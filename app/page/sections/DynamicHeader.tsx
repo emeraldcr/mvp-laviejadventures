@@ -4,38 +4,7 @@
 
 import { useState, useEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
-import Image from 'next/image'; // For optimized images
-
-// --- 1. Scroll-Adaptive Header ---
-const ScrollAdaptiveHeader: React.FC<{ scrollY: number }> = ({ scrollY }) => {
-  const isScrolled = scrollY > 80;
-
-  return (
-    <header 
-      className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ease-in-out 
-                  ${isScrolled 
-                    ? 'bg-teal-700 shadow-xl' 
-                    : 'bg-transparent text-white'
-                  }`}
-    >
-      <div className="flex items-center justify-between p-4 max-w-7xl mx-auto">
-        {/* Brand/Logo */}
-        <div className="text-3xl font-black tracking-tight">
-          La Vieja Adventures
-        </div>
-
-        {/* Navigation Links */}
-        <nav className="space-x-8 hidden md:flex font-semibold">
-          <a href="#tours" className="hover:text-teal-200 transition duration-300">Tours</a>
-          <a href="#galeria" className="hover:text-teal-200 transition duration-300">Galería</a>
-          <a href="#contacto" className="px-4 py-2 border border-white rounded-full hover:bg-white hover:text-teal-700 transition duration-300">
-            Reserva
-          </a>
-        </nav>
-      </div>
-    </header>
-  );
-};
+import Image from 'next/image'; 
 
 // --- 2. Hero Carousel ---
 const HeroCarousel: React.FC = () => {
@@ -43,7 +12,6 @@ const HeroCarousel: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch dynamic images from API
   useEffect(() => {
     fetch('/api/images')
       .then(res => {
@@ -54,7 +22,6 @@ const HeroCarousel: React.FC = () => {
       .catch(err => setError(err.message));
   }, []);
 
-  // Auto-cycle images
   useEffect(() => {
     if (carouselImages.length === 0) return;
     const interval = setInterval(() => {
@@ -109,6 +76,38 @@ const HeroCarousel: React.FC = () => {
         </a>
       </div>
     </section>
+  );
+};
+
+
+// --- 1. Scroll-Adaptive Header ---
+const ScrollAdaptiveHeader: React.FC<{ scrollY: number }> = ({ scrollY }) => {
+  const isScrolled = scrollY > 80;
+
+  return (
+    <header 
+      className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ease-in-out 
+                  ${isScrolled 
+                    ? 'bg-teal-700 shadow-xl' 
+                    : 'bg-transparent text-white'
+                  }`}
+    >
+      <div className="flex items-center justify-between p-4 max-w-7xl mx-auto">
+        {/* Brand/Logo */}
+        <div className="text-3xl font-black tracking-tight">
+          La Vieja Adventures
+        </div>
+
+        {/* Navigation Links */}
+        <nav className="space-x-8 hidden md:flex font-semibold">
+          <a href="#tours" className="hover:text-teal-200 transition duration-300">Tours</a>
+          <a href="#galeria" className="hover:text-teal-200 transition duration-300">Galería</a>
+          <a href="#contacto" className="px-4 py-2 border border-white rounded-full hover:bg-white hover:text-teal-700 transition duration-300">
+            Reserva
+          </a>
+        </nav>
+      </div>
+    </header>
   );
 };
 

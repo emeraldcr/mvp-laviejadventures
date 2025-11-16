@@ -9,7 +9,7 @@ import PaymentModal from "@/app/components/reservation/PaymentModal";
 import useCalendar from "./page/hooks/useCalendar";
 
 import { generateAvailability } from "@/lib/availability"; // CHANGED: Import the function instead of static const
-import DynamicHeroHeader from "./components/DynamicHeader";
+import DynamicHeroHeader from "./page/sections/DynamicHeader";
 
 export default function Home() {
   const {
