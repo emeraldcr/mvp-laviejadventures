@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 
-import Header from "./page/sections/Header";
 import CalendarSection from "./page/sections/CalendarSection";
 import ReservationSection from "./page/sections/ReservationSection";
 
@@ -10,6 +9,7 @@ import PaymentModal from "@/app/components/reservation/PaymentModal";
 import useCalendar from "./page/hooks/useCalendar";
 
 import { generateAvailability } from "@/lib/availability"; // CHANGED: Import the function instead of static const
+import DynamicHeroHeader from "./components/DynamicHeader";
 
 export default function Home() {
   const {
@@ -50,7 +50,7 @@ export default function Home() {
     <main className="min-h-screen bg-zinc-50 dark:bg-black flex justify-center py-10 px-4">
       <div className="w-full max-w-5xl bg-white dark:bg-zinc-950 rounded-2xl shadow-2xl p-10 border border-zinc-200 dark:border-zinc-800">
         
-        <Header />
+        <DynamicHeroHeader />
 
         <CalendarSection
           calendarDays={calendarDays}
