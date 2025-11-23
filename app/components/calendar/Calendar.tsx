@@ -31,7 +31,7 @@ export default function Calendar({
   onNext,
 }: Props) {
   return (
-    <section className="p-4">
+    <section className="p-4" id="calendar">
       <div className="flex justify-between items-center mb-6">
         <button
           onClick={onPrev}

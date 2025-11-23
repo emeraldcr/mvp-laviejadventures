@@ -1,0 +1,131 @@
+// Enhanced HeroCarousel Component with Full-Screen Parallax Images
+// and Modular Overlay Slot for Text or Image
+
+'use client';
+
+import { useState, useRef, useEffect, ReactNode } from 'react';
+import { ChevronDown } from 'lucide-react';
+import Image from 'next/image';
+import { useInterval } from '../../hooks/useInterval';
+import useSWR from 'swr';
+import { fetcher } from '@/lib/fetcher';
+
+// New: overlay prop to allow custom content (text or an image)
+interface HeroCarouselProps {
+  overlay?: ReactNode;
+}
+
+export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay }) => {
+  // --- Data Fetching ---
+  const {
+    data: carouselImages = [],
+    error,
+    isLoading
+  } = useSWR<string[]>('/api/images', fetcher);
+
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  // Parallax references
+  const parallaxImageRef = useRef<HTMLDivElement>(null);
+  const parallaxOverlayRef = useRef<HTMLDivElement>(null);
+
+  // --- Auto Advance ---
+  useInterval(() => {
+    if (carouselImages.length > 0) {
+      setCurrentIndex((prev) => (prev + 1) % carouselImages.length);
+    }
+  }, 5000);
+
+  // --- Parallax Effect for Images & Overlay ---
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const IMG_SPEED = -0.15; // slower parallax for background images
+    const OVERLAY_SPEED = -0.3; // stronger effect for text or custom overlay
+
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+
+      if (parallaxImageRef.current) {
+        parallaxImageRef.current.style.transform = `translate3d(0, ${scrollY * IMG_SPEED}px, 0)`;
+      }
+      if (parallaxOverlayRef.current) {
+        parallaxOverlayRef.current.style.transform = `translate3d(0, ${scrollY * OVERLAY_SPEED}px, 0)`;
+      }
+    };
+
+    let ticking = false;
+    const update = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          handleScroll();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', update, { passive: true });
+    return () => window.removeEventListener('scroll', update);
+  }, []);
+
+  if (error) return <div className="text-red-500 p-8">Error loading images: {error.message}</div>;
+  if (isLoading || carouselImages.length === 0)
+    return <div className="h-screen flex items-center justify-center">Loading...</div>;
+
+  return (
+    <section className="relative w-full h-screen overflow-hidden">
+      {/* Background Parallax Container */}
+      <div ref={parallaxImageRef} className="absolute inset-0 will-change-transform z-0">
+        {carouselImages.map((src, index) => (
+          <Image
+            key={index}
+            src={src}
+            alt={`Carousel image ${index + 1}`}
+            fill
+            className={`object-cover transition-opacity duration-1000 ease-in-out ${
+              index === currentIndex ? 'opacity-100' : 'opacity-0'
+            }`}
+            priority={index < 3}
+            sizes="100vw"
+          />
+        ))}
+      </div>
+
+      {/* Gradient overlays for readability */}
+      <div className="absolute inset-0 z-10 pointer-events-none">
+        <div className="w-full h-1/2 absolute top-0 bg-gradient-to-b from-black/60 to-transparent"></div>
+        <div className="w-full h-1/3 absolute bottom-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+      </div>
+
+      {/* Foreground Overlay (Text or Image) */}
+      <div
+        ref={parallaxOverlayRef}
+        className="relative w-full h-full flex flex-col justify-center items-center text-center z-20 px-4 md:px-8 will-change-transform"
+      >
+        {overlay ? (
+          overlay
+        ) : (
+          <>
+            <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black mb-6 text-white drop-shadow-2xl">
+              Ciudad Esmeralda
+            </h1>
+
+            <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-light text-white max-w-3xl drop-shadow-xl">
+              Selecciona tu fecha para <span className="font-semibold">vivir la aventura</span>.
+            </p>
+          </>
+        )}
+
+        {/* Scroll Indicator */}
+        <a
+          href="#calendar"
+          className="absolute bottom-12 animate-bounce p-3 rounded-full bg-white/20 hover:bg-white/40 transition"
+          aria-label="Scroll down to main content"
+        >
+          <ChevronDown size={32} className="text-white" />
+        </a>
+      </div>
+    </section>
+  );
+};

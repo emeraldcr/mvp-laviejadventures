@@ -2,14 +2,12 @@
 
 import React, { useState } from "react";
 
-import CalendarSection from "./page/sections/CalendarSection";
-import ReservationSection from "./page/sections/ReservationSection";
-
+import CalendarSection from "@/app/components/sections/CalendarSection";
+import ReservationSection from "@/app/components/sections/ReservationSection";
 import PaymentModal from "@/app/components/reservation/PaymentModal";
-import useCalendar from "./page/hooks/useCalendar";
-
-import { generateAvailability } from "@/lib/availability"; // CHANGED: Import the function instead of static const
-import DynamicHeroHeader from "./page/sections/DynamicHeader";
+import useCalendar from "@/app/hooks/useCalendar";
+import { generateAvailability } from "@/lib/availability"; 
+import DynamicHeroHeader from "@/app/components/sections/DynamicHeroHeader";
 
 export default function Home() {
   const {
@@ -51,6 +49,7 @@ export default function Home() {
       <div className="w-full max-w-5xl bg-white dark:bg-zinc-950 rounded-2xl shadow-2xl p-10 border border-zinc-200 dark:border-zinc-800">
         
         <DynamicHeroHeader />
+        
 
         <CalendarSection
           calendarDays={calendarDays}

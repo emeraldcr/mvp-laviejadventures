@@ -1,8 +1,5 @@
-// page/sections/CalendarSection.tsx (assuming based on import paths)
-
 "use client";
 
-import React from "react";
 import Calendar from "@/app/components/calendar/Calendar";
 import { AvailabilityMap } from "@/lib/types"; // Assuming types are in lib/types.ts
 
