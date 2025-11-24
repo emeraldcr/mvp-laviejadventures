@@ -1,75 +1,69 @@
-// pages/TermsPage.tsx (or app/terms/page.tsx if using Next.js App Router)
-
+import DynamicHeroHeader from "@/app/components/sections/DynamicHeroHeader";
 import React from "react";
 
-export default function TermsPage() {
+export default function InfoPage() {
   return (
     <main className="min-h-screen bg-zinc-50 dark:bg-black flex justify-center py-10 px-4">
-      <div className="w-full max-w-4xl bg-white dark:bg-zinc-950 rounded-2xl shadow-2xl p-10 border border-zinc-200 dark:border-zinc-800">
-        <h1 className="text-3xl font-bold mb-6 text-center">Términos y Condiciones</h1>
-        
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">1. Introducción</h2>
-          <p className="text-zinc-700 dark:text-zinc-400 mb-4">
-            Bienvenido a nuestro sitio de reservas de tours. Al acceder o utilizar nuestro sitio web y servicios, usted acepta cumplir con estos Términos y Condiciones. Si no está de acuerdo con alguna parte de estos términos, no debe usar nuestros servicios.
-          </p>
-          <p className="text-zinc-700 dark:text-zinc-400">
-            Estos términos rigen su uso del sitio, las reservas de tours, pagos y cualquier interacción relacionada. Nos reservamos el derecho de modificar estos términos en cualquier momento, y las actualizaciones se publicarán en esta página.
+     <DynamicHeroHeader></DynamicHeroHeader>
+      <div className="w-full max-w-5xl bg-white dark:bg-zinc-950 rounded-2xl shadow-2xl p-10 border border-zinc-200 dark:border-zinc-800">
+        <h1 className="text-3xl font-bold mb-8 text-center">Información General - La Vieja Adventures</h1>
+
+        <section className="mb-10">
+          <h2 className="text-2xl font-semibold mb-4">Sobre Nosotros</h2>
+          <p className="text-zinc-700 dark:text-zinc-400 leading-relaxed">
+            La Vieja Adventures es una empresa dedicada a experiencias de naturaleza en la zona norte de Costa Rica. Operamos tours guiados en el Cañón del Río La Vieja, Ciudad Esmeralda, volcanes dormidos del Parque Nacional del Agua Juan Castro Blanco y más. Nuestro equipo está conformado por guías certificados, personal de operaciones, logística y atención al cliente.
           </p>
         </section>
 
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">2. Reservas y Pagos</h2>
-          <p className="text-zinc-700 dark:text-zinc-400 mb-4">
-            Todas las reservas están sujetas a disponibilidad. Al realizar una reserva, usted garantiza que tiene la autoridad legal para hacerlo y que la información proporcionada es precisa y completa.
-          </p>
-          <ul className="list-disc ml-5 text-zinc-700 dark:text-zinc-400 space-y-2">
-            <li>Los pagos se procesan a través de proveedores de pago seguros. Aceptamos tarjetas de crédito/débito principales.</li>
-            <li>Los precios incluyen impuestos aplicables, pero pueden excluir cargos adicionales como propinas o extras opcionales.</li>
-            <li>Confirmaremos su reserva por correo electrónico una vez completado el pago.</li>
+        <section className="mb-10">
+          <h2 className="text-2xl font-semibold mb-4">Tours Principales</h2>
+          <ul className="space-y-3 text-zinc-700 dark:text-zinc-400">
+            <li>• Ciudad Esmeralda – nuestro tour estrella en el cañón del río.</li>
+            <li>• Cuadra-tours por senderos privados.</li>
+            <li>• Caminatas a cascadas escondidas.</li>
+            <li>• Tour gastronómico con cocina local.</li>
+            <li>• Experiencia "Lluvia en la Naturaleza".</li>
+            <li>• Avistamiento de aves.</li>
+            <li>• Tour nocturno.</li>
+            <li>• Rapel en cañón.</li>
+            <li>• Caminata a volcanes dormidos.</li>
           </ul>
         </section>
 
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">3. Responsabilidades del Usuario</h2>
-          <p className="text-zinc-700 dark:text-zinc-400 mb-4">
-            Usted es responsable de:
+        <section className="mb-10">
+          <h2 className="text-2xl font-semibold mb-4">Tarifas</h2>
+          <p className="text-zinc-700 dark:text-zinc-400 leading-relaxed">
+            Todos los tours tienen un rango de precios entre <strong>₡19.990</strong> (fines de semana en grupos) y <strong>₡34.990</strong> (reservas individuales entre semana). Los precios pueden variar según condiciones operativas, temporada o requerimientos especiales.
           </p>
-          <ul className="list-disc ml-5 text-zinc-700 dark:text-zinc-400 space-y-2">
-            <li>Proporcionar información precisa durante el proceso de reserva.</li>
-            <li>Cumplir con todas las leyes y regulaciones aplicables durante el tour.</li>
-            <li>Respetar las instrucciones del guía y las normas de seguridad.</li>
-            <li>Notificar cualquier condición médica o requerimiento especial con antelación.</li>
+        </section>
+
+        <section className="mb-10">
+          <h2 className="text-2xl font-semibold mb-4">Condiciones Climáticas</h2>
+          <p className="text-zinc-700 dark:text-zinc-400 leading-relaxed">
+            Todos los tours dependen de las condiciones del clima para garantizar la seguridad. En caso de lluvias fuertes, crecientes del río o inestabilidad en el terreno, podríamos mover, reprogramar o cancelar la experiencia según la política de reembolsos.
+          </p>
+        </section>
+
+        <section className="mb-10">
+          <h2 className="text-2xl font-semibold mb-4">Política de Reembolsos</h2>
+          <p className="text-zinc-700 dark:text-zinc-400 leading-relaxed">
+            Cada tour cuenta con su propia política de reembolso según el tipo de actividad y la logística requerida. Normalmente trabajamos con opciones de reprogramación, créditos para futuras visitas o reembolsos parciales si aplica.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-semibold mb-4">Contacto y Reservas</h2>
+          <p className="text-zinc-700 dark:text-zinc-400 leading-relaxed mb-4">
+            Para reservas, grupos, eventos privados o preguntas especiales, contáctanos:
+          </p>
+
+          <ul className="text-zinc-700 dark:text-zinc-400 space-y-1">
+            <li><strong>Teléfono:</strong> +506 8888-8888</li>
+            <li><strong>Email:</strong> reservas@laviejaadventures.com</li>
+            <li><strong>WhatsApp:</strong> Disponible 24/7</li>
+            <li><strong>Ubicación:</strong> Zona Norte, Costa Rica</li>
           </ul>
         </section>
-
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">4. Limitación de Responsabilidad</h2>
-          <p className="text-zinc-700 dark:text-zinc-400 mb-4">
-            No nos hacemos responsables por pérdidas, daños, lesiones o inconvenientes causados por factores fuera de nuestro control, como clima, desastres naturales o acciones de terceros.
-          </p>
-          <p className="text-zinc-700 dark:text-zinc-400">
-            Nuestra responsabilidad se limita al monto pagado por la reserva. No garantizamos la disponibilidad continua del sitio web.
-          </p>
-        </section>
-
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">5. Propiedad Intelectual</h2>
-          <p className="text-zinc-700 dark:text-zinc-400">
-            Todo el contenido del sitio, incluyendo textos, imágenes y logos, es propiedad nuestra o de nuestros licenciantes. No puede reproducir, distribuir o modificar este contenido sin permiso escrito.
-          </p>
-        </section>
-
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">6. Ley Aplicable</h2>
-          <p className="text-zinc-700 dark:text-zinc-400">
-            Estos términos se rigen por las leyes de Costa Rica. Cualquier disputa se resolverá en los tribunales de San José, Costa Rica.
-          </p>
-        </section>
-
-        <p className="text-center text-zinc-500 dark:text-zinc-500 mt-8">
-          Última actualización: 15 de noviembre de 2025
-        </p>
       </div>
     </main>
   );

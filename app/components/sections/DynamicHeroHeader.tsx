@@ -17,9 +17,9 @@ interface NavLinkItem {
 
 // More global-brand style links
 const NAV_LINKS: NavLinkItem[] = [
-  { href: "https://laviejadventures.com/info", label: "Información", external: true },
-  { href: "https://laviejadventures.com/tours", label: "Tours", external: true },
-  { href: "https://laviejadventures.com/galeria", label: "Galería", external: true },
+  { href: "/info", label: "Información", external: true },
+  { href: "/tours", label: "Tours", external: true },
+  { href: "/galeria", label: "Galería", external: true },
   { href: "#calendar", label: "Reserva", variant: "primary", external: false }, // Reservation stays internal
 ];
 
