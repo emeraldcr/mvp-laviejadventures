@@ -80,9 +80,8 @@ export default function Home() {
       {showModal && (
         <PaymentModal
           tickets={tickets}
-          date={`${selectedDate} de ${monthNames[currentMonth]} ${currentYear}`} // NEW: Optionally add year for clarity
+          date={`${selectedDate} de ${monthNames[currentMonth]} ${currentYear}`}
           onClose={() => setShowModal(false)}
-          onConfirm={handleConfirmPayment}
         />
       )}
     </main>
