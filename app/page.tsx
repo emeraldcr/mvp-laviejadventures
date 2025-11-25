@@ -4,9 +4,8 @@ import React, { useState, useMemo, JSX } from "react";
 
 import CalendarSection from "@/app/components/sections/CalendarSection";
 import ReservationSection from "@/app/components/sections/ReservationSection";
-import PaymentModal from "@/app/components/reservation/PaymentModal";
 import useCalendar from "@/app/hooks/useCalendar";
-import { generateAvailability } from "@/lib/availability"; 
+import { generateAvailability } from "@/lib/availability";
 import DynamicHeroHeader from "@/app/components/sections/DynamicHeroHeader";
 
 export default function Home(): JSX.Element {
@@ -22,7 +21,6 @@ export default function Home(): JSX.Element {
   } = useCalendar();
 
   const [tickets, setTickets] = useState(1);
-  const [showModal, setShowModal] = useState(false);
 
   const availability = useMemo(
     () => generateAvailability(currentYear, currentMonth),
@@ -34,26 +32,6 @@ export default function Home(): JSX.Element {
       setSelectedDate(day);
       setTickets(1);
     }
-  };
-
-  const handleReserve = () => {
-    if (selectedDate) {
-      if (tickets > availability[selectedDate]) {
-        alert("Not enough tickets available!");
-        return;
-      }
-      setShowModal(true);
-    }
-  };
-
-  const handleConfirmPayment = (data: { name: string; email: string }) => {
-    alert(
-      `Reserva procesada:\n\n${data.name}\n${data.email}\nTickets: ${tickets}`
-    );
-
-    setShowModal(false);
-    setTickets(1);
-    setSelectedDate(null);
   };
 
   return (
@@ -82,19 +60,10 @@ export default function Home(): JSX.Element {
           monthName={monthNames[currentMonth]}
           tickets={tickets}
           setTickets={setTickets}
-          onReserve={handleReserve}
           availability={availability}
           currentYear={currentYear}
         />
       </div>
-
-      {showModal && (
-        <PaymentModal
-          tickets={tickets}
-          date={`${selectedDate} de ${monthNames[currentMonth]} ${currentYear}`}
-          onClose={() => setShowModal(false)}
-        />
-      )}
     </main>
   );
 }

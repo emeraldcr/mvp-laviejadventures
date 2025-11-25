@@ -87,7 +87,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay }) => {
               index === currentIndex ? 'opacity-100' : 'opacity-0'
             }`}
             priority={index < 3}
-            sizes="100vw"
+           sizes="(max-width: 768px) 100vw, 1280px"
           />
         ))}
       </div>

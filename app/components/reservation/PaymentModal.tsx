@@ -83,7 +83,9 @@ export default function PaymentModal({
             onSuccess(output);
 
             // 🔥 2. Redirigir a /payment/success
-            router.push(`/payment/success?orderId=${output.id}`);
+            router.push(`/success?orderId=${output.id}`);
+            // ❗ delay closing so PayPal can finish cleanup
+            setTimeout(() => onClose(), 500);
 
             // 🔥 3. Cerrar modal
             onClose();

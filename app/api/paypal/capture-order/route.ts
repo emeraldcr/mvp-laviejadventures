@@ -1,6 +1,7 @@
 // app/api/paypal/capture-order/route.ts
 
 import { NextResponse } from "next/server";
+// Assuming these utility functions are correctly implemented
 import { getPayPalAuthHeader, getPayPalApiBaseUrl } from "@/lib/paypal";
 
 interface CaptureRequest {
@@ -12,79 +13,65 @@ export async function POST(req: Request) {
     const { orderID }: CaptureRequest = await req.json();
 
     if (!orderID) {
-      return NextResponse.json(
-        { message: "orderID is required." },
-        { status: 400 }
-      );
+      return NextResponse.json({ message: "orderID is required." }, { status: 400 });
     }
 
-    // -------------------------------
-    // CAPTURE ORDER
-    // -------------------------------
-
+    // --- FIX APPLIED HERE ---
     const res = await fetch(
       `${getPayPalApiBaseUrl()}/v2/checkout/orders/${orderID}/capture`,
       {
         method: "POST",
         headers: {
+          // This is required for the Capture API endpoint
           "Content-Type": "application/json",
           Authorization: getPayPalAuthHeader(),
         },
-        body: JSON.stringify({}), // PayPal requires an empty JSON payload
+        // PayPal's API requires an empty JSON body for a simple capture
+        body: JSON.stringify({}), 
       }
     );
+    // ------------------------
 
     const data = await res.json();
 
     if (!res.ok) {
-      console.error("PayPal Capture Error:", data);
+      console.error("PayPal Capture Error:", JSON.stringify(data, null, 2));
       return NextResponse.json(
         { message: "Failed to capture PayPal order.", details: data },
         { status: res.status }
       );
     }
 
-    // -------------------------------
-    // SAFE DATA EXTRACTION
-    // -------------------------------
-
     const purchaseUnit = data.purchase_units?.[0] ?? null;
-
-    const capture =
-      purchaseUnit?.payments?.captures?.[0] ?? null;
-
-    const captureID = capture?.id ?? null;
-
+    const capture = purchaseUnit?.payments?.captures?.[0] ?? null;
     const rawCustomId = purchaseUnit?.custom_id ?? null;
 
     let customData = null;
-
     if (rawCustomId) {
       try {
         customData = JSON.parse(rawCustomId);
-      } catch (err) {
-        console.error("Error parsing custom_id JSON:", err);
-      }
+      } catch (err) {}
     }
 
-    // Build clean output object for your frontend
     return NextResponse.json(
       {
+        id: data.id,
         status: data.status,
-        captureID,
+        captureID: capture?.id ?? null,
         payer: {
           name:
             data.payer?.name?.given_name +
             " " +
             (data.payer?.name?.surname || ""),
-          email: data.payer?.email_address || null,
+          email: data.payer?.email_address ?? null,
           payerID: data.payer?.payer_id,
         },
-        metadata: customData, // customer + booking + total
-        raw: data, // optional: full PayPal capture response
+        metadata: customData,
+        raw: data,
       },
       { status: 200 }
     );
+
   } catch (err: any) {
     console.error("Internal Capture Error:", err);
     return NextResponse.json(
