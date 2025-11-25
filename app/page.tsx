@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, JSX } from "react";
 
 import CalendarSection from "@/app/components/sections/CalendarSection";
 import ReservationSection from "@/app/components/sections/ReservationSection";
