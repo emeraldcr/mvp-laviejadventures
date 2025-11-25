@@ -43,9 +43,7 @@ export async function POST(req: Request) {
           },
         ],
 
-        // ❗ IMPORTANTE:
-        // NO USAR return_url / cancel_url cuando usas PayPal Buttons
-        // Quitar payment_source para evitar "PAYER_ACTION_REQUIRED"
+        
       }),
     });
 

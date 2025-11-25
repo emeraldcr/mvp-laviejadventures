@@ -1,40 +1,59 @@
+// app/payment/success/page.tsx
+
 import { redirect } from 'next/navigation'
-import { stripe } from '../../../lib/stripe'
-import type { Stripe } from 'stripe'
 import { SuccessClient } from './SuccessClient'
+import { getPayPalAuthHeader, getPayPalApiBaseUrl } from '@/lib/paypal'
 
 interface SuccessPageProps {
-  searchParams: { session_id?: string }
+  searchParams: { orderId?: string }
 }
 
 export default async function SuccessPage({ searchParams }: SuccessPageProps) {
-  const sessionId = searchParams.session_id
+  const orderId = searchParams.orderId
 
-  if (!sessionId) redirect('/')
+  if (!orderId) redirect('/')
 
-  let session: Stripe.Checkout.Session
+  // Fetch order details from PayPal
+  let paypalOrder
 
   try {
-    session = await stripe.checkout.sessions.retrieve(sessionId, {
-      expand: ['line_items', 'payment_intent'],
-    })
+    const res = await fetch(
+      `${getPayPalApiBaseUrl()}/v2/checkout/orders/${orderId}`,
+      {
+        headers: {
+          Authorization: getPayPalAuthHeader(),
+        },
+        cache: 'no-store',
+      }
+    )
+
+    paypalOrder = await res.json()
+
+    if (!res.ok) {
+      console.error('PayPal ERROR:', paypalOrder)
+      redirect('/')
+    }
   } catch (err) {
-    console.error('Stripe session error:', err)
+    console.error('PayPal fetch error:', err)
     redirect('/')
   }
 
-  if (session.status !== 'complete') redirect('/')
+  // Extract fields from PayPal order
+  const payer = paypalOrder.payer || {}
 
-  const customerEmail = session.customer_details?.email
+  const name = `${payer.name?.given_name || ''} ${payer.name?.surname || ''}`.trim()
+  const email = payer.email_address || ''
 
-  // ⭐ NEW — read metadata
-  const name = session.metadata?.name || ''
-  const date = session.metadata?.date || ''
-  const tickets = session.metadata?.tickets || ''
+  const description = paypalOrder.purchase_units?.[0]?.description || ''
+  const ticketsMatch = description.match(/(\d+)\s*tickets?/i)
+  const dateMatch = description.match(/para\s+(.*)/i)
+
+  const tickets = ticketsMatch ? ticketsMatch[1] : ''
+  const date = dateMatch ? dateMatch[1] : ''
 
   return (
     <SuccessClient
-      email={customerEmail}
+      email={email}
       name={name}
       date={date}
       tickets={tickets}

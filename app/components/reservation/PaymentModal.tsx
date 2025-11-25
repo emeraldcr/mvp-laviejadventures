@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 
 declare global {
   interface Window {
@@ -29,6 +30,7 @@ export default function PaymentModal({
   onSuccess,
 }: PaymentModalProps) {
   const paypalRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   const { name, email, phone, tickets, total, date } = orderDetails;
 
@@ -76,7 +78,14 @@ export default function PaymentModal({
             });
 
             const output = await res.json();
+
+            // 🔥 1. Notificar al padre
             onSuccess(output);
+
+            // 🔥 2. Redirigir a /payment/success
+            router.push(`/payment/success?orderId=${output.id}`);
+
+            // 🔥 3. Cerrar modal
             onClose();
           },
 
