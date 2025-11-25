@@ -1,4 +1,3 @@
-'use client'
 
 type SuccessClientProps = {
   email?: string | null
