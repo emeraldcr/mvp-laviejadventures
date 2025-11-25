@@ -1,21 +1,195 @@
 // components/ReservationDetails.tsx
 
 import { TOUR_INFO } from "@/lib/tour-info";
-import { AvailabilityMap } from "@/lib/types"; // Assuming types are in lib/types.ts
-import { useState } from "react";
+import { AvailabilityMap } from "@/lib/types";
+import { useState, useMemo, useCallback } from "react";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 
-// --- VALIDATION HELPERS (NUEVO) ---
+// ---------------------- CONSTANTS ----------------------
+// Move regex definitions to a utility or constant file if reused, but keep here for simplicity.
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-// Regex para un número de 8 dígitos (ej. formato en Costa Rica, asumiendo el código de país se maneja aparte)
-const PHONE_NUMBER_REGEX = /^\d{4}[\s-]?\d{4}$/; 
+const PHONE_NUMBER_REGEX = /^\d{4}[\s-]?\d{4}$/;
+
+// Define Phone Codes as a constant outside the component
+const COUNTRY_CODES = [
+  { code: "+506", name: "Costa Rica" },
+  { code: "+1", name: "EE. UU. / Canadá" },
+  { code: "+52", name: "México" },
+  { code: "+57", name: "Colombia" },
+  { code: "+34", name: "España" },
+];
+
+// Define Ticket Price as a constant
+const PRICE_PER_TICKET = 50;
+const TAX_RATE = 0.1;
+
+// ---------------------- TYPES (Re-used for form state) ----------------------
+interface ReservationFormState {
+  name: string;
+  email: string;
+  phoneCode: string;
+  phoneNumber: string;
+  specialRequests: string;
+  agreeTerms: boolean;
+}
+
+// ---------------------- CUSTOM HOOK: useReservationForm ----------------------
+// Good for isolating complex state and validation logic.
+const useReservationForm = (initialState: ReservationFormState) => {
+  const [formState, setFormState] = useState(initialState);
+
+  const handleChange = useCallback(
+    (key: keyof ReservationFormState, value: string | boolean) => {
+      setFormState((prev) => ({ ...prev, [key]: value }));
+    },
+    []
+  );
+
+  const validation = useMemo(() => {
+    const isNameValid = formState.name.trim() !== "";
+    const isEmailValid =
+      formState.email.trim() !== "" && EMAIL_REGEX.test(formState.email.trim());
+    const isPhoneNumberValid =
+      formState.phoneNumber.trim() !== "" &&
+      PHONE_NUMBER_REGEX.test(formState.phoneNumber.trim());
+    
+    return {
+      isNameValid,
+      isEmailValid,
+      isPhoneNumberValid,
+      isAgreeTermsValid: formState.agreeTerms,
+    };
+  }, [formState]);
+
+  return {
+    formState,
+    handleChange,
+    validation,
+  };
+};
+
+// ---------------------- CHILD COMPONENTS (for Composition) ----------------------
+
+// Component for displaying form errors
+const FormError = ({ message }: { message: string }) => (
+  <p className="text-red-500 text-sm mt-1">{message}</p>
+);
+
+// Component for a single traveler input field
+const TravelerInputField = ({
+  label,
+  id,
+  type = "text",
+  value,
+  onChange,
+  placeholder,
+  isValid,
+  validationMessage,
+  required = false,
+  className = "",
+}: {
+  label: string;
+  id: keyof ReservationFormState;
+  type?: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  isValid: boolean;
+  validationMessage: string;
+  required?: boolean;
+  className?: string;
+}) => {
+  const isTouched = value.trim() !== "";
+  const showError = isTouched && !isValid;
+
+  return (
+    <div className={className}>
+      <label htmlFor={id} className="block font-semibold text-lg mb-1">
+        {label}
+      </label>
+      <input
+        id={id}
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={`w-full p-3 rounded-lg border focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-zinc-800 ${
+          showError
+            ? "border-red-500"
+            : "border-zinc-300 dark:border-zinc-700"
+        }`}
+        placeholder={placeholder}
+        required={required}
+      />
+      {showError && <FormError message={validationMessage} />}
+    </div>
+  );
+};
+
+// Component for Phone Input (since it's a composite field)
+const TravelerPhoneInput = ({
+    phoneCode,
+    phoneNumber,
+    setPhoneCode,
+    setPhoneNumber,
+    isValid,
+}: {
+    phoneCode: string;
+    phoneNumber: string;
+    setPhoneCode: (code: string) => void;
+    setPhoneNumber: (number: string) => void;
+    isValid: boolean;
+}) => {
+    const isTouched = phoneNumber.trim() !== "";
+    const showError = isTouched && !isValid;
+
+    return (
+        <div className="md:col-span-2">
+            <label htmlFor="phoneNumber" className="block font-semibold text-lg mb-1">Teléfono</label>
+            <div className="flex gap-2">
+                <select
+                    id="phoneCode"
+                    value={phoneCode}
+                    onChange={(e) => setPhoneCode(e.target.value)}
+                    className="p-3 rounded-lg border bg-white dark:bg-zinc-800 border-zinc-300 dark:border-zinc-700 focus:ring-teal-500 focus:border-teal-500 w-1/3 md:w-1/4"
+                >
+                    {COUNTRY_CODES.map((country) => (
+                        <option key={country.code} value={country.code}>
+                            {country.code} ({country.name})
+                        </option>
+                    ))}
+                </select>
+                <input
+                    id="phoneNumber"
+                    type="tel"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    className={`w-full p-3 rounded-lg border focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-zinc-800 ${
+                        showError
+                            ? "border-red-500"
+                            : "border-zinc-300 dark:border-zinc-700"
+                    }`}
+                    placeholder="Ej. 1234 5678"
+                    required
+                />
+            </div>
+            {showError && (
+                <FormError message="Número de teléfono no válido. Formato sugerido: #### ####." />
+            )}
+        </div>
+    );
+};
+
+
+// ---------------------- MAIN COMPONENT ----------------------
 
 type Props = {
   selectedDate: number;
   currentMonth: number;
-  monthName: string;
+  monthName: string; // Not needed if using Date object/format()
   tickets: number;
   setTickets: (n: number) => void;
-  onReserve: () => void;
+  onReserve: (data: any) => void;
   availability: AvailabilityMap;
   currentYear: number;
 };
@@ -23,271 +197,307 @@ type Props = {
 export default function ReservationDetails({
   selectedDate,
   currentMonth,
-  monthName,
   tickets,
   setTickets,
   onReserve,
   availability,
   currentYear,
 }: Props) {
+  // 1. Data/Slot calculation
   const slots = availability[selectedDate] ?? 0;
-
-  const fullDate = new Date(currentYear, currentMonth, selectedDate).toLocaleDateString('es', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
+  const isTicketsValid = tickets >= 1 && tickets <= slots;
+  
+  // Create a proper Date object only once
+  const reservationDate = new Date(currentYear, currentMonth, selectedDate);
+  const formattedDate = format(reservationDate, "EEEE, dd 'de' MMMM 'de' yyyy", {
+    locale: es,
   });
 
-  const pricePerTicket = 50;
-  const totalPrice = tickets * pricePerTicket;
+  // 2. Pricing calculation (use useMemo for expensive/derived values)
+  const { subtotal, taxes, totalWithTaxes } = useMemo(() => {
+    const sub = tickets * PRICE_PER_TICKET;
+    const tax = sub * TAX_RATE;
+    const total = sub + tax;
+    return { subtotal: sub, taxes: tax, totalWithTaxes: total };
+  }, [tickets]);
 
-  // ESTADO DE FORMULARIO ACTUALIZADO
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  // NUEVO: Separamos código y número para mejor control internacional
-  const [phoneCode, setPhoneCode] = useState('+506'); // Default a Costa Rica
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [specialRequests, setSpecialRequests] = useState('');
-  const [agreeTerms, setAgreeTerms] = useState(false);
+  // 3. Form State Management (via Custom Hook)
+  const { formState, handleChange, validation } = useReservationForm({
+    name: "",
+    email: "",
+    phoneCode: COUNTRY_CODES[0].code, // Use the constant
+    phoneNumber: "",
+    specialRequests: "",
+    agreeTerms: false,
+  });
 
-  // NUEVO: LÓGICA DE VALIDACIÓN MEJORADA
-  const isNameValid = name.trim() !== '';
-  const isEmailValid = email.trim() !== '' && EMAIL_REGEX.test(email.trim());
-  const isPhoneNumberValid = phoneNumber.trim() !== '' && PHONE_NUMBER_REGEX.test(phoneNumber.trim());
-  const isTicketsValid = tickets >= 1 && tickets <= slots;
+  // 4. Validation Check
+  const isFormValid = useMemo(
+    () =>
+      isTicketsValid &&
+      validation.isNameValid &&
+      validation.isEmailValid &&
+      validation.isPhoneNumberValid &&
+      validation.isAgreeTermsValid,
+    [isTicketsValid, validation]
+  );
 
-  const isFormValid = isTicketsValid && isNameValid && isEmailValid && isPhoneNumberValid && agreeTerms;
+  // 5. Handler (use useCallback)
+  const handleReserve = useCallback(() => {
+    if (!isFormValid) return;
 
-  const handleReserve = () => {
-    if (isFormValid) {
-      // Aquí se enviaría la data completa: { date, tickets, name, email, phone: `${phoneCode} ${phoneNumber}`, specialRequests }
-      onReserve();
-    }
-  };
-
-  // DATOS: Lista de códigos de país simplificada (para simular el efecto de la bandera)
-  const countryCodes = [
-    { code: '+506', name: 'Costa Rica' },
-    { code: '+1', name: 'EE. UU. / Canadá' },
-    { code: '+52', name: 'México' },
-    { code: '+57', name: 'Colombia' },
-    { code: '+34', name: 'España' },
-  ];
+    // The data object is consistent with the original structure
+    onReserve({
+      tickets,
+      date: formattedDate,
+      total: totalWithTaxes,
+      name: formState.name,
+      email: formState.email,
+      phone: `${formState.phoneCode} ${formState.phoneNumber}`,
+      specialRequests: formState.specialRequests,
+    });
+  }, [
+    isFormValid,
+    onReserve,
+    tickets,
+    formattedDate,
+    totalWithTaxes,
+    formState,
+  ]);
 
   return (
     <div className="p-6 border-t border-zinc-300 dark:border-zinc-700">
       <h2 className="text-2xl font-bold mb-4">
-        Reservar para el {fullDate}
+        Reservar para el {formattedDate}
       </h2>
 
-      {/* INFORMACIÓN DEL TOUR (Sin cambios mayores) */}
+      {/* ---------------------- TOUR INFO (Could be a separate component: <TourInfoBlock />) ---------------------- */}
       <div className="bg-teal-50 dark:bg-zinc-900 p-4 rounded-xl border border-zinc-200 dark:border-zinc-700 mb-6">
         <h3 className="text-xl font-semibold text-teal-900 dark:text-teal-300 mb-2">
           Información del Tour
         </h3>
-        <p className="text-zinc-700 dark:text-zinc-400 mb-4">{TOUR_INFO.details}</p>
-        {/* ... (resto de la sección de Información del Tour) ... */}
+
+        <p className="text-zinc-700 dark:text-zinc-400 mb-4">
+          {TOUR_INFO.details}
+        </p>
+
         <div className="mb-4">
-          <strong className="block text-zinc-800 dark:text-zinc-200">Duración:</strong>
-          <span className="text-zinc-700 dark:text-zinc-400">{TOUR_INFO.duration || '2-3 horas (aprox.)'}</span>
+          <strong className="block text-zinc-800 dark:text-zinc-200">
+            Duración:
+          </strong>
+          <span className="text-zinc-700 dark:text-zinc-400">
+            {TOUR_INFO.duration || "2-3 horas (aprox.)"}
+          </span>
         </div>
+
         <div className="mb-4">
-          <strong className="block text-zinc-800 dark:text-zinc-200">Inclusiones:</strong>
+          <strong className="block text-zinc-800 dark:text-zinc-200">
+            Inclusiones:
+          </strong>
           <ul className="list-disc ml-5 text-zinc-700 dark:text-zinc-400 space-y-1">
-            {TOUR_INFO.inclusions?.map((item: string, i: number) => <li key={i}>{item}</li>) || <li>Guía profesional, transporte, entradas.</li>}
+            {(TOUR_INFO.inclusions || [
+              "Guía profesional",
+              "transporte",
+              "entradas",
+            ]).map((item: string, i: number) => (
+              <li key={i}>{item}</li>
+            ))}
           </ul>
         </div>
+
         <div className="mb-4">
-          <strong className="block text-zinc-800 dark:text-zinc-200">Exclusiones:</strong>
+          <strong className="block text-zinc-800 dark:text-zinc-200">
+            Exclusiones:
+          </strong>
           <ul className="list-disc ml-5 text-zinc-700 dark:text-zinc-400 space-y-1">
-            {TOUR_INFO.exclusions?.map((item: string, i: number) => <li key={i}>{item}</li>) || <li>Comidas, propinas, gastos personales.</li>}
+            {(TOUR_INFO.exclusions || [
+              "Comidas",
+              "propinas",
+              "gastos personales",
+            ]).map((item: string, i: number) => (
+              <li key={i}>{item}</li>
+            ))}
           </ul>
         </div>
+
         <div>
-          <strong className="block text-zinc-800 dark:text-zinc-200">Restricciones:</strong>
-          <span className="text-zinc-700 dark:text-zinc-400">{TOUR_INFO.restrictions}</span>
+          <strong className="block text-zinc-800 dark:text-zinc-200">
+            Restricciones:
+          </strong>
+          <span className="text-zinc-700 dark:text-zinc-400">
+            {TOUR_INFO.restrictions}
+          </span>
         </div>
       </div>
 
-      {/* INFORMACIÓN DEL VIAJERO (VALIDACIÓN Y DISEÑO MEJORADOS) */}
+      {/* ---------------------- TRAVELER INFO ---------------------- */}
       <div className="mb-6">
-        <h3 className="text-xl font-semibold mb-4">Información del Viajero Principal</h3>
+        <h3 className="text-xl font-semibold mb-4">
+          Información del Viajero Principal
+        </h3>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Nombre Completo */}
-          <div>
-            <label className="block font-semibold text-lg mb-1" htmlFor="name">Nombre Completo</label>
-            <input
-              id="name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              // Mejoras: p-3, focus ring, validación visual
-              className={`w-full p-3 rounded-lg border focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-zinc-800 ${!isNameValid && name.trim() !== '' ? 'border-red-500' : 'border-zinc-300 dark:border-zinc-700'}`}
-              placeholder="Ej. Juan Pérez"
-              required
-            />
-          </div>
+          {/* NAME */}
+          <TravelerInputField
+            id="name"
+            label="Nombre Completo"
+            value={formState.name}
+            onChange={(v) => handleChange("name", v)}
+            placeholder="Ej. Juan Pérez"
+            isValid={validation.isNameValid}
+            validationMessage="El nombre es obligatorio."
+            required
+          />
 
-          {/* Correo Electrónico (VALIDACIÓN MEJORADA) */}
-          <div>
-            <label className="block font-semibold text-lg mb-1" htmlFor="email">Correo Electrónico</label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              // Mejoras: p-3, focus ring, validación visual
-              className={`w-full p-3 rounded-lg border focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-zinc-800 ${!isEmailValid && email.trim() !== '' ? 'border-red-500' : 'border-zinc-300 dark:border-zinc-700'}`}
-              placeholder="Ej. juan@example.com"
-              required
-            />
-            {!isEmailValid && email.trim() !== '' && (
-              <p className="text-red-500 text-sm mt-1">Por favor, introduce un correo electrónico válido.</p>
-            )}
-          </div>
+          {/* EMAIL */}
+          <TravelerInputField
+            id="email"
+            label="Correo Electrónico"
+            type="email"
+            value={formState.email}
+            onChange={(v) => handleChange("email", v)}
+            placeholder="Ej. juan@example.com"
+            isValid={validation.isEmailValid}
+            validationMessage="Por favor, introduce un correo electrónico válido."
+            required
+          />
 
-          {/* Teléfono (MEJORADO CON CÓDIGO DE PAÍS) */}
-          <div className="md:col-span-2">
-            <label className="block font-semibold text-lg mb-1" htmlFor="phone-number">Teléfono</label>
-            <div className="flex gap-2">
-              {/* Selector de Código de País */}
-              <select
-                value={phoneCode}
-                onChange={(e) => setPhoneCode(e.target.value)}
-                className="p-3 rounded-lg border bg-white dark:bg-zinc-800 border-zinc-300 dark:border-zinc-700 focus:ring-teal-500 focus:border-teal-500 w-1/3 md:w-1/4"
-              >
-                {countryCodes.map((country) => (
-                  <option key={country.code} value={country.code}>
-                    {country.code} ({country.name})
-                  </option>
-                ))}
-              </select>
-              {/* Campo para el Número de Teléfono */}
-              <input
-                id="phone-number"
-                type="tel"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                // Mejoras: p-3, focus ring, validación visual
-                className={`w-full p-3 rounded-lg border focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-zinc-800 ${!isPhoneNumberValid && phoneNumber.trim() !== '' ? 'border-red-500' : 'border-zinc-300 dark:border-zinc-700'}`}
-                placeholder="Ej. 1234 5678"
-                maxLength={12} // Permite un poco de flexibilidad en el número de dígitos
-                required
-              />
-            </div>
-            {!isPhoneNumberValid && phoneNumber.trim() !== '' && (
-              <p className="text-red-500 text-sm mt-1">Número de teléfono no válido. Formato sugerido: #### ####.</p>
-            )}
-            <p className="text-sm text-zinc-500 mt-1">
-              *Para incluir banderas y validación más robusta, considera una librería externa de React.
-            </p>
-          </div>
+          {/* PHONE */}
+          <TravelerPhoneInput
+            phoneCode={formState.phoneCode}
+            phoneNumber={formState.phoneNumber}
+            setPhoneCode={(v) => handleChange("phoneCode", v)}
+            setPhoneNumber={(v) => handleChange("phoneNumber", v)}
+            isValid={validation.isPhoneNumberValid}
+          />
         </div>
       </div>
 
-      {/* SECCIÓN DE TICKETS Y PRECIO (Sin cambios mayores) */}
+      {/* ---------------------- PRICE & TICKETS (Could be a separate component: <TicketSelection />) ---------------------- */}
       <div className="mb-6">
         <h3 className="text-xl font-semibold mb-4">Selección de Tickets</h3>
+
         <div className="flex items-center gap-4 mb-4">
-          <label className="font-semibold text-lg">Número de Tickets</label>
+          <label htmlFor="tickets" className="font-semibold text-lg">
+            Número de Tickets
+          </label>
           <input
+            id="tickets"
             type="number"
             min={1}
             max={Math.max(1, slots)}
             value={tickets}
             onChange={(e) => {
               const val = +e.target.value;
-              if (val >= 1 && val <= slots) setTickets(val);
+              // Only call setTickets if the value is valid to prevent unnecessary re-renders
+              if (val >= 1 && val <= slots) {
+                setTickets(val);
+              } else if (val < 1) {
+                setTickets(1);
+              } else if (val > slots) {
+                setTickets(slots);
+              }
             }}
             className="w-20 p-2 rounded-lg border bg-white dark:bg-zinc-800"
             disabled={slots === 0}
           />
           <span className="text-sm text-zinc-500">(Disponibles: {slots})</span>
         </div>
+
         <div className="bg-zinc-100 dark:bg-zinc-800 p-4 rounded-xl">
           <div className="flex justify-between mb-2">
             <span>Precio por Ticket</span>
-            <span>${pricePerTicket.toFixed(2)}</span>
+            <span>${PRICE_PER_TICKET.toFixed(2)}</span>
           </div>
+
           <div className="flex justify-between mb-2">
             <span>Subtotal ({tickets} tickets)</span>
-            <span>${(tickets * pricePerTicket).toFixed(2)}</span>
+            <span>${subtotal.toFixed(2)}</span>
           </div>
+
           <div className="flex justify-between mb-2">
-            <span>Impuestos (10%)</span>
-            <span>${(totalPrice * 0.1).toFixed(2)}</span>
+            <span>Impuestos ({TAX_RATE * 100}%)</span>
+            <span>${taxes.toFixed(2)}</span>
           </div>
+
           <div className="flex justify-between font-bold text-lg border-t pt-2 border-zinc-300 dark:border-zinc-700">
             <span>Total</span>
-            <span>${(totalPrice * 1.1).toFixed(2)}</span>
+            <span>${totalWithTaxes.toFixed(2)}</span>
           </div>
         </div>
       </div>
 
-      {/* Solicitudes Especiales (Diseño actualizado) */}
+      {/* ---------------------- SPECIAL REQUESTS ---------------------- */}
       <div className="mb-6">
         <h3 className="text-xl font-semibold mb-4">Solicitudes Especiales</h3>
+
         <textarea
-          value={specialRequests}
-          onChange={(e) => setSpecialRequests(e.target.value)}
-          // Mejoras: p-3, focus ring
+          id="specialRequests"
+          value={formState.specialRequests}
+          onChange={(e) => handleChange("specialRequests", e.target.value)}
           className="w-full p-3 rounded-lg border bg-white dark:bg-zinc-800 h-24 border-zinc-300 dark:border-zinc-700 focus:ring-teal-500 focus:border-teal-500"
           placeholder="Ej. Requerimientos dietéticos, accesibilidad, etc."
         />
       </div>
 
-      {/* POLÍTICAS Y TÉRMINOS (MEJORA DE UX/UI) */}
+      {/* ---------------------- TERMS ---------------------- */}
       <div className="mb-6">
         <h3 className="text-xl font-semibold mb-4">Políticas y Términos</h3>
+
         <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-xl mb-4 text-zinc-800 dark:text-zinc-300">
-          <strong className="block mb-1 text-yellow-900 dark:text-yellow-300">Política de Cancelación:</strong>
-          <p className="text-sm">{TOUR_INFO.cancellationPolicy || 'Cancelación gratuita hasta 24 horas antes del tour.'}</p>
+          <strong className="block mb-1 text-yellow-900 dark:text-yellow-300">
+            Política de Cancelación:
+          </strong>
+          <p className="text-sm">
+            {TOUR_INFO.cancellationPolicy ||
+              "Cancelación gratuita hasta 24 horas antes del tour."}
+          </p>
         </div>
-        
-        {/* Checkbox mejorado visualmente con foco en los enlaces y el estado */}
+
         <label
-          className={`flex items-start gap-3 p-4 rounded-xl border transition-all cursor-pointer ${agreeTerms
-            ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/20' // Estilo cuando está activo
-            : 'border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800' // Estilo inactivo
+          htmlFor="agreeTerms"
+          className={`flex items-start gap-3 p-4 rounded-xl border transition-all cursor-pointer ${
+            formState.agreeTerms
+              ? "border-teal-500 bg-teal-50 dark:bg-teal-900/20"
+              : "border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800"
           }`}
         >
-          <div className="mt-0.5"> {/* Alineación visual del checkbox */}
-            <input
-              type="checkbox"
-              checked={agreeTerms}
-              onChange={(e) => setAgreeTerms(e.target.checked)}
-              className="form-checkbox h-5 w-5 text-teal-600 rounded border-zinc-400 focus:ring-teal-500 dark:bg-zinc-700 dark:border-zinc-600"
-            />
-          </div>
+          <input
+            id="agreeTerms"
+            type="checkbox"
+            checked={formState.agreeTerms}
+            onChange={(e) => handleChange("agreeTerms", e.target.checked)}
+            className="h-5 w-5 text-teal-600 rounded border-zinc-400 focus:ring-teal-500 dark:bg-zinc-700 dark:border-zinc-600 mt-0.5"
+          />
           <span className="text-zinc-700 dark:text-zinc-400 text-base">
-            He leído y acepto los{" "}
-            {/* Términos y Política como enlaces clickeables (aún si son simulados) */}
-            <a 
-              href="#" 
-              className="text-teal-600 dark:text-teal-400 hover:text-teal-500 dark:hover:text-teal-300 font-medium underline transition-colors" 
+            He leído y acepto los
+            <a
+              className="text-teal-600 underline ml-1"
+              href="#"
               onClick={(e) => e.preventDefault()}
             >
               Términos y Condiciones
             </a>
-            {" y la "}
-            <a 
-              href="#" 
-              className="text-teal-600 dark:text-teal-400 hover:text-teal-500 dark:hover:text-teal-300 font-medium underline transition-colors" 
+            y la
+            <a
+              className="text-teal-600 underline ml-1"
+              href="#"
               onClick={(e) => e.preventDefault()}
             >
               Política de Privacidad
-            </a>.
+            </a>
+            .
           </span>
         </label>
       </div>
 
-      {/* Botón de Reserva */}
+      {/* ---------------------- BUTTON ---------------------- */}
       <div className="flex justify-end">
         <button
+          type="button" // Use type="button" to prevent implicit form submission if wrapped in a <form> later
           onClick={handleReserve}
-          className="px-8 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-full font-bold shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
           disabled={!isFormValid}
+          className="px-8 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-full font-bold shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Proceder a Pago
         </button>

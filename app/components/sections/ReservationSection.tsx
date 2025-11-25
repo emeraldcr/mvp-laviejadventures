@@ -1,9 +1,29 @@
-// page/sections/ReservationSection.tsx (assuming based on import paths)
-
 "use client";
 
+import { useState } from "react";
 import ReservationDetails from "@/app/components/reservation/ReservationDetails";
-import { AvailabilityMap } from "@/lib/types"; // Assuming types are in lib/types.ts
+import PaymentModal from "@/app/components/reservation/PaymentModal";
+import { AvailabilityMap, PayPalOrder } from "@/lib/types";
+
+type OrderPayload = {
+  name: string;
+  email: string;
+  phone: string;
+  tickets: number;
+  total: number;
+  date: number;
+  month: number;
+  year: number;
+};
+
+type ModalPayload = {
+  name: string;
+  email: string;
+  phone: string;
+  tickets: number;
+  total: number;
+  date: string; // <-- FINAL FORMATTED STRING
+};
 
 type Props = {
   selectedDate: number | null;
@@ -11,9 +31,8 @@ type Props = {
   monthName: string;
   tickets: number;
   setTickets: (n: number) => void;
-  onReserve: () => void;
-  availability: AvailabilityMap; // NEW: Receive dynamic availability
-  currentYear: number; // NEW: Receive for full date if needed
+  availability: AvailabilityMap;
+  currentYear: number;
 };
 
 export default function ReservationSection({
@@ -22,26 +41,59 @@ export default function ReservationSection({
   monthName,
   tickets,
   setTickets,
-  onReserve,
   availability,
   currentYear,
 }: Props) {
-  return selectedDate ? (
-    <ReservationDetails
-      selectedDate={selectedDate}
-      currentMonth={currentMonth}
-      monthName={monthName}
-      tickets={tickets}
-      setTickets={setTickets}
-      onReserve={onReserve}
-      availability={availability} // NEW: Pass down
-      currentYear={currentYear} // NEW: Pass down
-    />
-  ) : (
-    <div className="rounded-xl bg-blue-50 dark:bg-zinc-900 p-8 text-center">
-      <p className="text-lg text-blue-800 dark:text-blue-300">
-        Selecciona una fecha disponible en el calendario.
-      </p>
-    </div>
+
+  const [orderDetails, setOrderDetails] = useState<ModalPayload | null>(null);
+  const [showModal, setShowModal] = useState(false);
+
+  const handleReserve = (data: OrderPayload) => {
+    const formattedDate = `${data.date} de ${monthName} de ${data.year}`;
+
+    const modalPayload: ModalPayload = {
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      tickets: data.tickets,
+      total: data.total,
+      date: formattedDate,
+    };
+
+    setOrderDetails(modalPayload);
+    setShowModal(true);
+  };
+
+  return (
+    <>
+      {selectedDate ? (
+        <ReservationDetails
+          selectedDate={selectedDate}
+          currentMonth={currentMonth}
+          monthName={monthName}
+          tickets={tickets}
+          setTickets={setTickets}
+          onReserve={handleReserve}
+          availability={availability}
+          currentYear={currentYear}
+        />
+      ) : (
+        <div className="rounded-xl bg-blue-50 dark:bg-zinc-900 p-8 text-center">
+          <p className="text-lg text-blue-800 dark:text-blue-300">
+            Selecciona una fecha disponible en el calendario.
+          </p>
+        </div>
+      )}
+
+      {showModal && orderDetails && (
+        <PaymentModal
+          orderDetails={orderDetails}
+          onClose={() => setShowModal(false)}
+          onSuccess={(order: PayPalOrder) => {
+            console.log("PAYPAL SUCCESS:", order);
+          }}
+        />
+      )}
+    </>
   );
 }

@@ -22,5 +22,27 @@ restrictions: string;
 contact: ContactInfo;
 };
 
+export interface PayPalCapture {
+  id: string;
+  status: string;
+  amount: {
+    currency_code: string;
+    value: string;
+  };
+}
+
+export interface PayPalPurchaseUnit {
+  reference_id?: string;
+  payments?: {
+    captures?: PayPalCapture[];
+  };
+}
+
+export interface PayPalOrder {
+  id: string;
+  status: string;
+  purchase_units: PayPalPurchaseUnit[];
+}
+
 
 export type AvailabilityMap = Record<number, number>;
