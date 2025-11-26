@@ -20,7 +20,7 @@ const NAV_LINKS: NavLinkItem[] = [
   { href: "/info", label: "Información", external: true },
   { href: "/tours", label: "Tours", external: true },
   { href: "/galeria", label: "Galería", external: true },
-  { href: "#calendar", label: "Reserva", variant: "primary", external: false }, // Reservation stays internal
+  { href: "/#calendar", label: "Reserva", variant: "primary", external: false }, // Reservation stays internal
 ];
 
 const SCROLL_THRESHOLD = 80;
