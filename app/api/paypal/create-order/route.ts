@@ -1,7 +1,10 @@
 // app/api/paypal/create-order/route.ts
 
 import { NextResponse } from "next/server";
-import { getPayPalAuthHeader, getPayPalApiBaseUrl } from "@/lib/paypal";
+import {
+  getPayPalApiBaseUrl,
+  getPayPalAccessToken,
+} from "@/lib/paypal";
 
 export async function POST(req: Request) {
   try {
@@ -16,34 +19,31 @@ export async function POST(req: Request) {
 
     const formattedTotal = Number(total).toFixed(2);
 
-    // Create PayPal order
+    // 1) Get OAuth access token
+    const accessToken = await getPayPalAccessToken();
+
+    // 2) Create PayPal order using Bearer token
     const res = await fetch(`${getPayPalApiBaseUrl()}/v2/checkout/orders`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: getPayPalAuthHeader(),
+        Authorization: `Bearer ${accessToken}`,
+        Prefer: "return=representation",
       },
       body: JSON.stringify({
         intent: "CAPTURE",
-
         purchase_units: [
           {
             amount: {
               currency_code: "USD",
               value: formattedTotal,
             },
-
             description: `Reserva de ${tickets} tickets (${date})`,
 
-            custom_id: JSON.stringify({
-              customer: { name, email, phone },
-              booking: { tickets, date },
-              total: formattedTotal,
-            }),
+            // PayPal custom_id max length is 127 chars → keep it short
+            custom_id: `tickets-${tickets}-${date}`,
           },
         ],
-
-        
       }),
     });
 
@@ -53,7 +53,7 @@ export async function POST(req: Request) {
       console.error("PayPal Create Order Error:", data);
       return NextResponse.json(
         { message: "Failed to create PayPal order.", details: data },
-        { status: res.status }
+        { status: res.status || 500 }
       );
     }
 
@@ -81,7 +81,7 @@ export async function POST(req: Request) {
     console.error("Server Error:", error);
 
     return NextResponse.json(
-      { message: "Internal server error.", error: error.message },
+      { message: "Internal server error.", error: error?.message ?? "Unknown" },
       { status: 500 }
     );
   }
