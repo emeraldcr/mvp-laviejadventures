@@ -1,7 +1,10 @@
 // app/payment/success/page.tsx
 
 import { SuccessClient } from "./SuccessClient";
-import { getPayPalAuthHeader, getPayPalApiBaseUrl } from "@/lib/paypal";
+import {
+  getPayPalApiBaseUrl,
+  getPayPalAccessToken,
+} from "@/lib/paypal";
 
 type SuccessPageProps = {
   searchParams: { orderId?: string };
@@ -29,11 +32,15 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
   let errorMessage: string | null = null;
 
   try {
+    // Use OAuth token (Bearer), not Basic
+    const accessToken = await getPayPalAccessToken();
+
     const res = await fetch(
       `${getPayPalApiBaseUrl()}/v2/checkout/orders/${orderId}`,
       {
         headers: {
-          Authorization: getPayPalAuthHeader(),
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
         },
         cache: "no-store",
       }
@@ -80,31 +87,52 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
   }`.trim();
   const payerEmail = payer.email_address || "";
 
-  // Try to read your custom metadata from custom_id (JSON string)
+  // Try to read your custom metadata from custom_id
+  // Supports both:
+  // - JSON string: { customer: { name, email, phone }, booking: { tickets, date }, total }
+  // - or any other flat JSON shape
   let meta: any = null;
   if (purchaseUnit.custom_id) {
     try {
       meta = JSON.parse(purchaseUnit.custom_id);
     } catch (e) {
       console.warn("Failed to parse custom_id JSON:", e);
+      // If you changed custom_id to a short string like "tickets-2-2025-01-01",
+      // parsing will fail here — that’s fine, we fall back to description.
     }
   }
 
+  const metaCustomer = meta?.customer ?? meta;
+  const metaBooking = meta?.booking ?? meta;
+
   // Also fallback to description parsing if needed
   const description = purchaseUnit.description || "";
+  // From: "Reserva de X tickets (YYYY-MM-DD)" etc.
   const ticketsMatch = description.match(/(\d+)\s*tickets?/i);
-  const dateMatch = description.match(/para\s+(.*)/i);
+  // Grab text inside parentheses (...) as date
+  const dateMatch =
+    description.match(/\(([^)]+)\)/) || description.match(/para\s+(.*)/i);
 
-  // Prefer metadata, fallback to PayPal data
-  const name = meta?.name || payerName || "Cliente";
-  const email = meta?.email || payerEmail || "";
-  const phone = meta?.phone || "";
+  // Prefer metadata, fallback to PayPal data / description
+  const name = metaCustomer?.name || payerName || "Cliente";
+  const email = metaCustomer?.email || payerEmail || "";
+  const phone = metaCustomer?.phone || "";
+
   const tickets =
-    meta?.tickets?.toString() || (ticketsMatch ? ticketsMatch[1] : "");
-  const date = meta?.date || (dateMatch ? dateMatch[1] : "");
+    metaBooking?.tickets?.toString() ||
+    metaCustomer?.tickets?.toString() ||
+    (ticketsMatch ? ticketsMatch[1] : "");
+
+  const date =
+    metaBooking?.date ||
+    metaCustomer?.date ||
+    (dateMatch ? dateMatch[1] : "");
 
   const amount =
-    capture?.amount?.value || purchaseUnit.amount?.value || meta?.total || "";
+    capture?.amount?.value ||
+    purchaseUnit.amount?.value ||
+    meta?.total ||
+    "";
   const currency =
     capture?.amount?.currency_code ||
     purchaseUnit.amount?.currency_code ||
