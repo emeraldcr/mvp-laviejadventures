@@ -11,7 +11,7 @@ type OrderPayload = {
   phone: string;
   tickets: number;
   total: number;
-  date: string; // <-- already formatted human-readable date
+  date: string;
 };
 
 type ModalPayload = {
@@ -20,7 +20,7 @@ type ModalPayload = {
   phone: string;
   tickets: number;
   total: number;
-  date: string; // <-- FINAL FORMATTED STRING
+  date: string; 
 };
 
 type Props = {
@@ -46,7 +46,6 @@ export default function ReservationSection({
   const [showModal, setShowModal] = useState(false);
 
   const handleReserve = (data: OrderPayload) => {
-    // data.date ya viene formateada desde ReservationDetails
     const modalPayload: ModalPayload = {
       name: data.name,
       email: data.email,
