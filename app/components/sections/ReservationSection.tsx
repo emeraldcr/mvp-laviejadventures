@@ -11,9 +11,7 @@ type OrderPayload = {
   phone: string;
   tickets: number;
   total: number;
-  date: number;
-  month: number;
-  year: number;
+  date: string; // <-- already formatted human-readable date
 };
 
 type ModalPayload = {
@@ -44,20 +42,18 @@ export default function ReservationSection({
   availability,
   currentYear,
 }: Props) {
-
   const [orderDetails, setOrderDetails] = useState<ModalPayload | null>(null);
   const [showModal, setShowModal] = useState(false);
 
   const handleReserve = (data: OrderPayload) => {
-    const formattedDate = `${data.date} de ${monthName} de ${data.year}`;
-
+    // data.date ya viene formateada desde ReservationDetails
     const modalPayload: ModalPayload = {
       name: data.name,
       email: data.email,
       phone: data.phone,
       tickets: data.tickets,
       total: data.total,
-      date: formattedDate,
+      date: data.date,
     };
 
     setOrderDetails(modalPayload);
