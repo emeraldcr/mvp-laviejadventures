@@ -1,5 +1,5 @@
 // components/ReservationDetails.tsx
-
+import Link from "next/link";
 import { TOUR_INFO } from "@/lib/tour-info";
 import { AvailabilityMap } from "@/lib/types";
 import { useState, useMemo, useCallback } from "react";
@@ -455,40 +455,45 @@ export default function ReservationDetails({
         </div>
 
         <label
-          htmlFor="agreeTerms"
-          className={`flex items-start gap-3 p-4 rounded-xl border transition-all cursor-pointer ${
-            formState.agreeTerms
-              ? "border-teal-500 bg-teal-50 dark:bg-teal-900/20"
-              : "border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800"
-          }`}
-        >
-          <input
-            id="agreeTerms"
-            type="checkbox"
-            checked={formState.agreeTerms}
-            onChange={(e) => handleChange("agreeTerms", e.target.checked)}
-            className="h-5 w-5 text-teal-600 rounded border-zinc-400 focus:ring-teal-500 dark:bg-zinc-700 dark:border-zinc-600 mt-0.5"
-          />
-          <span className="text-zinc-700 dark:text-zinc-400 text-base">
-            He leído y acepto los
-            <a
-              className="text-teal-600 underline ml-1"
-              href="#"
-              onClick={(e) => e.preventDefault()}
-            >
-              Términos y Condiciones
-            </a>
-            y la
-            <a
-              className="text-teal-600 underline ml-1"
-              href="#"
-              onClick={(e) => e.preventDefault()}
-            >
-              Política de Privacidad
-            </a>
-            .
-          </span>
-        </label>
+  htmlFor="agreeTerms"
+  className={`flex items-start gap-3 p-4 rounded-xl border transition-all cursor-pointer ${
+    formState.agreeTerms
+      ? "border-teal-500 bg-teal-50 dark:bg-teal-900/20"
+      : "border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+  }`}
+>
+  <input
+    id="agreeTerms"
+    type="checkbox"
+    checked={formState.agreeTerms}
+    onChange={(e) => handleChange("agreeTerms", e.target.checked)}
+    className="h-5 w-5 text-teal-600 rounded border-zinc-400 focus:ring-teal-500 dark:bg-zinc-700 dark:border-zinc-600 mt-0.5"
+  />
+
+  <span className="text-zinc-700 dark:text-zinc-400 text-base">
+    He leído y acepto los
+    <Link
+      href="/terminos-y-condiciones"
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={(e) => e.stopPropagation()}
+      className="text-teal-600 underline ml-1"
+    >
+      Términos y Condiciones
+    </Link>
+    y la
+    <Link
+      href="/politica-de-privacidad"
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={(e) => e.stopPropagation()}
+      className="text-teal-600 underline ml-1"
+    >
+      Política de Privacidad
+    </Link>
+    .
+  </span>
+</label>
       </div>
 
       {/* ---------------------- BUTTON ---------------------- */}
