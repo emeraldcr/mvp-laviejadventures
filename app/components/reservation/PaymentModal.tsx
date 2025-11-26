@@ -111,16 +111,27 @@ export default function PaymentModal({
         .render(paypalRef.current);
     };
 
+    const mode = process.env.NEXT_PUBLIC_PAYPAL_MODE?.toLowerCase() || 'dev'; // Assume 'dev' as fallback; ensure NEXT_PUBLIC_PAYPAL_MODE is set in .env
+
+    const clientId = mode === 'live'
+      ? process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID
+      : process.env.NEXT_PUBLIC_PAYPAL_SANDBOX_CLIENT_ID;
+
+    if (!clientId) {
+      console.error('Missing PayPal client ID for the current mode:', mode);
+      return; // Or handle error appropriately
+    }
+
     if (!existingScript) {
       const script = document.createElement("script");
       script.id = "paypal-sdk";
-      script.src = `https://www.paypal.com/sdk/js?client-id=${process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID}&currency=USD`;
+      script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD`;
       script.async = true;
       script.onload = initializeButtons;
       document.body.appendChild(script);
     } else {
       initializeButtons();
-    }
+    }   
 
     return () => {
       if (paypalRef.current) {

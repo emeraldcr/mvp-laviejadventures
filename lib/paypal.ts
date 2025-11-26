@@ -17,12 +17,28 @@ export function getPayPalApiBaseUrl() {
  * Creates a Basic auth header value for OAuth token request
  */
 function getPayPalBasicAuthHeader() {
-  const clientId =
-    process.env.PAYPAL_CLIENT_ID || process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
-  const clientSecret = process.env.PAYPAL_CLIENT_SECRET;
+  const mode = process.env.PAYPAL_MODE?.toLowerCase();
+
+  let clientId: string | undefined;
+  let clientSecret: string | undefined;
+
+  if (mode === "live") {
+    clientId =
+      process.env.PAYPAL_CLIENT_ID || process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
+    clientSecret = process.env.PAYPAL_CLIENT_SECRET;
+  } else {
+    // sandbox/dev mode
+    clientId =
+      process.env.PAYPAL_SANDBOX_CLIENT_ID || process.env.NEXT_PUBLIC_PAYPAL_SANDBOX_CLIENT_ID;
+    clientSecret = process.env.PAYPAL_SANDBOX_CLIENT_SECRET;
+  }
 
   if (!clientId || !clientSecret) {
-    throw new Error("Missing PayPal API credentials.");
+    throw new Error(
+      mode === "live"
+        ? "Missing PayPal LIVE API credentials."
+        : "Missing PayPal SANDBOX API credentials."
+    );
   }
 
   const encoded = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
