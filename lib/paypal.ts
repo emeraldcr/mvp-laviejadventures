@@ -6,9 +6,11 @@
  * Live → https://api-m.paypal.com
  */
 export function getPayPalApiBaseUrl() {
-  return process.env.PAYPAL_MODE === "live"
-    ? "https://api-m.paypal.com"
-    : "https://api-m.sandbox.paypal.com";
+  const mode = process.env.PAYPAL_MODE?.toLowerCase();
+
+  return mode === "live"
+    ? "https://api-m.paypal.com"            // LIVE
+    : "https://api-m.sandbox.paypal.com";   // SANDBOX
 }
 
 /**

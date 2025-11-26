@@ -102,9 +102,8 @@ export default function PaymentModal({
     if (!existingScript) {
       const script = document.createElement("script");
       script.id = "paypal-sdk";
-      script.src =
-        "https://www.paypal.com/sdk/js?client-id=AY_TdfjxpDefXQr5p7YVKLignlaJFLFx22-w7nl-vfaiKSz9GPt8dSEvA8cur9vXeL4MfX_zPqD2AWuG&currency=USD";
-      script.async = true;
+    script.src = `https://www.paypal.com/sdk/js?client-id=${process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID}&currency=USD`;
+   script.async = true;
       script.onload = initializeButtons;
       document.body.appendChild(script);
     } else {
