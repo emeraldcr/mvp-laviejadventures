@@ -1,49 +1,36 @@
 "use client";
 
 import Calendar from "@/app/components/calendar/Calendar";
-import { AvailabilityMap } from "@/lib/types"; // Assuming types are in lib/types.ts
+import { AvailabilityMap } from "@/lib/types";
 
 type Props = {
-  calendarDays: (number | null)[];
-  dayLabels: string[];
   selectedDate: number | null;
-  month: string;
-  year: number;
   onSelect: (day: number) => void;
-  onPrev: () => void;
-  onNext: () => void;
-  currentMonth: number; // NEW: For date calculations in CalendarDay
-  currentYear: number; // NEW: For date calculations in CalendarDay
-  availability: AvailabilityMap; // NEW: Dynamic availability for the displayed month
+  monthName: string;
+  currentMonth: number;
+  currentYear: number;
+  availability: AvailabilityMap;
 };
 
 export default function CalendarSection({
-  calendarDays,
-  dayLabels,
   selectedDate,
-  month,
-  year,
   onSelect,
-  onPrev,
-  onNext,
+  monthName,
   currentMonth,
   currentYear,
   availability,
 }: Props) {
   return (
-    <Calendar
-      calendarDays={calendarDays}
-      dayLabels={dayLabels}
-      selectedDate={selectedDate}
-      onSelect={onSelect}
-      month={month}
-      year={year}
-      onPrev={onPrev}
-      onNext={onNext}
-      currentMonth={currentMonth} // NEW: Pass down
-      currentYear={currentYear} // NEW: Pass down
-      availability={availability} // NEW: Pass down
-    />
+    <section className="mt-6">
+      <Calendar
+        selectedDate={selectedDate}
+        onSelect={onSelect}
+        month={monthName}
+        year={currentYear}
+        currentMonth={currentMonth}
+        currentYear={currentYear}
+        availability={availability}
+      />
+    </section>
   );
 }
-
