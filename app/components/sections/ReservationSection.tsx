@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useCalendarContext } from "@/app/context/CalendarContext";
 import ReservationDetails from "@/app/components/reservation/ReservationDetails";
 import PaymentModal from "@/app/components/reservation/PaymentModal";
-import { AvailabilityMap, PayPalOrder } from "@/lib/types";
+import { PayPalOrder } from "@/lib/types";
 
 type OrderPayload = {
   name: string;
@@ -14,71 +15,70 @@ type OrderPayload = {
   date: string;
 };
 
-type ModalPayload = {
-  name: string;
-  email: string;
-  phone: string;
-  tickets: number;
-  total: number;
-  date: string; 
-};
-
 type Props = {
-  selectedDate: number | null;
-  currentMonth: number;
-  monthName: string;
-  tickets: number;
-  setTickets: (n: number) => void;
-  availability: AvailabilityMap;
-  currentYear: number;
+  className?: string;
 };
 
-export default function ReservationSection({
-  selectedDate,
-  currentMonth,
-  monthName,
-  tickets,
-  setTickets,
-  availability,
-  currentYear,
-}: Props) {
-  const [orderDetails, setOrderDetails] = useState<ModalPayload | null>(null);
+export default function ReservationSection({ className }: Props) {
+  const {
+    selectedDate,
+    selectedDay,
+    currentMonth,
+    currentYear,
+    tickets,
+    setTickets,
+    availability,
+  } = useCalendarContext();
+
+  const [orderDetails, setOrderDetails] = useState<OrderPayload | null>(null);
   const [showModal, setShowModal] = useState(false);
 
   const handleReserve = (data: OrderPayload) => {
-    const modalPayload: ModalPayload = {
-      name: data.name,
-      email: data.email,
-      phone: data.phone,
-      tickets: data.tickets,
-      total: data.total,
-      date: data.date,
-    };
-
-    setOrderDetails(modalPayload);
+    setOrderDetails(data);
     setShowModal(true);
   };
 
-  return (
-    <>
-      {selectedDate ? (
-        <ReservationDetails
-          selectedDate={selectedDate}
-          currentMonth={currentMonth}
-          monthName={monthName}
-          tickets={tickets}
-          setTickets={setTickets}
-          onReserve={handleReserve}
-          availability={availability}
-          currentYear={currentYear}
-        />
-      ) : (
+  const monthNames = [
+    "Enero",
+    "Febrero",
+    "Marzo",
+    "Abril",
+    "Mayo",
+    "Junio",
+    "Julio",
+    "Agosto",
+    "Septiembre",
+    "Octubre",
+    "Noviembre",
+    "Diciembre",
+  ];
+
+  const monthName = monthNames[currentMonth];
+
+  if (!selectedDay) {
+    return (
+      <div className={className}>
         <div className="rounded-xl bg-blue-50 dark:bg-zinc-900 p-8 text-center">
           <p className="text-lg text-blue-800 dark:text-blue-300">
             Selecciona una fecha disponible en el calendario.
           </p>
         </div>
-      )}
+      </div>
+    );
+  }
+
+  return (
+    <div className={className}>
+      <ReservationDetails
+        selectedDate={selectedDay}
+        currentMonth={currentMonth}
+        monthName={monthName}
+        tickets={tickets}
+        setTickets={setTickets}
+        onReserve={handleReserve}
+        availability={availability}
+        currentYear={currentYear}
+      />
 
       {showModal && orderDetails && (
         <PaymentModal
@@ -89,6 +89,6 @@ export default function ReservationSection({
           }}
         />
       )}
-    </>
+    </div>
   );
 }

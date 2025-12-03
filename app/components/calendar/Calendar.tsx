@@ -1,52 +1,62 @@
 "use client";
 
 import React, { useMemo } from "react";
-import CalendarDay from "./CalendarDay";
-import { AvailabilityMap } from "@/lib/types";
 import { useCalendarContext } from "@/app/context/CalendarContext";
+import CalendarDay from "./CalendarDay";
+import { cn } from "@/lib/utils";
+import { getDaysInMonth, startOfMonth, getDay } from "date-fns";
 
-type Props = {
-  selectedDate: number | null;
-  onSelect: (d: number) => void;
-  month: string;
-  year: number;
-  currentMonth: number;
-  currentYear: number;
-  availability: AvailabilityMap;
-};
+// Semana empezando en Lunes:
+const DAY_LABELS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"] as const;
 
-function CalendarBase({
-  selectedDate,
-  onSelect,
-  month,
-  year,
-  currentMonth,
-  currentYear,
-  availability,
-}: Props) {
-  const { nextMonth, prevMonth } = useCalendarContext();
+function CalendarBase() {
+  const {
+    currentMonth,
+    currentYear,
+    monthLabel,
+    nextMonth,
+    prevMonth,
+    selectedDay,
+  } = useCalendarContext();
 
-  const dayLabels = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+  const calendarDays = useMemo(() => {
+    const firstOfMonth = new Date(currentYear, currentMonth, 1);
+    const daysInMonth = getDaysInMonth(firstOfMonth);
 
-  const { calendarDays } = useMemo(() => {
-    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-    const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+    // 0 = domingo ... 6 = sábado
+    const jsWeekday = getDay(startOfMonth(firstOfMonth));
+
+    // Re-mapeamos para que 0 = lunes ... 6 = domingo
+    const offset = (jsWeekday + 6) % 7;
 
     const days: (number | null)[] = [];
-    for (let i = 0; i < firstDay; i++) days.push(null);
-    for (let d = 1; d <= daysInMonth; d++) days.push(d);
 
-    return { calendarDays: days };
+    // Huecos antes del día 1
+    for (let i = 0; i < offset; i++) {
+      days.push(null);
+    }
+
+    // Días del mes
+    for (let d = 1; d <= daysInMonth; d++) {
+      days.push(d);
+    }
+
+    // Rellenar hasta 6 semanas (6 * 7 = 42 celdas)
+    while (days.length < 42) {
+      days.push(null);
+    }
+
+    return days;
   }, [currentMonth, currentYear]);
 
   return (
     <section className="mt-4 px-2 sm:px-4" id="calendar">
-      {/* Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
-        <div className="flex items-center justify-between gap-2 w-full">
+      {/* Header: month + nav */}
+      <div className="mb-4 sm:mb-5 space-y-2">
+        <div className="flex items-center justify-between gap-2">
           <button
-            onClick={prevMonth}
             type="button"
+            onClick={prevMonth}
             className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 transition"
             aria-label="Mes anterior"
           >
@@ -54,23 +64,30 @@ function CalendarBase({
           </button>
 
           <h2 className="flex-1 text-center text-lg sm:text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-            {month} {year}
+            {monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1)}{" "}
+            {currentYear}
           </h2>
 
           <button
-            onClick={nextMonth}
             type="button"
+            onClick={nextMonth}
             className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 transition"
             aria-label="Mes siguiente"
           >
             <span aria-hidden>›</span>
           </button>
         </div>
+
+        <p className="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400">
+          {selectedDay
+            ? "Has seleccionado una fecha. Elige el horario y la cantidad de entradas para completar tu reserva."
+            : "Selecciona una fecha disponible en el calendario para ver opciones y continuar con tu reserva."}
+        </p>
       </div>
 
       {/* Weekday labels + grid */}
       <div className="grid grid-cols-7 gap-y-1 gap-x-1 sm:gap-2 md:gap-3">
-        {dayLabels.map((lbl) => (
+        {DAY_LABELS.map((lbl) => (
           <div
             key={lbl}
             className="text-center text-[11px] sm:text-xs font-medium uppercase tracking-wide text-zinc-500"
@@ -81,17 +98,42 @@ function CalendarBase({
 
         {calendarDays.map((day, i) => (
           <CalendarDay
-            key={`${year}-${currentMonth}-${day ?? "empty"}-${i}`}
+            key={`${currentYear}-${currentMonth}-${day ?? "empty"}-${i}`}
             day={day}
-            selectedDate={selectedDate}
-            onSelect={onSelect}
-            currentMonth={currentMonth}
-            currentYear={currentYear}
-            availability={availability}
           />
         ))}
       </div>
+
+      {/* Legend */}
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-[10px] sm:text-[11px] text-zinc-500 dark:text-zinc-400">
+        <div className="flex flex-wrap items-center gap-3">
+          <LegendDot className="bg-emerald-500" label="Disponible" />
+          <LegendDot className="bg-amber-400" label="Pocas plazas" />
+          <LegendDot className="bg-red-500" label="Agotado" />
+          <LegendDot className="bg-zinc-400" label="Pasado" />
+          <LegendDot className="bg-blue-500" label="Hoy" />
+        </div>
+      </div>
     </section>
+  );
+}
+
+type LegendDotProps = {
+  className?: string;
+  label: string;
+};
+
+function LegendDot({ className, label }: LegendDotProps) {
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span
+        className={cn(
+          "h-2 w-2 rounded-full border border-zinc-300 dark:border-zinc-600",
+          className
+        )}
+      />
+      <span>{label}</span>
+    </span>
   );
 }
 

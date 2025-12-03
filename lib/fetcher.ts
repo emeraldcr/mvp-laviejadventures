@@ -9,12 +9,10 @@ export const fetcher = async (url: string) => {
   const res = await fetch(url);
   
   if (!res.ok) {
-    // Attach extra info to the error object.
     const error = new Error('Failed to fetch carousel images');
     throw error;
   }
   
   const data = await res.json();
-  // We assume the API returns { images: string[] }
   return data.images as string[];
 };

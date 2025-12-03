@@ -9,6 +9,7 @@ import Image from 'next/image';
 import { useInterval } from '../../hooks/useInterval';
 import useSWR from 'swr';
 import { fetcher } from '@/lib/fetcher';
+import CalendarSection from './CalendarSection';
 
 // New: overlay prop to allow custom content (text or an image)
 interface HeroCarouselProps {
@@ -90,6 +91,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay }) => {
            sizes="(max-width: 768px) 100vw, 1280px"
           />
         ))}
+        
       </div>
 
       {/* Gradient overlays for readability */}

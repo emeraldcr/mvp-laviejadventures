@@ -1,6 +1,13 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, memo } from "react";
+import {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  memo,
+  type ReactNode,
+} from "react";
 import Image from "next/image";
 import { Menu, X } from "lucide-react";
 import { usePathname } from "next/navigation";
@@ -12,15 +19,14 @@ interface NavLinkItem {
   href: string;
   label: string;
   variant?: "default" | "primary";
-  external?: boolean; // NEW: external link support
+  external?: boolean;
 }
 
-// More global-brand style links
 const NAV_LINKS: NavLinkItem[] = [
   { href: "/info", label: "Información", external: true },
   { href: "/tours", label: "Tours", external: true },
   { href: "/galeria", label: "Galería", external: true },
-  { href: "/#calendar", label: "Reserva", variant: "primary", external: false }, // Reservation stays internal
+  { href: "/#calendar", label: "Reserva", variant: "primary", external: false },
 ];
 
 const SCROLL_THRESHOLD = 80;
@@ -132,7 +138,9 @@ const Header = memo<{
       {/* Mobile Menu */}
       <div
         className={`flex flex-col bg-teal-900/95 px-6 py-8 text-white transition-all duration-300 md:hidden ${
-          isMenuOpen ? "max-h-96 opacity-100 space-y-6" : "max-h-0 opacity-0 overflow-hidden"
+          isMenuOpen
+            ? "max-h-96 opacity-100 space-y-6"
+            : "max-h-0 opacity-0 overflow-hidden"
         }`}
         aria-hidden={!isMenuOpen}
       >
@@ -150,8 +158,13 @@ const Header = memo<{
 });
 Header.displayName = "Header";
 
+// ✨ NEW: props so we can inject the calendar into the hero
+interface DynamicHeroHeaderProps {
+  children?: ReactNode;
+}
+
 // Main Component
-export default function DynamicHeroHeader() {
+export default function DynamicHeroHeader({ children }: DynamicHeroHeaderProps) {
   const scrollY = useScrollY();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const isScrolled = useMemo(() => scrollY > SCROLL_THRESHOLD, [scrollY]);
@@ -180,7 +193,23 @@ export default function DynamicHeroHeader() {
         onMenuToggle={toggleMenu}
         isMenuOpen={isMenuOpen}
       />
-      <HeroCarousel />
+
+      {/* HERO SECTION */}
+      <section className="pt-24 sm:pt-28 bg-gradient-to-b from-teal-900 via-teal-900 to-zinc-50 dark:to-black">
+        {/* Full-width carousel as the visual hero */}
+        <HeroCarousel />
+
+        {/* Floating card with calendar + reservation inside hero */}
+        {children && (
+          <div className="mx-auto -mt-10 max-w-6xl px-3 sm:px-4 pb-12">
+            <div className="rounded-2xl bg-white dark:bg-zinc-950 shadow-2xl border border-zinc-200/80 dark:border-zinc-800/80 p-5 sm:p-7 lg:p-8">
+              <div className="grid gap-8 lg:gap-10 lg:grid-cols-[1.6fr_minmax(0,1fr)] items-start">
+                {children}
+              </div>
+            </div>
+          </div>
+        )}
+      </section>
     </>
   );
 }

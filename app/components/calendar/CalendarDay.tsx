@@ -1,98 +1,168 @@
 "use client";
 
 import React from "react";
-import { AvailabilityMap } from "@/lib/types";
+import { useCalendarContext } from "@/app/context/CalendarContext";
+import { cn } from "@/lib/utils";
 
 type Props = {
   day: number | null;
-  selectedDate: number | null;
-  onSelect: (day: number) => void;
-  currentMonth: number;
-  currentYear: number;
-  availability: AvailabilityMap;
 };
 
-function CalendarDayBase({
-  day,
-  selectedDate,
-  onSelect,
-  currentMonth,
-  currentYear,
-  availability,
-}: Props) {
-  if (!day) {
-    return <div className="h-20 sm:h-24 lg:h-28 rounded-xl" aria-hidden="true" />;
+type Status = "past" | "soldout" | "last" | "few" | "many";
+
+const STATUS_LABEL: Record<Status, (slots: number) => string> = {
+  past: () => "Pasado",
+  soldout: () => "Agotado",
+  last: () => "Último lugar",
+  few: () => "Pocas plazas",
+  many: (slots) => `${slots} lugares`,
+};
+
+const STATUS_CARD_CLASS: Record<Status, string> = {
+  past: "bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700",
+  soldout: "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-700",
+  last: "bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-700",
+  few: "bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-700",
+  many: "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-700",
+};
+
+const STATUS_TEXT_CLASS: Record<Status, string> = {
+  past: "text-zinc-500 dark:text-zinc-400",
+  soldout: "text-red-600 dark:text-red-300",
+  last: "text-amber-700 dark:text-amber-200",
+  few: "text-amber-700 dark:text-amber-200",
+  many: "text-emerald-700 dark:text-emerald-200",
+};
+
+const STATUS_BAR_CLASS: Record<Status, string> = {
+  past: "bg-zinc-400",
+  soldout: "bg-red-400",
+  last: "bg-amber-500",
+  few: "bg-amber-500",
+  many: "bg-emerald-500",
+};
+
+function CalendarDayBase({ day }: Props) {
+  const {
+    selectedDay,
+    selectDay,
+    isPastDay,
+    isToday,
+    getSlotsForDay,
+    maxSlots,
+  } = useCalendarContext();
+
+  // Empty cell (padding at start / end of month)
+  if (day === null) {
+    return (
+      <div
+        className="h-20 sm:h-24 lg:h-28 rounded-xl"
+        aria-hidden="true"
+      />
+    );
   }
 
-  const cellDate = new Date(currentYear, currentMonth, day);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const past = isPastDay(day);
+  const today = isToday(day);
+  const slots = getSlotsForDay(day);
 
-  const isPast = cellDate < today;
-  const isToday = cellDate.getTime() === today.getTime();
+  const hasSlots = slots > 0 && !past;
+  const selected = selectedDay === day;
 
-  const slots = availability[day] ?? 0;
-  const available = slots > 0 && !isPast;
-  const selected = selectedDate === day;
+  let status: Status = "soldout";
+  if (past) status = "past";
+  else if (slots === 0) status = "soldout";
+  else if (slots === 1) status = "last";
+  else if (slots <= 5) status = "few";
+  else status = "many";
 
-  const base =
-    "flex flex-col p-2 sm:p-3 h-20 sm:h-24 lg:h-28 rounded-xl border shadow-sm transition duration-200 ease-in-out select-none";
+  const labelText = STATUS_LABEL[status](slots);
 
-  const interactive = available
-    ? "cursor-pointer active:scale-95 active:opacity-90 hover:scale-105 hover:shadow-md"
-    : isPast
-    ? "cursor-not-allowed opacity-50"
-    : "cursor-not-allowed";
+  const capacityRatio =
+    maxSlots > 0 && slots > 0 ? Math.min(slots / maxSlots, 1) : 0;
 
-  const bg = isPast
-    ? "bg-zinc-200 dark:bg-zinc-700 border-zinc-300 dark:border-zinc-600"
-    : !available
-    ? "bg-red-100 dark:bg-red-900/40 border-red-300 dark:border-red-800"
-    : selected
-    ? "bg-teal-600 dark:bg-teal-500 text-white border-teal-700"
-    : "bg-zinc-100 dark:bg-zinc-800 border-zinc-300 dark:border-zinc-700";
+  const handleSelect = () => {
+    if (!hasSlots) return;
+    selectDay(day);
+  };
 
-  const textColor = isPast
-    ? "text-zinc-500 dark:text-zinc-400"
-    : !available
-    ? "text-red-600 dark:text-red-300"
-    : slots < 10
-    ? "text-orange-500 dark:text-orange-300"
-    : selected
-    ? "text-white"
-    : "text-teal-700 dark:text-teal-300";
-
-  const todayStyle = isToday ? "border-2 border-teal-500" : "";
-
-  const labelText = isPast
-    ? "Pasado"
-    : available
-    ? `${slots}`
-    : "Agotado";
+  const isDisabled = !hasSlots;
 
   return (
-    <div
-      role="button"
-      tabIndex={available ? 0 : -1}
-      className={`${base} ${bg} ${todayStyle} ${interactive}`}
-      onClick={() => available && onSelect(day)}
-      onKeyDown={(e) => available && e.key === "Enter" && onSelect(day)}
+    <button
+      type="button"
+      onClick={handleSelect}
+      disabled={isDisabled}
+      aria-disabled={isDisabled}
       aria-label={
-        isPast
+        past
           ? `Día ${day}, pasado`
-          : available
+          : hasSlots
           ? `Día ${day}, ${slots} lugares disponibles`
           : `Día ${day}, agotado`
       }
+      aria-pressed={selected}
+      className={cn(
+        "flex h-20 sm:h-24 lg:h-28 flex-col rounded-xl border p-2 sm:p-3 text-left shadow-sm outline-none transition duration-150 ease-in-out select-none",
+        hasSlots
+          ? "cursor-pointer hover:scale-105 hover:shadow-md active:scale-95"
+          : "cursor-not-allowed opacity-60",
+        STATUS_CARD_CLASS[status],
+        selected && "ring-2 ring-teal-500"
+      )}
     >
-      <span className="text-lg sm:text-xl font-bold">{day}</span>
+      {/* top: day + badges */}
+      <div className="flex items-start justify-between">
+        <span
+          className={cn(
+            "text-lg sm:text-xl font-semibold",
+            past
+              ? "text-zinc-500 dark:text-zinc-400"
+              : selected
+              ? "text-teal-800 dark:text-teal-100"
+              : "text-zinc-900 dark:text-zinc-50"
+          )}
+        >
+          {day}
+        </span>
 
-      <div className="flex-grow flex items-end justify-center">
-        <span className={`text-[11px] sm:text-xs font-semibold ${textColor}`}>
+        <div className="flex flex-col items-end gap-1">
+          {today && (
+            <span className="rounded-full bg-teal-600/10 px-2 py-[2px] text-[10px] font-medium text-teal-700 dark:text-teal-300">
+              Hoy
+            </span>
+          )}
+          {!hasSlots && !past && (
+            <span className="rounded-full bg-red-500/10 px-2 py-[2px] text-[10px] font-medium text-red-600 dark:text-red-300">
+              x
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* center: status text */}
+      <div className="flex flex-1 items-center justify-center">
+        <span
+          className={cn(
+            "text-[11px] sm:text-xs font-semibold text-center",
+            STATUS_TEXT_CLASS[status]
+          )}
+        >
           {labelText}
         </span>
       </div>
-    </div>
+
+      {/* bottom: capacity bar */}
+      <div className="mt-1 h-1.5 w-full rounded-full bg-zinc-200/70 dark:bg-zinc-700/70 overflow-hidden">
+        <div
+          className={cn(
+            "h-full rounded-full transition-[width] duration-200",
+            STATUS_BAR_CLASS[status]
+          )}
+          style={{ width: `${capacityRatio * 100}%` }}
+        />
+      </div>
+    </button>
   );
 }
 

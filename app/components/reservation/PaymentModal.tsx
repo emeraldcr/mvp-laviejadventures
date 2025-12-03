@@ -112,7 +112,6 @@ export default function PaymentModal({
     };
 
     const mode = process.env.NEXT_PUBLIC_PAYPAL_MODE?.toLowerCase() || 'dev'; // Assume 'dev' as fallback; ensure NEXT_PUBLIC_PAYPAL_MODE is set in .env
-
     const clientId = mode === 'live'
       ? process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID
       : process.env.NEXT_PUBLIC_PAYPAL_SANDBOX_CLIENT_ID;
