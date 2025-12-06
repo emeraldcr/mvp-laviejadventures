@@ -1,28 +1,26 @@
-// Enhanced HeroCarousel Component with Full-Screen Parallax Images
-// and Modular Overlay Slot for Text or Image
+"use client";
 
-'use client';
+import { useState, useRef, useEffect, ReactNode } from "react";
+import { ChevronDown } from "lucide-react";
+import Image from "next/image";
+import { useInterval } from "../../hooks/useInterval";
+import useSWR from "swr";
+import { fetcher } from "@/lib/fetcher";
+import CalendarSection from "./CalendarSection";
 
-import { useState, useRef, useEffect, ReactNode } from 'react';
-import { ChevronDown } from 'lucide-react';
-import Image from 'next/image';
-import { useInterval } from '../../hooks/useInterval';
-import useSWR from 'swr';
-import { fetcher } from '@/lib/fetcher';
-import CalendarSection from './CalendarSection';
-
-// New: overlay prop to allow custom content (text or an image)
+// New: overlay prop to allow custom content (text or an image) and height prop
 interface HeroCarouselProps {
   overlay?: ReactNode;
+  height?: string; // Allow custom height (e.g., "50vh", "300px")
 }
 
-export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay }) => {
+export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "50vh" }) => {
   // --- Data Fetching ---
   const {
     data: carouselImages = [],
     error,
-    isLoading
-  } = useSWR<string[]>('/api/images', fetcher);
+    isLoading,
+  } = useSWR<string[]>("/api/images", fetcher);
 
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -39,10 +37,10 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay }) => {
 
   // --- Parallax Effect for Images & Overlay ---
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
-    const IMG_SPEED = -0.15; // slower parallax for background images
-    const OVERLAY_SPEED = -0.3; // stronger effect for text or custom overlay
+    const IMG_SPEED = -0.15; // Slower parallax for background images
+    const OVERLAY_SPEED = -0.3; // Stronger effect for text or custom overlay
 
     const handleScroll = () => {
       const scrollY = window.scrollY;
@@ -66,16 +64,16 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay }) => {
       }
     };
 
-    window.addEventListener('scroll', update, { passive: true });
-    return () => window.removeEventListener('scroll', update);
+    window.addEventListener("scroll", update, { passive: true });
+    return () => window.removeEventListener("scroll", update);
   }, []);
 
   if (error) return <div className="text-red-500 p-8">Error loading images: {error.message}</div>;
   if (isLoading || carouselImages.length === 0)
-    return <div className="h-screen flex items-center justify-center">Loading...</div>;
+    return <div className="h-[50vh] flex items-center justify-center">Loading...</div>;
 
   return (
-    <section className="relative w-full h-screen overflow-hidden">
+    <section className="relative w-full" style={{ height }}>
       {/* Background Parallax Container */}
       <div ref={parallaxImageRef} className="absolute inset-0 will-change-transform z-0">
         {carouselImages.map((src, index) => (
@@ -85,13 +83,12 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay }) => {
             alt={`Carousel image ${index + 1}`}
             fill
             className={`object-cover transition-opacity duration-1000 ease-in-out ${
-              index === currentIndex ? 'opacity-100' : 'opacity-0'
+              index === currentIndex ? "opacity-100" : "opacity-0"
             }`}
             priority={index < 3}
-           sizes="(max-width: 768px) 100vw, 1280px"
+            sizes="(max-width: 768px) 100vw, 1280px"
           />
         ))}
-        
       </div>
 
       {/* Gradient overlays for readability */}
@@ -112,7 +109,6 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay }) => {
             <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black mb-6 text-white drop-shadow-2xl">
               Ciudad Esmeralda
             </h1>
-
             <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-light text-white max-w-3xl drop-shadow-xl">
               Selecciona tu fecha para <span className="font-semibold">vivir la aventura</span>.
             </p>
