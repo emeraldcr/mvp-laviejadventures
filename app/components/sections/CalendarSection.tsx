@@ -29,21 +29,22 @@ export default function CalendarSection({ className }: Props) {
     : "Elige una fecha disponible para ver horarios y avanzar con tu reserva.";
 
   return (
-    <section className={cn("ml-6 mt-6 space-y-4", className)}>
-      {/* Step label + title */}
-      <header className="flex flex-col gap-1">
-        <p className="text-[11px] uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-          Paso 1 · Fecha
-        </p>
-        <h1 className="text-xl sm:text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-          Elige el día de tu reserva
-        </h1>
-      </header>
+    <section className={cn("flex items-start mt-6 px-2", className)}> {/* Changed: Removed justify-center, reduced px-4 to px-2 */}
+      <div className="w-full">
+        <header className="flex flex-col gap-1">
+          <p className="text-[11px] uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+            Paso 1 · Fecha
+          </p>
+          <h1 className="text-xl sm:text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
+            Elige el día de tu reserva
+          </h1>
+        </header>
 
-      <div className="grid gap-6 md:grid-cols-[minmax(0,2fr)_minmax(0,1.2fr)]">
-        {/* Calendar + UX copy */}
+        {/* Removed nested grid, relying on parent grid for layout */}
         <div className="space-y-4">
-          <Calendar />
+          <div className="w-full"> {/* Ensure full width */}
+            <Calendar />
+          </div>
 
           <div className="rounded-2xl border bg-zinc-50 dark:bg-zinc-900/40 px-3 py-3 sm:px-4 sm:py-3 shadow-sm flex items-start justify-between gap-3">
             <div className="space-y-1">
@@ -64,9 +65,6 @@ export default function CalendarSection({ className }: Props) {
             </button>
           </div>
         </div>
-
-        {/* Right side reserved for step 2 (ReservationSection) */}
-        <div className="hidden md:block" />
       </div>
     </section>
   );

@@ -50,7 +50,7 @@ function CalendarBase() {
   }, [currentMonth, currentYear]);
 
   return (
-    <section className="mt-4 px-2 sm:px-4" id="calendar">
+    <section className="mt-4 px-4 sm:px-6 lg:px-8 w-full" id="calendar">
       {/* Header: month + nav */}
       <div className="mb-4 sm:mb-5 space-y-2">
         <div className="flex items-center justify-between gap-2">

@@ -266,7 +266,7 @@ export default function ReservationDetails({
   ]);
 
   return (
-    <div className="p-6 border-t border-zinc-300 dark:border-zinc-700">
+    <div className="border-t border-zinc-300 dark:border-zinc-700">
       <h2 className="text-2xl font-bold mb-4">
         Reservar para el {formattedDate}
       </h2>
