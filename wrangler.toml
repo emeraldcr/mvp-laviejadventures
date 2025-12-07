@@ -1,0 +1,11 @@
+name = "Ciudad Esmeralda"               # can be anything
+compatibility_date = "2025-12-07"
+
+# This tells Cloudflare Pages where your built static assets are
+assets = { directory = "./out" }         # ← use "./out" if you run `next export`
+# OR
+# assets = { directory = ".next/static" } # ← only if you are NOT using `next export`
+
+# Only needed if you use middleware, edge API routes, etc.
+[[edge_preview]]
+# you normally don’t need to touch this when using the official Next.js integration
