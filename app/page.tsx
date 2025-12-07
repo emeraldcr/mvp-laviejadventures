@@ -14,7 +14,7 @@ interface HomeContentProps {
   // Keeping interface clean
 }
 const HomeContent: React.FC<HomeContentProps> = React.memo(() => {
-  // Define grid structure within useMemo for stability
+  // Define grid structure within useMemo for stability 
   const mainSections = useMemo(() => (
     <motion.div
       initial={{ opacity: 0, y: 50 }}
