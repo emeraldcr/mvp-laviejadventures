@@ -1,17 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Remove output: "export" ← this is the key change
-  trailingSlash: false,  // Back to your original
+  // Remove output: 'export' entirely
+  trailingSlash: false,  // Back to original
   images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'laviejaadventures.com',
-        port: '',
-        pathname: '/**',
-      },
-    ],
+    unoptimized: false,  // Re-enable optimization
+    remotePatterns: [ /* your patterns */ ],
   },
   poweredByHeader: false,
   reactStrictMode: true,
