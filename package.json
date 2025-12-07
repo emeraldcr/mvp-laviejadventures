@@ -2,12 +2,10 @@
   "name": "nextjs",
   "version": "0.1.0",
   "private": true,
-
- "scripts": {
+"scripts": {
   "dev": "next dev",
   "build": "next build && npx @cloudflare/next-on-pages",
-  "pages:build": "npm run build",   
-  "preview": "npm run pages:build && npx wrangler pages dev .vercel/output/static -- .vercel/output/functions",
+  "preview": "npx wrangler pages dev .next",
   "lint": "eslint"
 },
   "dependencies": {
