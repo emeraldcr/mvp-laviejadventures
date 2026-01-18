@@ -8,8 +8,8 @@ import ErrorBoundary from "@/lib/errorBoundary";
 import { CalendarProvider } from "@/app/context/CalendarContext";
 // Utilities
 import { cn } from "@/lib/utils";
-import { motion } from "framer-motion"; // Added motion for subtle entry animation
-// --- Home Content Component (Optimized) ---
+import { motion } from "framer-motion"; 
+
 interface HomeContentProps {
   // Keeping interface clean
 }
