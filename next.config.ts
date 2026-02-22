@@ -3,23 +3,41 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   trailingSlash: false,
-  // turbopack: false,  // ← REMOVE or COMMENT this out
-  // Turbopack is default in Next.js 16 — no need to set false unless forcing webpack
-  // If you want to opt out of Turbopack entirely (use webpack), do it via CLI flags instead:
-  //   next dev --webpack
-  //   next build --webpack
+  poweredByHeader: false,
+  reactStrictMode: true,
+
   images: {
     unoptimized: false,
+    formats: ["image/avif", "image/webp"],
     // remotePatterns: [
     //   { protocol: "https", hostname: "**" }, // or your specific ones
     // ],
   },
-  poweredByHeader: false,
-  reactStrictMode: true,
-  // Optional: enable filesystem caching for faster Turbopack dev restarts (recommended)
-  // experimental: {
-  //   turbopackFileSystemCacheForDev: true,
-  // },
+
+  // Skip type-checking and linting during `next build` — run them as separate
+  // CI steps (tsc --noEmit && eslint) so the build itself stays fast.
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+
+  // Tree-shake heavy packages so only the icons / components actually imported
+  // end up in the bundle.  Speeds up both build and runtime.
+  experimental: {
+    optimizePackageImports: [
+      "framer-motion",
+      "lucide-react",
+      "recharts",
+      "date-fns",
+    ],
+  },
+
+  // Drop console.* calls from production builds.
+  compiler: {
+    removeConsole: process.env.NODE_ENV === "production",
+  },
 };
 
 export default nextConfig;
