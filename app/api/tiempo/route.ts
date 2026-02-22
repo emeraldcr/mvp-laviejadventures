@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { load } from "cheerio";
+import { load, type CheerioAPI } from "cheerio";
 import { parse, isValid, format } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -50,7 +50,7 @@ function parseIMNDate(str: string): Date | null {
   return isValid(dt) ? dt : null;
 }
 
-function parseHourlyTable($: cheerio.Root): HourlyEntry[] {
+function parseHourlyTable($: CheerioAPI): HourlyEntry[] {
   const rows: HourlyEntry[] = [];
   $("table").eq(0).find("tr").slice(1).each((_, el) => {
     const cells = $(el).find("td, th");
@@ -68,7 +68,7 @@ function parseHourlyTable($: cheerio.Root): HourlyEntry[] {
   return rows;
 }
 
-function parseCurrentTable($: cheerio.Root): CurrentTotals {
+function parseCurrentTable($: CheerioAPI): CurrentTotals {
   const row = $("table").eq(1).find("tr").slice(1).first();
   if (row.length === 0) return null;
 
@@ -86,7 +86,7 @@ function parseCurrentTable($: cheerio.Root): CurrentTotals {
   };
 }
 
-function parseDailyTable($: cheerio.Root): { fecha: string; timestamp: Date | null; lluvia_mm: number }[] {
+function parseDailyTable($: CheerioAPI): { fecha: string; timestamp: Date | null; lluvia_mm: number }[] {
   const rows: any[] = [];
   $("table").eq(2).find("tr").slice(1).each((_, el) => {
     const cells = $(el).find("td, th");
