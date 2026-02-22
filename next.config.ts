@@ -1,4 +1,4 @@
-// next.config.ts  (recommended to use .ts for better type safety)
+// next.config.ts
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
@@ -9,35 +9,38 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: false,
     formats: ["image/avif", "image/webp"],
-    // remotePatterns: [
-    //   { protocol: "https", hostname: "**" }, // or your specific ones
-    // ],
+    // remotePatterns: [ { protocol: "https", hostname: "**" } ], // restrict for better security/perf
   },
 
-  // Skip type-checking and linting during `next build` — run them as separate
-  // CI steps (tsc --noEmit && eslint) so the build itself stays fast.
+  // Keep skipping type-check during build (run tsc separately in CI)
   typescript: {
     ignoreBuildErrors: true,
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  // REMOVE this entirely (deprecated/no longer valid in 16.x)
+  // eslint: { ignoreDuringBuilds: true },
 
-  // Tree-shake heavy packages so only the icons / components actually imported
-  // end up in the bundle.  Speeds up both build and runtime.
+  // Good: optimize heavy imports
   experimental: {
     optimizePackageImports: [
       "framer-motion",
       "lucide-react",
       "recharts",
       "date-fns",
+      // Add more if relevant: "lodash-es", "@radix-ui/*", etc.
     ],
+
+    // === Turbopack filesystem cache (add these if you want explicit control) ===
+    // turbopackFileSystemCacheForDev: true,     // already default in 16.1+ — optional to include
+    turbopackFileSystemCacheForBuild: true,      // opt-in for faster repeated `next build`
   },
 
-  // Drop console.* calls from production builds.
+  // Drop console in prod
   compiler: {
     removeConsole: process.env.NODE_ENV === "production",
   },
+
+  // Optional extras for even more speed (if compatible with your app)
+  // swcMinify: true,  // usually default, but explicit is fine
 };
 
 export default nextConfig;
