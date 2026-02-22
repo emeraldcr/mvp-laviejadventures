@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { load, type CheerioAPI } from "cheerio";
-import { parse, isValid, format } from "date-fns";
+import { parse, isValid } from "date-fns";
 import { es } from "date-fns/locale";
 
 const IMN_URL = "https://www.imn.ac.cr/especial/tablas/msagrada.html";
@@ -50,13 +49,36 @@ function parseIMNDate(str: string): Date | null {
   return isValid(dt) ? dt : null;
 }
 
-function parseHourlyTable($: CheerioAPI): HourlyEntry[] {
+function stripTags(raw: string): string {
+  return raw
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function getTables(html: string): string[] {
+  return html.match(/<table[\s\S]*?<\/table>/gi) ?? [];
+}
+
+function getRows(tableHtml: string): string[] {
+  return tableHtml.match(/<tr[\s\S]*?<\/tr>/gi) ?? [];
+}
+
+function getCells(rowHtml: string): string[] {
+  const cells = rowHtml.match(/<t[dh][^>]*>[\s\S]*?<\/t[dh]>/gi) ?? [];
+  return cells.map(stripTags);
+}
+
+function parseHourlyTable(tableHtml?: string): HourlyEntry[] {
+  if (!tableHtml) return [];
   const rows: HourlyEntry[] = [];
-  $("table").eq(0).find("tr").slice(1).each((_, el) => {
-    const cells = $(el).find("td, th");
+  getRows(tableHtml).slice(1).forEach((row) => {
+    const cells = getCells(row);
     if (cells.length < 2) return;
-    const fecha = $(cells[0]).text().trim();
-    const lluvia = safeParseFloat($(cells[1]).text());
+    const fecha = cells[0];
+    const lluvia = safeParseFloat(cells[1]);
     const timestamp = parseIMNDate(fecha);
     rows.push({
       fecha,
@@ -68,35 +90,37 @@ function parseHourlyTable($: CheerioAPI): HourlyEntry[] {
   return rows;
 }
 
-function parseCurrentTable($: CheerioAPI): CurrentTotals {
-  const row = $("table").eq(1).find("tr").slice(1).first();
-  if (row.length === 0) return null;
+function parseCurrentTable(tableHtml?: string): CurrentTotals {
+  if (!tableHtml) return null;
+  const row = getRows(tableHtml).slice(1)[0];
+  if (!row) return null;
 
-  const cells = row.find("td, th");
+  const cells = getCells(row);
   if (cells.length < 3) return null;
 
-  const fecha = $(cells[0]).text().trim();
+  const fecha = cells[0];
   const timestamp = parseIMNDate(fecha);
 
   return {
     fecha,
     timestamp,
-    sum_lluv_mm: safeParseFloat($(cells[1]).text()),
-    lluv_ayer_mm: safeParseFloat($(cells[2]).text()),
+    sum_lluv_mm: safeParseFloat(cells[1]),
+    lluv_ayer_mm: safeParseFloat(cells[2]),
   };
 }
 
-function parseDailyTable($: CheerioAPI): { fecha: string; timestamp: Date | null; lluvia_mm: number }[] {
-  const rows: any[] = [];
-  $("table").eq(2).find("tr").slice(1).each((_, el) => {
-    const cells = $(el).find("td, th");
+function parseDailyTable(tableHtml?: string): { fecha: string; timestamp: Date | null; lluvia_mm: number }[] {
+  if (!tableHtml) return [];
+  const rows: { fecha: string; timestamp: Date | null; lluvia_mm: number }[] = [];
+  getRows(tableHtml).slice(1).forEach((row) => {
+    const cells = getCells(row);
     if (cells.length < 2) return;
-    const fecha = $(cells[0]).text().trim();
+    const fecha = cells[0];
     const timestamp = parseIMNDate(fecha);
     rows.push({
       fecha,
       timestamp,
-      lluvia_mm: safeParseFloat($(cells[1]).text()),
+      lluvia_mm: safeParseFloat(cells[1]),
     });
   });
   return rows;
@@ -155,15 +179,15 @@ export async function GET(request: Request) {
     }
 
     const html = await res.text();
-    const $ = load(html);
+    const tables = getTables(html);
 
-    if ($("table").length < 3) {
+    if (tables.length < 3) {
       throw new Error("Estructura de página cambió – menos de 3 tablas");
     }
 
-    const hourlyRows = parseHourlyTable($);
-    const current = parseCurrentTable($);
-    const dailyRows = parseDailyTable($);
+    const hourlyRows = parseHourlyTable(tables[0]);
+    const current = parseCurrentTable(tables[1]);
+    const dailyRows = parseDailyTable(tables[2]);
 
     if (hourlyRows.length === 0) {
       throw new Error("No se encontraron datos horarios");
@@ -238,13 +262,13 @@ export async function GET(request: Request) {
         "Cache-Control": `s-maxage=${CACHE_TTL_SECONDS}, stale-while-revalidate=60`,
       },
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("[rain-msagrada]", err);
     return NextResponse.json(
       {
         success: false,
         error: "No pudimos obtener los datos del IMN en este momento",
-        details: process.env.NODE_ENV === "development" ? err.message : undefined,
+        details: process.env.NODE_ENV === "development" && err instanceof Error ? err.message : undefined,
       },
       { status: 503 }
     );
