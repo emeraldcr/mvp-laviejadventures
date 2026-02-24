@@ -7,6 +7,17 @@ import { es } from "date-fns/locale";
 const IMN_URL = "https://www.imn.ac.cr/especial/tablas/msagrada.html";
 const CACHE_TTL_SECONDS = 300; // 5 min
 
+// Browser-like headers to avoid 403 from IMN server
+const FETCH_HEADERS = {
+  "User-Agent":
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+  Accept:
+    "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+  "Accept-Language": "es-CR,es;q=0.9,en;q=0.8",
+  Referer: "https://www.imn.ac.cr/",
+  "Cache-Control": "no-cache",
+};
+
 const ABBREVIATIONS = {
   Temp: { desc: "Temperatura promedio", unit: "°C" },
   HR: { desc: "Humedad Relativa Promedio", unit: "%" },
@@ -145,13 +156,14 @@ function getConfidence(length: number, std: number): "baja" | "media" | "alta" {
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const full = searchParams.get("full") === "1";
-  const hours = Math.min(Math.max(Number(searchParams.get("hours") ?? 24), 1), 72);
+  const hours = Math.min(Math.max(Number(searchParams.get("hours") ?? 72), 1), 120);
   const days = Math.min(Math.max(Number(searchParams.get("days") ?? 14), 1), 31);
 
   try {
     const res = await fetch(IMN_URL, {
       cache: "no-store",
       next: { revalidate: CACHE_TTL_SECONDS },
+      headers: FETCH_HEADERS,
     });
 
     if (!res.ok) {
@@ -163,35 +175,86 @@ export async function GET(request: Request) {
 
     const sections: Record<string, string[][]> = {};
 
-    $('*:contains("Tabla de datos:")').each((_, el) => {
-      const title = $(el).text().trim();
-
-      const key =
-        title.includes("Horarios") ? "hourly" :
-        title.includes("Actuales") ? "current" :
-        title.includes("Diarios") ? "daily" : null;
-
-      if (!key) return;
-
-      const table = $(el).nextAll("table").first();
-      if (!table.length) return;
-
+    function parseTableRows(table: ReturnType<typeof $>): string[][] {
       const rows: string[][] = [];
-
       table.find("tr").each((_, tr) => {
         const cells: string[] = [];
         $(tr).find("td, th").each((_, td) => {
           cells.push($(td).text().trim());
         });
-        if (cells.length >= 2 && !cells[0].toLowerCase().includes("fecha")) {
+        // Skip empty rows and header rows that start with "fecha" or "date"
+        if (cells.length >= 2 && !cells[0].toLowerCase().match(/^(fecha|date|hora)$/)) {
           rows.push(cells);
         }
       });
+      return rows;
+    }
 
-      if (rows.length > 0) {
+    // Strategy 1: Find the most specific (leaf-level) element that contains "Tabla de datos:"
+    // using a targeted element list to avoid matching large parent containers.
+    const titleSelector = 'p, h2, h3, h4, h5, h6, td, th, div, span, b, strong';
+    $(titleSelector).each((_, el) => {
+      // Only match elements whose OWN direct text (not deep children) references the section
+      const ownText = $(el).clone().children().remove().end().text().trim();
+      const fullText = $(el).text().trim();
+
+      // Use short text elements as title markers (avoid whole-page containers)
+      const titleText = ownText.length > 0 && ownText.length < 120 ? ownText : fullText;
+      if (!titleText.includes("Tabla de datos:") || titleText.length > 200) return;
+
+      const key =
+        titleText.includes("Horarios") ? "hourly" :
+        titleText.includes("Actuales") ? "current" :
+        titleText.includes("Diarios") ? "daily" : null;
+
+      if (!key) return;
+
+      // Look for adjacent table: first as next sibling, then as sibling of parent
+      let table = $(el).nextAll("table").first();
+      if (!table.length) table = $(el).parent().nextAll("table").first();
+      if (!table.length) table = $(el).closest("table").length
+        ? $(el).closest("table")
+        : $();
+
+      if (!table.length) return;
+
+      const rows = parseTableRows(table);
+      if (rows.length > 0 && (!sections[key] || rows.length > sections[key].length)) {
+        // Keep the parse with the most rows (guards against partial matches)
         sections[key] = rows;
       }
     });
+
+    // Strategy 2 (fallback): if we still don't have hourly data, scan all tables
+    // and infer which is which from column headers / data patterns.
+    if (!sections.hourly) {
+      $("table").each((_, tableEl) => {
+        const table = $(tableEl);
+        const allRows: string[][] = [];
+        table.find("tr").each((_, tr) => {
+          const cells: string[] = [];
+          $(tr).find("td, th").each((_, td) => cells.push($(td).text().trim()));
+          if (cells.length >= 2) allRows.push(cells);
+        });
+        if (allRows.length < 2) return;
+
+        const headerRow = allRows[0].join(" ").toLowerCase();
+        const isHourly =
+          headerRow.includes("lluvia") || headerRow.includes("temp") || headerRow.includes("hr");
+        const isDaily =
+          (headerRow.includes("lluvia") || headerRow.includes("fecha")) &&
+          allRows.length <= 35 &&
+          !isHourly;
+
+        const dataRows = allRows.filter(
+          (r) => !r[0].toLowerCase().match(/^(fecha|date|hora)$/) && r.length >= 2
+        );
+        if (dataRows.length === 0) return;
+
+        if (isHourly && !sections.hourly) sections.hourly = dataRows;
+        else if (isDaily && !sections.daily) sections.daily = dataRows;
+      });
+    }
 
     if (!sections.hourly?.length) {
       throw new Error("No se encontraron datos en la tabla Horarios");
