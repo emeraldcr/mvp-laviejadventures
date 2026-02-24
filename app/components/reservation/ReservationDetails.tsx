@@ -7,11 +7,9 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
 // ---------------------- CONSTANTS ----------------------
-// Move regex definitions to a utility or constant file if reused, but keep here for simplicity.
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_NUMBER_REGEX = /^\d{4}[\s-]?\d{4}$/;
 
-// Define Phone Codes as a constant outside the component
 const COUNTRY_CODES = [
   { code: "+506", name: "Costa Rica" },
   { code: "+1", name: "EE. UU. / Canadá" },
@@ -20,11 +18,57 @@ const COUNTRY_CODES = [
   { code: "+34", name: "España" },
 ];
 
-// Define Ticket Price as a constant
-const PRICE_PER_TICKET = 50;
 const TAX_RATE = 0.1;
 
-// ---------------------- TYPES (Re-used for form state) ----------------------
+// ---------------------- TIME SLOTS ----------------------
+const TIME_SLOTS = [
+  { id: "08:00" as const, label: "8:00 AM" },
+  { id: "09:00" as const, label: "9:00 AM" },
+  { id: "10:00" as const, label: "10:00 AM" },
+];
+
+export type TourTime = "08:00" | "09:00" | "10:00";
+
+// ---------------------- PACKAGES ----------------------
+export type TourPackage = "basic" | "full-day" | "private";
+
+interface PackageOption {
+  id: TourPackage;
+  name: string;
+  priceUSD: number;
+  priceCRC: number | null;
+  description: string;
+  weekdayOnly: boolean;
+}
+
+const PACKAGES: PackageOption[] = [
+  {
+    id: "basic",
+    name: "Paquete Básico",
+    priceUSD: 30,
+    priceCRC: 15000,
+    description: "Incluye guía profesional y equipamiento básico.",
+    weekdayOnly: false,
+  },
+  {
+    id: "full-day",
+    name: "Día Completo con Almuerzo",
+    priceUSD: 40,
+    priceCRC: 20000,
+    description: "Incluye guía, equipamiento y almuerzo típico costarricense.",
+    weekdayOnly: false,
+  },
+  {
+    id: "private",
+    name: "Tour Privado",
+    priceUSD: 60,
+    priceCRC: null,
+    description: "Experiencia exclusiva para tu grupo. Solo disponible de lunes a viernes.",
+    weekdayOnly: true,
+  },
+];
+
+// ---------------------- TYPES ----------------------
 interface ReservationFormState {
   name: string;
   email: string;
@@ -34,8 +78,7 @@ interface ReservationFormState {
   agreeTerms: boolean;
 }
 
-// ---------------------- CUSTOM HOOK: useReservationForm ----------------------
-// Good for isolating complex state and validation logic.
+// ---------------------- CUSTOM HOOK ----------------------
 const useReservationForm = (initialState: ReservationFormState) => {
   const [formState, setFormState] = useState(initialState);
 
@@ -53,7 +96,7 @@ const useReservationForm = (initialState: ReservationFormState) => {
     const isPhoneNumberValid =
       formState.phoneNumber.trim() !== "" &&
       PHONE_NUMBER_REGEX.test(formState.phoneNumber.trim());
-    
+
     return {
       isNameValid,
       isEmailValid,
@@ -62,21 +105,15 @@ const useReservationForm = (initialState: ReservationFormState) => {
     };
   }, [formState]);
 
-  return {
-    formState,
-    handleChange,
-    validation,
-  };
+  return { formState, handleChange, validation };
 };
 
-// ---------------------- CHILD COMPONENTS (for Composition) ----------------------
+// ---------------------- CHILD COMPONENTS ----------------------
 
-// Component for displaying form errors
 const FormError = ({ message }: { message: string }) => (
   <p className="text-red-500 text-sm mt-1">{message}</p>
 );
 
-// Component for a single traveler input field
 const TravelerInputField = ({
   label,
   id,
@@ -126,67 +163,65 @@ const TravelerInputField = ({
   );
 };
 
-// Component for Phone Input (since it's a composite field)
 const TravelerPhoneInput = ({
-    phoneCode,
-    phoneNumber,
-    setPhoneCode,
-    setPhoneNumber,
-    isValid,
+  phoneCode,
+  phoneNumber,
+  setPhoneCode,
+  setPhoneNumber,
+  isValid,
 }: {
-    phoneCode: string;
-    phoneNumber: string;
-    setPhoneCode: (code: string) => void;
-    setPhoneNumber: (number: string) => void;
-    isValid: boolean;
+  phoneCode: string;
+  phoneNumber: string;
+  setPhoneCode: (code: string) => void;
+  setPhoneNumber: (number: string) => void;
+  isValid: boolean;
 }) => {
-    const isTouched = phoneNumber.trim() !== "";
-    const showError = isTouched && !isValid;
+  const isTouched = phoneNumber.trim() !== "";
+  const showError = isTouched && !isValid;
 
-    return (
-        <div className="md:col-span-2">
-            <label htmlFor="phoneNumber" className="block font-semibold text-lg mb-1">Teléfono</label>
-            <div className="flex gap-2">
-                <select
-                    id="phoneCode"
-                    value={phoneCode}
-                    onChange={(e) => setPhoneCode(e.target.value)}
-                    className="p-3 rounded-lg border bg-white dark:bg-zinc-800 border-zinc-300 dark:border-zinc-700 focus:ring-teal-500 focus:border-teal-500 w-1/3 md:w-1/4"
-                >
-                    {COUNTRY_CODES.map((country) => (
-                        <option key={country.code} value={country.code}>
-                            {country.code} ({country.name})
-                        </option>
-                    ))}
-                </select>
-                <input
-                    id="phoneNumber"
-                    type="tel"
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    className={`w-full p-3 rounded-lg border focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-zinc-800 ${
-                        showError
-                            ? "border-red-500"
-                            : "border-zinc-300 dark:border-zinc-700"
-                    }`}
-                    placeholder="Ej. 1234 5678"
-                    required
-                />
-            </div>
-            {showError && (
-                <FormError message="Número de teléfono no válido. Formato sugerido: #### ####." />
-            )}
-        </div>
-    );
+  return (
+    <div className="md:col-span-2">
+      <label htmlFor="phoneNumber" className="block font-semibold text-lg mb-1">
+        Teléfono
+      </label>
+      <div className="flex gap-2">
+        <select
+          id="phoneCode"
+          value={phoneCode}
+          onChange={(e) => setPhoneCode(e.target.value)}
+          className="p-3 rounded-lg border bg-white dark:bg-zinc-800 border-zinc-300 dark:border-zinc-700 focus:ring-teal-500 focus:border-teal-500 w-1/3 md:w-1/4"
+        >
+          {COUNTRY_CODES.map((country) => (
+            <option key={country.code} value={country.code}>
+              {country.code} ({country.name})
+            </option>
+          ))}
+        </select>
+        <input
+          id="phoneNumber"
+          type="tel"
+          value={phoneNumber}
+          onChange={(e) => setPhoneNumber(e.target.value)}
+          className={`w-full p-3 rounded-lg border focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-zinc-800 ${
+            showError ? "border-red-500" : "border-zinc-300 dark:border-zinc-700"
+          }`}
+          placeholder="Ej. 1234 5678"
+          required
+        />
+      </div>
+      {showError && (
+        <FormError message="Número de teléfono no válido. Formato sugerido: #### ####." />
+      )}
+    </div>
+  );
 };
-
 
 // ---------------------- MAIN COMPONENT ----------------------
 
 type Props = {
   selectedDate: number;
   currentMonth: number;
-  monthName: string; // Not needed if using Date object/format()
+  monthName: string;
   tickets: number;
   setTickets: (n: number) => void;
   onReserve: (data: any) => void;
@@ -203,50 +238,64 @@ export default function ReservationDetails({
   availability,
   currentYear,
 }: Props) {
-  // 1. Data/Slot calculation
+  // --- Date & slots ---
   const slots = availability[selectedDate] ?? 0;
   const isTicketsValid = tickets >= 1 && tickets <= slots;
-  
-  // Create a proper Date object only once
+
   const reservationDate = new Date(currentYear, currentMonth, selectedDate);
   const formattedDate = format(reservationDate, "EEEE, dd 'de' MMMM 'de' yyyy", {
     locale: es,
   });
 
-  // 2. Pricing calculation (use useMemo for expensive/derived values)
-  const { subtotal, taxes, totalWithTaxes } = useMemo(() => {
-    const sub = tickets * PRICE_PER_TICKET;
-    const tax = sub * TAX_RATE;
-    const total = sub + tax;
-    return { subtotal: sub, taxes: tax, totalWithTaxes: total };
-  }, [tickets]);
+  const isWeekend = reservationDate.getDay() === 0 || reservationDate.getDay() === 6;
 
-  // 3. Form State Management (via Custom Hook)
+  // --- New selections ---
+  const [tourTime, setTourTime] = useState<TourTime | null>(null);
+  const [tourPackage, setTourPackage] = useState<TourPackage | null>(null);
+
+  const selectedPackage = useMemo(
+    () => PACKAGES.find((p) => p.id === tourPackage) ?? null,
+    [tourPackage]
+  );
+
+  const privateOnWeekend = tourPackage === "private" && isWeekend;
+
+  // --- Pricing ---
+  const { subtotal, taxes, totalWithTaxes } = useMemo(() => {
+    const pricePerPerson = selectedPackage?.priceUSD ?? 0;
+    const sub = tickets * pricePerPerson;
+    const tax = sub * TAX_RATE;
+    return { subtotal: sub, taxes: tax, totalWithTaxes: sub + tax };
+  }, [tickets, selectedPackage]);
+
+  // --- Form state ---
   const { formState, handleChange, validation } = useReservationForm({
     name: "",
     email: "",
-    phoneCode: COUNTRY_CODES[0].code, // Use the constant
+    phoneCode: COUNTRY_CODES[0].code,
     phoneNumber: "",
     specialRequests: "",
     agreeTerms: false,
   });
 
-  // 4. Validation Check
+  // --- Validation ---
   const isFormValid = useMemo(
     () =>
       isTicketsValid &&
+      tourTime !== null &&
+      tourPackage !== null &&
+      !privateOnWeekend &&
       validation.isNameValid &&
       validation.isEmailValid &&
       validation.isPhoneNumberValid &&
       validation.isAgreeTermsValid,
-    [isTicketsValid, validation]
+    [isTicketsValid, tourTime, tourPackage, privateOnWeekend, validation]
   );
 
-  // 5. Handler (use useCallback)
+  // --- Submit ---
   const handleReserve = useCallback(() => {
-    if (!isFormValid) return;
+    if (!isFormValid || !selectedPackage) return;
 
-    // The data object is consistent with the original structure
     onReserve({
       tickets,
       date: formattedDate,
@@ -255,6 +304,9 @@ export default function ReservationDetails({
       email: formState.email,
       phone: `${formState.phoneCode} ${formState.phoneNumber}`,
       specialRequests: formState.specialRequests,
+      tourTime,
+      tourPackage,
+      packagePrice: selectedPackage.priceUSD,
     });
   }, [
     isFormValid,
@@ -263,6 +315,9 @@ export default function ReservationDetails({
     formattedDate,
     totalWithTaxes,
     formState,
+    tourTime,
+    tourPackage,
+    selectedPackage,
   ]);
 
   return (
@@ -271,7 +326,7 @@ export default function ReservationDetails({
         Reservar para el {formattedDate}
       </h2>
 
-      {/* ---------------------- TOUR INFO (Could be a separate component: <TourInfoBlock />) ---------------------- */}
+      {/* ---------------------- TOUR INFO ---------------------- */}
       <div className="bg-teal-50 dark:bg-zinc-900 p-4 rounded-xl border border-zinc-200 dark:border-zinc-700 mb-6">
         <h3 className="text-xl font-semibold text-teal-900 dark:text-teal-300 mb-2">
           Información del Tour
@@ -282,52 +337,137 @@ export default function ReservationDetails({
         </p>
 
         <div className="mb-4">
-          <strong className="block text-zinc-800 dark:text-zinc-200">
-            Duración:
-          </strong>
+          <strong className="block text-zinc-800 dark:text-zinc-200">Duración:</strong>
           <span className="text-zinc-700 dark:text-zinc-400">
             {TOUR_INFO.duration || "2-3 horas (aprox.)"}
           </span>
         </div>
 
         <div className="mb-4">
-          <strong className="block text-zinc-800 dark:text-zinc-200">
-            Inclusiones:
-          </strong>
+          <strong className="block text-zinc-800 dark:text-zinc-200">Inclusiones:</strong>
           <ul className="list-disc ml-5 text-zinc-700 dark:text-zinc-400 space-y-1">
-            {(TOUR_INFO.inclusions || [
-              "Guía profesional",
-              "transporte",
-              "entradas",
-            ]).map((item: string, i: number) => (
-              <li key={i}>{item}</li>
-            ))}
+            {(TOUR_INFO.inclusions || ["Guía profesional", "transporte", "entradas"]).map(
+              (item: string, i: number) => (
+                <li key={i}>{item}</li>
+              )
+            )}
           </ul>
         </div>
 
         <div className="mb-4">
-          <strong className="block text-zinc-800 dark:text-zinc-200">
-            Exclusiones:
-          </strong>
+          <strong className="block text-zinc-800 dark:text-zinc-200">Exclusiones:</strong>
           <ul className="list-disc ml-5 text-zinc-700 dark:text-zinc-400 space-y-1">
-            {(TOUR_INFO.exclusions || [
-              "Comidas",
-              "propinas",
-              "gastos personales",
-            ]).map((item: string, i: number) => (
-              <li key={i}>{item}</li>
-            ))}
+            {(TOUR_INFO.exclusions || ["Comidas", "propinas", "gastos personales"]).map(
+              (item: string, i: number) => (
+                <li key={i}>{item}</li>
+              )
+            )}
           </ul>
         </div>
 
         <div>
-          <strong className="block text-zinc-800 dark:text-zinc-200">
-            Restricciones:
-          </strong>
+          <strong className="block text-zinc-800 dark:text-zinc-200">Restricciones:</strong>
           <span className="text-zinc-700 dark:text-zinc-400">
             {TOUR_INFO.restrictions}
           </span>
         </div>
+      </div>
+
+      {/* ---------------------- TIME SLOT SELECTOR ---------------------- */}
+      <div className="mb-6">
+        <h3 className="text-xl font-semibold mb-3">Hora del Tour</h3>
+        <div className="flex gap-3 flex-wrap">
+          {TIME_SLOTS.map((slot) => {
+            const isSelected = tourTime === slot.id;
+            return (
+              <button
+                key={slot.id}
+                type="button"
+                onClick={() => setTourTime(slot.id)}
+                className={`flex-1 min-w-[90px] py-3 px-4 rounded-xl border-2 font-semibold text-base transition-all
+                  ${
+                    isSelected
+                      ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300"
+                      : "border-zinc-300 dark:border-zinc-600 hover:border-emerald-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
+                  }`}
+              >
+                {slot.label}
+              </button>
+            );
+          })}
+        </div>
+        {tourTime === null && (
+          <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-2">
+            Selecciona una hora para continuar.
+          </p>
+        )}
+      </div>
+
+      {/* ---------------------- PACKAGE SELECTOR ---------------------- */}
+      <div className="mb-6">
+        <h3 className="text-xl font-semibold mb-3">Paquete del Tour</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {PACKAGES.map((pkg) => {
+            const isSelected = tourPackage === pkg.id;
+            const isDisabled = pkg.weekdayOnly && isWeekend;
+
+            return (
+              <button
+                key={pkg.id}
+                type="button"
+                onClick={() => !isDisabled && setTourPackage(pkg.id)}
+                disabled={isDisabled}
+                className={`relative text-left p-4 rounded-xl border-2 transition-all
+                  ${
+                    isDisabled
+                      ? "border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800/50 opacity-50 cursor-not-allowed"
+                      : isSelected
+                      ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20"
+                      : "border-zinc-300 dark:border-zinc-600 hover:border-emerald-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 cursor-pointer"
+                  }`}
+              >
+                {pkg.weekdayOnly && (
+                  <span className="inline-block text-xs font-semibold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 rounded px-2 py-0.5 mb-2">
+                    Solo lunes–viernes
+                  </span>
+                )}
+                <p
+                  className={`font-bold text-base mb-1 ${
+                    isSelected
+                      ? "text-emerald-700 dark:text-emerald-300"
+                      : "text-zinc-800 dark:text-zinc-100"
+                  }`}
+                >
+                  {pkg.name}
+                </p>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-3 leading-snug">
+                  {pkg.description}
+                </p>
+                <p className="font-bold text-lg text-zinc-800 dark:text-zinc-100">
+                  ${pkg.priceUSD} USD
+                </p>
+                {pkg.priceCRC && (
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                    ₡{pkg.priceCRC.toLocaleString("es-CR")}
+                  </p>
+                )}
+                <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">
+                  por persona
+                </p>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Private tour + weekend warning */}
+        {privateOnWeekend && (
+          <div className="mt-3 flex items-start gap-2 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700">
+            <span className="text-red-500 mt-0.5">⚠</span>
+            <p className="text-sm text-red-600 dark:text-red-400">
+              El tour privado solo está disponible de lunes a viernes. Por favor selecciona una fecha entre semana o elige otro paquete.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* ---------------------- TRAVELER INFO ---------------------- */}
@@ -337,7 +477,6 @@ export default function ReservationDetails({
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* NAME */}
           <TravelerInputField
             id="name"
             label="Nombre Completo"
@@ -349,7 +488,6 @@ export default function ReservationDetails({
             required
           />
 
-          {/* EMAIL */}
           <TravelerInputField
             id="email"
             label="Correo Electrónico"
@@ -362,7 +500,6 @@ export default function ReservationDetails({
             required
           />
 
-          {/* PHONE */}
           <TravelerPhoneInput
             phoneCode={formState.phoneCode}
             phoneNumber={formState.phoneNumber}
@@ -373,13 +510,13 @@ export default function ReservationDetails({
         </div>
       </div>
 
-      {/* ---------------------- PRICE & TICKETS (Could be a separate component: <TicketSelection />) ---------------------- */}
+      {/* ---------------------- PRICE & TICKETS ---------------------- */}
       <div className="mb-6">
         <h3 className="text-xl font-semibold mb-4">Selección de Tickets</h3>
 
         <div className="flex items-center gap-4 mb-4">
           <label htmlFor="tickets" className="font-semibold text-lg">
-            Número de Tickets
+            Número de Personas
           </label>
           <input
             id="tickets"
@@ -389,7 +526,6 @@ export default function ReservationDetails({
             value={tickets}
             onChange={(e) => {
               const val = +e.target.value;
-              // Only call setTickets if the value is valid to prevent unnecessary re-renders
               if (val >= 1 && val <= slots) {
                 setTickets(val);
               } else if (val < 1) {
@@ -405,13 +541,25 @@ export default function ReservationDetails({
         </div>
 
         <div className="bg-zinc-100 dark:bg-zinc-800 p-4 rounded-xl">
-          <div className="flex justify-between mb-2">
-            <span>Precio por Ticket</span>
-            <span>${PRICE_PER_TICKET.toFixed(2)}</span>
-          </div>
+          {selectedPackage ? (
+            <>
+              <div className="flex justify-between mb-2">
+                <span>Paquete</span>
+                <span className="font-medium">{selectedPackage.name}</span>
+              </div>
+              <div className="flex justify-between mb-2">
+                <span>Precio por persona</span>
+                <span>${selectedPackage.priceUSD.toFixed(2)}</span>
+              </div>
+            </>
+          ) : (
+            <div className="flex justify-between mb-2 text-zinc-400">
+              <span>Selecciona un paquete para ver el precio</span>
+            </div>
+          )}
 
           <div className="flex justify-between mb-2">
-            <span>Subtotal ({tickets} tickets)</span>
+            <span>Subtotal ({tickets} {tickets === 1 ? "persona" : "personas"})</span>
             <span>${subtotal.toFixed(2)}</span>
           </div>
 
@@ -430,7 +578,6 @@ export default function ReservationDetails({
       {/* ---------------------- SPECIAL REQUESTS ---------------------- */}
       <div className="mb-6">
         <h3 className="text-xl font-semibold mb-4">Solicitudes Especiales</h3>
-
         <textarea
           id="specialRequests"
           value={formState.specialRequests}
@@ -455,51 +602,50 @@ export default function ReservationDetails({
         </div>
 
         <label
-  htmlFor="agreeTerms"
-  className={`flex items-start gap-3 p-4 rounded-xl border transition-all cursor-pointer ${
-    formState.agreeTerms
-      ? "border-teal-500 bg-teal-50 dark:bg-teal-900/20"
-      : "border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800"
-  }`}
->
-  <input
-    id="agreeTerms"
-    type="checkbox"
-    checked={formState.agreeTerms}
-    onChange={(e) => handleChange("agreeTerms", e.target.checked)}
-    className="h-5 w-5 text-teal-600 rounded border-zinc-400 focus:ring-teal-500 dark:bg-zinc-700 dark:border-zinc-600 mt-0.5"
-  />
-
-  <span className="text-zinc-700 dark:text-zinc-400 text-base">
-    He leído y acepto los
-    <Link
-      href="/terminos-y-condiciones"
-      target="_blank"
-      rel="noopener noreferrer"
-      onClick={(e) => e.stopPropagation()}
-      className="text-teal-600 underline ml-1"
-    >
-      Términos y Condiciones
-    </Link>
-    y la
-    <Link
-      href="/politica-de-privacidad"
-      target="_blank"
-      rel="noopener noreferrer"
-      onClick={(e) => e.stopPropagation()}
-      className="text-teal-600 underline ml-1"
-    >
-      Política de Privacidad
-    </Link>
-    .
-  </span>
-</label>
+          htmlFor="agreeTerms"
+          className={`flex items-start gap-3 p-4 rounded-xl border transition-all cursor-pointer ${
+            formState.agreeTerms
+              ? "border-teal-500 bg-teal-50 dark:bg-teal-900/20"
+              : "border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+          }`}
+        >
+          <input
+            id="agreeTerms"
+            type="checkbox"
+            checked={formState.agreeTerms}
+            onChange={(e) => handleChange("agreeTerms", e.target.checked)}
+            className="h-5 w-5 text-teal-600 rounded border-zinc-400 focus:ring-teal-500 dark:bg-zinc-700 dark:border-zinc-600 mt-0.5"
+          />
+          <span className="text-zinc-700 dark:text-zinc-400 text-base">
+            He leído y acepto los
+            <Link
+              href="/terminos-y-condiciones"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="text-teal-600 underline ml-1"
+            >
+              Términos y Condiciones
+            </Link>
+            y la
+            <Link
+              href="/politica-de-privacidad"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="text-teal-600 underline ml-1"
+            >
+              Política de Privacidad
+            </Link>
+            .
+          </span>
+        </label>
       </div>
 
       {/* ---------------------- BUTTON ---------------------- */}
       <div className="flex justify-end">
         <button
-          type="button" // Use type="button" to prevent implicit form submission if wrapped in a <form> later
+          type="button"
           onClick={handleReserve}
           disabled={!isFormValid}
           className="px-8 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-full font-bold shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"

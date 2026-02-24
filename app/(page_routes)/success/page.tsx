@@ -49,6 +49,9 @@ type BookingRecord = {
   tickets: number | null;
   amount: number | null;
   currency: string | null;
+  tourTime: string | null;
+  tourPackage: string | null;
+  packagePrice: number | null;
   createdAt?: Date;
   paypalRaw?: unknown;
 };
@@ -301,14 +304,21 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
   const phone = metaCustomer?.phone || "";
 
   const ticketsStr =
+    meta?.tickets?.toString() ||
     metaBooking?.tickets?.toString() ||
     metaCustomer?.tickets?.toString() ||
     (ticketsMatch ? ticketsMatch[1] : "");
 
   const date =
+    meta?.date ||
     metaBooking?.date ||
     metaCustomer?.date ||
     (dateMatch ? dateMatch[1] : "");
+
+  const tourTime: string | null = meta?.time ?? null;
+  const tourPackage: string | null = meta?.pkg ?? null;
+  const packagePrice: number | null =
+    meta?.ppUSD != null ? Number(meta.ppUSD) : null;
 
   const amountStr =
     capture?.amount?.value ||
@@ -340,6 +350,9 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
     tickets: ticketsNumber,
     amount: amountNumber,
     currency: currency || null,
+    tourTime,
+    tourPackage,
+    packagePrice,
     paypalRaw: paypalOrder,
   };
 

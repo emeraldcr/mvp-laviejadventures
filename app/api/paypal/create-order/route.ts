@@ -8,7 +8,7 @@ import {
 
 export async function POST(req: Request) {
   try {
-    const { name, email, phone, tickets, total, date } = await req.json();
+    const { name, email, phone, tickets, total, date, tourTime, tourPackage, packagePrice } = await req.json();
 
     if (!name || !email || !tickets || !total) {
       return NextResponse.json(
@@ -18,6 +18,30 @@ export async function POST(req: Request) {
     }
 
     const formattedTotal = Number(total).toFixed(2);
+
+    const packageLabel =
+      tourPackage === "basic"
+        ? "Paquete Básico"
+        : tourPackage === "full-day"
+        ? "Día Completo con Almuerzo"
+        : tourPackage === "private"
+        ? "Tour Privado"
+        : "Tour";
+
+    const timeLabel = tourTime
+      ? tourTime === "08:00" ? "8:00 AM" : tourTime === "09:00" ? "9:00 AM" : "10:00 AM"
+      : "";
+
+    // PayPal custom_id max length is 127 chars — use compact JSON to carry metadata
+    const customIdPayload = JSON.stringify({
+      tickets,
+      time: tourTime ?? null,
+      pkg: tourPackage ?? null,
+      ppUSD: packagePrice ?? null,
+      date,
+    });
+    // Truncate to 127 chars as a safeguard (date is the longest field)
+    const custom_id = customIdPayload.slice(0, 127);
 
     // 1) Get OAuth access token
     const accessToken = await getPayPalAccessToken();
@@ -38,10 +62,8 @@ export async function POST(req: Request) {
               currency_code: "USD",
               value: formattedTotal,
             },
-            description: `Reserva de ${tickets} tickets (${date})`,
-
-            // PayPal custom_id max length is 127 chars → keep it short
-            custom_id: `tickets-${tickets}-${date}`,
+            description: `Reserva: ${tickets} pax - ${packageLabel}${timeLabel ? ` (${timeLabel})` : ""} - ${date}`,
+            custom_id,
           },
         ],
       }),
