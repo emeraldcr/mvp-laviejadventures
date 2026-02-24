@@ -24,6 +24,8 @@ import {
   TrendingUp, TrendingDown, Minus, Eye, EyeOff,
   CloudRain, Gauge, Activity,
 } from "lucide-react";
+import WeatherMessage from "./components/WeatherMessage";
+import type { WeatherSnapshot } from "@/app/lib/weatherMessageHelpers";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type HourlyEntry = {
@@ -241,6 +243,26 @@ export default function TourWeatherDashboard() {
   const decision = getDecision(rain);
   const DecisionIcon = decision.icon;
 
+  // ── Snapshot for Anthropic funny message ──
+  const weatherSnap: WeatherSnapshot | null = rain?.status
+    ? {
+        risk:        rain.status.risk,
+        riskLabel:   rain.status.riskLabel,
+        last1h_mm:   rain.stats?.last1h_mm  ?? 0,
+        last3h_mm:   rain.stats?.last3h_mm  ?? 0,
+        last6h_mm:   rain.stats?.last6h_mm  ?? 0,
+        last24h_mm:  rain.stats?.last24h_mm ?? 0,
+        intensity:   rain.status.intensity,
+        trend:       rain.status.trend,
+        consensusMm: rain.forecast?.consensusMm ?? 0,
+        confidence:  rain.forecast?.confidence  ?? "baja",
+        wetStreak:   rain.stats?.wetStreak  ?? 0,
+        dryStreak:   rain.stats?.dryStreak  ?? 0,
+        avgTemp24h:  rain.weather?.avgTemp24h ?? null,
+        avgHR24h:    rain.weather?.avgHR24h   ?? null,
+      }
+    : null;
+
   // ── Chart data: last 12h hourly ──
   const hourlyChart = (rain?.data?.hourly ?? [])
     .slice(0, 12)
@@ -402,6 +424,9 @@ export default function TourWeatherDashboard() {
             </div>
           </div>
         </div>
+
+        {/* ═══ ANTHROPIC FUNNY MESSAGE ════════════════════════════════════════ */}
+        <WeatherMessage snap={weatherSnap} />
 
         {/* ═══ MINI HOURLY BAR CHART (last 12h) ══════════════════════════════ */}
         <div className="rounded-2xl border border-white/8 bg-white/[0.02] p-4">
