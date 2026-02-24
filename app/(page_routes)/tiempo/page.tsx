@@ -152,6 +152,9 @@ function DashboardContent({ data }: { data: any }) {
             methods={forecast.methods}
             consensusMm={forecast.consensusMm ?? forecast.nextHour_mm}
             confidence={forecast.confidence}
+            extended={forecast.extended}
+            modelSource={forecast.modelSource}
+            modelAvailable={forecast.modelAvailable}
           />
         </div>
       )}

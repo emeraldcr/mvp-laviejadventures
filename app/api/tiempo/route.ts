@@ -84,6 +84,26 @@ function getRiskStatus(
   return { level: "green", label: "Condiciones aceptables", emoji: "🟢" };
 }
 
+// ─── Open-Meteo fetch (nearest NWP proxy to Montaña Sagrada) ─────────────────
+// Juan Castro Blanco NP coordinates are the closest grid point available.
+// Returns precipitation array for next 6 hours (index 0 = current hour).
+async function fetchOpenMeteoProxy(): Promise<number[]> {
+  try {
+    const url = new URL("https://api.open-meteo.com/v1/forecast");
+    url.searchParams.set("latitude",       "10.185");
+    url.searchParams.set("longitude",      "-84.370");
+    url.searchParams.set("hourly",         "precipitation");
+    url.searchParams.set("timezone",       "America/Costa_Rica");
+    url.searchParams.set("forecast_hours", "6");
+    const res = await fetch(url.toString(), { cache: "no-store" });
+    if (!res.ok) return [];
+    const json = await res.json();
+    return (json.hourly?.precipitation as number[]) ?? [];
+  } catch {
+    return [];
+  }
+}
+
 // ─── Forecast methods ────────────────────────────────────────────────────────
 
 /** Exponential Moving Average – gives more weight to recent hours */
@@ -151,6 +171,73 @@ function getConfidence(length: number, std: number): "baja" | "media" | "alta" {
   return "baja";
 }
 
+// ─── Multi-step (h+n) forecast helpers ───────────────────────────────────────
+
+/**
+ * Projects linear regression n steps ahead.
+ * values[0] = most recent (newest-first order).
+ */
+function linearRegressionNStep(values: number[], horizon: number): number {
+  const n = values.length;
+  if (n < 2) return Math.max(0, values[0] ?? 0);
+  const ordered = [...values].reverse(); // oldest first
+  const xMean = (n - 1) / 2;
+  const yMean = ordered.reduce((a, b) => a + b, 0) / n;
+  let num = 0, den = 0;
+  for (let i = 0; i < n; i++) {
+    num += (i - xMean) * (ordered[i] - yMean);
+    den += (i - xMean) ** 2;
+  }
+  const slope = den === 0 ? 0 : num / den;
+  const intercept = yMean - slope * xMean;
+  return Math.max(0, intercept + slope * (n - 1 + horizon));
+}
+
+/**
+ * Projects Holt-Winters double EMA n steps ahead: level + horizon * trend.
+ * values[0] = most recent.
+ */
+function doubleEMANStep(
+  values: number[],
+  horizon: number,
+  alpha = 0.5,
+  beta = 0.3
+): number {
+  if (values.length === 0) return 0;
+  const ordered = [...values].reverse(); // oldest first
+  let level = ordered[0];
+  let trend = ordered.length > 1 ? ordered[1] - ordered[0] : 0;
+  for (let i = 1; i < ordered.length; i++) {
+    const prevLevel = level;
+    level = alpha * ordered[i] + (1 - alpha) * (level + trend);
+    trend = beta * (level - prevLevel) + (1 - beta) * trend;
+  }
+  return Math.max(0, level + horizon * trend);
+}
+
+/**
+ * Combined IMN statistical estimate for h+n.
+ * As horizon grows, we reduce the regression weight (it can diverge) and lean
+ * more on the level-only EMA, keeping DoubleEMA as a middle ground.
+ */
+function imnHorizonEstimate(
+  forecastValues: number[],
+  horizon: number,
+  emaLevel: number
+): number {
+  const lr   = linearRegressionNStep(forecastValues, horizon);
+  const dema = doubleEMANStep(forecastValues, horizon);
+  // LR weight decreases from 1/3 toward 0 as horizon grows
+  const lrW   = Math.max(0.05, 1 / 3 - (horizon - 1) * 0.1);
+  const demaW = 1 / 3;
+  const emaW  = 1 - lrW - demaW;
+  return Math.max(0, lr * lrW + dema * demaW + emaLevel * emaW);
+}
+
+// Blend weights: how much to trust IMN stats vs Open-Meteo NWP per horizon
+// h+1: obs-heavy (70/30), h+4: model-heavy (10/90)
+const BLEND_IMN_WEIGHT = [0.70, 0.50, 0.25, 0.10] as const;
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 export async function GET(request: Request) {
@@ -160,15 +247,24 @@ export async function GET(request: Request) {
   const days = Math.min(Math.max(Number(searchParams.get("days") ?? 14), 1), 31);
 
   try {
-    const res = await fetch(IMN_URL, {
-      cache: "no-store",
-      next: { revalidate: CACHE_TTL_SECONDS },
-      headers: FETCH_HEADERS,
-    });
+    // Fire both fetches simultaneously to avoid sequential latency
+    const [res, ometRaw] = await Promise.all([
+      fetch(IMN_URL, {
+        cache: "no-store",
+        next: { revalidate: CACHE_TTL_SECONDS },
+        headers: FETCH_HEADERS,
+      }),
+      fetchOpenMeteoProxy(),
+    ]);
 
     if (!res.ok) {
       throw new Error(`IMN fetch failed: ${res.status} ${res.statusText}`);
     }
+
+    // ometRaw[0] = current hour (partial), [1..4] = next 4 complete hours
+    const ometNext4h: (number | null)[] = [1, 2, 3, 4].map((i) =>
+      typeof ometRaw[i] === "number" ? ometRaw[i] : null
+    );
 
     const html = await res.text();
     const $ = load(html);
@@ -352,6 +448,27 @@ export async function GET(request: Request) {
       Object.values(forecastMethods).length
     );
 
+    // ─── 4-hour blended forecast (IMN stats × obs-weight + NWP × model-weight) ─
+    const extendedForecast = ([1, 2, 3, 4] as const).map((horizon, i) => {
+      const imnEst = r(imnHorizonEstimate(forecastValues, horizon, ema));
+      const ometVal = ometNext4h[i];
+      const imnW  = BLEND_IMN_WEIGHT[i];
+      const ometW = 1 - imnW;
+      const blended = ometVal !== null
+        ? r(imnEst * imnW + ometVal * ometW)
+        : imnEst;
+      return {
+        horizon,                           // 1–4
+        label: `+${horizon}h`,
+        imnForecast_mm:   imnEst,
+        modelForecast_mm: ometVal !== null ? r(ometVal) : null,
+        blended_mm:       blended,
+        imnWeight:        imnW,
+        modelWeight:      ometVal !== null ? ometW : null,
+        hasModel:         ometVal !== null,
+      };
+    });
+
     // ─── Extra stats ──────────────────────────────────────────────────────────
     const recent24 = hourlyRows.slice(0, 24);
     const wetHoursLast24 = recent24.filter(r => r.lluvia_mm > 0.5).length;
@@ -442,11 +559,14 @@ export async function GET(request: Request) {
         peakHour24h,
       },
       forecast: {
-        nextHour_mm: Math.round(ema * 10) / 10,
+        nextHour_mm:      Math.round(ema * 10) / 10,
         confidence,
         consensusMm,
-        method:     "EMA (α=0.6)",
-        methods:    forecastMethods,
+        method:           "EMA (α=0.6)",
+        methods:          forecastMethods,
+        extended:         extendedForecast,
+        modelSource:      "Open-Meteo / P.N. Juan Castro Blanco",
+        modelAvailable:   ometNext4h.some((v) => v !== null),
       },
       weather:  weatherMetrics,
       analysis: { rollingRisk },
