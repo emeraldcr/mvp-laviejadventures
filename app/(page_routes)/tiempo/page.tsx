@@ -8,6 +8,7 @@ import DailyRainBarChart   from "./components/DailyRainBarChart";
 import ForecastPanel       from "./components/ForecastPanel";
 import RollingRiskChart    from "./components/RollingRiskChart";
 import WeatherMetricsPanel from "./components/WeatherMetricsPanel";
+import RegionalWeatherPanel from "./components/RegionalWeatherPanel";
 
 export const revalidate = 300;
 export const dynamic = "force-dynamic";
@@ -15,27 +16,51 @@ export const dynamic = "force-dynamic";
 export const metadata = {
   title: "Dashboard Lluvia Río La Vieja | La Vieja Adventures",
   description:
-    "Monitoreo en tiempo real de lluvia y riesgo de crecida – Estación Montaña Sagrada (IMN). Ideal para tours en río.",
+    "Monitoreo en tiempo real de lluvia y riesgo de crecida – Estación Montaña Sagrada (IMN). Clima regional San Carlos, Juan Castro Blanco, San José de la Montaña, El Congo.",
 };
 
 async function fetchRainData() {
   const base = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-  const res = await fetch(`${base}/api/tiempo?hours=48&days=14`, {
+  // Request all available hours (up to 120) so the chart shows the full table
+  const res = await fetch(`${base}/api/tiempo?hours=120&days=14`, {
     next: { revalidate: 300 },
   });
   if (!res.ok) throw new Error(`Error ${res.status}: ${res.statusText}`);
   return res.json();
 }
 
+async function fetchRegionalData() {
+  const base = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+  try {
+    const res = await fetch(`${base}/api/tiempo/regional`, {
+      next: { revalidate: 1800 },
+    });
+    if (!res.ok) return null;
+    return res.json();
+  } catch {
+    return null;
+  }
+}
+
 export default async function DashboardPage() {
   let apiData = null;
+  let regionalData = null;
   let error: string | null = null;
 
   try {
-    apiData = await fetchRainData();
+    [apiData, regionalData] = await Promise.all([
+      fetchRainData(),
+      fetchRegionalData(),
+    ]);
   } catch (err: any) {
     error = err.message || "No se pudieron cargar los datos del IMN";
     console.error("[Dashboard]", err);
+    // Still try regional data independently if IMN fails
+    try {
+      regionalData = await fetchRegionalData();
+    } catch {
+      // silently ignore
+    }
   }
 
   return (
@@ -51,8 +76,8 @@ export default async function DashboardPage() {
         </header>
 
         {error ? (
-          <div className="bg-red-950/60 border border-red-600/50 rounded-2xl p-8 text-center shadow-xl">
-            <h2 className="text-2xl font-bold text-red-300 mb-4">¡Problema al cargar datos!</h2>
+          <div className="bg-red-950/60 border border-red-600/50 rounded-2xl p-8 text-center shadow-xl mb-8">
+            <h2 className="text-2xl font-bold text-red-300 mb-4">¡Problema al cargar datos IMN!</h2>
             <p className="text-slate-200 mb-4">{error}</p>
             <p className="text-sm text-slate-400">
               Intenta refrescar la página en unos minutos. Los datos se actualizan cada 5 minutos.
@@ -62,6 +87,14 @@ export default async function DashboardPage() {
           <Suspense fallback={<LoadingSkeleton />}>
             <DashboardContent data={apiData} />
           </Suspense>
+        )}
+
+        {/* Regional weather – shown regardless of IMN status */}
+        {regionalData?.success && regionalData.locations?.length > 0 && (
+          <RegionalWeatherPanel
+            locations={regionalData.locations}
+            fetchedAt={regionalData.fetchedAt}
+          />
         )}
       </div>
     </main>
@@ -130,13 +163,15 @@ function DashboardContent({ data }: { data: any }) {
         </div>
       )}
 
-      {/* ── Row 4: Hourly rain chart ── */}
+      {/* ── Row 4: Hourly rain chart – all available hours ── */}
       <section className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-2xl p-6 md:p-8 shadow-2xl mb-8">
         <h2 className="text-2xl md:text-3xl font-semibold mb-2 flex items-center gap-3">
           Lluvia horaria
         </h2>
         <p className="text-sm text-slate-400 mb-6">
-          Barras = lluvia cada hora · Línea = acumulado progresivo · Últimas {payload.hourly.length} horas
+          Barras = lluvia cada hora · Línea = acumulado progresivo ·{" "}
+          <span className="text-cyan-400 font-medium">{payload.hourly.length} horas disponibles</span>
+          {" "}(estación Montaña Sagrada)
         </p>
         <HourlyRainChart hourly={payload.hourly} />
       </section>
@@ -187,7 +222,7 @@ function DashboardContent({ data }: { data: any }) {
           </p>
           <DailyRainBarChart daily={payload.daily} />
 
-          {/* Also keep the table for exact values */}
+          {/* Exact values table */}
           <div className="overflow-x-auto mt-6 border-t border-slate-700 pt-6">
             <table className="w-full text-sm">
               <thead>
@@ -210,9 +245,9 @@ function DashboardContent({ data }: { data: any }) {
       )}
 
       {/* ── Footer ── */}
-      <footer className="text-center text-sm text-slate-500 mt-12">
+      <footer className="text-center text-sm text-slate-500 mt-4 mb-8">
         <p>
-          Fuente:{" "}
+          Fuente IMN:{" "}
           <a
             href={meta.source}
             target="_blank"
@@ -223,9 +258,11 @@ function DashboardContent({ data }: { data: any }) {
           </a>
           {" · "}Última actualización:{" "}
           {new Date(meta.fetchedAt).toLocaleString("es-CR", { timeZone: "America/Costa_Rica" })}
+          {" · "}
+          <span className="text-cyan-400">{data.counts?.hourlyAvailable ?? "?"} filas horarias disponibles</span>
         </p>
         <p className="mt-2 italic">{meta.note}</p>
-        <p className="mt-4 text-xs opacity-70">
+        <p className="mt-2 text-xs opacity-70">
           Datos preliminares – sin control de calidad oficial del IMN. Uso bajo responsabilidad propia.
         </p>
       </footer>
