@@ -13,6 +13,7 @@
  */
 
 import { useEffect, useState, useCallback, useMemo } from "react";
+import Link from "next/link";
 import {
   BarChart, Bar, LineChart, Line, AreaChart, Area,
   XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, ReferenceLine,
@@ -22,7 +23,7 @@ import {
   CheckCircle2, AlertTriangle, XCircle, ChevronDown,
   RefreshCw, Droplets, Thermometer, Wind, Clock,
   TrendingUp, TrendingDown, Minus, Eye, EyeOff,
-  CloudRain, Gauge, Activity,
+  CloudRain, Gauge, Activity, ArrowLeft,
 } from "lucide-react";
 import WeatherMessage from "./components/WeatherMessage";
 import type { WeatherSnapshot } from "@/app/lib/weatherMessageHelpers";
@@ -217,6 +218,9 @@ const CustomBarTooltip = ({ active, payload, label }: any) => {
   );
 };
 
+// ─── Constants ────────────────────────────────────────────────────────────────
+const RELOAD_COOLDOWN_SECS = 30;
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function TourWeatherDashboard() {
   const [rain, setRain] = useState<RainData | null>(null);
@@ -224,6 +228,7 @@ export default function TourWeatherDashboard() {
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
   const [showRawForecast, setShowRawForecast] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
@@ -235,10 +240,18 @@ export default function TourWeatherDashboard() {
       if (r1.status === "fulfilled") setRain(r1.value);
       if (r2.status === "fulfilled") setRegional(r2.value);
       setLastRefresh(new Date());
+      setCooldown(RELOAD_COOLDOWN_SECS);
     } catch { /* silent */ } finally { setLoading(false); }
   }, []);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
+
+  // ── Cooldown countdown ──
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = setTimeout(() => setCooldown(c => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [cooldown]);
 
   const decision = getDecision(rain);
   const DecisionIcon = decision.icon;
@@ -316,11 +329,20 @@ export default function TourWeatherDashboard() {
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="sticky top-0 z-20 bg-[#080b0d]/90 backdrop-blur-xl border-b border-white/6">
         <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <PulsingDot color={loading ? "bg-zinc-500" : "bg-emerald-500"} />
-            <span className="text-xs font-bold uppercase tracking-widest text-zinc-400">
-              Estación IMN · Montaña Sagrada
-            </span>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/"
+              className="flex items-center gap-1.5 text-zinc-400 hover:text-white transition-colors group"
+            >
+              <ArrowLeft size={15} className="group-hover:-translate-x-0.5 transition-transform" />
+              <span className="text-xs font-semibold">Inicio</span>
+            </Link>
+            <div className="flex items-center gap-2">
+              <PulsingDot color={loading ? "bg-zinc-500" : "bg-emerald-500"} />
+              <span className="hidden sm:block text-xs font-bold uppercase tracking-widest text-zinc-500">
+                Estación IMN · Montaña Sagrada
+              </span>
+            </div>
           </div>
           <div className="flex items-center gap-3">
             {lastRefresh && (
@@ -328,10 +350,14 @@ export default function TourWeatherDashboard() {
                 {lastRefresh.toLocaleTimeString("es-CR", { hour: "2-digit", minute: "2-digit" })}
               </span>
             )}
+            {cooldown > 0 && !loading && (
+              <span className="text-[10px] text-zinc-600 tabular-nums">{cooldown}s</span>
+            )}
             <button
               onClick={fetchAll}
-              disabled={loading}
-              className="w-7 h-7 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors disabled:opacity-40"
+              disabled={loading || cooldown > 0}
+              title={cooldown > 0 ? `Espera ${cooldown}s para recargar` : "Recargar datos"}
+              className="w-7 h-7 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <RefreshCw size={13} className={loading ? "animate-spin text-zinc-400" : "text-zinc-400"} />
             </button>
