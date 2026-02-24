@@ -13,6 +13,7 @@
  */
 
 import { useEffect, useState, useCallback, useMemo } from "react";
+import Link from "next/link";
 import {
   BarChart, Bar, LineChart, Line, AreaChart, Area,
   XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, ReferenceLine,
@@ -22,7 +23,7 @@ import {
   CheckCircle2, AlertTriangle, XCircle, ChevronDown,
   RefreshCw, Droplets, Thermometer, Wind, Clock,
   TrendingUp, TrendingDown, Minus, Eye, EyeOff,
-  CloudRain, Gauge, Activity,
+  CloudRain, Gauge, Activity, ArrowLeft,
 } from "lucide-react";
 import WeatherMessage from "./components/WeatherMessage";
 import type { WeatherSnapshot } from "@/app/lib/weatherMessageHelpers";
@@ -316,11 +317,20 @@ export default function TourWeatherDashboard() {
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="sticky top-0 z-20 bg-[#080b0d]/90 backdrop-blur-xl border-b border-white/6">
         <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <PulsingDot color={loading ? "bg-zinc-500" : "bg-emerald-500"} />
-            <span className="text-xs font-bold uppercase tracking-widest text-zinc-400">
-              Estación IMN · Montaña Sagrada
-            </span>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/"
+              className="flex items-center gap-1.5 text-zinc-400 hover:text-white transition-colors group"
+            >
+              <ArrowLeft size={15} className="group-hover:-translate-x-0.5 transition-transform" />
+              <span className="text-xs font-semibold">Inicio</span>
+            </Link>
+            <div className="flex items-center gap-2">
+              <PulsingDot color={loading ? "bg-zinc-500" : "bg-emerald-500"} />
+              <span className="hidden sm:block text-xs font-bold uppercase tracking-widest text-zinc-500">
+                Estación IMN · Montaña Sagrada
+              </span>
+            </div>
           </div>
           <div className="flex items-center gap-3">
             {lastRefresh && (
