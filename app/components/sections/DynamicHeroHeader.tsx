@@ -17,6 +17,8 @@ import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
 import CalendarSection from "./CalendarSection";
 import { useInterval } from "../../hooks/useInterval";
+import { useLanguage } from "@/app/context/LanguageContext";
+import { translations } from "@/lib/translations";
 
 // Types
 interface NavLinkItem {
@@ -25,13 +27,6 @@ interface NavLinkItem {
   variant?: "default" | "primary";
   external?: boolean;
 }
-
-const NAV_LINKS: NavLinkItem[] = [
-  { href: "/info", label: "Información", external: true },
-  { href: "/tours", label: "Tours", external: true },
-  { href: "/galeria", label: "Galería", external: true },
-  { href: "/#calendar", label: "Reserva", variant: "primary", external: false },
-];
 
 const SCROLL_THRESHOLD = 80;
 const LOGO_SIZE = { default: 64, scrolled: 42 };
@@ -91,6 +86,21 @@ const NavLink = memo<
 });
 NavLink.displayName = "NavLink";
 
+// Language Toggle Button
+const LangToggle = memo<{ onClick: () => void; currentLang: string }>(
+  ({ onClick, currentLang }) => (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={currentLang === "es" ? "Switch to English" : "Cambiar a Español"}
+      className="px-3 py-1.5 rounded-full border border-white/40 bg-white/10 backdrop-blur-md text-white text-sm font-bold hover:bg-white hover:text-teal-900 hover:border-white transition-colors duration-200 shadow-sm shadow-black/20 min-w-[40px] text-center"
+    >
+      {currentLang === "es" ? "EN" : "ES"}
+    </button>
+  )
+);
+LangToggle.displayName = "LangToggle";
+
 // Header Component
 const Header = memo<{
   isScrolled: boolean;
@@ -99,6 +109,15 @@ const Header = memo<{
 }>(({ isScrolled, onMenuToggle, isMenuOpen }) => {
   const logoSize = isScrolled ? LOGO_SIZE.scrolled : LOGO_SIZE.default;
   const textSize = isScrolled ? TEXT_SIZE.scrolled : TEXT_SIZE.default;
+  const { lang, toggle } = useLanguage();
+  const tr = translations[lang].nav;
+
+  const navLinks: NavLinkItem[] = [
+    { href: "/info", label: tr.info, external: true },
+    { href: "/tours", label: tr.tours, external: true },
+    { href: "/galeria", label: tr.gallery, external: true },
+    { href: "/#calendar", label: tr.reserve, variant: "primary", external: false },
+  ];
 
   return (
     <header
@@ -131,9 +150,10 @@ const Header = memo<{
         </Link>
 
         <nav className="hidden md:flex items-center space-x-10 font-medium text-white">
-          {NAV_LINKS.map((link) => (
+          {navLinks.map((link) => (
             <NavLink key={link.href} {...link} />
           ))}
+          <LangToggle onClick={toggle} currentLang={lang} />
         </nav>
 
         <button
@@ -157,7 +177,7 @@ const Header = memo<{
         ].join(" ")}
         aria-hidden={!isMenuOpen}
       >
-        {NAV_LINKS.map((link) => (
+        {navLinks.map((link) => (
           <NavLink
             key={link.href}
             {...link}
@@ -165,6 +185,9 @@ const Header = memo<{
             onClick={onMenuToggle}
           />
         ))}
+        <div className="pt-2">
+          <LangToggle onClick={toggle} currentLang={lang} />
+        </div>
       </div>
     </header>
   );
@@ -183,6 +206,9 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "5
     error,
     isLoading,
   } = useSWR<string[]>("/api/images", fetcher);
+
+  const { lang } = useLanguage();
+  const tr = translations[lang].hero;
 
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -263,10 +289,11 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "5
         ) : (
           <>
             <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black mb-6 text-white drop-shadow-2xl">
-              Ciudad Esmeralda
+              {tr.title}
             </h1>
             <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-light text-white max-w-3xl drop-shadow-xl">
-              Selecciona tu fecha para <span className="font-semibold">vivir la aventura</span>.
+              {tr.subtitle}{" "}
+              <span className="font-semibold">{tr.subtitleBold}</span>.
             </p>
           </>
         )}

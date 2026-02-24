@@ -2,6 +2,8 @@
 
 import React, { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/app/context/LanguageContext";
+import { translations } from "@/lib/translations";
 
 declare global {
   interface Window {
@@ -34,6 +36,8 @@ export default function PaymentModal({
 }: PaymentModalProps) {
   const paypalRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const { lang } = useLanguage();
+  const tr = translations[lang].payment;
 
   const { name, email, phone, tickets, total, date, tourTime, tourPackage, packagePrice } = orderDetails;
 
@@ -97,34 +101,34 @@ export default function PaymentModal({
 
             const output = await res.json();
 
-            // Notificar al padre
+            // Notify parent
             onSuccess(output);
 
-            // Redirigir
+            // Redirect
             router.push(`/success?orderId=${output.id}`);
 
-            // Cerrar modal con pequeño delay para que PayPal limpie bien
+            // Close modal with small delay so PayPal cleans up properly
             setTimeout(() => {
               onClose();
             }, 500);
           },
 
           onError: (err: any) => {
-            alert("Hubo un error con PayPal. Intenta nuevamente.");
+            alert(tr.error);
             console.error("PAYPAL ERROR:", err);
           },
         })
         .render(paypalRef.current);
     };
 
-    const mode = process.env.NEXT_PUBLIC_PAYPAL_MODE?.toLowerCase() || 'dev'; // Assume 'dev' as fallback; ensure NEXT_PUBLIC_PAYPAL_MODE is set in .env
+    const mode = process.env.NEXT_PUBLIC_PAYPAL_MODE?.toLowerCase() || 'dev';
     const clientId = mode === 'live'
       ? process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID
       : process.env.NEXT_PUBLIC_PAYPAL_SANDBOX_CLIENT_ID;
 
     if (!clientId) {
       console.error('Missing PayPal client ID for the current mode:', mode);
-      return; // Or handle error appropriately
+      return;
     }
 
     if (!existingScript) {
@@ -136,14 +140,16 @@ export default function PaymentModal({
       document.body.appendChild(script);
     } else {
       initializeButtons();
-    }   
+    }
 
     return () => {
       if (paypalRef.current) {
         paypalRef.current.innerHTML = "";
       }
     };
-  }, [name, email, phone, tickets, total, date, tourTime, tourPackage, packagePrice]);
+  }, [name, email, phone, tickets, total, date, tourTime, tourPackage, packagePrice, tr.error]);
+
+  const packageName = tr.packages[tourPackage] ?? tourPackage;
 
   return (
     <div
@@ -158,47 +164,45 @@ export default function PaymentModal({
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-2xl text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-100"
-          aria-label="Cerrar"
+          aria-label={tr.closeLabel}
         >
           &times;
         </button>
 
         <div className="mb-6 pr-8">
           <h2 className="text-2xl sm:text-3xl font-bold">
-            Finalizar Pago con PayPal
+            {tr.title}
           </h2>
         </div>
 
         <p className="mb-3 text-lg">
-          <strong>Nombre:</strong> {name}
+          <strong>{tr.nameLabel}:</strong> {name}
         </p>
         <p className="mb-3 text-lg">
-          <strong>Email:</strong> {email}
+          <strong>{tr.emailLabel}:</strong> {email}
         </p>
         <p className="mb-4 text-lg">
-          <strong>Teléfono:</strong> {phone}
+          <strong>{tr.phoneLabel}:</strong> {phone}
         </p>
 
         <p className="mb-2 text-lg">
-          Estás reservando <strong>{tickets} {tickets === 1 ? "persona" : "personas"}</strong> para el día{" "}
+          {tr.bookingPrefix}{" "}
+          <strong>{tickets} {tickets === 1 ? tr.person : tr.persons}</strong>{" "}
+          {tr.bookingForDay}{" "}
           <strong>{date}</strong>.
         </p>
 
         <p className="mb-2 text-lg">
-          <strong>Hora:</strong> {tourTime === "08:00" ? "8:00 AM" : tourTime === "09:00" ? "9:00 AM" : "10:00 AM"}
+          <strong>{tr.tourTime}:</strong>{" "}
+          {tourTime === "08:00" ? "8:00 AM" : tourTime === "09:00" ? "9:00 AM" : "10:00 AM"}
         </p>
 
         <p className="mb-4 text-lg">
-          <strong>Paquete:</strong>{" "}
-          {tourPackage === "basic"
-            ? "Paquete Básico"
-            : tourPackage === "full-day"
-            ? "Día Completo con Almuerzo"
-            : "Tour Privado"}{" "}
-          (${packagePrice} USD/persona)
+          <strong>{tr.package}:</strong>{" "}
+          {packageName} (${packagePrice} USD/{lang === "es" ? "persona" : "person"})
         </p>
 
-        <p className="text-xl font-bold mb-6">Total: ${total.toFixed(2)}</p>
+        <p className="text-xl font-bold mb-6">{tr.total}: ${total.toFixed(2)}</p>
 
         {/* PayPal Buttons / Card Form */}
         <div ref={paypalRef} className="min-h-[140px] w-full" />
