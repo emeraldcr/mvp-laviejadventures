@@ -21,9 +21,9 @@ import React, { useState, useEffect } from "react";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/lib/translations";
 import { useUser } from "@auth0/nextjs-auth0/client";
-import LoginButton from "../src/components/LoginButton";
-import LogoutButton from "../src/components/LogoutButton";
-import Profile from "../src/components/Profile";
+import LoginButton from "../../../src/components/LoginButton";
+import LogoutButton from "../../../src/components/LogoutButton";
+import Profile from "../../../src/components/Profile";
 
 // Mock data for bookings (replace with actual API fetch in production)
 const mockBookings = [

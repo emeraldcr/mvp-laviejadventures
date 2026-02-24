@@ -191,6 +191,15 @@ const es = {
       "Intermedio a avanzado": "Avanzado",
     } as Record<string, string>,
   },
+  dashboard: {
+    title: "Dashboard",
+    description: "Manage your bookings and profile",
+    bookingsTitle: "My Bookings",
+    bookingsDescription: "Here you can view and manage your bookings",
+    profileTitle: "My Profile",
+    profileDescription: "Here you can view and manage your profile",
+    logoutBtn: "Logout",
+  }
 };
 
 const en = {
@@ -381,6 +390,15 @@ const en = {
       "Intermedio a avanzado": "Advanced",
     } as Record<string, string>,
   },
+  dashboard: {
+    title: "Dashboard",
+    description: "Manage your bookings and profile",
+    bookingsTitle: "My Bookings",
+    bookingsDescription: "Here you can view and manage your bookings",
+    profileTitle: "My Profile",
+    profileDescription: "Here you can view and manage your profile",
+    logoutBtn: "Logout",
+  }
 };
 
 export const translations: Record<Lang, typeof es> = { es, en };
