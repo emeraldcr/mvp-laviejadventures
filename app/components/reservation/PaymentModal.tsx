@@ -16,6 +16,9 @@ export type OrderDetails = {
   tickets: number;
   total: number;
   date: string;
+  tourTime: string;
+  tourPackage: string;
+  packagePrice: number;
 };
 
 type PaymentModalProps = {
@@ -32,7 +35,7 @@ export default function PaymentModal({
   const paypalRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  const { name, email, phone, tickets, total, date } = orderDetails;
+  const { name, email, phone, tickets, total, date, tourTime, tourPackage, packagePrice } = orderDetails;
 
   // 🔒 Lock body scroll while modal is open
   useEffect(() => {
@@ -73,6 +76,9 @@ export default function PaymentModal({
                 tickets,
                 date,
                 total,
+                tourTime,
+                tourPackage,
+                packagePrice,
               }),
             });
 
@@ -137,7 +143,7 @@ export default function PaymentModal({
         paypalRef.current.innerHTML = "";
       }
     };
-  }, [name, email, phone, tickets, total, date]);
+  }, [name, email, phone, tickets, total, date, tourTime, tourPackage, packagePrice]);
 
   return (
     <div
@@ -173,9 +179,23 @@ export default function PaymentModal({
           <strong>Teléfono:</strong> {phone}
         </p>
 
-        <p className="mb-4 text-lg">
-          Estás pagando <strong>{tickets} tickets</strong> para el día{" "}
+        <p className="mb-2 text-lg">
+          Estás reservando <strong>{tickets} {tickets === 1 ? "persona" : "personas"}</strong> para el día{" "}
           <strong>{date}</strong>.
+        </p>
+
+        <p className="mb-2 text-lg">
+          <strong>Hora:</strong> {tourTime === "08:00" ? "8:00 AM" : tourTime === "09:00" ? "9:00 AM" : "10:00 AM"}
+        </p>
+
+        <p className="mb-4 text-lg">
+          <strong>Paquete:</strong>{" "}
+          {tourPackage === "basic"
+            ? "Paquete Básico"
+            : tourPackage === "full-day"
+            ? "Día Completo con Almuerzo"
+            : "Tour Privado"}{" "}
+          (${packagePrice} USD/persona)
         </p>
 
         <p className="text-xl font-bold mb-6">Total: ${total.toFixed(2)}</p>

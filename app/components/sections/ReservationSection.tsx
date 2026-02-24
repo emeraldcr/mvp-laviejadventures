@@ -13,6 +13,9 @@ type OrderPayload = {
   tickets: number;
   total: number;
   date: string;
+  tourTime: string;
+  tourPackage: string;
+  packagePrice: number;
 };
 
 type Props = {
