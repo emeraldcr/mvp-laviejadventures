@@ -20,8 +20,7 @@ import {
 import React, { useState, useEffect } from "react";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/lib/translations";
-import { useUser } from "@auth0/nextjs-auth0/client";
-import LoginButton from "../../../src/components/LoginButton";
+import { useSession, signIn } from "next-auth/react";
 import LogoutButton from "../../../src/components/LogoutButton";
 import Profile from "../../../src/components/Profile";
 
@@ -57,7 +56,9 @@ export default function DashboardPage() {
     const { lang } = useLanguage();
     const tr = translations[lang].dashboard || translations[lang].info; // Fallback to info if dashboard translations not available
 
-    const { user, error, isLoading } = useUser();
+    const { data: session, status } = useSession();
+    const user = session?.user;
+    const isLoading = status === "loading";
     const [bookings, setBookings] = useState([]);
 
     useEffect(() => {
@@ -72,15 +73,6 @@ export default function DashboardPage() {
         return (
             <div className="flex justify-center items-center h-screen text-zinc-700 dark:text-zinc-300">
                 {lang === "es" ? "Cargando..." : "Loading..."}
-            </div>
-        );
-    }
-
-    if (error) {
-        console.error("Auth error:", error);
-        return (
-            <div className="flex justify-center items-center h-screen text-red-600">
-                {lang === "es" ? "Error de autenticación" : "Authentication error"}
             </div>
         );
     }
@@ -101,7 +93,12 @@ export default function DashboardPage() {
                                     ? "Accede para ver tus reservas, perfil y más."
                                     : "Access to view your bookings, profile, and more."}
                             </p>
-                            <LoginButton />
+                            <button
+                                onClick={() => signIn(undefined, { callbackUrl: "/dashboard" })}
+                                className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-800/20 transition hover:bg-emerald-700"
+                            >
+                                {lang === "es" ? "Iniciar sesión" : "Log In"}
+                            </button>
                         </div>
                     </section>
                 ) : (

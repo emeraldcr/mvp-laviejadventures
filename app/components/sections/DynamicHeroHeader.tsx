@@ -10,7 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import Image from "next/image";
-import { Menu, X, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { Menu, X, ChevronDown, ChevronLeft, ChevronRight, LogOut, User, LayoutDashboard } from "lucide-react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import useSWR from "swr";
@@ -18,6 +18,7 @@ import { fetcher } from "@/lib/fetcher";
 import { useInterval } from "../../hooks/useInterval";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/lib/translations";
+import { useSession, signIn, signOut } from "next-auth/react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface NavLinkItem {
@@ -81,6 +82,102 @@ const LangToggle = memo<{ onClick: () => void; currentLang: string }>(({ onClick
 ));
 LangToggle.displayName = "LangToggle";
 
+// ─── AuthNav ──────────────────────────────────────────────────────────────────
+const AuthNav = memo<{ onMobileClose?: () => void; isMobile?: boolean }>(({ onMobileClose, isMobile }) => {
+  const { data: session, status } = useSession();
+  const { lang } = useLanguage();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  if (status === "loading") {
+    return <div className="w-8 h-8 rounded-full bg-white/20 animate-pulse" />;
+  }
+
+  if (!session?.user) {
+    return (
+      <button
+        onClick={() => { signIn(undefined, { callbackUrl: "/dashboard" }); onMobileClose?.(); }}
+        className="px-5 py-2 rounded-full font-semibold border border-white/40 bg-white/10 backdrop-blur-md shadow-sm shadow-black/20 hover:bg-white hover:text-teal-900 hover:border-white transition-colors duration-200 text-white text-sm"
+      >
+        {lang === "es" ? "Iniciar sesión" : "Log In"}
+      </button>
+    );
+  }
+
+  const { name, image } = session.user;
+
+  if (isMobile) {
+    return (
+      <div className="space-y-3 pt-2 border-t border-white/10">
+        <div className="flex items-center gap-3">
+          {image ? (
+            <Image src={image} alt={name || "User"} width={36} height={36} className="rounded-full border border-white/30" referrerPolicy="no-referrer" />
+          ) : (
+            <div className="w-9 h-9 rounded-full bg-teal-700 flex items-center justify-center">
+              <User size={16} className="text-white" />
+            </div>
+          )}
+          <span className="text-white font-medium text-sm truncate">{name}</span>
+        </div>
+        <Link href="/dashboard" onClick={onMobileClose} className="flex items-center gap-2 text-white/80 hover:text-white text-sm font-semibold">
+          <LayoutDashboard size={15} /> Dashboard
+        </Link>
+        <button
+          onClick={() => { signOut({ callbackUrl: "/" }); onMobileClose?.(); }}
+          className="flex items-center gap-2 text-white/80 hover:text-white text-sm font-semibold"
+        >
+          <LogOut size={15} /> {lang === "es" ? "Cerrar sesión" : "Log Out"}
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setDropdownOpen((p) => !p)}
+        className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/30 bg-white/10 backdrop-blur-md hover:bg-white/20 transition-colors duration-200"
+        aria-label="User menu"
+      >
+        {image ? (
+          <Image src={image} alt={name || "User"} width={28} height={28} className="rounded-full" referrerPolicy="no-referrer" />
+        ) : (
+          <div className="w-7 h-7 rounded-full bg-teal-700 flex items-center justify-center">
+            <User size={14} className="text-white" />
+          </div>
+        )}
+        <span className="text-white text-sm font-medium hidden lg:block max-w-[100px] truncate">{name?.split(" ")[0]}</span>
+        <ChevronDown size={14} className={`text-white/70 transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`} />
+      </button>
+
+      {dropdownOpen && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setDropdownOpen(false)} />
+          <div className="absolute right-0 top-full mt-2 z-50 w-52 rounded-2xl border border-white/10 bg-teal-950/95 backdrop-blur-xl shadow-2xl overflow-hidden">
+            <div className="px-4 py-3 border-b border-white/10">
+              <p className="text-white text-sm font-semibold truncate">{name}</p>
+              <p className="text-white/50 text-xs truncate">{session.user.email}</p>
+            </div>
+            <Link
+              href="/dashboard"
+              onClick={() => setDropdownOpen(false)}
+              className="flex items-center gap-2.5 px-4 py-3 text-sm text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+            >
+              <LayoutDashboard size={15} /> Dashboard
+            </Link>
+            <button
+              onClick={() => { setDropdownOpen(false); signOut({ callbackUrl: "/" }); }}
+              className="flex w-full items-center gap-2.5 px-4 py-3 text-sm text-white/80 hover:text-white hover:bg-white/10 transition-colors border-t border-white/10"
+            >
+              <LogOut size={15} /> {lang === "es" ? "Cerrar sesión" : "Log Out"}
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+});
+AuthNav.displayName = "AuthNav";
+
 // ─── Header ───────────────────────────────────────────────────────────────────
 const Header = memo<{ isScrolled: boolean; onMenuToggle: () => void; isMenuOpen: boolean }>(
   ({ isScrolled, onMenuToggle, isMenuOpen }) => {
@@ -130,6 +227,7 @@ const Header = memo<{ isScrolled: boolean; onMenuToggle: () => void; isMenuOpen:
               <NavLink key={link.href} {...link} />
             ))}
             <LangToggle onClick={toggle} currentLang={lang} />
+            <AuthNav />
           </nav>
 
           <button
@@ -147,7 +245,7 @@ const Header = memo<{ isScrolled: boolean; onMenuToggle: () => void; isMenuOpen:
             "flex flex-col md:hidden text-white",
             "backdrop-blur-2xl bg-teal-950/80 border-t border-white/10 shadow-[0_18px_40px_rgba(0,0,0,0.75)]",
             "px-6 py-8 transition-all duration-300",
-            isMenuOpen ? "max-h-96 opacity-100 space-y-6" : "max-h-0 opacity-0 overflow-hidden",
+            isMenuOpen ? "max-h-[32rem] opacity-100 space-y-6" : "max-h-0 opacity-0 overflow-hidden",
           ].join(" ")}
           aria-hidden={!isMenuOpen}
         >
@@ -157,6 +255,7 @@ const Header = memo<{ isScrolled: boolean; onMenuToggle: () => void; isMenuOpen:
           <div className="pt-2">
             <LangToggle onClick={toggle} currentLang={lang} />
           </div>
+          <AuthNav isMobile onMobileClose={onMenuToggle} />
         </div>
       </header>
     );
