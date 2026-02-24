@@ -62,11 +62,11 @@ const NavLink = memo<
   const variantStyles =
     variant === "primary"
       ? [
-          "px-5 py-2 rounded-full font-semibold",
-          "border border-white/40 bg-white/10 backdrop-blur-md",
-          "shadow-sm shadow-black/20",
-          "hover:bg-white hover:text-teal-900 hover:border-white",
-        ].join(" ")
+        "px-5 py-2 rounded-full font-semibold",
+        "border border-white/40 bg-white/10 backdrop-blur-md",
+        "shadow-sm shadow-black/20",
+        "hover:bg-white hover:text-teal-900 hover:border-white",
+      ].join(" ")
       : "hover:text-teal-200";
 
   const linkProps = external
@@ -113,10 +113,11 @@ const Header = memo<{
   const tr = translations[lang].nav;
 
   const navLinks: NavLinkItem[] = [
-    { href: "/info", label: tr.info, external: true },
-    { href: "/tours", label: tr.tours, external: true },
-    { href: "/galeria", label: tr.gallery, external: true },
+    { href: "/info", label: tr.info, external: false },
+    { href: "/tours", label: tr.tours, external: false },
+    { href: "/galeria", label: tr.gallery, external: false },
     { href: "/#calendar", label: tr.reserve, variant: "primary", external: false },
+    { href: "/tiempo", label: tr.time, external: false },
   ];
 
   return (
@@ -266,9 +267,8 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "5
             src={src}
             alt={`Carousel image ${index + 1}`}
             fill
-            className={`object-cover transition-opacity duration-1000 ease-in-out ${
-              index === currentIndex ? "opacity-100" : "opacity-0"
-            }`}
+            className={`object-cover transition-opacity duration-1000 ease-in-out ${index === currentIndex ? "opacity-100" : "opacity-0"
+              }`}
             priority={index < 3}
             sizes="(max-width: 768px) 100vw, 1280px"
           />
