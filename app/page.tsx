@@ -1,64 +1,118 @@
 "use client";
-import React, { JSX, useMemo } from "react";
-// Components
+import React, { JSX } from "react";
 import CalendarSection from "@/app/components/sections/CalendarSection";
 import ReservationSection from "@/app/components/sections/ReservationSection";
 import DynamicHeroHeader from "@/app/components/sections/DynamicHeroHeader";
 import ErrorBoundary from "@/lib/errorBoundary";
 import { CalendarProvider } from "@/app/context/CalendarContext";
-// Utilities
-import { cn } from "@/lib/utils";
-import { motion } from "framer-motion"; 
+import { motion } from "framer-motion";
+import { CalendarDays, ClipboardList } from "lucide-react";
+import { useLanguage } from "@/app/context/LanguageContext";
 
-interface HomeContentProps {
-  // Keeping interface clean
-}
-const HomeContent: React.FC<HomeContentProps> = React.memo(() => {
-  // Define grid structure within useMemo for stability 
-  const mainSections = useMemo(() => (
-    <motion.div
-      initial={{ opacity: 0, y: 50 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay: 0.2 }}
-      id="booking-interface"
-      className={cn(
-        "container mx-auto p-4 md:p-8", // Added padding for better mobile spacing
-        "grid grid-cols-1 lg:grid-cols-7 gap-4", // ⭐️ CHANGED: Reduced gap from gap-8 to gap-4
-        "min-h-[60vh] -mt-16 md:-mt-24 relative z-10"
-      )}
-    >
-      {/* 1. Calendar/Details Section (Left-Hand Side) */}
-      {/* On Mobile (cols-1), takes full width. On Desktop (lg:cols-5), takes 4/5 width. */}
-      <section className="lg:col-span-4 w-full"> {/* ⭐️ CHANGED: col-span-3 to col-span-4, added w-full */}
-        <CalendarSection />
-      </section>
-      
-      {/* 2. Reservation Summary Section (Right-Hand Side) */}
-      {/* On Mobile, stacks below. On Desktop (lg:cols-5), takes 1/5 width. */}
-      <aside className="lg:col-span-3 sticky top-8 self-start"> {/* ⭐️ CHANGED: col-span-2 to col-span-1 */}
-        <ReservationSection />
-      </aside>
-    </motion.div>
-  ), []);
+// BookingSection is a separate component so it can use useLanguage
+// (which requires being inside LanguageProvider from the layout)
+function BookingSection() {
+  const { lang } = useLanguage();
+
   return (
-    <main className="min-h-screen bg-zinc-50 dark:bg-black overflow-x-hidden">
-      <DynamicHeroHeader />
-      {mainSections}
-    </main>
+    <section id="booking" className="relative bg-zinc-950 overflow-hidden">
+      {/* Ambient glow blobs */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-teal-900/15 blur-[140px] pointer-events-none" />
+      <div className="absolute top-40 left-0 w-[350px] h-[350px] bg-teal-800/8 blur-[120px] pointer-events-none" />
+      <div className="absolute top-40 right-0 w-[350px] h-[350px] bg-cyan-900/8 blur-[120px] pointer-events-none" />
+
+      <div className="relative z-10 container mx-auto px-4 md:px-8 py-16 md:py-28">
+
+        {/* ── Section header ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.55 }}
+          className="text-center mb-12"
+        >
+          <p className="text-teal-400 text-[11px] font-bold uppercase tracking-[0.28em] mb-3">
+            {lang === "es" ? "Tu próxima aventura" : "Your next adventure"}
+          </p>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-4 leading-tight">
+            {lang === "es" ? "Reserva tu experiencia" : "Book your experience"}
+          </h2>
+          <p className="text-zinc-400 text-base md:text-lg max-w-lg mx-auto leading-relaxed">
+            {lang === "es"
+              ? "Elige una fecha disponible y personaliza cada detalle de tu tour."
+              : "Choose an available date and customize every detail of your tour."}
+          </p>
+        </motion.div>
+
+        {/* ── Step indicators ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.45, delay: 0.1 }}
+          className="flex items-center justify-center gap-3 mb-12"
+        >
+          <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-teal-500/12 border border-teal-500/25 shadow-[0_0_18px_rgba(20,184,166,0.12)]">
+            <CalendarDays size={13} className="text-teal-400" />
+            <span className="text-[11px] font-bold text-teal-300 uppercase tracking-widest">
+              {lang === "es" ? "Paso 1 · Fecha" : "Step 1 · Date"}
+            </span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-px bg-zinc-700" />
+            <div className="w-1.5 h-1.5 rounded-full bg-zinc-700" />
+            <div className="w-3 h-px bg-zinc-700" />
+          </div>
+          <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-800/50 border border-zinc-700/60">
+            <ClipboardList size={13} className="text-zinc-500" />
+            <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest">
+              {lang === "es" ? "Paso 2 · Detalles" : "Step 2 · Details"}
+            </span>
+          </div>
+        </motion.div>
+
+        {/* ── Calendar + Reservation grid ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.6, delay: 0.15 }}
+          className="grid grid-cols-1 lg:grid-cols-7 gap-5 items-start"
+        >
+          {/* Calendar panel */}
+          <div className="lg:col-span-4 rounded-3xl border border-white/[0.07] bg-white/[0.025] backdrop-blur-sm shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+            <CalendarSection />
+          </div>
+
+          {/* Reservation panel */}
+          <div className="lg:col-span-3 lg:sticky lg:top-24">
+            <div className="rounded-3xl border border-white/[0.07] bg-white/[0.025] backdrop-blur-sm shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+              <ReservationSection />
+            </div>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Bottom fade */}
+      <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black to-transparent pointer-events-none" />
+    </section>
   );
-});
-HomeContent.displayName = 'HomeContent';
-// --- Root Page Component (Safest Structure) ---
+}
+
 export default function Home(): JSX.Element {
   return (
-    // The ErrorBoundary correctly wraps the context provider, protecting the whole flow.
-    <ErrorBoundary fallback={
-      <div className="flex justify-center items-center h-screen text-xl text-red-600 bg-black">
-        ⚠️ Critical System Failure: Cannot load the booking engine.
-      </div>
-    }>
+    <ErrorBoundary
+      fallback={
+        <div className="flex justify-center items-center h-screen text-xl text-red-600 bg-black">
+          ⚠️ Critical System Failure: Cannot load the booking engine.
+        </div>
+      }
+    >
       <CalendarProvider>
-        <HomeContent />
+        <main className="min-h-screen bg-black overflow-x-hidden">
+          <DynamicHeroHeader />
+          <BookingSection />
+        </main>
       </CalendarProvider>
     </ErrorBoundary>
   );

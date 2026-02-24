@@ -3,7 +3,7 @@ import { getOperatorFromRequest } from "./lib/b2b-auth";
 
 const PUBLIC_B2B_PATHS = ["/b2b/login", "/b2b/register"];
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   if (!pathname.startsWith("/b2b")) {

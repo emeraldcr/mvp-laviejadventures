@@ -6,6 +6,7 @@ const es = {
     tours: "Tours",
     gallery: "Galería",
     reserve: "Reserva",
+    time: "Tiempo",
   },
   hero: {
     title: "Ciudad Esmeralda",
