@@ -1,4 +1,5 @@
 "use client";
+
 import React, { JSX } from "react";
 import CalendarSection from "@/app/components/sections/CalendarSection";
 import ReservationSection from "@/app/components/sections/ReservationSection";
@@ -8,11 +9,32 @@ import { CalendarProvider } from "@/app/context/CalendarContext";
 import { motion } from "framer-motion";
 import { CalendarDays, ClipboardList } from "lucide-react";
 import { useLanguage } from "@/app/context/LanguageContext";
+import { useUser } from "@auth0/nextjs-auth0/client"; // ← Key import for client-side auth
+import LoginButton from "../src/components/LoginButton";
+import LogoutButton from "../src/components/LogoutButton";
+import Profile from "../src/components/Profile";
 
-// BookingSection is a separate component so it can use useLanguage
-// (which requires being inside LanguageProvider from the layout)
+// BookingSection is a client component that can now safely use useUser
 function BookingSection() {
   const { lang } = useLanguage();
+  const { user, error, isLoading } = useUser();
+
+  // Handle auth loading state
+  if (isLoading) {
+    return (
+      <div className="relative z-10 container mx-auto px-4 md:px-8 py-16 md:py-28 text-center">
+        <div className="text-zinc-400 text-lg">
+          {lang === "es" ? "Verificando sesión..." : "Checking session..."}
+        </div>
+      </div>
+    );
+  }
+
+  // Optional: Show error if auth fails (you can style/customize this)
+  if (error) {
+    console.error("Auth error:", error);
+    // You could return a fallback UI here if desired
+  }
 
   return (
     <section id="booking" className="relative bg-zinc-950 overflow-hidden">
@@ -22,7 +44,6 @@ function BookingSection() {
       <div className="absolute top-40 right-0 w-[350px] h-[350px] bg-cyan-900/8 blur-[120px] pointer-events-none" />
 
       <div className="relative z-10 container mx-auto px-4 md:px-8 py-16 md:py-28">
-
         {/* ── Section header ── */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -95,6 +116,30 @@ function BookingSection() {
 
       {/* Bottom fade */}
       <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black to-transparent pointer-events-none" />
+
+      {/* Action card / Auth UI */}
+      <div className="action-card relative z-10 container mx-auto px-4 md:px-8 pb-16 text-center">
+        {user ? (
+          <div className="logged-in-section max-w-md mx-auto bg-zinc-900/60 backdrop-blur-md p-8 rounded-2xl border border-teal-500/20 shadow-xl">
+            <p className="logged-in-message text-teal-400 text-xl font-bold mb-6">
+              {lang === "es" ? "¡Sesión iniciada con éxito!" : "Successfully logged in!"}
+            </p>
+            <Profile />
+            <div className="mt-6">
+              <LogoutButton />
+            </div>
+          </div>
+        ) : (
+          <div className="max-w-md mx-auto bg-zinc-900/60 backdrop-blur-md p-8 rounded-2xl border border-zinc-700/60 shadow-xl">
+            <p className="action-text text-zinc-300 text-lg mb-6">
+              {lang === "es"
+                ? "¡Bienvenido! Inicia sesión para reservar o ver tu perfil."
+                : "Welcome! Please log in to book your adventure or access your profile."}
+            </p>
+            <LoginButton />
+          </div>
+        )}
+      </div>
     </section>
   );
 }
