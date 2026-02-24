@@ -4,7 +4,9 @@ import { TOUR_INFO } from "@/lib/tour-info";
 import { AvailabilityMap } from "@/lib/types";
 import { useState, useMemo, useCallback } from "react";
 import { format } from "date-fns";
-import { es } from "date-fns/locale";
+import { es, enUS } from "date-fns/locale";
+import { useLanguage } from "@/app/context/LanguageContext";
+import { translations } from "@/lib/translations";
 
 // ---------------------- CONSTANTS ----------------------
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -34,36 +36,28 @@ export type TourPackage = "basic" | "full-day" | "private";
 
 interface PackageOption {
   id: TourPackage;
-  name: string;
   priceUSD: number;
   priceCRC: number | null;
-  description: string;
   weekdayOnly: boolean;
 }
 
 const PACKAGES: PackageOption[] = [
   {
     id: "basic",
-    name: "Paquete Básico",
     priceUSD: 30,
     priceCRC: 15000,
-    description: "Incluye guía profesional y equipamiento básico.",
     weekdayOnly: false,
   },
   {
     id: "full-day",
-    name: "Día Completo con Almuerzo",
     priceUSD: 40,
     priceCRC: 20000,
-    description: "Incluye guía, equipamiento y almuerzo típico costarricense.",
     weekdayOnly: false,
   },
   {
     id: "private",
-    name: "Tour Privado",
     priceUSD: 60,
     priceCRC: null,
-    description: "Experiencia exclusiva para tu grupo. Solo disponible de lunes a viernes.",
     weekdayOnly: true,
   },
 ];
@@ -169,12 +163,18 @@ const TravelerPhoneInput = ({
   setPhoneCode,
   setPhoneNumber,
   isValid,
+  label,
+  placeholder,
+  validationMessage,
 }: {
   phoneCode: string;
   phoneNumber: string;
   setPhoneCode: (code: string) => void;
   setPhoneNumber: (number: string) => void;
   isValid: boolean;
+  label: string;
+  placeholder: string;
+  validationMessage: string;
 }) => {
   const isTouched = phoneNumber.trim() !== "";
   const showError = isTouched && !isValid;
@@ -182,7 +182,7 @@ const TravelerPhoneInput = ({
   return (
     <div className="md:col-span-2">
       <label htmlFor="phoneNumber" className="block font-semibold text-lg mb-1">
-        Teléfono
+        {label}
       </label>
       <div className="flex gap-2">
         <select
@@ -205,13 +205,11 @@ const TravelerPhoneInput = ({
           className={`w-full p-3 rounded-lg border focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-zinc-800 ${
             showError ? "border-red-500" : "border-zinc-300 dark:border-zinc-700"
           }`}
-          placeholder="Ej. 1234 5678"
+          placeholder={placeholder}
           required
         />
       </div>
-      {showError && (
-        <FormError message="Número de teléfono no válido. Formato sugerido: #### ####." />
-      )}
+      {showError && <FormError message={validationMessage} />}
     </div>
   );
 };
@@ -238,14 +236,20 @@ export default function ReservationDetails({
   availability,
   currentYear,
 }: Props) {
+  const { lang } = useLanguage();
+  const tr = translations[lang].reservation;
+  const dateLocale = lang === "es" ? es : enUS;
+
   // --- Date & slots ---
   const slots = availability[selectedDate] ?? 0;
   const isTicketsValid = tickets >= 1 && tickets <= slots;
 
   const reservationDate = new Date(currentYear, currentMonth, selectedDate);
-  const formattedDate = format(reservationDate, "EEEE, dd 'de' MMMM 'de' yyyy", {
-    locale: es,
-  });
+  const formattedDate = format(
+    reservationDate,
+    lang === "es" ? "EEEE, dd 'de' MMMM 'de' yyyy" : "EEEE, MMMM dd, yyyy",
+    { locale: dateLocale }
+  );
 
   const isWeekend = reservationDate.getDay() === 0 || reservationDate.getDay() === 6;
 
@@ -323,13 +327,13 @@ export default function ReservationDetails({
   return (
     <div className="border-t border-zinc-300 dark:border-zinc-700">
       <h2 className="text-2xl font-bold mb-4">
-        Reservar para el {formattedDate}
+        {tr.titlePrefix} {formattedDate}
       </h2>
 
       {/* ---------------------- TOUR INFO ---------------------- */}
       <div className="bg-teal-50 dark:bg-zinc-900 p-4 rounded-xl border border-zinc-200 dark:border-zinc-700 mb-6">
         <h3 className="text-xl font-semibold text-teal-900 dark:text-teal-300 mb-2">
-          Información del Tour
+          {tr.tourInfoTitle}
         </h3>
 
         <p className="text-zinc-700 dark:text-zinc-400 mb-4">
@@ -337,14 +341,14 @@ export default function ReservationDetails({
         </p>
 
         <div className="mb-4">
-          <strong className="block text-zinc-800 dark:text-zinc-200">Duración:</strong>
+          <strong className="block text-zinc-800 dark:text-zinc-200">{tr.duration}</strong>
           <span className="text-zinc-700 dark:text-zinc-400">
             {TOUR_INFO.duration || "2-3 horas (aprox.)"}
           </span>
         </div>
 
         <div className="mb-4">
-          <strong className="block text-zinc-800 dark:text-zinc-200">Inclusiones:</strong>
+          <strong className="block text-zinc-800 dark:text-zinc-200">{tr.inclusions}</strong>
           <ul className="list-disc ml-5 text-zinc-700 dark:text-zinc-400 space-y-1">
             {(TOUR_INFO.inclusions || ["Guía profesional", "transporte", "entradas"]).map(
               (item: string, i: number) => (
@@ -355,7 +359,7 @@ export default function ReservationDetails({
         </div>
 
         <div className="mb-4">
-          <strong className="block text-zinc-800 dark:text-zinc-200">Exclusiones:</strong>
+          <strong className="block text-zinc-800 dark:text-zinc-200">{tr.exclusions}</strong>
           <ul className="list-disc ml-5 text-zinc-700 dark:text-zinc-400 space-y-1">
             {(TOUR_INFO.exclusions || ["Comidas", "propinas", "gastos personales"]).map(
               (item: string, i: number) => (
@@ -366,7 +370,7 @@ export default function ReservationDetails({
         </div>
 
         <div>
-          <strong className="block text-zinc-800 dark:text-zinc-200">Restricciones:</strong>
+          <strong className="block text-zinc-800 dark:text-zinc-200">{tr.restrictions}</strong>
           <span className="text-zinc-700 dark:text-zinc-400">
             {TOUR_INFO.restrictions}
           </span>
@@ -375,7 +379,7 @@ export default function ReservationDetails({
 
       {/* ---------------------- TIME SLOT SELECTOR ---------------------- */}
       <div className="mb-6">
-        <h3 className="text-xl font-semibold mb-3">Hora del Tour</h3>
+        <h3 className="text-xl font-semibold mb-3">{tr.tourTimeTitle}</h3>
         <div className="flex gap-3 flex-wrap">
           {TIME_SLOTS.map((slot) => {
             const isSelected = tourTime === slot.id;
@@ -398,18 +402,19 @@ export default function ReservationDetails({
         </div>
         {tourTime === null && (
           <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-2">
-            Selecciona una hora para continuar.
+            {tr.selectTimeCta}
           </p>
         )}
       </div>
 
       {/* ---------------------- PACKAGE SELECTOR ---------------------- */}
       <div className="mb-6">
-        <h3 className="text-xl font-semibold mb-3">Paquete del Tour</h3>
+        <h3 className="text-xl font-semibold mb-3">{tr.packageTitle}</h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {PACKAGES.map((pkg) => {
             const isSelected = tourPackage === pkg.id;
             const isDisabled = pkg.weekdayOnly && isWeekend;
+            const pkgTr = tr.packages[pkg.id];
 
             return (
               <button
@@ -428,7 +433,7 @@ export default function ReservationDetails({
               >
                 {pkg.weekdayOnly && (
                   <span className="inline-block text-xs font-semibold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 rounded px-2 py-0.5 mb-2">
-                    Solo lunes–viernes
+                    {tr.weekdaysOnly}
                   </span>
                 )}
                 <p
@@ -438,10 +443,10 @@ export default function ReservationDetails({
                       : "text-zinc-800 dark:text-zinc-100"
                   }`}
                 >
-                  {pkg.name}
+                  {pkgTr.name}
                 </p>
                 <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-3 leading-snug">
-                  {pkg.description}
+                  {pkgTr.description}
                 </p>
                 <p className="font-bold text-lg text-zinc-800 dark:text-zinc-100">
                   ${pkg.priceUSD} USD
@@ -452,7 +457,7 @@ export default function ReservationDetails({
                   </p>
                 )}
                 <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">
-                  por persona
+                  {tr.perPerson}
                 </p>
               </button>
             );
@@ -464,7 +469,7 @@ export default function ReservationDetails({
           <div className="mt-3 flex items-start gap-2 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700">
             <span className="text-red-500 mt-0.5">⚠</span>
             <p className="text-sm text-red-600 dark:text-red-400">
-              El tour privado solo está disponible de lunes a viernes. Por favor selecciona una fecha entre semana o elige otro paquete.
+              {tr.privateWeekendWarning}
             </p>
           </div>
         )}
@@ -473,30 +478,30 @@ export default function ReservationDetails({
       {/* ---------------------- TRAVELER INFO ---------------------- */}
       <div className="mb-6">
         <h3 className="text-xl font-semibold mb-4">
-          Información del Viajero Principal
+          {tr.travelerTitle}
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <TravelerInputField
             id="name"
-            label="Nombre Completo"
+            label={tr.fullName}
             value={formState.name}
             onChange={(v) => handleChange("name", v)}
-            placeholder="Ej. Juan Pérez"
+            placeholder={tr.namePlaceholder}
             isValid={validation.isNameValid}
-            validationMessage="El nombre es obligatorio."
+            validationMessage={tr.nameRequired}
             required
           />
 
           <TravelerInputField
             id="email"
-            label="Correo Electrónico"
+            label={tr.emailLabel}
             type="email"
             value={formState.email}
             onChange={(v) => handleChange("email", v)}
-            placeholder="Ej. juan@example.com"
+            placeholder={tr.emailPlaceholder}
             isValid={validation.isEmailValid}
-            validationMessage="Por favor, introduce un correo electrónico válido."
+            validationMessage={tr.emailInvalid}
             required
           />
 
@@ -506,17 +511,20 @@ export default function ReservationDetails({
             setPhoneCode={(v) => handleChange("phoneCode", v)}
             setPhoneNumber={(v) => handleChange("phoneNumber", v)}
             isValid={validation.isPhoneNumberValid}
+            label={tr.phoneLabel}
+            placeholder={tr.phonePlaceholder}
+            validationMessage={tr.phoneInvalid}
           />
         </div>
       </div>
 
       {/* ---------------------- PRICE & TICKETS ---------------------- */}
       <div className="mb-6">
-        <h3 className="text-xl font-semibold mb-4">Selección de Tickets</h3>
+        <h3 className="text-xl font-semibold mb-4">{tr.ticketsTitle}</h3>
 
         <div className="flex items-center gap-4 mb-4">
           <label htmlFor="tickets" className="font-semibold text-lg">
-            Número de Personas
+            {tr.numPeople}
           </label>
           <input
             id="tickets"
@@ -537,39 +545,41 @@ export default function ReservationDetails({
             className="w-20 p-2 rounded-lg border bg-white dark:bg-zinc-800"
             disabled={slots === 0}
           />
-          <span className="text-sm text-zinc-500">(Disponibles: {slots})</span>
+          <span className="text-sm text-zinc-500">({tr.availablePrefix} {slots})</span>
         </div>
 
         <div className="bg-zinc-100 dark:bg-zinc-800 p-4 rounded-xl">
           {selectedPackage ? (
             <>
               <div className="flex justify-between mb-2">
-                <span>Paquete</span>
-                <span className="font-medium">{selectedPackage.name}</span>
+                <span>{tr.packageLabel}</span>
+                <span className="font-medium">{tr.packages[selectedPackage.id].name}</span>
               </div>
               <div className="flex justify-between mb-2">
-                <span>Precio por persona</span>
+                <span>{tr.pricePerPerson}</span>
                 <span>${selectedPackage.priceUSD.toFixed(2)}</span>
               </div>
             </>
           ) : (
             <div className="flex justify-between mb-2 text-zinc-400">
-              <span>Selecciona un paquete para ver el precio</span>
+              <span>{tr.selectPackageCta}</span>
             </div>
           )}
 
           <div className="flex justify-between mb-2">
-            <span>Subtotal ({tickets} {tickets === 1 ? "persona" : "personas"})</span>
+            <span>
+              {tr.subtotalLabel} ({tickets} {tickets === 1 ? tr.person : tr.persons})
+            </span>
             <span>${subtotal.toFixed(2)}</span>
           </div>
 
           <div className="flex justify-between mb-2">
-            <span>Impuestos ({TAX_RATE * 100}%)</span>
+            <span>{tr.taxes} ({TAX_RATE * 100}%)</span>
             <span>${taxes.toFixed(2)}</span>
           </div>
 
           <div className="flex justify-between font-bold text-lg border-t pt-2 border-zinc-300 dark:border-zinc-700">
-            <span>Total</span>
+            <span>{tr.total}</span>
             <span>${totalWithTaxes.toFixed(2)}</span>
           </div>
         </div>
@@ -577,23 +587,23 @@ export default function ReservationDetails({
 
       {/* ---------------------- SPECIAL REQUESTS ---------------------- */}
       <div className="mb-6">
-        <h3 className="text-xl font-semibold mb-4">Solicitudes Especiales</h3>
+        <h3 className="text-xl font-semibold mb-4">{tr.specialTitle}</h3>
         <textarea
           id="specialRequests"
           value={formState.specialRequests}
           onChange={(e) => handleChange("specialRequests", e.target.value)}
           className="w-full p-3 rounded-lg border bg-white dark:bg-zinc-800 h-24 border-zinc-300 dark:border-zinc-700 focus:ring-teal-500 focus:border-teal-500"
-          placeholder="Ej. Requerimientos dietéticos, accesibilidad, etc."
+          placeholder={tr.specialPlaceholder}
         />
       </div>
 
       {/* ---------------------- TERMS ---------------------- */}
       <div className="mb-6">
-        <h3 className="text-xl font-semibold mb-4">Políticas y Términos</h3>
+        <h3 className="text-xl font-semibold mb-4">{tr.policiesTitle}</h3>
 
         <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-xl mb-4 text-zinc-800 dark:text-zinc-300">
           <strong className="block mb-1 text-yellow-900 dark:text-yellow-300">
-            Política de Cancelación:
+            {tr.cancellationLabel}
           </strong>
           <p className="text-sm">
             {TOUR_INFO.cancellationPolicy ||
@@ -617,7 +627,7 @@ export default function ReservationDetails({
             className="h-5 w-5 text-teal-600 rounded border-zinc-400 focus:ring-teal-500 dark:bg-zinc-700 dark:border-zinc-600 mt-0.5"
           />
           <span className="text-zinc-700 dark:text-zinc-400 text-base">
-            He leído y acepto los
+            {tr.agreeText}
             <Link
               href="/terminos-y-condiciones"
               target="_blank"
@@ -625,9 +635,9 @@ export default function ReservationDetails({
               onClick={(e) => e.stopPropagation()}
               className="text-teal-600 underline ml-1"
             >
-              Términos y Condiciones
+              {tr.termsLink}
             </Link>
-            y la
+            {" "}{tr.andThe}{" "}
             <Link
               href="/politica-de-privacidad"
               target="_blank"
@@ -635,7 +645,7 @@ export default function ReservationDetails({
               onClick={(e) => e.stopPropagation()}
               className="text-teal-600 underline ml-1"
             >
-              Política de Privacidad
+              {tr.privacyLink}
             </Link>
             .
           </span>
@@ -650,7 +660,7 @@ export default function ReservationDetails({
           disabled={!isFormValid}
           className="px-8 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-full font-bold shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Proceder a Pago
+          {tr.proceedBtn}
         </button>
       </div>
     </div>

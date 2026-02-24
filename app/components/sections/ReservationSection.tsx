@@ -5,6 +5,8 @@ import { useCalendarContext } from "@/app/context/CalendarContext";
 import ReservationDetails from "@/app/components/reservation/ReservationDetails";
 import PaymentModal from "@/app/components/reservation/PaymentModal";
 import { PayPalOrder } from "@/lib/types";
+import { useLanguage } from "@/app/context/LanguageContext";
+import { translations } from "@/lib/translations";
 
 type OrderPayload = {
   name: string;
@@ -33,6 +35,9 @@ export default function ReservationSection({ className }: Props) {
     availability,
   } = useCalendarContext();
 
+  const { lang } = useLanguage();
+  const tr = translations[lang].calendar;
+
   const [orderDetails, setOrderDetails] = useState<OrderPayload | null>(null);
   const [showModal, setShowModal] = useState(false);
 
@@ -41,20 +46,10 @@ export default function ReservationSection({ className }: Props) {
     setShowModal(true);
   };
 
-  const monthNames = [
-    "Enero",
-    "Febrero",
-    "Marzo",
-    "Abril",
-    "Mayo",
-    "Junio",
-    "Julio",
-    "Agosto",
-    "Septiembre",
-    "Octubre",
-    "Noviembre",
-    "Diciembre",
-  ];
+  const monthNames =
+    lang === "es"
+      ? ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"]
+      : ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
   const monthName = monthNames[currentMonth];
 
@@ -63,7 +58,7 @@ export default function ReservationSection({ className }: Props) {
       <div className={className}>
         <div className="rounded-xl bg-blue-50 dark:bg-zinc-900 p-8 text-center">
           <p className="text-lg text-blue-800 dark:text-blue-300">
-            Selecciona una fecha disponible en el calendario.
+            {tr.noDate}
           </p>
         </div>
       </div>
