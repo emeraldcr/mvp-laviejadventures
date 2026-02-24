@@ -2,6 +2,19 @@
   "framework": "nextjs",
   "buildCommand": "next build",
   "installCommand": "npm ci",
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "laviejaadventures.com"
+        }
+      ],
+      "destination": "https://www.laviejaadventures.com/:path*",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/:path*",
