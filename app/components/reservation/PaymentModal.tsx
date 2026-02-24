@@ -4,30 +4,14 @@ import React, { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/lib/translations";
+import type { PaymentModalProps } from "@/lib/types";
 
 declare global {
   interface Window {
-    paypal?: any;
+    paypal?: { Buttons: (config: unknown) => { render: (container: HTMLDivElement) => void } };
   }
 }
 
-export type OrderDetails = {
-  name: string;
-  email: string;
-  phone: string;
-  tickets: number;
-  total: number;
-  date: string;
-  tourTime: string;
-  tourPackage: string;
-  packagePrice: number;
-};
-
-type PaymentModalProps = {
-  orderDetails: OrderDetails;
-  onClose: () => void;
-  onSuccess: (orderData: any) => void;
-};
 
 export default function PaymentModal({
   orderDetails,
@@ -90,7 +74,7 @@ export default function PaymentModal({
             return data.orderID;
           },
 
-          onApprove: async (data: any) => {
+          onApprove: async (data: { orderID: string }) => {
             const res = await fetch("/api/paypal/capture-order", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -113,7 +97,7 @@ export default function PaymentModal({
             }, 500);
           },
 
-          onError: (err: any) => {
+          onError: (err: unknown) => {
             alert(tr.error);
             console.error("PAYPAL ERROR:", err);
           },

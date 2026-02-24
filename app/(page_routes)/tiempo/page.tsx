@@ -9,6 +9,7 @@ import ForecastPanel       from "./components/ForecastPanel";
 import RollingRiskChart    from "./components/RollingRiskChart";
 import WeatherMetricsPanel from "./components/WeatherMetricsPanel";
 import RegionalWeatherPanel from "./components/RegionalWeatherPanel";
+import type { DashboardApiResponse } from "@/lib/types";
 
 export const revalidate = 300;
 export const dynamic = "force-dynamic";
@@ -52,8 +53,8 @@ export default async function DashboardPage() {
       fetchRainData(),
       fetchRegionalData(),
     ]);
-  } catch (err: any) {
-    error = err.message || "No se pudieron cargar los datos del IMN";
+  } catch (err: unknown) {
+    error = err instanceof Error ? err.message : "No se pudieron cargar los datos del IMN";
     console.error("[Dashboard]", err);
     // Still try regional data independently if IMN fails
     try {
@@ -101,7 +102,7 @@ export default async function DashboardPage() {
   );
 }
 
-function DashboardContent({ data }: { data: any }) {
+function DashboardContent({ data }: { data: DashboardApiResponse }) {
   if (!data?.success) {
     return (
       <div className="text-center py-12 text-red-400 text-xl">
@@ -232,7 +233,7 @@ function DashboardContent({ data }: { data: any }) {
                 </tr>
               </thead>
               <tbody>
-                {payload.daily.slice(0, 14).map((day: any, i: number) => (
+                {payload.daily.slice(0, 14).map((day, i: number) => (
                   <tr key={i} className="border-b border-slate-700 hover:bg-slate-700/30 transition-colors">
                     <td className="py-3 px-4">{day.fecha}</td>
                     <td className="text-right py-3 px-4 font-medium">{day.lluvia_mm.toFixed(2)}</td>

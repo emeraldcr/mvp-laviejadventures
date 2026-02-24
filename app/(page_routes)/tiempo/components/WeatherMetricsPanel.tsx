@@ -1,14 +1,5 @@
 import { Thermometer, Droplets } from "lucide-react";
-
-type WeatherMetrics = {
-  hasData:    boolean;
-  avgTemp24h: number | null;
-  maxTemp24h: number | null;
-  minTemp24h: number | null;
-  avgHR24h:   number | null;
-  maxHR24h:   number | null;
-  minHR24h:   number | null;
-};
+import type { WeatherMetrics } from "@/lib/types";
 
 export default function WeatherMetricsPanel({ metrics }: { metrics: WeatherMetrics }) {
   if (!metrics.hasData) return null;

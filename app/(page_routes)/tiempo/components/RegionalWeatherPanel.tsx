@@ -1,7 +1,7 @@
 "use client";
 
 import { Thermometer, Droplets, Wind, CloudRain, MapPin, Calendar } from "lucide-react";
-import type { LocationWeather } from "@/app/api/tiempo/regional/route";
+import type { LocationWeather, RegionalWeatherPanelProps } from "@/lib/types";
 
 // Day-of-week in Spanish
 function dayLabel(dateStr: string, index: number): string {
@@ -177,12 +177,8 @@ function LocationCard({ loc }: { loc: LocationWeather }) {
   );
 }
 
-interface Props {
-  locations: LocationWeather[];
-  fetchedAt: string;
-}
 
-export default function RegionalWeatherPanel({ locations, fetchedAt }: Props) {
+export default function RegionalWeatherPanel({ locations, fetchedAt }: RegionalWeatherPanelProps) {
   const fetchTime = (() => {
     try {
       return new Date(fetchedAt).toLocaleTimeString("es-CR", {

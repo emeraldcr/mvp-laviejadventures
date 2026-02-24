@@ -14,14 +14,7 @@ import {
 } from "recharts";
 import { format, parseISO, parse, isValid } from "date-fns";
 import { es } from "date-fns/locale";
-
-type HourlyData = {
-  fecha: string;
-  timestampISO?: string | null;
-  lluvia_mm: number;
-  temp_c?: number | null;
-  hr_pct?: number | null;
-};
+import type { HourlyRainEntry } from "@/lib/types";
 
 type ChartEntry = {
   time: string;
@@ -31,7 +24,7 @@ type ChartEntry = {
   fullDate: string;
 };
 
-export default function HourlyRainChart({ hourly }: { hourly: HourlyData[] }) {
+export default function HourlyRainChart({ hourly }: { hourly: HourlyRainEntry[] }) {
   // Prepare data: reverse to show oldest → newest (left to right)
   const chartData: ChartEntry[] = hourly
     .slice(0, 72) // máx 72 horas para no saturar el gráfico
