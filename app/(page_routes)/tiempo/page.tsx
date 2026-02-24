@@ -12,7 +12,7 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import {
   BarChart, Bar, LineChart, Line, AreaChart, Area,
   XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, ReferenceLine,
@@ -244,24 +244,28 @@ export default function TourWeatherDashboard() {
   const DecisionIcon = decision.icon;
 
   // ── Snapshot for Anthropic funny message ──
-  const weatherSnap: WeatherSnapshot | null = rain?.status
-    ? {
-        risk:        rain.status.risk,
-        riskLabel:   rain.status.riskLabel,
-        last1h_mm:   rain.stats?.last1h_mm  ?? 0,
-        last3h_mm:   rain.stats?.last3h_mm  ?? 0,
-        last6h_mm:   rain.stats?.last6h_mm  ?? 0,
-        last24h_mm:  rain.stats?.last24h_mm ?? 0,
-        intensity:   rain.status.intensity,
-        trend:       rain.status.trend,
-        consensusMm: rain.forecast?.consensusMm ?? 0,
-        confidence:  rain.forecast?.confidence  ?? "baja",
-        wetStreak:   rain.stats?.wetStreak  ?? 0,
-        dryStreak:   rain.stats?.dryStreak  ?? 0,
-        avgTemp24h:  rain.weather?.avgTemp24h ?? null,
-        avgHR24h:    rain.weather?.avgHR24h   ?? null,
-      }
-    : null;
+  // Memoized on `rain` so a new object reference is only created when weather
+  // data actually changes — prevents the useEffect in WeatherMessage from
+  // firing on every unrelated parent re-render.
+  const weatherSnap = useMemo<WeatherSnapshot | null>(() => {
+    if (!rain?.status) return null;
+    return {
+      risk:        rain.status.risk,
+      riskLabel:   rain.status.riskLabel,
+      last1h_mm:   rain.stats?.last1h_mm  ?? 0,
+      last3h_mm:   rain.stats?.last3h_mm  ?? 0,
+      last6h_mm:   rain.stats?.last6h_mm  ?? 0,
+      last24h_mm:  rain.stats?.last24h_mm ?? 0,
+      intensity:   rain.status.intensity,
+      trend:       rain.status.trend,
+      consensusMm: rain.forecast?.consensusMm ?? 0,
+      confidence:  rain.forecast?.confidence  ?? "baja",
+      wetStreak:   rain.stats?.wetStreak  ?? 0,
+      dryStreak:   rain.stats?.dryStreak  ?? 0,
+      avgTemp24h:  rain.weather?.avgTemp24h ?? null,
+      avgHR24h:    rain.weather?.avgHR24h   ?? null,
+    };
+  }, [rain]);
 
   // ── Chart data: last 12h hourly ──
   const hourlyChart = (rain?.data?.hourly ?? [])
