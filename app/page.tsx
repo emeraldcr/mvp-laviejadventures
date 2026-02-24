@@ -30,11 +30,7 @@ function BookingSection() {
     );
   }
 
-  // Optional: Show error if auth fails (you can style/customize this)
-  if (error) {
-    console.error("Auth error:", error);
-    // You could return a fallback UI here if desired
-  }
+
 
   return (
     <section id="booking" className="relative bg-zinc-950 overflow-hidden">
