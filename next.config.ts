@@ -39,6 +39,21 @@ const nextConfig: NextConfig = {
     removeConsole: process.env.NODE_ENV === "production",
   },
 
+  async rewrites() {
+    return [
+      {
+        source: '/:path*',           // Matches everything on the subdomain
+        has: [
+          {
+            type: 'host',
+            value: 'platform.laviejaadventures.com',  // or 'platform.laviejaadventures.com:443' if needed
+          },
+        ],
+        destination: '/platform/:path*',  // Rewrites internally to your /platform route
+      },
+    ];
+  },
+
   // Optional extras for even more speed (if compatible with your app)
   // swcMinify: true,  // usually default, but explicit is fine
 };
