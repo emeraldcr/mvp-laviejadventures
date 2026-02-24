@@ -38,7 +38,7 @@ export default function AuthLanding() {
                 {/* Google Button – using Chrome icon from lucide-react */}
                 <button
                     type="button"
-                    onClick={() => signIn('google', { callbackUrl: '/platform' })} // Redirect after login (change path as needed)
+                    onClick={() => signIn('google', { callbackUrl: '/b2b/dashboard' })} // Redirect after login (change path as needed)
                     className="w-full bg-white text-gray-900 hover:bg-gray-100 font-medium py-3.5 px-6 rounded-lg flex items-center justify-center gap-3 transition-colors shadow-md"
                 >
                     <Chrome className="h-7 w-7" /> {/* Slightly larger for better visibility */}
