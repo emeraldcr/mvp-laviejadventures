@@ -1,20 +1,5 @@
 import { CloudRain, Clock, CalendarDays, AlertTriangle, Droplet } from "lucide-react";
-
-interface AccumulationStatsProps {
-  last1h:           number;
-  last3h:           number;
-  last6h:           number;
-  last24h:          number;
-  last48h:          number;
-  todayAccum:       number | string;
-  yesterday:        number | string;
-  forecastNextHour: number;
-  confidence:       "alta" | "media" | "baja";
-  wetHoursLast24:   number;
-  wetStreak:        number;
-  dryStreak:        number;
-  peakHour24h:      { mm: number; fecha: string };
-}
+import type { AccumulationStatsProps } from "@/lib/types";
 
 export default function AccumulationStats({
   last1h,

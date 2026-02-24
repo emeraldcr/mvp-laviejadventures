@@ -3,6 +3,7 @@
 // locations in the San Carlos / Juan Castro Blanco area of Costa Rica.
 
 import { NextResponse } from "next/server";
+import type { LocationWeather } from "@/lib/types";
 
 const CACHE_TTL = 1800; // 30 min – regional forecast doesn't change as fast
 
@@ -37,46 +38,6 @@ const WMO: Record<number, { label: string; icon: string }> = {
 function wmo(code: number): { label: string; icon: string } {
   return WMO[code] ?? { label: `Código ${code}`, icon: "🌡️" };
 }
-
-export type LocationWeather = {
-  id: string;
-  name: string;
-  description: string;
-  lat: number;
-  lon: number;
-  elevation_m: number | null;
-  current: {
-    time: string;
-    temp_c: number;
-    hr_pct: number;
-    precip_mm: number;
-    rain_mm: number;
-    wind_kmh: number;
-    cloud_pct: number;
-    weather_code: number;
-    weather_label: string;
-    weather_icon: string;
-  } | null;
-  hourly_24h: Array<{
-    time: string;
-    temp_c: number;
-    hr_pct: number;
-    precip_mm: number;
-    rain_mm: number;
-    weather_code: number;
-    weather_icon: string;
-  }>;
-  daily_5d: Array<{
-    date: string;
-    weather_code: number;
-    weather_label: string;
-    weather_icon: string;
-    temp_max_c: number;
-    temp_min_c: number;
-    precip_sum_mm: number;
-  }>;
-  error?: string;
-};
 
 const LOCATIONS: Array<{
   id: string;

@@ -13,13 +13,7 @@ import {
 } from "recharts";
 import { parseISO, format } from "date-fns";
 import { es } from "date-fns/locale";
-
-type RollingEntry = {
-  fecha:        string;
-  timestampISO: string | null;
-  r3h:          number;
-  r6h:          number;
-};
+import type { RollingRiskEntry } from "@/lib/types";
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
@@ -35,7 +29,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   );
 };
 
-export default function RollingRiskChart({ data }: { data: RollingEntry[] }) {
+export default function RollingRiskChart({ data }: { data: RollingRiskEntry[] }) {
   const chartData = data.map((d) => {
     let label = d.fecha;
     if (d.timestampISO) {

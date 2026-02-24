@@ -3,20 +3,7 @@
 
 import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/lib/translations";
-
-type SuccessClientProps = {
-  email?: string | null;
-  name?: string | null;
-  phone?: string | null;
-  date?: string | null;
-  tickets?: string | number | null;
-  amount?: string | number | null;
-  currency?: string | null;
-  orderId?: string | null;
-  captureId?: string | null;
-  status?: string | null;
-  error?: string | null;
-};
+import type { SuccessClientProps } from "@/lib/types";
 
 export function SuccessClient({
   email,

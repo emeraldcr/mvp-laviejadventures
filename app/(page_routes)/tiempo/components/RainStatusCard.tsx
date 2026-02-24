@@ -1,5 +1,6 @@
 // dashboard/components/RainStatusCard.tsx
-import { CloudRain, AlertTriangle, TrendingUp, TrendingDown } from "lucide-react";
+import { TrendingUp, TrendingDown } from "lucide-react";
+import type { RainStatusCardProps } from "@/lib/types";
 
 const colorMap = {
   green: "bg-green-600/30 border-green-500 text-green-300",
@@ -14,14 +15,7 @@ export default function RainStatusCard({
   intensity,
   lastHour_mm,
   trend,
-}: {
-  risk: string;
-  riskLabel: string;
-  riskEmoji: string;
-  intensity: string;
-  lastHour_mm: number;
-  trend: string;
-}) {
+}: RainStatusCardProps) {
   return (
     <div className={`p-6 rounded-2xl border backdrop-blur-sm ${colorMap[risk as keyof typeof colorMap]}`}>
       <div className="flex items-center justify-between mb-4">

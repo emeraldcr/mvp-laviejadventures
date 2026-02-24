@@ -8,11 +8,8 @@ import {
 
 import nodemailer from "nodemailer";
 import { MongoClient, Db } from "mongodb";
+import type { BookingRecord, SendEmailParams, SuccessPageProps } from "@/lib/types";
 export const dynamic = "force-dynamic";
-
-type SuccessPageProps = {
-  searchParams: Promise<{ orderId?: string }>;
-};
 
 // ---------- MONGO HELPERS (inline) ----------
 
@@ -38,23 +35,6 @@ async function getDb(): Promise<Db> {
   return cachedDb;
 }
 
-type BookingRecord = {
-  orderId: string;
-  captureId: string | null;
-  status: string | null;
-  name: string | null;
-  email: string | null;
-  phone: string | null;
-  date: string | null;
-  tickets: number | null;
-  amount: number | null;
-  currency: string | null;
-  tourTime: string | null;
-  tourPackage: string | null;
-  packagePrice: number | null;
-  createdAt?: Date;
-  paypalRaw?: unknown;
-};
 
 async function saveBookingToDb(record: BookingRecord): Promise<string | null> {
   try {
@@ -91,19 +71,6 @@ function createTransporter() {
   });
 }
 
-type SendEmailParams = {
-  to: string | null;
-  name: string | null;
-  phone: string | null;
-  date: string | null;
-  tickets: string | number | null;
-  amount: string | number | null;
-  currency: string | null;
-  orderId: string;
-  captureId: string | null;
-  status: string | null;
-  reservationId: string | null;
-};
 
 function createMailBody({
   to,
