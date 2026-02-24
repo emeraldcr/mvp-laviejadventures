@@ -3,7 +3,9 @@
     "allow": [
       "Bash(head:*)",
       "Bash(python3:*)",
-      "Bash(tail:*)"
+      "Bash(tail:*)",
+      "Bash(cd /c/Users/aroja/Documents/GitHub/mvp-laviejadventures && echo \"1427711885990846467-XzGfH1JysbxgZMVLfMHFiaDukfqhE9\" | npx vercel env add AUTH_SECRET production --yes 2>&1)",
+      "Bash(cd /c/Users/aroja/Documents/GitHub/mvp-laviejadventures && npx vercel --prod 2>&1)"
     ]
   }
 }
