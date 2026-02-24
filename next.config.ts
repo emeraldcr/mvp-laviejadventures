@@ -9,7 +9,11 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: false,
     formats: ["image/avif", "image/webp"],
-    // remotePatterns: [ { protocol: "https", hostname: "**" } ], // restrict for better security/perf
+    remotePatterns: [
+      { protocol: "https", hostname: "lh3.googleusercontent.com" }, // Google profile pictures
+      { protocol: "https", hostname: "avatars.githubusercontent.com" }, // GitHub profile pictures
+      { protocol: "https", hostname: "*.googleusercontent.com" },
+    ],
   },
 
   // Keep skipping type-check during build (run tsc separately in CI)

@@ -9,18 +9,16 @@ import { CalendarProvider } from "@/app/context/CalendarContext";
 import { motion } from "framer-motion";
 import { CalendarDays, ClipboardList } from "lucide-react";
 import { useLanguage } from "@/app/context/LanguageContext";
-import { useUser } from "@auth0/nextjs-auth0/client"; // ← Key import for client-side auth
-import LoginButton from "../src/components/LoginButton";
-import LogoutButton from "../src/components/LogoutButton";
+import { useSession, signIn, signOut } from "next-auth/react";
 import Profile from "../src/components/Profile";
 
 // BookingSection is a client component that can now safely use useUser
 function BookingSection() {
   const { lang } = useLanguage();
-  const { user, error, isLoading } = useUser();
+  const { data: session, status } = useSession();
+  const user = session?.user;
 
-  // Handle auth loading state
-  if (isLoading) {
+  if (status === "loading") {
     return (
       <div className="relative z-10 container mx-auto px-4 md:px-8 py-16 md:py-28 text-center">
         <div className="text-zinc-400 text-lg">
@@ -29,8 +27,6 @@ function BookingSection() {
       </div>
     );
   }
-
-
 
   return (
     <section id="booking" className="relative bg-zinc-950 overflow-hidden">
@@ -121,8 +117,19 @@ function BookingSection() {
               {lang === "es" ? "¡Sesión iniciada con éxito!" : "Successfully logged in!"}
             </p>
             <Profile />
-            <div className="mt-6">
-              <LogoutButton />
+            <div className="mt-6 flex flex-col gap-3">
+              <a
+                href="/dashboard"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700"
+              >
+                {lang === "es" ? "Ver mi dashboard" : "Go to Dashboard"}
+              </a>
+              <button
+                onClick={() => signOut({ callbackUrl: "/" })}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-600 px-4 py-3 text-sm font-semibold text-zinc-300 transition hover:bg-zinc-800"
+              >
+                {lang === "es" ? "Cerrar sesión" : "Log Out"}
+              </button>
             </div>
           </div>
         ) : (
@@ -132,7 +139,12 @@ function BookingSection() {
                 ? "¡Bienvenido! Inicia sesión para reservar o ver tu perfil."
                 : "Welcome! Please log in to book your adventure or access your profile."}
             </p>
-            <LoginButton />
+            <button
+              onClick={() => signIn(undefined, { callbackUrl: "/dashboard" })}
+              className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700"
+            >
+              {lang === "es" ? "Iniciar sesión" : "Log In"}
+            </button>
           </div>
         )}
       </div>
