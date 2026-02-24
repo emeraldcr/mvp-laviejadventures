@@ -1,59 +1,66 @@
-// app/dashboard/page.tsx
 import { Suspense } from "react";
-import RainStatusCard from "./components/RainStatusCard";
-import HourlyRainChart from "./components/HourlyRainChart";
-import AccumulationStats from "./components/AccumulationStats";
-import LastUpdate from "./components/LastUpdate";
-import LoadingSkeleton from "./components/LoadingSkeleton";
+import RainStatusCard      from "./components/RainStatusCard";
+import HourlyRainChart     from "./components/HourlyRainChart";
+import AccumulationStats   from "./components/AccumulationStats";
+import LastUpdate          from "./components/LastUpdate";
+import LoadingSkeleton     from "./components/LoadingSkeleton";
+import DailyRainBarChart   from "./components/DailyRainBarChart";
+import ForecastPanel       from "./components/ForecastPanel";
+import RollingRiskChart    from "./components/RollingRiskChart";
+import WeatherMetricsPanel from "./components/WeatherMetricsPanel";
 
-export const revalidate = 300; // ISR cada 5 minutos (como el cache del API)
-export const dynamic = "force-dynamic"; // o "auto" si prefieres
+export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Dashboard Lluvia Río La Vieja | La Vieja Adventures",
-  description: "Monitoreo en tiempo real de lluvia y riesgo de crecida en Montaña Sagrada – ideal para tours en río.",
+  description:
+    "Monitoreo en tiempo real de lluvia y riesgo de crecida – Estación Montaña Sagrada (IMN). Ideal para tours en río.",
 };
 
 async function fetchRainData() {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/tiempo`,
-    { next: { revalidate: 300 } }
-  );
-  if (!res.ok) throw new Error("Error al cargar datos de lluvia");
+  const base = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+  const res = await fetch(`${base}/api/tiempo?hours=48&days=14`, {
+    next: { revalidate: 300 },
+  });
+  if (!res.ok) throw new Error(`Error ${res.status}: ${res.statusText}`);
   return res.json();
 }
 
 export default async function DashboardPage() {
-  let data;
-  let error = null;
+  let apiData = null;
+  let error: string | null = null;
 
   try {
-    data = await fetchRainData();
-  } catch (err) {
-    error = (err as Error).message;
+    apiData = await fetchRainData();
+  } catch (err: any) {
+    error = err.message || "No se pudieron cargar los datos del IMN";
+    console.error("[Dashboard]", err);
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 text-white">
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
-        <header className="mb-10 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-3">
+    <main className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-800 text-slate-100">
+      <div className="container mx-auto px-4 py-8 md:py-12 max-w-7xl">
+        <header className="text-center mb-10 md:mb-14">
+          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-3 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500">
             Dashboard Lluvia – Río La Vieja
           </h1>
-          <p className="text-lg text-slate-300">
-            Monitoreo en tiempo real – Reserva Montaña Sagrada (IMN)
+          <p className="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto">
+            Monitoreo en tiempo real – Estación Automática Montaña Sagrada (IMN)
           </p>
         </header>
 
         {error ? (
-          <div className="bg-red-900/50 border border-red-500 text-red-200 p-6 rounded-xl text-center">
-            <p className="text-xl font-semibold mb-2">¡Ups! No pudimos cargar los datos</p>
-            <p>{error}</p>
-            <p className="mt-4 text-sm">Intenta de nuevo en unos minutos o revisa tu conexión.</p>
+          <div className="bg-red-950/60 border border-red-600/50 rounded-2xl p-8 text-center shadow-xl">
+            <h2 className="text-2xl font-bold text-red-300 mb-4">¡Problema al cargar datos!</h2>
+            <p className="text-slate-200 mb-4">{error}</p>
+            <p className="text-sm text-slate-400">
+              Intenta refrescar la página en unos minutos. Los datos se actualizan cada 5 minutos.
+            </p>
           </div>
         ) : (
           <Suspense fallback={<LoadingSkeleton />}>
-            <DashboardContent data={data} />
+            <DashboardContent data={apiData} />
           </Suspense>
         )}
       </div>
@@ -63,16 +70,21 @@ export default async function DashboardPage() {
 
 function DashboardContent({ data }: { data: any }) {
   if (!data?.success) {
-    return <div className="text-center text-red-400">Datos no disponibles</div>;
+    return (
+      <div className="text-center py-12 text-red-400 text-xl">
+        Datos no disponibles en este momento
+      </div>
+    );
   }
 
-  const { status, now, stats, forecast, meta } = data;
+  const { status, stats, forecast, weather, analysis, meta, data: payload, currentSnapshot } = data;
 
   return (
     <>
       <LastUpdate lastUpdateISO={meta.lastUpdateISO} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+      {/* ── Row 1: Status card + Accumulation stats ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 mb-8">
         <RainStatusCard
           risk={status.risk}
           riskLabel={status.riskLabel}
@@ -81,22 +93,141 @@ function DashboardContent({ data }: { data: any }) {
           lastHour_mm={status.lastHour_mm}
           trend={status.trend}
         />
-
         <div className="lg:col-span-2">
-          <AccumulationStats stats={stats} forecast={forecast} />
+          <AccumulationStats
+            last1h={stats.last1h_mm}
+            last3h={stats.last3h_mm}
+            last6h={stats.last6h_mm}
+            last24h={stats.last24h_mm}
+            last48h={stats.last48h_mm}
+            todayAccum={currentSnapshot?.sum_lluv_mm?.toFixed(2) ?? "—"}
+            yesterday={currentSnapshot?.lluv_ayer_mm?.toFixed(2) ?? "—"}
+            forecastNextHour={forecast.nextHour_mm}
+            confidence={forecast.confidence}
+            wetHoursLast24={stats.wetHoursLast24 ?? 0}
+            wetStreak={stats.wetStreak ?? 0}
+            dryStreak={stats.dryStreak ?? 0}
+            peakHour24h={stats.peakHour24h ?? { mm: 0, fecha: "—" }}
+          />
         </div>
       </div>
 
-      <div className="bg-slate-800/60 backdrop-blur-sm border border-slate-700 rounded-2xl p-6 shadow-xl">
-        <h2 className="text-2xl font-semibold mb-6 flex items-center gap-3">
-          Lluvia horaria (últimas 48 h)
-        </h2>
-        <HourlyRainChart hourly={data.data.hourly} />
-      </div>
+      {/* ── Row 2: Forecast methods panel ── */}
+      {forecast.methods && (
+        <div className="mb-8">
+          <ForecastPanel
+            methods={forecast.methods}
+            consensusMm={forecast.consensusMm ?? forecast.nextHour_mm}
+            confidence={forecast.confidence}
+          />
+        </div>
+      )}
 
-      <footer className="mt-12 text-center text-sm text-slate-500">
-        <p>Fuente: {meta.source} • Última actualización: {new Date(meta.fetchedAt).toLocaleString("es-CR")}</p>
-        <p className="mt-2">{meta.note}</p>
+      {/* ── Row 3: Weather metrics (only if station has temp/HR data) ── */}
+      {weather?.hasData && (
+        <div className="mb-8">
+          <WeatherMetricsPanel metrics={weather} />
+        </div>
+      )}
+
+      {/* ── Row 4: Hourly rain chart ── */}
+      <section className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-2xl p-6 md:p-8 shadow-2xl mb-8">
+        <h2 className="text-2xl md:text-3xl font-semibold mb-2 flex items-center gap-3">
+          Lluvia horaria
+        </h2>
+        <p className="text-sm text-slate-400 mb-6">
+          Barras = lluvia cada hora · Línea = acumulado progresivo · Últimas {payload.hourly.length} horas
+        </p>
+        <HourlyRainChart hourly={payload.hourly} />
+      </section>
+
+      {/* ── Row 5: Rolling risk chart ── */}
+      {analysis?.rollingRisk?.length > 0 && (
+        <section className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-2xl p-6 md:p-8 shadow-2xl mb-8">
+          <h2 className="text-2xl md:text-3xl font-semibold mb-2">
+            Riesgo de crecida — evolución (24h)
+          </h2>
+          <p className="text-sm text-slate-400 mb-6">
+            Acumulados móviles de 3h y 6h con umbrales de alerta. Cuando la línea cruza los umbrales, el riesgo se activa.
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6 text-center text-xs">
+            <div className="bg-slate-900/50 rounded-xl p-3 border border-slate-700/50">
+              <p className="text-yellow-300 font-semibold">3h &ge; 10 mm</p>
+              <p className="text-slate-400 mt-0.5">Precaución</p>
+            </div>
+            <div className="bg-slate-900/50 rounded-xl p-3 border border-slate-700/50">
+              <p className="text-red-300 font-semibold">3h &ge; 20 mm</p>
+              <p className="text-slate-400 mt-0.5">Riesgo alto</p>
+            </div>
+            <div className="bg-slate-900/50 rounded-xl p-3 border border-slate-700/50">
+              <p className="text-yellow-300 font-semibold">6h &ge; 18 mm</p>
+              <p className="text-slate-400 mt-0.5">Precaución</p>
+            </div>
+            <div className="bg-slate-900/50 rounded-xl p-3 border border-slate-700/50">
+              <p className="text-red-300 font-semibold">6h &ge; 35 mm</p>
+              <p className="text-slate-400 mt-0.5">Riesgo alto</p>
+            </div>
+          </div>
+          <RollingRiskChart data={analysis.rollingRisk} />
+        </section>
+      )}
+
+      {/* ── Row 6: Daily bar chart ── */}
+      {payload.daily?.length > 0 && (
+        <section className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-2xl p-6 md:p-8 shadow-2xl mb-8">
+          <h2 className="text-2xl md:text-3xl font-semibold mb-2">
+            Historial diario (7 a.m. – 7 a.m.)
+          </h2>
+          <p className="text-sm text-slate-400 mb-6">
+            Últimos {Math.min(14, payload.daily.length)} días ·
+            <span className="text-sky-400 ml-1">azul claro</span> = traza,
+            <span className="text-blue-400 ml-1">azul</span> = moderado (&ge;5 mm),
+            <span className="text-amber-400 ml-1">ámbar</span> = intenso (&ge;20 mm),
+            <span className="text-red-400 ml-1">rojo</span> = extremo (&ge;50 mm)
+          </p>
+          <DailyRainBarChart daily={payload.daily} />
+
+          {/* Also keep the table for exact values */}
+          <div className="overflow-x-auto mt-6 border-t border-slate-700 pt-6">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-600 bg-slate-700/40">
+                  <th className="text-left py-3 px-4 font-semibold">Fecha</th>
+                  <th className="text-right py-3 px-4 font-semibold">Lluvia (mm)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {payload.daily.slice(0, 14).map((day: any, i: number) => (
+                  <tr key={i} className="border-b border-slate-700 hover:bg-slate-700/30 transition-colors">
+                    <td className="py-3 px-4">{day.fecha}</td>
+                    <td className="text-right py-3 px-4 font-medium">{day.lluvia_mm.toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
+      {/* ── Footer ── */}
+      <footer className="text-center text-sm text-slate-500 mt-12">
+        <p>
+          Fuente:{" "}
+          <a
+            href={meta.source}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-cyan-400 hover:underline"
+          >
+            {meta.station}
+          </a>
+          {" · "}Última actualización:{" "}
+          {new Date(meta.fetchedAt).toLocaleString("es-CR", { timeZone: "America/Costa_Rica" })}
+        </p>
+        <p className="mt-2 italic">{meta.note}</p>
+        <p className="mt-4 text-xs opacity-70">
+          Datos preliminares – sin control de calidad oficial del IMN. Uso bajo responsabilidad propia.
+        </p>
       </footer>
     </>
   );
