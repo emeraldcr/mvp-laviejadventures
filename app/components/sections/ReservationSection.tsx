@@ -26,7 +26,6 @@ type Props = {
 
 export default function ReservationSection({ className }: Props) {
   const {
-    selectedDate,
     selectedDay,
     currentMonth,
     currentYear,
@@ -36,7 +35,7 @@ export default function ReservationSection({ className }: Props) {
   } = useCalendarContext();
 
   const { lang } = useLanguage();
-  const tr = translations[lang].calendar;
+  const tr = translations[lang];
 
   const [orderDetails, setOrderDetails] = useState<OrderPayload | null>(null);
   const [showModal, setShowModal] = useState(false);
@@ -46,12 +45,9 @@ export default function ReservationSection({ className }: Props) {
     setShowModal(true);
   };
 
-  const monthNames =
-    lang === "es"
-      ? ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"]
-      : ["January","February","March","April","May","June","July","August","September","October","November","December"];
-
-  const monthName = monthNames[currentMonth];
+  const monthName = new Intl.DateTimeFormat(lang === "es" ? "es-ES" : "en-US", {
+    month: "long",
+  }).format(new Date(currentYear, currentMonth, 1));
 
   if (!selectedDay) {
     return (
@@ -69,13 +65,13 @@ export default function ReservationSection({ className }: Props) {
 
           <div>
             <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-2">
-              {lang === "es" ? "Paso 2 · Detalles" : "Step 2 · Details"}
+              {tr.reservation.step}
             </p>
             <p className="text-base font-semibold text-zinc-200 mb-1">
-              {lang === "es" ? "Elige una fecha primero" : "Select a date first"}
+              {tr.reservation.selectDateFirst}
             </p>
             <p className="text-sm text-zinc-500 max-w-[220px] leading-relaxed">
-              {tr.noDate}
+              {tr.calendar.noDate}
             </p>
           </div>
 
@@ -84,7 +80,7 @@ export default function ReservationSection({ className }: Props) {
             <svg className="w-4 h-4 animate-bounce-x" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
             </svg>
-            <span>{lang === "es" ? "Selecciona en el calendario" : "Select from the calendar"}</span>
+            <span>{tr.reservation.selectFromCalendar}</span>
           </div>
         </div>
       </div>
