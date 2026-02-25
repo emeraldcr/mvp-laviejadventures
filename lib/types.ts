@@ -238,8 +238,56 @@ export type BookingRecord = {
   tourTime: string | null;
   tourPackage: string | null;
   packagePrice: number | null;
+  userId?: string | null;
+  userEmail?: string | null;
   createdAt?: Date;
   paypalRaw?: unknown;
+};
+
+// Tour document stored in MongoDB
+export type TourDocument = {
+  _id?: string;
+  slug: string;
+  iconName: string;
+  titleEs: string;
+  titleEn: string;
+  descriptionEs: string;
+  descriptionEn: string;
+  duration: string;
+  difficulty: string;
+  priceCRC: number;
+  tagEs: string;
+  tagEn: string;
+  accent: string;
+  border: string;
+  type: "public" | "b2b" | "both";
+  retailPricePerPax?: number;
+  currency?: string;
+  minPax?: number;
+  maxPax?: number;
+  includes?: string[];
+  exclusions?: string[];
+  restrictions?: string;
+  location?: string;
+  cancellationPolicy?: string;
+  isMain?: boolean;
+  isFeatured?: boolean;
+  isActive?: boolean;
+};
+
+// Main tour info as served from the API
+export type MainTourInfo = {
+  name: string;
+  operator: string;
+  duration: string;
+  price: string;
+  location: string;
+  inclusions: string[];
+  exclusions: string[];
+  cancellationPolicy: string;
+  details: string;
+  restrictions: string;
+  contact: ContactInfo;
 };
 
 export type SendEmailParams = {

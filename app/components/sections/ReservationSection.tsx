@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useCalendarContext } from "@/app/context/CalendarContext";
 import ReservationDetails from "@/app/components/reservation/ReservationDetails";
 import PaymentModal from "@/app/components/reservation/PaymentModal";
-import { PayPalOrder } from "@/lib/types";
+import { PayPalOrder, type MainTourInfo } from "@/lib/types";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/lib/translations";
 
@@ -39,6 +39,19 @@ export default function ReservationSection({ className }: Props) {
 
   const [orderDetails, setOrderDetails] = useState<OrderPayload | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [tourInfo, setTourInfo] = useState<MainTourInfo | null>(null);
+
+  // Fetch main tour info from MongoDB on mount
+  useEffect(() => {
+    fetch("/api/tours/main")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.tour) setTourInfo(data.tour);
+      })
+      .catch(() => {
+        // silently fall back to static TOUR_INFO inside ReservationDetails
+      });
+  }, []);
 
   const handleReserve = (data: OrderPayload) => {
     setOrderDetails(data);
@@ -98,6 +111,7 @@ export default function ReservationSection({ className }: Props) {
         onReserve={handleReserve}
         availability={availability}
         currentYear={currentYear}
+        tourInfo={tourInfo}
       />
 
       {showModal && orderDetails && (

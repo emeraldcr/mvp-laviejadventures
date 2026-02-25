@@ -1,12 +1,10 @@
-// app/(page_routes)/tours/page.tsx
-// Server component: fetches tours from MongoDB and passes to client component
+// app/api/tours/route.ts
+// Returns public tours from MongoDB, seeding defaults if the collection is empty
 
+import { NextResponse } from "next/server";
 import { getDb } from "@/lib/mongodb";
-import { ToursClient, type TourData } from "./ToursClient";
 
-export const dynamic = "force-dynamic";
-
-const DEFAULT_TOURS: Omit<TourData, "id">[] = [
+const DEFAULT_TOURS = [
   {
     slug: "cuadra-tours-aventura",
     iconName: "Bike",
@@ -21,6 +19,8 @@ const DEFAULT_TOURS: Omit<TourData, "id">[] = [
     tagEn: "Adrenaline",
     accent: "from-amber-900/40 to-amber-950/60",
     border: "border-amber-700/30 hover:border-amber-500/60",
+    type: "public",
+    isActive: true,
     isFeatured: false,
     isMain: false,
   },
@@ -38,6 +38,8 @@ const DEFAULT_TOURS: Omit<TourData, "id">[] = [
     tagEn: "Nature",
     accent: "from-cyan-900/40 to-cyan-950/60",
     border: "border-cyan-700/30 hover:border-cyan-500/60",
+    type: "public",
+    isActive: true,
     isFeatured: false,
     isMain: false,
   },
@@ -55,6 +57,8 @@ const DEFAULT_TOURS: Omit<TourData, "id">[] = [
     tagEn: "Culture",
     accent: "from-rose-900/40 to-rose-950/60",
     border: "border-rose-700/30 hover:border-rose-500/60",
+    type: "public",
+    isActive: true,
     isFeatured: false,
     isMain: false,
   },
@@ -72,6 +76,8 @@ const DEFAULT_TOURS: Omit<TourData, "id">[] = [
     tagEn: "Sensory",
     accent: "from-indigo-900/40 to-indigo-950/60",
     border: "border-indigo-700/30 hover:border-indigo-500/60",
+    type: "public",
+    isActive: true,
     isFeatured: false,
     isMain: false,
   },
@@ -89,6 +95,8 @@ const DEFAULT_TOURS: Omit<TourData, "id">[] = [
     tagEn: "Wildlife",
     accent: "from-lime-900/40 to-lime-950/60",
     border: "border-lime-700/30 hover:border-lime-500/60",
+    type: "public",
+    isActive: true,
     isFeatured: false,
     isMain: false,
   },
@@ -106,6 +114,8 @@ const DEFAULT_TOURS: Omit<TourData, "id">[] = [
     tagEn: "Nocturnal",
     accent: "from-violet-900/40 to-violet-950/60",
     border: "border-violet-700/30 hover:border-violet-500/60",
+    type: "public",
+    isActive: true,
     isFeatured: false,
     isMain: false,
   },
@@ -123,6 +133,8 @@ const DEFAULT_TOURS: Omit<TourData, "id">[] = [
     tagEn: "Extreme",
     accent: "from-red-900/40 to-red-950/60",
     border: "border-red-700/30 hover:border-red-500/60",
+    type: "public",
+    isActive: true,
     isFeatured: false,
     isMain: false,
   },
@@ -140,58 +152,54 @@ const DEFAULT_TOURS: Omit<TourData, "id">[] = [
     tagEn: "Volcanoes",
     accent: "from-orange-900/40 to-orange-950/60",
     border: "border-orange-700/30 hover:border-orange-500/60",
+    type: "public",
+    isActive: true,
     isFeatured: false,
     isMain: false,
   },
 ];
 
-async function getTours(): Promise<TourData[]> {
+export async function GET() {
   try {
     const db = await getDb();
     const collection = db.collection("tours");
 
-    let docs = await collection
-      .find({ type: { $in: ["public", "both"] }, isActive: { $ne: false }, isMain: { $ne: true } })
+    let tours = await collection
+      .find({ type: { $in: ["public", "both"] }, isActive: { $ne: false } })
       .sort({ isFeatured: -1, priceCRC: 1 })
       .toArray();
 
-    // Auto-seed if collection has no public tours yet
-    if (docs.length === 0) {
-      await collection.insertMany(
-        DEFAULT_TOURS.map((t) => ({ ...t, type: "public", isActive: true }))
-      );
-      docs = await collection
-        .find({ type: { $in: ["public", "both"] }, isActive: { $ne: false }, isMain: { $ne: true } })
+    // Seed defaults if collection is empty
+    if (tours.length === 0) {
+      await collection.insertMany(DEFAULT_TOURS);
+      tours = await collection
+        .find({ type: { $in: ["public", "both"] }, isActive: { $ne: false } })
         .sort({ isFeatured: -1, priceCRC: 1 })
         .toArray();
     }
 
-    return docs.map((t) => ({
+    const result = tours.map((t) => ({
       id: t._id.toString(),
-      slug: t.slug ?? "",
-      iconName: t.iconName ?? "Star",
-      titleEs: t.titleEs ?? "",
-      titleEn: t.titleEn ?? "",
-      descriptionEs: t.descriptionEs ?? "",
-      descriptionEn: t.descriptionEn ?? "",
-      duration: t.duration ?? "",
-      difficulty: t.difficulty ?? "Fácil",
-      priceCRC: t.priceCRC ?? 0,
-      tagEs: t.tagEs ?? "",
-      tagEn: t.tagEn ?? "",
-      accent: t.accent ?? "from-zinc-900/40 to-zinc-950/60",
-      border: t.border ?? "border-zinc-700/30",
+      slug: t.slug,
+      iconName: t.iconName,
+      titleEs: t.titleEs,
+      titleEn: t.titleEn,
+      descriptionEs: t.descriptionEs,
+      descriptionEn: t.descriptionEn,
+      duration: t.duration,
+      difficulty: t.difficulty,
+      priceCRC: t.priceCRC,
+      tagEs: t.tagEs,
+      tagEn: t.tagEn,
+      accent: t.accent,
+      border: t.border,
       isFeatured: t.isFeatured ?? false,
       isMain: t.isMain ?? false,
     }));
-  } catch (err) {
-    console.error("Failed to load tours from MongoDB:", err);
-    // Fallback to defaults so the page always renders
-    return DEFAULT_TOURS.map((t, i) => ({ id: String(i), ...t }));
-  }
-}
 
-export default async function ToursPage() {
-  const tours = await getTours();
-  return <ToursClient tours={tours} />;
+    return NextResponse.json({ tours: result });
+  } catch (err) {
+    console.error("GET /api/tours error:", err);
+    return NextResponse.json({ error: "Failed to fetch tours" }, { status: 500 });
+  }
 }

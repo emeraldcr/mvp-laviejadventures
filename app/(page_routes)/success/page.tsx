@@ -7,33 +7,10 @@ import {
 } from "@/lib/paypal";
 
 import nodemailer from "nodemailer";
-import { MongoClient, Db } from "mongodb";
+import { getDb } from "@/lib/mongodb";
+import { auth } from "@/auth";
 import type { BookingRecord, SendEmailParams, SuccessPageProps } from "@/lib/types";
 export const dynamic = "force-dynamic";
-
-// ---------- MONGO HELPERS (inline) ----------
-
-let cachedClient: MongoClient | null = null;
-let cachedDb: Db | null = null;
-
-async function getDb(): Promise<Db> {
-  if (cachedDb) return cachedDb;
-
-  const uri = process.env.MONGODB_URI;
-  const dbName = process.env.MONGODB_DB || "lva";
-
-  if (!uri) {
-    throw new Error("MONGODB_URI is not set in env");
-  }
-
-  const client = new MongoClient(uri);
-  await client.connect();
-
-  cachedClient = client;
-  cachedDb = client.db(dbName);
-
-  return cachedDb;
-}
 
 
 async function saveBookingToDb(record: BookingRecord): Promise<string | null> {
@@ -194,6 +171,11 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
     );
   }
 
+  // 0) GET LOGGED-IN USER SESSION
+  const session = await auth();
+  const userId = (session?.user as { id?: string })?.id ?? null;
+  const userEmail = session?.user?.email ?? null;
+
   // 1) GET PAYPAL ORDER DETAILS
   let paypalOrder: any = null;
   let errorMessage: string | null = null;
@@ -320,6 +302,9 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
     tourTime,
     tourPackage,
     packagePrice,
+    // Link reservation to the logged-in user
+    userId: userId,
+    userEmail: userEmail,
     paypalRaw: paypalOrder,
   };
 

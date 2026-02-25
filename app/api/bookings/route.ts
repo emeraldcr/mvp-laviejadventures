@@ -9,10 +9,19 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const userId = (session.user as { id?: string }).id ?? null;
+  const userEmail = session.user.email;
+
   const db = await getDb();
+
+  // Query by userId if available (most reliable), fallback to email match
+  const query = userId
+    ? { $or: [{ userId }, { userEmail }, { email: userEmail }] }
+    : { email: userEmail };
+
   const docs = await db
     .collection("Reservations")
-    .find({ email: session.user.email })
+    .find(query)
     .sort({ createdAt: -1 })
     .toArray();
 
