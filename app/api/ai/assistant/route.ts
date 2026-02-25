@@ -268,8 +268,9 @@ function extractPackage(raw: string): BookingState["tourPackage"] {
 
 function extractTickets(raw: string): number | null {
   const grouped = raw.match(TICKETS_PATTERN)?.[1];
-  const direct = raw.match(/(?:x|para|seriamos|somos\s+de)?\s*(\d{1,2})\s*(?:adultos?|personas?|pax)?\b/i)?.[1];
-  const parsed = Number(grouped ?? direct);
+  const withPrefix = raw.match(/(?:x|para|seriamos|somos\s+de|grupo\s+de)\s*(\d{1,2})\b/i)?.[1];
+  const withSuffix = raw.match(/\b(\d{1,2})\s*(?:adultos?|personas?|pax|tickets?|boletos?|cupos?)\b/i)?.[1];
+  const parsed = Number(grouped ?? withPrefix ?? withSuffix);
   if (!Number.isFinite(parsed) || parsed <= 0 || parsed > 20) return null;
   return parsed;
 }
