@@ -249,6 +249,7 @@ type Props = {
   currentYear: number;
   tourInfo?: MainTourInfo | null;
   tours: TourSummary[];
+  initialSelectedTourSlug?: string;
 };
 
 export default function ReservationDetails({
@@ -261,6 +262,7 @@ export default function ReservationDetails({
   currentYear,
   tourInfo,
   tours,
+  initialSelectedTourSlug,
 }: Props) {
   const { lang } = useLanguage();
   const tr = translations[lang].reservation;
@@ -281,7 +283,19 @@ export default function ReservationDetails({
   const [tourTime, setTourTime] = useState<TourTime | null>(null);
   const [tourPackage, setTourPackage] = useState<TourPackage | null>(null);
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
-  const [selectedTourSlug, setSelectedTourSlug] = useState<string>(tours[0]?.slug ?? "tour-ciudad-esmeralda");
+  const [manualSelectedTourSlug, setManualSelectedTourSlug] = useState<string | null>(null);
+
+  const selectedTourSlug = useMemo(() => {
+    if (manualSelectedTourSlug && tours.some((tour) => tour.slug === manualSelectedTourSlug)) {
+      return manualSelectedTourSlug;
+    }
+
+    if (initialSelectedTourSlug && tours.some((tour) => tour.slug === initialSelectedTourSlug)) {
+      return initialSelectedTourSlug;
+    }
+
+    return tours[0]?.slug ?? "tour-ciudad-esmeralda";
+  }, [manualSelectedTourSlug, initialSelectedTourSlug, tours]);
 
   const selectedTour = useMemo(
     () => tours.find((tour) => tour.slug === selectedTourSlug) ?? tours[0] ?? null,
@@ -464,7 +478,7 @@ export default function ReservationDetails({
                   <button
                     key={tour.slug}
                     type="button"
-                    onClick={() => setSelectedTourSlug(tour.slug)}
+                    onClick={() => setManualSelectedTourSlug(tour.slug)}
                     className={`text-left p-4 rounded-xl border-2 transition-all ${
                       isSelected
                         ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20"
