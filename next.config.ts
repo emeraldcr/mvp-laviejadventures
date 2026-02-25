@@ -7,7 +7,9 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
 
   images: {
-    unoptimized: false,
+    // Disable Next.js on-the-fly optimization to avoid Vercel image transformation/cache spikes.
+    // Images are served as-is from the source URL/static asset.
+    unoptimized: true,
     formats: ["image/avif", "image/webp"],
     remotePatterns: [
       { protocol: "https", hostname: "lh3.googleusercontent.com" }, // Google profile pictures
