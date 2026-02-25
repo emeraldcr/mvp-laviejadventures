@@ -38,14 +38,13 @@ export default async function B2BBookingsPage({
     <div>
       <B2BNav operatorName={operator.name} company={operator.company} />
 
-      <main className="mx-auto max-w-6xl px-4 py-8">
-        <div className="mb-6 flex items-center justify-between">
+      <main className="mx-auto max-w-7xl px-4 py-8 md:px-6 lg:px-8">
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-              Mis reservas
-            </h1>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400">Command Center</p>
+            <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">Mis reservas</h1>
             <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-              {allBookings.length} reserva{allBookings.length !== 1 ? "s" : ""} en total
+              {allBookings.length} reserva{allBookings.length !== 1 ? "s" : ""} en total para el canal B2B.
             </p>
           </div>
           <Link
