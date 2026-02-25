@@ -38,7 +38,7 @@ interface PackageOption {
   id: TourPackage;
   priceUSD: number;
   priceCRC: number | null;
-  weekdayOnly: boolean;
+  availableOn: "weekdays" | "weekends";
 }
 
 const PACKAGES: PackageOption[] = [
@@ -46,19 +46,19 @@ const PACKAGES: PackageOption[] = [
     id: "basic",
     priceUSD: 30,
     priceCRC: 15000,
-    weekdayOnly: false,
+    availableOn: "weekends",
   },
   {
     id: "full-day",
     priceUSD: 40,
     priceCRC: 20000,
-    weekdayOnly: false,
+    availableOn: "weekends",
   },
   {
     id: "private",
     priceUSD: 60,
     priceCRC: null,
-    weekdayOnly: true,
+    availableOn: "weekdays",
   },
 ];
 
@@ -276,14 +276,21 @@ export default function ReservationDetails({
     [tourPackage]
   );
 
-  const privateOnWeekend = tourPackage === "private" && isWeekend;
+  const selectedPackageUnavailable = selectedPackage
+    ? selectedPackage.availableOn === "weekdays"
+      ? isWeekend
+      : !isWeekend
+    : false;
+
+  const effectiveTourPackage = selectedPackageUnavailable ? null : tourPackage;
+  const effectiveSelectedPackage = selectedPackageUnavailable ? null : selectedPackage;
 
   const { subtotal, taxes, totalWithTaxes } = useMemo(() => {
-    const pricePerPerson = selectedPackage?.priceUSD ?? 0;
+    const pricePerPerson = effectiveSelectedPackage?.priceUSD ?? 0;
     const sub = tickets * pricePerPerson;
     const tax = sub * TAX_RATE;
     return { subtotal: sub, taxes: tax, totalWithTaxes: sub + tax };
-  }, [tickets, selectedPackage]);
+  }, [tickets, effectiveSelectedPackage]);
 
   const { formState, handleChange, validation } = useReservationForm({
     name: "",
@@ -294,7 +301,10 @@ export default function ReservationDetails({
     agreeTerms: false,
   });
 
-  const isStep1Valid = isTicketsValid && tourTime !== null && tourPackage !== null && !privateOnWeekend;
+  const isStep1Valid =
+    isTicketsValid &&
+    tourTime !== null &&
+    effectiveTourPackage !== null;
   const isStep2Valid = validation.isNameValid && validation.isEmailValid && validation.isPhoneNumberValid;
 
   const isFormValid = useMemo(
@@ -309,7 +319,7 @@ export default function ReservationDetails({
   ];
 
   const handleReserve = useCallback(() => {
-    if (!isFormValid || !selectedPackage || !tourTime || !tourPackage) return;
+    if (!isFormValid || !effectiveSelectedPackage || !tourTime || !effectiveTourPackage) return;
 
     onReserve({
       tickets,
@@ -320,14 +330,14 @@ export default function ReservationDetails({
       phone: `${formState.phoneCode} ${formState.phoneNumber}`,
       specialRequests: formState.specialRequests,
       tourTime,
-      tourPackage,
-      packagePrice: selectedPackage.priceUSD,
+      tourPackage: effectiveTourPackage,
+      packagePrice: effectiveSelectedPackage.priceUSD,
     });
   }, [
     isFormValid,
-    selectedPackage,
+    effectiveSelectedPackage,
     tourTime,
-    tourPackage,
+    effectiveTourPackage,
     onReserve,
     tickets,
     formattedDate,
@@ -422,8 +432,9 @@ export default function ReservationDetails({
             <h3 className="text-xl font-semibold mb-3">{tr.packageTitle}</h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {PACKAGES.map((pkg) => {
-                const isSelected = tourPackage === pkg.id;
-                const isDisabled = pkg.weekdayOnly && isWeekend;
+                const isSelected = effectiveTourPackage === pkg.id;
+                const isDisabled =
+                  pkg.availableOn === "weekdays" ? isWeekend : !isWeekend;
                 const pkgTr = tr.packages[pkg.id];
 
                 return (
@@ -440,9 +451,14 @@ export default function ReservationDetails({
                         : "border-zinc-300 dark:border-zinc-600 hover:border-emerald-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 cursor-pointer"
                     }`}
                   >
-                    {pkg.weekdayOnly && (
+                    {pkg.availableOn === "weekdays" && (
                       <span className="inline-block text-xs font-semibold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 rounded px-2 py-0.5 mb-2">
                         {tr.weekdaysOnly}
+                      </span>
+                    )}
+                    {pkg.availableOn === "weekends" && (
+                      <span className="inline-block text-xs font-semibold bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-300 rounded px-2 py-0.5 mb-2">
+                        {tr.weekendsOnly}
                       </span>
                     )}
                     <p className="font-bold text-base mb-1 text-zinc-800 dark:text-zinc-100">{pkgTr.name}</p>
@@ -452,10 +468,10 @@ export default function ReservationDetails({
                 );
               })}
             </div>
-            {privateOnWeekend && (
+            {selectedPackageUnavailable && (
               <div className="mt-3 flex items-start gap-2 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700">
                 <span className="text-red-500 mt-0.5">⚠</span>
-                <p className="text-sm text-red-600 dark:text-red-400">{tr.privateWeekendWarning}</p>
+                <p className="text-sm text-red-600 dark:text-red-400">{tr.packageAvailabilityWarning}</p>
               </div>
             )}
           </div>
@@ -507,7 +523,7 @@ export default function ReservationDetails({
       {currentStep === 3 && (
         <>
           <div className="mb-6 bg-zinc-100 dark:bg-zinc-800 p-4 rounded-xl">
-            <div className="flex justify-between mb-2"><span>{tr.packageLabel}</span><span className="font-medium">{selectedPackage ? tr.packages[selectedPackage.id].name : "—"}</span></div>
+            <div className="flex justify-between mb-2"><span>{tr.packageLabel}</span><span className="font-medium">{effectiveSelectedPackage ? tr.packages[effectiveSelectedPackage.id].name : "—"}</span></div>
             <div className="flex justify-between mb-2"><span>{tr.tourTimeTitle}</span><span>{tourTime ?? "—"}</span></div>
             <div className="flex justify-between mb-2"><span>{tr.subtotalLabel}</span><span>${subtotal.toFixed(2)}</span></div>
             <div className="flex justify-between mb-2"><span>{tr.taxes} ({TAX_RATE * 100}%)</span><span>${taxes.toFixed(2)}</span></div>
