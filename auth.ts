@@ -14,6 +14,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         signIn: "/platform",
     },
     callbacks: {
+        async jwt({ token, account, profile }) {
+            if (account && profile) {
+                token.sub = (profile as { sub?: string }).sub ?? token.sub;
+            }
+            return token;
+        },
         async session({ session, token }) {
             if (session.user && token.sub) {
                 (session.user as { id?: string }).id = token.sub;

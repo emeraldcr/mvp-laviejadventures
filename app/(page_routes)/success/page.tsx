@@ -16,7 +16,15 @@ export const dynamic = "force-dynamic";
 async function saveBookingToDb(record: BookingRecord): Promise<string | null> {
   try {
     const db = await getDb();
-    const result = await db.collection("Reservations").insertOne({
+    const col = db.collection("Reservations");
+
+    // Idempotency: return existing reservation if orderId already saved
+    const existing = await col.findOne({ orderId: record.orderId });
+    if (existing) {
+      return existing._id.toString();
+    }
+
+    const result = await col.insertOne({
       ...record,
       createdAt: new Date(),
     });
