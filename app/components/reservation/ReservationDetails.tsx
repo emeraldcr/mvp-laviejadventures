@@ -20,7 +20,7 @@ const COUNTRY_CODES = [
   { code: "+34", name: "España" },
 ];
 
-const TAX_RATE = 0.1;
+const TAX_RATE = 0.13;
 
 // ---------------------- TIME SLOTS ----------------------
 const TIME_SLOTS = [
