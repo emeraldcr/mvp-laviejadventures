@@ -2,22 +2,32 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { findOperatorByEmail } from "@/lib/models/operator";
 import { signToken, COOKIE_NAME } from "@/lib/b2b-auth";
+import { createLogger, maskEmail } from "@/lib/logger";
+
+const logger = createLogger("b2b.auth.login");
 
 export async function POST(req: NextRequest) {
   try {
     const { email, password } = await req.json();
 
     if (!email || !password) {
+      logger.warn("Missing credentials in login request");
       return NextResponse.json({ error: "Email and password are required." }, { status: 400 });
     }
 
-    const operator = await findOperatorByEmail(email);
+    const normalizedEmail = String(email).toLowerCase();
+    const operator = await findOperatorByEmail(normalizedEmail);
     if (!operator) {
+      logger.warn("Login rejected: operator not found", { email: maskEmail(normalizedEmail) });
       return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
     }
 
     const valid = await bcrypt.compare(password, operator.password);
     if (!valid) {
+      logger.warn("Login rejected: invalid password", {
+        operatorId: operator._id?.toString(),
+        email: maskEmail(normalizedEmail),
+      });
       return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
     }
 
@@ -50,9 +60,17 @@ export async function POST(req: NextRequest) {
       path: "/",
     });
 
+    logger.info("Operator login successful", {
+      operatorId: operator._id!.toString(),
+      email: maskEmail(operator.email),
+      status: operator.status,
+    });
+
     return res;
   } catch (err) {
-    console.error("B2B login error:", err);
+    logger.error("B2B login error", {
+      error: err instanceof Error ? err.message : String(err),
+    });
     return NextResponse.json({ error: "Login failed. Please try again." }, { status: 500 });
   }
 }

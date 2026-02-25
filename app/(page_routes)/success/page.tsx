@@ -10,7 +10,10 @@ import nodemailer from "nodemailer";
 import { getDb } from "@/lib/mongodb";
 import { auth } from "@/auth";
 import type { BookingRecord, SendEmailParams, SuccessPageProps } from "@/lib/types";
+import { createLogger, maskEmail } from "@/lib/logger";
 export const dynamic = "force-dynamic";
+
+const logger = createLogger("booking.success-page");
 
 
 async function saveBookingToDb(record: BookingRecord): Promise<string | null> {
@@ -30,7 +33,7 @@ async function saveBookingToDb(record: BookingRecord): Promise<string | null> {
     });
     return result.insertedId.toString();
   } catch (err) {
-    console.error("Mongo insert error:", err);
+    logger.error("Mongo insert error", { error: err instanceof Error ? err.message : String(err) });
     return null;
   }
 }
@@ -44,7 +47,7 @@ function createTransporter() {
   const pass = process.env.SMTP_PASS;
 
   if (!host || !user || !pass) {
-    console.warn("SMTP env vars not fully set, skipping email sending");
+    logger.warn("SMTP env vars not fully set, skipping email sending");
     return null;
   }
 
@@ -158,7 +161,7 @@ async function sendConfirmationEmail(params: SendEmailParams) {
     html,
   });
 
-  console.log("Confirmation email sent");
+  logger.info("Confirmation email sent", { to: maskEmail(toEmail), orderId: params.orderId });
 }
 
 // ---------- MAIN PAGE (PayPal + DB + email + UI) ----------
@@ -185,7 +188,7 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
   const userEmail = session?.user?.email ?? null;
 
   // 1) GET PAYPAL ORDER DETAILS
-  let paypalOrder: any = null;
+  let paypalOrder: unknown = null;
   let errorMessage: string | null = null;
 
   try {
@@ -205,14 +208,14 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
     paypalOrder = await res.json();
 
     if (!res.ok) {
-      console.error("PayPal ERROR:", paypalOrder);
+      logger.error("PayPal order fetch returned error", { orderId, paypalOrder });
       errorMessage =
         paypalOrder?.message ||
         paypalOrder?.details?.[0]?.description ||
         "Error al obtener detalles de PayPal.";
     }
-  } catch (err: any) {
-    console.error("PayPal fetch error:", err);
+  } catch (err: unknown) {
+    logger.error("PayPal fetch error", { orderId, error: err instanceof Error ? err.message : String(err) });
     errorMessage = "No se pudo conectar con PayPal.";
   }
 
@@ -239,12 +242,12 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
   }`.trim();
   const payerEmail = payer.email_address || "";
 
-  let meta: any = null;
+  let meta: Record<string, unknown> | null = null;
   if (purchaseUnit.custom_id) {
     try {
       meta = JSON.parse(purchaseUnit.custom_id);
     } catch (e) {
-      console.warn("Failed to parse custom_id JSON:", e);
+      logger.warn("Failed to parse custom_id JSON", { orderId, error: e instanceof Error ? e.message : String(e) });
     }
   }
 
