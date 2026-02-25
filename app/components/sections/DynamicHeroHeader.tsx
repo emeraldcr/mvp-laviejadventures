@@ -297,6 +297,7 @@ const Header = memo<{ isScrolled: boolean; onMenuToggle: () => void; isMenuOpen:
       { href: "/galeria", label: tr.gallery },
       { href: "/wildo", label: tr.wildo },
       { href: "/tiempo", label: lang === "es" ? "Pronóstico" : "Forecast" },
+      { href: "/ai", label: "AI" },
     ];
 
     const [openMobileGroup, setOpenMobileGroup] = useState<string | null>(null);
