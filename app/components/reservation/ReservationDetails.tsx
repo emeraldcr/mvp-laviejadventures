@@ -41,6 +41,13 @@ interface PackageOption {
   availableOn: "weekdays" | "weekends";
 }
 
+export type TourSummary = {
+  id: string;
+  slug: string;
+  titleEs: string;
+  titleEn: string;
+};
+
 const PACKAGES: PackageOption[] = [
   {
     id: "basic",
@@ -81,6 +88,8 @@ interface ReservationOrderPayload {
   date: string;
   tourTime: TourTime;
   tourPackage: TourPackage;
+  tourSlug: string;
+  tourName: string;
   packagePrice: number;
   specialRequests: string;
 }
@@ -239,6 +248,7 @@ type Props = {
   availability: AvailabilityMap;
   currentYear: number;
   tourInfo?: MainTourInfo | null;
+  tours: TourSummary[];
 };
 
 export default function ReservationDetails({
@@ -250,6 +260,7 @@ export default function ReservationDetails({
   availability,
   currentYear,
   tourInfo,
+  tours,
 }: Props) {
   const { lang } = useLanguage();
   const tr = translations[lang].reservation;
@@ -270,6 +281,13 @@ export default function ReservationDetails({
   const [tourTime, setTourTime] = useState<TourTime | null>(null);
   const [tourPackage, setTourPackage] = useState<TourPackage | null>(null);
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
+  const [selectedTourSlug, setSelectedTourSlug] = useState<string>(tours[0]?.slug ?? "tour-ciudad-esmeralda");
+
+  const selectedTour = useMemo(
+    () => tours.find((tour) => tour.slug === selectedTourSlug) ?? tours[0] ?? null,
+    [selectedTourSlug, tours]
+  );
+  const selectedTourName = selectedTour ? (lang === "es" ? selectedTour.titleEs : selectedTour.titleEn) : (lang === "es" ? "Tour" : "Tour");
 
   const selectedPackage = useMemo(
     () => PACKAGES.find((p) => p.id === tourPackage) ?? null,
@@ -304,7 +322,8 @@ export default function ReservationDetails({
   const isStep1Valid =
     isTicketsValid &&
     tourTime !== null &&
-    effectiveTourPackage !== null;
+    effectiveTourPackage !== null &&
+    Boolean(selectedTour);
   const isStep2Valid = validation.isNameValid && validation.isEmailValid && validation.isPhoneNumberValid;
 
   const missingStep1Items = useMemo(() => {
@@ -312,10 +331,11 @@ export default function ReservationDetails({
 
     if (!tourTime) missing.push(tr.missing.time);
     if (!effectiveTourPackage) missing.push(tr.missing.package);
+    if (!selectedTour) missing.push(lang === "es" ? "Elegir un tour." : "Choose a tour.");
     if (!isTicketsValid) missing.push(tr.missing.tickets);
 
     return missing;
-  }, [tourTime, effectiveTourPackage, isTicketsValid, tr.missing]);
+  }, [tourTime, effectiveTourPackage, isTicketsValid, selectedTour, tr.missing, lang]);
 
   const missingStep2Items = useMemo(() => {
     const missing: string[] = [];
@@ -339,7 +359,7 @@ export default function ReservationDetails({
   ];
 
   const handleReserve = useCallback(() => {
-    if (!isFormValid || !effectiveSelectedPackage || !tourTime || !effectiveTourPackage) return;
+    if (!isFormValid || !effectiveSelectedPackage || !tourTime || !effectiveTourPackage || !selectedTour) return;
 
     onReserve({
       tickets,
@@ -351,6 +371,8 @@ export default function ReservationDetails({
       specialRequests: formState.specialRequests,
       tourTime,
       tourPackage: effectiveTourPackage,
+      tourSlug: selectedTour.slug,
+      tourName: selectedTourName,
       packagePrice: effectiveSelectedPackage.priceUSD,
     });
   }, [
@@ -363,6 +385,8 @@ export default function ReservationDetails({
     formattedDate,
     totalWithTaxes,
     formState,
+    selectedTour,
+    selectedTourName,
   ]);
 
   const goToNextStep = useCallback(() => {
@@ -431,6 +455,29 @@ export default function ReservationDetails({
 
       {currentStep === 1 && (
         <>
+          <div className={`mb-6 rounded-xl ${!selectedTour ? "ring-2 ring-amber-300/70 p-3" : ""}`}>
+            <h3 className="text-xl font-semibold mb-3">{lang === "es" ? "Tour" : "Tour"}</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {tours.map((tour) => {
+                const isSelected = selectedTourSlug === tour.slug;
+                return (
+                  <button
+                    key={tour.slug}
+                    type="button"
+                    onClick={() => setSelectedTourSlug(tour.slug)}
+                    className={`text-left p-4 rounded-xl border-2 transition-all ${
+                      isSelected
+                        ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20"
+                        : "border-zinc-300 dark:border-zinc-600 hover:border-emerald-400 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                    }`}
+                  >
+                    <p className="font-bold text-base text-zinc-800 dark:text-zinc-100">{lang === "es" ? tour.titleEs : tour.titleEn}</p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           <div className={`mb-6 rounded-xl ${!tourTime ? "ring-2 ring-amber-300/70 p-3" : ""}`}>
             <h3 className="text-xl font-semibold mb-3">{tr.tourTimeTitle}</h3>
             {!tourTime && <p className="mb-3 text-sm font-medium text-amber-700 dark:text-amber-400">👉 {tr.indicators.chooseTourTime}</p>}
@@ -571,6 +618,7 @@ export default function ReservationDetails({
       {currentStep === 3 && (
         <>
           <div className="mb-6 bg-zinc-100 dark:bg-zinc-800 p-4 rounded-xl">
+            <div className="flex justify-between mb-2"><span>{lang === "es" ? "Tour" : "Tour"}</span><span className="font-medium">{selectedTourName}</span></div>
             <div className="flex justify-between mb-2"><span>{tr.packageLabel}</span><span className="font-medium">{effectiveSelectedPackage ? tr.packages[effectiveSelectedPackage.id].name : "—"}</span></div>
             <div className="flex justify-between mb-2"><span>{tr.tourTimeTitle}</span><span>{tourTime ?? "—"}</span></div>
             <div className="flex justify-between mb-2"><span>{tr.subtotalLabel}</span><span>${subtotal.toFixed(2)}</span></div>

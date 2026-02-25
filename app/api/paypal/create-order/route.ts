@@ -18,7 +18,7 @@ interface CreateOrderResponse {
 
 export async function POST(req: Request) {
   try {
-    const { name, email, tickets, total, date, tourTime, tourPackage, packagePrice } = await req.json();
+    const { name, email, tickets, total, date, tourTime, tourPackage, packagePrice, tourSlug, tourName } = await req.json();
 
     if (!name || !email || !tickets || !total) {
       return NextResponse.json(
@@ -48,6 +48,8 @@ export async function POST(req: Request) {
       time: tourTime ?? null,
       pkg: tourPackage ?? null,
       ppUSD: packagePrice ?? null,
+      tourSlug: tourSlug ?? null,
+      tourName: tourName ?? null,
       date,
     });
     // Truncate to 127 chars as a safeguard (date is the longest field)
@@ -72,7 +74,7 @@ export async function POST(req: Request) {
               currency_code: "USD",
               value: formattedTotal,
             },
-            description: `Reserva: ${tickets} pax - ${packageLabel}${timeLabel ? ` (${timeLabel})` : ""} - ${date}`,
+            description: `Reserva: ${tickets} pax - ${tourName ?? packageLabel}${timeLabel ? ` (${timeLabel})` : ""} - ${date}`,
             custom_id,
           },
         ],

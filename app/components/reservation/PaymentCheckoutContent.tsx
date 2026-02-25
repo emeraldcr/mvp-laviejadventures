@@ -23,7 +23,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
   const { lang } = useLanguage();
   const tr = translations[lang].payment;
 
-  const { name, email, phone, tickets, total, date, tourTime, tourPackage, packagePrice } = orderDetails;
+  const { name, email, phone, tickets, total, date, tourTime, tourPackage, tourSlug, tourName, packagePrice } = orderDetails;
 
   useEffect(() => {
     const existingScript = document.querySelector("#paypal-sdk");
@@ -56,6 +56,8 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
                 tourTime,
                 tourPackage,
                 packagePrice,
+                tourSlug,
+                tourName,
               }),
             });
 
@@ -108,7 +110,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
         paypalContainer.innerHTML = "";
       }
     };
-  }, [date, email, name, onSuccess, packagePrice, phone, router, tickets, total, tourPackage, tourTime, tr.error]);
+  }, [date, email, name, onSuccess, packagePrice, phone, router, tickets, total, tourName, tourPackage, tourSlug, tourTime, tr.error]);
 
   const packageName = tr.packages[tourPackage] ?? tourPackage;
 
@@ -122,6 +124,10 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
       </p>
       <p className="mb-4 text-lg">
         <strong>{tr.phoneLabel}:</strong> {phone}
+      </p>
+
+      <p className="mb-2 text-lg">
+        <strong>{tr.package}:</strong> {tourName}
       </p>
 
       <p className="mb-2 text-lg">

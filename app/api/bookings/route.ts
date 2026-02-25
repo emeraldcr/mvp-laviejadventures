@@ -38,6 +38,8 @@ export async function GET() {
     status: doc.status ?? null,
     tourTime: doc.tourTime ?? null,
     tourPackage: doc.tourPackage ?? null,
+    tourSlug: doc.tourSlug ?? null,
+    tourName: doc.tourName ?? null,
     packagePrice: doc.packagePrice ?? null,
     createdAt: doc.createdAt ? doc.createdAt.toISOString() : null,
   }));

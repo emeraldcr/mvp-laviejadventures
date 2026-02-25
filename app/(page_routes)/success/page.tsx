@@ -293,6 +293,8 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
   const tourPackage: string | null = typeof meta?.pkg === "string" ? meta.pkg : null;
   const packagePrice: number | null =
     meta?.ppUSD != null ? Number(meta.ppUSD) : null;
+  const tourSlug: string | null = typeof meta?.tourSlug === "string" ? meta.tourSlug : null;
+  const tourName: string | null = typeof meta?.tourName === "string" ? meta.tourName : null;
 
   const amountStr =
     capture?.amount?.value ||
@@ -326,6 +328,8 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
     currency: currency || null,
     tourTime,
     tourPackage,
+    tourSlug,
+    tourName,
     packagePrice,
     // Link reservation to the logged-in user
     userId: userId,

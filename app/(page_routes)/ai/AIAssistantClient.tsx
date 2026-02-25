@@ -104,6 +104,8 @@ export default function AIAssistantClient() {
       date: bookingState.date,
       tourTime: bookingState.tourTime,
       tourPackage: bookingState.tourPackage,
+      tourSlug: "tour-ciudad-esmeralda",
+      tourName: "Tour Ciudad Esmeralda",
       packagePrice,
       total: Number((subtotal * (1 + TAX_RATE)).toFixed(2)),
     };
