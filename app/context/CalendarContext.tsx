@@ -10,6 +10,7 @@ import {
 } from "react";
 import { AvailabilityMap } from "@/lib/types";
 import { generateAvailability } from "@/lib/availability";
+import { useLanguage } from "@/app/context/LanguageContext";
 
 type CalendarContextValue = {
   // calendar state
@@ -56,6 +57,8 @@ type Props = {
 };
 
 export function CalendarProvider({ children }: Props) {
+  const { lang } = useLanguage();
+
   const today = useMemo(() => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
@@ -74,10 +77,12 @@ export function CalendarProvider({ children }: Props) {
 
   const monthLabel = useMemo(
     () =>
-      new Intl.DateTimeFormat("es-ES", { month: "long" }).format(
+      new Intl.DateTimeFormat(lang === "es" ? "es-ES" : "en-US", {
+        month: "long",
+      }).format(
         new Date(currentYear, currentMonth, 1)
       ),
-    [currentYear, currentMonth]
+    [currentYear, currentMonth, lang]
   );
 
   const maxSlots = useMemo(
