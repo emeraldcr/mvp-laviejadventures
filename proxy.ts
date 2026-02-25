@@ -1,15 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getOperatorFromRequest } from "./lib/b2b-auth";
-import { auth0 } from "./src/lib/auth0";
 
 const PUBLIC_B2B_PATHS = ["/b2b/login", "/b2b/register"];
 
 export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
-
-  if (pathname.startsWith("/auth")) {
-    return auth0.middleware(req);
-  }
 
   if (!pathname.startsWith("/b2b")) {
     return NextResponse.next();
@@ -35,5 +30,5 @@ export function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/b2b/:path*", "/auth/:path*"],
+  matcher: ["/b2b/:path*"],
 };

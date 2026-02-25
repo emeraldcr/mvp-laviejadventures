@@ -97,15 +97,17 @@ const DesktopNavGroup = memo<{ item: NavGroup }>(({ item }) => {
       </button>
 
       {open && (
-        <div className="absolute left-0 top-full mt-2 min-w-52 rounded-2xl border border-white/10 bg-teal-950/95 p-2 shadow-2xl backdrop-blur-xl">
-          {item.links.map((link) => (
-            <NavLink
-              key={link.href}
-              {...link}
-              className="block rounded-xl px-3 py-2 text-sm font-medium hover:bg-white/10"
-              onClick={() => setOpen(false)}
-            />
-          ))}
+        <div className="absolute left-0 top-full z-50 min-w-52 pt-2">
+          <div className="rounded-2xl border border-white/10 bg-teal-950/95 p-2 shadow-2xl backdrop-blur-xl">
+            {item.links.map((link) => (
+              <NavLink
+                key={link.href}
+                {...link}
+                className="block rounded-xl px-3 py-2 text-sm font-medium hover:bg-white/10"
+                onClick={() => setOpen(false)}
+              />
+            ))}
+          </div>
         </div>
       )}
     </div>

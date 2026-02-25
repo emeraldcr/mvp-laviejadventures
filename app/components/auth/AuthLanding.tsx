@@ -1,7 +1,10 @@
 'use client';
 
+import { FormEvent, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, CheckCircle2, Chrome, Mail, Shield, Sparkles } from 'lucide-react';
+import { signIn } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 const highlights = [
   'Reservas y disponibilidad en tiempo real',
@@ -10,6 +13,61 @@ const highlights = [
 ];
 
 export default function AuthLanding() {
+  const router = useRouter();
+  const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleCredentialsSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      if (mode === 'register') {
+        const registerResponse = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, password }),
+        });
+
+        if (!registerResponse.ok) {
+          const data = await registerResponse.json().catch(() => ({}));
+          setError(data.error ?? 'No se pudo crear la cuenta.');
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
+      const loginResult = await signIn('credentials', {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (loginResult?.error) {
+        setError('Credenciales inválidas.');
+        return;
+      }
+
+      router.push('/dashboard');
+      router.refresh();
+    } catch {
+      setError('No fue posible completar la autenticación.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function handleAuth0GoogleLogin() {
+    await signIn('auth0', {
+      callbackUrl: '/dashboard',
+    });
+  }
+
   return (
     <main className="relative min-h-screen overflow-hidden bg-slate-950 text-white">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_15%,rgba(34,197,94,0.3),transparent_40%),radial-gradient(circle_at_80%_0%,rgba(59,130,246,0.25),transparent_45%),radial-gradient(circle_at_50%_80%,rgba(16,185,129,0.2),transparent_50%)]" />
@@ -69,31 +127,70 @@ export default function AuthLanding() {
               </div>
 
               <p className="text-sm text-slate-300 sm:text-base">
-                Regístrate con correo, recupera tu contraseña o vincula Google en tu cuenta de Auth0.
+                Usa tu correo (MongoDB credentials) o Auth0 con Google. Ambos entran al mismo contexto de sesión.
               </p>
 
-              <a
-                href="/auth/login?screen_hint=signup"
-                className="inline-flex w-full cursor-pointer items-center justify-center gap-3 rounded-xl bg-emerald-500 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-400 hover:shadow-lg hover:shadow-emerald-950/30 active:translate-y-0 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200 sm:text-base"
-              >
-                <Mail className="h-5 w-5" />
-                Registrarme con correo
-              </a>
+              <form className="space-y-3" onSubmit={handleCredentialsSubmit}>
+                {mode === 'register' && (
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(event) => setName(event.target.value)}
+                    placeholder="Nombre completo"
+                    required
+                    className="w-full rounded-xl border border-white/20 bg-black/20 px-4 py-3 text-sm text-white placeholder:text-slate-400 focus:border-emerald-300 focus:outline-none"
+                  />
+                )}
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  placeholder="Email"
+                  required
+                  className="w-full rounded-xl border border-white/20 bg-black/20 px-4 py-3 text-sm text-white placeholder:text-slate-400 focus:border-emerald-300 focus:outline-none"
+                />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder="Contraseña"
+                  required
+                  minLength={8}
+                  className="w-full rounded-xl border border-white/20 bg-black/20 px-4 py-3 text-sm text-white placeholder:text-slate-400 focus:border-emerald-300 focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="inline-flex w-full items-center justify-center gap-3 rounded-xl bg-emerald-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  <Mail className="h-5 w-5" />
+                  {isSubmitting
+                    ? 'Procesando...'
+                    : mode === 'register'
+                      ? 'Crear cuenta e ingresar'
+                      : 'Iniciar sesión con correo'}
+                </button>
+              </form>
 
-              <a
-                href="/auth/login"
-                className="inline-flex w-full cursor-pointer items-center justify-center gap-3 rounded-xl border border-white/25 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:border-white/40 hover:bg-white/10 hover:shadow-lg hover:shadow-black/20 active:translate-y-0 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 sm:text-base"
-              >
-                Iniciar sesión con correo
-              </a>
-
-              <a
-                href="/auth/login?connection=google-oauth2&prompt=login"
-                className="inline-flex w-full cursor-pointer items-center justify-center gap-3 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-100 hover:shadow-lg hover:shadow-black/20 active:translate-y-0 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 sm:text-base"
+              <button
+                onClick={handleAuth0GoogleLogin}
+                className="inline-flex w-full items-center justify-center gap-3 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 sm:text-base"
               >
                 <Chrome className="h-5 w-5" />
-                Conectar Google (Auth0)
-              </a>
+                Continuar con Google (Auth0)
+              </button>
+
+              {error && <p className="text-sm text-rose-300">{error}</p>}
+
+              <button
+                onClick={() => {
+                  setMode(mode === 'login' ? 'register' : 'login');
+                  setError(null);
+                }}
+                className="block w-full text-center text-sm text-emerald-200 underline-offset-4 transition hover:text-emerald-100 hover:underline"
+              >
+                {mode === 'login' ? '¿No tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Inicia sesión'}
+              </button>
 
               <Link
                 href="/auth/recover-password"
@@ -101,18 +198,6 @@ export default function AuthLanding() {
               >
                 ¿Olvidaste tu contraseña?
               </Link>
-
-              <p className="text-xs leading-relaxed text-slate-400">
-                Al continuar aceptas nuestros{' '}
-                <Link href="/terminos-y-condiciones" className="text-emerald-200 underline-offset-4 hover:underline">
-                  Términos y Condiciones
-                </Link>{' '}
-                y nuestra{' '}
-                <Link href="/politica-de-privacidad" className="text-emerald-200 underline-offset-4 hover:underline">
-                  Política de Privacidad
-                </Link>
-                .
-              </p>
             </div>
           </div>
         </section>
