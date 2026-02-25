@@ -86,8 +86,9 @@ const es = {
     privacyLink: "Política de Privacidad",
     proceedBtn: "Proceder a Pago",
     weekdaysOnly: "Solo lunes–viernes",
-    privateWeekendWarning:
-      "El tour privado solo está disponible de lunes a viernes. Por favor selecciona una fecha entre semana o elige otro paquete.",
+    weekendsOnly: "Solo fines de semana",
+    packageAvailabilityWarning:
+      "Este paquete no está disponible para la fecha seleccionada. Elige una fecha válida o selecciona otro paquete.",
     packages: {
       basic: {
         name: "Paquete Básico",
@@ -324,8 +325,9 @@ const en = {
     privacyLink: "Privacy Policy",
     proceedBtn: "Proceed to Payment",
     weekdaysOnly: "Weekdays only",
-    privateWeekendWarning:
-      "Private tour is only available Monday–Friday. Please select a weekday or choose another package.",
+    weekendsOnly: "Weekends only",
+    packageAvailabilityWarning:
+      "This package is not available for the selected date. Choose a valid date or pick another package.",
     packages: {
       basic: {
         name: "Basic Package",
