@@ -10,6 +10,11 @@ export function proxy(req: NextRequest) {
     return NextResponse.next();
   }
 
+  // Admin B2B has its own authentication flow.
+  if (pathname.startsWith("/b2b/admin")) {
+    return NextResponse.next();
+  }
+
   if (PUBLIC_B2B_PATHS.some((p) => pathname === p || pathname.startsWith(p + "?"))) {
     return NextResponse.next();
   }
@@ -23,6 +28,9 @@ export function proxy(req: NextRequest) {
   }
 
   if (operator.status === "pending") {
+    if (pathname === "/b2b/pending") {
+      return NextResponse.next();
+    }
     return NextResponse.redirect(new URL("/b2b/pending", req.url));
   }
 
