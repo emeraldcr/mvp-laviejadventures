@@ -1,6 +1,6 @@
 // components/ReservationDetails.tsx
 import Link from "next/link";
-import { activeTourInfo } from "@/lib/tour-info";
+import { TOUR_INFO } from "@/lib/tour-info";
 import { AvailabilityMap, MainTourInfo } from "@/lib/types";
 import { useState, useMemo, useCallback } from "react";
 import { format } from "date-fns";
@@ -255,7 +255,7 @@ export default function ReservationDetails({
   const tr = translations[lang].reservation;
   const dateLocale = lang === "es" ? es : enUS;
 
-  const resolvedTourInfo = tourInfo ?? activeTourInfo;
+  const resolvedTourInfo = tourInfo ?? TOUR_INFO;
   const slots = availability[selectedDate] ?? 0;
   const isTicketsValid = tickets >= 1 && tickets <= slots;
 
