@@ -303,6 +303,7 @@ export default function ReservationDetails({
   );
   const selectedTourName = selectedTour ? (lang === "es" ? selectedTour.titleEs : selectedTour.titleEn) : (lang === "es" ? "Tour" : "Tour");
 
+
   const selectedPackage = useMemo(
     () => PACKAGES.find((p) => p.id === tourPackage) ?? null,
     [tourPackage]

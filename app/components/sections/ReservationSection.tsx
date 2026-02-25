@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useCalendarContext } from "@/app/context/CalendarContext";
 import ReservationDetails, { type TourSummary } from "@/app/components/reservation/ReservationDetails";
 import { type MainTourInfo } from "@/lib/types";
@@ -25,6 +25,8 @@ type OrderPayload = {
 type Props = {
   className?: string;
 };
+
+const RESERVATION_RETURN_KEY = "reservationReturnPath";
 
 const DEFAULT_BOOKABLE_TOUR: TourSummary = {
   id: "tour-ciudad-esmeralda",
@@ -87,6 +89,7 @@ export default function ReservationSection({ className }: Props) {
 
   const handleReserve = (data: OrderPayload) => {
     sessionStorage.setItem("reservationOrderDetails", JSON.stringify(data));
+    sessionStorage.setItem(RESERVATION_RETURN_KEY, "/#booking");
     router.push("/reservation");
   };
 
@@ -135,6 +138,7 @@ export default function ReservationSection({ className }: Props) {
   return (
     <div className={className}>
       <ReservationDetails
+        key={`reservation-${initialTourSlug ?? "default"}`}
         selectedDate={selectedDay}
         currentMonth={currentMonth}
         monthName={monthName}
