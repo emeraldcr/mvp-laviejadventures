@@ -2,7 +2,17 @@
 
 import DynamicHeroHeader from "@/app/components/sections/DynamicHeroHeader";
 import { useLanguage } from "@/app/context/LanguageContext";
-import { BookOpen, CalendarCheck2, Compass, CreditCard, Map, MessageCircle } from "lucide-react";
+import {
+  BookOpen,
+  Building2,
+  CalendarCheck2,
+  CircleHelp,
+  Compass,
+  CreditCard,
+  LayoutDashboard,
+  Map,
+  MessageCircle,
+} from "lucide-react";
 import Link from "next/link";
 
 const steps = {
@@ -76,9 +86,65 @@ const steps = {
   ],
 } as const;
 
+const tools = {
+  es: [
+    {
+      title: "Dashboard de reservas",
+      description:
+        "En el dashboard puedes revisar tus reservas, confirmar estado de pago y tener a mano la información clave para el día del tour.",
+      href: "/dashboard",
+      cta: "Abrir dashboard",
+      icon: LayoutDashboard,
+    },
+    {
+      title: "Portal B2B para operadores",
+      description:
+        "Si trabajas como aliado comercial, entra al portal B2B para gestionar reservas de clientes, ver tours disponibles y dar seguimiento a tu operación.",
+      href: "/b2b/login",
+      cta: "Entrar al portal B2B",
+      icon: Building2,
+    },
+    {
+      title: "Preguntas frecuentes",
+      description:
+        "Revisa respuestas rápidas sobre pagos, políticas, horarios, qué llevar al tour y otros temas comunes antes de reservar.",
+      href: "/preguntas-frecuentes",
+      cta: "Ir a preguntas frecuentes",
+      icon: CircleHelp,
+    },
+  ],
+  en: [
+    {
+      title: "Booking dashboard",
+      description:
+        "Use the dashboard to review your reservations, confirm payment status, and keep essential details ready for your tour day.",
+      href: "/dashboard",
+      cta: "Open dashboard",
+      icon: LayoutDashboard,
+    },
+    {
+      title: "B2B operator portal",
+      description:
+        "If you're a commercial partner, log into the B2B portal to manage client bookings, browse available tours, and track operations.",
+      href: "/b2b/login",
+      cta: "Go to B2B portal",
+      icon: Building2,
+    },
+    {
+      title: "Frequently asked questions",
+      description:
+        "Find quick answers about payments, policies, schedules, what to bring, and other common topics before booking.",
+      href: "/preguntas-frecuentes",
+      cta: "View FAQs",
+      icon: CircleHelp,
+    },
+  ],
+} as const;
+
 export default function DocsPage() {
   const { lang } = useLanguage();
   const copy = lang === "es" ? steps.es : steps.en;
+  const toolCopy = lang === "es" ? tools.es : tools.en;
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-teal-50 via-zinc-50 to-white px-4 py-10 dark:from-black dark:via-zinc-950 dark:to-zinc-900">
@@ -128,6 +194,41 @@ export default function DocsPage() {
             </article>
           );
         })}
+      </section>
+
+      <section className="mx-auto mt-6 w-full max-w-6xl rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
+        <h3 className="text-xl font-semibold text-zinc-900 dark:text-white">
+          {lang === "es" ? "Más herramientas útiles" : "More helpful tools"}
+        </h3>
+        <p className="mt-2 text-zinc-700 dark:text-zinc-300">
+          {lang === "es"
+            ? "Además de la reserva rápida, también puedes usar estas secciones para gestionar mejor tu experiencia."
+            : "Beyond quick booking, you can also use these sections to better manage your experience."}
+        </p>
+
+        <div className="mt-5 grid gap-4 md:grid-cols-3">
+          {toolCopy.map((item) => {
+            const Icon = item.icon;
+            return (
+              <article
+                key={item.title}
+                className="rounded-xl border border-zinc-200 bg-zinc-50 p-5 dark:border-zinc-800 dark:bg-zinc-900/50"
+              >
+                <div className="mb-3 inline-flex rounded-full bg-teal-100 p-2 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300">
+                  <Icon size={18} />
+                </div>
+                <h4 className="text-lg font-semibold text-zinc-900 dark:text-white">{item.title}</h4>
+                <p className="mt-2 text-sm text-zinc-700 dark:text-zinc-300">{item.description}</p>
+                <Link
+                  href={item.href}
+                  className="mt-4 inline-flex items-center gap-2 rounded-lg bg-teal-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-teal-700"
+                >
+                  {item.cta}
+                </Link>
+              </article>
+            );
+          })}
+        </div>
       </section>
 
       <section className="mx-auto mt-6 w-full max-w-6xl rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
