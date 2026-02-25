@@ -5,6 +5,7 @@ const es = {
     info: "Información",
     tours: "Tours",
     gallery: "Galería",
+    wildo: "Wildo",
     reserve: "Reserva",
     time: "Tiempo",
   },
@@ -242,7 +243,9 @@ const en = {
     info: "Information",
     tours: "Tours",
     gallery: "Gallery",
+    wildo: "Wildo",
     reserve: "Reserve",
+    time: "Weather",
   },
   hero: {
     title: "Ciudad Esmeralda",

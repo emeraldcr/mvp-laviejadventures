@@ -190,6 +190,7 @@ const Header = memo<{ isScrolled: boolean; onMenuToggle: () => void; isMenuOpen:
       { href: "/info", label: tr.info },
       { href: "/tours", label: tr.tours },
       { href: "/galeria", label: tr.gallery },
+      { href: "/wildo", label: tr.wildo },
       { href: "/#booking", label: tr.reserve, variant: "primary" },
       { href: "/tiempo", label: tr.time },
     ];
