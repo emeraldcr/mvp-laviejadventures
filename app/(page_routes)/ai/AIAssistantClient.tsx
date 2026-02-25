@@ -1,8 +1,7 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
-import { Bot, CalendarDays, CheckCircle2, SendHorizonal } from "lucide-react";
-import Link from "next/link";
+import { FormEvent, useEffect, useRef, useState } from "react";
+import { Bot, SendHorizonal } from "lucide-react";
 
 type BookingState = {
   date: string | null;
@@ -59,7 +58,6 @@ export default function AIAssistantClient() {
     "email",
     "phone",
   ]);
-  const [readyToBook, setReadyToBook] = useState(false);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [guidedDate, setGuidedDate] = useState("");
@@ -67,10 +65,13 @@ export default function AIAssistantClient() {
   const [guidedText, setGuidedText] = useState("");
   const [guidedPhone, setGuidedPhone] = useState("");
 
-  const completion = useMemo(() => {
-    const total = 7;
-    return Math.round(((total - missingFields.length) / total) * 100);
-  }, [missingFields]);
+  const messagesContainerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    container.scrollTop = container.scrollHeight;
+  }, [messages, loading, missingFields]);
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -97,7 +98,6 @@ export default function AIAssistantClient() {
       setMessages((prev) => [...prev, { role: "assistant", content: data.reply }]);
       setState(data.updatedState ?? INITIAL_STATE);
       setMissingFields(data.missingFields ?? []);
-      setReadyToBook(Boolean(data.readyToBook));
     } catch {
       setMessages((prev) => [
         ...prev,
@@ -120,9 +120,8 @@ export default function AIAssistantClient() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950 px-4 py-10 text-zinc-100">
-      <div className="mx-auto grid w-full max-w-6xl gap-6 lg:grid-cols-[1.1fr_420px]">
-        <section className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 shadow-2xl backdrop-blur">
+    <main className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950 px-4 pt-6 pb-4 text-zinc-100 md:pt-8">
+      <section className="mx-auto flex h-[calc(100vh-2.5rem)] w-full max-w-4xl flex-col rounded-3xl border border-white/10 bg-white/[0.03] p-4 shadow-2xl backdrop-blur md:h-[calc(100vh-3rem)] md:p-6">
           <div className="mb-5 flex items-center gap-3">
             <span className="rounded-xl bg-emerald-500/20 p-2 text-emerald-300">
               <Bot size={20} />
@@ -138,7 +137,10 @@ export default function AIAssistantClient() {
             aunque mandés todo junto. También responde dudas rápidas del tour.
           </p>
 
-          <div className="h-[56vh] space-y-3 overflow-y-auto rounded-2xl border border-white/10 bg-black/20 p-4">
+          <div
+            ref={messagesContainerRef}
+            className="flex-1 space-y-3 overflow-y-auto rounded-2xl border border-white/10 bg-black/20 p-4 pr-3"
+          >
             {messages.map((message, index) => (
               <article
                 key={`${message.role}-${index}`}
@@ -261,7 +263,7 @@ export default function AIAssistantClient() {
             {loading && <div className="h-10 w-40 animate-pulse rounded-xl bg-white/10" />}
           </div>
 
-          <form onSubmit={onSubmit} className="mt-4 flex gap-2">
+          <form onSubmit={onSubmit} className="mt-4 flex gap-2 border-t border-white/10 pt-4">
             <input
               value={input}
               onChange={(event) => setInput(event.target.value)}
@@ -277,65 +279,7 @@ export default function AIAssistantClient() {
               Enviar
             </button>
           </form>
-        </section>
-
-        <aside className="space-y-4 rounded-3xl border border-white/10 bg-white/[0.03] p-6">
-          <h2 className="text-lg font-semibold">Estado de reserva</h2>
-          <div className="h-2 overflow-hidden rounded-full bg-white/10">
-            <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${completion}%` }} />
-          </div>
-          <p className="text-sm text-zinc-400">Completado: {completion}%</p>
-
-          <div className="space-y-2 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm">
-            {Object.entries(FIELD_LABELS).map(([key, label]) => {
-              const value = state[key as keyof BookingState];
-              return (
-                <div key={key} className="flex items-center justify-between gap-3 border-b border-white/5 pb-2 last:border-0 last:pb-0">
-                  <span className="text-zinc-400">{label}</span>
-                  <span className="font-medium text-zinc-200">{value ? String(value) : "—"}</span>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="rounded-2xl border border-white/10 bg-black/20 p-4 text-sm">
-            {readyToBook ? (
-              <div className="space-y-3">
-                <p className="flex items-start gap-2 text-emerald-300">
-                  <CheckCircle2 size={16} className="mt-0.5" />
-                  ¡Listo! Ya tengo los datos básicos para continuar con la reserva.
-                </p>
-                <Link
-                  href="/reservation"
-                  className="inline-flex rounded-xl bg-emerald-500 px-4 py-2 font-semibold text-zinc-950 transition hover:bg-emerald-400"
-                >
-                  Go pay with PayPal
-                </Link>
-              </div>
-            ) : (
-              <>
-                <p className="mb-2 font-medium text-zinc-300">Aún faltan:</p>
-                <ul className="space-y-1 text-zinc-400">
-                  {missingFields.map((field) => (
-                    <li key={field}>• {FIELD_LABELS[field] ?? field}</li>
-                  ))}
-                </ul>
-              </>
-            )}
-          </div>
-
-          <div className="rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-zinc-300">
-            <p className="mb-2 flex items-center gap-2 font-medium">
-              <CalendarDays size={16} /> Tips rápidos
-            </p>
-            <ul className="space-y-1 text-zinc-400">
-              <li>• Horas válidas: 08:00, 09:00, 10:00</li>
-              <li>• Paquetes: basic, full-day, private</li>
-              <li>• También podés preguntar: ubicación, qué llevar, políticas</li>
-            </ul>
-          </div>
-        </aside>
-      </div>
+      </section>
     </main>
   );
 }
