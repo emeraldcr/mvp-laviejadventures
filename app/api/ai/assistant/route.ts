@@ -60,7 +60,8 @@ const DEFAULT_RESULT: AssistantResult = {
   readyToBook: false,
 };
 
-const DATE_PATTERN = /\b(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})\b/;
+const DATE_PATTERN_ISO = /\b(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})\b/;
+const DATE_PATTERN_DMY = /\b(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})\b/;
 const EMAIL_PATTERN = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i;
 const PHONE_PATTERN = /\+?[\d\s()\-]{8,}/;
 const NAME_PATTERN = /(?:me\s+llamo|mi\s+nombre\s+es|soy)\s+([a-záéíóúñ]+(?:\s+[a-záéíóúñ]+){0,3})/i;
@@ -147,7 +148,7 @@ IMPORTANTE: devolvé SOLO JSON válido con esta forma exacta:
 function sanitizeResult(raw: Partial<AssistantResult>, fallbackState: BookingState): AssistantResult {
   const tickets = typeof raw.updatedState?.tickets === "number" ? raw.updatedState.tickets : fallbackState.tickets;
 
-  const updatedState: BookingState = {
+  const updatedState = normalizeState({
     date: raw.updatedState?.date ?? fallbackState.date,
     tourTime: raw.updatedState?.tourTime ?? fallbackState.tourTime,
     tourPackage: raw.updatedState?.tourPackage ?? fallbackState.tourPackage,
@@ -156,7 +157,7 @@ function sanitizeResult(raw: Partial<AssistantResult>, fallbackState: BookingSta
     email: raw.updatedState?.email ?? fallbackState.email,
     phone: raw.updatedState?.phone ?? fallbackState.phone,
     specialRequests: raw.updatedState?.specialRequests ?? fallbackState.specialRequests,
-  };
+  });
 
   const missingFields = REQUIRED_FIELDS.filter((field) => !updatedState[field]);
 
@@ -217,12 +218,28 @@ function extractDate(raw: string): string | null {
     return formatDate(now);
   }
 
-  const match = raw.match(DATE_PATTERN);
-  if (!match) return null;
+  const isoMatch = raw.match(DATE_PATTERN_ISO);
+  if (isoMatch) {
+    const year = Number(isoMatch[1]);
+    const month = Number(isoMatch[2]);
+    const day = Number(isoMatch[3]);
+    if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) return null;
 
-  const year = Number(match[1]);
-  const month = Number(match[2]);
-  const day = Number(match[3]);
+    const parsed = new Date(Date.UTC(year, month - 1, day));
+    if (parsed.getUTCFullYear() !== year || parsed.getUTCMonth() !== month - 1 || parsed.getUTCDate() !== day) {
+      return null;
+    }
+
+    return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  }
+
+  const dmyMatch = raw.match(DATE_PATTERN_DMY);
+  if (!dmyMatch) return null;
+
+  const day = Number(dmyMatch[1]);
+  const month = Number(dmyMatch[2]);
+  const yearCandidate = Number(dmyMatch[3]);
+  const year = dmyMatch[3].length === 2 ? 2000 + yearCandidate : yearCandidate;
   if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) return null;
 
   const parsed = new Date(Date.UTC(year, month - 1, day));
@@ -235,9 +252,9 @@ function extractDate(raw: string): string | null {
 
 function extractTime(raw: string): BookingState["tourTime"] {
   const text = normalizeText(raw);
-  if (/\b8(:00)?\s*(am)?\b/.test(text) || /\b08:00\b/.test(text) || /\bocho\b/.test(text)) return "08:00";
-  if (/\b9(:00)?\s*(am)?\b/.test(text) || /\b09:00\b/.test(text) || /\bnueve\b/.test(text)) return "09:00";
-  if (/\b10(:00)?\s*(am)?\b/.test(text) || /\b10:00\b/.test(text) || /\bdiez\b/.test(text)) return "10:00";
+  if (/\b8(:00)?\s*(am)?\b/.test(text) || /\b08:00\b/.test(text) || /\bocho\b/.test(text) || /\bprimera?\s*hora\b/.test(text)) return "08:00";
+  if (/\b9(:00)?\s*(am)?\b/.test(text) || /\b09:00\b/.test(text) || /\bnueve\b/.test(text) || /\bsegunda?\s*hora\b/.test(text)) return "09:00";
+  if (/\b10(:00)?\s*(am)?\b/.test(text) || /\b10:00\b/.test(text) || /\bdiez\b/.test(text) || /\btercera?\s*hora\b/.test(text)) return "10:00";
   return null;
 }
 
@@ -251,7 +268,7 @@ function extractPackage(raw: string): BookingState["tourPackage"] {
 
 function extractTickets(raw: string): number | null {
   const grouped = raw.match(TICKETS_PATTERN)?.[1];
-  const direct = raw.match(/\b(\d{1,2})\b/)?.[1];
+  const direct = raw.match(/(?:x|para|seriamos|somos\s+de)?\s*(\d{1,2})\s*(?:adultos?|personas?|pax)?\b/i)?.[1];
   const parsed = Number(grouped ?? direct);
   if (!Number.isFinite(parsed) || parsed <= 0 || parsed > 20) return null;
   return parsed;
@@ -287,7 +304,7 @@ function extractSpecialRequests(raw: string): string | null {
 }
 
 function inferFromLatestMessage(state: BookingState, latestUserMessage: string): BookingState {
-  return {
+  return normalizeState({
     date: extractDate(latestUserMessage) ?? state.date,
     tourTime: extractTime(latestUserMessage) ?? state.tourTime,
     tourPackage: extractPackage(latestUserMessage) ?? state.tourPackage,
@@ -296,6 +313,30 @@ function inferFromLatestMessage(state: BookingState, latestUserMessage: string):
     email: extractEmail(latestUserMessage) ?? state.email,
     phone: extractPhone(latestUserMessage) ?? state.phone,
     specialRequests: extractSpecialRequests(latestUserMessage) ?? state.specialRequests,
+  });
+}
+
+function inferFromConversation(state: BookingState, messages: ChatMessage[]): BookingState {
+  return messages
+    .filter((message) => message.role === "user")
+    .reduce((acc, message) => inferFromLatestMessage(acc, message.content), state);
+}
+
+function normalizeState(state: BookingState): BookingState {
+  const validTourTime = state.tourTime === "08:00" || state.tourTime === "09:00" || state.tourTime === "10:00" ? state.tourTime : null;
+  const validPackage = state.tourPackage === "basic" || state.tourPackage === "full-day" || state.tourPackage === "private" ? state.tourPackage : null;
+  const validTickets = typeof state.tickets === "number" && state.tickets >= 1 && state.tickets <= 20 ? state.tickets : null;
+
+  return {
+    ...state,
+    date: state.date && /^\d{4}-\d{2}-\d{2}$/.test(state.date) ? state.date : null,
+    tourTime: validTourTime,
+    tourPackage: validPackage,
+    tickets: validTickets,
+    name: state.name?.trim() || null,
+    email: state.email && EMAIL_PATTERN.test(state.email) ? state.email : null,
+    phone: state.phone?.trim() || null,
+    specialRequests: state.specialRequests?.trim() || null,
   };
 }
 
@@ -314,7 +355,7 @@ function buildLocalReply(updatedState: BookingState, latestMessage: string): str
   const faqAnswer = getFaqAnswer(latestMessage);
 
   if (missingFields.length === 0) {
-    return "¡Excelente! Ya tengo todo para tu reserva: fecha, hora, paquete, cantidad, nombre, correo y teléfono. Cuando quieras, seguimos con la confirmación.";
+    return "¡Excelente! Ya tengo todo para tu reserva: fecha, hora, paquete, cantidad, nombre, correo y teléfono. Ahora podés pasar al flujo de reserva y pagar con PayPal.";
   }
 
   const nextField = missingFields[0];
@@ -332,7 +373,7 @@ function buildLocalReply(updatedState: BookingState, latestMessage: string): str
     return `${faqAnswer} Para avanzar con la reserva, ${promptByField[nextField]}`;
   }
 
-  return `Perfecto, ya avancé con tus datos. ${promptByField[nextField]}`;
+  return `Perfecto, ya avancé con tus datos. ${promptByField[nextField]} Si querés, podés enviarme varios datos en un solo mensaje y yo completo los huecos automáticamente.`;
 }
 
 function shouldUseModel(previousState: BookingState, inferredState: BookingState, latestMessage: string): boolean {
@@ -353,7 +394,7 @@ export async function POST(req: NextRequest) {
     const { messages, state } = (await req.json()) as AssistantPayload;
     const latestUserMessage = [...messages].reverse().find((msg) => msg.role === "user")?.content ?? "";
 
-    const inferredState = inferFromLatestMessage(state, latestUserMessage);
+    const inferredState = inferFromConversation(normalizeState(state), messages);
     if (!shouldUseModel(state, inferredState, latestUserMessage)) {
       const missingFields = getMissingFields(inferredState);
       return NextResponse.json(
