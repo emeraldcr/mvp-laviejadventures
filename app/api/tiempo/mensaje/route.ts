@@ -6,6 +6,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { buildSystemPrompt, buildUserPrompt, type WeatherSnapshot } from "@/app/lib/weatherMessageHelpers";
+import {
+  WEATHER_MESSAGE_CACHE_HEADERS,
+  WEATHER_MESSAGE_DEFAULT_TEXT,
+  WEATHER_MESSAGE_ERROR_FALLBACK,
+  WEATHER_MESSAGE_FALLBACK_CACHE_HEADERS,
+  WEATHER_MESSAGE_MAX_TOKENS,
+  WEATHER_MESSAGE_MODEL,
+  WEATHER_MESSAGE_TEMPERATURE,
+} from "@/app/lib/weatherMessageConstants";
 
 const client = new Anthropic(); // uses ANTHROPIC_API_KEY from env
 
@@ -14,21 +23,21 @@ export async function POST(req: NextRequest) {
     const snap: WeatherSnapshot = await req.json();
 
     const message = await client.messages.create({
-      model: "claude-haiku-4-5",
-      max_tokens: 120,
-      temperature: 1,           // max variety
+      model: WEATHER_MESSAGE_MODEL,
+      max_tokens: WEATHER_MESSAGE_MAX_TOKENS,
+      temperature: WEATHER_MESSAGE_TEMPERATURE, // max variety
       system: buildSystemPrompt(),
       messages: [{ role: "user", content: buildUserPrompt(snap) }],
     });
 
     const text =
-      message.content[0]?.type === "text" ? message.content[0].text.trim() : "Pura vida, mae.";
+      message.content[0]?.type === "text" ? message.content[0].text.trim() : WEATHER_MESSAGE_DEFAULT_TEXT;
 
     return NextResponse.json(
       { message: text },
       {
         headers: {
-          "Cache-Control": "no-store, no-cache, must-revalidate",
+          ...WEATHER_MESSAGE_CACHE_HEADERS,
         },
       }
     );
@@ -36,8 +45,8 @@ export async function POST(req: NextRequest) {
     console.error("[tiempo/mensaje]", err);
     // Fallback so the page never breaks if Anthropic is unreachable
     return NextResponse.json(
-      { message: "El clima aquí tiene más personalidad que la mayoría de la gente." },
-      { status: 200, headers: { "Cache-Control": "no-store" } }
+      { message: WEATHER_MESSAGE_ERROR_FALLBACK },
+      { status: 200, headers: WEATHER_MESSAGE_FALLBACK_CACHE_HEADERS }
     );
   }
 }
