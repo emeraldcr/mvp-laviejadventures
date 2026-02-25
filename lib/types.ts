@@ -107,9 +107,24 @@ export type RainData = {
       temp_c: number | null;
       hr_pct: number | null;
     }>;
-    daily: any[];
+    daily: Array<{ fecha: string; timestamp?: string | null; lluvia_mm: number }>;
   };
   currentSnapshot?: { sum_lluv_mm: number; lluv_ayer_mm: number } | null;
+  riverLevel?: {
+    station: string;
+    label: string;
+    status: "bajo" | "normal" | "alto" | "critico";
+    estimatedLevelM: number;
+    referenceMm: number;
+    guidance: string;
+  };
+  reliability?: {
+    level: "alta" | "media" | "baja";
+    score: number;
+    reason: string;
+    freshnessMinutes: number;
+    records24h: number;
+  };
   error?: string;
 };
 

@@ -48,10 +48,13 @@ export function getCostaRicaHour(referenceISO?: string | null): number {
 }
 
 export function mmToColor(mm: number): string {
-  if (mm >= 12) return "#ef4444";
-  if (mm >= 4) return "#f97316";
-  if (mm > 0.5) return "#fbbf24";
-  return "#22c55e";
+  if (!Number.isFinite(mm) || mm <= 0) return "#22c55e";
+  if (mm >= 20) return "#7f1d1d";
+  if (mm >= 12) return "#dc2626";
+  if (mm >= 8) return "#f97316";
+  if (mm >= 4) return "#f59e0b";
+  if (mm > 0.5) return "#facc15";
+  return "#84cc16";
 }
 
 // ── GO / CAUTION / NO decision engine ────────────────────────────────────────
@@ -151,7 +154,7 @@ export function buildRiskChart(rain: RainData | null) {
 }
 
 export function buildDailyChart(rain: RainData | null) {
-  return (rain?.data?.daily ?? []).slice(0, 7).map((d: any) => ({
+  return (rain?.data?.daily ?? []).slice(0, 7).map((d) => ({
     fecha: formatFecha(d.timestamp ?? null),
     lluvia: d.lluvia_mm,
     fill: mmToColor(d.lluvia_mm),

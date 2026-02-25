@@ -18,19 +18,34 @@ export function useTiempoData() {
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
   const [showRawForecast, setShowRawForecast] = useState(false);
   const [cooldown, setCooldown] = useState(0);
+  const [fetchWarning, setFetchWarning] = useState<string | null>(null);
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
     try {
+      setFetchWarning(null);
       const [r1, r2] = await Promise.allSettled([
         fetch("/api/tiempo?hours=24").then(r => r.json()),
         fetch("/api/tiempo/regional").then(r => r.json()),
       ]);
-      if (r1.status === "fulfilled") setRain(r1.value);
-      if (r2.status === "fulfilled") setRegional(r2.value);
+
+      if (r1.status === "fulfilled" && r1.value?.success) setRain(r1.value);
+      if (r2.status === "fulfilled" && r2.value?.success) setRegional(r2.value);
+
+      if (r1.status !== "fulfilled" || !r1.value?.success) {
+        setFetchWarning("Datos locales de lluvia no disponibles temporalmente.");
+      }
+      if (r2.status !== "fulfilled" || !r2.value?.success) {
+        setFetchWarning(prev => prev
+          ? `${prev} Contexto regional no disponible.`
+          : "Contexto regional no disponible temporalmente.");
+      }
+
       setLastRefresh(new Date());
       setCooldown(RELOAD_COOLDOWN_SECS);
-    } catch { /* silent */ } finally { setLoading(false); }
+    } catch {
+      setFetchWarning("No se pudieron actualizar los datos en este momento.");
+    } finally { setLoading(false); }
   }, []);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
@@ -93,5 +108,6 @@ export function useTiempoData() {
     dailyChart,
     showRawForecast,
     setShowRawForecast,
+    fetchWarning,
   };
 }
