@@ -250,6 +250,7 @@ type Props = {
   tourInfo?: MainTourInfo | null;
   tours: TourSummary[];
   initialSelectedTourSlug?: string;
+  hasPreselectedTour?: boolean;
 };
 
 export default function ReservationDetails({
@@ -263,6 +264,7 @@ export default function ReservationDetails({
   tourInfo,
   tours,
   initialSelectedTourSlug,
+  hasPreselectedTour = false,
 }: Props) {
   const { lang } = useLanguage();
   const tr = translations[lang].reservation;
@@ -471,26 +473,43 @@ export default function ReservationDetails({
       {currentStep === 1 && (
         <>
           <div className={`mb-6 rounded-xl ${!selectedTour ? "ring-2 ring-amber-300/70 p-3" : ""}`}>
-            <h3 className="text-xl font-semibold mb-3">{lang === "es" ? "Tour" : "Tour"}</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {tours.map((tour) => {
-                const isSelected = selectedTourSlug === tour.slug;
-                return (
-                  <button
-                    key={tour.slug}
-                    type="button"
-                    onClick={() => setManualSelectedTourSlug(tour.slug)}
-                    className={`text-left p-4 rounded-xl border-2 transition-all ${
-                      isSelected
-                        ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20"
-                        : "border-zinc-300 dark:border-zinc-600 hover:border-emerald-400 hover:bg-zinc-50 dark:hover:bg-zinc-800"
-                    }`}
-                  >
-                    <p className="font-bold text-base text-zinc-800 dark:text-zinc-100">{lang === "es" ? tour.titleEs : tour.titleEn}</p>
-                  </button>
-                );
-              })}
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <h3 className="text-xl font-semibold">{lang === "es" ? "Tour" : "Tour"}</h3>
+              {hasPreselectedTour && (
+                <Link
+                  href="/tours"
+                  className="inline-flex items-center rounded-full border border-teal-500/40 px-3 py-1 text-xs font-semibold text-teal-700 transition hover:bg-teal-50 dark:text-teal-300 dark:hover:bg-teal-900/20"
+                >
+                  {lang === "es" ? "Buscar tours" : "Search tours"}
+                </Link>
+              )}
             </div>
+
+            {hasPreselectedTour && selectedTour ? (
+              <div className="rounded-xl border-2 border-emerald-500 bg-emerald-50 p-4 dark:bg-emerald-900/20">
+                <p className="font-bold text-base text-zinc-800 dark:text-zinc-100">{selectedTourName}</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {tours.map((tour) => {
+                  const isSelected = selectedTourSlug === tour.slug;
+                  return (
+                    <button
+                      key={tour.slug}
+                      type="button"
+                      onClick={() => setManualSelectedTourSlug(tour.slug)}
+                      className={`text-left p-4 rounded-xl border-2 transition-all ${
+                        isSelected
+                          ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20"
+                          : "border-zinc-300 dark:border-zinc-600 hover:border-emerald-400 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                      }`}
+                    >
+                      <p className="font-bold text-base text-zinc-800 dark:text-zinc-100">{lang === "es" ? tour.titleEs : tour.titleEn}</p>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <div className={`mb-6 rounded-xl ${!tourTime ? "ring-2 ring-amber-300/70 p-3" : ""}`}>

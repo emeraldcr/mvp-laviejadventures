@@ -55,6 +55,7 @@ export default function ReservationSection({ className }: Props) {
 
   const requestedTourSlug = (searchParams.get("tour") ?? "").trim();
   const initialSelectedTourSlug = requestedTourSlug || DEFAULT_BOOKABLE_TOUR.slug;
+  const hasPreselectedTour = requestedTourSlug.length > 0;
 
   // Fetch tour info from MongoDB on mount
   useEffect(() => {
@@ -148,6 +149,7 @@ export default function ReservationSection({ className }: Props) {
         tourInfo={tourInfo}
         tours={tours}
         initialSelectedTourSlug={initialSelectedTourSlug}
+        hasPreselectedTour={hasPreselectedTour}
       />
     </div>
   );
