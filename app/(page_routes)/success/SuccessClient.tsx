@@ -4,6 +4,7 @@
 import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/lib/translations";
 import type { SuccessClientProps } from "@/lib/types";
+import Link from "next/link";
 
 export function SuccessClient({
   email,
@@ -33,12 +34,12 @@ export function SuccessClient({
             {error}
           </p>
 
-          <a
+          <Link
             href="/"
             className="mt-8 inline-block px-6 py-3 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700 transition"
           >
             {tr.backBtn}
-          </a>
+          </Link>
         </div>
       </section>
     );
@@ -119,12 +120,12 @@ export function SuccessClient({
         </div>
 
         <div className="mt-8 flex justify-center">
-          <a
+          <Link
             href="/"
             className="inline-block px-6 py-3 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700 transition"
           >
             {tr.backBtn}
-          </a>
+          </Link>
         </div>
       </div>
     </section>

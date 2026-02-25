@@ -15,12 +15,18 @@ import { parseISO, format } from "date-fns";
 import { es } from "date-fns/locale";
 import type { RollingRiskEntry } from "@/lib/types";
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+type RollingTooltipProps = {
+  active?: boolean;
+  payload?: Array<{ dataKey?: string; color?: string; name?: string; value?: number }>;
+  label?: string;
+};
+
+const CustomTooltip = ({ active, payload, label }: RollingTooltipProps) => {
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-slate-800/95 border border-slate-600 rounded-lg p-3 shadow-xl text-sm">
       <p className="text-slate-300 font-medium mb-2">{label}</p>
-      {payload.map((p: any) => (
+      {payload.map((p) => (
         <p key={p.dataKey} style={{ color: p.color }}>
           {p.name}: <span className="font-bold">{p.value?.toFixed(1)} mm</span>
         </p>

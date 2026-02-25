@@ -13,6 +13,23 @@ import type { BookingRecord, SendEmailParams, SuccessPageProps } from "@/lib/typ
 export const dynamic = "force-dynamic";
 
 
+type PayPalOrderResponse = {
+  status?: string;
+  message?: string;
+  details?: Array<{ description?: string }>;
+  payer?: {
+    name?: { given_name?: string; surname?: string };
+    email_address?: string;
+  };
+  purchase_units?: Array<{
+    amount?: { value?: string; currency_code?: string };
+    description?: string;
+    custom_id?: string;
+    payments?: { captures?: Array<{ id?: string; status?: string; amount?: { value?: string; currency_code?: string } }> };
+  }>;
+};
+
+
 async function saveBookingToDb(record: BookingRecord): Promise<string | null> {
   try {
     const db = await getDb();
@@ -185,7 +202,7 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
   const userEmail = session?.user?.email ?? null;
 
   // 1) GET PAYPAL ORDER DETAILS
-  let paypalOrder: any = null;
+  let paypalOrder: PayPalOrderResponse | null = null;
   let errorMessage: string | null = null;
 
   try {
@@ -211,7 +228,7 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
         paypalOrder?.details?.[0]?.description ||
         "Error al obtener detalles de PayPal.";
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("PayPal fetch error:", err);
     errorMessage = "No se pudo conectar con PayPal.";
   }
@@ -239,7 +256,7 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
   }`.trim();
   const payerEmail = payer.email_address || "";
 
-  let meta: any = null;
+  let meta: Record<string, unknown> | null = null;
   if (purchaseUnit.custom_id) {
     try {
       meta = JSON.parse(purchaseUnit.custom_id);
@@ -248,32 +265,32 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
     }
   }
 
-  const metaCustomer = meta?.customer ?? meta;
-  const metaBooking = meta?.booking ?? meta;
+  const metaCustomer = (meta?.customer as Record<string, unknown> | undefined) ?? meta;
+  const metaBooking = (meta?.booking as Record<string, unknown> | undefined) ?? meta;
 
   const description = purchaseUnit.description || "";
   const ticketsMatch = description.match(/(\d+)\s*tickets?/i);
   const dateMatch =
     description.match(/\(([^)]+)\)/) || description.match(/para\s+(.*)/i);
 
-  const name = metaCustomer?.name || payerName || "Cliente";
-  const email = metaCustomer?.email || payerEmail || "";
-  const phone = metaCustomer?.phone || "";
+  const name = (metaCustomer?.name as string | undefined) || payerName || "Cliente";
+  const email = (metaCustomer?.email as string | undefined) || payerEmail || "";
+  const phone = (metaCustomer?.phone as string | undefined) || "";
 
   const ticketsStr =
-    meta?.tickets?.toString() ||
-    metaBooking?.tickets?.toString() ||
-    metaCustomer?.tickets?.toString() ||
+    String(meta?.tickets ?? "") ||
+    String(metaBooking?.tickets ?? "") ||
+    String(metaCustomer?.tickets ?? "") ||
     (ticketsMatch ? ticketsMatch[1] : "");
 
   const date =
-    meta?.date ||
-    metaBooking?.date ||
-    metaCustomer?.date ||
+    (meta?.date as string | undefined) ||
+    (metaBooking?.date as string | undefined) ||
+    (metaCustomer?.date as string | undefined) ||
     (dateMatch ? dateMatch[1] : "");
 
-  const tourTime: string | null = meta?.time ?? null;
-  const tourPackage: string | null = meta?.pkg ?? null;
+  const tourTime: string | null = typeof meta?.time === "string" ? meta.time : null;
+  const tourPackage: string | null = typeof meta?.pkg === "string" ? meta.pkg : null;
   const packagePrice: number | null =
     meta?.ppUSD != null ? Number(meta.ppUSD) : null;
 

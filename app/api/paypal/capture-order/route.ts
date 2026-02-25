@@ -10,6 +10,20 @@ interface CaptureRequest {
   orderID: string;
 }
 
+interface CaptureResponse {
+  id?: string;
+  status?: string;
+  payer?: {
+    name?: { given_name?: string; surname?: string };
+    email_address?: string;
+    payer_id?: string;
+  };
+  purchase_units?: Array<{
+    custom_id?: string;
+    payments?: { captures?: Array<{ id?: string }> };
+  }>;
+}
+
 export async function POST(req: Request) {
   try {
     const { orderID }: CaptureRequest = await req.json();
@@ -38,7 +52,7 @@ export async function POST(req: Request) {
       }
     );
 
-    const data = await res.json();
+    const data = (await res.json()) as CaptureResponse;
 
     if (!res.ok) {
       console.error("PayPal Capture Error:", JSON.stringify(data, null, 2));
@@ -52,7 +66,7 @@ export async function POST(req: Request) {
     const capture = purchaseUnit?.payments?.captures?.[0] ?? null;
     const rawCustomId = purchaseUnit?.custom_id ?? null;
 
-    let customData: any = null;
+    let customData: Record<string, unknown> | string | null = null;
 
     // NOTE: if custom_id is *not* JSON (e.g. "tickets-2-2025-01-01"),
     // this will just fail silently and metadata will stay null.
@@ -81,10 +95,10 @@ export async function POST(req: Request) {
       },
       { status: 200 }
     );
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Internal Capture Error:", err);
     return NextResponse.json(
-      { message: "Internal server error.", error: err?.message ?? "Unknown" },
+      { message: "Internal server error.", error: err instanceof Error ? err.message : "Unknown" },
       { status: 500 }
     );
   }

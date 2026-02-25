@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Component, ErrorInfo, ReactNode } from "react";
+import { Component, type ErrorInfo, type ReactNode } from "react";
 
 // --- 1. Type Definitions ---
 
@@ -32,7 +32,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
    * descendant component. It receives the error and should return a value 
    * to update state.
    */
-  public static getDerivedStateFromError(_: Error): ErrorBoundaryState {
+  public static getDerivedStateFromError(): ErrorBoundaryState {
     // Update state to indicate an error occurred.
     return { hasError: true };
   }

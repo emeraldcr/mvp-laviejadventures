@@ -4,7 +4,6 @@ import DynamicHeroHeader from "@/app/components/sections/DynamicHeroHeader";
 import Link from "next/link";
 import {
     ArrowRight,
-    Bird,
     Building2,
     CalendarClock,
     CalendarDays,
@@ -12,17 +11,13 @@ import {
     Home,
     Mail,
     MapPin,
-    Mountain,
     Phone,
     ShieldCheck,
     Sparkles,
-    TreePine,
     User,
-    LogOut,
 } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { useLanguage } from "@/app/context/LanguageContext";
-import { translations } from "@/lib/translations";
 import { useSession, signIn } from "next-auth/react";
 import LogoutButton from "../../../src/components/LogoutButton";
 import Profile from "../../../src/components/Profile";
@@ -62,24 +57,32 @@ const DASHBOARD_LINKS = [
 
 export default function DashboardPage() {
     const { lang } = useLanguage();
-    const tr = translations[lang].dashboard || translations[lang].info; // Fallback to info if dashboard translations not available
-
     const { data: session, status } = useSession();
     const user = session?.user;
     const isLoading = status === "loading";
-    const [bookings, setBookings] = useState<Booking[]>([]);
-    const [bookingsLoading, setBookingsLoading] = useState(false);
+    const [bookings, setBookings] = useState<Booking[] | null>(null);
 
     useEffect(() => {
-        if (user) {
-            setBookingsLoading(true);
-            fetch("/api/bookings")
-                .then((res) => res.json())
-                .then((data) => setBookings(data.bookings ?? []))
-                .catch(() => setBookings([]))
-                .finally(() => setBookingsLoading(false));
-        }
+        if (!user) return;
+
+        let cancelled = false;
+
+        fetch("/api/bookings")
+            .then((res) => res.json())
+            .then((data) => {
+                if (!cancelled) setBookings(data.bookings ?? []);
+            })
+            .catch(() => {
+                if (!cancelled) setBookings([]);
+            });
+
+        return () => {
+            cancelled = true;
+        };
     }, [user]);
+
+    const bookingsLoading = Boolean(user) && bookings === null;
+    const safeBookings = bookings ?? [];
 
     if (isLoading) {
         return (
@@ -203,7 +206,7 @@ export default function DashboardPage() {
                                     <p className="text-zinc-500 dark:text-zinc-400">{lang === "es" ? "Cargando..." : "Loading..."}</p>
                                 ) : (
                                     <ul className="space-y-3 text-zinc-700 dark:text-zinc-300">
-                                        {bookings.filter(b => isUpcoming(b.date)).map((booking) => (
+                                        {safeBookings.filter(b => isUpcoming(b.date)).map((booking) => (
                                             <li key={booking.id} className="flex flex-col gap-1 border-b border-zinc-200 pb-2 last:border-b-0 dark:border-zinc-800">
                                                 <span className="font-semibold">
                                                     {booking.tourPackage
@@ -214,7 +217,7 @@ export default function DashboardPage() {
                                                 <span className="text-sm">{lang === "es" ? "Boletos:" : "Tickets:"} {booking.tickets ?? "—"}</span>
                                             </li>
                                         ))}
-                                        {bookings.filter(b => isUpcoming(b.date)).length === 0 && (
+                                        {safeBookings.filter(b => isUpcoming(b.date)).length === 0 && (
                                             <p>{lang === "es" ? "No hay reservas próximas." : "No upcoming bookings."}</p>
                                         )}
                                     </ul>
@@ -230,7 +233,7 @@ export default function DashboardPage() {
                                     <p className="text-zinc-500 dark:text-zinc-400">{lang === "es" ? "Cargando..." : "Loading..."}</p>
                                 ) : (
                                     <ul className="space-y-3 text-zinc-700 dark:text-zinc-300">
-                                        {bookings.filter(b => !isUpcoming(b.date)).map((booking) => (
+                                        {safeBookings.filter(b => !isUpcoming(b.date)).map((booking) => (
                                             <li key={booking.id} className="flex flex-col gap-1 border-b border-zinc-200 pb-2 last:border-b-0 dark:border-zinc-800">
                                                 <span className="font-semibold">
                                                     {booking.tourPackage
@@ -241,7 +244,7 @@ export default function DashboardPage() {
                                                 <span className="text-sm">{lang === "es" ? "Boletos:" : "Tickets:"} {booking.tickets ?? "—"}</span>
                                             </li>
                                         ))}
-                                        {bookings.filter(b => !isUpcoming(b.date)).length === 0 && (
+                                        {safeBookings.filter(b => !isUpcoming(b.date)).length === 0 && (
                                             <p>{lang === "es" ? "No hay reservas pasadas." : "No past bookings."}</p>
                                         )}
                                     </ul>

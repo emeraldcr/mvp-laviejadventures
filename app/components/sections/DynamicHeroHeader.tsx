@@ -403,21 +403,10 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "1
   const tr = translations[lang].hero;
 
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [progress, setProgress] = useState(0);
   const [paused, setPaused] = useState(false);
 
   const parallaxImageRef = useRef<HTMLDivElement>(null);
   const parallaxOverlayRef = useRef<HTMLDivElement>(null);
-
-  // Progress bar – resets and fills each slide
-  useEffect(() => {
-    if (paused || carouselImages.length === 0) return;
-    setProgress(0);
-    const TICK_MS = 50;
-    const step = (TICK_MS / SLIDE_DURATION) * 100;
-    const timer = setInterval(() => setProgress((p) => Math.min(p + step, 100)), TICK_MS);
-    return () => clearInterval(timer);
-  }, [currentIndex, paused, carouselImages.length]);
 
   // Auto-advance
   useInterval(() => {
@@ -449,17 +438,14 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "1
     return () => window.removeEventListener("scroll", update);
   }, []);
 
-  const goTo = useCallback(
-    (idx: number) => { setCurrentIndex(idx); setProgress(0); },
-    []
-  );
+  const goTo = useCallback((idx: number) => {
+    setCurrentIndex(idx);
+  }, []);
   const goPrev = useCallback(() => {
     setCurrentIndex((p) => (p - 1 + carouselImages.length) % carouselImages.length);
-    setProgress(0);
   }, [carouselImages.length]);
   const goNext = useCallback(() => {
     setCurrentIndex((p) => (p + 1) % carouselImages.length);
-    setProgress(0);
   }, [carouselImages.length]);
 
   if (error)
@@ -509,8 +495,12 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "1
       {/* ── Progress bar (top) ── */}
       <div className="absolute top-0 left-0 right-0 z-30 h-[3px] bg-white/10">
         <div
-          className="h-full bg-gradient-to-r from-teal-500 to-teal-300 transition-none"
-          style={{ width: `${progress}%` }}
+          key={`${currentIndex}-${paused ? "paused" : "playing"}`}
+          className="h-full bg-gradient-to-r from-teal-500 to-teal-300"
+          style={{
+            animation: `lva-progress ${SLIDE_DURATION}ms linear forwards`,
+            animationPlayState: paused ? "paused" : "running",
+          }}
         />
       </div>
 
@@ -600,6 +590,12 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "1
           </a>
         </div>
       </div>
+      <style jsx>{`
+        @keyframes lva-progress {
+          from { width: 0%; }
+          to { width: 100%; }
+        }
+      `}</style>
     </section>
   );
 };
@@ -612,12 +608,17 @@ interface DynamicHeroHeaderProps {
 
 export default function DynamicHeroHeader({ children, showHeroSlider = true }: DynamicHeroHeaderProps) {
   const scrollY = useScrollY();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const pathname = usePathname() ?? "";
+  const [menuState, setMenuState] = useState({ open: false, pathname });
+  const isMenuOpen = menuState.open && menuState.pathname === pathname;
   const isScrolled = useMemo(() => scrollY > SCROLL_THRESHOLD, [scrollY]);
-  const toggleMenu = useCallback(() => setIsMenuOpen((prev) => !prev), []);
-  const pathname = usePathname();
+  const toggleMenu = useCallback(() => {
+    setMenuState((prev) => ({
+      open: !(prev.open && prev.pathname === pathname),
+      pathname,
+    }));
+  }, [pathname]);
 
-  useEffect(() => { setIsMenuOpen(false); }, [pathname]);
   useEffect(() => {
     document.body.style.overflow = isMenuOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };

@@ -12,14 +12,12 @@ type Props = { snap: WeatherSnapshot | null };
 
 export default function WeatherMessage({ snap }: Props) {
   const [message, setMessage] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!snap) return;
 
-    let cancelled = false;
-    setLoading(true);
 
+    let cancelled = false;
     fetch("/api/tiempo/mensaje", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -29,7 +27,7 @@ export default function WeatherMessage({ snap }: Props) {
       .then((r) => r.json())
       .then(({ message }) => { if (!cancelled) setMessage(message); })
       .catch(() => { if (!cancelled) setMessage(null); })
-      .finally(() => { if (!cancelled) setLoading(false); });
+      ;
 
     return () => { cancelled = true; };
   }, [snap]);
@@ -41,7 +39,7 @@ export default function WeatherMessage({ snap }: Props) {
       <p className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold mb-2">
         El pronóstico del humor
       </p>
-      {loading ? (
+      {snap && !message ? (
         <div className="h-5 w-3/4 rounded bg-white/5 animate-pulse" />
       ) : message ? (
         <p className="text-sm text-zinc-300 leading-relaxed italic">{message}</p>
