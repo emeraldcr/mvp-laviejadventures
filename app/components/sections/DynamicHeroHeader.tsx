@@ -188,6 +188,7 @@ const Header = memo<{ isScrolled: boolean; onMenuToggle: () => void; isMenuOpen:
 
     const navLinks: NavLinkItem[] = [
       { href: "/info", label: tr.info },
+      { href: "/docs", label: tr.docs },
       { href: "/tours", label: tr.tours },
       { href: "/galeria", label: tr.gallery },
       { href: "/wildo", label: tr.wildo },

@@ -3,6 +3,7 @@ import type { Lang } from "@/app/context/LanguageContext";
 const es = {
   nav: {
     info: "Información",
+    docs: "Guía",
     tours: "Tours",
     gallery: "Galería",
     wildo: "Wildo",
@@ -241,6 +242,7 @@ const es = {
 const en = {
   nav: {
     info: "Information",
+    docs: "Docs",
     tours: "Tours",
     gallery: "Gallery",
     wildo: "Wildo",
