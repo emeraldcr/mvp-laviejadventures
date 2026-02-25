@@ -18,13 +18,27 @@ export function safeParseFloat(s?: string): number {
 export function parseIMNDate(str: string): Date | null {
   const cleaned = str.trim().replace(/\s+/g, " ");
   let dt = parse(cleaned, "dd/MM/yyyy hh:mm:ss a", new Date(), { locale: es });
-  if (isValid(dt)) return dt;
+  if (!isValid(dt)) {
+    dt = parse(cleaned, "dd/MM/yyyy hh:mm a", new Date(), { locale: es });
+  }
+  if (!isValid(dt)) {
+    dt = parse(cleaned, "dd/MM/yyyy HH:mm", new Date());
+  }
+  if (!isValid(dt)) return null;
 
-  dt = parse(cleaned, "dd/MM/yyyy hh:mm a", new Date(), { locale: es });
-  if (isValid(dt)) return dt;
-
-  dt = parse(cleaned, "dd/MM/yyyy HH:mm", new Date());
-  return isValid(dt) ? dt : null;
+  const hoursInCostaRica = dt.getHours();
+  const utcHour = hoursInCostaRica + 6; // Costa Rica = UTC-6 todo el año.
+  return new Date(
+    Date.UTC(
+      dt.getFullYear(),
+      dt.getMonth(),
+      dt.getDate(),
+      utcHour,
+      dt.getMinutes(),
+      dt.getSeconds(),
+      dt.getMilliseconds(),
+    ),
+  );
 }
 
 export function getRainIntensity(mm: number): RainStatus {
