@@ -107,6 +107,17 @@ function formatFecha(iso: string | null | undefined): string {
   } catch { return "—"; }
 }
 
+function getCostaRicaHour(referenceISO?: string | null): number {
+  const base = referenceISO ? new Date(referenceISO) : new Date();
+  const hourText = new Intl.DateTimeFormat("en-US", {
+    hour: "numeric",
+    hour12: false,
+    timeZone: "America/Costa_Rica",
+  }).format(base);
+  const hour = Number(hourText);
+  return Number.isFinite(hour) ? hour : 12;
+}
+
 function mmToColor(mm: number): string {
   if (mm >= 12) return "#ef4444";
   if (mm >= 4) return "#f97316";
@@ -128,6 +139,25 @@ function getDecision(rain: RainData | null): Decision {
   const last3h = rain.stats?.last3h_mm ?? 0;
   const forecast = rain.forecast?.consensusMm ?? 0;
   const trend = rain.status.trend;
+  const wetStreak = rain.stats?.wetStreak ?? 0;
+  const currentHourCR = getCostaRicaHour(rain.meta?.lastUpdateISO);
+  const isWithinCanyonWindow = currentHourCR >= 7 && currentHourCR < 16;
+
+  if (!isWithinCanyonWindow) return {
+    level: "no",
+    title: "Fuera de horario recomendado",
+    subtitle: "Para seguridad en el cañón: ingreso solo entre 7:00 a.m. y 4:00 p.m.",
+    color: "text-red-400", bg: "bg-red-500/10", border: "border-red-500/40",
+    icon: XCircle,
+  };
+
+  if (wetStreak >= 4) return {
+    level: "no",
+    title: "No recomendado ingresar al cañón",
+    subtitle: `${wetStreak}h seguidas de lluvia detectadas · Posible aumento de caudal`,
+    color: "text-red-400", bg: "bg-red-500/10", border: "border-red-500/40",
+    icon: XCircle,
+  };
 
   if (r === "red" || (last3h > 15 && forecast > 3)) return {
     level: "no",
@@ -453,6 +483,20 @@ export default function TourWeatherDashboard() {
               </div>
             </div>
           </div>
+        </div>
+
+        {(rain?.stats?.wetStreak ?? 0) >= 4 && (
+          <div className="rounded-2xl border border-red-500/35 bg-red-500/10 px-4 py-3">
+            <p className="text-xs font-semibold text-red-300 uppercase tracking-wide">Alerta por lluvia continua</p>
+            <p className="text-sm text-red-100 mt-1">
+              Se registran <strong>{rain?.stats?.wetStreak} horas seguidas de lluvia</strong>. No se recomienda entrar al cañón hasta que baje el caudal.
+            </p>
+          </div>
+        )}
+
+        <div className="rounded-2xl border border-amber-500/25 bg-amber-500/10 px-4 py-3">
+          <p className="text-xs font-semibold text-amber-300 uppercase tracking-wide">Horario seguro en cañón</p>
+          <p className="text-sm text-amber-100 mt-1">Recomendación operativa: permanecer dentro del cañón solo entre <strong>7:00 a.m. y 4:00 p.m.</strong></p>
         </div>
 
         {/* ═══ ANTHROPIC FUNNY MESSAGE ════════════════════════════════════════ */}
