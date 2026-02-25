@@ -279,18 +279,23 @@ export default function AIAssistantClient() {
                   <div className="flex flex-wrap items-end gap-2">
                     <label className="space-y-1">
                       <span className="text-xs text-zinc-400">Personas (1-20)</span>
-                      <input
-                        type="number"
-                        min={1}
-                        max={20}
+                      <select
                         value={guidedTickets}
-                        onChange={(event) => setGuidedTickets(Math.min(20, Math.max(1, Number(event.target.value) || 1)))}
+                        onChange={(event) => {
+                          const selectedTickets = Number(event.target.value);
+                          setGuidedTickets(selectedTickets);
+                          addToPrompt(`Somos ${selectedTickets} personas`);
+                        }}
                         className="w-28 rounded-lg border border-white/10 bg-white/5 px-3 py-2"
-                      />
+                      >
+                        {Array.from({ length: 20 }, (_, index) => index + 1).map((option) => (
+                          <option key={option} value={option} className="bg-zinc-900">
+                            {option}
+                          </option>
+                        ))}
+                      </select>
                     </label>
-                    <button type="button" onClick={() => addToPrompt(`Somos ${guidedTickets} personas`)} className="rounded-lg border border-emerald-400 bg-emerald-500/20 px-3 py-2 text-emerald-300">
-                      Agregar
-                    </button>
+                    <p className="text-xs text-zinc-400">Se agrega automáticamente al seleccionar.</p>
                   </div>
                 )}
 
