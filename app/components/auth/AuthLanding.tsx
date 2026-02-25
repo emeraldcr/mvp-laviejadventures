@@ -1,92 +1,102 @@
 'use client';
 
-// src/components/AuthLanding.tsx
-import { Chrome } from 'lucide-react'; // Use Chrome as Google stand-in
-import { signIn } from 'next-auth/react'; // For real Google login (assuming Auth.js/NextAuth setup)
+import Link from 'next/link';
+import { ArrowRight, CheckCircle2, Chrome, Shield, Sparkles } from 'lucide-react';
+import { signIn } from 'next-auth/react';
+
+const highlights = [
+    'Reservas y disponibilidad en tiempo real',
+    'Panel optimizado para equipos y agencias',
+    'Soporte dedicado para partners de La Vieja',
+];
 
 export default function AuthLanding() {
     return (
-        <div className="min-h-screen bg-gray-950 text-white flex flex-col items-center justify-center p-6">
-            {/* Top right corner link – customize to your main app */}
-            <div className="absolute top-6 right-6">
-                <a
-                    href="/" // ← e.g. https://laviejaadventures.com or your chat/app home
-                    className="text-purple-400 hover:text-purple-300 font-medium flex items-center gap-2 transition-colors"
-                >
-                    Go to La Vieja Adventures →
-                </a>
-            </div>
+        <main className="relative min-h-screen overflow-hidden bg-slate-950 text-white">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_15%,rgba(34,197,94,0.3),transparent_40%),radial-gradient(circle_at_80%_0%,rgba(59,130,246,0.25),transparent_45%),radial-gradient(circle_at_50%_80%,rgba(16,185,129,0.2),transparent_50%)]" />
+            <div className="absolute inset-0 bg-slate-950/70 backdrop-blur-3xl" />
 
-            <div className="w-full max-w-md space-y-10 text-center">
-                {/* Logo / Brand – customize name & star color */}
-                <div className="flex justify-center">
-                    <div className="text-5xl font-bold tracking-tight">
-                        <span className="text-purple-500">★</span> La Vieja
-                    </div>
-                </div>
-
-                <h1 className="text-4xl font-bold tracking-tight">
-                    Build on the
-                    <br />
-                    La Vieja Developer Platform
-                </h1>
-
-                <p className="text-gray-400 text-lg">
-                    Sign in or create a developer account to build with the La Vieja API
-                </p>
-
-                {/* Google Button – using Chrome icon from lucide-react */}
-                <button
-                    type="button"
-                    onClick={() => signIn('google', { callbackUrl: '/dashboard' })} // Redirect after login (change path as needed)
-                    className="w-full bg-white text-gray-900 hover:bg-gray-100 font-medium py-3.5 px-6 rounded-lg flex items-center justify-center gap-3 transition-colors shadow-md"
-                >
-                    <Chrome className="h-7 w-7" /> {/* Slightly larger for better visibility */}
-                    Continue with Google
-                </button>
-
-                <div className="relative my-6">
-                    <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-gray-700"></div>
-                    </div>
-                    <div className="relative flex justify-center text-sm">
-                        <span className="px-4 bg-gray-950 text-gray-500">OR</span>
-                    </div>
-                </div>
-
-                {/* Email input + button – placeholder for now */}
-                <div className="space-y-4">
-                    <input
-                        type="email"
-                        placeholder="Enter your email"
-                        className="w-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-lg py-3.5 px-5 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    />
-
-                    <button
-                        type="button"
-                        onClick={() => alert('Email/magic link coming soon – implement your auth flow here!')}
-                        className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-3.5 px-6 rounded-lg transition-colors"
+            <div className="relative mx-auto flex min-h-screen w-full max-w-6xl flex-col justify-between px-5 py-6 sm:px-8 sm:py-8 lg:px-12">
+                <header className="flex items-center justify-between">
+                    <Link href="/" className="inline-flex items-center gap-2 text-base font-semibold tracking-tight text-slate-200 transition hover:text-white">
+                        <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-400/20 text-emerald-300">
+                            <Sparkles className="h-4 w-4" />
+                        </span>
+                        La Vieja Adventures
+                    </Link>
+                    <Link
+                        href="/tours"
+                        className="hidden items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-2 text-sm text-slate-100 transition hover:border-white/40 hover:bg-white/10 sm:inline-flex"
                     >
-                        Continue with email
-                    </button>
-                </div>
+                        Explorar tours
+                        <ArrowRight className="h-4 w-4" />
+                    </Link>
+                </header>
 
-                <p className="text-sm text-gray-500 mt-8">
-                    By continuing, you agree to La Vieja Adventures's{' '}
-                    <a href="/terms" className="text-purple-400 hover:underline">
-                        Terms of Service
-                    </a>
-                    ,{' '}
-                    <a href="/usage-policy" className="text-purple-400 hover:underline">
-                        Usage Policy
-                    </a>
-                    , and acknowledge our{' '}
-                    <a href="/privacy" className="text-purple-400 hover:underline">
-                        Privacy Policy
-                    </a>
-                    .
-                </p>
+                <section className="grid items-center gap-8 py-10 md:grid-cols-2 md:gap-12 lg:py-14">
+                    <div className="space-y-6 text-left">
+                        <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-4 py-2 text-xs font-medium uppercase tracking-[0.18em] text-emerald-200">
+                            <Shield className="h-3.5 w-3.5" />
+                            Plataforma segura
+                        </span>
+
+                        <h1 className="text-balance text-4xl font-semibold leading-tight text-white sm:text-5xl lg:text-6xl">
+                            La plataforma moderna para gestionar experiencias memorables.
+                        </h1>
+
+                        <p className="max-w-xl text-pretty text-base text-slate-300 sm:text-lg">
+                            Administra operaciones, reservas y clientes desde un mismo lugar. Diseñada para ser rápida en escritorio y súper cómoda en móvil.
+                        </p>
+
+                        <ul className="space-y-3">
+                            {highlights.map((item) => (
+                                <li key={item} className="flex items-start gap-3 text-sm text-slate-200 sm:text-base">
+                                    <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-300" />
+                                    <span>{item}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+
+                    <div className="rounded-3xl border border-white/15 bg-white/10 p-5 shadow-2xl shadow-black/30 backdrop-blur-xl sm:p-7">
+                        <div className="space-y-5">
+                            <div>
+                                <p className="text-sm font-medium uppercase tracking-[0.2em] text-emerald-200/90">Acceso partner</p>
+                                <h2 className="mt-2 text-2xl font-semibold text-white sm:text-3xl">Entra a tu panel</h2>
+                            </div>
+
+                            <p className="text-sm text-slate-300 sm:text-base">
+                                Inicia sesión para gestionar tus operaciones en La Vieja Adventures y continuar donde te quedaste.
+                            </p>
+
+                            <button
+                                type="button"
+                                onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
+                                className="inline-flex w-full items-center justify-center gap-3 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 sm:text-base"
+                            >
+                                <Chrome className="h-5 w-5" />
+                                Continuar con Google
+                            </button>
+
+                            <p className="text-xs leading-relaxed text-slate-400">
+                                Al continuar aceptas nuestros{' '}
+                                <Link href="/terminos-y-condiciones" className="text-emerald-200 underline-offset-4 hover:underline">
+                                    Términos y Condiciones
+                                </Link>{' '}
+                                y nuestra{' '}
+                                <Link href="/politica-de-privacidad" className="text-emerald-200 underline-offset-4 hover:underline">
+                                    Política de Privacidad
+                                </Link>
+                                .
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                <footer className="pt-2 text-center text-xs text-slate-400 sm:text-sm">
+                    © {new Date().getFullYear()} La Vieja Adventures. Diseñado para equipos en movimiento.
+                </footer>
             </div>
-        </div>
+        </main>
     );
 }
