@@ -66,7 +66,7 @@ export function ToursClient({ tours }: { tours: TourData[] }) {
 
   return (
     <main className="min-h-screen bg-black text-white">
-      <DynamicHeroHeader />
+      <DynamicHeroHeader showHeroSlider={false} />
 
       {/* Page header */}
       <section className="relative pt-24 pb-16 px-4 text-center overflow-hidden">
