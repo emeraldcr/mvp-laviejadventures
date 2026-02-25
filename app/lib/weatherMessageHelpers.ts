@@ -5,20 +5,28 @@
 
 export type WeatherSnapshot = {
   risk: "green" | "yellow" | "red";
+  riskLabel?: string;
   last1h_mm: number;
+  last3h_mm?: number;
+  last6h_mm?: number;
   last24h_mm: number;
   intensity: string;
   trend: string;
   consensusMm: number;
+  confidence?: string;
+  wetStreak?: number;
+  dryStreak?: number;
   avgTemp24h: number | null;
+  avgHR24h?: number | null;
 };
 
 export function buildSystemPrompt(): string {
-  return `Sos un compa vacilón de San Carlos.
+  return `Sos una persona guía local en Costa Rica.
 Escribí SOLO 1 o 2 oraciones cortas sobre el clima actual.
 Tiene que ser gracioso pero buena nota (no cruel).
 Meté al menos un dato (mm, °C, tendencia o intensidad) dentro del chiste.
-Sin emojis. Sin sonar como reporte.`;
+Sin emojis. Sin sonar como reporte.
+Usá un español neutro y natural, sin depender de chistes demasiado locales.`;
 }
 
 function trendLabel(trendRaw: string): "up" | "down" | "flat" {
@@ -66,7 +74,7 @@ export function buildUserPrompt(snap: WeatherSnapshot): string {
 
   const angle = angles[Math.floor(Math.random() * angles.length)];
 
-  return `Clima en San Carlos:
+  return `Clima actual en zona de cañón:
 - General: ${condicion}
 - Lluvia: ${lluvia}
 - Temp: ${temp}
@@ -74,5 +82,5 @@ export function buildUserPrompt(snap: WeatherSnapshot): string {
 - Intensidad: ${snap.intensity}
 
 Estilo: ${angle}
-Recordá: 1-2 oraciones, corto y vacilón suave.`;
+Recordá: 1-2 oraciones, corto y vacilón suave. Evitá frases demasiado personalizadas de un solo pueblo.`;
 }
