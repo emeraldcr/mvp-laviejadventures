@@ -64,6 +64,8 @@ export function ToursClient({ tours }: { tours: TourData[] }) {
   const formatPrice = (priceCRC: number) =>
     priceCRC.toLocaleString("es-CR").replace(/,/g, ".");
 
+  const getReservationHref = (tourSlug: string) => `/?tour=${encodeURIComponent(tourSlug)}#booking`;
+
   return (
     <main className="min-h-screen bg-black text-white">
       <DynamicHeroHeader showHeroSlider={false} />
@@ -119,7 +121,7 @@ export function ToursClient({ tours }: { tours: TourData[] }) {
               </p>
               <p className="text-zinc-500 text-xs mt-1">{tr.perPerson}</p>
               <Link
-                href="/#calendar"
+                href={getReservationHref("tour-ciudad-esmeralda")}
                 className="mt-4 inline-flex items-center gap-2 px-6 py-3 rounded-full bg-teal-500 hover:bg-teal-400 text-black font-bold text-sm transition-all duration-200 shadow-lg shadow-teal-900/40"
               >
                 {tr.bookNow} <ChevronRight size={16} />
@@ -196,7 +198,7 @@ export function ToursClient({ tours }: { tours: TourData[] }) {
                     </p>
                   </div>
                   <Link
-                    href="/#calendar"
+                    href={getReservationHref(tour.slug)}
                     className="px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white text-sm font-semibold transition-all duration-200 flex items-center gap-1.5 flex-shrink-0"
                   >
                     {tr.reserve} <ChevronRight size={14} />
