@@ -67,7 +67,7 @@ function AILandingIntro() {
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Link
-              href="/AI"
+              href="/ai"
               className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-400 to-emerald-400 px-6 py-3 text-sm font-extrabold uppercase tracking-wider text-zinc-950 shadow-[0_18px_45px_rgba(45,212,191,0.35)] transition hover:-translate-y-0.5"
             >
               <Sparkles size={16} />
@@ -199,7 +199,7 @@ function BookingSection() {
                 {lang === "es" ? "Ver mi dashboard" : "Go to Dashboard"}
               </a>
               <Link
-                href="/AI"
+                href="/ai"
                 className="inline-flex items-center justify-center gap-2 rounded-xl border border-cyan-400/50 px-4 py-3 text-sm font-semibold text-cyan-200 transition hover:bg-cyan-400/10"
               >
                 {lang === "es" ? "Abrir La Vieja AI" : "Open La Vieja AI"}
@@ -227,7 +227,7 @@ function BookingSection() {
                 {lang === "es" ? "Iniciar sesión" : "Log In"}
               </button>
               <Link
-                href="/AI"
+                href="/ai"
                 className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-cyan-400/50 px-6 py-3 text-sm font-semibold text-cyan-200 transition hover:bg-cyan-400/10"
               >
                 {lang === "es" ? "Explorar La Vieja AI" : "Explore La Vieja AI"}
