@@ -1,7 +1,8 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { CheckCircle2, Loader2, LogIn, LogOut, ShieldAlert, XCircle } from "lucide-react";
+import Link from "next/link";
+import { CheckCircle2, Home, Loader2, LogIn, LogOut, ShieldAlert, ShieldCheck, UserRound, XCircle } from "lucide-react";
 
 type Operator = {
   _id: string;
@@ -12,6 +13,12 @@ type Operator = {
   commissionRate: number;
   createdAt: string;
 };
+
+const ACCESS_LINKS = [
+  { href: "/", label: "Inicio", icon: <Home className="h-4 w-4" />, style: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300" },
+  { href: "/dashboard", label: "Usuario normal", icon: <UserRound className="h-4 w-4" />, style: "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200" },
+  { href: "/b2b/login", label: "Login B2B", icon: <ShieldCheck className="h-4 w-4" />, style: "bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300" },
+];
 
 export default function B2BAdminPage() {
   const [username, setUsername] = useState("");
@@ -165,6 +172,18 @@ export default function B2BAdminPage() {
           <p className="mb-6 text-sm text-zinc-500 dark:text-zinc-400">
             Acceso interno para aprobación de operadores.
           </p>
+          <div className="mb-6 grid gap-2 sm:grid-cols-3">
+            {ACCESS_LINKS.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${link.style}`}
+              >
+                {link.icon}
+                {link.label}
+              </Link>
+            ))}
+          </div>
 
           {authError && (
             <p className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">
@@ -202,21 +221,32 @@ export default function B2BAdminPage() {
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-6xl px-4 py-8">
-      <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
+      <header className="mb-6 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="mb-4 flex flex-col gap-2">
           <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">Dashboard aprobación B2B</h1>
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
             Revisa y aprueba cuentas de operadores con estado pendiente.
           </p>
         </div>
-
-        <button
-          onClick={handleLogout}
-          className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
-        >
-          <LogOut className="h-4 w-4" />
-          Salir
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          {ACCESS_LINKS.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${link.style}`}
+            >
+              {link.icon}
+              {link.label}
+            </Link>
+          ))}
+          <button
+            onClick={handleLogout}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-zinc-700 hover:shadow-md dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white"
+          >
+            <LogOut className="h-4 w-4" />
+            Salir
+          </button>
+        </div>
       </header>
 
       {requestError && (

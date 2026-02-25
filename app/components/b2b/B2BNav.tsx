@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Compass, LayoutDashboard, Map, ClipboardList, LogOut, Menu, X } from "lucide-react";
+import { Compass, LayoutDashboard, Map, ClipboardList, LogOut, Menu, ShieldCheck, UserRound, House, X } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +16,12 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/b2b/dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-4 w-4" /> },
   { href: "/b2b/tours", label: "Catálogo de tours", icon: <Map className="h-4 w-4" /> },
   { href: "/b2b/bookings", label: "Mis reservas", icon: <ClipboardList className="h-4 w-4" /> },
+];
+
+const ACCESS_SHORTCUTS = [
+  { href: "/", label: "Inicio", icon: <House className="h-4 w-4" /> },
+  { href: "/dashboard", label: "Usuario", icon: <UserRound className="h-4 w-4" /> },
+  { href: "/b2b/admin", label: "Admin", icon: <ShieldCheck className="h-4 w-4" /> },
 ];
 
 interface B2BNavProps {
@@ -76,6 +82,18 @@ export default function B2BNav({ operatorName, company }: B2BNavProps) {
             <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">{operatorName}</p>
             <p className="text-xs text-zinc-500 dark:text-zinc-400">{company}</p>
           </div>
+          <div className="hidden items-center gap-2 md:flex">
+            {ACCESS_SHORTCUTS.map((shortcut) => (
+              <Link
+                key={shortcut.href}
+                href={shortcut.href}
+                className="inline-flex items-center gap-1.5 rounded-full border border-zinc-200 bg-white px-3 py-2 text-xs font-semibold text-zinc-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
+              >
+                {shortcut.icon}
+                {shortcut.label}
+              </Link>
+            ))}
+          </div>
           <button
             onClick={handleLogout}
             className="hidden items-center gap-1.5 rounded-xl border border-zinc-200 px-3 py-2 text-sm font-medium text-zinc-600 transition hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 md:flex"
@@ -118,9 +136,22 @@ export default function B2BNav({ operatorName, company }: B2BNavProps) {
                 {item.label}
               </Link>
             ))}
+            <div className="grid grid-cols-1 gap-2 pt-2">
+              {ACCESS_SHORTCUTS.map((shortcut) => (
+                <Link
+                  key={shortcut.href}
+                  href={shortcut.href}
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2.5 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
+                >
+                  {shortcut.icon}
+                  {shortcut.label}
+                </Link>
+              ))}
+            </div>
             <button
               onClick={handleLogout}
-              className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
+              className="mt-1 flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
             >
               <LogOut className="h-4 w-4" />
               Cerrar sesión

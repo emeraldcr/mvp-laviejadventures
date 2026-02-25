@@ -1,12 +1,15 @@
 "use client";
 
 import DynamicHeroHeader from "@/app/components/sections/DynamicHeroHeader";
+import Link from "next/link";
 import {
     ArrowRight,
     Bird,
+    Building2,
     CalendarClock,
     CalendarDays,
     Compass,
+    Home,
     Mail,
     MapPin,
     Mountain,
@@ -47,6 +50,15 @@ const PACKAGE_LABELS: Record<string, { es: string; en: string }> = {
     "full-day": { es: "Tour Día Completo", en: "Full-Day Tour" },
     private: { es: "Tour Privado", en: "Private Tour" },
 };
+
+const DASHBOARD_LINKS = [
+    { href: "/", es: "Ir al inicio", en: "Go to home", icon: Home, style: "from-emerald-500 to-emerald-600" },
+    { href: "/dashboard", es: "Dashboard usuario", en: "User dashboard", icon: User, style: "from-zinc-700 to-zinc-900" },
+    { href: "/booking", es: "Reservar tour", en: "Book tour", icon: CalendarDays, style: "from-teal-500 to-cyan-600" },
+    { href: "/tours", es: "Ver tours", en: "View tours", icon: Compass, style: "from-purple-500 to-indigo-600" },
+    { href: "/b2b/login", es: "Login B2B", en: "B2B login", icon: Building2, style: "from-amber-500 to-orange-600" },
+    { href: "/b2b/admin", es: "Admin B2B", en: "B2B admin", icon: ShieldCheck, style: "from-indigo-500 to-violet-700" },
+];
 
 export default function DashboardPage() {
     const { lang } = useLanguage();
@@ -99,6 +111,21 @@ export default function DashboardPage() {
                             >
                                 {lang === "es" ? "Iniciar sesión" : "Log In"}
                             </button>
+                            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                                {DASHBOARD_LINKS.map((link) => {
+                                    const Icon = link.icon;
+                                    return (
+                                        <Link
+                                            key={link.href}
+                                            href={link.href}
+                                            className={`inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r ${link.style} px-4 py-3 text-xs font-semibold text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg`}
+                                        >
+                                            <Icon size={14} />
+                                            {lang === "es" ? link.es : link.en}
+                                        </Link>
+                                    );
+                                })}
+                            </div>
                         </div>
                     </section>
                 ) : (
@@ -121,15 +148,48 @@ export default function DashboardPage() {
                                 </div>
 
                                 <div className="grid w-full gap-3 rounded-2xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900 md:max-w-xs">
-                                    <a
+                                    <Link
                                         href="/booking"
                                         className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-center text-sm font-semibold text-white shadow-lg shadow-emerald-800/20 transition hover:bg-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 dark:focus-visible:ring-emerald-700"
                                     >
                                         {lang === "es" ? "Reservar Nuevo Tour" : "Book New Tour"}
                                         <ArrowRight size={16} />
-                                    </a>
+                                    </Link>
                                     <LogoutButton />
                                 </div>
+                            </div>
+                        </section>
+
+                        <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
+                            <div className="mb-4 flex items-center justify-between">
+                                <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white">
+                                    {lang === "es" ? "Accesos rápidos" : "Quick links"}
+                                </h2>
+                                <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                                    {lang === "es" ? "Todos conectados entre sí" : "All connected together"}
+                                </p>
+                            </div>
+                            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                                {DASHBOARD_LINKS.map((link) => {
+                                    const Icon = link.icon;
+                                    return (
+                                        <Link
+                                            key={link.href}
+                                            href={link.href}
+                                            className={`group relative overflow-hidden rounded-2xl bg-gradient-to-br ${link.style} px-4 py-4 text-white shadow-lg shadow-zinc-900/10 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl`}
+                                        >
+                                            <span className="pointer-events-none absolute -right-4 -top-4 h-16 w-16 rounded-full bg-white/20 blur-xl" />
+                                            <span className="flex items-center gap-2 text-sm font-semibold">
+                                                <Icon size={16} />
+                                                {lang === "es" ? link.es : link.en}
+                                            </span>
+                                            <span className="mt-1 inline-flex items-center gap-1 text-xs text-white/90">
+                                                {lang === "es" ? "Abrir" : "Open"}
+                                                <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
+                                            </span>
+                                        </Link>
+                                    );
+                                })}
                             </div>
                         </section>
 
