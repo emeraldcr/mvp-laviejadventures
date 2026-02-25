@@ -233,6 +233,13 @@ export default function AuthLanding() {
               >
                 ¿Olvidaste tu contraseña?
               </Link>
+
+              <Link
+                href="/b2b/login"
+                className="block text-center text-sm text-emerald-200 underline-offset-4 transition hover:text-emerald-100 hover:underline"
+              >
+                ¿Eres operador? Inicia sesión en el portal B2B
+              </Link>
             </div>
           </div>
         </section>
