@@ -141,7 +141,7 @@ function BookingSection() {
             </p>
             <button
               onClick={() => signIn(undefined, { callbackUrl: "/dashboard" })}
-              className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700"
+              className="w-full inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-900/30 active:translate-y-0 active:scale-[0.99]"
             >
               {lang === "es" ? "Iniciar sesión" : "Log In"}
             </button>

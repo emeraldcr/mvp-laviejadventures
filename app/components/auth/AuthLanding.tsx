@@ -74,7 +74,7 @@ export default function AuthLanding() {
 
               <a
                 href="/auth/login?screen_hint=signup"
-                className="inline-flex w-full items-center justify-center gap-3 rounded-xl bg-emerald-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200 sm:text-base"
+                className="inline-flex w-full cursor-pointer items-center justify-center gap-3 rounded-xl bg-emerald-500 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-400 hover:shadow-lg hover:shadow-emerald-950/30 active:translate-y-0 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200 sm:text-base"
               >
                 <Mail className="h-5 w-5" />
                 Registrarme con correo
@@ -82,14 +82,14 @@ export default function AuthLanding() {
 
               <a
                 href="/auth/login"
-                className="inline-flex w-full items-center justify-center gap-3 rounded-xl border border-white/25 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 sm:text-base"
+                className="inline-flex w-full cursor-pointer items-center justify-center gap-3 rounded-xl border border-white/25 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:border-white/40 hover:bg-white/10 hover:shadow-lg hover:shadow-black/20 active:translate-y-0 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 sm:text-base"
               >
                 Iniciar sesión con correo
               </a>
 
               <a
                 href="/auth/login?connection=google-oauth2&prompt=login"
-                className="inline-flex w-full items-center justify-center gap-3 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 sm:text-base"
+                className="inline-flex w-full cursor-pointer items-center justify-center gap-3 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-100 hover:shadow-lg hover:shadow-black/20 active:translate-y-0 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 sm:text-base"
               >
                 <Chrome className="h-5 w-5" />
                 Conectar Google (Auth0)
