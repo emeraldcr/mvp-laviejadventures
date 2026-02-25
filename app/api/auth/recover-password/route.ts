@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getAuth0PasswordResetUrl } from "@/lib/auth0-config";
 
 export async function POST(req: NextRequest) {
   try {
@@ -8,18 +9,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Email is required." }, { status: 400 });
     }
 
-    const domain = process.env.AUTH0_DOMAIN;
+    const passwordResetUrl = getAuth0PasswordResetUrl();
     const clientId = process.env.AUTH0_CLIENT_ID;
     const connection = process.env.AUTH0_DB_CONNECTION ?? "Username-Password-Authentication";
 
-    if (!domain || !clientId) {
+    if (!passwordResetUrl || !clientId) {
       return NextResponse.json(
         { error: "Auth0 password recovery is not configured." },
         { status: 500 }
       );
     }
 
-    const auth0Response = await fetch(`https://${domain}/dbconnections/change_password`, {
+    const auth0Response = await fetch(passwordResetUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

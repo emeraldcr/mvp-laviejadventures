@@ -3,12 +3,11 @@ import Auth0Provider from "next-auth/providers/auth0";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { findUserByEmail, upsertUserFromAuth0 } from "@/lib/models/user";
+import { getAuth0Issuer } from "@/lib/auth0-config";
 
 const auth0ClientId = process.env.AUTH0_CLIENT_ID;
 const auth0ClientSecret = process.env.AUTH0_CLIENT_SECRET;
-const auth0Issuer =
-  process.env.AUTH0_ISSUER_BASE_URL ??
-  (process.env.AUTH0_DOMAIN ? `https://${process.env.AUTH0_DOMAIN}` : undefined);
+const auth0Issuer = getAuth0Issuer();
 
 const hasAuth0Config = Boolean(auth0ClientId && auth0ClientSecret && auth0Issuer);
 
