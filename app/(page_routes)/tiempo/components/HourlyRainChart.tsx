@@ -16,6 +16,11 @@ import { format, parseISO, parse, isValid } from "date-fns";
 import { es } from "date-fns/locale";
 import type { HourlyRainEntry } from "@/lib/types";
 
+type HourlyTooltipProps = {
+  active?: boolean;
+  payload?: Array<{ payload: ChartEntry }>;
+};
+
 type ChartEntry = {
   time: string;
   horaLabel: string;
@@ -23,6 +28,26 @@ type ChartEntry = {
   acumulado: number;
   fullDate: string;
 };
+
+
+function HourlyTooltip({ active, payload }: HourlyTooltipProps) {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    return (
+      <div className="bg-slate-800/95 border border-slate-600 rounded-lg p-3 shadow-xl text-sm">
+        <p className="text-slate-300 font-medium mb-2">{data.fullDate}</p>
+        <p className="text-blue-400">
+          Lluvia: <span className="font-bold">{data.mm.toFixed(1)} mm</span>
+        </p>
+        <p className="text-teal-400">
+          Acumulado: <span className="font-bold">{data.acumulado.toFixed(1)} mm</span>
+        </p>
+      </div>
+    );
+  }
+
+  return null;
+}
 
 export default function HourlyRainChart({ hourly }: { hourly: HourlyRainEntry[] }) {
   // Prepare data: reverse to show oldest → newest (left to right)
@@ -81,24 +106,6 @@ export default function HourlyRainChart({ hourly }: { hourly: HourlyRainEntry[] 
     return null;
   }
 
-  // Custom tooltip
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      return (
-        <div className="bg-slate-800/95 border border-slate-600 rounded-lg p-3 shadow-xl text-sm">
-          <p className="text-slate-300 font-medium mb-2">{data.fullDate}</p>
-          <p className="text-blue-400">
-            Lluvia: <span className="font-bold">{data.mm.toFixed(1)} mm</span>
-          </p>
-          <p className="text-teal-400">
-            Acumulado: <span className="font-bold">{data.acumulado.toFixed(1)} mm</span>
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
 
   return (
     <div className="h-[320px] md:h-[400px] w-full">
@@ -128,7 +135,6 @@ export default function HourlyRainChart({ hourly }: { hourly: HourlyRainEntry[] 
             height={70}
             interval="preserveStartEnd"
             tick={{ fontSize: 12 }}
-            tickFormatter={(value) => value}
           />
 
           <YAxis
@@ -148,7 +154,7 @@ export default function HourlyRainChart({ hourly }: { hourly: HourlyRainEntry[] 
             width={50}
           />
 
-          <Tooltip content={<CustomTooltip />} />
+          <Tooltip content={<HourlyTooltip />} />
 
           <Legend
             verticalAlign="top"

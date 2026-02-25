@@ -6,9 +6,19 @@ import {
   getPayPalAccessToken,
 } from "@/lib/paypal";
 
+interface CreateOrderLink {
+  rel?: string;
+  href?: string;
+}
+
+interface CreateOrderResponse {
+  id?: string;
+  links?: CreateOrderLink[];
+}
+
 export async function POST(req: Request) {
   try {
-    const { name, email, phone, tickets, total, date, tourTime, tourPackage, packagePrice } = await req.json();
+    const { name, email, tickets, total, date, tourTime, tourPackage, packagePrice } = await req.json();
 
     if (!name || !email || !tickets || !total) {
       return NextResponse.json(
@@ -69,7 +79,7 @@ export async function POST(req: Request) {
       }),
     });
 
-    const data = await res.json();
+    const data = (await res.json()) as CreateOrderResponse;
 
     if (!res.ok || !data.id) {
       console.error("PayPal Create Order Error:", data);
@@ -81,7 +91,7 @@ export async function POST(req: Request) {
 
     // Extract approval URL
     const approvalUrl = data.links?.find(
-      (link: any) => link.rel === "approve"
+      (link) => link.rel === "approve"
     )?.href;
 
     if (!approvalUrl) {
@@ -99,11 +109,11 @@ export async function POST(req: Request) {
       orderID: data.id,
       approvalUrl,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Server Error:", error);
 
     return NextResponse.json(
-      { message: "Internal server error.", error: error?.message ?? "Unknown" },
+      { message: "Internal server error.", error: error instanceof Error ? error.message : "Unknown" },
       { status: 500 }
     );
   }

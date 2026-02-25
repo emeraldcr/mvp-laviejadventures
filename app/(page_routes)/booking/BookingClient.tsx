@@ -18,6 +18,7 @@ import {
   User,
   XCircle,
 } from "lucide-react";
+import Link from "next/link";
 import { signOut } from "next-auth/react";
 
 type Booking = {
@@ -160,13 +161,13 @@ export function BookingClient({ bookings, userName, userEmail }: Props) {
             </div>
 
             <div className="grid w-full gap-3 rounded-2xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900 md:max-w-xs">
-              <a
+              <Link
                 href="/"
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-center text-sm font-semibold text-white shadow-lg shadow-emerald-800/20 transition hover:bg-emerald-700"
               >
                 {lang === "es" ? "Reservar Nuevo Tour" : "Book New Tour"}
                 <ArrowRight size={16} />
-              </a>
+              </Link>
               <button
                 onClick={() => signOut({ callbackUrl: "/" })}
                 className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
@@ -187,13 +188,13 @@ export function BookingClient({ bookings, userName, userEmail }: Props) {
                 ? "Aún no tienes reservas. ¡Reserva tu primera aventura!"
                 : "You have no bookings yet. Book your first adventure!"}
             </p>
-            <a
+            <Link
               href="/"
               className="mt-6 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700"
             >
               {lang === "es" ? "Ver tours" : "Browse tours"}
               <ArrowRight size={16} />
-            </a>
+            </Link>
           </section>
         ) : (
           <div className="grid gap-6 md:grid-cols-2">
