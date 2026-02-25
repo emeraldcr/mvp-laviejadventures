@@ -345,6 +345,8 @@ export type BookingRecord = {
   currency: string | null;
   tourTime: string | null;
   tourPackage: string | null;
+  tourSlug?: string | null;
+  tourName?: string | null;
   packagePrice: number | null;
   userId?: string | null;
   userEmail?: string | null;
@@ -435,6 +437,8 @@ export type OrderDetails = {
   date: string;
   tourTime: string;
   tourPackage: string;
+  tourSlug: string;
+  tourName: string;
   packagePrice: number;
 };
 

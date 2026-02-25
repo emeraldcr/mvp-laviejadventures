@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useCalendarContext } from "@/app/context/CalendarContext";
-import ReservationDetails from "@/app/components/reservation/ReservationDetails";
+import ReservationDetails, { type TourSummary } from "@/app/components/reservation/ReservationDetails";
 import { type MainTourInfo } from "@/lib/types";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/lib/translations";
@@ -17,11 +17,20 @@ type OrderPayload = {
   date: string;
   tourTime: string;
   tourPackage: string;
+  tourSlug: string;
+  tourName: string;
   packagePrice: number;
 };
 
 type Props = {
   className?: string;
+};
+
+const DEFAULT_BOOKABLE_TOUR: TourSummary = {
+  id: "tour-ciudad-esmeralda",
+  slug: "tour-ciudad-esmeralda",
+  titleEs: "Tour Ciudad Esmeralda",
+  titleEn: "Ciudad Esmeralda Tour",
 };
 
 export default function ReservationSection({ className }: Props) {
@@ -38,9 +47,10 @@ export default function ReservationSection({ className }: Props) {
   const tr = translations[lang];
 
   const [tourInfo, setTourInfo] = useState<MainTourInfo | null>(null);
+  const [tours, setTours] = useState<TourSummary[]>([DEFAULT_BOOKABLE_TOUR]);
   const router = useRouter();
 
-  // Fetch main tour info from MongoDB on mount
+  // Fetch tour info from MongoDB on mount
   useEffect(() => {
     fetch("/api/tours/main")
       .then((r) => r.json())
@@ -49,6 +59,23 @@ export default function ReservationSection({ className }: Props) {
       })
       .catch(() => {
         // silently fall back to static TOUR_INFO inside ReservationDetails
+      });
+
+    fetch("/api/tours")
+      .then((r) => r.json())
+      .then((data) => {
+        const remoteTours = Array.isArray(data?.tours) ? data.tours : [];
+        const mapped = remoteTours.map((tour: { id?: string; slug?: string; titleEs?: string; titleEn?: string }) => ({
+          id: tour.id ?? tour.slug ?? "",
+          slug: tour.slug ?? "",
+          titleEs: tour.titleEs ?? "Tour",
+          titleEn: tour.titleEn ?? "Tour",
+        })).filter((tour: TourSummary) => Boolean(tour.slug));
+        const hasMain = mapped.some((tour: TourSummary) => tour.slug === DEFAULT_BOOKABLE_TOUR.slug);
+        setTours(hasMain ? mapped : [DEFAULT_BOOKABLE_TOUR, ...mapped]);
+      })
+      .catch(() => {
+        setTours([DEFAULT_BOOKABLE_TOUR]);
       });
   }, []);
 
@@ -111,6 +138,7 @@ export default function ReservationSection({ className }: Props) {
         availability={availability}
         currentYear={currentYear}
         tourInfo={tourInfo}
+        tours={tours}
       />
     </div>
   );

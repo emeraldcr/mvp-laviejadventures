@@ -28,6 +28,8 @@ type Booking = {
     date: string | null;
     tourTime: string | null;
     tourPackage: string | null;
+    tourSlug: string | null;
+    tourName: string | null;
     tickets: number | null;
     amount: number | null;
     currency: string | null;
@@ -209,7 +211,9 @@ export default function DashboardPage() {
                                         {safeBookings.filter(b => isUpcoming(b.date)).map((booking) => (
                                             <li key={booking.id} className="flex flex-col gap-1 border-b border-zinc-200 pb-2 last:border-b-0 dark:border-zinc-800">
                                                 <span className="font-semibold">
-                                                    {booking.tourPackage
+                                                    {booking.tourName
+                                                        ? booking.tourName
+                                                        : booking.tourPackage
                                                         ? (PACKAGE_LABELS[booking.tourPackage]?.[lang] ?? booking.tourPackage)
                                                         : (lang === "es" ? "Tour Ciudad Esmeralda" : "Ciudad Esmeralda Tour")}
                                                 </span>
@@ -236,7 +240,9 @@ export default function DashboardPage() {
                                         {safeBookings.filter(b => !isUpcoming(b.date)).map((booking) => (
                                             <li key={booking.id} className="flex flex-col gap-1 border-b border-zinc-200 pb-2 last:border-b-0 dark:border-zinc-800">
                                                 <span className="font-semibold">
-                                                    {booking.tourPackage
+                                                    {booking.tourName
+                                                        ? booking.tourName
+                                                        : booking.tourPackage
                                                         ? (PACKAGE_LABELS[booking.tourPackage]?.[lang] ?? booking.tourPackage)
                                                         : (lang === "es" ? "Tour Ciudad Esmeralda" : "Ciudad Esmeralda Tour")}
                                                 </span>
