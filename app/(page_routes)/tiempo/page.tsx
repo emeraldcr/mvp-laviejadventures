@@ -9,7 +9,7 @@ import {
 import {
   RefreshCw, Droplets, Thermometer, Wind,
   TrendingUp, TrendingDown, Minus, Eye, EyeOff,
-  CloudRain, Gauge, Activity, ArrowLeft,
+  CloudRain, Gauge, Activity, ArrowLeft, Waves, ShieldCheck, AlertOctagon,
 } from "lucide-react";
 
 import { useTiempoData } from "@/app/hooks/useTiempoData";
@@ -35,6 +35,7 @@ export default function TourWeatherDashboard() {
     dailyChart,
     showRawForecast,
     setShowRawForecast,
+    fetchWarning,
   } = useTiempoData();
 
   const DecisionIcon = decision.icon;
@@ -47,6 +48,15 @@ export default function TourWeatherDashboard() {
     : rain?.status?.trend === "bajando"
       ? <TrendingDown size={14} className="text-emerald-400" />
       : <Minus size={14} className="text-zinc-400" />;
+
+
+  const reliabilityTone = rain?.reliability?.level === "alta"
+    ? "text-emerald-300 border-emerald-500/30 bg-emerald-500/10"
+    : rain?.reliability?.level === "media"
+      ? "text-amber-300 border-amber-500/30 bg-amber-500/10"
+      : "text-red-300 border-red-500/30 bg-red-500/10";
+
+  const RiverIcon = rain?.riverLevel?.status === "critico" ? AlertOctagon : Waves;
 
   return (
     <div className="min-h-screen bg-[#080b0d] text-white font-sans">
@@ -91,6 +101,12 @@ export default function TourWeatherDashboard() {
       </div>
 
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
+        {fetchWarning && (
+          <div className="rounded-2xl border border-amber-500/35 bg-amber-500/10 px-4 py-3">
+            <p className="text-xs font-semibold text-amber-300 uppercase tracking-wide">Aviso de actualización</p>
+            <p className="text-sm text-amber-100 mt-1">{fetchWarning}</p>
+          </div>
+        )}
 
         {/* ═══ HERO: ¿PUEDO SALIR? ════════════════════════════════════════════ */}
         <div className={`relative rounded-3xl border-2 overflow-hidden ${decision.bg} ${decision.border} p-6`}>
@@ -206,6 +222,27 @@ export default function TourWeatherDashboard() {
           <p className="text-sm text-amber-100 mt-1">
             Recomendación operativa: permanecer dentro del cañón solo entre <strong>7:00 a.m. y 4:00 p.m.</strong>
           </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className={`rounded-2xl border px-4 py-3 ${reliabilityTone}`}>
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs font-semibold uppercase tracking-wide">Confiabilidad de datos</p>
+              <ShieldCheck size={14} />
+            </div>
+            <p className="text-sm font-bold mt-1">{rain?.reliability?.level?.toUpperCase() ?? "SIN DATO"} · {rain?.reliability?.score ?? "—"}/100</p>
+            <p className="text-xs mt-1 opacity-90">{rain?.reliability?.reason ?? "Sin evaluación disponible."}</p>
+          </div>
+
+          <div className="rounded-2xl border border-cyan-500/25 bg-cyan-500/10 px-4 py-3 text-cyan-100">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs font-semibold uppercase tracking-wide">Nivel actual Río La Vieja (Sucre)</p>
+              <RiverIcon size={14} className={rain?.riverLevel?.status === "critico" ? "text-red-300" : "text-cyan-300"} />
+            </div>
+            <p className="text-lg font-black mt-1 tabular-nums">{rain?.riverLevel?.estimatedLevelM?.toFixed(2) ?? "—"} m</p>
+            <p className="text-xs opacity-90">{rain?.riverLevel?.label ?? "Sin estimación"} · Ref. estación: {rain?.riverLevel?.referenceMm ?? "—"} mm</p>
+            <p className="text-xs mt-1 opacity-80">{rain?.riverLevel?.guidance ?? ""}</p>
+          </div>
         </div>
 
         {/* ═══ MENSAJE DIVERTIDO (IA) ══════════════════════════════════════════ */}

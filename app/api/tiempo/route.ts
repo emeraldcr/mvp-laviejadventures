@@ -16,6 +16,87 @@ import {
 } from "./helpers";
 import { ABBREVIATIONS, CACHE_TTL_SECONDS, FETCH_HEADERS, IMN_URL } from "./types";
 
+
+function estimateRiverLevel(sumLluvMm: number) {
+  const level = 0.45 + sumLluvMm * 0.012;
+  if (level >= 1.8) {
+    return {
+      station: "Río La Vieja (Sucre)",
+      label: "Crecida fuerte",
+      status: "critico" as const,
+      estimatedLevelM: round1(level),
+      guidance: "Evitar ingresos al cañón. Revisar en sitio antes de operar.",
+    };
+  }
+  if (level >= 1.4) {
+    return {
+      station: "Río La Vieja (Sucre)",
+      label: "Caudal alto",
+      status: "alto" as const,
+      estimatedLevelM: round1(level),
+      guidance: "Operar solo con alta precaución y monitoreo constante.",
+    };
+  }
+  if (level >= 0.95) {
+    return {
+      station: "Río La Vieja (Sucre)",
+      label: "Caudal normal",
+      status: "normal" as const,
+      estimatedLevelM: round1(level),
+      guidance: "Condiciones operativas normales, mantener observación.",
+    };
+  }
+  return {
+    station: "Río La Vieja (Sucre)",
+    label: "Caudal bajo",
+    status: "bajo" as const,
+    estimatedLevelM: round1(level),
+    guidance: "Caudal bajo. Mantener protocolos de seguridad estándar.",
+  };
+}
+
+function buildReliability(args: { records24h: number; freshnessMinutes: number; hasCurrentSnapshot: boolean; }) {
+  const { records24h, freshnessMinutes, hasCurrentSnapshot } = args;
+  let score = 100;
+  const reasons: string[] = [];
+
+  if (records24h < 18) {
+    score -= 35;
+    reasons.push("faltan registros horarios en las últimas 24h");
+  } else if (records24h < 24) {
+    score -= 15;
+    reasons.push("faltan algunos registros horarios");
+  }
+
+  if (freshnessMinutes > 180) {
+    score -= 35;
+    reasons.push("datos con más de 3 horas de atraso");
+  } else if (freshnessMinutes > 90) {
+    score -= 20;
+    reasons.push("datos algo desactualizados");
+  } else if (freshnessMinutes > 45) {
+    score -= 10;
+    reasons.push("actualización no reciente");
+  }
+
+  if (!hasCurrentSnapshot) {
+    score -= 10;
+    reasons.push("snapshot actual de estación no disponible");
+  }
+
+  score = Math.max(0, Math.min(100, score));
+  const level = score >= 80 ? "alta" : score >= 55 ? "media" : "baja";
+
+  return {
+    level,
+    score,
+    reason: reasons.length ? reasons.join(" · ") : "datos consistentes y recientes",
+    freshnessMinutes,
+    records24h,
+  };
+}
+
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const full = searchParams.get("full") === "1";
@@ -127,6 +208,14 @@ export async function GET(request: Request) {
       .reverse();
 
     const lastUpdate = hourlyRows[0]?.timestamp ?? current?.timestamp ?? new Date();
+    const freshnessMinutes = Math.max(0, Math.round((Date.now() - lastUpdate.getTime()) / 60000));
+    const reliability = buildReliability({
+      records24h: recent24.length,
+      freshnessMinutes,
+      hasCurrentSnapshot: Boolean(current),
+    });
+    const referenceMm = round1(current?.sum_lluv_mm ?? last24h);
+    const riverLevel = estimateRiverLevel(referenceMm);
 
     return NextResponse.json(
       {
@@ -183,6 +272,11 @@ export async function GET(request: Request) {
           daily: full ? dailyRows : dailyRows.slice(0, days),
         },
         currentSnapshot: current,
+        riverLevel: {
+          ...riverLevel,
+          referenceMm,
+        },
+        reliability,
         counts: { hourlyAvailable: hourlyRows.length, dailyAvailable: dailyRows.length },
       },
       {
