@@ -1,7 +1,8 @@
 "use client";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
-import { Bot, SendHorizonal } from "lucide-react";
+import { ArrowLeft, Bot, SendHorizonal } from "lucide-react";
+import Link from "next/link";
 
 type BookingState = {
   date: string | null;
@@ -122,6 +123,16 @@ export default function AIAssistantClient() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950 px-4 pt-6 pb-4 text-zinc-100 md:pt-8">
       <section className="mx-auto flex h-[calc(100vh-2.5rem)] w-full max-w-4xl flex-col rounded-3xl border border-white/10 bg-white/[0.03] p-4 shadow-2xl backdrop-blur md:h-[calc(100vh-3rem)] md:p-6">
+          <div className="mb-4">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold tracking-wide text-zinc-200 transition hover:border-emerald-400 hover:text-emerald-300"
+            >
+              <ArrowLeft size={14} />
+              Volver a La Vieja Adventures
+            </Link>
+          </div>
+
           <div className="mb-5 flex items-center gap-3">
             <span className="rounded-xl bg-emerald-500/20 p-2 text-emerald-300">
               <Bot size={20} />

@@ -9,6 +9,7 @@ import {
   CircleHelp,
   Compass,
   CreditCard,
+  Sparkles,
   LayoutDashboard,
   Map,
   MessageCircle,
@@ -24,6 +25,14 @@ const steps = {
       href: "/tours",
       cta: "Ver tours",
       icon: Compass,
+    },
+    {
+      title: "Usa el asistente IA para reservar más rápido",
+      description:
+        "Entra a la sección AI para escribir tu solicitud como en un chat. El asistente te guía paso a paso y responde dudas antes de confirmar la reserva.",
+      href: "/ai",
+      cta: "Abrir asistente IA",
+      icon: Sparkles,
     },
     {
       title: "Selecciona fecha y paquete",
@@ -58,6 +67,14 @@ const steps = {
       href: "/tours",
       cta: "View tours",
       icon: Compass,
+    },
+    {
+      title: "Use the AI assistant for faster booking",
+      description:
+        "Open the AI section and write naturally like in a chat. The assistant guides you step by step and answers key questions before checkout.",
+      href: "/ai",
+      cta: "Open AI assistant",
+      icon: Sparkles,
     },
     {
       title: "Pick date and package",
@@ -105,6 +122,14 @@ const tools = {
       icon: Building2,
     },
     {
+      title: "Asistente IA de reservas",
+      description:
+        "Chatea con la IA para resolver dudas y completar fecha, horario, paquete y datos del viajero en una sola conversación.",
+      href: "/ai",
+      cta: "Ir a AI",
+      icon: Sparkles,
+    },
+    {
       title: "Preguntas frecuentes",
       description:
         "Revisa respuestas rápidas sobre pagos, políticas, horarios, qué llevar al tour y otros temas comunes antes de reservar.",
@@ -129,6 +154,14 @@ const tools = {
       href: "/b2b/login",
       cta: "Go to B2B portal",
       icon: Building2,
+    },
+    {
+      title: "AI booking assistant",
+      description:
+        "Chat with AI to get quick answers and complete your booking details in one guided conversation.",
+      href: "/ai",
+      cta: "Open AI",
+      icon: Sparkles,
     },
     {
       title: "Frequently asked questions",
