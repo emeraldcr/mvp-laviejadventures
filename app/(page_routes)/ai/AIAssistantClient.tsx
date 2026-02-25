@@ -1,8 +1,10 @@
 "use client";
 
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { ArrowLeft, Bot, SendHorizonal } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import type { OrderDetails } from "@/lib/types";
 
 type BookingState = {
   date: string | null;
@@ -41,7 +43,16 @@ const INITIAL_STATE: BookingState = {
   specialRequests: null,
 };
 
+const PACKAGE_PRICE_USD: Record<NonNullable<BookingState["tourPackage"]>, number> = {
+  basic: 30,
+  "full-day": 40,
+  private: 60,
+};
+
+const TAX_RATE = 0.13;
+
 export default function AIAssistantClient() {
+  const router = useRouter();
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: "assistant",
@@ -67,12 +78,58 @@ export default function AIAssistantClient() {
   const [guidedPhone, setGuidedPhone] = useState("");
 
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
+  const hasRedirectedRef = useRef(false);
+
+  const buildOrderDetails = useCallback((bookingState: BookingState): OrderDetails | null => {
+    if (
+      !bookingState.date ||
+      !bookingState.tourTime ||
+      !bookingState.tourPackage ||
+      !bookingState.tickets ||
+      !bookingState.name ||
+      !bookingState.email ||
+      !bookingState.phone
+    ) {
+      return null;
+    }
+
+    const packagePrice = PACKAGE_PRICE_USD[bookingState.tourPackage];
+    const subtotal = bookingState.tickets * packagePrice;
+
+    return {
+      name: bookingState.name,
+      email: bookingState.email,
+      phone: bookingState.phone,
+      tickets: bookingState.tickets,
+      date: bookingState.date,
+      tourTime: bookingState.tourTime,
+      tourPackage: bookingState.tourPackage,
+      packagePrice,
+      total: Number((subtotal * (1 + TAX_RATE)).toFixed(2)),
+    };
+  }, []);
+
+  const redirectToReservation = useCallback((bookingState: BookingState) => {
+    const orderDetails = buildOrderDetails(bookingState);
+    if (!orderDetails) return;
+
+    sessionStorage.setItem("reservationOrderDetails", JSON.stringify(orderDetails));
+    hasRedirectedRef.current = true;
+    router.push("/reservation");
+  }, [buildOrderDetails, router]);
 
   useEffect(() => {
     const container = messagesContainerRef.current;
     if (!container) return;
     container.scrollTop = container.scrollHeight;
   }, [messages, loading, missingFields]);
+
+  useEffect(() => {
+    const readyToBook = missingFields.length === 0;
+    if (!readyToBook || hasRedirectedRef.current) return;
+
+    redirectToReservation(state);
+  }, [missingFields, redirectToReservation, state]);
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -99,6 +156,12 @@ export default function AIAssistantClient() {
       setMessages((prev) => [...prev, { role: "assistant", content: data.reply }]);
       setState(data.updatedState ?? INITIAL_STATE);
       setMissingFields(data.missingFields ?? []);
+
+      const nextState = data.updatedState ?? INITIAL_STATE;
+      const nextMissingFields = data.missingFields ?? [];
+      if (!hasRedirectedRef.current && nextMissingFields.length === 0) {
+        redirectToReservation(nextState);
+      }
     } catch {
       setMessages((prev) => [
         ...prev,
