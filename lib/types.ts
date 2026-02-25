@@ -47,6 +47,99 @@ export interface PayPalOrder {
 
 export type AvailabilityMap = Record<number, number>;
 
+// ── /tiempo route API response types ─────────────────────────────────────────
+
+export type RainData = {
+  success: boolean;
+  meta?: {
+    fetchedAt: string;
+    lastUpdateISO: string;
+    note: string;
+    station: string;
+  };
+  status?: {
+    risk: "green" | "yellow" | "red";
+    riskLabel: string;
+    riskEmoji: string;
+    intensity: string;
+    lastHour_mm: number;
+    trend: string;
+  };
+  stats?: {
+    last1h_mm: number;
+    last3h_mm: number;
+    last6h_mm: number;
+    last24h_mm: number;
+    last48h_mm: number;
+    wetHoursLast24: number;
+    wetStreak: number;
+    dryStreak: number;
+    peakHour24h: { mm: number; fecha: string };
+  };
+  forecast?: {
+    nextHour_mm: number;
+    confidence: string;
+    consensusMm: number;
+    methods: Record<string, { value: number; label: string }>;
+  };
+  weather?: {
+    hasData: boolean;
+    avgTemp24h: number | null;
+    maxTemp24h: number | null;
+    minTemp24h: number | null;
+    avgHR24h: number | null;
+    maxHR24h: number | null;
+    minHR24h: number | null;
+  };
+  analysis?: {
+    rollingRisk: Array<{
+      fecha: string;
+      timestampISO: string | null;
+      r3h: number;
+      r6h: number;
+    }>;
+  };
+  data?: {
+    hourly: Array<{
+      fecha: string;
+      timestampISO: string | null;
+      lluvia_mm: number;
+      temp_c: number | null;
+      hr_pct: number | null;
+    }>;
+    daily: any[];
+  };
+  currentSnapshot?: { sum_lluv_mm: number; lluv_ayer_mm: number } | null;
+  error?: string;
+};
+
+export type RegionalData = {
+  success: boolean;
+  fetchedAt?: string;
+  locations?: Array<{
+    id: string;
+    name: string;
+    lat: number;
+    lon: number;
+    current: {
+      temp_c: number;
+      hr_pct: number;
+      precip_mm: number;
+      weather_label: string;
+      weather_icon: string;
+      wind_kmh: number;
+    } | null;
+    daily_5d: Array<{
+      date: string;
+      weather_icon: string;
+      weather_label: string;
+      temp_max_c: number;
+      temp_min_c: number;
+      precip_sum_mm: number;
+    }>;
+  }>;
+};
+
 export type ConfidenceLevel = "alta" | "media" | "baja";
 
 export type WeatherMetrics = {
