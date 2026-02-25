@@ -64,7 +64,6 @@ export function ToursClient({ tours }: { tours: TourData[] }) {
   const formatPrice = (priceCRC: number) =>
     priceCRC.toLocaleString("es-CR").replace(/,/g, ".");
 
-  const getReservationHref = (tourSlug: string) => `/?tour=${encodeURIComponent(tourSlug)}#booking`;
 
   return (
     <main className="min-h-screen bg-black text-white">
