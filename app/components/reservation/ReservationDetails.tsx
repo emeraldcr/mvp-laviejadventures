@@ -283,7 +283,9 @@ export default function ReservationDetails({
   const [tourTime, setTourTime] = useState<TourTime | null>(null);
   const [tourPackage, setTourPackage] = useState<TourPackage | null>(null);
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
-  const [selectedTourSlug, setSelectedTourSlug] = useState<string>(initialTourSlug ?? tours[0]?.slug ?? "tour-ciudad-esmeralda");
+  const [manualSelectedTourSlug, setManualSelectedTourSlug] = useState<string | null>(null);
+
+  const selectedTourSlug = manualSelectedTourSlug ?? initialTourSlug ?? tours[0]?.slug ?? "tour-ciudad-esmeralda";
 
   const selectedTour = useMemo(
     () => tours.find((tour) => tour.slug === selectedTourSlug) ?? tours[0] ?? null,
@@ -467,7 +469,7 @@ export default function ReservationDetails({
                   <button
                     key={tour.slug}
                     type="button"
-                    onClick={() => setSelectedTourSlug(tour.slug)}
+                    onClick={() => setManualSelectedTourSlug(tour.slug)}
                     className={`text-left p-4 rounded-xl border-2 transition-all ${
                       isSelected
                         ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20"
