@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useCalendarContext } from "@/app/context/CalendarContext";
 import ReservationDetails from "@/app/components/reservation/ReservationDetails";
-import PaymentModal from "@/app/components/reservation/PaymentModal";
-import { PayPalOrder, type MainTourInfo } from "@/lib/types";
+import { type MainTourInfo } from "@/lib/types";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/lib/translations";
+import { useRouter } from "next/navigation";
 
 type OrderPayload = {
   name: string;
@@ -37,9 +37,8 @@ export default function ReservationSection({ className }: Props) {
   const { lang } = useLanguage();
   const tr = translations[lang];
 
-  const [orderDetails, setOrderDetails] = useState<OrderPayload | null>(null);
-  const [showModal, setShowModal] = useState(false);
   const [tourInfo, setTourInfo] = useState<MainTourInfo | null>(null);
+  const router = useRouter();
 
   // Fetch main tour info from MongoDB on mount
   useEffect(() => {
@@ -54,8 +53,8 @@ export default function ReservationSection({ className }: Props) {
   }, []);
 
   const handleReserve = (data: OrderPayload) => {
-    setOrderDetails(data);
-    setShowModal(true);
+    sessionStorage.setItem("reservationOrderDetails", JSON.stringify(data));
+    router.push("/reservation");
   };
 
   const monthName = new Intl.DateTimeFormat(lang === "es" ? "es-ES" : "en-US", {
@@ -113,16 +112,6 @@ export default function ReservationSection({ className }: Props) {
         currentYear={currentYear}
         tourInfo={tourInfo}
       />
-
-      {showModal && orderDetails && (
-        <PaymentModal
-          orderDetails={orderDetails}
-          onClose={() => setShowModal(false)}
-          onSuccess={(order: PayPalOrder) => {
-            console.log("PAYPAL SUCCESS:", order);
-          }}
-        />
-      )}
     </div>
   );
 }
