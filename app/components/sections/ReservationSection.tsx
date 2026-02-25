@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useCalendarContext } from "@/app/context/CalendarContext";
 import ReservationDetails, { type TourSummary } from "@/app/components/reservation/ReservationDetails";
 import { type MainTourInfo } from "@/lib/types";
@@ -53,10 +53,8 @@ export default function ReservationSection({ className }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const requestedTourSlug = searchParams.get("tour") ?? "";
-  const initialSelectedTourSlug = tours.some((tour) => tour.slug === requestedTourSlug)
-    ? requestedTourSlug
-    : DEFAULT_BOOKABLE_TOUR.slug;
+  const requestedTourSlug = (searchParams.get("tour") ?? "").trim();
+  const initialSelectedTourSlug = requestedTourSlug || DEFAULT_BOOKABLE_TOUR.slug;
 
   // Fetch tour info from MongoDB on mount
   useEffect(() => {
@@ -138,7 +136,7 @@ export default function ReservationSection({ className }: Props) {
   return (
     <div className={className}>
       <ReservationDetails
-        key={`reservation-${initialTourSlug ?? "default"}`}
+        key={`reservation-${initialSelectedTourSlug}`}
         selectedDate={selectedDay}
         currentMonth={currentMonth}
         monthName={monthName}
