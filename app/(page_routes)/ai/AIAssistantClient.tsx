@@ -62,13 +62,9 @@ export default function AIAssistantClient() {
   const [readyToBook, setReadyToBook] = useState(false);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [dateBox, setDateBox] = useState("");
-  const [timeBox, setTimeBox] = useState<BookingState["tourTime"]>(null);
-  const [packageBox, setPackageBox] = useState<BookingState["tourPackage"]>(null);
-  const [ticketsBox, setTicketsBox] = useState<number>(2);
-  const [nameBox, setNameBox] = useState("");
-  const [emailBox, setEmailBox] = useState("");
-  const [phoneBox, setPhoneBox] = useState("");
+  const [guidedDate, setGuidedDate] = useState("");
+  const [guidedTickets, setGuidedTickets] = useState<number>(2);
+  const [guidedText, setGuidedText] = useState("");
 
   const completion = useMemo(() => {
     const total = 7;
@@ -115,19 +111,11 @@ export default function AIAssistantClient() {
     }
   };
 
-  const fillPromptFromBoxes = () => {
-    const chunks = [
-      dateBox ? `Fecha ${dateBox}` : "",
-      timeBox ? `hora ${timeBox}` : "",
-      packageBox ? `paquete ${packageBox}` : "",
-      ticketsBox ? `somos ${ticketsBox} personas` : "",
-      nameBox.trim() ? `nombre ${nameBox.trim()}` : "",
-      emailBox.trim() ? `correo ${emailBox.trim()}` : "",
-      phoneBox.trim() ? `telefono ${phoneBox.trim()}` : "",
-    ].filter(Boolean);
+  const currentGuidedField = missingFields[0] ?? null;
 
-    if (!chunks.length) return;
-    setInput(`Quiero reservar con estos datos: ${chunks.join(", ")}.`);
+  const addToPrompt = (chunk: string) => {
+    if (!chunk.trim()) return;
+    setInput((prev) => (prev.trim() ? `${prev.trim()} ${chunk.trim()}` : chunk.trim()));
   };
 
   return (
@@ -149,72 +137,6 @@ export default function AIAssistantClient() {
             aunque mandés todo junto. También responde dudas rápidas del tour.
           </p>
 
-          <div className="mb-5 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm">
-            <p className="mb-3 font-medium text-zinc-200">Cajas rápidas (solo opciones válidas)</p>
-            <div className="grid gap-3 md:grid-cols-2">
-              <label className="space-y-1">
-                <span className="text-zinc-400">Fecha</span>
-                <input
-                  type="date"
-                  value={dateBox}
-                  onChange={(event) => setDateBox(event.target.value)}
-                  className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2"
-                />
-              </label>
-              <label className="space-y-1">
-                <span className="text-zinc-400">Personas (1-20)</span>
-                <input
-                  type="number"
-                  min={1}
-                  max={20}
-                  value={ticketsBox}
-                  onChange={(event) => setTicketsBox(Math.min(20, Math.max(1, Number(event.target.value) || 1)))}
-                  className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2"
-                />
-              </label>
-              <div>
-                <p className="mb-1 text-zinc-400">Hora</p>
-                <div className="flex flex-wrap gap-2">
-                  {(["08:00", "09:00", "10:00"] as const).map((slot) => (
-                    <button
-                      key={slot}
-                      type="button"
-                      onClick={() => setTimeBox(slot)}
-                      className={`rounded-lg border px-3 py-1.5 ${timeBox === slot ? "border-emerald-400 bg-emerald-500/20 text-emerald-300" : "border-white/10 bg-white/5"}`}
-                    >
-                      {slot}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <p className="mb-1 text-zinc-400">Paquete</p>
-                <div className="flex flex-wrap gap-2">
-                  {(["basic", "full-day", "private"] as const).map((pkg) => (
-                    <button
-                      key={pkg}
-                      type="button"
-                      onClick={() => setPackageBox(pkg)}
-                      className={`rounded-lg border px-3 py-1.5 ${packageBox === pkg ? "border-emerald-400 bg-emerald-500/20 text-emerald-300" : "border-white/10 bg-white/5"}`}
-                    >
-                      {pkg}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <input value={nameBox} onChange={(event) => setNameBox(event.target.value)} placeholder="Nombre" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2" />
-              <input value={emailBox} onChange={(event) => setEmailBox(event.target.value)} placeholder="Correo" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2" />
-              <input value={phoneBox} onChange={(event) => setPhoneBox(event.target.value)} placeholder="Teléfono" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 md:col-span-2" />
-            </div>
-            <button
-              type="button"
-              onClick={fillPromptFromBoxes}
-              className="mt-3 rounded-xl bg-emerald-500 px-4 py-2 font-semibold text-zinc-950 transition hover:bg-emerald-400"
-            >
-              Usar estas cajas en el prompt
-            </button>
-          </div>
-
           <div className="h-[56vh] space-y-3 overflow-y-auto rounded-2xl border border-white/10 bg-black/20 p-4">
             {messages.map((message, index) => (
               <article
@@ -231,6 +153,87 @@ export default function AIAssistantClient() {
                 <p>{message.content}</p>
               </article>
             ))}
+
+            {currentGuidedField && !loading && (
+              <article className="mr-auto max-w-[90%] rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm leading-relaxed">
+                <p className="mb-2 text-[11px] uppercase tracking-wide text-zinc-400">Asistente</p>
+                <p className="mb-3">Para avanzar paso a paso, elegí este dato: <strong>{FIELD_LABELS[currentGuidedField] ?? currentGuidedField}</strong>.</p>
+
+                {currentGuidedField === "date" && (
+                  <div className="flex flex-wrap items-end gap-2">
+                    <label className="space-y-1">
+                      <span className="text-xs text-zinc-400">Fecha</span>
+                      <input
+                        type="date"
+                        value={guidedDate}
+                        onChange={(event) => setGuidedDate(event.target.value)}
+                        className="rounded-lg border border-white/10 bg-white/5 px-3 py-2"
+                      />
+                    </label>
+                    <button type="button" onClick={() => addToPrompt(`Fecha ${guidedDate}`)} className="rounded-lg border border-emerald-400 bg-emerald-500/20 px-3 py-2 text-emerald-300">
+                      Agregar
+                    </button>
+                  </div>
+                )}
+
+                {currentGuidedField === "tourTime" && (
+                  <div className="flex flex-wrap gap-2">
+                    {(["08:00", "09:00", "10:00"] as const).map((slot) => (
+                      <button key={slot} type="button" onClick={() => addToPrompt(`Hora ${slot}`)} className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 hover:border-emerald-400 hover:text-emerald-300">
+                        {slot}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {currentGuidedField === "tourPackage" && (
+                  <div className="flex flex-wrap gap-2">
+                    {(["basic", "full-day", "private"] as const).map((pkg) => (
+                      <button key={pkg} type="button" onClick={() => addToPrompt(`Paquete ${pkg}`)} className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 hover:border-emerald-400 hover:text-emerald-300">
+                        {pkg}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {currentGuidedField === "tickets" && (
+                  <div className="flex flex-wrap items-end gap-2">
+                    <label className="space-y-1">
+                      <span className="text-xs text-zinc-400">Personas (1-20)</span>
+                      <input
+                        type="number"
+                        min={1}
+                        max={20}
+                        value={guidedTickets}
+                        onChange={(event) => setGuidedTickets(Math.min(20, Math.max(1, Number(event.target.value) || 1)))}
+                        className="w-28 rounded-lg border border-white/10 bg-white/5 px-3 py-2"
+                      />
+                    </label>
+                    <button type="button" onClick={() => addToPrompt(`Somos ${guidedTickets} personas`)} className="rounded-lg border border-emerald-400 bg-emerald-500/20 px-3 py-2 text-emerald-300">
+                      Agregar
+                    </button>
+                  </div>
+                )}
+
+                {(currentGuidedField === "name" || currentGuidedField === "email" || currentGuidedField === "phone") && (
+                  <div className="flex flex-wrap items-end gap-2">
+                    <label className="space-y-1">
+                      <span className="text-xs text-zinc-400">{FIELD_LABELS[currentGuidedField]}</span>
+                      <input
+                        value={guidedText}
+                        onChange={(event) => setGuidedText(event.target.value)}
+                        placeholder={`Tu ${FIELD_LABELS[currentGuidedField].toLowerCase()}`}
+                        className="rounded-lg border border-white/10 bg-white/5 px-3 py-2"
+                      />
+                    </label>
+                    <button type="button" onClick={() => addToPrompt(`${FIELD_LABELS[currentGuidedField]} ${guidedText.trim()}`)} className="rounded-lg border border-emerald-400 bg-emerald-500/20 px-3 py-2 text-emerald-300">
+                      Agregar
+                    </button>
+                  </div>
+                )}
+              </article>
+            )}
+
             {loading && <div className="h-10 w-40 animate-pulse rounded-xl bg-white/10" />}
           </div>
 
