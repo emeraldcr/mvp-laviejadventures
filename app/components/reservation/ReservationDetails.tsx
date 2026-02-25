@@ -307,6 +307,26 @@ export default function ReservationDetails({
     effectiveTourPackage !== null;
   const isStep2Valid = validation.isNameValid && validation.isEmailValid && validation.isPhoneNumberValid;
 
+  const missingStep1Items = useMemo(() => {
+    const missing: string[] = [];
+
+    if (!tourTime) missing.push(tr.missing.time);
+    if (!effectiveTourPackage) missing.push(tr.missing.package);
+    if (!isTicketsValid) missing.push(tr.missing.tickets);
+
+    return missing;
+  }, [tourTime, effectiveTourPackage, isTicketsValid, tr.missing]);
+
+  const missingStep2Items = useMemo(() => {
+    const missing: string[] = [];
+
+    if (!validation.isNameValid) missing.push(tr.missing.name);
+    if (!validation.isEmailValid) missing.push(tr.missing.email);
+    if (!validation.isPhoneNumberValid) missing.push(tr.missing.phone);
+
+    return missing;
+  }, [validation.isNameValid, validation.isEmailValid, validation.isPhoneNumberValid, tr.missing]);
+
   const isFormValid = useMemo(
     () => isStep1Valid && isStep2Valid && validation.isAgreeTermsValid,
     [isStep1Valid, isStep2Valid, validation.isAgreeTermsValid]
@@ -373,7 +393,13 @@ export default function ReservationDetails({
               <button
                 key={step.id}
                 type="button"
-                onClick={() => setCurrentStep(step.id)}
+                onClick={() => {
+                  if (step.id > currentStep) {
+                    if (currentStep === 1 && !isStep1Valid) return;
+                    if (currentStep === 2 && !isStep2Valid) return;
+                  }
+                  setCurrentStep(step.id);
+                }}
                 className={`rounded-xl border px-3 py-2 text-left text-sm transition-all ${
                   isCurrent
                     ? "border-emerald-400 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300"
@@ -405,8 +431,9 @@ export default function ReservationDetails({
 
       {currentStep === 1 && (
         <>
-          <div className="mb-6">
+          <div className={`mb-6 rounded-xl ${!tourTime ? "ring-2 ring-amber-300/70 p-3" : ""}`}>
             <h3 className="text-xl font-semibold mb-3">{tr.tourTimeTitle}</h3>
+            {!tourTime && <p className="mb-3 text-sm font-medium text-amber-700 dark:text-amber-400">👉 {tr.indicators.chooseTourTime}</p>}
             <div className="flex gap-3 flex-wrap">
               {TIME_SLOTS.map((slot) => {
                 const isSelected = tourTime === slot.id;
@@ -428,8 +455,9 @@ export default function ReservationDetails({
             </div>
           </div>
 
-          <div className="mb-6">
+          <div className={`mb-6 rounded-xl ${!effectiveTourPackage ? "ring-2 ring-amber-300/70 p-3" : ""}`}>
             <h3 className="text-xl font-semibold mb-3">{tr.packageTitle}</h3>
+            {!effectiveTourPackage && <p className="mb-3 text-sm font-medium text-amber-700 dark:text-amber-400">👉 {tr.indicators.choosePackage}</p>}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {PACKAGES.map((pkg) => {
                 const isSelected = effectiveTourPackage === pkg.id;
@@ -476,8 +504,9 @@ export default function ReservationDetails({
             )}
           </div>
 
-          <div className="mb-6">
+          <div className={`mb-6 rounded-xl ${!isTicketsValid ? "ring-2 ring-amber-300/70 p-3" : ""}`}>
             <h3 className="text-xl font-semibold mb-4">{tr.ticketsTitle}</h3>
+            {!isTicketsValid && <p className="mb-3 text-sm font-medium text-amber-700 dark:text-amber-400">👉 {tr.indicators.chooseTickets}</p>}
             <div className="flex items-center gap-4 mb-4">
               <label htmlFor="tickets" className="font-semibold text-lg">{tr.numPeople}</label>
               <input
@@ -498,14 +527,24 @@ export default function ReservationDetails({
               <span className="text-sm text-zinc-500">({tr.availablePrefix} {slots})</span>
             </div>
           </div>
-          {!isStep1Valid && <p className="mb-6 text-sm text-amber-600 dark:text-amber-400">{tr.completeStepOneHint}</p>}
+          {!isStep1Valid && (
+            <div className="mb-6 rounded-xl border border-amber-300 bg-amber-50 p-4 dark:border-amber-700 dark:bg-amber-900/20">
+              <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">{tr.completeStepOneHint}</p>
+              <ul className="mt-2 space-y-1 text-sm text-amber-700 dark:text-amber-300">
+                {missingStep1Items.map((item) => (
+                  <li key={item}>• {item}</li>
+                ))}
+              </ul>
+            </div>
+          )}
         </>
       )}
 
       {currentStep === 2 && (
         <>
-          <div className="mb-6">
+          <div className={`mb-6 rounded-xl ${!isStep2Valid ? "ring-2 ring-amber-300/70 p-3" : ""}`}>
             <h3 className="text-xl font-semibold mb-4">{tr.travelerTitle}</h3>
+            {!isStep2Valid && <p className="mb-3 text-sm font-medium text-amber-700 dark:text-amber-400">👉 {tr.indicators.completeTravelerData}</p>}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <TravelerInputField id="name" label={tr.fullName} value={formState.name} onChange={(v) => handleChange("name", v)} placeholder={tr.namePlaceholder} isValid={validation.isNameValid} validationMessage={tr.nameRequired} required />
               <TravelerInputField id="email" label={tr.emailLabel} type="email" value={formState.email} onChange={(v) => handleChange("email", v)} placeholder={tr.emailPlaceholder} isValid={validation.isEmailValid} validationMessage={tr.emailInvalid} required />
@@ -516,7 +555,16 @@ export default function ReservationDetails({
             <h3 className="text-xl font-semibold mb-4">{tr.specialTitle}</h3>
             <textarea id="specialRequests" value={formState.specialRequests} onChange={(e) => handleChange("specialRequests", e.target.value)} className="w-full p-3 rounded-lg border bg-white dark:bg-zinc-800 h-24 border-zinc-300 dark:border-zinc-700 focus:ring-teal-500 focus:border-teal-500" placeholder={tr.specialPlaceholder} />
           </div>
-          {!isStep2Valid && <p className="mb-6 text-sm text-amber-600 dark:text-amber-400">{tr.completeStepTwoHint}</p>}
+          {!isStep2Valid && (
+            <div className="mb-6 rounded-xl border border-amber-300 bg-amber-50 p-4 dark:border-amber-700 dark:bg-amber-900/20">
+              <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">{tr.completeStepTwoHint}</p>
+              <ul className="mt-2 space-y-1 text-sm text-amber-700 dark:text-amber-300">
+                {missingStep2Items.map((item) => (
+                  <li key={item}>• {item}</li>
+                ))}
+              </ul>
+            </div>
+          )}
         </>
       )}
 
