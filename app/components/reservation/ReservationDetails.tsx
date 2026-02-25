@@ -1,7 +1,7 @@
 // components/ReservationDetails.tsx
 import Link from "next/link";
-import { TOUR_INFO } from "@/lib/tour-info";
-import { AvailabilityMap } from "@/lib/types";
+import { activeTourInfo } from "@/lib/tour-info";
+import { AvailabilityMap, MainTourInfo } from "@/lib/types";
 import { useState, useMemo, useCallback } from "react";
 import { format } from "date-fns";
 import { es, enUS } from "date-fns/locale";
@@ -225,6 +225,7 @@ type Props = {
   onReserve: (data: any) => void;
   availability: AvailabilityMap;
   currentYear: number;
+  tourInfo?: MainTourInfo | null;
 };
 
 export default function ReservationDetails({
@@ -235,10 +236,14 @@ export default function ReservationDetails({
   onReserve,
   availability,
   currentYear,
+  tourInfo,
 }: Props) {
   const { lang } = useLanguage();
   const tr = translations[lang].reservation;
   const dateLocale = lang === "es" ? es : enUS;
+
+  // Use tourInfo from MongoDB if available, otherwise fall back to static activeTourInfo
+  const activeTourInfo = tourInfo ?? activeTourInfo;
 
   // --- Date & slots ---
   const slots = availability[selectedDate] ?? 0;
@@ -337,20 +342,20 @@ export default function ReservationDetails({
         </h3>
 
         <p className="text-zinc-700 dark:text-zinc-400 mb-4">
-          {TOUR_INFO.details}
+          {activeTourInfo.details}
         </p>
 
         <div className="mb-4">
           <strong className="block text-zinc-800 dark:text-zinc-200">{tr.duration}</strong>
           <span className="text-zinc-700 dark:text-zinc-400">
-            {TOUR_INFO.duration || "2-3 horas (aprox.)"}
+            {activeTourInfo.duration || "2-3 horas (aprox.)"}
           </span>
         </div>
 
         <div className="mb-4">
           <strong className="block text-zinc-800 dark:text-zinc-200">{tr.inclusions}</strong>
           <ul className="list-disc ml-5 text-zinc-700 dark:text-zinc-400 space-y-1">
-            {(TOUR_INFO.inclusions || ["Guía profesional", "transporte", "entradas"]).map(
+            {(activeTourInfo.inclusions || ["Guía profesional", "transporte", "entradas"]).map(
               (item: string, i: number) => (
                 <li key={i}>{item}</li>
               )
@@ -361,7 +366,7 @@ export default function ReservationDetails({
         <div className="mb-4">
           <strong className="block text-zinc-800 dark:text-zinc-200">{tr.exclusions}</strong>
           <ul className="list-disc ml-5 text-zinc-700 dark:text-zinc-400 space-y-1">
-            {(TOUR_INFO.exclusions || ["Comidas", "propinas", "gastos personales"]).map(
+            {(activeTourInfo.exclusions || ["Comidas", "propinas", "gastos personales"]).map(
               (item: string, i: number) => (
                 <li key={i}>{item}</li>
               )
@@ -372,7 +377,7 @@ export default function ReservationDetails({
         <div>
           <strong className="block text-zinc-800 dark:text-zinc-200">{tr.restrictions}</strong>
           <span className="text-zinc-700 dark:text-zinc-400">
-            {TOUR_INFO.restrictions}
+            {activeTourInfo.restrictions}
           </span>
         </div>
       </div>
@@ -606,7 +611,7 @@ export default function ReservationDetails({
             {tr.cancellationLabel}
           </strong>
           <p className="text-sm">
-            {TOUR_INFO.cancellationPolicy ||
+            {activeTourInfo.cancellationPolicy ||
               "Cancelación gratuita hasta 24 horas antes del tour."}
           </p>
         </div>
