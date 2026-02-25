@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { updateOperator, findOperatorById } from "@/lib/models/operator";
-
-const ADMIN_SECRET = process.env.ADMIN_SECRET || "admin-secret-change-in-production";
+import { getAdminFromRequest } from "@/lib/admin-auth";
 
 function isAuthorized(req: NextRequest): boolean {
-  const secret = req.headers.get("x-admin-secret");
-  return secret === ADMIN_SECRET;
+  return Boolean(getAdminFromRequest(req));
 }
+
+const ALLOWED_STATUS = new Set(["pending", "approved", "active"]);
 
 export async function PATCH(
   req: NextRequest,
@@ -27,8 +27,13 @@ export async function PATCH(
     const body = await req.json();
     const allowed = ["status", "commissionRate", "name", "company"];
     const update: Record<string, unknown> = {};
+
     for (const key of allowed) {
       if (key in body) update[key] = body[key];
+    }
+
+    if ("status" in update && !ALLOWED_STATUS.has(String(update.status))) {
+      return NextResponse.json({ error: "Invalid operator status." }, { status: 400 });
     }
 
     await updateOperator(id, update);

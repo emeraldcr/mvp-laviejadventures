@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { listOperators } from "@/lib/models/operator";
-
-const ADMIN_SECRET = process.env.ADMIN_SECRET || "admin-secret-change-in-production";
+import { getAdminFromRequest } from "@/lib/admin-auth";
 
 function isAuthorized(req: NextRequest): boolean {
-  const secret = req.headers.get("x-admin-secret");
-  return secret === ADMIN_SECRET;
+  return Boolean(getAdminFromRequest(req));
 }
 
 export async function GET(req: NextRequest) {
