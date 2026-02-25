@@ -28,6 +28,11 @@ interface NavLinkItem {
   external?: boolean;
 }
 
+interface NavGroup {
+  label: string;
+  links: NavLinkItem[];
+}
+
 // ─── Constants ────────────────────────────────────────────────────────────────
 const SCROLL_THRESHOLD = 80;
 const LOGO_SIZE = { default: 64, scrolled: 42 };
@@ -54,11 +59,14 @@ const useScrollY = () => {
 // ─── NavLink ──────────────────────────────────────────────────────────────────
 const NavLink = memo<NavLinkItem & { onClick?: () => void; className?: string }>(
   ({ href, label, variant = "default", external, onClick, className = "" }) => {
+    const pathname = usePathname();
+    const isAnchor = href.startsWith("/#");
+    const isActive = !isAnchor && pathname === href;
     const base = "transition-colors duration-200";
     const style =
       variant === "primary"
         ? "px-5 py-2 rounded-full font-semibold border border-white/40 bg-white/10 backdrop-blur-md shadow-sm shadow-black/20 hover:bg-white hover:text-teal-900 hover:border-white"
-        : "hover:text-teal-200";
+        : `hover:text-teal-200 ${isActive ? "text-teal-200" : "text-white"}`;
     const linkProps = external ? { target: "_blank", rel: "noopener noreferrer" } : {};
     return (
       <Link href={href} {...linkProps} className={`${base} ${style} ${className}`} onClick={onClick}>
@@ -68,6 +76,73 @@ const NavLink = memo<NavLinkItem & { onClick?: () => void; className?: string }>
   }
 );
 NavLink.displayName = "NavLink";
+
+const DesktopNavGroup = memo<{ item: NavGroup }>(({ item }) => {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div
+      className="relative"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+    >
+      <button
+        type="button"
+        onClick={() => setOpen((prev) => !prev)}
+        className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-sm font-semibold text-white hover:bg-white/15 transition-colors"
+        aria-expanded={open}
+      >
+        {item.label}
+        <ChevronDown size={14} className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      {open && (
+        <div className="absolute left-0 top-full mt-2 min-w-52 rounded-2xl border border-white/10 bg-teal-950/95 p-2 shadow-2xl backdrop-blur-xl">
+          {item.links.map((link) => (
+            <NavLink
+              key={link.href}
+              {...link}
+              className="block rounded-xl px-3 py-2 text-sm font-medium hover:bg-white/10"
+              onClick={() => setOpen(false)}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+});
+DesktopNavGroup.displayName = "DesktopNavGroup";
+
+const MobileNavGroup = memo<{ item: NavGroup; onNavigate: () => void }>(({ item, onNavigate }) => {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/5">
+      <button
+        type="button"
+        className="flex w-full items-center justify-between px-4 py-3 text-left text-base font-semibold text-white"
+        onClick={() => setOpen((prev) => !prev)}
+        aria-expanded={open}
+      >
+        {item.label}
+        <ChevronDown size={16} className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <div className="space-y-1 px-2 pb-3">
+          {item.links.map((link) => (
+            <NavLink
+              key={link.href}
+              {...link}
+              className="block rounded-xl px-3 py-2 text-base font-medium hover:bg-white/10"
+              onClick={onNavigate}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+});
+MobileNavGroup.displayName = "MobileNavGroup";
 
 // ─── LangToggle ───────────────────────────────────────────────────────────────
 const LangToggle = memo<{ onClick: () => void; currentLang: string }>(({ onClick, currentLang }) => (
@@ -192,8 +267,18 @@ const Header = memo<{ isScrolled: boolean; onMenuToggle: () => void; isMenuOpen:
       { href: "/tours", label: tr.tours },
       { href: "/galeria", label: tr.gallery },
       { href: "/wildo", label: tr.wildo },
-      { href: "/#booking", label: tr.reserve, variant: "primary" },
       { href: "/tiempo", label: tr.time },
+    ];
+
+    const navGroups: NavGroup[] = [
+      {
+        label: lang === "es" ? "Explorar" : "Explore",
+        links: navLinks.slice(0, 5),
+      },
+      {
+        label: lang === "es" ? "Condiciones" : "Conditions",
+        links: navLinks.slice(5),
+      },
     ];
 
     return (
@@ -224,10 +309,11 @@ const Header = memo<{ isScrolled: boolean; onMenuToggle: () => void; isMenuOpen:
             </div>
           </Link>
 
-          <nav className="hidden md:flex items-center space-x-10 font-medium text-white">
-            {navLinks.map((link) => (
-              <NavLink key={link.href} {...link} />
+          <nav className="hidden md:flex items-center gap-3 font-medium text-white">
+            {navGroups.map((group) => (
+              <DesktopNavGroup key={group.label} item={group} />
             ))}
+            <NavLink href="/#booking" label={tr.reserve} variant="primary" className="ml-1" />
             <LangToggle onClick={toggle} currentLang={lang} />
             <AuthNav />
           </nav>
@@ -247,13 +333,14 @@ const Header = memo<{ isScrolled: boolean; onMenuToggle: () => void; isMenuOpen:
             "flex flex-col md:hidden text-white",
             "backdrop-blur-2xl bg-teal-950/80 border-t border-white/10 shadow-[0_18px_40px_rgba(0,0,0,0.75)]",
             "px-6 py-8 transition-all duration-300",
-            isMenuOpen ? "max-h-[32rem] opacity-100 space-y-6" : "max-h-0 opacity-0 overflow-hidden",
+            isMenuOpen ? "max-h-[40rem] opacity-100 space-y-4" : "max-h-0 opacity-0 overflow-hidden",
           ].join(" ")}
           aria-hidden={!isMenuOpen}
         >
-          {navLinks.map((link) => (
-            <NavLink key={link.href} {...link} className="text-lg font-semibold" onClick={onMenuToggle} />
+          {navGroups.map((group) => (
+            <MobileNavGroup key={group.label} item={group} onNavigate={onMenuToggle} />
           ))}
+          <NavLink href="/#booking" label={tr.reserve} variant="primary" className="text-center" onClick={onMenuToggle} />
           <div className="pt-2">
             <LangToggle onClick={toggle} currentLang={lang} />
           </div>
