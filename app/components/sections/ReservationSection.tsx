@@ -26,6 +26,8 @@ type Props = {
   className?: string;
 };
 
+const RESERVATION_RETURN_KEY = "reservationReturnPath";
+
 const DEFAULT_BOOKABLE_TOUR: TourSummary = {
   id: "tour-ciudad-esmeralda",
   slug: "tour-ciudad-esmeralda",
@@ -89,6 +91,7 @@ export default function ReservationSection({ className }: Props) {
 
   const handleReserve = (data: OrderPayload) => {
     sessionStorage.setItem("reservationOrderDetails", JSON.stringify(data));
+    sessionStorage.setItem(RESERVATION_RETURN_KEY, "/#booking");
     router.push("/reservation");
   };
 

@@ -50,6 +50,15 @@ const PACKAGE_PRICE_USD: Record<NonNullable<BookingState["tourPackage"]>, number
 };
 
 const TAX_RATE = 0.13;
+const AI_BOOKING_SESSION_KEY = "aiBookingConversationState";
+const RESERVATION_RETURN_KEY = "reservationReturnPath";
+
+type PersistedAIState = {
+  messages: ChatMessage[];
+  state: BookingState;
+  missingFields: string[];
+  input: string;
+};
 
 export default function AIAssistantClient() {
   const router = useRouter();
@@ -79,6 +88,40 @@ export default function AIAssistantClient() {
 
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
   const hasRedirectedRef = useRef(false);
+
+  useEffect(() => {
+    const raw = sessionStorage.getItem(AI_BOOKING_SESSION_KEY);
+    if (!raw) return;
+
+    try {
+      const persisted = JSON.parse(raw) as PersistedAIState;
+      if (persisted.messages?.length) {
+        setMessages(persisted.messages);
+      }
+      if (persisted.state) {
+        setState(persisted.state);
+      }
+      if (persisted.missingFields) {
+        setMissingFields(persisted.missingFields);
+      }
+      if (typeof persisted.input === "string") {
+        setInput(persisted.input);
+      }
+    } catch {
+      sessionStorage.removeItem(AI_BOOKING_SESSION_KEY);
+    }
+  }, []);
+
+  useEffect(() => {
+    const payload: PersistedAIState = {
+      messages,
+      state,
+      missingFields,
+      input,
+    };
+
+    sessionStorage.setItem(AI_BOOKING_SESSION_KEY, JSON.stringify(payload));
+  }, [input, messages, missingFields, state]);
 
   const buildOrderDetails = useCallback((bookingState: BookingState): OrderDetails | null => {
     if (
@@ -115,10 +158,19 @@ export default function AIAssistantClient() {
     const orderDetails = buildOrderDetails(bookingState);
     if (!orderDetails) return;
 
+    const payload: PersistedAIState = {
+      messages,
+      state: bookingState,
+      missingFields,
+      input,
+    };
+
+    sessionStorage.setItem(AI_BOOKING_SESSION_KEY, JSON.stringify(payload));
     sessionStorage.setItem("reservationOrderDetails", JSON.stringify(orderDetails));
+    sessionStorage.setItem(RESERVATION_RETURN_KEY, "/ai");
     hasRedirectedRef.current = true;
     router.push("/reservation");
-  }, [buildOrderDetails, router]);
+  }, [buildOrderDetails, input, messages, missingFields, router]);
 
   useEffect(() => {
     const container = messagesContainerRef.current;
