@@ -133,12 +133,12 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
 
       <p className="mb-2 text-lg">
         <strong>{tr.tourTime}:</strong>{" "}
-        {tourTime === "08:00" ? "8:00 AM" : tourTime === "09:00" ? "9:00 AM" : "10:00 AM"}
+        {tr.timeLabels[tourTime] ?? tourTime}
       </p>
 
       <p className="mb-4 text-lg">
         <strong>{tr.package}:</strong>{" "}
-        {packageName} (${packagePrice} USD/{lang === "es" ? "persona" : "person"})
+        {packageName} (${packagePrice} USD/{tr.pricePerPersonUnit})
       </p>
 
       <p className="text-xl font-bold mb-6">{tr.total}: ${total.toFixed(2)}</p>

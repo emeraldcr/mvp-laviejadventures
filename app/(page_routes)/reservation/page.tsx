@@ -46,18 +46,18 @@ export default function ReservationPage() {
             href="/#booking"
             className="rounded-lg border border-zinc-600 px-3 py-2 text-sm font-medium text-zinc-300 hover:bg-zinc-800"
           >
-            {lang === "es" ? "Volver" : "Back"}
+            {paymentTr.backBtn}
           </Link>
         </div>
 
         {!orderDetails ? (
           <div className="space-y-4 text-zinc-300">
-            <p>{lang === "es" ? "No hay una reserva activa para pagar." : "There is no active reservation to pay for."}</p>
+            <p>{paymentTr.noActiveReservation}</p>
             <button
               onClick={() => router.push("/#booking")}
               className="rounded-lg bg-teal-600 px-4 py-2 font-semibold text-white hover:bg-teal-500"
             >
-              {lang === "es" ? "Ir a reservar" : "Go to booking"}
+              {paymentTr.goToBooking}
             </button>
           </div>
         ) : (
