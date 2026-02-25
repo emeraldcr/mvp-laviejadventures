@@ -19,6 +19,8 @@ export default function PaymentModal({
   onSuccess,
 }: PaymentModalProps) {
   const paypalRef = useRef<HTMLDivElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const previouslyFocusedElementRef = useRef<HTMLElement | null>(null);
   const router = useRouter();
   const { lang } = useLanguage();
   const tr = translations[lang].payment;
@@ -28,10 +30,20 @@ export default function PaymentModal({
   // 🔒 Lock body scroll while modal is open
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
+    previouslyFocusedElementRef.current = document.activeElement as HTMLElement | null;
     document.body.style.overflow = "hidden";
 
+    const focusModal = () => {
+      modalRef.current?.focus();
+      modalRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    };
+
+    const animationFrame = window.requestAnimationFrame(focusModal);
+
     return () => {
+      window.cancelAnimationFrame(animationFrame);
       document.body.style.overflow = previousOverflow;
+      previouslyFocusedElementRef.current?.focus?.();
     };
   }, []);
 
@@ -141,6 +153,11 @@ export default function PaymentModal({
       onClick={onClose}
     >
       <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="payment-modal-title"
+        tabIndex={-1}
         className="relative w-full max-w-2xl rounded-2xl bg-white p-6 sm:p-8 shadow-2xl dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
@@ -154,7 +171,7 @@ export default function PaymentModal({
         </button>
 
         <div className="mb-6 pr-8">
-          <h2 className="text-2xl sm:text-3xl font-bold">
+          <h2 id="payment-modal-title" className="text-2xl sm:text-3xl font-bold">
             {tr.title}
           </h2>
         </div>
