@@ -64,7 +64,7 @@ const DATE_PATTERN_ISO = /\b(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})\b/;
 const DATE_PATTERN_DMY = /\b(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})\b/;
 const EMAIL_PATTERN = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i;
 const PHONE_PATTERN = /\+?[\d\s()\-]{8,}/;
-const NAME_PATTERN = /(?:me\s+llamo|mi\s+nombre\s+es|soy)\s+([a-záéíóúñ]+(?:\s+[a-záéíóúñ]+){0,3})/i;
+const NAME_PATTERN = /(?:me\s+llamo|mi\s+nombre\s+es|soy|nombre|name)\s*[:=-]?\s*([a-záéíóúñ]+(?:\s+[a-záéíóúñ]+){0,3})/i;
 const TICKETS_PATTERN = /(?:somos|vamos|personas?|tickets?|boletos?|cupos?)\s*[:=]?\s*(\d{1,2})/i;
 
 const FAQ_ENTRIES: { keywords: string[]; answer: string }[] = [
@@ -276,8 +276,11 @@ function extractTickets(raw: string): number | null {
 
 function extractName(raw: string): string | null {
   const fromPrefix = raw.match(NAME_PATTERN)?.[1]?.trim();
-  if (fromPrefix && fromPrefix.length >= 2) {
-    return fromPrefix
+  const fromLabeledInput = raw.match(/^\s*(?:nombre|name)\s*[:=-]?\s*([a-záéíóúñ]+(?:\s+[a-záéíóúñ]+){0,3})\s*$/i)?.[1]?.trim();
+  const candidate = fromLabeledInput ?? fromPrefix;
+
+  if (candidate && candidate.length >= 2) {
+    return candidate
       .split(/\s+/)
       .map((chunk) => chunk.charAt(0).toUpperCase() + chunk.slice(1).toLowerCase())
       .join(" ");
