@@ -24,33 +24,29 @@ import { useSession, signIn } from "next-auth/react";
 import LogoutButton from "../../../src/components/LogoutButton";
 import Profile from "../../../src/components/Profile";
 
-// Mock data for bookings (replace with actual API fetch in production)
-const mockBookings = [
-    {
-        id: 1,
-        tour: "Ciudad Esmeralda Tour",
-        date: "2026-03-15",
-        time: "09:00 AM",
-        status: "Upcoming",
-        participants: 4,
-    },
-    {
-        id: 2,
-        tour: "Rio La Vieja Adventure",
-        date: "2026-02-28",
-        time: "10:00 AM",
-        status: "Upcoming",
-        participants: 2,
-    },
-    {
-        id: 3,
-        tour: "Parque Nacional Hike",
-        date: "2026-01-10",
-        time: "08:00 AM",
-        status: "Past",
-        participants: 3,
-    },
-];
+type Booking = {
+    id: string;
+    orderId: string | null;
+    date: string | null;
+    tourTime: string | null;
+    tourPackage: string | null;
+    tickets: number | null;
+    amount: number | null;
+    currency: string | null;
+    status: string | null;
+    createdAt: string | null;
+};
+
+function isUpcoming(dateStr: string | null): boolean {
+    if (!dateStr) return false;
+    return new Date(dateStr) >= new Date(new Date().toDateString());
+}
+
+const PACKAGE_LABELS: Record<string, { es: string; en: string }> = {
+    basic: { es: "Tour Básico", en: "Basic Tour" },
+    "full-day": { es: "Tour Día Completo", en: "Full-Day Tour" },
+    private: { es: "Tour Privado", en: "Private Tour" },
+};
 
 export default function DashboardPage() {
     const { lang } = useLanguage();
@@ -59,13 +55,17 @@ export default function DashboardPage() {
     const { data: session, status } = useSession();
     const user = session?.user;
     const isLoading = status === "loading";
-    const [bookings, setBookings] = useState([]);
+    const [bookings, setBookings] = useState<Booking[]>([]);
+    const [bookingsLoading, setBookingsLoading] = useState(false);
 
     useEffect(() => {
         if (user) {
-            // TODO: Replace with actual API call to fetch user's bookings
-            // e.g., fetch('/api/bookings').then(res => res.json()).then(setBookings);
-            setBookings(mockBookings);
+            setBookingsLoading(true);
+            fetch("/api/bookings")
+                .then((res) => res.json())
+                .then((data) => setBookings(data.bookings ?? []))
+                .catch(() => setBookings([]))
+                .finally(() => setBookingsLoading(false));
         }
     }, [user]);
 
@@ -139,18 +139,26 @@ export default function DashboardPage() {
                                     <CalendarDays size={20} className="text-emerald-600" />
                                     {lang === "es" ? "Reservas Próximas" : "Upcoming Bookings"}
                                 </h2>
-                                <ul className="space-y-3 text-zinc-700 dark:text-zinc-300">
-                                    {bookings.filter(b => b.status === "Upcoming").map((booking) => (
-                                        <li key={booking.id} className="flex flex-col gap-1 border-b border-zinc-200 pb-2 last:border-b-0 dark:border-zinc-800">
-                                            <span className="font-semibold">{booking.tour}</span>
-                                            <span className="text-sm">{booking.date} at {booking.time}</span>
-                                            <span className="text-sm">{lang === "es" ? "Participantes:" : "Participants:"} {booking.participants}</span>
-                                        </li>
-                                    ))}
-                                    {bookings.filter(b => b.status === "Upcoming").length === 0 && (
-                                        <p>{lang === "es" ? "No hay reservas próximas." : "No upcoming bookings."}</p>
-                                    )}
-                                </ul>
+                                {bookingsLoading ? (
+                                    <p className="text-zinc-500 dark:text-zinc-400">{lang === "es" ? "Cargando..." : "Loading..."}</p>
+                                ) : (
+                                    <ul className="space-y-3 text-zinc-700 dark:text-zinc-300">
+                                        {bookings.filter(b => isUpcoming(b.date)).map((booking) => (
+                                            <li key={booking.id} className="flex flex-col gap-1 border-b border-zinc-200 pb-2 last:border-b-0 dark:border-zinc-800">
+                                                <span className="font-semibold">
+                                                    {booking.tourPackage
+                                                        ? (PACKAGE_LABELS[booking.tourPackage]?.[lang] ?? booking.tourPackage)
+                                                        : (lang === "es" ? "Tour Ciudad Esmeralda" : "Ciudad Esmeralda Tour")}
+                                                </span>
+                                                <span className="text-sm">{booking.date}{booking.tourTime ? ` — ${booking.tourTime}` : ""}</span>
+                                                <span className="text-sm">{lang === "es" ? "Boletos:" : "Tickets:"} {booking.tickets ?? "—"}</span>
+                                            </li>
+                                        ))}
+                                        {bookings.filter(b => isUpcoming(b.date)).length === 0 && (
+                                            <p>{lang === "es" ? "No hay reservas próximas." : "No upcoming bookings."}</p>
+                                        )}
+                                    </ul>
+                                )}
                             </article>
 
                             <article className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
@@ -158,18 +166,26 @@ export default function DashboardPage() {
                                     <CalendarClock size={20} className="text-emerald-600" />
                                     {lang === "es" ? "Reservas Pasadas" : "Past Bookings"}
                                 </h2>
-                                <ul className="space-y-3 text-zinc-700 dark:text-zinc-300">
-                                    {bookings.filter(b => b.status === "Past").map((booking) => (
-                                        <li key={booking.id} className="flex flex-col gap-1 border-b border-zinc-200 pb-2 last:border-b-0 dark:border-zinc-800">
-                                            <span className="font-semibold">{booking.tour}</span>
-                                            <span className="text-sm">{booking.date} at {booking.time}</span>
-                                            <span className="text-sm">{lang === "es" ? "Participantes:" : "Participants:"} {booking.participants}</span>
-                                        </li>
-                                    ))}
-                                    {bookings.filter(b => b.status === "Past").length === 0 && (
-                                        <p>{lang === "es" ? "No hay reservas pasadas." : "No past bookings."}</p>
-                                    )}
-                                </ul>
+                                {bookingsLoading ? (
+                                    <p className="text-zinc-500 dark:text-zinc-400">{lang === "es" ? "Cargando..." : "Loading..."}</p>
+                                ) : (
+                                    <ul className="space-y-3 text-zinc-700 dark:text-zinc-300">
+                                        {bookings.filter(b => !isUpcoming(b.date)).map((booking) => (
+                                            <li key={booking.id} className="flex flex-col gap-1 border-b border-zinc-200 pb-2 last:border-b-0 dark:border-zinc-800">
+                                                <span className="font-semibold">
+                                                    {booking.tourPackage
+                                                        ? (PACKAGE_LABELS[booking.tourPackage]?.[lang] ?? booking.tourPackage)
+                                                        : (lang === "es" ? "Tour Ciudad Esmeralda" : "Ciudad Esmeralda Tour")}
+                                                </span>
+                                                <span className="text-sm">{booking.date}{booking.tourTime ? ` — ${booking.tourTime}` : ""}</span>
+                                                <span className="text-sm">{lang === "es" ? "Boletos:" : "Tickets:"} {booking.tickets ?? "—"}</span>
+                                            </li>
+                                        ))}
+                                        {bookings.filter(b => !isUpcoming(b.date)).length === 0 && (
+                                            <p>{lang === "es" ? "No hay reservas pasadas." : "No past bookings."}</p>
+                                        )}
+                                    </ul>
+                                )}
                             </article>
                         </section>
 
