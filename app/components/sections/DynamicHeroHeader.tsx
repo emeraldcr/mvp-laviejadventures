@@ -479,9 +479,10 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "1
 // ─── DynamicHeroHeader ────────────────────────────────────────────────────────
 interface DynamicHeroHeaderProps {
   children?: ReactNode;
+  showHeroSlider?: boolean;
 }
 
-export default function DynamicHeroHeader({ children }: DynamicHeroHeaderProps) {
+export default function DynamicHeroHeader({ children, showHeroSlider = true }: DynamicHeroHeaderProps) {
   const scrollY = useScrollY();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const isScrolled = useMemo(() => scrollY > SCROLL_THRESHOLD, [scrollY]);
@@ -497,10 +498,12 @@ export default function DynamicHeroHeader({ children }: DynamicHeroHeaderProps) 
   return (
     <>
       <Header isScrolled={isScrolled} onMenuToggle={toggleMenu} isMenuOpen={isMenuOpen} />
-      <section className="relative h-screen min-h-[600px] overflow-hidden">
-        <HeroCarousel height="100%" overlay={null} />
-        {children}
-      </section>
+      {showHeroSlider && (
+        <section className="relative h-screen min-h-[600px] overflow-hidden">
+          <HeroCarousel height="100%" overlay={null} />
+          {children}
+        </section>
+      )}
     </>
   );
 }

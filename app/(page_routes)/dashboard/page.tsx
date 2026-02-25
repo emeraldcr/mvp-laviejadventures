@@ -79,7 +79,7 @@ export default function DashboardPage() {
 
     return (
         <main className="min-h-screen bg-gradient-to-b from-emerald-50 via-zinc-50 to-white px-4 py-10 dark:from-black dark:via-zinc-950 dark:to-zinc-900">
-            <DynamicHeroHeader />
+            <DynamicHeroHeader showHeroSlider={false} />
 
             <div className="mx-auto w-full max-w-6xl space-y-6">
                 {!user ? (
