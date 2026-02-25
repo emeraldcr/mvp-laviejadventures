@@ -3,6 +3,7 @@ import type { Lang } from "@/app/context/LanguageContext";
 const es = {
   nav: {
     info: "Información",
+    docs: "Guía",
     tours: "Tours",
     gallery: "Galería",
     reserve: "Reserva",
@@ -240,9 +241,11 @@ const es = {
 const en = {
   nav: {
     info: "Information",
+    docs: "Docs",
     tours: "Tours",
     gallery: "Gallery",
     reserve: "Reserve",
+    time: "Weather",
   },
   hero: {
     title: "Ciudad Esmeralda",
