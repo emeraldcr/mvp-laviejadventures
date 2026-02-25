@@ -296,7 +296,7 @@ const Header = memo<{ isScrolled: boolean; onMenuToggle: () => void; isMenuOpen:
       { href: "/tours", label: tr.tours },
       { href: "/galeria", label: tr.gallery },
       { href: "/wildo", label: tr.wildo },
-      { href: "/tiempo", label: tr.time },
+      { href: "/tiempo", label: lang === "es" ? "Pronóstico" : "Forecast" },
     ];
 
     const [openMobileGroup, setOpenMobileGroup] = useState<string | null>(null);
@@ -305,11 +305,7 @@ const Header = memo<{ isScrolled: boolean; onMenuToggle: () => void; isMenuOpen:
     const navGroups: NavGroup[] = [
       {
         label: lang === "es" ? "Explorar" : "Explore",
-        links: navLinks.slice(0, 5),
-      },
-      {
-        label: lang === "es" ? "Condiciones" : "Conditions",
-        links: navLinks.slice(5),
+        links: navLinks,
       },
     ];
 
