@@ -4,6 +4,14 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { findUserByEmail, upsertUserFromAuth0 } from "@/lib/models/user";
 
+const auth0ClientId = process.env.AUTH0_CLIENT_ID;
+const auth0ClientSecret = process.env.AUTH0_CLIENT_SECRET;
+const auth0Issuer =
+  process.env.AUTH0_ISSUER_BASE_URL ??
+  (process.env.AUTH0_DOMAIN ? `https://${process.env.AUTH0_DOMAIN}` : undefined);
+
+const hasAuth0Config = Boolean(auth0ClientId && auth0ClientSecret && auth0Issuer);
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   secret: process.env.AUTH_SECRET,
   trustHost: true,
@@ -41,16 +49,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         };
       },
     }),
-    Auth0Provider({
-      clientId: process.env.AUTH0_CLIENT_ID!,
-      clientSecret: process.env.AUTH0_CLIENT_SECRET!,
-      issuer: process.env.AUTH0_ISSUER_BASE_URL!,
-      authorization: {
-        params: {
-          scope: "openid profile email",
-        },
-      },
-    }),
+    ...(hasAuth0Config
+      ? [
+          Auth0Provider({
+            clientId: auth0ClientId!,
+            clientSecret: auth0ClientSecret!,
+            issuer: auth0Issuer!,
+            authorization: {
+              params: {
+                scope: "openid profile email",
+              },
+            },
+          }),
+        ]
+      : []),
   ],
   pages: {
     signIn: "/platform",

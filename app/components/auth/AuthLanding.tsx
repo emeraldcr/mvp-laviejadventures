@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, CheckCircle2, Chrome, Mail, Shield, Sparkles } from 'lucide-react';
 import { signIn } from 'next-auth/react';
@@ -20,6 +20,33 @@ export default function AuthLanding() {
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isAuth0Available, setIsAuth0Available] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadProviders() {
+      try {
+        const response = await fetch('/api/auth/providers', { cache: 'no-store' });
+        if (!response.ok) {
+          return;
+        }
+
+        const providers = (await response.json()) as Record<string, unknown>;
+        if (isMounted) {
+          setIsAuth0Available(Boolean(providers?.auth0));
+        }
+      } catch {
+        // Keep default state to avoid blocking users when provider discovery fails.
+      }
+    }
+
+    loadProviders();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   async function handleCredentialsSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -63,6 +90,11 @@ export default function AuthLanding() {
   }
 
   async function handleAuth0GoogleLogin() {
+    if (!isAuth0Available) {
+      setError('Acceso con Google no disponible temporalmente. Inicia con correo y contraseña.');
+      return;
+    }
+
     await signIn('auth0', {
       callbackUrl: '/dashboard',
     });
@@ -174,10 +206,13 @@ export default function AuthLanding() {
 
               <button
                 onClick={handleAuth0GoogleLogin}
-                className="inline-flex w-full items-center justify-center gap-3 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 sm:text-base"
+                disabled={!isAuth0Available}
+                className="inline-flex w-full items-center justify-center gap-3 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 disabled:cursor-not-allowed disabled:opacity-70 sm:text-base"
               >
                 <Chrome className="h-5 w-5" />
-                Continuar con Google (Auth0)
+                {isAuth0Available
+                  ? 'Continuar con Google (Auth0)'
+                  : 'Google (Auth0) no configurado'}
               </button>
 
               {error && <p className="text-sm text-rose-300">{error}</p>}
