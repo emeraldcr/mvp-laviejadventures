@@ -18,7 +18,7 @@ import { fetcher } from "@/lib/fetcher";
 import { useInterval } from "../../hooks/useInterval";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/lib/translations";
-import { useSession, signIn, signOut } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface NavLinkItem {
@@ -198,12 +198,13 @@ const AuthNav = memo<{ onMobileClose?: () => void; isMobile?: boolean }>(({ onMo
 
   if (!session?.user) {
     return (
-      <button
-        onClick={() => { signIn(undefined, { callbackUrl: "/dashboard" }); onMobileClose?.(); }}
+      <Link
+        href="/platform"
+        onClick={onMobileClose}
         className="px-5 py-2 rounded-full font-semibold border border-white/40 bg-white/10 backdrop-blur-md shadow-sm shadow-black/20 transition-all duration-200 text-white text-sm hover:-translate-y-0.5 hover:bg-white hover:text-teal-900 hover:border-white hover:shadow-md hover:shadow-black/30 active:translate-y-0 active:scale-[0.99] cursor-pointer"
       >
         {lang === "es" ? "Iniciar sesión" : "Log In"}
-      </button>
+      </Link>
     );
   }
 
