@@ -24,7 +24,7 @@ export default function ProfilePage() {
                 </h1>
                 <button
                     onClick={() => signIn(undefined, { callbackUrl: "/auth/profile" })}
-                    className="rounded-xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700"
+                    className="rounded-xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-900/20 active:translate-y-0 active:scale-[0.99] cursor-pointer"
                 >
                     Log In
                 </button>

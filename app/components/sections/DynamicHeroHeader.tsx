@@ -173,7 +173,7 @@ const AuthNav = memo<{ onMobileClose?: () => void; isMobile?: boolean }>(({ onMo
     return (
       <button
         onClick={() => { signIn(undefined, { callbackUrl: "/dashboard" }); onMobileClose?.(); }}
-        className="px-5 py-2 rounded-full font-semibold border border-white/40 bg-white/10 backdrop-blur-md shadow-sm shadow-black/20 hover:bg-white hover:text-teal-900 hover:border-white transition-colors duration-200 text-white text-sm"
+        className="px-5 py-2 rounded-full font-semibold border border-white/40 bg-white/10 backdrop-blur-md shadow-sm shadow-black/20 transition-all duration-200 text-white text-sm hover:-translate-y-0.5 hover:bg-white hover:text-teal-900 hover:border-white hover:shadow-md hover:shadow-black/30 active:translate-y-0 active:scale-[0.99] cursor-pointer"
       >
         {lang === "es" ? "Iniciar sesión" : "Log In"}
       </button>
