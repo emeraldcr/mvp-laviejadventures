@@ -13,10 +13,6 @@ type Operator = {
   createdAt: string;
 };
 
-const ADMIN_USER = "admin";
-const ADMIN_PASS = "admin";
-const ADMIN_SECRET = process.env.NEXT_PUBLIC_ADMIN_SECRET ?? "admin-secret-change-in-production";
-
 export default function B2BAdminPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -25,6 +21,8 @@ export default function B2BAdminPage() {
 
   const [operators, setOperators] = useState<Operator[]>([]);
   const [loading, setLoading] = useState(false);
+  const [initialSessionLoading, setInitialSessionLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(false);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [requestError, setRequestError] = useState("");
 
@@ -43,32 +41,33 @@ export default function B2BAdminPage() {
     setRequestError("");
 
     try {
-      const response = await fetch("/api/admin/b2b/operators", {
-        headers: {
-          "x-admin-secret": ADMIN_SECRET,
-        },
-      });
-
+      const response = await fetch("/api/admin/b2b/operators");
       const data = await response.json();
+
+      if (response.status === 401) {
+        setIsLoggedIn(false);
+        setOperators([]);
+        return;
+      }
 
       if (!response.ok) {
         setRequestError(data.error || "No se pudieron cargar los operadores.");
         return;
       }
 
+      setIsLoggedIn(true);
       setOperators(data.operators || []);
     } catch {
       setRequestError("No se pudo conectar con el servidor.");
     } finally {
       setLoading(false);
+      setInitialSessionLoading(false);
     }
   }
 
   useEffect(() => {
-    if (isLoggedIn) {
-      fetchOperators();
-    }
-  }, [isLoggedIn]);
+    fetchOperators();
+  }, []);
 
   async function updateStatus(id: string, status: "approved" | "pending") {
     setActionLoadingId(id);
@@ -79,12 +78,17 @@ export default function B2BAdminPage() {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          "x-admin-secret": ADMIN_SECRET,
         },
         body: JSON.stringify({ status }),
       });
 
       const data = await response.json();
+
+      if (response.status === 401) {
+        setIsLoggedIn(false);
+        setOperators([]);
+        return;
+      }
 
       if (!response.ok) {
         setRequestError(data.error || "No se pudo actualizar el estado.");
@@ -103,16 +107,54 @@ export default function B2BAdminPage() {
     }
   }
 
-  function handleLogin(event: FormEvent) {
+  async function handleLogin(event: FormEvent) {
     event.preventDefault();
     setAuthError("");
+    setAuthLoading(true);
 
-    if (username === ADMIN_USER && password === ADMIN_PASS) {
+    try {
+      const response = await fetch("/api/admin/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setAuthError(data.error || "Credenciales inválidas.");
+        return;
+      }
+
       setIsLoggedIn(true);
-      return;
+      setPassword("");
+      await fetchOperators();
+    } catch {
+      setAuthError("No se pudo iniciar sesión. Intenta nuevamente.");
+    } finally {
+      setAuthLoading(false);
     }
+  }
 
-    setAuthError("Credenciales inválidas. Usa admin/admin.");
+  async function handleLogout() {
+    await fetch("/api/admin/auth/logout", { method: "POST" });
+    setIsLoggedIn(false);
+    setUsername("");
+    setPassword("");
+    setOperators([]);
+  }
+
+  if (initialSessionLoading) {
+    return (
+      <main className="mx-auto flex min-h-screen w-full max-w-md items-center justify-center px-4 py-12">
+        <p className="inline-flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Verificando sesión de administrador...
+        </p>
+      </main>
+    );
   }
 
   if (!isLoggedIn) {
@@ -146,16 +188,13 @@ export default function B2BAdminPage() {
             />
             <button
               type="submit"
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-zinc-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+              disabled={authLoading}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-zinc-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-zinc-700 disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
             >
-              <LogIn className="h-4 w-4" />
+              {authLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
               Entrar
             </button>
           </form>
-
-          <p className="mt-6 text-center text-xs text-zinc-500 dark:text-zinc-400">
-            Usuario de demo: <strong>admin</strong> / <strong>admin</strong>
-          </p>
         </section>
       </main>
     );
@@ -172,12 +211,7 @@ export default function B2BAdminPage() {
         </div>
 
         <button
-          onClick={() => {
-            setIsLoggedIn(false);
-            setUsername("");
-            setPassword("");
-            setOperators([]);
-          }}
+          onClick={handleLogout}
           className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
         >
           <LogOut className="h-4 w-4" />
@@ -257,9 +291,7 @@ export default function B2BAdminPage() {
                   <p className="text-sm text-zinc-500 dark:text-zinc-400">
                     {operator.name} · {operator.email}
                   </p>
-                  <p className="mt-1 text-xs text-zinc-400 dark:text-zinc-500">
-                    Estado: {operator.status}
-                  </p>
+                  <p className="mt-1 text-xs text-zinc-400 dark:text-zinc-500">Estado: {operator.status}</p>
                   <button
                     disabled={actionLoadingId === operator._id}
                     onClick={() => updateStatus(operator._id, "pending")}
