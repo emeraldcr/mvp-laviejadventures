@@ -2,6 +2,7 @@
 
 import { FormEvent, useMemo, useState } from "react";
 import { Bot, CalendarDays, CheckCircle2, SendHorizonal } from "lucide-react";
+import Link from "next/link";
 
 type BookingState = {
   date: string | null;
@@ -61,6 +62,13 @@ export default function AIAssistantClient() {
   const [readyToBook, setReadyToBook] = useState(false);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [dateBox, setDateBox] = useState("");
+  const [timeBox, setTimeBox] = useState<BookingState["tourTime"]>(null);
+  const [packageBox, setPackageBox] = useState<BookingState["tourPackage"]>(null);
+  const [ticketsBox, setTicketsBox] = useState<number>(2);
+  const [nameBox, setNameBox] = useState("");
+  const [emailBox, setEmailBox] = useState("");
+  const [phoneBox, setPhoneBox] = useState("");
 
   const completion = useMemo(() => {
     const total = 7;
@@ -107,6 +115,21 @@ export default function AIAssistantClient() {
     }
   };
 
+  const fillPromptFromBoxes = () => {
+    const chunks = [
+      dateBox ? `Fecha ${dateBox}` : "",
+      timeBox ? `hora ${timeBox}` : "",
+      packageBox ? `paquete ${packageBox}` : "",
+      ticketsBox ? `somos ${ticketsBox} personas` : "",
+      nameBox.trim() ? `nombre ${nameBox.trim()}` : "",
+      emailBox.trim() ? `correo ${emailBox.trim()}` : "",
+      phoneBox.trim() ? `telefono ${phoneBox.trim()}` : "",
+    ].filter(Boolean);
+
+    if (!chunks.length) return;
+    setInput(`Quiero reservar con estos datos: ${chunks.join(", ")}.`);
+  };
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950 px-4 py-10 text-zinc-100">
       <div className="mx-auto grid w-full max-w-6xl gap-6 lg:grid-cols-[1.1fr_420px]">
@@ -125,6 +148,72 @@ export default function AIAssistantClient() {
             Conversá como en ChatGPT/Grok: escribí libremente y el bot recolecta datos de tu reserva,
             aunque mandés todo junto. También responde dudas rápidas del tour.
           </p>
+
+          <div className="mb-5 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm">
+            <p className="mb-3 font-medium text-zinc-200">Cajas rápidas (solo opciones válidas)</p>
+            <div className="grid gap-3 md:grid-cols-2">
+              <label className="space-y-1">
+                <span className="text-zinc-400">Fecha</span>
+                <input
+                  type="date"
+                  value={dateBox}
+                  onChange={(event) => setDateBox(event.target.value)}
+                  className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2"
+                />
+              </label>
+              <label className="space-y-1">
+                <span className="text-zinc-400">Personas (1-20)</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={20}
+                  value={ticketsBox}
+                  onChange={(event) => setTicketsBox(Math.min(20, Math.max(1, Number(event.target.value) || 1)))}
+                  className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2"
+                />
+              </label>
+              <div>
+                <p className="mb-1 text-zinc-400">Hora</p>
+                <div className="flex flex-wrap gap-2">
+                  {(["08:00", "09:00", "10:00"] as const).map((slot) => (
+                    <button
+                      key={slot}
+                      type="button"
+                      onClick={() => setTimeBox(slot)}
+                      className={`rounded-lg border px-3 py-1.5 ${timeBox === slot ? "border-emerald-400 bg-emerald-500/20 text-emerald-300" : "border-white/10 bg-white/5"}`}
+                    >
+                      {slot}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="mb-1 text-zinc-400">Paquete</p>
+                <div className="flex flex-wrap gap-2">
+                  {(["basic", "full-day", "private"] as const).map((pkg) => (
+                    <button
+                      key={pkg}
+                      type="button"
+                      onClick={() => setPackageBox(pkg)}
+                      className={`rounded-lg border px-3 py-1.5 ${packageBox === pkg ? "border-emerald-400 bg-emerald-500/20 text-emerald-300" : "border-white/10 bg-white/5"}`}
+                    >
+                      {pkg}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <input value={nameBox} onChange={(event) => setNameBox(event.target.value)} placeholder="Nombre" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2" />
+              <input value={emailBox} onChange={(event) => setEmailBox(event.target.value)} placeholder="Correo" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2" />
+              <input value={phoneBox} onChange={(event) => setPhoneBox(event.target.value)} placeholder="Teléfono" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 md:col-span-2" />
+            </div>
+            <button
+              type="button"
+              onClick={fillPromptFromBoxes}
+              className="mt-3 rounded-xl bg-emerald-500 px-4 py-2 font-semibold text-zinc-950 transition hover:bg-emerald-400"
+            >
+              Usar estas cajas en el prompt
+            </button>
+          </div>
 
           <div className="h-[56vh] space-y-3 overflow-y-auto rounded-2xl border border-white/10 bg-black/20 p-4">
             {messages.map((message, index) => (
@@ -184,10 +273,18 @@ export default function AIAssistantClient() {
 
           <div className="rounded-2xl border border-white/10 bg-black/20 p-4 text-sm">
             {readyToBook ? (
-              <p className="flex items-start gap-2 text-emerald-300">
-                <CheckCircle2 size={16} className="mt-0.5" />
-                ¡Listo! Ya tengo los datos básicos para continuar con la reserva.
-              </p>
+              <div className="space-y-3">
+                <p className="flex items-start gap-2 text-emerald-300">
+                  <CheckCircle2 size={16} className="mt-0.5" />
+                  ¡Listo! Ya tengo los datos básicos para continuar con la reserva.
+                </p>
+                <Link
+                  href="/reservation"
+                  className="inline-flex rounded-xl bg-emerald-500 px-4 py-2 font-semibold text-zinc-950 transition hover:bg-emerald-400"
+                >
+                  Go pay with PayPal
+                </Link>
+              </div>
             ) : (
               <>
                 <p className="mb-2 font-medium text-zinc-300">Aún faltan:</p>
