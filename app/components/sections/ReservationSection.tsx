@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useCalendarContext } from "@/app/context/CalendarContext";
 import ReservationDetails, { type TourSummary } from "@/app/components/reservation/ReservationDetails";
 import { type MainTourInfo } from "@/lib/types";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/lib/translations";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 type OrderPayload = {
   name: string;
@@ -49,6 +49,14 @@ export default function ReservationSection({ className }: Props) {
   const [tourInfo, setTourInfo] = useState<MainTourInfo | null>(null);
   const [tours, setTours] = useState<TourSummary[]>([DEFAULT_BOOKABLE_TOUR]);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const requestedTourSlug = searchParams.get("tour");
+  const initialTourSlug = useMemo(() => {
+    if (!requestedTourSlug) return null;
+    return tours.some((tour) => tour.slug === requestedTourSlug)
+      ? requestedTourSlug
+      : null;
+  }, [requestedTourSlug, tours]);
 
   // Fetch tour info from MongoDB on mount
   useEffect(() => {
@@ -129,6 +137,7 @@ export default function ReservationSection({ className }: Props) {
   return (
     <div className={className}>
       <ReservationDetails
+        key={`reservation-${initialTourSlug ?? "default"}`}
         selectedDate={selectedDay}
         currentMonth={currentMonth}
         monthName={monthName}
@@ -139,6 +148,7 @@ export default function ReservationSection({ className }: Props) {
         currentYear={currentYear}
         tourInfo={tourInfo}
         tours={tours}
+        initialTourSlug={initialTourSlug}
       />
     </div>
   );
