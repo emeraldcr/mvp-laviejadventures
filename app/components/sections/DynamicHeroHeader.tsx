@@ -138,15 +138,19 @@ const DesktopNavGroup = memo<{ item: NavGroup }>(({ item }) => {
 });
 DesktopNavGroup.displayName = "DesktopNavGroup";
 
-const MobileNavGroup = memo<{ item: NavGroup; onNavigate: () => void }>(({ item, onNavigate }) => {
-  const [open, setOpen] = useState(false);
+const MobileNavGroup = memo<{
+  item: NavGroup;
+  onNavigate: () => void;
+  open: boolean;
+  onToggle: () => void;
+}>(({ item, onNavigate, open, onToggle }) => {
 
   return (
     <div className="rounded-2xl border border-white/10 bg-white/5">
       <button
         type="button"
         className="flex w-full items-center justify-between px-4 py-3 text-left text-base font-semibold text-white"
-        onClick={() => setOpen((prev) => !prev)}
+        onClick={onToggle}
         aria-expanded={open}
       >
         {item.label}
@@ -295,6 +299,9 @@ const Header = memo<{ isScrolled: boolean; onMenuToggle: () => void; isMenuOpen:
       { href: "/tiempo", label: tr.time },
     ];
 
+    const [openMobileGroup, setOpenMobileGroup] = useState<string | null>(null);
+
+
     const navGroups: NavGroup[] = [
       {
         label: lang === "es" ? "Explorar" : "Explore",
@@ -362,9 +369,19 @@ const Header = memo<{ isScrolled: boolean; onMenuToggle: () => void; isMenuOpen:
           ].join(" ")}
           aria-hidden={!isMenuOpen}
         >
-          {navGroups.map((group) => (
-            <MobileNavGroup key={group.label} item={group} onNavigate={onMenuToggle} />
-          ))}
+          {navGroups.map((group) => {
+            const isGroupOpen = openMobileGroup === group.label;
+
+            return (
+              <MobileNavGroup
+                key={group.label}
+                item={group}
+                open={isGroupOpen}
+                onNavigate={onMenuToggle}
+                onToggle={() => setOpenMobileGroup(isGroupOpen ? null : group.label)}
+              />
+            );
+          })}
           <NavLink href="/#booking" label={tr.reserve} variant="primary" className="text-center" onClick={onMenuToggle} />
           <div className="pt-2">
             <LangToggle onClick={toggle} currentLang={lang} />
