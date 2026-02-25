@@ -52,13 +52,11 @@ export default function ReservationSection({ className }: Props) {
   const [tours, setTours] = useState<TourSummary[]>([DEFAULT_BOOKABLE_TOUR]);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const requestedTourSlug = searchParams.get("tour");
-  const initialTourSlug = useMemo(() => {
-    if (!requestedTourSlug) return null;
-    return tours.some((tour) => tour.slug === requestedTourSlug)
-      ? requestedTourSlug
-      : null;
-  }, [requestedTourSlug, tours]);
+
+  const requestedTourSlug = searchParams.get("tour") ?? "";
+  const initialSelectedTourSlug = tours.some((tour) => tour.slug === requestedTourSlug)
+    ? requestedTourSlug
+    : DEFAULT_BOOKABLE_TOUR.slug;
 
   // Fetch tour info from MongoDB on mount
   useEffect(() => {
@@ -151,7 +149,7 @@ export default function ReservationSection({ className }: Props) {
         currentYear={currentYear}
         tourInfo={tourInfo}
         tours={tours}
-        initialTourSlug={initialTourSlug}
+        initialSelectedTourSlug={initialSelectedTourSlug}
       />
     </div>
   );

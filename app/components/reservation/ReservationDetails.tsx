@@ -249,7 +249,7 @@ type Props = {
   currentYear: number;
   tourInfo?: MainTourInfo | null;
   tours: TourSummary[];
-  initialTourSlug?: string | null;
+  initialSelectedTourSlug?: string;
 };
 
 export default function ReservationDetails({
@@ -262,7 +262,7 @@ export default function ReservationDetails({
   currentYear,
   tourInfo,
   tours,
-  initialTourSlug,
+  initialSelectedTourSlug,
 }: Props) {
   const { lang } = useLanguage();
   const tr = translations[lang].reservation;
@@ -285,7 +285,17 @@ export default function ReservationDetails({
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
   const [manualSelectedTourSlug, setManualSelectedTourSlug] = useState<string | null>(null);
 
-  const selectedTourSlug = manualSelectedTourSlug ?? initialTourSlug ?? tours[0]?.slug ?? "tour-ciudad-esmeralda";
+  const selectedTourSlug = useMemo(() => {
+    if (manualSelectedTourSlug && tours.some((tour) => tour.slug === manualSelectedTourSlug)) {
+      return manualSelectedTourSlug;
+    }
+
+    if (initialSelectedTourSlug && tours.some((tour) => tour.slug === initialSelectedTourSlug)) {
+      return initialSelectedTourSlug;
+    }
+
+    return tours[0]?.slug ?? "tour-ciudad-esmeralda";
+  }, [manualSelectedTourSlug, initialSelectedTourSlug, tours]);
 
   const selectedTour = useMemo(
     () => tours.find((tour) => tour.slug === selectedTourSlug) ?? tours[0] ?? null,
