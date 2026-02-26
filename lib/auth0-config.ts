@@ -12,10 +12,28 @@ function normalizeAuth0Domain(input?: string | null): string | undefined {
   return domain || undefined;
 }
 
+function normalizeAuth0Issuer(input?: string | null): string | undefined {
+  const trimmed = input?.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+
+  const withProtocol = protocolPattern.test(trimmed) ? trimmed : `https://${trimmed}`;
+
+  try {
+    const url = new URL(withProtocol);
+    return `${url.protocol}//${url.host}`;
+  } catch {
+    return undefined;
+  }
+}
+
 export function getAuth0Issuer(): string | undefined {
-  const issuer = process.env.AUTH0_ISSUER_BASE_URL?.trim();
+  const issuer = normalizeAuth0Issuer(
+    process.env.AUTH0_ISSUER_BASE_URL ?? process.env.AUTH0_ISSUER
+  );
   if (issuer) {
-    return issuer.replace(/\/+$/, "");
+    return issuer;
   }
 
   const domain = normalizeAuth0Domain(process.env.AUTH0_DOMAIN);
