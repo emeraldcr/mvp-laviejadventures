@@ -3,7 +3,7 @@
 // locations in the San Carlos / Juan Castro Blanco area of Costa Rica.
 
 import { NextResponse } from "next/server";
-import type { LocationWeather } from "@/lib/types";
+import type { LocationWeather } from "@/types";
 
 const CACHE_TTL = 1800; // 30 min – regional forecast doesn't change as fast
 

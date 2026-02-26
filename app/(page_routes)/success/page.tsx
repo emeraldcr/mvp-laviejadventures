@@ -9,7 +9,7 @@ import {
 import nodemailer from "nodemailer";
 import { getDb } from "@/lib/mongodb";
 import { auth } from "@/auth";
-import type { BookingRecord, SendEmailParams, SuccessPageProps } from "@/lib/types";
+import type { BookingRecord, SendEmailParams, SuccessPageProps } from "@/types";
 export const dynamic = "force-dynamic";
 
 

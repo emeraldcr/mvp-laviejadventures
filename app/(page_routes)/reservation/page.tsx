@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMemo } from "react";
 import { useLanguage } from "@/app/context/LanguageContext";
 import PaymentCheckoutContent from "@/app/components/reservation/PaymentCheckoutContent";
-import type { OrderDetails } from "@/lib/types";
+import type { OrderDetails } from "@/types";
 import { translations } from "@/lib/translations";
 
 const RESERVATION_RETURN_KEY = "reservationReturnPath";

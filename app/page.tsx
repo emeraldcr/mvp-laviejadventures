@@ -11,7 +11,7 @@ import { motion } from "framer-motion";
 import { CalendarDays, ClipboardList, MessageCircleHeart, Sparkles, Wand2 } from "lucide-react";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { useSession, signIn, signOut } from "next-auth/react";
-import Profile from "../src/components/Profile";
+import Profile from "@/src/components/Profile";
 
 function AILandingIntro() {
   const { lang } = useLanguage();

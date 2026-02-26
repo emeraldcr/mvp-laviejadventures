@@ -1,7 +1,7 @@
 // components/ReservationDetails.tsx
 import Link from "next/link";
 import { TOUR_INFO } from "@/lib/tour-info";
-import { AvailabilityMap, MainTourInfo } from "@/lib/types";
+import { AvailabilityMap, MainTourInfo } from "@/types";
 import { useState, useMemo, useCallback } from "react";
 import { format } from "date-fns";
 import { es, enUS } from "date-fns/locale";

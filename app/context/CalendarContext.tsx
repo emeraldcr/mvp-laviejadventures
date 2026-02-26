@@ -8,7 +8,7 @@ import {
   useState,
   ReactNode,
 } from "react";
-import { AvailabilityMap } from "@/lib/types";
+import { AvailabilityMap } from "@/types";
 import { generateAvailability } from "@/lib/availability";
 import { useLanguage } from "@/app/context/LanguageContext";
 

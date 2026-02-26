@@ -1,5 +1,5 @@
 import { Activity, TrendingUp, BarChart2, Layers, Scale } from "lucide-react";
-import type { ForecastMethod, ForecastMethods, ForecastPanelProps } from "@/lib/types";
+import type { ForecastMethod, ForecastMethods, ForecastPanelProps } from "@/types";
 
 const METHOD_META: Record<keyof ForecastMethods, { icon: React.ReactNode; color: string }> = {
   ema:               { icon: <Activity   className="w-4 h-4 text-blue-400"   />, color: "text-blue-300"   },

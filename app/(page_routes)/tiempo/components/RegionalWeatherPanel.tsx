@@ -1,7 +1,7 @@
 "use client";
 
 import { Thermometer, Droplets, Wind, CloudRain, MapPin, Calendar } from "lucide-react";
-import type { LocationWeather, RegionalWeatherPanelProps } from "@/lib/types";
+import type { LocationWeather, RegionalWeatherPanelProps } from "@/types";
 
 // Day-of-week in Spanish
 function dayLabel(dateStr: string, index: number): string {

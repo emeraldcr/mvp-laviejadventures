@@ -3,7 +3,7 @@
 
 import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/lib/translations";
-import type { SuccessClientProps } from "@/lib/types";
+import type { SuccessClientProps } from "@/types";
 import Link from "next/link";
 
 export function SuccessClient({
