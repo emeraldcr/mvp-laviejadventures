@@ -11,7 +11,7 @@ import {
   Cell,
   ReferenceLine,
 } from "recharts";
-import type { DailyRainEntry } from "@/lib/types";
+import type { DailyRainEntry } from "@/types";
 
 function getBarColor(mm: number): string {
   if (mm >= 50) return "#ef4444"; // red – extreme

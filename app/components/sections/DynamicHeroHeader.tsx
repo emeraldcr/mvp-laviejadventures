@@ -15,7 +15,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
-import { useInterval } from "../../hooks/useInterval";
+import { useInterval } from "@/app/hooks/useInterval";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/lib/translations";
 import { useSession, signOut } from "next-auth/react";

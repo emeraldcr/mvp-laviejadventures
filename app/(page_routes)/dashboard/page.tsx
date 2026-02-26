@@ -19,8 +19,8 @@ import {
 import React, { useState, useEffect } from "react";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { useSession, signIn } from "next-auth/react";
-import LogoutButton from "../../../src/components/LogoutButton";
-import Profile from "../../../src/components/Profile";
+import LogoutButton from "@/src/components/LogoutButton";
+import Profile from "@/src/components/Profile";
 
 type Booking = {
     id: string;

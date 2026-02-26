@@ -4,7 +4,7 @@ import React, { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/lib/translations";
-import type { OrderDetails } from "@/lib/types";
+import type { OrderDetails } from "@/types";
 
 declare global {
   interface Window {

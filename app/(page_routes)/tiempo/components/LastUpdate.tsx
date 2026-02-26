@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { LastUpdateProps } from "@/lib/types";
+import type { LastUpdateProps } from "@/types";
 
 export default function LastUpdate({ lastUpdateISO }: LastUpdateProps) {
   const [relative, setRelative] = useState("");

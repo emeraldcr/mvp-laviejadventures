@@ -1,5 +1,5 @@
 import { ObjectId } from "mongodb";
-import { getDb } from "../mongodb";
+import { getDb } from "@/lib/mongodb";
 
 export interface OperatorBooking {
   _id?: ObjectId;

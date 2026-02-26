@@ -1,6 +1,6 @@
 // dashboard/components/RainStatusCard.tsx
 import { TrendingUp, TrendingDown } from "lucide-react";
-import type { RainStatusCardProps } from "@/lib/types";
+import type { RainStatusCardProps } from "@/types";
 
 const colorMap = {
   green: "bg-green-600/30 border-green-500 text-green-300",

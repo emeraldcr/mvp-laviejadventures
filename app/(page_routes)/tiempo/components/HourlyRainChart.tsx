@@ -14,7 +14,7 @@ import {
 } from "recharts";
 import { format, parseISO, parse, isValid } from "date-fns";
 import { es } from "date-fns/locale";
-import type { HourlyRainEntry } from "@/lib/types";
+import type { HourlyRainEntry } from "@/types";
 
 type HourlyTooltipProps = {
   active?: boolean;

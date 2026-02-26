@@ -1,5 +1,5 @@
 import { CloudRain, Clock, CalendarDays, AlertTriangle, Droplet } from "lucide-react";
-import type { AccumulationStatsProps } from "@/lib/types";
+import type { AccumulationStatsProps } from "@/types";
 
 export default function AccumulationStats({
   last1h,

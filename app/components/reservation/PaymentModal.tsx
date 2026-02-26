@@ -3,7 +3,7 @@
 import React, { useEffect, useRef } from "react";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/lib/translations";
-import type { PaymentModalProps } from "@/lib/types";
+import type { PaymentModalProps } from "@/types";
 import PaymentCheckoutContent from "@/app/components/reservation/PaymentCheckoutContent";
 
 export default function PaymentModal({

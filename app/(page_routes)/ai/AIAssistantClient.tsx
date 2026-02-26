@@ -4,7 +4,7 @@ import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { ArrowLeft, Bot, SendHorizonal } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { OrderDetails } from "@/lib/types";
+import type { OrderDetails } from "@/types";
 
 type BookingState = {
   date: string | null;
