@@ -3,12 +3,11 @@ import Auth0Provider from "next-auth/providers/auth0";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { findUserByEmail, upsertUserFromAuth0 } from "@/lib/models/user";
-import { getAuth0Issuer, getAuth0RedirectProxyUrl } from "@/lib/auth0-config";
+import { getAuth0Issuer } from "@/lib/auth0-config";
 
 const auth0ClientId = process.env.AUTH0_CLIENT_ID?.trim();
 const auth0ClientSecret = process.env.AUTH0_CLIENT_SECRET?.trim();
 const auth0Issuer = getAuth0Issuer();
-const auth0RedirectProxyUrl = getAuth0RedirectProxyUrl();
 
 const hasAuth0Config = Boolean(auth0ClientId && auth0ClientSecret && auth0Issuer);
 
@@ -55,7 +54,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             clientId: auth0ClientId!,
             clientSecret: auth0ClientSecret!,
             issuer: auth0Issuer!,
-            ...(auth0RedirectProxyUrl ? { redirectProxyUrl: auth0RedirectProxyUrl } : {}),
             authorization: {
               params: {
                 scope: "openid profile email",
