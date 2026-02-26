@@ -61,12 +61,11 @@ export function getAuth0PasswordResetUrl(): string | undefined {
   return domain ? `https://${domain}/dbconnections/change_password` : undefined;
 }
 
-export function getAuth0CallbackUrl(): string | undefined {
-  const explicitCallback = normalizeAbsoluteUrl(process.env.AUTH0_CALLBACK_URL);
-  if (explicitCallback) {
-    return explicitCallback;
+export function getAuth0RedirectProxyUrl(): string | undefined {
+  const explicitProxy = normalizeAbsoluteUrl(process.env.AUTH0_REDIRECT_PROXY_URL);
+  if (explicitProxy) {
+    return explicitProxy;
   }
 
-  const appBaseUrl = normalizeAbsoluteUrl(process.env.APP_BASE_URL ?? process.env.AUTH_URL);
-  return appBaseUrl ? `${appBaseUrl}/api/auth/callback/auth0` : undefined;
+  return undefined;
 }
