@@ -105,7 +105,13 @@ const es = {
           "Experiencia exclusiva para tu grupo. Solo disponible de lunes a viernes.",
       },
     },
-    perPerson: "por persona",
+    perPerson: "persona",
+    priceFrom: "Desde",
+    packageFootnotes: {
+      capacity: "Grupos reducidos para una experiencia más cómoda y segura.",
+      photo: "Rutas pensadas para capturar los mejores paisajes del recorrido.",
+      support: "Operación local con protocolos de seguridad y acompañamiento continuo.",
+    },
     nameRequired: "El nombre es obligatorio.",
     emailInvalid: "Por favor, introduce un correo electrónico válido.",
     phoneInvalid:
@@ -240,7 +246,7 @@ const es = {
     featuredDesc:
       "Nuestro tour insignia a través del Cañón del Río La Vieja. Una jornada de aventura, agua y naturaleza virgen que no olvidarás.",
     from: "Desde",
-    perPerson: "por persona",
+    perPerson: "persona",
     bookNow: "Reservar ahora",
     alternativesTitle: "Tours Alternativos",
     experiences: "experiencias",
@@ -367,7 +373,13 @@ const en = {
           "Exclusive experience for your group. Only available Monday to Friday.",
       },
     },
-    perPerson: "per person",
+    perPerson: "person",
+    priceFrom: "From",
+    packageFootnotes: {
+      capacity: "Small groups for a more comfortable and safe experience.",
+      photo: "Routes designed to capture the best landscapes along the journey.",
+      support: "Local operation with safety protocols and continuous support.",
+    },
     nameRequired: "Name is required.",
     emailInvalid: "Please enter a valid email address.",
     phoneInvalid: "Invalid phone number. Suggested format: #### ####.",
@@ -501,7 +513,7 @@ const en = {
     featuredDesc:
       "Our flagship tour through the La Vieja River Canyon. A day of adventure, water and untouched nature you won't forget.",
     from: "From",
-    perPerson: "per person",
+    perPerson: "person",
     bookNow: "Book now",
     alternativesTitle: "Alternative Tours",
     experiences: "experiences",
