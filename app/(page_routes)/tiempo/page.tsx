@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import {
   BarChart, Bar, LineChart, Line, AreaChart, Area,
   XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, ReferenceLine,
@@ -61,8 +62,39 @@ export default function TourWeatherDashboard() {
   return (
     <div className="min-h-screen bg-[#080b0d] text-white font-sans">
 
+      {/* ── Site navbar (consistent with main site) ───────────────────────── */}
+      <header className="sticky top-0 z-30 border-b border-white/10 bg-teal-950/80 backdrop-blur-2xl shadow-[0_10px_40px_rgba(0,0,0,0.6)]">
+        <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 md:px-8">
+          <Link href="/" className="flex items-center gap-3">
+            <Image
+              src="/logo2.jpg"
+              alt="La Vieja Adventures Logo"
+              width={40}
+              height={40}
+              className="rounded-md object-cover shadow-md shadow-black/30"
+              priority
+            />
+            <span className="hidden text-sm font-black tracking-tight text-white sm:inline md:text-base">
+              La Vieja Adventures
+            </span>
+          </Link>
+
+          <nav className="flex items-center gap-2 text-xs font-semibold text-zinc-200 md:gap-4 md:text-sm">
+            <Link href="/tours" className="transition-colors hover:text-white">Tours</Link>
+            <Link href="/galeria" className="transition-colors hover:text-white">Galería</Link>
+            <Link href="/ai" className="transition-colors hover:text-white">AI</Link>
+            <Link
+              href="/#booking"
+              className="rounded-full border border-teal-300/40 bg-teal-400/10 px-3 py-1 text-teal-200 transition hover:bg-teal-400/20"
+            >
+              Reservar
+            </Link>
+          </nav>
+        </div>
+      </header>
+
       {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <div className="sticky top-0 z-20 bg-[#080b0d]/90 backdrop-blur-xl border-b border-white/6">
+      <div className="sticky top-16 z-20 bg-[#080b0d]/90 backdrop-blur-xl border-b border-white/6">
         <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link
