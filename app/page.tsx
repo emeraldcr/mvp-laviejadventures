@@ -8,92 +8,10 @@ import DynamicHeroHeader from "@/app/components/sections/DynamicHeroHeader";
 import ErrorBoundary from "@/lib/errorBoundary";
 import { CalendarProvider } from "@/app/context/CalendarContext";
 import { motion } from "framer-motion";
-import { CalendarDays, ClipboardList, MessageCircleHeart, Sparkles, Wand2 } from "lucide-react";
+import { CalendarDays, ClipboardList } from "lucide-react";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { useSession, signIn, signOut } from "next-auth/react";
 import Profile from "@/src/components/Profile";
-
-function AILandingIntro() {
-  const { lang } = useLanguage();
-
-  const points = [
-    {
-      icon: Sparkles,
-      es: "Recomendaciones inteligentes para elegir tour según clima, presupuesto y estilo.",
-      en: "Smart recommendations to pick your tour by weather, budget, and vibe.",
-    },
-    {
-      icon: MessageCircleHeart,
-      es: "Resuelve dudas al instante: horarios, transporte, qué llevar y más.",
-      en: "Get instant answers: schedules, transport, what to bring, and more.",
-    },
-    {
-      icon: Wand2,
-      es: "Reserva en segundos con una experiencia conversacional moderna.",
-      en: "Book in seconds with a modern conversational experience.",
-    },
-  ];
-
-  return (
-    <section className="relative overflow-hidden bg-black pt-24 md:pt-32 pb-14 md:pb-20">
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute top-[-120px] left-1/2 -translate-x-1/2 h-[420px] w-[900px] rounded-full bg-cyan-500/10 blur-[130px]" />
-        <div className="absolute top-24 right-[-90px] h-72 w-72 rounded-full bg-emerald-400/10 blur-[110px]" />
-        <div className="absolute bottom-[-60px] left-[-70px] h-80 w-80 rounded-full bg-teal-500/10 blur-[110px]" />
-      </div>
-
-      <div className="relative z-10 container mx-auto px-4 md:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55 }}
-          className="mx-auto max-w-5xl"
-        >
-          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-cyan-300/30 bg-cyan-300/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200">
-            <Sparkles size={14} />
-            {lang === "es" ? "Nueva atracción: La Vieja AI" : "New attraction: La Vieja AI"}
-          </div>
-
-          <h1 className="text-balance text-4xl font-black leading-tight text-white sm:text-5xl md:text-6xl">
-            {lang === "es"
-              ? "La aventura ahora también se conversa."
-              : "Adventure now comes with conversation."}
-          </h1>
-          <p className="mt-6 max-w-3xl text-pretty text-base leading-relaxed text-zinc-300 md:text-xl">
-            {lang === "es"
-              ? "Transformamos el inicio de tu tour en una experiencia AI: te guía, responde tus preguntas y te ayuda a reservar el plan perfecto con estilo moderno y energía aventurera."
-              : "We transformed your tour journey with AI: it guides you, answers your questions, and helps you book the perfect plan with modern style and adventurous energy."}
-          </p>
-
-          <div className="mt-8 flex flex-wrap items-center gap-3">
-            <Link
-              href="/ai"
-              className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-400 to-emerald-400 px-6 py-3 text-sm font-extrabold uppercase tracking-wider text-zinc-950 shadow-[0_18px_45px_rgba(45,212,191,0.35)] transition hover:-translate-y-0.5"
-            >
-              <Sparkles size={16} />
-              {lang === "es" ? "Probar La Vieja AI" : "Try La Vieja AI"}
-            </Link>
-            <a
-              href="#booking"
-              className="inline-flex items-center gap-2 rounded-2xl border border-zinc-600 bg-zinc-900/50 px-6 py-3 text-sm font-semibold text-zinc-200 transition hover:border-cyan-300/60 hover:text-cyan-200"
-            >
-              {lang === "es" ? "Reservar ahora" : "Book now"}
-            </a>
-          </div>
-
-          <div className="mt-9 grid gap-3 md:grid-cols-3">
-            {points.map(({ icon: Icon, es, en }) => (
-              <div key={es} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-sm">
-                <Icon size={18} className="mb-3 text-emerald-300" />
-                <p className="text-sm leading-relaxed text-zinc-300">{lang === "es" ? es : en}</p>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-      </div>
-    </section>
-  );
-}
 
 function BookingSection() {
   const { lang } = useLanguage();
@@ -216,8 +134,8 @@ function BookingSection() {
           <div className="mx-auto max-w-md rounded-2xl border border-zinc-700/60 bg-zinc-900/60 p-8 shadow-xl backdrop-blur-md">
             <p className="action-text mb-6 text-lg text-zinc-300">
               {lang === "es"
-                ? "Inicia sesión para reservar, y luego descubre todo lo que puedes hacer con La Vieja AI."
-                : "Log in to book your tour, then unlock everything you can do with La Vieja AI."}
+                ? "Inicia sesión para reservar tu tour."
+                : "Log in to book your tour."}
             </p>
             <div className="flex flex-col gap-3">
               <button
@@ -226,12 +144,6 @@ function BookingSection() {
               >
                 {lang === "es" ? "Iniciar sesión" : "Log In"}
               </button>
-              <Link
-                href="/ai"
-                className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-cyan-400/50 px-6 py-3 text-sm font-semibold text-cyan-200 transition hover:bg-cyan-400/10"
-              >
-                {lang === "es" ? "Explorar La Vieja AI" : "Explore La Vieja AI"}
-              </Link>
             </div>
           </div>
         )}
@@ -252,7 +164,6 @@ export default function Home(): JSX.Element {
       <CalendarProvider>
         <main className="min-h-screen overflow-x-hidden bg-black">
           <DynamicHeroHeader />
-          <AILandingIntro />
           <BookingSection />
         </main>
       </CalendarProvider>
