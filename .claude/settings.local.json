@@ -5,7 +5,15 @@
       "Bash(python3:*)",
       "Bash(tail:*)",
       "Bash(cd /c/Users/aroja/Documents/GitHub/mvp-laviejadventures && echo \"1427711885990846467-XzGfH1JysbxgZMVLfMHFiaDukfqhE9\" | npx vercel env add AUTH_SECRET production --yes 2>&1)",
-      "Bash(cd /c/Users/aroja/Documents/GitHub/mvp-laviejadventures && npx vercel --prod 2>&1)"
+      "Bash(cd /c/Users/aroja/Documents/GitHub/mvp-laviejadventures && npx vercel --prod 2>&1)",
+      "Bash(git pull:*)",
+      "Bash(vercel:*)",
+      "Bash(git:*)",
+      "Bash(gh pr:*)",
+      "Bash(printf:*)",
+      "Bash(curl:*)",
+      "mcp__claude_ai_Vercel__list_deployments",
+      "mcp__claude_ai_Vercel__get_project"
     ]
   }
 }
