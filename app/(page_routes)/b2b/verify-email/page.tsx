@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Compass, CheckCircle, XCircle, Loader2 } from "lucide-react";
@@ -11,39 +11,65 @@ function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
 
-  const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
-  const [message, setMessage] = useState("");
+  const missingTokenMessage = "No se encontró el token de verificación.";
+  const successMessage = "¡Correo verificado! Redirigiendo al login...";
+
+  const initialState = useMemo(
+    () =>
+      token
+        ? { status: "loading" as const, message: "" }
+        : { status: "error" as const, message: missingTokenMessage },
+    [token],
+  );
+
+  const [{ status, message }, setVerificationState] = useState(initialState);
 
   useEffect(() => {
     if (!token) {
-      setStatus("error");
-      setMessage("No se encontró el token de verificación.");
       return;
     }
 
-    fetch(`/api/b2b/auth/verify-email?token=${token}`)
+    const abortController = new AbortController();
+    let redirectTimeout: ReturnType<typeof setTimeout> | undefined;
+
+    const setSuccessState = () => {
+      setVerificationState({ status: "success", message: successMessage });
+      redirectTimeout = setTimeout(() => router.push("/b2b/login?verified=1"), 2000);
+    };
+
+    fetch(`/api/b2b/auth/verify-email?token=${token}`, { signal: abortController.signal })
       .then(async (res) => {
         // The API redirects on success; if we're here with a non-redirect it's an error
         if (res.redirected) {
-          setStatus("success");
-          setMessage("¡Correo verificado! Redirigiendo al login...");
-          setTimeout(() => router.push("/b2b/login?verified=1"), 2000);
+          setSuccessState();
           return;
         }
+
         const data = await res.json();
+
         if (res.ok) {
-          setStatus("success");
-          setMessage("¡Correo verificado! Redirigiendo al login...");
-          setTimeout(() => router.push("/b2b/login?verified=1"), 2000);
+          setSuccessState();
         } else {
-          setStatus("error");
-          setMessage(data.error || "No se pudo verificar el correo.");
+          setVerificationState({
+            status: "error",
+            message: data.error || "No se pudo verificar el correo.",
+          });
         }
       })
-      .catch(() => {
-        setStatus("error");
-        setMessage("Error de conexión. Intenta de nuevo.");
+      .catch((error: unknown) => {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return;
+        }
+
+        setVerificationState({ status: "error", message: "Error de conexión. Intenta de nuevo." });
       });
+
+    return () => {
+      abortController.abort();
+      if (redirectTimeout) {
+        clearTimeout(redirectTimeout);
+      }
+    };
   }, [token, router]);
 
   return (
