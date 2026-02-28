@@ -38,10 +38,10 @@
         "lib/*"
       ],
       "@/types": [
-        "types/index.ts"
+        "lib/types/index.ts"
       ],
       "@/types/*": [
-        "types/*"
+        "lib/types/*"
       ]
     }
   },

@@ -1,6 +1,6 @@
 import { CheckCircle2, AlertTriangle, XCircle } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import type { RainData } from "@/types";
+import type { RainData } from "@/lib/types/index";
 
 // ── Decision type ─────────────────────────────────────────────────────────────
 

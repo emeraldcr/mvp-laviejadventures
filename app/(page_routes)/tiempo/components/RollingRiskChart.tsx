@@ -13,7 +13,7 @@ import {
 } from "recharts";
 import { parseISO, format } from "date-fns";
 import { es } from "date-fns/locale";
-import type { RollingRiskEntry } from "@/types";
+import type { RollingRiskEntry } from "@/lib/types/index";
 
 type RollingTooltipProps = {
   active?: boolean;

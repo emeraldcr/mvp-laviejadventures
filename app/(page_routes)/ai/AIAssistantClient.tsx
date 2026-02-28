@@ -4,7 +4,7 @@ import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { ArrowLeft, Bot, SendHorizonal } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import type { OrderDetails } from "@/types";
+import type { OrderDetails } from "@/lib/types/index";
 import {
   FIELD_LABELS,
   INITIAL_BOOKING_STATE,

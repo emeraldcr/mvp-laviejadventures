@@ -8,8 +8,8 @@ import {
 
 import { Resend } from "resend";
 import { getDb } from "@/lib/mongodb";
-import { auth } from "@/auth";
-import type { BookingRecord, SendEmailParams, SuccessPageProps } from "@/types";
+import { auth } from "@/lib/auth";
+import type { BookingRecord, SendEmailParams, SuccessPageProps } from "@/lib/types/index";
 export const dynamic = "force-dynamic";
 
 

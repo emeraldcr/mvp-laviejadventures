@@ -1,5 +1,5 @@
 import { Thermometer, Droplets } from "lucide-react";
-import type { WeatherMetrics } from "@/types";
+import type { WeatherMetrics } from "@/lib/types/index";
 
 export default function WeatherMetricsPanel({ metrics }: { metrics: WeatherMetrics }) {
   if (!metrics.hasData) return null;

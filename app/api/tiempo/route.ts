@@ -14,7 +14,7 @@ import {
   round1,
   weightedMovingAverage,
 } from "./helpers";
-import { ABBREVIATIONS, CACHE_TTL_SECONDS, FETCH_HEADERS, IMN_URL } from "@/types/tiempo-api";
+import { ABBREVIATIONS, CACHE_TTL_SECONDS, FETCH_HEADERS, IMN_URL } from "@/lib/types/tiempo-api";
 
 
 function estimateRiverLevel(sumLluvMm: number) {

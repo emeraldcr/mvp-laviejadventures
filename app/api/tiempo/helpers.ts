@@ -8,7 +8,7 @@ import type {
   RainStatus,
   RiskDescriptor,
   TiempoSections,
-} from "@/types/tiempo-api";
+} from "@/lib/types/tiempo-api";
 
 export function safeParseFloat(s?: string): number {
   if (!s) return 0;
