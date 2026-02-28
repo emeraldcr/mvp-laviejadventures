@@ -15,6 +15,7 @@ import {
   TreePine,
 } from "lucide-react";
 import React from "react";
+import Image from "next/image";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/lib/translations";
 
@@ -130,6 +131,43 @@ export default function InfoPage() {
               <p>{tr.ratesText3}</p>
             </div>
           </article>
+        </section>
+
+        <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950 md:p-8">
+          <h2 className="mb-5 flex items-center gap-2 text-2xl font-semibold text-zinc-900 dark:text-white">
+            <Mountain size={20} className="text-emerald-600" />
+            {tr.storyTitle}
+          </h2>
+
+          <div className="space-y-8">
+            {tr.storyParagraphs.map((paragraph, index) => {
+              const images = [
+                "/image/IMG_6813.jpg",
+                "/image/IMG_6805.jpg",
+                "/image/IMG_4522.jpg",
+              ];
+
+              return (
+                <article
+                  key={paragraph}
+                  className={`grid items-center gap-5 ${index % 2 === 0 ? "md:grid-cols-[1.1fr_0.9fr]" : "md:grid-cols-[0.9fr_1.1fr]"}`}
+                >
+                  <p className={`text-base leading-relaxed text-zinc-700 dark:text-zinc-300 ${index % 2 === 1 ? "md:order-2" : ""}`}>
+                    {paragraph}
+                  </p>
+                  <div className={`relative h-52 overflow-hidden rounded-2xl ${index % 2 === 1 ? "md:order-1" : ""}`}>
+                    <Image
+                      src={images[index]}
+                      alt={lang === "es" ? `Momento de la experiencia Ciudad Esmeralda ${index + 1}` : `Ciudad Esmeralda experience moment ${index + 1}`}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, 40vw"
+                    />
+                  </div>
+                </article>
+              );
+            })}
+          </div>
         </section>
 
         <section className="grid gap-6 md:grid-cols-[1.1fr_0.9fr]">
