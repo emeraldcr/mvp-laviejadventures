@@ -5,7 +5,7 @@ import {
   buildForecastChart,
   buildRiskChart,
   buildDailyChart,
-} from "@/app/lib/tiempoHelpers";
+} from "@/lib/tiempoHelpers";
 import type { RainData, RegionalData } from "@/types";
 import type { WeatherSnapshot } from "@/lib/weatherMessageHelpers";
 

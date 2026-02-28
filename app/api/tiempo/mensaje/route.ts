@@ -14,7 +14,7 @@ import {
   WEATHER_MESSAGE_MAX_TOKENS,
   WEATHER_MESSAGE_MODEL,
   WEATHER_MESSAGE_TEMPERATURE,
-} from "@/app/lib/weatherMessageConstants";
+} from "@/lib/weatherMessageConstants";
 
 const client = new Anthropic(); // uses ANTHROPIC_API_KEY from env
 
