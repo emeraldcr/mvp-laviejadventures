@@ -7,7 +7,7 @@ import {
   buildDailyChart,
 } from "@/app/lib/tiempoHelpers";
 import type { RainData, RegionalData } from "@/types";
-import type { WeatherSnapshot } from "@/app/lib/weatherMessageHelpers";
+import type { WeatherSnapshot } from "@/lib/weatherMessageHelpers";
 
 const RELOAD_COOLDOWN_SECS = 30;
 

@@ -5,7 +5,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
-import { buildSystemPrompt, buildUserPrompt, type WeatherSnapshot } from "@/app/lib/weatherMessageHelpers";
+import { buildSystemPrompt, buildUserPrompt, type WeatherSnapshot } from "@/lib/weatherMessageHelpers";
 import {
   WEATHER_MESSAGE_CACHE_HEADERS,
   WEATHER_MESSAGE_DEFAULT_TEXT,

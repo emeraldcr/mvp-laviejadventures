@@ -6,7 +6,7 @@
  * Fetches a fresh message from Anthropic every time the parent triggers a refresh.
  */
 import { useEffect, useState } from "react";
-import type { WeatherSnapshot } from "@/app/lib/weatherMessageHelpers";
+import type { WeatherSnapshot } from "@/lib/weatherMessageHelpers";
 
 type Props = { snap: WeatherSnapshot | null };
 
