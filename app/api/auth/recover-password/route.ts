@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
 
     const user = await findUserByEmail(normalizedEmail);
 
-    if (user?._id && user.passwordHash) {
+    if (user?._id) {
       const token = crypto.randomBytes(32).toString("hex");
       const expiry = new Date(Date.now() + 1000 * 60 * 60);
 
