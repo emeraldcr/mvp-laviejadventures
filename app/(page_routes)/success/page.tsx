@@ -147,7 +147,7 @@ async function sendConfirmationEmail(params: SendEmailParams) {
   const toEmail = params.to || adminEmail;
   const from =
     process.env.SMTP_FROM ||
-    `"La Vieja Adventures" <noreply@laviejadventures.com>`;
+    `"La Vieja Adventures" <noreply@laviejaadventures.com>`;
 
   const html = createMailBody(params);
 
