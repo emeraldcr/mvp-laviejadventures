@@ -12,8 +12,8 @@ const es = {
   },
   hero: {
     title: "Ciudad Esmeralda",
-    subtitle: "Selecciona tu fecha para",
-    subtitleBold: "vivir la aventura",
+    subtitle: "Una experiencia muy especial para",
+    subtitleBold: "descubrir tus propios límites",
   },
   calendar: {
     step: "Paso 1 · Fecha",
@@ -191,34 +191,40 @@ const es = {
   gallery: {
     title: "Galería La Vieja Adventures",
     description:
-      "Imágenes representativas de nuestros tours: Ciudad Esmeralda, cuadra-tours, cabaños, senderos, cascadas, gastronomía, lluvia en la naturaleza, avistamiento de aves, tours nocturnos, rapel, y caminatas por volcanes del Parque Nacional del Agua Juan Castro Blanco.",
+      "Imágenes reales de nuestra aventura en Ciudad Esmeralda: senderos del bosque nuboso, aguas cristalinas del Río La Vieja, paredes del cañón de hasta 180 metros y momentos inolvidables bajo el histórico Puente sobre el Río La Vieja.",
   },
   info: {
     badge: "Experiencias auténticas en Costa Rica",
     title: "Información General - La Vieja Adventures",
     description:
-      "Somos una empresa dedicada a experiencias de naturaleza en la zona norte de Costa Rica. Operamos tours guiados en el Cañón del Río La Vieja, Ciudad Esmeralda, volcanes dormidos del Parque Nacional del Agua Juan Castro Blanco y más.",
+      "Vive Ciudad Esmeralda como una travesía única: caminamos por senderos del bosque nuboso en un corredor biológico entre Monteverde y la montaña sagrada del Parque Nacional del Agua Juan Castro Blanco, descubriendo naturaleza, historia y superación personal en cada paso.",
     bookWhatsApp: "Reservar por WhatsApp",
     callNow: "Llamar ahora",
     mainToursTitle: "Tours Principales",
     ratesTitle: "Tarifas y Condiciones",
     ratesText1:
-      "Todos los tours tienen un rango de precios entre ₡19.990 (fines de semana en grupos) y ₡34.990 (reservas individuales entre semana).",
+      "Nuestros tours se ajustan a distintos estilos de viaje: desde ₡19.990 (fines de semana en grupo) hasta ₡34.990 (reservas individuales entre semana).",
     ratesText2:
-      "Los tours dependen del clima para garantizar seguridad. En caso de lluvias fuertes, crecientes del río o inestabilidad en el terreno, podríamos mover, reprogramar o cancelar la experiencia.",
+      "La seguridad siempre va primero. Si hay lluvias fuertes, crecientes del río o condiciones inestables en el terreno, reprogramamos o ajustamos la experiencia para cuidarte en todo momento.",
     ratesText3:
-      "Cada tour cuenta con su propia política de reembolso según tipo de actividad y logística requerida; usualmente aplican opciones de reprogramación, créditos o reembolsos parciales.",
+      "Cada actividad tiene políticas claras y humanas según su logística: te acompañamos con opciones de reprogramación, créditos o reembolsos parciales cuando corresponda.",
+    storyTitle: "Una historia que se siente en cada tramo",
+    storyParagraphs: [
+      "Durante el tour pasamos bajo el legendario patrimonio arquitectónico olvidado: el Puente sobre el Río La Vieja, un sitio cargado de historias de miedo, respeto y sabiduría de nuestros antepasados.",
+      "El Río La Vieja nace a apenas 13 km de esta ruta. Sus aguas cristalinas y las paredes del cañón, que alcanzan hasta 180 metros de altura, crean un escenario natural que inspira y transforma.",
+      "Somos un proyecto familiar formado por 7 hermanos. Nuestro propósito es ser referentes en turismo responsable con guías certificados, atención de emergencias y programas locales de sostenibilidad.",
+    ],
     whyTitle: "¿Por qué elegirnos?",
-    why1: "Guías certificados, equipo de operaciones especializado y atención personalizada.",
-    why2: "Rutas auténticas en cañones, cascadas y volcanes dormidos.",
-    why3: "Experiencias para todo nivel: aventura, fotografía y naturaleza.",
-    why4: "Ubicación estratégica en la zona norte de Costa Rica.",
+    why1: "Guías certificados, protocolos de atención de emergencias y acompañamiento cercano.",
+    why2: "Rutas auténticas por bosque nuboso, cañón, río y conexión con montaña sagrada.",
+    why3: "Proyecto familiar de 7 hermanos con trato cálido y propósito real.",
+    why4: "Compromiso activo con sostenibilidad local y turismo consciente.",
     contactTitle: "Contacto y Redes",
     phoneLabel: "Teléfono:",
     emailLabel: "Email:",
     locationLabel: "Ubicación:",
     tours: [
-      "Ciudad Esmeralda – nuestro tour estrella en el cañón del río.",
+      "Ciudad Esmeralda – nuestra experiencia insignia para retarte y conectar con la naturaleza.",
       "Cuadra-tours por senderos privados.",
       "Caminatas a cascadas escondidas.",
       "Tour gastronómico con cocina local.",
@@ -233,12 +239,12 @@ const es = {
     badge: "La Vieja Adventures",
     title: "Nuestros Tours",
     description:
-      "Cada aventura es única. Elige la experiencia que más resuene contigo y vívela con guías certificados.",
+      "Cada aventura está diseñada para emocionar, inspirar y cuidarte. Elige la experiencia que más resuene contigo y vívela con guías certificados.",
     featuredLabel: "Tour Estrella",
     mostBooked: "Más Reservado",
     featuredTitle: "Ciudad Esmeralda",
     featuredDesc:
-      "Nuestro tour insignia a través del Cañón del Río La Vieja. Una jornada de aventura, agua y naturaleza virgen que no olvidarás.",
+      "Nuestro tour insignia en el Cañón del Río La Vieja: senderos del bosque nuboso, aguas cristalinas, paso bajo el histórico puente y vistas imponentes que te invitan a superar tus límites.",
     from: "Desde",
     perPerson: "por persona",
     bookNow: "Reservar ahora",
@@ -275,8 +281,8 @@ const en = {
   },
   hero: {
     title: "Ciudad Esmeralda",
-    subtitle: "Select your date to",
-    subtitleBold: "live the adventure",
+    subtitle: "A truly special experience to",
+    subtitleBold: "discover your own limits",
   },
   calendar: {
     step: "Step 1 · Date",
@@ -452,34 +458,40 @@ const en = {
   gallery: {
     title: "La Vieja Adventures Gallery",
     description:
-      "Representative images of our tours: Ciudad Esmeralda, ATV tours, cabins, trails, waterfalls, gastronomy, rain in nature, birdwatching, night tours, rappelling, and hikes through the volcanoes of Juan Castro Blanco National Water Park.",
+      "Real moments from our Ciudad Esmeralda experience: cloud-forest trails, crystal-clear waters of La Vieja River, canyon walls up to 180 meters high, and unforgettable scenes beneath the historic bridge over La Vieja River.",
   },
   info: {
     badge: "Authentic experiences in Costa Rica",
     title: "General Information - La Vieja Adventures",
     description:
-      "We are a company dedicated to nature experiences in the northern zone of Costa Rica. We operate guided tours in the La Vieja River Canyon, Ciudad Esmeralda, dormant volcanoes of Juan Castro Blanco National Water Park and more.",
+      "Experience Ciudad Esmeralda as a unique journey: we walk cloud-forest trails in a biological corridor between Monteverde and the sacred mountain of Juan Castro Blanco National Water Park, blending nature, history, and personal growth.",
     bookWhatsApp: "Book via WhatsApp",
     callNow: "Call now",
     mainToursTitle: "Main Tours",
     ratesTitle: "Rates & Conditions",
     ratesText1:
-      "All tours are priced between ₡19,990 (weekends in groups) and ₡34,990 (individual bookings on weekdays).",
+      "Our tours fit different travel styles: from ₡19,990 (group weekends) to ₡34,990 (individual weekday bookings).",
     ratesText2:
-      "Tours depend on weather conditions to ensure safety. In case of heavy rain, river flooding, or terrain instability, we may reschedule or cancel the experience.",
+      "Safety always comes first. If we face heavy rain, river flooding, or unstable terrain, we reschedule or adapt the experience to keep everyone safe.",
     ratesText3:
-      "Each tour has its own refund policy based on activity type and logistics; rescheduling, credits, or partial refunds usually apply.",
+      "Each activity has clear and fair policies based on logistics: we support you with rescheduling options, credits, or partial refunds when applicable.",
+    storyTitle: "A story felt in every section of the route",
+    storyParagraphs: [
+      "During the tour we pass beneath the legendary, often-forgotten architectural heritage: the Bridge over La Vieja River, a place filled with stories of fear, wisdom, and ancestral memory.",
+      "La Vieja River is born only 13 km from this route. Its crystal-clear waters and canyon walls rising up to 180 meters create a landscape that inspires and transforms.",
+      "We are a family project formed by 7 siblings. Our mission is to become a tourism benchmark through certified guides, emergency readiness, and local sustainability programs.",
+    ],
     whyTitle: "Why choose us?",
-    why1: "Certified guides, specialized operations team and personalized attention.",
-    why2: "Authentic routes through canyons, waterfalls and dormant volcanoes.",
-    why3: "Experiences for all levels: adventure, photography and nature.",
-    why4: "Strategic location in the northern zone of Costa Rica.",
+    why1: "Certified guides, emergency-response protocols, and close support throughout your experience.",
+    why2: "Authentic routes through cloud forest, canyon, river, and sacred mountain connections.",
+    why3: "A family project of 7 siblings with warm, personalized hosting.",
+    why4: "Active commitment to local sustainability and conscious tourism.",
     contactTitle: "Contact & Social Media",
     phoneLabel: "Phone:",
     emailLabel: "Email:",
     locationLabel: "Location:",
     tours: [
-      "Ciudad Esmeralda – our flagship tour through the river canyon.",
+      "Ciudad Esmeralda – our signature experience to challenge yourself and reconnect with nature.",
       "ATV tours through private trails.",
       "Hikes to hidden waterfalls.",
       "Gastronomic tour with local cuisine.",
@@ -494,12 +506,12 @@ const en = {
     badge: "La Vieja Adventures",
     title: "Our Tours",
     description:
-      "Every adventure is unique. Choose the experience that resonates with you and live it with certified guides.",
+      "Every adventure is designed to inspire, challenge, and protect you. Choose the experience that resonates with you and enjoy it with certified guides.",
     featuredLabel: "Featured Tour",
     mostBooked: "Most Booked",
     featuredTitle: "Ciudad Esmeralda",
     featuredDesc:
-      "Our flagship tour through the La Vieja River Canyon. A day of adventure, water and untouched nature you won't forget.",
+      "Our flagship tour in La Vieja River Canyon: cloud-forest trails, crystal-clear waters, a crossing beneath the historic bridge, and breathtaking views that invite you to push your limits.",
     from: "From",
     perPerson: "per person",
     bookNow: "Book now",
