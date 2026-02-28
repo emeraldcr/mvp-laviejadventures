@@ -29,6 +29,11 @@ type FaqEntry = {
   answer: string;
 };
 
+type CachedResult = {
+  expiresAt: number;
+  value: AssistantResult;
+};
+
 const DEFAULT_RESULT: AssistantResult = {
   reply:
     "¡Pura vida! Te ayudo con la reserva. Para empezar, decime fecha, hora (08:00/09:00/10:00), paquete (basic/full-day/private), cantidad de personas, nombre, correo y teléfono.",
@@ -38,6 +43,9 @@ const DEFAULT_RESULT: AssistantResult = {
 };
 
 const AI_HEADERS = { "Cache-Control": "no-store" };
+const MODEL_NAME = "claude-haiku-4-5";
+const MODEL_CACHE_TTL_MS = 1000 * 60 * 10;
+const modelResponseCache = new Map<string, CachedResult>();
 const DATE_PATTERN_ISO = /\b(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})\b/;
 const DATE_PATTERN_DMY = /\b(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})\b/;
 const EMAIL_PATTERN = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i;
@@ -70,6 +78,23 @@ const FAQ_ENTRIES: FaqEntry[] = [
     answer:
       "Hay reembolso completo con al menos 48 horas de anticipación a la fecha reservada.",
   },
+  {
+    keywords: ["horario", "horarios", "hora disponible", "horas disponibles"],
+    answer: `Tenemos salidas a las ${TOUR_TIME_OPTIONS.join(", ")}. Si querés, te ayudo a elegir la mejor según tu plan del día.`,
+  },
+  {
+    keywords: ["paquete", "plan", "opcion", "opciones", "diferencia"],
+    answer:
+      "Los paquetes disponibles son basic, full-day y private. Si me contás si venís en pareja, familia o grupo, te recomiendo el que mejor les convenga.",
+  },
+];
+
+const LOCAL_COMPLEX_REQUEST_PATTERNS = [
+  /itinerario|cronograma|paso\s+a\s+paso/,
+  /compar|versus|vs\b|diferencia\s+entre/,
+  /politica\s+completa|terminos|condiciones/,
+  /precio|costo|tarifa|descuento/,
+  /explicame\s+mejor|no\s+entiendo|mas\s+detalle/,
 ];
 
 function buildSystemPrompt(state: BookingState) {
@@ -325,9 +350,26 @@ function getFaqAnswer(input: string): string | null {
   return entry?.answer ?? null;
 }
 
+function summarizeProgress(state: BookingState): string {
+  const capturedLabels = [
+    state.date ? "fecha" : null,
+    state.tourTime ? "hora" : null,
+    state.tourPackage ? "paquete" : null,
+    state.tickets ? "personas" : null,
+    state.name ? "nombre" : null,
+    state.email ? "correo" : null,
+    state.phone ? "teléfono" : null,
+  ].filter((value): value is string => Boolean(value));
+
+  if (capturedLabels.length === 0) return "Todavía no tengo datos de la reserva.";
+  if (capturedLabels.length === REQUIRED_BOOKING_FIELDS.length) return "Ya tengo todos los datos requeridos.";
+  return `Ya tengo: ${capturedLabels.join(", ")}.`;
+}
+
 function buildLocalReply(updatedState: BookingState, latestMessage: string): string {
   const missingFields = getMissingFields(updatedState);
   const faqAnswer = getFaqAnswer(latestMessage);
+  const progressSummary = summarizeProgress(updatedState);
 
   if (missingFields.length === 0) {
     return "¡Excelente! Ya tengo todo para tu reserva: fecha, hora, paquete, cantidad, nombre, correo y teléfono. Ahora podés pasar al flujo de reserva y pagar con PayPal.";
@@ -337,21 +379,40 @@ function buildLocalReply(updatedState: BookingState, latestMessage: string): str
   const nextPrompt = NEXT_FIELD_PROMPTS[nextField];
 
   if (faqAnswer) {
-    return `${faqAnswer} Para avanzar con la reserva, ${nextPrompt}`;
+    return `${faqAnswer} ${progressSummary} Para avanzar con la reserva, ${nextPrompt}`;
   }
 
-  return `Perfecto, ya avancé con tus datos. ${nextPrompt} Si querés, podés enviarme varios datos en un solo mensaje y yo completo los huecos automáticamente.`;
+  return `${progressSummary} ${nextPrompt} Si querés, podés enviarme varios datos en un solo mensaje y yo completo los huecos automáticamente.`;
+}
+
+function isComplexRequest(latestMessage: string): boolean {
+  const normalized = normalizeText(latestMessage);
+  return LOCAL_COMPLEX_REQUEST_PATTERNS.some((pattern) => pattern.test(normalized));
 }
 
 function shouldUseModel(previousState: BookingState, inferredState: BookingState, latestMessage: string): boolean {
+  const normalized = normalizeText(latestMessage);
   const prevMissing = getMissingFields(previousState).length;
   const nextMissing = getMissingFields(inferredState).length;
   const hasFaqAnswer = Boolean(getFaqAnswer(latestMessage));
+  const isVeryShort = normalized.trim().length < 8;
+  const madeProgress = nextMissing < prevMissing;
 
-  if (hasFaqAnswer || nextMissing < prevMissing || latestMessage.trim().length < 8) return false;
+  if (isVeryShort || hasFaqAnswer || madeProgress) return false;
 
-  const normalized = normalizeText(latestMessage);
-  return /\?|explic|detalle|recomend|ayuda|no\s+entiendo|diferencia/.test(normalized);
+  const asksForNextStep = /que\s+falta|siguiente\s+paso|que\s+necesitas|que\s+ocupas/.test(normalized);
+  if (asksForNextStep) return false;
+
+  if (isComplexRequest(latestMessage)) return true;
+
+  return /\?/.test(normalized) && nextMissing > 0;
+}
+
+function buildCacheKey(state: BookingState, latestMessage: string): string {
+  return JSON.stringify({
+    state,
+    message: normalizeText(latestMessage).replace(/\s+/g, " ").trim(),
+  });
 }
 
 export async function POST(req: NextRequest) {
@@ -376,8 +437,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const cacheKey = buildCacheKey(inferredState, latestUserMessage);
+    const cached = modelResponseCache.get(cacheKey);
+    if (cached && cached.expiresAt > Date.now()) {
+      return NextResponse.json(cached.value, {
+        headers: { ...AI_HEADERS, "X-AI-Mode": "anthropic-cache-hit" },
+      });
+    }
+    if (cached && cached.expiresAt <= Date.now()) modelResponseCache.delete(cacheKey);
+
     const response = await client.messages.create({
-      model: "claude-haiku-4-5",
+      model: MODEL_NAME,
       max_tokens: 450,
       temperature: 0.3,
       system: buildSystemPrompt(inferredState),
@@ -396,7 +466,13 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    return NextResponse.json(sanitizeResult(parsed, inferredState), {
+    const sanitizedResult = sanitizeResult(parsed, inferredState);
+    modelResponseCache.set(cacheKey, {
+      value: sanitizedResult,
+      expiresAt: Date.now() + MODEL_CACHE_TTL_MS,
+    });
+
+    return NextResponse.json(sanitizedResult, {
       headers: { ...AI_HEADERS, "X-AI-Mode": "anthropic" },
     });
   } catch (error) {
