@@ -21,8 +21,6 @@ const COUNTRY_CODES = [
   { code: "+34", name: "España" },
 ];
 
-const TAX_RATE = 0.13;
-
 // ---------------------- TIME SLOTS ----------------------
 const TIME_SLOTS = [
   { id: "08:00" as const, label: "8:00 AM" },
@@ -278,6 +276,7 @@ type Props = {
   tours: TourSummary[];
   initialSelectedTourSlug?: string;
   hasPreselectedTour?: boolean;
+  ivaRatePercent?: number;
 };
 
 export default function ReservationDetails({
@@ -292,6 +291,7 @@ export default function ReservationDetails({
   tours,
   initialSelectedTourSlug,
   hasPreselectedTour = false,
+  ivaRatePercent = 13,
 }: Props) {
   const { lang } = useLanguage();
   const tr = translations[lang].reservation;
@@ -350,9 +350,10 @@ export default function ReservationDetails({
   const { subtotal, taxes, totalWithTaxes } = useMemo(() => {
     const pricePerPerson = effectiveSelectedPackage?.priceUSD ?? 0;
     const sub = tickets * pricePerPerson;
-    const tax = sub * TAX_RATE;
+    const normalizedTaxRate = Math.max(0, ivaRatePercent) / 100;
+    const tax = sub * normalizedTaxRate;
     return { subtotal: sub, taxes: tax, totalWithTaxes: sub + tax };
-  }, [tickets, effectiveSelectedPackage]);
+  }, [tickets, effectiveSelectedPackage, ivaRatePercent]);
 
   const { formState, handleChange, validation } = useReservationForm({
     name: "",
@@ -722,7 +723,7 @@ export default function ReservationDetails({
             <div className="flex justify-between mb-2"><span>{tr.packageLabel}</span><span className="font-medium">{effectiveSelectedPackage ? tr.packages[effectiveSelectedPackage.id].name : "—"}</span></div>
             <div className="flex justify-between mb-2"><span>{tr.tourTimeTitle}</span><span>{tourTime ?? "—"}</span></div>
             <div className="flex justify-between mb-2"><span>{tr.subtotalLabel}</span><span>${subtotal.toFixed(2)}</span></div>
-            <div className="flex justify-between mb-2"><span>{tr.taxes} ({TAX_RATE * 100}%)</span><span>${taxes.toFixed(2)}</span></div>
+            <div className="flex justify-between mb-2"><span>{tr.taxes} ({ivaRatePercent}%)</span><span>${taxes.toFixed(2)}</span></div>
             <div className="flex justify-between font-bold text-lg border-t pt-2 border-zinc-300 dark:border-zinc-700"><span>{tr.total}</span><span>${totalWithTaxes.toFixed(2)}</span></div>
           </div>
 

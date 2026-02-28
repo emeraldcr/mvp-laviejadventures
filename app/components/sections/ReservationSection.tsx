@@ -50,6 +50,7 @@ export default function ReservationSection({ className }: Props) {
 
   const [tourInfo, setTourInfo] = useState<MainTourInfo | null>(null);
   const [tours, setTours] = useState<TourSummary[]>([DEFAULT_BOOKABLE_TOUR]);
+  const [ivaRatePercent, setIvaRatePercent] = useState<number>(13);
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -66,6 +67,19 @@ export default function ReservationSection({ className }: Props) {
       })
       .catch(() => {
         // silently fall back to static TOUR_INFO inside ReservationDetails
+      });
+
+
+    fetch("/api/settings/iva")
+      .then((r) => r.json())
+      .then((data) => {
+        const nextIvaRate = Number(data?.ivaRate);
+        if (!Number.isNaN(nextIvaRate) && nextIvaRate >= 0) {
+          setIvaRatePercent(nextIvaRate);
+        }
+      })
+      .catch(() => {
+        // keep default IVA when endpoint is unavailable
       });
 
     fetch("/api/tours")
@@ -150,6 +164,7 @@ export default function ReservationSection({ className }: Props) {
         tours={tours}
         initialSelectedTourSlug={initialSelectedTourSlug}
         hasPreselectedTour={hasPreselectedTour}
+        ivaRatePercent={ivaRatePercent}
       />
     </div>
   );
