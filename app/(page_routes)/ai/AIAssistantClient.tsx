@@ -5,43 +5,15 @@ import { ArrowLeft, Bot, SendHorizonal } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { OrderDetails } from "@/types";
-
-type BookingState = {
-  date: string | null;
-  tourTime: "08:00" | "09:00" | "10:00" | null;
-  tourPackage: "basic" | "full-day" | "private" | null;
-  tickets: number | null;
-  name: string | null;
-  email: string | null;
-  phone: string | null;
-  specialRequests: string | null;
-};
-
-type ChatMessage = {
-  role: "user" | "assistant";
-  content: string;
-};
-
-const FIELD_LABELS: Record<string, string> = {
-  date: "Fecha",
-  tourTime: "Hora",
-  tourPackage: "Paquete",
-  tickets: "Personas",
-  name: "Nombre",
-  email: "Correo",
-  phone: "Teléfono",
-};
-
-const INITIAL_STATE: BookingState = {
-  date: null,
-  tourTime: null,
-  tourPackage: null,
-  tickets: null,
-  name: null,
-  email: null,
-  phone: null,
-  specialRequests: null,
-};
+import {
+  FIELD_LABELS,
+  INITIAL_BOOKING_STATE,
+  REQUIRED_BOOKING_FIELDS,
+  TOUR_PACKAGE_OPTIONS,
+  TOUR_TIME_OPTIONS,
+  type BookingState,
+  type ChatMessage,
+} from "@/lib/ai-assistant/shared";
 
 const PACKAGE_PRICE_USD: Record<NonNullable<BookingState["tourPackage"]>, number> = {
   basic: 30,
@@ -53,6 +25,12 @@ const TAX_RATE = 0.13;
 const AI_BOOKING_SESSION_KEY = "aiBookingConversationState";
 const RESERVATION_RETURN_KEY = "reservationReturnPath";
 
+const INITIAL_ASSISTANT_MESSAGE: ChatMessage = {
+  role: "assistant",
+  content:
+    "¡Hola! Soy tu asistente de reservas ✨ Puedo ayudarte a reservar y también responder dudas como ubicación, qué llevar o políticas. ¿Querés comenzar con fecha, hora, paquete y cantidad de personas?",
+};
+
 type PersistedAIState = {
   messages: ChatMessage[];
   state: BookingState;
@@ -62,23 +40,9 @@ type PersistedAIState = {
 
 export default function AIAssistantClient() {
   const router = useRouter();
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      role: "assistant",
-      content:
-        "¡Hola! Soy tu asistente de reservas ✨ Puedo ayudarte a reservar y también responder dudas como ubicación, qué llevar o políticas. ¿Querés comenzar con fecha, hora, paquete y cantidad de personas?",
-    },
-  ]);
-  const [state, setState] = useState<BookingState>(INITIAL_STATE);
-  const [missingFields, setMissingFields] = useState<string[]>([
-    "date",
-    "tourTime",
-    "tourPackage",
-    "tickets",
-    "name",
-    "email",
-    "phone",
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([INITIAL_ASSISTANT_MESSAGE]);
+  const [state, setState] = useState<BookingState>(INITIAL_BOOKING_STATE);
+  const [missingFields, setMissingFields] = useState<string[]>(REQUIRED_BOOKING_FIELDS);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [guidedDate, setGuidedDate] = useState("");
@@ -95,18 +59,10 @@ export default function AIAssistantClient() {
 
     try {
       const persisted = JSON.parse(raw) as PersistedAIState;
-      if (persisted.messages?.length) {
-        setMessages(persisted.messages);
-      }
-      if (persisted.state) {
-        setState(persisted.state);
-      }
-      if (persisted.missingFields) {
-        setMissingFields(persisted.missingFields);
-      }
-      if (typeof persisted.input === "string") {
-        setInput(persisted.input);
-      }
+      if (persisted.messages?.length) setMessages(persisted.messages);
+      if (persisted.state) setState(persisted.state);
+      if (persisted.missingFields) setMissingFields(persisted.missingFields);
+      if (typeof persisted.input === "string") setInput(persisted.input);
     } catch {
       sessionStorage.removeItem(AI_BOOKING_SESSION_KEY);
     }
@@ -185,12 +141,14 @@ export default function AIAssistantClient() {
     redirectToReservation(state);
   }, [missingFields, redirectToReservation, state]);
 
-  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const content = input.trim();
-    if (!content || loading) return;
+  const submitContent = useCallback(async (content: string) => {
+    const trimmed = content.trim();
+    if (!trimmed || loading) return;
 
-    const nextMessages: ChatMessage[] = [...messages, { role: "user", content }];
+    const lastUserContent = [...messages].reverse().find((message) => message.role === "user")?.content.trim();
+    if (lastUserContent && lastUserContent === trimmed) return;
+
+    const nextMessages: ChatMessage[] = [...messages, { role: "user", content: trimmed }];
     setMessages(nextMessages);
     setInput("");
     setLoading(true);
@@ -208,11 +166,11 @@ export default function AIAssistantClient() {
       const data = await response.json();
 
       setMessages((prev) => [...prev, { role: "assistant", content: data.reply }]);
-      setState(data.updatedState ?? INITIAL_STATE);
-      setMissingFields(data.missingFields ?? []);
+      setState(data.updatedState ?? INITIAL_BOOKING_STATE);
+      setMissingFields(data.missingFields ?? REQUIRED_BOOKING_FIELDS);
 
-      const nextState = data.updatedState ?? INITIAL_STATE;
-      const nextMissingFields = data.missingFields ?? [];
+      const nextState = data.updatedState ?? INITIAL_BOOKING_STATE;
+      const nextMissingFields = data.missingFields ?? REQUIRED_BOOKING_FIELDS;
       if (!hasRedirectedRef.current && nextMissingFields.length === 0) {
         redirectToReservation(nextState);
       }
@@ -228,14 +186,25 @@ export default function AIAssistantClient() {
     } finally {
       setLoading(false);
     }
+  }, [loading, messages, redirectToReservation, state]);
+
+  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    await submitContent(input);
   };
 
   const currentGuidedField = missingFields[0] ?? null;
 
-  const addToPrompt = (chunk: string) => {
-    if (!chunk.trim()) return;
-    setInput((prev) => (prev.trim() ? `${prev.trim()} ${chunk.trim()}` : chunk.trim()));
-  };
+  const addToPrompt = useCallback((chunk: string, submit = false) => {
+    const safeChunk = chunk.trim();
+    if (!safeChunk) return;
+
+    setInput((prev) => {
+      const composed = prev.trim() ? `${prev.trim()} ${safeChunk}` : safeChunk;
+      if (submit) void submitContent(composed);
+      return submit ? "" : composed;
+    });
+  }, [submitContent]);
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950 px-4 pt-6 pb-4 text-zinc-100 md:pt-8">
@@ -301,7 +270,7 @@ export default function AIAssistantClient() {
                         className="rounded-lg border border-white/10 bg-white/5 px-3 py-2"
                       />
                     </label>
-                    <button type="button" onClick={() => addToPrompt(`Fecha ${guidedDate}`)} className="rounded-lg border border-emerald-400 bg-emerald-500/20 px-3 py-2 text-emerald-300">
+                    <button type="button" onClick={() => addToPrompt(`Fecha ${guidedDate}`, true)} className="rounded-lg border border-emerald-400 bg-emerald-500/20 px-3 py-2 text-emerald-300">
                       Agregar
                     </button>
                   </div>
@@ -309,8 +278,8 @@ export default function AIAssistantClient() {
 
                 {currentGuidedField === "tourTime" && (
                   <div className="flex flex-wrap gap-2">
-                    {(["08:00", "09:00", "10:00"] as const).map((slot) => (
-                      <button key={slot} type="button" onClick={() => addToPrompt(`Hora ${slot}`)} className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 hover:border-emerald-400 hover:text-emerald-300">
+                    {TOUR_TIME_OPTIONS.map((slot) => (
+                      <button key={slot} type="button" onClick={() => addToPrompt(`Hora ${slot}`, true)} className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 hover:border-emerald-400 hover:text-emerald-300">
                         {slot}
                       </button>
                     ))}
@@ -319,8 +288,8 @@ export default function AIAssistantClient() {
 
                 {currentGuidedField === "tourPackage" && (
                   <div className="flex flex-wrap gap-2">
-                    {(["basic", "full-day", "private"] as const).map((pkg) => (
-                      <button key={pkg} type="button" onClick={() => addToPrompt(`Paquete ${pkg}`)} className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 hover:border-emerald-400 hover:text-emerald-300">
+                    {TOUR_PACKAGE_OPTIONS.map((pkg) => (
+                      <button key={pkg} type="button" onClick={() => addToPrompt(`Paquete ${pkg}`, true)} className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 hover:border-emerald-400 hover:text-emerald-300">
                         {pkg}
                       </button>
                     ))}
@@ -336,7 +305,7 @@ export default function AIAssistantClient() {
                         onChange={(event) => {
                           const selectedTickets = Number(event.target.value);
                           setGuidedTickets(selectedTickets);
-                          addToPrompt(`Somos ${selectedTickets} personas`);
+                          addToPrompt(`Somos ${selectedTickets} personas`, true);
                         }}
                         className="w-28 rounded-lg border border-white/10 bg-white/5 px-3 py-2"
                       >
@@ -347,7 +316,7 @@ export default function AIAssistantClient() {
                         ))}
                       </select>
                     </label>
-                    <p className="text-xs text-zinc-400">Se agrega automáticamente al seleccionar.</p>
+                    <p className="text-xs text-zinc-400">Se envía automáticamente al seleccionar.</p>
                   </div>
                 )}
 
@@ -359,12 +328,18 @@ export default function AIAssistantClient() {
                         id={`guided-${currentGuidedField}`}
                         value={guidedText}
                         onChange={(event) => setGuidedText(event.target.value)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter") {
+                            event.preventDefault();
+                            addToPrompt(`${FIELD_LABELS[currentGuidedField]} ${guidedText.trim()}`, true);
+                          }
+                        }}
                         placeholder={`Tu ${FIELD_LABELS[currentGuidedField].toLowerCase()}`}
                         autoComplete={currentGuidedField === "name" ? "name" : "email"}
                         className="rounded-lg border border-white/10 bg-white/5 px-3 py-2"
                       />
                     </label>
-                    <button type="button" onClick={() => addToPrompt(`${FIELD_LABELS[currentGuidedField]} ${guidedText.trim()}`)} className="rounded-lg border border-emerald-400 bg-emerald-500/20 px-3 py-2 text-emerald-300">
+                    <button type="button" onClick={() => addToPrompt(`${FIELD_LABELS[currentGuidedField]} ${guidedText.trim()}`, true)} className="rounded-lg border border-emerald-400 bg-emerald-500/20 px-3 py-2 text-emerald-300">
                       Agregar
                     </button>
                   </div>
@@ -381,11 +356,17 @@ export default function AIAssistantClient() {
                         autoComplete="tel"
                         value={guidedPhone}
                         onChange={(event) => setGuidedPhone(event.target.value)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter") {
+                            event.preventDefault();
+                            addToPrompt(`${FIELD_LABELS[currentGuidedField]} ${guidedPhone.trim()}`, true);
+                          }
+                        }}
                         placeholder="Tu teléfono"
                         className="rounded-lg border border-white/10 bg-white/5 px-3 py-2"
                       />
                     </label>
-                    <button type="button" onClick={() => addToPrompt(`${FIELD_LABELS[currentGuidedField]} ${guidedPhone.trim()}`)} className="rounded-lg border border-emerald-400 bg-emerald-500/20 px-3 py-2 text-emerald-300">
+                    <button type="button" onClick={() => addToPrompt(`${FIELD_LABELS[currentGuidedField]} ${guidedPhone.trim()}`, true)} className="rounded-lg border border-emerald-400 bg-emerald-500/20 px-3 py-2 text-emerald-300">
                       Agregar
                     </button>
                   </div>
@@ -400,6 +381,12 @@ export default function AIAssistantClient() {
             <input
               value={input}
               onChange={(event) => setInput(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "." && input.trim()) {
+                  event.preventDefault();
+                  void submitContent(input);
+                }
+              }}
               placeholder="Ejemplo: Somos 3, vamos el 2026-03-15 a las 09:00, paquete full-day..."
               className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none ring-emerald-500 transition placeholder:text-zinc-500 focus:ring"
             />
