@@ -1,25 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import {
+  INITIAL_BOOKING_STATE,
+  NEXT_FIELD_PROMPTS,
+  REQUIRED_BOOKING_FIELDS,
+  TOUR_PACKAGE_OPTIONS,
+  TOUR_TIME_OPTIONS,
+  type BookingState,
+  type ChatMessage,
+} from "@/lib/ai-assistant/shared";
 
 const client = new Anthropic();
-
-type ChatRole = "user" | "assistant";
-
-type ChatMessage = {
-  role: ChatRole;
-  content: string;
-};
-
-type BookingState = {
-  date: string | null;
-  tourTime: "08:00" | "09:00" | "10:00" | null;
-  tourPackage: "basic" | "full-day" | "private" | null;
-  tickets: number | null;
-  name: string | null;
-  email: string | null;
-  phone: string | null;
-  specialRequests: string | null;
-};
 
 type AssistantPayload = {
   messages: ChatMessage[];
@@ -33,33 +24,20 @@ type AssistantResult = {
   readyToBook: boolean;
 };
 
-const REQUIRED_FIELDS: (keyof BookingState)[] = [
-  "date",
-  "tourTime",
-  "tourPackage",
-  "tickets",
-  "name",
-  "email",
-  "phone",
-];
+type FaqEntry = {
+  keywords: string[];
+  answer: string;
+};
 
 const DEFAULT_RESULT: AssistantResult = {
   reply:
     "¡Pura vida! Te ayudo con la reserva. Para empezar, decime fecha, hora (08:00/09:00/10:00), paquete (basic/full-day/private), cantidad de personas, nombre, correo y teléfono.",
-  updatedState: {
-    date: null,
-    tourTime: null,
-    tourPackage: null,
-    tickets: null,
-    name: null,
-    email: null,
-    phone: null,
-    specialRequests: null,
-  },
-  missingFields: REQUIRED_FIELDS,
+  updatedState: INITIAL_BOOKING_STATE,
+  missingFields: REQUIRED_BOOKING_FIELDS,
   readyToBook: false,
 };
 
+const AI_HEADERS = { "Cache-Control": "no-store" };
 const DATE_PATTERN_ISO = /\b(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})\b/;
 const DATE_PATTERN_DMY = /\b(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})\b/;
 const EMAIL_PATTERN = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i;
@@ -67,7 +45,7 @@ const PHONE_PATTERN = /\+?[\d\s()\-]{8,}/;
 const NAME_PATTERN = /(?:me\s+llamo|mi\s+nombre\s+es|soy|nombre|name)\s*[:=-]?\s*([a-záéíóúñ]+(?:\s+[a-záéíóúñ]+){0,3})/i;
 const TICKETS_PATTERN = /(?:somos|vamos|personas?|tickets?|boletos?|cupos?)\s*[:=]?\s*(\d{1,2})/i;
 
-const FAQ_ENTRIES: { keywords: string[]; answer: string }[] = [
+const FAQ_ENTRIES: FaqEntry[] = [
   {
     keywords: ["donde", "ubicacion", "llegar", "dirección", "direccion"],
     answer:
@@ -103,9 +81,9 @@ Objetivo:
 3) Responder preguntas frecuentes (ubicación, qué llevar, duración, políticas, horarios, etc.) sin perder el contexto de reserva.
 
 Reglas de negocio:
-- Horas válidas: 08:00, 09:00, 10:00.
-- Paquetes válidos: basic, full-day, private.
-- Campos requeridos para confirmar: date, tourTime, tourPackage, tickets, name, email, phone.
+- Horas válidas: ${TOUR_TIME_OPTIONS.join(", ")}.
+- Paquetes válidos: ${TOUR_PACKAGE_OPTIONS.join(", ")}.
+- Campos requeridos para confirmar: ${REQUIRED_BOOKING_FIELDS.join(", ")}.
 - Campo opcional: specialRequests.
 
 Información de apoyo (FAQ):
@@ -159,7 +137,7 @@ function sanitizeResult(raw: Partial<AssistantResult>, fallbackState: BookingSta
     specialRequests: raw.updatedState?.specialRequests ?? fallbackState.specialRequests,
   });
 
-  const missingFields = REQUIRED_FIELDS.filter((field) => !updatedState[field]);
+  const missingFields = getMissingFields(updatedState);
 
   return {
     reply: raw.reply?.trim() || DEFAULT_RESULT.reply,
@@ -214,9 +192,7 @@ function extractDate(raw: string): string | null {
     return formatDate(d);
   }
 
-  if (text.includes("hoy")) {
-    return formatDate(now);
-  }
+  if (text.includes("hoy")) return formatDate(now);
 
   const isoMatch = raw.match(DATE_PATTERN_ISO);
   if (isoMatch) {
@@ -226,9 +202,7 @@ function extractDate(raw: string): string | null {
     if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) return null;
 
     const parsed = new Date(Date.UTC(year, month - 1, day));
-    if (parsed.getUTCFullYear() !== year || parsed.getUTCMonth() !== month - 1 || parsed.getUTCDate() !== day) {
-      return null;
-    }
+    if (parsed.getUTCFullYear() !== year || parsed.getUTCMonth() !== month - 1 || parsed.getUTCDate() !== day) return null;
 
     return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
   }
@@ -243,9 +217,7 @@ function extractDate(raw: string): string | null {
   if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) return null;
 
   const parsed = new Date(Date.UTC(year, month - 1, day));
-  if (parsed.getUTCFullYear() !== year || parsed.getUTCMonth() !== month - 1 || parsed.getUTCDate() !== day) {
-    return null;
-  }
+  if (parsed.getUTCFullYear() !== year || parsed.getUTCMonth() !== month - 1 || parsed.getUTCDate() !== day) return null;
 
   return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
@@ -280,13 +252,12 @@ function extractName(raw: string): string | null {
   const fromLabeledInput = raw.match(/^\s*(?:nombre|name)\s*[:=-]?\s*([a-záéíóúñ]+(?:\s+[a-záéíóúñ]+){0,3})\s*$/i)?.[1]?.trim();
   const candidate = fromLabeledInput ?? fromPrefix;
 
-  if (candidate && candidate.length >= 2) {
-    return candidate
-      .split(/\s+/)
-      .map((chunk) => chunk.charAt(0).toUpperCase() + chunk.slice(1).toLowerCase())
-      .join(" ");
-  }
-  return null;
+  if (!candidate || candidate.length < 2) return null;
+
+  return candidate
+    .split(/\s+/)
+    .map((chunk) => chunk.charAt(0).toUpperCase() + chunk.slice(1).toLowerCase())
+    .join(" ");
 }
 
 function extractEmail(raw: string): string | null {
@@ -327,8 +298,8 @@ function inferFromConversation(state: BookingState, messages: ChatMessage[]): Bo
 }
 
 function normalizeState(state: BookingState): BookingState {
-  const validTourTime = state.tourTime === "08:00" || state.tourTime === "09:00" || state.tourTime === "10:00" ? state.tourTime : null;
-  const validPackage = state.tourPackage === "basic" || state.tourPackage === "full-day" || state.tourPackage === "private" ? state.tourPackage : null;
+  const validTourTime = TOUR_TIME_OPTIONS.includes(state.tourTime as (typeof TOUR_TIME_OPTIONS)[number]) ? state.tourTime : null;
+  const validPackage = TOUR_PACKAGE_OPTIONS.includes(state.tourPackage as (typeof TOUR_PACKAGE_OPTIONS)[number]) ? state.tourPackage : null;
   const validTickets = typeof state.tickets === "number" && state.tickets >= 1 && state.tickets <= 20 ? state.tickets : null;
 
   return {
@@ -345,7 +316,7 @@ function normalizeState(state: BookingState): BookingState {
 }
 
 function getMissingFields(state: BookingState): string[] {
-  return REQUIRED_FIELDS.filter((field) => !state[field]);
+  return REQUIRED_BOOKING_FIELDS.filter((field) => !state[field]);
 }
 
 function getFaqAnswer(input: string): string | null {
@@ -363,21 +334,13 @@ function buildLocalReply(updatedState: BookingState, latestMessage: string): str
   }
 
   const nextField = missingFields[0];
-  const promptByField: Record<string, string> = {
-    date: "¿Qué fecha querés reservar? Podés escribirla como YYYY-MM-DD.",
-    tourTime: "¿Qué horario preferís: 08:00, 09:00 o 10:00?",
-    tourPackage: "¿Cuál paquete preferís: basic, full-day o private?",
-    tickets: "¿Para cuántas personas sería la reserva?",
-    name: "¿A nombre de quién hacemos la reserva?",
-    email: "¿Cuál es tu correo para enviarte la confirmación?",
-    phone: "¿Cuál es tu número de teléfono?",
-  };
+  const nextPrompt = NEXT_FIELD_PROMPTS[nextField];
 
   if (faqAnswer) {
-    return `${faqAnswer} Para avanzar con la reserva, ${promptByField[nextField]}`;
+    return `${faqAnswer} Para avanzar con la reserva, ${nextPrompt}`;
   }
 
-  return `Perfecto, ya avancé con tus datos. ${promptByField[nextField]} Si querés, podés enviarme varios datos en un solo mensaje y yo completo los huecos automáticamente.`;
+  return `Perfecto, ya avancé con tus datos. ${nextPrompt} Si querés, podés enviarme varios datos en un solo mensaje y yo completo los huecos automáticamente.`;
 }
 
 function shouldUseModel(previousState: BookingState, inferredState: BookingState, latestMessage: string): boolean {
@@ -385,9 +348,7 @@ function shouldUseModel(previousState: BookingState, inferredState: BookingState
   const nextMissing = getMissingFields(inferredState).length;
   const hasFaqAnswer = Boolean(getFaqAnswer(latestMessage));
 
-  if (hasFaqAnswer) return false;
-  if (nextMissing < prevMissing) return false;
-  if (latestMessage.trim().length < 8) return false;
+  if (hasFaqAnswer || nextMissing < prevMissing || latestMessage.trim().length < 8) return false;
 
   const normalized = normalizeText(latestMessage);
   return /\?|explic|detalle|recomend|ayuda|no\s+entiendo|diferencia/.test(normalized);
@@ -396,10 +357,11 @@ function shouldUseModel(previousState: BookingState, inferredState: BookingState
 export async function POST(req: NextRequest) {
   try {
     const { messages, state } = (await req.json()) as AssistantPayload;
+    const normalizedIncomingState = normalizeState(state ?? INITIAL_BOOKING_STATE);
     const latestUserMessage = [...messages].reverse().find((msg) => msg.role === "user")?.content ?? "";
 
-    const inferredState = inferFromConversation(normalizeState(state), messages);
-    if (!shouldUseModel(state, inferredState, latestUserMessage)) {
+    const inferredState = inferFromConversation(normalizedIncomingState, messages);
+    if (!shouldUseModel(normalizedIncomingState, inferredState, latestUserMessage)) {
       const missingFields = getMissingFields(inferredState);
       return NextResponse.json(
         {
@@ -409,7 +371,7 @@ export async function POST(req: NextRequest) {
           readyToBook: missingFields.length === 0,
         } satisfies AssistantResult,
         {
-          headers: { "Cache-Control": "no-store", "X-AI-Mode": "local-rules" },
+          headers: { ...AI_HEADERS, "X-AI-Mode": "local-rules" },
         },
       );
     }
@@ -419,7 +381,7 @@ export async function POST(req: NextRequest) {
       max_tokens: 450,
       temperature: 0.3,
       system: buildSystemPrompt(inferredState),
-      messages: messages.map((msg) => ({
+      messages: messages.slice(-8).map((msg) => ({
         role: msg.role,
         content: msg.content,
       })),
@@ -430,17 +392,17 @@ export async function POST(req: NextRequest) {
 
     if (!parsed) {
       return NextResponse.json(sanitizeResult(DEFAULT_RESULT, inferredState), {
-        headers: { "Cache-Control": "no-store", "X-AI-Mode": "fallback-default" },
+        headers: { ...AI_HEADERS, "X-AI-Mode": "fallback-default" },
       });
     }
 
     return NextResponse.json(sanitizeResult(parsed, inferredState), {
-      headers: { "Cache-Control": "no-store", "X-AI-Mode": "anthropic" },
+      headers: { ...AI_HEADERS, "X-AI-Mode": "anthropic" },
     });
   } catch (error) {
     console.error("[ai/assistant]", error);
     return NextResponse.json(DEFAULT_RESULT, {
-      headers: { "Cache-Control": "no-store", "X-AI-Mode": "error-default" },
+      headers: { ...AI_HEADERS, "X-AI-Mode": "error-default" },
     });
   }
 }
