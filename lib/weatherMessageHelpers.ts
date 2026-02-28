@@ -7,7 +7,7 @@ import {
   WEATHER_MESSAGE_CHARACTERS,
   WEATHER_MESSAGE_STYLE_ANGLES,
   WEATHER_MESSAGE_SYSTEM_PROMPT,
-} from "@/app/lib/weatherMessageConstants";
+} from "@/lib/weatherMessageConstants";
 
 export type WeatherSnapshot = {
   risk: "green" | "yellow" | "red";
