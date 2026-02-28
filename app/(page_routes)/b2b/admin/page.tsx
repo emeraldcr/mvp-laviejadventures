@@ -22,6 +22,19 @@ type AppUser = {
   updatedAt: string;
 };
 
+type Reservation = {
+  _id: string;
+  name: string | null;
+  email: string | null;
+  date: string | null;
+  tickets: number | null;
+  amount: number | null;
+  currency: string | null;
+  status: string | null;
+  tourName: string | null;
+  createdAt: string | null;
+};
+
 type LoginLog = {
   _id: string;
   userType: "admin" | "operator" | "user";
@@ -51,6 +64,7 @@ export default function B2BAdminPage() {
   const [operators, setOperators] = useState<Operator[]>([]);
   const [users, setUsers] = useState<AppUser[]>([]);
   const [loginLogs, setLoginLogs] = useState<LoginLog[]>([]);
+  const [reservations, setReservations] = useState<Reservation[]>([]);
   const [settings, setSettings] = useState<B2BSettings>({ ivaRate: 13, tourPricing: [] });
   const [pricingJson, setPricingJson] = useState("[]");
 
@@ -78,6 +92,7 @@ export default function B2BAdminPage() {
       if (operatorsRes.status === 401 || insightsRes.status === 401 || settingsRes.status === 401) {
         setIsLoggedIn(false);
         setOperators([]);
+    setReservations([]);
         return;
       }
 
@@ -94,6 +109,7 @@ export default function B2BAdminPage() {
       setOperators(operatorsData.operators || []);
       setUsers(insightsData.users || []);
       setLoginLogs(insightsData.loginLogs || []);
+      setReservations(insightsData.reservations || []);
       const nextSettings = settingsData.settings || { ivaRate: 13, tourPricing: [] };
       setSettings(nextSettings);
       setPricingJson(JSON.stringify(nextSettings.tourPricing || [], null, 2));
@@ -125,6 +141,7 @@ export default function B2BAdminPage() {
       if (response.status === 401) {
         setIsLoggedIn(false);
         setOperators([]);
+    setReservations([]);
         return;
       }
 
@@ -196,6 +213,7 @@ export default function B2BAdminPage() {
     setUsername("");
     setPassword("");
     setOperators([]);
+    setReservations([]);
   }
 
   if (initialSessionLoading) return <main className="mx-auto flex min-h-screen w-full max-w-md items-center justify-center px-4 py-12"><p className="inline-flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300"><Loader2 className="h-4 w-4 animate-spin" />Verificando sesión de administrador...</p></main>;
@@ -260,6 +278,49 @@ export default function B2BAdminPage() {
           </div>
         </article>
       </section>
+
+      <section className="mt-6 rounded-2xl border border-zinc-200 bg-white p-6">
+        <h2 className="mb-4 text-xl font-semibold">Reservas de usuarios normales ({reservations.length})</h2>
+        <p className="mb-4 text-sm text-zinc-500">Este panel ahora unifica B2B + usuarios normales para que admin/admin gestione todo en un solo lugar.</p>
+        <div className="max-h-96 overflow-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-zinc-500">
+                <th className="pb-2">Cliente</th>
+                <th className="pb-2">Tour</th>
+                <th className="pb-2">Fecha tour</th>
+                <th className="pb-2">Tickets</th>
+                <th className="pb-2">Monto</th>
+                <th className="pb-2">Estado</th>
+                <th className="pb-2">Creada</th>
+              </tr>
+            </thead>
+            <tbody>
+              {reservations.map((reservation) => (
+                <tr key={reservation._id} className="border-t border-zinc-100">
+                  <td className="py-2">
+                    <p className="font-medium text-zinc-900">{reservation.name || "Sin nombre"}</p>
+                    <p className="text-xs text-zinc-500">{reservation.email || "Sin email"}</p>
+                  </td>
+                  <td className="py-2">{reservation.tourName || "Tour principal"}</td>
+                  <td className="py-2">{reservation.date || "Sin fecha"}</td>
+                  <td className="py-2">{reservation.tickets ?? "-"}</td>
+                  <td className="py-2">
+                    {reservation.amount != null
+                      ? `${reservation.amount} ${reservation.currency || "USD"}`
+                      : "-"}
+                  </td>
+                  <td className="py-2">{reservation.status || "-"}</td>
+                  <td className="py-2">
+                    {reservation.createdAt ? new Date(reservation.createdAt).toLocaleString("es-CR") : "-"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
     </main>
   );
 }
