@@ -119,10 +119,32 @@ export async function upsertUserFromAuth0(input: {
   name?: string;
   image?: string;
 }) {
-  if (!input.email) return null;
-
   const users = await getUsersCollection();
   const now = new Date();
+
+  if (input.auth0Sub) {
+    const existingBySub = await users.findOne({ auth0Sub: input.auth0Sub });
+    if (existingBySub) {
+      const normalizedEmail = input.email?.toLowerCase();
+      await users.updateOne(
+        { _id: existingBySub._id },
+        {
+          $set: {
+            email: normalizedEmail ?? existingBySub.email,
+            name: input.name ?? existingBySub.name,
+            image: input.image ?? existingBySub.image,
+            preferences: mergeUserPreferences(existingBySub.preferences),
+            updatedAt: now,
+          },
+        }
+      );
+
+      return users.findOne({ _id: existingBySub._id });
+    }
+  }
+
+  if (!input.email) return null;
+
   const email = input.email.toLowerCase();
 
   const existing = await users.findOne({ email });
