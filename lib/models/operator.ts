@@ -10,6 +10,13 @@ export interface OperatorAccount {
   status: "pending" | "approved" | "active";
   commissionRate: number;
   createdAt: Date;
+  // Email verification
+  emailVerified: boolean;
+  verificationToken?: string | null;
+  verificationExpiry?: Date | null;
+  // Password reset
+  resetToken?: string | null;
+  resetExpiry?: Date | null;
 }
 
 export async function getOperatorsCollection() {
@@ -27,6 +34,16 @@ export async function findOperatorById(id: string) {
   return col.findOne({ _id: new ObjectId(id) });
 }
 
+export async function findOperatorByVerificationToken(token: string) {
+  const col = await getOperatorsCollection();
+  return col.findOne({ verificationToken: token, verificationExpiry: { $gt: new Date() } });
+}
+
+export async function findOperatorByResetToken(token: string) {
+  const col = await getOperatorsCollection();
+  return col.findOne({ resetToken: token, resetExpiry: { $gt: new Date() } });
+}
+
 export async function createOperator(data: Omit<OperatorAccount, "_id">) {
   const col = await getOperatorsCollection();
   const result = await col.insertOne(data);
@@ -36,6 +53,38 @@ export async function createOperator(data: Omit<OperatorAccount, "_id">) {
 export async function updateOperator(id: string, update: Partial<OperatorAccount>) {
   const col = await getOperatorsCollection();
   return col.updateOne({ _id: new ObjectId(id) }, { $set: update });
+}
+
+export async function verifyOperatorEmail(id: string) {
+  const col = await getOperatorsCollection();
+  return col.updateOne(
+    { _id: new ObjectId(id) },
+    { $set: { emailVerified: true, verificationToken: null, verificationExpiry: null } }
+  );
+}
+
+export async function setVerificationToken(id: string, token: string, expiry: Date) {
+  const col = await getOperatorsCollection();
+  return col.updateOne(
+    { _id: new ObjectId(id) },
+    { $set: { verificationToken: token, verificationExpiry: expiry } }
+  );
+}
+
+export async function setResetToken(id: string, token: string, expiry: Date) {
+  const col = await getOperatorsCollection();
+  return col.updateOne(
+    { _id: new ObjectId(id) },
+    { $set: { resetToken: token, resetExpiry: expiry } }
+  );
+}
+
+export async function clearResetToken(id: string) {
+  const col = await getOperatorsCollection();
+  return col.updateOne(
+    { _id: new ObjectId(id) },
+    { $set: { resetToken: null, resetExpiry: null } }
+  );
 }
 
 export async function listOperators() {

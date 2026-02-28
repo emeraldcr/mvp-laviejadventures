@@ -3,6 +3,7 @@ import { ObjectId } from "mongodb";
 import { getOperatorFromRequest } from "@/lib/b2b-auth";
 import { createBooking, findBookingsByOperator } from "@/lib/models/booking";
 import { B2B_TOURS } from "@/lib/b2b-tours";
+import { sendBookingConfirmationEmail } from "@/lib/email/b2b-emails";
 
 export async function GET(req: NextRequest) {
   const operator = getOperatorFromRequest(req);
@@ -67,8 +68,24 @@ export async function POST(req: NextRequest) {
       createdAt: new Date(),
     });
 
+    const bookingId = result.insertedId.toString();
+
+    sendBookingConfirmationEmail({
+      operatorEmail: operator.email,
+      operatorName: operator.name,
+      bookingId,
+      tourName: tour.name,
+      clientName,
+      clientEmail,
+      pax: Number(pax),
+      date: new Date(date).toLocaleDateString("es-CR"),
+      totalPrice,
+      commissionAmount,
+      currency: tour.currency,
+    }).catch(console.error);
+
     return NextResponse.json(
-      { message: "Booking created successfully.", bookingId: result.insertedId.toString() },
+      { message: "Booking created successfully.", bookingId },
       { status: 201 }
     );
   } catch (err) {
