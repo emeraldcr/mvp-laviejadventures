@@ -3,7 +3,7 @@
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { ArrowLeft, Bot, SendHorizonal } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import type { OrderDetails } from "@/types";
 import {
   FIELD_LABELS,
@@ -40,6 +40,8 @@ type PersistedAIState = {
 
 export default function AIAssistantClient() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnedFromReservation = searchParams.get("from") === "reservation";
   const [messages, setMessages] = useState<ChatMessage[]>([INITIAL_ASSISTANT_MESSAGE]);
   const [state, setState] = useState<BookingState>(INITIAL_BOOKING_STATE);
   const [missingFields, setMissingFields] = useState<string[]>(REQUIRED_BOOKING_FIELDS);
@@ -49,6 +51,7 @@ export default function AIAssistantClient() {
   const [guidedTickets, setGuidedTickets] = useState<number>(2);
   const [guidedText, setGuidedText] = useState("");
   const [guidedPhone, setGuidedPhone] = useState("");
+  const [hasPendingCheckout, setHasPendingCheckout] = useState(false);
 
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
   const hasRedirectedRef = useRef(false);
@@ -78,6 +81,11 @@ export default function AIAssistantClient() {
 
     sessionStorage.setItem(AI_BOOKING_SESSION_KEY, JSON.stringify(payload));
   }, [input, messages, missingFields, state]);
+
+  useEffect(() => {
+    const storedOrder = sessionStorage.getItem("reservationOrderDetails");
+    setHasPendingCheckout(Boolean(storedOrder));
+  }, [missingFields, messages]);
 
   const buildOrderDetails = useCallback((bookingState: BookingState): OrderDetails | null => {
     if (
@@ -136,10 +144,10 @@ export default function AIAssistantClient() {
 
   useEffect(() => {
     const readyToBook = missingFields.length === 0;
-    if (!readyToBook || hasRedirectedRef.current) return;
+    if (!readyToBook || hasRedirectedRef.current || returnedFromReservation) return;
 
     redirectToReservation(state);
-  }, [missingFields, redirectToReservation, state]);
+  }, [missingFields, redirectToReservation, returnedFromReservation, state]);
 
   const submitContent = useCallback(async (content: string) => {
     const trimmed = content.trim();
@@ -233,6 +241,19 @@ export default function AIAssistantClient() {
             Conversá como en ChatGPT/Grok: escribí libremente y el bot recolecta datos de tu reserva,
             aunque mandés todo junto. También responde dudas rápidas del tour.
           </p>
+
+          {hasPendingCheckout && missingFields.length === 0 && (
+            <div className="mb-5 flex items-center justify-between gap-3 rounded-2xl border border-emerald-500/25 bg-emerald-500/10 p-3">
+              <p className="text-sm text-emerald-100">Tu reserva ya está lista. Podés seguir conversando o ir directo al pago.</p>
+              <button
+                type="button"
+                onClick={() => redirectToReservation(state)}
+                className="shrink-0 rounded-lg bg-emerald-500 px-3 py-2 text-xs font-semibold text-zinc-950 hover:bg-emerald-400"
+              >
+                Ir a pagar
+              </button>
+            </div>
+          )}
 
           <div
             ref={messagesContainerRef}

@@ -30,9 +30,9 @@ function BookingSection() {
 
   return (
     <section id="booking" className="relative overflow-hidden bg-zinc-950">
-      <div className="absolute left-1/2 top-0 h-[500px] w-[900px] -translate-x-1/2 bg-teal-900/15 blur-[140px] pointer-events-none" />
-      <div className="absolute left-0 top-40 h-[350px] w-[350px] bg-teal-800/8 blur-[120px] pointer-events-none" />
-      <div className="absolute right-0 top-40 h-[350px] w-[350px] bg-cyan-900/8 blur-[120px] pointer-events-none" />
+      <div className="pointer-events-none absolute left-1/2 top-0 h-[500px] w-[900px] -translate-x-1/2 bg-teal-900/15 blur-[140px]" />
+      <div className="pointer-events-none absolute left-0 top-40 h-[350px] w-[350px] bg-teal-800/8 blur-[120px]" />
+      <div className="pointer-events-none absolute right-0 top-40 h-[350px] w-[350px] bg-cyan-900/8 blur-[120px]" />
 
       <div className="relative z-10 container mx-auto px-4 py-16 md:px-8 md:py-28">
         <motion.div
@@ -102,9 +102,9 @@ function BookingSection() {
 
       <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black to-transparent" />
 
-      <div className="action-card relative z-10 container mx-auto px-4 pb-16 text-center md:px-8">
+      <div className="relative z-10 container mx-auto px-4 pb-16 text-center md:px-8">
         {user ? (
-          <div className="logged-in-section mx-auto max-w-md rounded-2xl border border-teal-500/20 bg-zinc-900/60 p-8 shadow-xl backdrop-blur-md">
+          <div className="mx-auto max-w-md rounded-2xl border border-teal-500/20 bg-zinc-900/60 p-8 shadow-xl backdrop-blur-md">
             <p className="logged-in-message mb-6 text-xl font-bold text-teal-400">
               {lang === "es" ? "¡Sesión iniciada con éxito!" : "Successfully logged in!"}
             </p>
@@ -112,19 +112,19 @@ function BookingSection() {
             <div className="mt-6 flex flex-col gap-3">
               <a
                 href="/dashboard"
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700"
+                className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition bg-emerald-600 text-white hover:bg-emerald-700"
               >
                 {lang === "es" ? "Ver mi dashboard" : "Go to Dashboard"}
               </a>
               <Link
                 href="/ai"
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-cyan-400/50 px-4 py-3 text-sm font-semibold text-cyan-200 transition hover:bg-cyan-400/10"
+                className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition border border-cyan-400/50 text-cyan-200 hover:bg-cyan-400/10"
               >
                 {lang === "es" ? "Abrir La Vieja AI" : "Open La Vieja AI"}
               </Link>
               <button
                 onClick={() => signOut({ callbackUrl: "/" })}
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-600 px-4 py-3 text-sm font-semibold text-zinc-300 transition hover:bg-zinc-800"
+                className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition border border-zinc-600 text-zinc-300 hover:bg-zinc-800"
               >
                 {lang === "es" ? "Cerrar sesión" : "Log Out"}
               </button>
@@ -140,7 +140,7 @@ function BookingSection() {
             <div className="flex flex-col gap-3">
               <button
                 onClick={() => signIn(undefined, { callbackUrl: "/dashboard" })}
-                className="w-full inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-900/30 active:scale-[0.99] active:translate-y-0"
+                className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-900/30 active:translate-y-0 active:scale-[0.99]"
               >
                 {lang === "es" ? "Iniciar sesión" : "Log In"}
               </button>
