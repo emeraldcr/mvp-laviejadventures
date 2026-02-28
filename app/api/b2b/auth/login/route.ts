@@ -21,6 +21,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
     }
 
+    // Block login until email is verified
+    // Treat missing emailVerified (legacy accounts) as verified
+    if (operator.emailVerified === false) {
+      return NextResponse.json(
+        { error: "Please verify your email before logging in. Check your inbox for the verification link." },
+        { status: 403 }
+      );
+    }
+
     const token = signToken({
       id: operator._id!.toString(),
       email: operator.email,

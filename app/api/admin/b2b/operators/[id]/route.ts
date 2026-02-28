@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { updateOperator, findOperatorById } from "@/lib/models/operator";
 import { getAdminFromRequest } from "@/lib/admin-auth";
+import { sendApprovalEmail } from "@/lib/email/b2b-emails";
 
 function isAuthorized(req: NextRequest): boolean {
   return Boolean(getAdminFromRequest(req));
@@ -37,6 +38,16 @@ export async function PATCH(
     }
 
     await updateOperator(id, update);
+
+    // Send approval email when status changes to approved or active
+    const newStatus = update.status as string | undefined;
+    const wasAlreadyApproved = existing.status === "approved" || existing.status === "active";
+    if (
+      (newStatus === "approved" || newStatus === "active") &&
+      !wasAlreadyApproved
+    ) {
+      sendApprovalEmail(existing.email, existing.name).catch(console.error);
+    }
 
     return NextResponse.json({ message: "Operator updated successfully." });
   } catch (err) {

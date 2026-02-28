@@ -3,13 +3,14 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { LogIn, Eye, EyeOff, Compass } from "lucide-react";
+import { LogIn, Eye, EyeOff, Compass, CheckCircle } from "lucide-react";
 import { Suspense } from "react";
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const from = searchParams.get("from") || "/b2b/dashboard";
+  const verified = searchParams.get("verified") === "1";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -70,6 +71,13 @@ function LoginForm() {
             Iniciar sesión
           </h2>
 
+          {verified && (
+            <div className="mb-4 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
+              <CheckCircle className="h-4 w-4 shrink-0" />
+              ¡Correo verificado! Ya puedes iniciar sesión.
+            </div>
+          )}
+
           {error && (
             <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
               {error}
@@ -101,7 +109,13 @@ function LoginForm() {
                 htmlFor="password"
                 className="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
               >
-                Contraseña
+                <span>Contraseña</span>
+                <Link
+                  href="/b2b/forgot-password"
+                  className="float-right font-normal text-emerald-600 hover:text-emerald-700 dark:text-emerald-400"
+                >
+                  ¿Olvidaste tu contraseña?
+                </Link>
               </label>
               <div className="relative">
                 <input
