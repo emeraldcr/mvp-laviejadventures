@@ -6,6 +6,8 @@ export interface AppUser {
   email: string;
   name: string;
   passwordHash?: string;
+  resetToken?: string | null;
+  resetExpiry?: Date | null;
   auth0Sub?: string;
   image?: string;
   preferences?: UserPreferences;
@@ -111,6 +113,40 @@ export async function createCredentialsUser(input: {
   });
 
   return users.findOne({ _id: result.insertedId });
+}
+
+export async function findUserByResetToken(token: string) {
+  const users = await getUsersCollection();
+  return users.findOne({ resetToken: token, resetExpiry: { $gt: new Date() } });
+}
+
+export async function setUserResetToken(id: string, token: string, expiry: Date) {
+  const users = await getUsersCollection();
+  return users.updateOne(
+    { _id: new ObjectId(id) },
+    { $set: { resetToken: token, resetExpiry: expiry, updatedAt: new Date() } }
+  );
+}
+
+export async function clearUserResetToken(id: string) {
+  const users = await getUsersCollection();
+  return users.updateOne(
+    { _id: new ObjectId(id) },
+    { $set: { resetToken: null, resetExpiry: null, updatedAt: new Date() } }
+  );
+}
+
+export async function updateUserPassword(id: string, passwordHash: string) {
+  const users = await getUsersCollection();
+  return users.updateOne(
+    { _id: new ObjectId(id) },
+    {
+      $set: {
+        passwordHash,
+        updatedAt: new Date(),
+      },
+    }
+  );
 }
 
 export async function upsertUserFromAuth0(input: {

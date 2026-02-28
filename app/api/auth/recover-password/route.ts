@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAuth0PasswordResetUrl } from "@/lib/auth0-config";
+import crypto from "crypto";
+import { findUserByEmail, setUserResetToken } from "@/lib/models/user";
+import { sendUserPasswordResetEmail } from "@/lib/email/user-emails";
 
 export async function POST(req: NextRequest) {
   try {
@@ -10,40 +12,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Email is required." }, { status: 400 });
     }
 
-    const passwordResetUrl = getAuth0PasswordResetUrl();
-    const clientId = process.env.AUTH0_CLIENT_ID;
-    const connection =
-      process.env.AUTH0_DB_CONNECTION?.trim() ||
-      process.env.AUTH0_CONNECTION?.trim() ||
-      "Username-Password-Authentication";
+    const user = await findUserByEmail(normalizedEmail);
 
-    if (!passwordResetUrl || !clientId) {
-      return NextResponse.json(
-        { error: "Auth0 password recovery is not configured." },
-        { status: 500 }
-      );
+    if (user?._id && user.passwordHash) {
+      const token = crypto.randomBytes(32).toString("hex");
+      const expiry = new Date(Date.now() + 1000 * 60 * 60);
+
+      await setUserResetToken(user._id.toString(), token, expiry);
+      await sendUserPasswordResetEmail(normalizedEmail, user.name, token);
     }
 
-    const auth0Response = await fetch(passwordResetUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        client_id: clientId,
-        email: normalizedEmail,
-        connection,
-      }),
+    return NextResponse.json({
+      message: "If an account exists for that email, you will receive a password reset link shortly.",
     });
-
-    if (!auth0Response.ok) {
-      const details = await auth0Response.text();
-      console.error("Auth0 password recovery error:", details);
-      return NextResponse.json(
-        { error: "Could not trigger password recovery email." },
-        { status: auth0Response.status }
-      );
-    }
-
-    return NextResponse.json({ message: "Password recovery email sent." });
   } catch (error) {
     console.error("Recover password endpoint error:", error);
     return NextResponse.json(
