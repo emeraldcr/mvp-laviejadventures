@@ -4,6 +4,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { findUserByEmail, upsertUserFromAuth0 } from "@/lib/models/user";
 import { getAuth0AuthorizationParams, getAuth0Issuer } from "@/lib/auth0-config";
+import { sendLoginNotificationEmail } from "@/lib/email/login-email";
 
 const auth0ClientId = process.env.AUTH0_CLIENT_ID?.trim();
 const auth0ClientSecret = process.env.AUTH0_CLIENT_SECRET?.trim();
@@ -63,6 +64,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   pages: {
     signIn: "/platform",
+  },
+  events: {
+    async signIn({ user }) {
+      if (!user?.email) return;
+
+      sendLoginNotificationEmail({
+        email: user.email,
+        name: user.name,
+      }).catch((error) => {
+        console.error("Login notification email failed:", error);
+      });
+    },
   },
   callbacks: {
     async jwt({ token, account, profile, user }) {
