@@ -1,8 +1,8 @@
 import { redirect, notFound } from "next/navigation";
 import { getOperatorFromCookies } from "@/lib/b2b-auth";
-import { B2B_TOURS } from "@/lib/b2b-tours";
 import B2BNav from "@/app/components/b2b/B2BNav";
 import BookingForm from "./BookingForm";
+import { getB2BCatalog } from "@/lib/b2b-catalog";
 
 export default async function BookTourPage({
   params,
@@ -14,7 +14,8 @@ export default async function BookTourPage({
   if (operator.status === "pending") redirect("/b2b/pending");
 
   const { tourId } = await params;
-  const tour = B2B_TOURS.find((t) => t.id === tourId);
+  const { tours, ivaRate } = await getB2BCatalog();
+  const tour = tours.find((t) => t.id === tourId);
   if (!tour) notFound();
 
   const commissionPerPax = Math.round(tour.retailPricePerPax * (operator.commissionRate / 100));
@@ -33,6 +34,7 @@ export default async function BookTourPage({
           tour={tour}
           commissionRate={operator.commissionRate}
           commissionPerPax={commissionPerPax}
+          ivaRate={ivaRate}
         />
       </main>
     </div>
