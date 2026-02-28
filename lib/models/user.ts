@@ -8,8 +8,50 @@ export interface AppUser {
   passwordHash?: string;
   auth0Sub?: string;
   image?: string;
+  preferences?: UserPreferences;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export type UserPreferences = {
+  notifications: {
+    emailEnabled: boolean;
+    bookingReminders: boolean;
+    promotions: boolean;
+    weeklySummary: boolean;
+  };
+  dashboard: {
+    compactView: boolean;
+    showSupportCard: boolean;
+    defaultBookingTab: "upcoming" | "past";
+  };
+};
+
+export const DEFAULT_USER_PREFERENCES: UserPreferences = {
+  notifications: {
+    emailEnabled: true,
+    bookingReminders: true,
+    promotions: false,
+    weeklySummary: false,
+  },
+  dashboard: {
+    compactView: false,
+    showSupportCard: true,
+    defaultBookingTab: "upcoming",
+  },
+};
+
+function mergeUserPreferences(preferences?: Partial<UserPreferences> | null): UserPreferences {
+  return {
+    notifications: {
+      ...DEFAULT_USER_PREFERENCES.notifications,
+      ...(preferences?.notifications ?? {}),
+    },
+    dashboard: {
+      ...DEFAULT_USER_PREFERENCES.dashboard,
+      ...(preferences?.dashboard ?? {}),
+    },
+  };
 }
 
 async function getUsersCollection() {
@@ -20,6 +62,36 @@ async function getUsersCollection() {
 export async function findUserByEmail(email: string) {
   const users = await getUsersCollection();
   return users.findOne({ email: email.toLowerCase() });
+}
+
+export async function getUserPreferencesByEmail(email: string): Promise<UserPreferences | null> {
+  const user = await findUserByEmail(email);
+  if (!user) return null;
+  return mergeUserPreferences(user.preferences);
+}
+
+export async function updateUserPreferencesByEmail(
+  email: string,
+  preferences: UserPreferences
+): Promise<UserPreferences | null> {
+  const users = await getUsersCollection();
+  const mergedPreferences = mergeUserPreferences(preferences);
+
+  const result = await users.findOneAndUpdate(
+    { email: email.toLowerCase() },
+    {
+      $set: {
+        preferences: mergedPreferences,
+        updatedAt: new Date(),
+      },
+    },
+    {
+      returnDocument: "after",
+    }
+  );
+
+  if (!result) return null;
+  return mergeUserPreferences(result.preferences);
 }
 
 export async function createCredentialsUser(input: {
@@ -33,6 +105,7 @@ export async function createCredentialsUser(input: {
     email: input.email.toLowerCase(),
     name: input.name,
     passwordHash: input.passwordHash,
+    preferences: DEFAULT_USER_PREFERENCES,
     createdAt: now,
     updatedAt: now,
   });
@@ -61,6 +134,7 @@ export async function upsertUserFromAuth0(input: {
           auth0Sub: input.auth0Sub ?? existing.auth0Sub,
           name: input.name ?? existing.name,
           image: input.image ?? existing.image,
+          preferences: mergeUserPreferences(existing.preferences),
           updatedAt: now,
         },
       }
@@ -74,6 +148,7 @@ export async function upsertUserFromAuth0(input: {
     name: input.name ?? email.split("@")[0],
     auth0Sub: input.auth0Sub,
     image: input.image,
+    preferences: DEFAULT_USER_PREFERENCES,
     createdAt: now,
     updatedAt: now,
   });
