@@ -6,7 +6,7 @@ import {
   getPayPalAccessToken,
 } from "@/lib/paypal";
 
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 import { getDb } from "@/lib/mongodb";
 import { auth } from "@/auth";
 import type { BookingRecord, SendEmailParams, SuccessPageProps } from "@/types";
@@ -53,25 +53,6 @@ async function saveBookingToDb(record: BookingRecord): Promise<string | null> {
 }
 
 // ---------- EMAIL HELPERS (inline) ----------
-
-function createTransporter() {
-  const host = process.env.SMTP_HOST;
-  const port = process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : 587;
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-
-  if (!host || !user || !pass) {
-    console.warn("SMTP env vars not fully set, skipping email sending");
-    return null;
-  }
-
-  return nodemailer.createTransport({
-    host,
-    port,
-    secure: port === 465, // true for 465, false otherwise
-    auth: { user, pass },
-  });
-}
 
 
 function createMailBody({
@@ -155,27 +136,35 @@ function createMailBody({
 }
 
 async function sendConfirmationEmail(params: SendEmailParams) {
-  const transporter = createTransporter();
-  if (!transporter) return;
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    console.warn("RESEND_API_KEY not set, skipping email sending");
+    return;
+  }
 
+  const resend = new Resend(apiKey);
   const adminEmail = process.env.RESERVATION_CC || "ciudadesmeraldacr@gmail.com";
   const toEmail = params.to || adminEmail;
-
-  await transporter.verify();
+  const from =
+    process.env.SMTP_FROM ||
+    `"La Vieja Adventures" <noreply@laviejadventures.com>`;
 
   const html = createMailBody(params);
 
-  await transporter.sendMail({
-    from:
-      process.env.SMTP_FROM ||
-      `"La Vieja Adventures" <ciudadesmeraldacr@gmail.com>`,
+  const { error } = await resend.emails.send({
+    from,
     to: toEmail,
-    cc: [adminEmail],
+    cc: adminEmail,
     subject: `Nueva reservación creada: ${params.orderId}`,
     html,
   });
 
-  console.log("Confirmation email sent");
+  if (error) {
+    console.error("Resend error:", error);
+    return;
+  }
+
+  console.log("Confirmation email sent via Resend");
 }
 
 // ---------- MAIN PAGE (PayPal + DB + email + UI) ----------
