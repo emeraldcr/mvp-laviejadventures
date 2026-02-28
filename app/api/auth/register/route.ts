@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { createCredentialsUser, findUserByEmail } from "@/lib/models/user";
+import { sendUserWelcomeEmail } from "@/lib/email/user-emails";
 
 export async function POST(req: NextRequest) {
   try {
@@ -27,6 +28,10 @@ export async function POST(req: NextRequest) {
       name,
       email,
       passwordHash,
+    });
+
+    sendUserWelcomeEmail(user.email, user.name).catch((emailError) => {
+      console.error("Welcome email error:", emailError);
     });
 
     return NextResponse.json(
