@@ -2,7 +2,7 @@ import NextAuth from "next-auth";
 import Auth0Provider from "next-auth/providers/auth0";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
-import { findUserByEmail, upsertUserFromAuth0 } from "@/lib/models/user";
+import { findUserByEmail, getUserPreferencesByEmail, upsertUserFromAuth0 } from "@/lib/models/user";
 import { getAuth0AuthorizationParams, getAuth0Issuer } from "@/lib/auth0-config";
 import { sendLoginNotificationEmail } from "@/lib/email/login-email";
 
@@ -68,6 +68,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   events: {
     async signIn({ user }) {
       if (!user?.email) return;
+
+      const preferences = await getUserPreferencesByEmail(user.email);
+      if (preferences?.notifications.emailEnabled === false) return;
 
       sendLoginNotificationEmail({
         email: user.email,
