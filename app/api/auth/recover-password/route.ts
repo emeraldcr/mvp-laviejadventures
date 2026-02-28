@@ -4,14 +4,18 @@ import { getAuth0PasswordResetUrl } from "@/lib/auth0-config";
 export async function POST(req: NextRequest) {
   try {
     const { email } = await req.json();
+    const normalizedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
 
-    if (!email || typeof email !== "string") {
+    if (!normalizedEmail) {
       return NextResponse.json({ error: "Email is required." }, { status: 400 });
     }
 
     const passwordResetUrl = getAuth0PasswordResetUrl();
     const clientId = process.env.AUTH0_CLIENT_ID;
-    const connection = process.env.AUTH0_DB_CONNECTION ?? "Username-Password-Authentication";
+    const connection =
+      process.env.AUTH0_DB_CONNECTION?.trim() ||
+      process.env.AUTH0_CONNECTION?.trim() ||
+      "Username-Password-Authentication";
 
     if (!passwordResetUrl || !clientId) {
       return NextResponse.json(
@@ -25,7 +29,7 @@ export async function POST(req: NextRequest) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         client_id: clientId,
-        email,
+        email: normalizedEmail,
         connection,
       }),
     });
