@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 import { getOperatorFromRequest } from "@/lib/b2b-auth";
 import { createBooking, findBookingsByOperator } from "@/lib/models/booking";
-import { B2B_TOURS } from "@/lib/b2b-tours";
 import { sendBookingConfirmationEmail } from "@/lib/email/b2b-emails";
+import { getB2BCatalog } from "@/lib/b2b-catalog";
 
 export async function GET(req: NextRequest) {
   const operator = getOperatorFromRequest(req);
@@ -30,16 +30,22 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { tourId, clientName, clientEmail, clientPhone, pax, date, notes } =
+    const { tourId, packageId, clientName, clientEmail, clientPhone, pax, date, notes } =
       await req.json();
 
-    if (!tourId || !clientName || !clientEmail || !clientPhone || !pax || !date) {
+    if (!tourId || !packageId || !clientName || !clientEmail || !clientPhone || !pax || !date) {
       return NextResponse.json({ error: "All required fields must be filled." }, { status: 400 });
     }
 
-    const tour = B2B_TOURS.find((t) => t.id === tourId);
+    const { tours, ivaRate } = await getB2BCatalog();
+    const tour = tours.find((t) => t.id === tourId);
     if (!tour) {
       return NextResponse.json({ error: "Tour not found." }, { status: 404 });
+    }
+
+    const selectedPackage = tour.packages.find((pkg) => pkg.id === packageId);
+    if (!selectedPackage) {
+      return NextResponse.json({ error: "Package not found." }, { status: 404 });
     }
 
     if (pax < tour.minPax || pax > tour.maxPax) {
@@ -49,13 +55,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const totalPrice = tour.retailPricePerPax * pax;
+    const subtotal = selectedPackage.priceCRC * Number(pax);
+    const ivaAmount = Math.round(subtotal * (ivaRate / 100));
+    const totalPrice = subtotal + ivaAmount;
     const commissionAmount = Math.round(totalPrice * (operator.commissionRate / 100));
 
     const result = await createBooking({
       operatorId: new ObjectId(operator.id),
       tourId,
-      tourName: tour.name,
+      tourName: `${tour.name} (${selectedPackage.name})`,
       clientName,
       clientEmail,
       clientPhone,
@@ -74,7 +82,7 @@ export async function POST(req: NextRequest) {
       operatorEmail: operator.email,
       operatorName: operator.name,
       bookingId,
-      tourName: tour.name,
+      tourName: `${tour.name} (${selectedPackage.name})`,
       clientName,
       clientEmail,
       pax: Number(pax),

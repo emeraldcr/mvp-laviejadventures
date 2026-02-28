@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import { findUserByEmail, upsertUserFromAuth0 } from "@/lib/models/user";
 import { getAuth0AuthorizationParams, getAuth0Issuer } from "@/lib/auth0-config";
 import { sendLoginNotificationEmail } from "@/lib/email/login-email";
+import { createLoginLog } from "@/lib/models/login-log";
 
 const auth0ClientId = process.env.AUTH0_CLIENT_ID?.trim();
 const auth0ClientSecret = process.env.AUTH0_CLIENT_SECRET?.trim();
@@ -74,6 +75,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         name: user.name,
       }).catch((error) => {
         console.error("Login notification email failed:", error);
+      });
+
+      createLoginLog({
+        userType: "user",
+        userId: (user as { id?: string }).id,
+        emailOrUsername: user.email,
+        device: "nextauth-session",
+        createdAt: new Date(),
+      }).catch((error) => {
+        console.error("User login log failed:", error);
       });
     },
   },

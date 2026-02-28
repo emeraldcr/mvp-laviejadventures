@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { findAdminByUsername } from "@/lib/models/admin";
 import { ADMIN_COOKIE_NAME, signAdminToken } from "@/lib/admin-auth";
+import { createLoginLog } from "@/lib/models/login-log";
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,6 +21,18 @@ export async function POST(req: NextRequest) {
     if (!valid) {
       return NextResponse.json({ error: "Invalid credentials." }, { status: 401 });
     }
+
+
+    const userAgent = req.headers.get("user-agent") || "unknown";
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || undefined;
+    await createLoginLog({
+      userType: "admin",
+      userId: admin._id!.toString(),
+      emailOrUsername: admin.username,
+      device: userAgent,
+      ip,
+      createdAt: new Date(),
+    });
 
     const token = signAdminToken({
       id: admin._id!.toString(),

@@ -80,3 +80,9 @@ export async function upsertUserFromAuth0(input: {
 
   return users.findOne({ _id: result.insertedId });
 }
+
+
+export async function listUsers() {
+  const users = await getUsersCollection();
+  return users.find({}, { projection: { passwordHash: 0 } }).sort({ createdAt: -1 }).toArray();
+}
