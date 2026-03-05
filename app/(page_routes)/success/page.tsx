@@ -297,6 +297,19 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
   const status = capture?.status || paypalOrder.status || "";
   const captureId = capture?.id || "";
 
+  if (status !== "COMPLETED" || !captureId) {
+    return (
+      <SuccessClient
+        error="El pago de PayPal no está completado. No se creó la reservación."
+        name={name}
+        email={email}
+        phone={phone}
+        date={date}
+        tickets={ticketsStr}
+      />
+    );
+  }
+
   // Convert to numbers for DB
   const ticketsNumber =
     typeof ticketsStr === "string" ? parseInt(ticketsStr, 10) || null : null;

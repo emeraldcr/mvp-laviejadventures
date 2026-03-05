@@ -72,6 +72,13 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
             });
 
             const output = await res.json();
+
+            if (!res.ok || !output?.captureID || output?.status !== "COMPLETED") {
+              console.error("PAYPAL CAPTURE FAILED:", output);
+              alert(tr.error);
+              return;
+            }
+
             sessionStorage.removeItem("reservationOrderDetails");
             onSuccess(output);
             router.push(`/success?orderId=${output.id}`);
@@ -153,4 +160,3 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
     </>
   );
 }
-
