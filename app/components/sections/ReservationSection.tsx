@@ -149,7 +149,7 @@ export default function ReservationSection({ className }: Props) {
   }
 
   return (
-    <div className={className}>
+    <div id="reservation-details-card" className={className}>
       <ReservationDetails
         key={`reservation-${initialSelectedTourSlug}`}
         selectedDate={selectedDay}
