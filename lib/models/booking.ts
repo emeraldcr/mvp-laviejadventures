@@ -29,6 +29,12 @@ export async function createBooking(data: Omit<OperatorBooking, "_id">) {
   return result;
 }
 
+export async function createBookings(data: Omit<OperatorBooking, "_id">[]) {
+  const col = await getBookingsCollection();
+  const result = await col.insertMany(data);
+  return result;
+}
+
 export async function findBookingsByOperator(operatorId: string) {
   const col = await getBookingsCollection();
   return col
