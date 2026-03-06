@@ -19,6 +19,10 @@ function formatCRC(amount: number) {
 
 export default function BookingForm({ tour, commissionRate, ivaRate }: BookingFormProps) {
   const router = useRouter();
+  const labelClassName =
+    "mb-1.5 block text-sm font-semibold text-zinc-800 dark:text-zinc-100";
+  const fieldClassName =
+    "w-full rounded-xl border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 shadow-sm placeholder:text-zinc-500 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-400 dark:focus:border-emerald-400 dark:focus:ring-emerald-900/40";
 
   const [form, setForm] = useState({
     packageId: tour.packages[0]?.id ?? "",
@@ -87,10 +91,14 @@ export default function BookingForm({ tour, commissionRate, ivaRate }: BookingFo
       <div className="lg:col-span-3">
         <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
           <form className="space-y-4" onSubmit={handleSubmit}>
-            {error && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
+            {error && (
+              <p className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-300">
+                {error}
+              </p>
+            )}
 
             <div>
-              <label htmlFor="packageId" className="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              <label htmlFor="packageId" className={labelClassName}>
                 Paquete *
               </label>
               <select
@@ -98,7 +106,7 @@ export default function BookingForm({ tour, commissionRate, ivaRate }: BookingFo
                 name="packageId"
                 value={form.packageId}
                 onChange={handleChange}
-                className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm"
+                className={fieldClassName}
               >
                 {tour.packages.map((pkg) => (
                   <option key={pkg.id} value={pkg.id}>{pkg.name} - {formatCRC(pkg.priceCRC)}</option>
@@ -106,26 +114,81 @@ export default function BookingForm({ tour, commissionRate, ivaRate }: BookingFo
               </select>
             </div>
 
-            <input name="clientName" required placeholder="Nombre del cliente" value={form.clientName} onChange={handleChange} className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm" />
-            <input name="clientEmail" type="email" required placeholder="Email" value={form.clientEmail} onChange={handleChange} className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm" />
-            <input name="clientPhone" required placeholder="Teléfono" value={form.clientPhone} onChange={handleChange} className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm" />
+            <div>
+              <label htmlFor="clientName" className={labelClassName}>
+                Nombre del cliente *
+              </label>
+              <input
+                id="clientName"
+                name="clientName"
+                required
+                placeholder="Ej. María Fernández"
+                value={form.clientName}
+                onChange={handleChange}
+                className={fieldClassName}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="clientEmail" className={labelClassName}>
+                Email de contacto *
+              </label>
+              <input
+                id="clientEmail"
+                name="clientEmail"
+                type="email"
+                required
+                placeholder="cliente@empresa.com"
+                value={form.clientEmail}
+                onChange={handleChange}
+                className={fieldClassName}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="clientPhone" className={labelClassName}>
+                Teléfono de contacto *
+              </label>
+              <input
+                id="clientPhone"
+                name="clientPhone"
+                required
+                placeholder="Ej. +506 8888 8888"
+                value={form.clientPhone}
+                onChange={handleChange}
+                className={fieldClassName}
+              />
+            </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label htmlFor="pax" className="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                <label htmlFor="pax" className={labelClassName}>
                   <span className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5" />Cantidad pax *</span>
                 </label>
-                <input id="pax" name="pax" type="number" required min={tour.minPax} max={tour.maxPax} value={form.pax} onChange={handleChange} className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm" />
+                <input id="pax" name="pax" type="number" required min={tour.minPax} max={tour.maxPax} value={form.pax} onChange={handleChange} className={fieldClassName} />
               </div>
               <div>
-                <label htmlFor="date" className="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                <label htmlFor="date" className={labelClassName}>
                   <span className="flex items-center gap-1.5"><CalendarDays className="h-3.5 w-3.5" />Fecha preferida *</span>
                 </label>
-                <input id="date" name="date" type="date" required min={today} value={form.date} onChange={handleChange} className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm" />
+                <input id="date" name="date" type="date" required min={today} value={form.date} onChange={handleChange} className={fieldClassName} />
               </div>
             </div>
 
-            <textarea name="notes" rows={3} value={form.notes} onChange={handleChange} className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm" placeholder="Notas adicionales" />
+            <div>
+              <label htmlFor="notes" className={labelClassName}>
+                Notas adicionales
+              </label>
+              <textarea
+                id="notes"
+                name="notes"
+                rows={3}
+                value={form.notes}
+                onChange={handleChange}
+                className={fieldClassName}
+                placeholder="Comparte requisitos especiales, horario deseado o información adicional."
+              />
+            </div>
 
             <div className="flex gap-3 pt-2">
               <Link href="/b2b/tours" className="flex items-center gap-2 rounded-xl border border-zinc-200 px-4 py-3 text-sm font-semibold text-zinc-700">
