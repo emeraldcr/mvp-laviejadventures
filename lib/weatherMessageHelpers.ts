@@ -3,11 +3,7 @@
  * Versión chill: vacilón tico ligero, corto y sin ser despiadado.
  */
 
-import {
-  WEATHER_MESSAGE_CHARACTERS,
-  WEATHER_MESSAGE_STYLE_ANGLES,
-  WEATHER_MESSAGE_SYSTEM_PROMPT,
-} from "@/lib/weatherMessageConstants";
+import { WEATHER_MESSAGE_SYSTEM_PROMPT } from "@/lib/weatherMessageConstants";
 
 export type WeatherSnapshot = {
   risk: "green" | "yellow" | "red";
@@ -66,9 +62,6 @@ export function buildUserPrompt(snap: WeatherSnapshot): string {
         ? "bajando"
         : "estable";
 
-  const angle =
-    WEATHER_MESSAGE_STYLE_ANGLES[Math.floor(Math.random() * WEATHER_MESSAGE_STYLE_ANGLES.length)];
-
   return `Generá 1-2 oraciones de humor campesino san carleño con estos datos reales:
 - Estado general: ${condicion} (${snap.riskLabel ?? snap.risk})
 - Intensidad reportada: ${snap.intensity}
@@ -94,11 +87,5 @@ export function buildUserPrompt(snap: WeatherSnapshot): string {
 - Estación/zona: ${snap.stationName ?? "San Carlos"}
 
 Personalización obligatoria Río La Vieja:
-- Mencioná explícitamente "Río La Vieja" o "La Vieja river".
-- Estilo de compa extranjero + barrio tico, con humor más filoso pero no odio real.
-- Meté al menos 1 personaje de esta lista en la línea final:
-  ${WEATHER_MESSAGE_CHARACTERS.join(", ")}.
-- Si encaja, podés usar guiños como: "ni que fuera Virgilio" o "o sea(s) tonto".
-
-Enfoque de estilo: ${angle}`;
+- Mencioná explícitamente "Río La Vieja" o "La Vieja river".`;
 }
