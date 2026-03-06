@@ -1,9 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 import { getOperatorFromRequest } from "@/lib/b2b-auth";
-import { createBooking, findBookingsByOperator } from "@/lib/models/booking";
+import { createBooking, createBookings, findBookingsByOperator } from "@/lib/models/booking";
 import { sendBookingConfirmationEmail } from "@/lib/email/b2b-emails";
 import { getB2BCatalog } from "@/lib/b2b-catalog";
+
+type BookingPayload = {
+  tourId: string;
+  packageId: string;
+  clientName: string;
+  clientEmail: string;
+  clientPhone: string;
+  pax: number;
+  date: string;
+  notes?: string;
+};
+
+function isValidBookingPayload(payload: Partial<BookingPayload>) {
+  return Boolean(
+    payload.tourId &&
+      payload.packageId &&
+      payload.clientName &&
+      payload.clientEmail &&
+      payload.clientPhone &&
+      payload.pax &&
+      payload.date
+  );
+}
 
 export async function GET(req: NextRequest) {
   const operator = getOperatorFromRequest(req);
@@ -30,73 +53,128 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { tourId, packageId, clientName, clientEmail, clientPhone, pax, date, notes } =
-      await req.json();
+    const body = await req.json();
+    const payloads: BookingPayload[] = Array.isArray(body?.bookings)
+      ? body.bookings
+      : [body as BookingPayload];
 
-    if (!tourId || !packageId || !clientName || !clientEmail || !clientPhone || !pax || !date) {
+    if (payloads.length === 0) {
+      return NextResponse.json({ error: "At least one booking is required." }, { status: 400 });
+    }
+
+    if (!payloads.every((payload) => isValidBookingPayload(payload))) {
       return NextResponse.json({ error: "All required fields must be filled." }, { status: 400 });
     }
 
     const { tours, ivaRate } = await getB2BCatalog();
-    const tour = tours.find((t) => t.id === tourId);
-    if (!tour) {
+    const byTourId = new Map(tours.map((tour) => [tour.id, tour]));
+
+    const bookingDocs = payloads.map((payload) => {
+      const tour = byTourId.get(payload.tourId);
+      if (!tour) {
+        throw new Error(`TOUR_NOT_FOUND:${payload.tourId}`);
+      }
+
+      const selectedPackage = tour.packages.find((pkg) => pkg.id === payload.packageId);
+      if (!selectedPackage) {
+        throw new Error(`PACKAGE_NOT_FOUND:${payload.packageId}`);
+      }
+
+      if (payload.pax < tour.minPax || payload.pax > tour.maxPax) {
+        throw new Error(`INVALID_PAX:${tour.minPax}:${tour.maxPax}`);
+      }
+
+      const subtotal = selectedPackage.priceCRC * Number(payload.pax);
+      const ivaAmount = Math.round(subtotal * (ivaRate / 100));
+      const totalPrice = subtotal + ivaAmount;
+      const commissionAmount = Math.round(totalPrice * (operator.commissionRate / 100));
+
+      return {
+        operatorId: new ObjectId(operator.id),
+        tourId: payload.tourId,
+        tourName: `${tour.name} (${selectedPackage.name})`,
+        clientName: payload.clientName,
+        clientEmail: payload.clientEmail,
+        clientPhone: payload.clientPhone,
+        pax: Number(payload.pax),
+        date: new Date(payload.date),
+        totalPrice,
+        commissionAmount,
+        status: "pending" as const,
+        notes: payload.notes || "",
+        createdAt: new Date(),
+      };
+    });
+
+    const bookingCurrencies = payloads.map((payload) => byTourId.get(payload.tourId)?.currency ?? "CRC");
+
+    if (bookingDocs.length === 1) {
+      const [doc] = bookingDocs;
+      const result = await createBooking(doc);
+      const bookingId = result.insertedId.toString();
+
+      sendBookingConfirmationEmail({
+        operatorEmail: operator.email,
+        operatorName: operator.name,
+        bookingId,
+        tourName: doc.tourName,
+        clientName: doc.clientName,
+        clientEmail: doc.clientEmail,
+        pax: doc.pax,
+        date: doc.date.toLocaleDateString("es-CR"),
+        totalPrice: doc.totalPrice,
+        commissionAmount: doc.commissionAmount,
+        currency: bookingCurrencies[0],
+      }).catch(console.error);
+
+      return NextResponse.json(
+        { message: "Booking created successfully.", bookingId },
+        { status: 201 }
+      );
+    }
+
+    const result = await createBookings(bookingDocs);
+    const bookingIds = Object.values(result.insertedIds).map((id) => id.toString());
+
+    bookingDocs.forEach((doc, index) => {
+      sendBookingConfirmationEmail({
+        operatorEmail: operator.email,
+        operatorName: operator.name,
+        bookingId: bookingIds[index],
+        tourName: doc.tourName,
+        clientName: doc.clientName,
+        clientEmail: doc.clientEmail,
+        pax: doc.pax,
+        date: doc.date.toLocaleDateString("es-CR"),
+        totalPrice: doc.totalPrice,
+        commissionAmount: doc.commissionAmount,
+        currency: bookingCurrencies[index],
+      }).catch(console.error);
+    });
+
+    return NextResponse.json(
+      { message: "Bookings created successfully.", bookingIds },
+      { status: 201 }
+    );
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "";
+
+    if (message.startsWith("TOUR_NOT_FOUND:")) {
       return NextResponse.json({ error: "Tour not found." }, { status: 404 });
     }
 
-    const selectedPackage = tour.packages.find((pkg) => pkg.id === packageId);
-    if (!selectedPackage) {
+    if (message.startsWith("PACKAGE_NOT_FOUND:")) {
       return NextResponse.json({ error: "Package not found." }, { status: 404 });
     }
 
-    if (pax < tour.minPax || pax > tour.maxPax) {
+    if (message.startsWith("INVALID_PAX:")) {
+      const [, minPax, maxPax] = message.split(":");
       return NextResponse.json(
-        { error: `Pax must be between ${tour.minPax} and ${tour.maxPax}.` },
+        { error: `Pax must be between ${minPax} and ${maxPax}.` },
         { status: 400 }
       );
     }
 
-    const subtotal = selectedPackage.priceCRC * Number(pax);
-    const ivaAmount = Math.round(subtotal * (ivaRate / 100));
-    const totalPrice = subtotal + ivaAmount;
-    const commissionAmount = Math.round(totalPrice * (operator.commissionRate / 100));
-
-    const result = await createBooking({
-      operatorId: new ObjectId(operator.id),
-      tourId,
-      tourName: `${tour.name} (${selectedPackage.name})`,
-      clientName,
-      clientEmail,
-      clientPhone,
-      pax: Number(pax),
-      date: new Date(date),
-      totalPrice,
-      commissionAmount,
-      status: "pending",
-      notes: notes || "",
-      createdAt: new Date(),
-    });
-
-    const bookingId = result.insertedId.toString();
-
-    sendBookingConfirmationEmail({
-      operatorEmail: operator.email,
-      operatorName: operator.name,
-      bookingId,
-      tourName: `${tour.name} (${selectedPackage.name})`,
-      clientName,
-      clientEmail,
-      pax: Number(pax),
-      date: new Date(date).toLocaleDateString("es-CR"),
-      totalPrice,
-      commissionAmount,
-      currency: tour.currency,
-    }).catch(console.error);
-
-    return NextResponse.json(
-      { message: "Booking created successfully.", bookingId },
-      { status: 201 }
-    );
-  } catch (err) {
     console.error("B2B booking create error:", err);
     return NextResponse.json({ error: "Failed to create booking." }, { status: 500 });
   }
