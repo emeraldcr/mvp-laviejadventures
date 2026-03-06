@@ -2,6 +2,9 @@ import Link from "next/link";
 import { ArrowLeft, Building2, ShieldCheck, UserRound } from "lucide-react";
 import type { Metadata } from "next";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export const metadata: Metadata = {
   title: "Portal B2B – La Vieja Adventures",
   description: "Portal para operadores turísticos, hoteles y agentes de viaje.",
