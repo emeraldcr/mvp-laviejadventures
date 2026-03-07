@@ -412,6 +412,9 @@ export type SendEmailParams = {
   captureId: string | null;
   status: string | null;
   reservationId: string | null;
+  tourName?: string | null;
+  tourPackage?: string | null;
+  tourTime?: string | null;
 };
 
 export type SuccessClientProps = {

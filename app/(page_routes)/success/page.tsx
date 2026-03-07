@@ -67,6 +67,9 @@ function createMailBody({
   captureId,
   status,
   reservationId,
+  tourName,
+  tourPackage,
+  tourTime,
 }: SendEmailParams) {
   const displayName = name ?? "Cliente";
   const displayDate = date ?? "N/A";
@@ -78,6 +81,9 @@ function createMailBody({
   const displayStatus = status ?? "N/A";
   const displayReservationId = reservationId ?? "N/A";
   const displayPhone = phone ?? "N/A";
+  const displayTourName = tourName ?? "N/A";
+  const displayTourPackage = tourPackage ?? "N/A";
+  const displayTourTime = tourTime ?? "N/A";
 
   return `<!DOCTYPE html>
 <html>
@@ -113,6 +119,9 @@ function createMailBody({
     <li><b>Teléfono:</b> ${displayPhone}</li>
     <li><b>Fecha de la experiencia:</b> ${displayDate}</li>
     <li><b>Cantidad de tickets:</b> ${displayTickets}</li>
+    <li><b>Tour:</b> ${displayTourName}</li>
+    <li><b>Paquete elegido:</b> ${displayTourPackage}</li>
+    <li><b>Hora del tour:</b> ${displayTourTime}</li>
     <li><b>Total Pagado:</b> ${displayAmount}</li>
     <li><b>ID de la Orden (PayPal):</b> ${displayOrderId}</li>
     <li><b>ID de Pago / Transacción:</b> ${displayCaptureId}</li>
@@ -245,6 +254,14 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
   }`.trim();
   const payerEmail = payer.email_address || "";
 
+  let persistedContext: Record<string, unknown> | null = null;
+  try {
+    const db = await getDb();
+    persistedContext = (await db.collection("paypal_order_contexts").findOne({ orderId })) as Record<string, unknown> | null;
+  } catch (contextErr) {
+    console.warn("Failed to read persisted PayPal context:", contextErr);
+  }
+
   let meta: Record<string, unknown> | null = null;
   if (purchaseUnit.custom_id) {
     try {
@@ -256,34 +273,61 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
 
   const metaCustomer = (meta?.customer as Record<string, unknown> | undefined) ?? meta;
   const metaBooking = (meta?.booking as Record<string, unknown> | undefined) ?? meta;
+  const persistedCustomer = (persistedContext?.customer as Record<string, unknown> | undefined) ?? null;
+  const persistedBooking = (persistedContext?.booking as Record<string, unknown> | undefined) ?? null;
 
   const description = purchaseUnit.description || "";
   const ticketsMatch = description.match(/(\d+)\s*tickets?/i);
   const dateMatch =
     description.match(/\(([^)]+)\)/) || description.match(/para\s+(.*)/i);
 
-  const name = (metaCustomer?.name as string | undefined) || payerName || "Cliente";
-  const email = (metaCustomer?.email as string | undefined) || payerEmail || "";
-  const phone = (metaCustomer?.phone as string | undefined) || "";
+  const name =
+    (metaCustomer?.name as string | undefined) ||
+    (persistedCustomer?.name as string | undefined) ||
+    payerName ||
+    "Cliente";
+  const email =
+    (metaCustomer?.email as string | undefined) ||
+    (persistedCustomer?.email as string | undefined) ||
+    payerEmail ||
+    "";
+  const phone =
+    (metaCustomer?.phone as string | undefined) ||
+    (persistedCustomer?.phone as string | undefined) ||
+    "";
 
   const ticketsStr =
     String(meta?.tickets ?? "") ||
     String(metaBooking?.tickets ?? "") ||
     String(metaCustomer?.tickets ?? "") ||
+    String(persistedBooking?.tickets ?? "") ||
     (ticketsMatch ? ticketsMatch[1] : "");
 
   const date =
     (meta?.date as string | undefined) ||
     (metaBooking?.date as string | undefined) ||
     (metaCustomer?.date as string | undefined) ||
+    (persistedBooking?.date as string | undefined) ||
     (dateMatch ? dateMatch[1] : "");
 
-  const tourTime: string | null = typeof meta?.time === "string" ? meta.time : null;
-  const tourPackage: string | null = typeof meta?.pkg === "string" ? meta.pkg : null;
+  const tourTime: string | null =
+    (typeof meta?.time === "string" ? meta.time : null) ||
+    (typeof persistedBooking?.tourTime === "string" ? persistedBooking.tourTime : null);
+  const tourPackage: string | null =
+    (typeof meta?.pkg === "string" ? meta.pkg : null) ||
+    (typeof persistedBooking?.tourPackage === "string" ? persistedBooking.tourPackage : null);
   const packagePrice: number | null =
-    meta?.ppUSD != null ? Number(meta.ppUSD) : null;
-  const tourSlug: string | null = typeof meta?.tourSlug === "string" ? meta.tourSlug : null;
-  const tourName: string | null = typeof meta?.tourName === "string" ? meta.tourName : null;
+    meta?.ppUSD != null
+      ? Number(meta.ppUSD)
+      : persistedBooking?.packagePrice != null
+      ? Number(persistedBooking.packagePrice)
+      : null;
+  const tourSlug: string | null =
+    (typeof meta?.tourSlug === "string" ? meta.tourSlug : null) ||
+    (typeof persistedBooking?.tourSlug === "string" ? persistedBooking.tourSlug : null);
+  const tourName: string | null =
+    (typeof meta?.tourName === "string" ? meta.tourName : null) ||
+    (typeof persistedBooking?.tourName === "string" ? persistedBooking.tourName : null);
 
   const amountStr =
     capture?.amount?.value ||
@@ -355,6 +399,9 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
           captureId,
           status,
           reservationId,
+          tourName,
+          tourPackage,
+          tourTime,
         })
       : Promise.resolve(),
   ]);
