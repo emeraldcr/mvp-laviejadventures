@@ -46,6 +46,9 @@ const es = {
     chosenFew: "Queda muy poco espacio, confirma tu horario cuanto antes.",
     chosenPrefix: "Has elegido el",
     noDate: "Selecciona una fecha disponible en el calendario.",
+    continueToDetails: "Continuar con datos",
+    selectDateFirst: "Primero selecciona una fecha",
+    mobileFlowHint: "Paso 2: completa tus datos sin perder tu avance.",
   },
   reservation: {
     step: "Paso 2 · Detalles",
@@ -321,6 +324,9 @@ const en = {
     chosenFew: "Very limited space left — confirm your time as soon as possible.",
     chosenPrefix: "You chose",
     noDate: "Select an available date on the calendar.",
+    continueToDetails: "Continue to details",
+    selectDateFirst: "Select a date first",
+    mobileFlowHint: "Step 2: complete your details without losing progress.",
   },
   reservation: {
     step: "Step 2 · Details",

@@ -2,12 +2,13 @@
 import Link from "next/link";
 import { TOUR_INFO } from "@/lib/tour-info";
 import { AvailabilityMap, MainTourInfo } from "@/lib/types/index";
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { format } from "date-fns";
 import { es, enUS } from "date-fns/locale";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/lib/translations";
 import { Camera, ShieldCheck, Sparkles, TreePalm, Users, UtensilsCrossed } from "lucide-react";
+import { trackAnalyticsEvent } from "@/lib/analytics/client";
 
 // ---------------------- CONSTANTS ----------------------
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -403,8 +404,42 @@ export default function ReservationDetails({
     { id: 3 as const, label: tr.steps.review },
   ];
 
+  useEffect(() => {
+    trackAnalyticsEvent("booking_step", {
+      metadata: {
+        step: currentStep,
+        selectedDate,
+        currentMonth,
+        currentYear,
+        tickets,
+        hasSelectedTime: Boolean(tourTime),
+        hasSelectedPackage: Boolean(effectiveTourPackage),
+        selectedTourSlug: selectedTour?.slug ?? null,
+      },
+    });
+  }, [
+    currentStep,
+    selectedDate,
+    currentMonth,
+    currentYear,
+    tickets,
+    tourTime,
+    effectiveTourPackage,
+    selectedTour?.slug,
+  ]);
+
   const handleReserve = useCallback(() => {
     if (!isFormValid || !effectiveSelectedPackage || !tourTime || !effectiveTourPackage || !selectedTour) return;
+
+    trackAnalyticsEvent("booking_submitted", {
+      metadata: {
+        tickets,
+        tourTime,
+        tourPackage: effectiveTourPackage,
+        tourSlug: selectedTour.slug,
+        totalWithTaxes,
+      },
+    });
 
     onReserve({
       tickets,
