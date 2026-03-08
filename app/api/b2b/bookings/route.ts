@@ -4,6 +4,18 @@ import { getOperatorFromRequest } from "@/lib/b2b-auth";
 import { createBooking, createBookings, findBookingsByOperator } from "@/lib/models/booking";
 import { sendBookingConfirmationEmail } from "@/lib/email/b2b-emails";
 import { getB2BCatalog } from "@/lib/b2b-catalog";
+import {
+  isISODateOnly,
+  isSafeText,
+  isSlugLike,
+  isValidEmail,
+  isValidPhone,
+  normalizeEmail,
+  normalizePhone,
+  normalizeSlugLike,
+  sanitizeText,
+  toPositiveInt,
+} from "@/lib/security/input-validation";
 
 type BookingPayload = {
   tourId: string;
@@ -16,16 +28,45 @@ type BookingPayload = {
   notes?: string;
 };
 
-function isValidBookingPayload(payload: Partial<BookingPayload>) {
-  return Boolean(
-    payload.tourId &&
-      payload.packageId &&
-      payload.clientName &&
-      payload.clientEmail &&
-      payload.clientPhone &&
-      payload.pax &&
-      payload.date
-  );
+type SanitizedBookingPayload = {
+  tourId: string;
+  packageId: string;
+  clientName: string;
+  clientEmail: string;
+  clientPhone: string;
+  pax: number;
+  date: string;
+  notes: string;
+};
+
+function sanitizeAndValidateBookingPayload(payload: Partial<BookingPayload>): SanitizedBookingPayload | null {
+  const tourId = normalizeSlugLike(payload.tourId, 120);
+  const packageId = normalizeSlugLike(payload.packageId, 60);
+  const clientName = sanitizeText(payload.clientName, 100);
+  const clientEmail = normalizeEmail(payload.clientEmail);
+  const clientPhone = normalizePhone(payload.clientPhone);
+  const pax = toPositiveInt(payload.pax);
+  const date = typeof payload.date === "string" ? payload.date.trim() : "";
+  const notes = sanitizeText(payload.notes ?? "", 500);
+
+  if (!tourId || !isSlugLike(tourId)) return null;
+  if (!packageId || !isSlugLike(packageId)) return null;
+  if (!clientName || !isSafeText(clientName, 2)) return null;
+  if (!isValidEmail(clientEmail)) return null;
+  if (!isValidPhone(clientPhone)) return null;
+  if (!pax) return null;
+  if (!isISODateOnly(date)) return null;
+
+  return {
+    tourId,
+    packageId,
+    clientName,
+    clientEmail,
+    clientPhone,
+    pax,
+    date,
+    notes,
+  };
 }
 
 export async function GET(req: NextRequest) {
@@ -58,18 +99,22 @@ export async function POST(req: NextRequest) {
       ? body.bookings
       : [body as BookingPayload];
 
-    if (payloads.length === 0) {
-      return NextResponse.json({ error: "At least one booking is required." }, { status: 400 });
+    if (payloads.length === 0 || payloads.length > 20) {
+      return NextResponse.json({ error: "Between 1 and 20 bookings are allowed per request." }, { status: 400 });
     }
 
-    if (!payloads.every((payload) => isValidBookingPayload(payload))) {
-      return NextResponse.json({ error: "All required fields must be filled." }, { status: 400 });
+    const sanitizedPayloads = payloads
+      .map((payload) => sanitizeAndValidateBookingPayload(payload))
+      .filter((payload): payload is SanitizedBookingPayload => payload !== null);
+
+    if (sanitizedPayloads.length !== payloads.length) {
+      return NextResponse.json({ error: "Invalid booking payload." }, { status: 400 });
     }
 
     const { tours, ivaRate } = await getB2BCatalog();
     const byTourId = new Map(tours.map((tour) => [tour.id, tour]));
 
-    const bookingDocs = payloads.map((payload) => {
+    const bookingDocs = sanitizedPayloads.map((payload) => {
       const tour = byTourId.get(payload.tourId);
       if (!tour) {
         throw new Error(`TOUR_NOT_FOUND:${payload.tourId}`);
@@ -101,12 +146,12 @@ export async function POST(req: NextRequest) {
         totalPrice,
         commissionAmount,
         status: "pending" as const,
-        notes: payload.notes || "",
+        notes: payload.notes,
         createdAt: new Date(),
       };
     });
 
-    const bookingCurrencies = payloads.map((payload) => byTourId.get(payload.tourId)?.currency ?? "CRC");
+    const bookingCurrencies = sanitizedPayloads.map((payload) => byTourId.get(payload.tourId)?.currency ?? "CRC");
 
     if (bookingDocs.length === 1) {
       const [doc] = bookingDocs;

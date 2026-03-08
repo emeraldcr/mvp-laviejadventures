@@ -6,6 +6,19 @@ import {
   getPayPalAccessToken,
 } from "@/lib/paypal";
 import { getDb } from "@/lib/mongodb";
+import {
+  isISODateOnly,
+  isSafeText,
+  isSlugLike,
+  isValidEmail,
+  isValidPhone,
+  normalizeEmail,
+  normalizePhone,
+  normalizeSlugLike,
+  sanitizeText,
+  toPositiveCurrency,
+  toPositiveInt,
+} from "@/lib/security/input-validation";
 
 interface CreateOrderLink {
   rel?: string;
@@ -17,18 +30,80 @@ interface CreateOrderResponse {
   links?: CreateOrderLink[];
 }
 
+interface SanitizedCreateOrderPayload {
+  name: string;
+  email: string;
+  phone: string;
+  tickets: number;
+  total: number;
+  date: string;
+  tourTime: string | null;
+  tourPackage: "basic" | "full-day" | "private";
+  packagePrice: number | null;
+  tourSlug: string | null;
+  tourName: string | null;
+}
+
+function sanitizeCreateOrderPayload(body: Record<string, unknown>): SanitizedCreateOrderPayload | null {
+  const name = sanitizeText(body.name, 100);
+  const email = normalizeEmail(body.email);
+  const phone = normalizePhone(body.phone);
+  const tickets = toPositiveInt(body.tickets);
+  const total = toPositiveCurrency(body.total);
+  const date = typeof body.date === "string" ? body.date.trim() : "";
+
+  const rawTourTime = typeof body.tourTime === "string" ? body.tourTime.trim() : "";
+  const allowedTourTimes = new Set(["08:00", "09:00", "10:00"]);
+  const tourTime = rawTourTime ? (allowedTourTimes.has(rawTourTime) ? rawTourTime : null) : null;
+
+  const rawPackage = typeof body.tourPackage === "string" ? body.tourPackage.trim() : "";
+  const allowedPackages = new Set(["basic", "full-day", "private"]);
+  if (!allowedPackages.has(rawPackage)) return null;
+  const tourPackage = rawPackage as "basic" | "full-day" | "private";
+
+  const packagePrice = body.packagePrice == null ? null : toPositiveCurrency(body.packagePrice);
+  const tourSlugRaw = body.tourSlug == null ? "" : normalizeSlugLike(body.tourSlug, 80);
+  const tourNameRaw = body.tourName == null ? "" : sanitizeText(body.tourName, 120);
+
+  if (!name || !isSafeText(name, 2)) return null;
+  if (!isValidEmail(email)) return null;
+  if (!isValidPhone(phone)) return null;
+  if (!tickets) return null;
+  if (!total) return null;
+  if (!isISODateOnly(date)) return null;
+  if (tourSlugRaw && !isSlugLike(tourSlugRaw)) return null;
+  if (tourNameRaw && !isSafeText(tourNameRaw, 2)) return null;
+  if (body.packagePrice != null && !packagePrice) return null;
+
+  return {
+    name,
+    email,
+    phone,
+    tickets,
+    total,
+    date,
+    tourTime,
+    tourPackage,
+    packagePrice,
+    tourSlug: tourSlugRaw || null,
+    tourName: tourNameRaw || null,
+  };
+}
+
 export async function POST(req: Request) {
   try {
-    const { name, email, phone, tickets, total, date, tourTime, tourPackage, packagePrice, tourSlug, tourName } = await req.json();
+    const body = (await req.json()) as Record<string, unknown>;
+    const payload = sanitizeCreateOrderPayload(body);
 
-    if (!name || !email || !phone || !tickets || !total || !date || !tourPackage) {
+    if (!payload) {
       return NextResponse.json(
-        { message: "Missing required fields." },
+        { message: "Invalid or missing fields." },
         { status: 400 }
       );
     }
 
-    const formattedTotal = Number(total).toFixed(2);
+    const { name, email, phone, tickets, total, date, tourTime, tourPackage, packagePrice, tourSlug, tourName } = payload;
+    const formattedTotal = total.toFixed(2);
 
     const packageLabel =
       tourPackage === "basic"
@@ -109,14 +184,14 @@ export async function POST(req: Request) {
               phone,
             },
             booking: {
-              tickets: Number(tickets),
+              tickets,
               date,
               tourTime: tourTime ?? null,
               tourPackage: tourPackage ?? null,
-              packagePrice: packagePrice != null ? Number(packagePrice) : null,
+              packagePrice,
               tourSlug: tourSlug ?? null,
               tourName: tourName ?? null,
-              total: Number(total),
+              total,
             },
             updatedAt: new Date(),
           },
