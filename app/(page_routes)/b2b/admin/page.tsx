@@ -49,6 +49,43 @@ type B2BSettings = {
   tourPricing: Array<{ tourId: string; packages: Array<{ id: string; name: string; priceCRC: number }> }>;
 };
 
+type BookingAnalyticsEvent = {
+  _id: string;
+  event: "booking_step" | "booking_submitted";
+  path: string | null;
+  sessionId: string | null;
+  happenedAt: string | null;
+  createdAt: string | null;
+  metadata: {
+    step?: string;
+    tickets?: number;
+    amount?: number;
+    currency?: string;
+    [key: string]: unknown;
+  };
+  user: {
+    userId?: string | null;
+    email?: string | null;
+    name?: string | null;
+  };
+  request: {
+    country?: string | null;
+    city?: string | null;
+    deviceType?: string | null;
+    browser?: string | null;
+    os?: string | null;
+  };
+};
+
+type BookingAnalytics = {
+  totalEvents: number;
+  bookingSteps: number;
+  bookingSubmissions: number;
+  uniqueSessions: number;
+  conversionRate: number;
+  recentEvents: BookingAnalyticsEvent[];
+};
+
 const ACCESS_LINKS = [
   { href: "/", label: "Inicio", icon: <Home className="h-4 w-4" />, style: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300" },
   { href: "/dashboard", label: "Usuario normal", icon: <UserRound className="h-4 w-4" />, style: "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200" },
@@ -65,6 +102,14 @@ export default function B2BAdminPage() {
   const [users, setUsers] = useState<AppUser[]>([]);
   const [loginLogs, setLoginLogs] = useState<LoginLog[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [bookingAnalytics, setBookingAnalytics] = useState<BookingAnalytics>({
+    totalEvents: 0,
+    bookingSteps: 0,
+    bookingSubmissions: 0,
+    uniqueSessions: 0,
+    conversionRate: 0,
+    recentEvents: [],
+  });
   const [settings, setSettings] = useState<B2BSettings>({ ivaRate: 13, tourPricing: [] });
   const [pricingJson, setPricingJson] = useState("[]");
 
@@ -92,7 +137,8 @@ export default function B2BAdminPage() {
       if (operatorsRes.status === 401 || insightsRes.status === 401 || settingsRes.status === 401) {
         setIsLoggedIn(false);
         setOperators([]);
-    setReservations([]);
+        setReservations([]);
+        setBookingAnalytics({ totalEvents: 0, bookingSteps: 0, bookingSubmissions: 0, uniqueSessions: 0, conversionRate: 0, recentEvents: [] });
         return;
       }
 
@@ -110,6 +156,10 @@ export default function B2BAdminPage() {
       setUsers(insightsData.users || []);
       setLoginLogs(insightsData.loginLogs || []);
       setReservations(insightsData.reservations || []);
+      setBookingAnalytics(
+        insightsData.bookingAnalytics ||
+          { totalEvents: 0, bookingSteps: 0, bookingSubmissions: 0, uniqueSessions: 0, conversionRate: 0, recentEvents: [] },
+      );
       const nextSettings = settingsData.settings || { ivaRate: 13, tourPricing: [] };
       setSettings(nextSettings);
       setPricingJson(JSON.stringify(nextSettings.tourPricing || [], null, 2));
@@ -141,7 +191,8 @@ export default function B2BAdminPage() {
       if (response.status === 401) {
         setIsLoggedIn(false);
         setOperators([]);
-    setReservations([]);
+        setReservations([]);
+        setBookingAnalytics({ totalEvents: 0, bookingSteps: 0, bookingSubmissions: 0, uniqueSessions: 0, conversionRate: 0, recentEvents: [] });
         return;
       }
 
@@ -314,6 +365,63 @@ export default function B2BAdminPage() {
                   <td className="py-2">
                     {reservation.createdAt ? new Date(reservation.createdAt).toLocaleString("es-CR") : "-"}
                   </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="mt-6 rounded-2xl border border-zinc-200 bg-white p-6">
+        <h2 className="mb-1 text-xl font-semibold">Booking analytics (Mongo track)</h2>
+        <p className="mb-4 text-sm text-zinc-500">Eventos nuevos de analytics para seguir el embudo de reserva e insights de conversión.</p>
+
+        <div className="mb-4 grid gap-3 md:grid-cols-5">
+          <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3">
+            <p className="text-xs text-zinc-500">Eventos</p>
+            <p className="text-2xl font-semibold">{bookingAnalytics.totalEvents}</p>
+          </div>
+          <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3">
+            <p className="text-xs text-zinc-500">Booking steps</p>
+            <p className="text-2xl font-semibold">{bookingAnalytics.bookingSteps}</p>
+          </div>
+          <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3">
+            <p className="text-xs text-zinc-500">Submissions</p>
+            <p className="text-2xl font-semibold">{bookingAnalytics.bookingSubmissions}</p>
+          </div>
+          <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3">
+            <p className="text-xs text-zinc-500">Sesiones únicas</p>
+            <p className="text-2xl font-semibold">{bookingAnalytics.uniqueSessions}</p>
+          </div>
+          <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3">
+            <p className="text-xs text-zinc-500">Conversión / sesión</p>
+            <p className="text-2xl font-semibold">{bookingAnalytics.conversionRate}%</p>
+          </div>
+        </div>
+
+        <div className="max-h-96 overflow-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-zinc-500">
+                <th className="pb-2">Evento</th>
+                <th className="pb-2">Paso</th>
+                <th className="pb-2">Path</th>
+                <th className="pb-2">Usuario</th>
+                <th className="pb-2">Dispositivo</th>
+                <th className="pb-2">Sesión</th>
+                <th className="pb-2">Fecha</th>
+              </tr>
+            </thead>
+            <tbody>
+              {bookingAnalytics.recentEvents.map((event) => (
+                <tr key={event._id} className="border-t border-zinc-100">
+                  <td className="py-2 font-medium">{event.event}</td>
+                  <td className="py-2">{typeof event.metadata.step === "string" ? event.metadata.step : "-"}</td>
+                  <td className="py-2">{event.path || "-"}</td>
+                  <td className="py-2">{event.user.email || event.user.name || "Anónimo"}</td>
+                  <td className="py-2">{event.request.deviceType || "-"} · {event.request.browser || "-"}</td>
+                  <td className="py-2">{event.sessionId ? event.sessionId.slice(0, 8) : "-"}</td>
+                  <td className="py-2">{event.happenedAt ? new Date(event.happenedAt).toLocaleString("es-CR") : "-"}</td>
                 </tr>
               ))}
             </tbody>
