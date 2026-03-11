@@ -11,8 +11,7 @@ import {
   Cell,
   ReferenceLine,
 } from "recharts";
-
-type DailyEntry = { fecha: string; lluvia_mm: number };
+import type { DailyRainEntry } from "@/lib/types/index";
 
 function getBarColor(mm: number): string {
   if (mm >= 50) return "#ef4444"; // red – extreme
@@ -21,7 +20,9 @@ function getBarColor(mm: number): string {
   return "#93c5fd";               // light blue – light/trace
 }
 
-const CustomTooltip = ({ active, payload }: any) => {
+type DailyTooltipProps = { active?: boolean; payload?: Array<{ payload: { fecha: string; mm: number } }> };
+
+const CustomTooltip = ({ active, payload }: DailyTooltipProps) => {
   if (!active || !payload?.length) return null;
   const d = payload[0].payload;
   const color = getBarColor(d.mm);
@@ -35,7 +36,7 @@ const CustomTooltip = ({ active, payload }: any) => {
   );
 };
 
-export default function DailyRainBarChart({ daily }: { daily: DailyEntry[] }) {
+export default function DailyRainBarChart({ daily }: { daily: DailyRainEntry[] }) {
   const chartData = daily
     .slice(0, 14)
     .reverse()

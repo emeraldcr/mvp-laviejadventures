@@ -3,10 +3,9 @@
 import { useState, useRef, useEffect, ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 import Image from "next/image";
-import { useInterval } from "../../hooks/useInterval";
+import { useInterval } from "@/app/hooks/useInterval";
 import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
-import CalendarSection from "./CalendarSection";
 
 // New: overlay prop to allow custom content (text or an image) and height prop
 interface HeroCarouselProps {

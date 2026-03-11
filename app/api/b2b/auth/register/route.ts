@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { findOperatorByEmail, createOperator } from "@/lib/models/operator";
-import { signToken, COOKIE_NAME } from "@/lib/b2b-auth";
+import crypto from "crypto";
+import { findOperatorByEmail, createOperator, setVerificationToken } from "@/lib/models/operator";
+import { sendVerificationEmail } from "@/lib/email/b2b-emails";
 
 export async function POST(req: NextRequest) {
   try {
@@ -24,6 +25,8 @@ export async function POST(req: NextRequest) {
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+    const verificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h
 
     const result = await createOperator({
       name,
@@ -33,30 +36,20 @@ export async function POST(req: NextRequest) {
       status: "pending",
       commissionRate: 10,
       createdAt: new Date(),
+      emailVerified: false,
+      verificationToken,
+      verificationExpiry,
     });
 
-    const token = signToken({
-      id: result.insertedId.toString(),
-      email: email.toLowerCase(),
-      name,
-      company,
-      commissionRate: 10,
-      status: "pending",
-    });
+    await setVerificationToken(result.insertedId.toString(), verificationToken, verificationExpiry);
 
-    const res = NextResponse.json(
-      { message: "Account created. Awaiting admin approval.", status: "pending" },
+    // Fire-and-forget — don't block the response
+    sendVerificationEmail(email.toLowerCase(), name, verificationToken).catch(console.error);
+
+    return NextResponse.json(
+      { message: "Account created. Please check your email to verify your account.", status: "pending" },
       { status: 201 }
     );
-    res.cookies.set(COOKIE_NAME, token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 7,
-      path: "/",
-    });
-
-    return res;
   } catch (err) {
     console.error("B2B register error:", err);
     return NextResponse.json({ error: "Registration failed. Please try again." }, { status: 500 });

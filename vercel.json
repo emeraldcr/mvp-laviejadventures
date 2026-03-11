@@ -2,7 +2,41 @@
   "framework": "nextjs",
   "buildCommand": "next build",
   "installCommand": "npm ci",
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "laviejaadventures.com"
+        }
+      ],
+      "destination": "https://www.laviejaadventures.com/:path*",
+      "permanent": true
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "platform.laviejaadventures.com"
+        }
+      ],
+      "destination": "/platform/:path*"
+    }
+  ],
   "headers": [
+    {
+      "source": "/b2b/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, s-maxage=0, must-revalidate"
+        }
+      ]
+    },
     {
       "source": "/_next/static/(.*)",
       "headers": [
@@ -30,5 +64,6 @@
         }
       ]
     }
-  ]
+  ],
+  "ignoreCommand": "if [ \"$VERCEL_ENV\" != \"production\" ]; then exit 0; else exit 1; fi"
 }

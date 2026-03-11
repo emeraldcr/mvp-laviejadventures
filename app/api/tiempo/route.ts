@@ -1,157 +1,101 @@
-// app/api/tiempo/route.ts
 import { NextResponse } from "next/server";
-import { load } from "cheerio";
-import { parse, isValid } from "date-fns";
-import { es } from "date-fns/locale";
+import {
+  calculateEMA,
+  doubleEMAForecast,
+  extractSections,
+  getConfidence,
+  getRainIntensity,
+  getRiskStatus,
+  linearRegressionForecast,
+  movingAverageForecast,
+  parseCurrentTotals,
+  parseDailyRows,
+  parseHourlyRows,
+  round1,
+  weightedMovingAverage,
+} from "./helpers";
+import { ABBREVIATIONS, CACHE_TTL_SECONDS, FETCH_HEADERS, IMN_URL } from "@/lib/types/tiempo-api";
 
-const IMN_URL = "https://www.imn.ac.cr/especial/tablas/msagrada.html";
-const CACHE_TTL_SECONDS = 300; // 5 min
 
-// Browser-like headers to avoid 403 from IMN server
-const FETCH_HEADERS = {
-  "User-Agent":
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-  Accept:
-    "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-  "Accept-Language": "es-CR,es;q=0.9,en;q=0.8",
-  Referer: "https://www.imn.ac.cr/",
-  "Cache-Control": "no-cache",
-};
-
-const ABBREVIATIONS = {
-  Temp: { desc: "Temperatura promedio", unit: "°C" },
-  HR: { desc: "Humedad Relativa Promedio", unit: "%" },
-  Lluvia: { desc: "Lluvia horaria", unit: "mm" },
-  SUM_lluv: { desc: "Lluvia acumulada desde 7 a.m.", unit: "mm" },
-  LLUV_ayer: { desc: "Lluvia del día anterior (7 a.m. a 7 a.m.)", unit: "mm" },
-  nota: "Datos preliminares – sin control de calidad completo. Úsalos solo como referencia.",
-} as const;
-
-type HourlyEntry = {
-  fecha: string;
-  timestamp: Date | null;
-  timestampISO: string | null;
-  lluvia_mm: number;
-  temp_c: number | null;
-  hr_pct: number | null;
-};
-
-type CurrentTotals = {
-  fecha: string;
-  timestamp: Date | null;
-  sum_lluv_mm: number;
-  lluv_ayer_mm: number;
-} | null;
-
-type RiskStatus = "green" | "yellow" | "red";
-type RainStatus = "sin lluvia" | "ligera" | "moderada" | "intensa";
-
-function safeParseFloat(s?: string): number {
-  if (!s) return 0;
-  return parseFloat(s.replace(",", ".").trim()) || 0;
-}
-
-function parseIMNDate(str: string): Date | null {
-  const cleaned = str.trim().replace(/\s+/g, " ");
-  let dt = parse(cleaned, "dd/MM/yyyy hh:mm:ss a", new Date(), { locale: es });
-  if (isValid(dt)) return dt;
-
-  dt = parse(cleaned, "dd/MM/yyyy hh:mm a", new Date(), { locale: es });
-  if (isValid(dt)) return dt;
-
-  dt = parse(cleaned, "dd/MM/yyyy HH:mm", new Date());
-  return isValid(dt) ? dt : null;
-}
-
-function getRainIntensity(mm: number): RainStatus {
-  if (mm >= 12) return "intensa";
-  if (mm >= 4) return "moderada";
-  if (mm > 0.5) return "ligera";
-  return "sin lluvia";
-}
-
-function getRiskStatus(
-  last3h: number,
-  last6h: number,
-  last24h: number
-): { level: RiskStatus; label: string; emoji: string } {
-  if (last3h >= 20 || last6h >= 35 || last24h >= 70) {
-    return { level: "red", label: "Riesgo alto – probable crecida rápida", emoji: "🔴" };
+function estimateRiverLevel(sumLluvMm: number) {
+  const level = 0.45 + sumLluvMm * 0.012;
+  if (level >= 1.8) {
+    return {
+      station: "Río La Vieja (Sucre)",
+      label: "Crecida fuerte",
+      status: "critico" as const,
+      estimatedLevelM: round1(level),
+      guidance: "Evitar ingresos al cañón. Revisar en sitio antes de operar.",
+    };
   }
-  if (last3h >= 10 || last6h >= 18 || last24h >= 40) {
-    return { level: "yellow", label: "Precaución – caudal puede subir", emoji: "🟡" };
+  if (level >= 1.4) {
+    return {
+      station: "Río La Vieja (Sucre)",
+      label: "Caudal alto",
+      status: "alto" as const,
+      estimatedLevelM: round1(level),
+      guidance: "Operar solo con alta precaución y monitoreo constante.",
+    };
   }
-  return { level: "green", label: "Condiciones aceptables", emoji: "🟢" };
-}
-
-// ─── Forecast methods ────────────────────────────────────────────────────────
-
-/** Exponential Moving Average – gives more weight to recent hours */
-function calculateEMA(values: number[], alpha = 0.6): number {
-  if (values.length === 0) return 0;
-  let ema = values[values.length - 1];
-  for (let i = values.length - 2; i >= 0; i--) {
-    ema = alpha * values[i] + (1 - alpha) * ema;
+  if (level >= 0.95) {
+    return {
+      station: "Río La Vieja (Sucre)",
+      label: "Caudal normal",
+      status: "normal" as const,
+      estimatedLevelM: round1(level),
+      guidance: "Condiciones operativas normales, mantener observación.",
+    };
   }
-  return ema;
+  return {
+    station: "Río La Vieja (Sucre)",
+    label: "Caudal bajo",
+    status: "bajo" as const,
+    estimatedLevelM: round1(level),
+    guidance: "Caudal bajo. Mantener protocolos de seguridad estándar.",
+  };
 }
 
-/** Linear regression on the last N hours – projects the trend forward */
-function linearRegressionForecast(values: number[]): number {
-  const n = values.length;
-  if (n < 2) return Math.max(0, values[0] ?? 0);
-  // values[0] = latest, so reverse to get chronological order
-  const ordered = [...values].reverse();
-  const xMean = (n - 1) / 2;
-  const yMean = ordered.reduce((a, b) => a + b, 0) / n;
-  let num = 0, den = 0;
-  for (let i = 0; i < n; i++) {
-    num += (i - xMean) * (ordered[i] - yMean);
-    den += (i - xMean) ** 2;
+function buildReliability(args: { records24h: number; freshnessMinutes: number; hasCurrentSnapshot: boolean; }) {
+  const { records24h, freshnessMinutes, hasCurrentSnapshot } = args;
+  let score = 100;
+  const reasons: string[] = [];
+
+  if (records24h < 18) {
+    score -= 35;
+    reasons.push("faltan registros horarios en las últimas 24h");
+  } else if (records24h < 24) {
+    score -= 15;
+    reasons.push("faltan algunos registros horarios");
   }
-  const slope = den === 0 ? 0 : num / den;
-  const intercept = yMean - slope * xMean;
-  return Math.max(0, intercept + slope * n);
-}
 
-/** Simple moving average over a window */
-function movingAverageForecast(values: number[], window: number): number {
-  const slice = values.slice(0, window);
-  return Math.max(0, slice.reduce((a, b) => a + b, 0) / Math.max(1, slice.length));
-}
-
-/** Double EMA (Holt–Winters simple) – captures trend + level */
-function doubleEMAForecast(values: number[], alpha = 0.5, beta = 0.3): number {
-  if (values.length === 0) return 0;
-  const ordered = [...values].reverse(); // oldest first
-  let level = ordered[0];
-  let trend = ordered.length > 1 ? ordered[1] - ordered[0] : 0;
-  for (let i = 1; i < ordered.length; i++) {
-    const prevLevel = level;
-    level = alpha * ordered[i] + (1 - alpha) * (level + trend);
-    trend = beta * (level - prevLevel) + (1 - beta) * trend;
+  if (freshnessMinutes > 180) {
+    score -= 35;
+    reasons.push("datos con más de 3 horas de atraso");
+  } else if (freshnessMinutes > 90) {
+    score -= 20;
+    reasons.push("datos algo desactualizados");
+  } else if (freshnessMinutes > 45) {
+    score -= 10;
+    reasons.push("actualización no reciente");
   }
-  return Math.max(0, level + trend);
+
+  if (!hasCurrentSnapshot) {
+    score -= 10;
+    reasons.push("snapshot actual de estación no disponible");
+  }
+
+  score = Math.max(0, Math.min(100, score));
+  const level = score >= 80 ? "alta" : score >= 55 ? "media" : "baja";
+
+  return {
+    level,
+    score,
+    reason: reasons.length ? reasons.join(" · ") : "datos consistentes y recientes",
+    freshnessMinutes,
+    records24h,
+  };
 }
 
-/** Weighted moving average – recent hours get linearly higher weight */
-function weightedMovingAverage(values: number[], window: number): number {
-  const slice = values.slice(0, window);
-  const n = slice.length;
-  if (n === 0) return 0;
-  // weight[0] = highest (most recent), weight[n-1] = lowest
-  const totalWeight = (n * (n + 1)) / 2;
-  const weighted = slice.reduce((sum, v, i) => sum + v * (n - i), 0);
-  return Math.max(0, weighted / totalWeight);
-}
-
-function getConfidence(length: number, std: number): "baja" | "media" | "alta" {
-  if (length >= 8 && std < 2.5) return "alta";
-  if (length >= 5) return "media";
-  return "baja";
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -171,309 +115,186 @@ export async function GET(request: Request) {
     }
 
     const html = await res.text();
-    const $ = load(html);
-
-    const sections: Record<string, string[][]> = {};
-
-    function parseTableRows(table: ReturnType<typeof $>): string[][] {
-      const rows: string[][] = [];
-      table.find("tr").each((_, tr) => {
-        const cells: string[] = [];
-        $(tr).find("td, th").each((_, td) => {
-          cells.push($(td).text().trim());
-        });
-        // Skip empty rows and header rows that start with "fecha" or "date"
-        if (cells.length >= 2 && !cells[0].toLowerCase().match(/^(fecha|date|hora)$/)) {
-          rows.push(cells);
-        }
-      });
-      return rows;
-    }
-
-    // Strategy 1: Find the most specific (leaf-level) element that contains "Tabla de datos:"
-    // using a targeted element list to avoid matching large parent containers.
-    const titleSelector = 'p, h2, h3, h4, h5, h6, td, th, div, span, b, strong';
-    $(titleSelector).each((_, el) => {
-      // Only match elements whose OWN direct text (not deep children) references the section
-      const ownText = $(el).clone().children().remove().end().text().trim();
-      const fullText = $(el).text().trim();
-
-      // Use short text elements as title markers (avoid whole-page containers)
-      const titleText = ownText.length > 0 && ownText.length < 120 ? ownText : fullText;
-      if (!titleText.includes("Tabla de datos:") || titleText.length > 200) return;
-
-      const key =
-        titleText.includes("Horarios") ? "hourly" :
-        titleText.includes("Actuales") ? "current" :
-        titleText.includes("Diarios") ? "daily" : null;
-
-      if (!key) return;
-
-      // Look for adjacent table: first as next sibling, then as sibling of parent
-      let table = $(el).nextAll("table").first();
-      if (!table.length) table = $(el).parent().nextAll("table").first();
-      if (!table.length) table = $(el).closest("table").length
-        ? $(el).closest("table")
-        : $();
-
-      if (!table.length) return;
-
-      const rows = parseTableRows(table);
-      if (rows.length > 0 && (!sections[key] || rows.length > sections[key].length)) {
-        // Keep the parse with the most rows (guards against partial matches)
-        sections[key] = rows;
-      }
-    });
-
-    // Strategy 2 (fallback): if we still don't have hourly data, scan all tables
-    // and infer which is which from column headers / data patterns.
-    if (!sections.hourly) {
-      $("table").each((_, tableEl) => {
-        const table = $(tableEl);
-        const allRows: string[][] = [];
-        table.find("tr").each((_, tr) => {
-          const cells: string[] = [];
-          $(tr).find("td, th").each((_, td) => cells.push($(td).text().trim()));
-          if (cells.length >= 2) allRows.push(cells);
-        });
-        if (allRows.length < 2) return;
-
-        const headerRow = allRows[0].join(" ").toLowerCase();
-        const isHourly =
-          headerRow.includes("lluvia") || headerRow.includes("temp") || headerRow.includes("hr");
-        const isDaily =
-          (headerRow.includes("lluvia") || headerRow.includes("fecha")) &&
-          allRows.length <= 35 &&
-          !isHourly;
-
-        const dataRows = allRows.filter(
-          (r) => !r[0].toLowerCase().match(/^(fecha|date|hora)$/) && r.length >= 2
-        );
-        if (dataRows.length === 0) return;
-
-        if (isHourly && !sections.hourly) sections.hourly = dataRows;
-        else if (isDaily && !sections.daily) sections.daily = dataRows;
-      });
-    }
+    const sections = extractSections(html);
 
     if (!sections.hourly?.length) {
       throw new Error("No se encontraron datos en la tabla Horarios");
     }
 
-    // ─── Parse hourly (newest first) ─────────────────────────────────────────
-    const hourlyRows: HourlyEntry[] = sections.hourly.map((cells) => {
-      const fecha = cells[0]?.trim() ?? "";
-      const timestamp = parseIMNDate(fecha);
+    const hourlyRows = parseHourlyRows(sections.hourly);
+    const current = parseCurrentTotals(sections.current);
+    const dailyRows = parseDailyRows(sections.daily);
 
-      let lluvia_mm: number;
-      let temp_c: number | null = null;
-      let hr_pct: number | null = null;
-
-      if (cells.length >= 4) {
-        // Format: fecha, temp, HR, lluvia
-        const t = safeParseFloat(cells[1]);
-        const h = safeParseFloat(cells[2]);
-        const l = safeParseFloat(cells[3]);
-        temp_c = (t >= 5 && t <= 45) ? t : null;
-        hr_pct = (h > 0 && h <= 100) ? h : null;
-        lluvia_mm = l;
-      } else {
-        // Original format: fecha, lluvia
-        lluvia_mm = safeParseFloat(cells[1]);
-      }
-
-      return {
-        fecha,
-        timestamp,
-        timestampISO: timestamp?.toISOString() ?? null,
-        lluvia_mm,
-        temp_c,
-        hr_pct,
-      };
-    });
-
-    // ─── Parse current totals ─────────────────────────────────────────────────
-    let current: CurrentTotals = null;
-    if (sections.current?.length) {
-      const [fechaRaw, sumRaw, ayerRaw] = sections.current[0];
-      const timestamp = parseIMNDate(fechaRaw);
-      current = {
-        fecha: fechaRaw.trim(),
-        timestamp,
-        sum_lluv_mm: safeParseFloat(sumRaw),
-        lluv_ayer_mm: safeParseFloat(ayerRaw),
-      };
-    }
-
-    // ─── Parse daily ──────────────────────────────────────────────────────────
-    const dailyRows = (sections.daily ?? []).map(([fechaRaw, lluviaRaw]) => ({
-      fecha: fechaRaw.trim(),
-      timestamp: parseIMNDate(fechaRaw),
-      lluvia_mm: safeParseFloat(lluviaRaw),
-    }));
-
-    // ─── Accumulation stats ───────────────────────────────────────────────────
     const lastValues = hourlyRows.map((r) => r.lluvia_mm);
-
-    const last1h  = lastValues[0] ?? 0;
-    const last3h  = hourlyRows.slice(0, 3).reduce((a, r) => a + r.lluvia_mm, 0);
-    const last6h  = hourlyRows.slice(0, 6).reduce((a, r) => a + r.lluvia_mm, 0);
+    const last1h = lastValues[0] ?? 0;
+    const last3h = hourlyRows.slice(0, 3).reduce((a, r) => a + r.lluvia_mm, 0);
+    const last6h = hourlyRows.slice(0, 6).reduce((a, r) => a + r.lluvia_mm, 0);
     const last24h = hourlyRows.slice(0, 24).reduce((a, r) => a + r.lluvia_mm, 0);
     const last48h = hourlyRows.slice(0, 48).reduce((a, r) => a + r.lluvia_mm, 0);
 
     const intensity = getRainIntensity(last1h);
     const risk = getRiskStatus(last3h, last6h, last24h);
 
-    // ─── Forecast – all methods ───────────────────────────────────────────────
-    const forecastValues = lastValues.slice(0, 12); // last 12 h for forecast input
+    const forecastValues = lastValues.slice(0, 12);
     const ema = calculateEMA(forecastValues);
-
-    // Confidence based on recent spread
     const recent8 = forecastValues.slice(0, 8);
     const mean8 = recent8.reduce((a, b) => a + b, 0) / Math.max(1, recent8.length);
-    const variance8 = recent8.reduce((a, b) => a + (b - mean8) ** 2, 0) / Math.max(1, recent8.length - 1);
-    const std8 = Math.sqrt(variance8);
-    const confidence = getConfidence(recent8.length, std8);
-
-    const r = (v: number) => Math.round(v * 10) / 10;
+    const variance8 =
+      recent8.reduce((a, b) => a + (b - mean8) ** 2, 0) / Math.max(1, recent8.length - 1);
+    const confidence = getConfidence(recent8.length, Math.sqrt(variance8));
 
     const forecastMethods = {
-      ema:               { value: r(ema),                                          label: "EMA exponencial (α=0.6)" },
-      doubleEMA:         { value: r(doubleEMAForecast(forecastValues)),             label: "Double EMA / Holt-Winters" },
-      linearRegression:  { value: r(linearRegressionForecast(forecastValues)),     label: "Regresión lineal (12h)" },
-      movingAverage3h:   { value: r(movingAverageForecast(lastValues, 3)),         label: "Media móvil simple (3h)" },
-      movingAverage6h:   { value: r(movingAverageForecast(lastValues, 6)),         label: "Media móvil simple (6h)" },
-      weightedAverage6h: { value: r(weightedMovingAverage(lastValues, 6)),         label: "Media ponderada reciente (6h)" },
+      ema: { value: round1(ema), label: "EMA exponencial (α=0.6)" },
+      doubleEMA: {
+        value: round1(doubleEMAForecast(forecastValues)),
+        label: "Double EMA / Holt-Winters",
+      },
+      linearRegression: {
+        value: round1(linearRegressionForecast(forecastValues)),
+        label: "Regresión lineal (12h)",
+      },
+      movingAverage3h: {
+        value: round1(movingAverageForecast(lastValues, 3)),
+        label: "Media móvil simple (3h)",
+      },
+      movingAverage6h: {
+        value: round1(movingAverageForecast(lastValues, 6)),
+        label: "Media móvil simple (6h)",
+      },
+      weightedAverage6h: {
+        value: round1(weightedMovingAverage(lastValues, 6)),
+        label: "Media ponderada reciente (6h)",
+      },
     };
 
-    // Consensus: simple mean of all method values
-    const consensusMm = r(
-      Object.values(forecastMethods).reduce((s, m) => s + m.value, 0) /
-      Object.values(forecastMethods).length
+    const consensusMm = round1(
+      Object.values(forecastMethods).reduce((sum, method) => sum + method.value, 0) /
+        Object.values(forecastMethods).length,
     );
 
-    // ─── Extra stats ──────────────────────────────────────────────────────────
     const recent24 = hourlyRows.slice(0, 24);
-    const wetHoursLast24 = recent24.filter(r => r.lluvia_mm > 0.5).length;
-
-    // Peak hour in last 24h
+    const wetHoursLast24 = recent24.filter((r) => r.lluvia_mm > 0.5).length;
     const peakIdx24 = recent24.reduce(
-      (maxI, row, i) => row.lluvia_mm > (recent24[maxI]?.lluvia_mm ?? 0) ? i : maxI,
-      0
+      (maxI, row, i) => (row.lluvia_mm > (recent24[maxI]?.lluvia_mm ?? 0) ? i : maxI),
+      0,
     );
-    const peakHour24h = {
-      mm: Math.round((recent24[peakIdx24]?.lluvia_mm ?? 0) * 10) / 10,
-      fecha: recent24[peakIdx24]?.fecha ?? "—",
-    };
 
-    // Wet / dry streak (counting from latest hour)
     let wetStreak = 0;
     let dryStreak = 0;
     let mode: "wet" | "dry" | "unknown" = "unknown";
     for (const row of hourlyRows) {
       const wet = row.lluvia_mm > 0.5;
-      if (mode === "unknown") {
-        mode = wet ? "wet" : "dry";
+      if (mode === "unknown") mode = wet ? "wet" : "dry";
+      if (mode === "wet" && wet) {
+        wetStreak++;
+        continue;
       }
-      if (mode === "wet" && wet)  { wetStreak++;  continue; }
-      if (mode === "dry" && !wet) { dryStreak++;  continue; }
+      if (mode === "dry" && !wet) {
+        dryStreak++;
+        continue;
+      }
       break;
     }
 
-    // ─── Weather metrics (temp + humidity) ───────────────────────────────────
-    const tempVals = recent24.map(r => r.temp_c).filter((v): v is number => v !== null);
-    const hrVals   = recent24.map(r => r.hr_pct).filter((v): v is number => v !== null);
+    const tempVals = recent24.map((r) => r.temp_c).filter((v): v is number => v !== null);
+    const hrVals = recent24.map((r) => r.hr_pct).filter((v): v is number => v !== null);
 
-    const weatherMetrics = {
-      hasData:    tempVals.length > 0,
-      avgTemp24h: tempVals.length ? r(tempVals.reduce((a, b) => a + b) / tempVals.length) : null,
-      maxTemp24h: tempVals.length ? r(Math.max(...tempVals)) : null,
-      minTemp24h: tempVals.length ? r(Math.min(...tempVals)) : null,
-      avgHR24h:   hrVals.length   ? Math.round(hrVals.reduce((a, b) => a + b) / hrVals.length) : null,
-      maxHR24h:   hrVals.length   ? Math.round(Math.max(...hrVals)) : null,
-      minHR24h:   hrVals.length   ? Math.round(Math.min(...hrVals)) : null,
-    };
-
-    // ─── Rolling risk timeline (last 24h, chronological) ─────────────────────
-    // hourlyRows[0] = latest, so slice(0,24) → then compute rolling 3h & 6h at each point
-    const rollingRisk = hourlyRows.slice(0, 24).map((_, i, arr) => {
-      const r3h = arr.slice(i, Math.min(i + 3, arr.length)).reduce((a, v) => a + v.lluvia_mm, 0);
-      const r6h = arr.slice(i, Math.min(i + 6, arr.length)).reduce((a, v) => a + v.lluvia_mm, 0);
-      return {
-        fecha:       arr[i].fecha,
-        timestampISO: arr[i].timestampISO,
-        r3h: Math.round(r3h * 10) / 10,
-        r6h: Math.round(r6h * 10) / 10,
-      };
-    }).reverse(); // now oldest → newest for charts
+    const rollingRisk = recent24
+      .map((_, i, arr) => {
+        const r3h = arr.slice(i, Math.min(i + 3, arr.length)).reduce((a, v) => a + v.lluvia_mm, 0);
+        const r6h = arr.slice(i, Math.min(i + 6, arr.length)).reduce((a, v) => a + v.lluvia_mm, 0);
+        return { fecha: arr[i].fecha, timestampISO: arr[i].timestampISO, r3h: round1(r3h), r6h: round1(r6h) };
+      })
+      .reverse();
 
     const lastUpdate = hourlyRows[0]?.timestamp ?? current?.timestamp ?? new Date();
-
-    return NextResponse.json({
-      success: true,
-      meta: {
-        station:       "Reserva Montaña Sagrada (IMN)",
-        source:        IMN_URL,
-        fetchedAt:     new Date().toISOString(),
-        lastUpdateISO: lastUpdate.toISOString(),
-        note:          ABBREVIATIONS.nota,
-      },
-      status: {
-        risk:          risk.level,
-        riskLabel:     risk.label,
-        riskEmoji:     risk.emoji,
-        intensity,
-        lastHour_mm:   Math.round(last1h * 10) / 10,
-        trend: last3h > last6h * 1.3 ? "subiendo" : last3h < last6h * 0.7 ? "bajando" : "estable",
-      },
-      now: {
-        lastHour:     hourlyRows[0] ?? null,
-        currentTotals: current,
-      },
-      stats: {
-        last1h_mm:       Math.round(last1h  * 10) / 10,
-        last3h_mm:       Math.round(last3h  * 10) / 10,
-        last6h_mm:       Math.round(last6h  * 10) / 10,
-        last24h_mm:      Math.round(last24h * 10) / 10,
-        last48h_mm:      Math.round(last48h * 10) / 10,
-        wetHoursLast24,
-        wetStreak,
-        dryStreak,
-        peakHour24h,
-      },
-      forecast: {
-        nextHour_mm: Math.round(ema * 10) / 10,
-        confidence,
-        consensusMm,
-        method:     "EMA (α=0.6)",
-        methods:    forecastMethods,
-      },
-      weather:  weatherMetrics,
-      analysis: { rollingRisk },
-      data: {
-        hourly: full ? hourlyRows : hourlyRows.slice(0, hours),
-        daily:  full ? dailyRows  : dailyRows.slice(0, days),
-      },
-      currentSnapshot: current,
-      counts: {
-        hourlyAvailable: hourlyRows.length,
-        dailyAvailable:  dailyRows.length,
-      },
-    }, {
-      headers: {
-        "Cache-Control": `s-maxage=${CACHE_TTL_SECONDS}, stale-while-revalidate=60`,
-      },
+    const freshnessMinutes = Math.max(0, Math.round((Date.now() - lastUpdate.getTime()) / 60000));
+    const reliability = buildReliability({
+      records24h: recent24.length,
+      freshnessMinutes,
+      hasCurrentSnapshot: Boolean(current),
     });
+    const referenceMm = round1(current?.sum_lluv_mm ?? last24h);
+    const riverLevel = estimateRiverLevel(referenceMm);
+
+    return NextResponse.json(
+      {
+        success: true,
+        meta: {
+          station: "Reserva Montaña Sagrada (IMN)",
+          source: IMN_URL,
+          fetchedAt: new Date().toISOString(),
+          lastUpdateISO: lastUpdate.toISOString(),
+          note: ABBREVIATIONS.nota,
+        },
+        status: {
+          risk: risk.level,
+          riskLabel: risk.label,
+          riskEmoji: risk.emoji,
+          intensity,
+          lastHour_mm: round1(last1h),
+          trend: last3h > last6h * 1.3 ? "subiendo" : last3h < last6h * 0.7 ? "bajando" : "estable",
+        },
+        now: { lastHour: hourlyRows[0] ?? null, currentTotals: current },
+        stats: {
+          last1h_mm: round1(last1h),
+          last3h_mm: round1(last3h),
+          last6h_mm: round1(last6h),
+          last24h_mm: round1(last24h),
+          last48h_mm: round1(last48h),
+          wetHoursLast24,
+          wetStreak,
+          dryStreak,
+          peakHour24h: {
+            mm: round1(recent24[peakIdx24]?.lluvia_mm ?? 0),
+            fecha: recent24[peakIdx24]?.fecha ?? "—",
+          },
+        },
+        forecast: {
+          nextHour_mm: round1(ema),
+          confidence,
+          consensusMm,
+          method: "EMA (α=0.6)",
+          methods: forecastMethods,
+        },
+        weather: {
+          hasData: tempVals.length > 0,
+          avgTemp24h: tempVals.length ? round1(tempVals.reduce((a, b) => a + b) / tempVals.length) : null,
+          maxTemp24h: tempVals.length ? round1(Math.max(...tempVals)) : null,
+          minTemp24h: tempVals.length ? round1(Math.min(...tempVals)) : null,
+          avgHR24h: hrVals.length ? Math.round(hrVals.reduce((a, b) => a + b) / hrVals.length) : null,
+          maxHR24h: hrVals.length ? Math.round(Math.max(...hrVals)) : null,
+          minHR24h: hrVals.length ? Math.round(Math.min(...hrVals)) : null,
+        },
+        analysis: { rollingRisk },
+        data: {
+          hourly: full ? hourlyRows : hourlyRows.slice(0, hours),
+          daily: full ? dailyRows : dailyRows.slice(0, days),
+        },
+        currentSnapshot: current,
+        riverLevel: {
+          ...riverLevel,
+          referenceMm,
+        },
+        reliability,
+        counts: { hourlyAvailable: hourlyRows.length, dailyAvailable: dailyRows.length },
+      },
+      {
+        headers: {
+          "Cache-Control": `s-maxage=${CACHE_TTL_SECONDS}, stale-while-revalidate=60`,
+        },
+      },
+    );
   } catch (err: unknown) {
     console.error("[rain-msagrada]", err);
     const message = err instanceof Error ? err.message : "Error desconocido";
     return NextResponse.json(
       {
         success: false,
-        error:   "No pudimos obtener los datos del IMN en este momento",
+        error: "No pudimos obtener los datos del IMN en este momento",
         details: process.env.NODE_ENV === "development" ? message : undefined,
       },
-      { status: 503 }
+      { status: 503 },
     );
   }
 }

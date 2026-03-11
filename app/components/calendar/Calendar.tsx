@@ -2,12 +2,11 @@
 
 import React, { useMemo } from "react";
 import { useCalendarContext } from "@/app/context/CalendarContext";
+import { useLanguage } from "@/app/context/LanguageContext";
+import { translations } from "@/lib/translations";
 import CalendarDay from "./CalendarDay";
 import { cn } from "@/lib/utils";
 import { getDaysInMonth, startOfMonth, getDay } from "date-fns";
-
-// Semana empezando en Lunes:
-const DAY_LABELS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"] as const;
 
 function CalendarBase() {
   const {
@@ -18,6 +17,8 @@ function CalendarBase() {
     prevMonth,
     selectedDay,
   } = useCalendarContext();
+  const { lang } = useLanguage();
+  const tr = translations[lang].calendar;
 
   const calendarDays = useMemo(() => {
     const firstOfMonth = new Date(currentYear, currentMonth, 1);
@@ -58,7 +59,7 @@ function CalendarBase() {
             type="button"
             onClick={prevMonth}
             className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 transition"
-            aria-label="Mes anterior"
+            aria-label={tr.prevMonthAria}
           >
             <span aria-hidden>‹</span>
           </button>
@@ -72,7 +73,7 @@ function CalendarBase() {
             type="button"
             onClick={nextMonth}
             className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 transition"
-            aria-label="Mes siguiente"
+            aria-label={tr.nextMonthAria}
           >
             <span aria-hidden>›</span>
           </button>
@@ -80,14 +81,14 @@ function CalendarBase() {
 
         <p className="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400">
           {selectedDay
-            ? "Has seleccionado una fecha. Elige el horario y la cantidad de entradas para completar tu reserva."
-            : "Selecciona una fecha disponible en el calendario para ver opciones y continuar con tu reserva."}
+            ? tr.selectedDateHint
+            : tr.idleHint}
         </p>
       </div>
 
       {/* Weekday labels + grid */}
       <div className="grid grid-cols-7 gap-y-1 gap-x-1 sm:gap-2 md:gap-3">
-        {DAY_LABELS.map((lbl) => (
+        {tr.weekdays.map((lbl) => (
           <div
             key={lbl}
             className="text-center text-[11px] sm:text-xs font-medium uppercase tracking-wide text-zinc-500"
@@ -107,11 +108,11 @@ function CalendarBase() {
       {/* Legend */}
       <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-[10px] sm:text-[11px] text-zinc-500 dark:text-zinc-400">
         <div className="flex flex-wrap items-center gap-3">
-          <LegendDot className="bg-emerald-500" label="Disponible" />
-          <LegendDot className="bg-amber-400" label="Pocas plazas" />
-          <LegendDot className="bg-red-500" label="Agotado" />
-          <LegendDot className="bg-zinc-400" label="Pasado" />
-          <LegendDot className="bg-blue-500" label="Hoy" />
+          <LegendDot className="bg-emerald-500" label={tr.legendAvailable} />
+          <LegendDot className="bg-amber-400" label={tr.legendFew} />
+          <LegendDot className="bg-red-500" label={tr.legendSoldOut} />
+          <LegendDot className="bg-zinc-400" label={tr.legendPast} />
+          <LegendDot className="bg-blue-500" label={tr.legendToday} />
         </div>
       </div>
     </section>

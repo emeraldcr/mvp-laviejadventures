@@ -6,60 +6,42 @@ import {
   getPayPalAccessToken,
 } from "@/lib/paypal";
 
-import nodemailer from "nodemailer";
-import { MongoClient, Db } from "mongodb";
+import { Resend } from "resend";
+import { getDb } from "@/lib/mongodb";
+import { auth } from "@/lib/auth";
+import type { BookingRecord, SendEmailParams, SuccessPageProps } from "@/lib/types/index";
 export const dynamic = "force-dynamic";
 
-type SuccessPageProps = {
-  searchParams: Promise<{ orderId?: string }>;
+
+type PayPalOrderResponse = {
+  status?: string;
+  message?: string;
+  details?: Array<{ description?: string }>;
+  payer?: {
+    name?: { given_name?: string; surname?: string };
+    email_address?: string;
+  };
+  purchase_units?: Array<{
+    amount?: { value?: string; currency_code?: string };
+    description?: string;
+    custom_id?: string;
+    payments?: { captures?: Array<{ id?: string; status?: string; amount?: { value?: string; currency_code?: string } }> };
+  }>;
 };
 
-// ---------- MONGO HELPERS (inline) ----------
-
-let cachedClient: MongoClient | null = null;
-let cachedDb: Db | null = null;
-
-async function getDb(): Promise<Db> {
-  if (cachedDb) return cachedDb;
-
-  const uri = process.env.MONGODB_URI;
-  const dbName = process.env.MONGODB_DB || "lva";
-
-  if (!uri) {
-    throw new Error("MONGODB_URI is not set in env");
-  }
-
-  const client = new MongoClient(uri);
-  await client.connect();
-
-  cachedClient = client;
-  cachedDb = client.db(dbName);
-
-  return cachedDb;
-}
-
-type BookingRecord = {
-  orderId: string;
-  captureId: string | null;
-  status: string | null;
-  name: string | null;
-  email: string | null;
-  phone: string | null;
-  date: string | null;
-  tickets: number | null;
-  amount: number | null;
-  currency: string | null;
-  tourTime: string | null;
-  tourPackage: string | null;
-  packagePrice: number | null;
-  createdAt?: Date;
-  paypalRaw?: unknown;
-};
 
 async function saveBookingToDb(record: BookingRecord): Promise<string | null> {
   try {
     const db = await getDb();
-    const result = await db.collection("Reservations").insertOne({
+    const col = db.collection("Reservations");
+
+    // Idempotency: return existing reservation if orderId already saved
+    const existing = await col.findOne({ orderId: record.orderId });
+    if (existing) {
+      return existing._id.toString();
+    }
+
+    const result = await col.insertOne({
       ...record,
       createdAt: new Date(),
     });
@@ -72,38 +54,6 @@ async function saveBookingToDb(record: BookingRecord): Promise<string | null> {
 
 // ---------- EMAIL HELPERS (inline) ----------
 
-function createTransporter() {
-  const host = process.env.SMTP_HOST;
-  const port = process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : 587;
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-
-  if (!host || !user || !pass) {
-    console.warn("SMTP env vars not fully set, skipping email sending");
-    return null;
-  }
-
-  return nodemailer.createTransport({
-    host,
-    port,
-    secure: port === 465, // true for 465, false otherwise
-    auth: { user, pass },
-  });
-}
-
-type SendEmailParams = {
-  to: string | null;
-  name: string | null;
-  phone: string | null;
-  date: string | null;
-  tickets: string | number | null;
-  amount: string | number | null;
-  currency: string | null;
-  orderId: string;
-  captureId: string | null;
-  status: string | null;
-  reservationId: string | null;
-};
 
 function createMailBody({
   to,
@@ -117,6 +67,9 @@ function createMailBody({
   captureId,
   status,
   reservationId,
+  tourName,
+  tourPackage,
+  tourTime,
 }: SendEmailParams) {
   const displayName = name ?? "Cliente";
   const displayDate = date ?? "N/A";
@@ -128,6 +81,9 @@ function createMailBody({
   const displayStatus = status ?? "N/A";
   const displayReservationId = reservationId ?? "N/A";
   const displayPhone = phone ?? "N/A";
+  const displayTourName = tourName ?? "N/A";
+  const displayTourPackage = tourPackage ?? "N/A";
+  const displayTourTime = tourTime ?? "N/A";
 
   return `<!DOCTYPE html>
 <html>
@@ -163,6 +119,9 @@ function createMailBody({
     <li><b>Teléfono:</b> ${displayPhone}</li>
     <li><b>Fecha de la experiencia:</b> ${displayDate}</li>
     <li><b>Cantidad de tickets:</b> ${displayTickets}</li>
+    <li><b>Tour:</b> ${displayTourName}</li>
+    <li><b>Paquete elegido:</b> ${displayTourPackage}</li>
+    <li><b>Hora del tour:</b> ${displayTourTime}</li>
     <li><b>Total Pagado:</b> ${displayAmount}</li>
     <li><b>ID de la Orden (PayPal):</b> ${displayOrderId}</li>
     <li><b>ID de Pago / Transacción:</b> ${displayCaptureId}</li>
@@ -186,27 +145,35 @@ function createMailBody({
 }
 
 async function sendConfirmationEmail(params: SendEmailParams) {
-  const transporter = createTransporter();
-  if (!transporter) return;
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    console.warn("RESEND_API_KEY not set, skipping email sending");
+    return;
+  }
 
+  const resend = new Resend(apiKey);
   const adminEmail = process.env.RESERVATION_CC || "ciudadesmeraldacr@gmail.com";
   const toEmail = params.to || adminEmail;
-
-  await transporter.verify();
+  const from =
+    process.env.SMTP_FROM ||
+    `"La Vieja Adventures" <noreply@laviejaadventures.com>`;
 
   const html = createMailBody(params);
 
-  await transporter.sendMail({
-    from:
-      process.env.SMTP_FROM ||
-      `"La Vieja Adventures" <ciudadesmeraldacr@gmail.com>`,
+  const { error } = await resend.emails.send({
+    from,
     to: toEmail,
-    cc: [adminEmail],
+    cc: adminEmail,
     subject: `Nueva reservación creada: ${params.orderId}`,
     html,
   });
 
-  console.log("Confirmation email sent");
+  if (error) {
+    console.error("Resend error:", error);
+    return;
+  }
+
+  console.log("Confirmation email sent via Resend");
 }
 
 // ---------- MAIN PAGE (PayPal + DB + email + UI) ----------
@@ -227,8 +194,13 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
     );
   }
 
+  // 0) GET LOGGED-IN USER SESSION
+  const session = await auth();
+  const userId = (session?.user as { id?: string })?.id ?? null;
+  const userEmail = session?.user?.email ?? null;
+
   // 1) GET PAYPAL ORDER DETAILS
-  let paypalOrder: any = null;
+  let paypalOrder: PayPalOrderResponse | null = null;
   let errorMessage: string | null = null;
 
   try {
@@ -254,7 +226,7 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
         paypalOrder?.details?.[0]?.description ||
         "Error al obtener detalles de PayPal.";
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("PayPal fetch error:", err);
     errorMessage = "No se pudo conectar con PayPal.";
   }
@@ -282,7 +254,15 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
   }`.trim();
   const payerEmail = payer.email_address || "";
 
-  let meta: any = null;
+  let persistedContext: Record<string, unknown> | null = null;
+  try {
+    const db = await getDb();
+    persistedContext = (await db.collection("paypal_order_contexts").findOne({ orderId })) as Record<string, unknown> | null;
+  } catch (contextErr) {
+    console.warn("Failed to read persisted PayPal context:", contextErr);
+  }
+
+  let meta: Record<string, unknown> | null = null;
   if (purchaseUnit.custom_id) {
     try {
       meta = JSON.parse(purchaseUnit.custom_id);
@@ -291,34 +271,63 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
     }
   }
 
-  const metaCustomer = meta?.customer ?? meta;
-  const metaBooking = meta?.booking ?? meta;
+  const metaCustomer = (meta?.customer as Record<string, unknown> | undefined) ?? meta;
+  const metaBooking = (meta?.booking as Record<string, unknown> | undefined) ?? meta;
+  const persistedCustomer = (persistedContext?.customer as Record<string, unknown> | undefined) ?? null;
+  const persistedBooking = (persistedContext?.booking as Record<string, unknown> | undefined) ?? null;
 
   const description = purchaseUnit.description || "";
   const ticketsMatch = description.match(/(\d+)\s*tickets?/i);
   const dateMatch =
     description.match(/\(([^)]+)\)/) || description.match(/para\s+(.*)/i);
 
-  const name = metaCustomer?.name || payerName || "Cliente";
-  const email = metaCustomer?.email || payerEmail || "";
-  const phone = metaCustomer?.phone || "";
+  const name =
+    (metaCustomer?.name as string | undefined) ||
+    (persistedCustomer?.name as string | undefined) ||
+    payerName ||
+    "Cliente";
+  const email =
+    (metaCustomer?.email as string | undefined) ||
+    (persistedCustomer?.email as string | undefined) ||
+    payerEmail ||
+    "";
+  const phone =
+    (metaCustomer?.phone as string | undefined) ||
+    (persistedCustomer?.phone as string | undefined) ||
+    "";
 
   const ticketsStr =
-    meta?.tickets?.toString() ||
-    metaBooking?.tickets?.toString() ||
-    metaCustomer?.tickets?.toString() ||
+    String(meta?.tickets ?? "") ||
+    String(metaBooking?.tickets ?? "") ||
+    String(metaCustomer?.tickets ?? "") ||
+    String(persistedBooking?.tickets ?? "") ||
     (ticketsMatch ? ticketsMatch[1] : "");
 
   const date =
-    meta?.date ||
-    metaBooking?.date ||
-    metaCustomer?.date ||
+    (meta?.date as string | undefined) ||
+    (metaBooking?.date as string | undefined) ||
+    (metaCustomer?.date as string | undefined) ||
+    (persistedBooking?.date as string | undefined) ||
     (dateMatch ? dateMatch[1] : "");
 
-  const tourTime: string | null = meta?.time ?? null;
-  const tourPackage: string | null = meta?.pkg ?? null;
+  const tourTime: string | null =
+    (typeof meta?.time === "string" ? meta.time : null) ||
+    (typeof persistedBooking?.tourTime === "string" ? persistedBooking.tourTime : null);
+  const tourPackage: string | null =
+    (typeof meta?.pkg === "string" ? meta.pkg : null) ||
+    (typeof persistedBooking?.tourPackage === "string" ? persistedBooking.tourPackage : null);
   const packagePrice: number | null =
-    meta?.ppUSD != null ? Number(meta.ppUSD) : null;
+    meta?.ppUSD != null
+      ? Number(meta.ppUSD)
+      : persistedBooking?.packagePrice != null
+      ? Number(persistedBooking.packagePrice)
+      : null;
+  const tourSlug: string | null =
+    (typeof meta?.tourSlug === "string" ? meta.tourSlug : null) ||
+    (typeof persistedBooking?.tourSlug === "string" ? persistedBooking.tourSlug : null);
+  const tourName: string | null =
+    (typeof meta?.tourName === "string" ? meta.tourName : null) ||
+    (typeof persistedBooking?.tourName === "string" ? persistedBooking.tourName : null);
 
   const amountStr =
     capture?.amount?.value ||
@@ -331,6 +340,19 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
     "USD";
   const status = capture?.status || paypalOrder.status || "";
   const captureId = capture?.id || "";
+
+  if (status !== "COMPLETED" || !captureId) {
+    return (
+      <SuccessClient
+        error="El pago de PayPal no está completado. No se creó la reservación."
+        name={name}
+        email={email}
+        phone={phone}
+        date={date}
+        tickets={ticketsStr}
+      />
+    );
+  }
 
   // Convert to numbers for DB
   const ticketsNumber =
@@ -352,7 +374,12 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
     currency: currency || null,
     tourTime,
     tourPackage,
+    tourSlug,
+    tourName,
     packagePrice,
+    // Link reservation to the logged-in user
+    userId: userId,
+    userEmail: userEmail,
     paypalRaw: paypalOrder,
   };
 
@@ -372,6 +399,9 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
           captureId,
           status,
           reservationId,
+          tourName,
+          tourPackage,
+          tourTime,
         })
       : Promise.resolve(),
   ]);

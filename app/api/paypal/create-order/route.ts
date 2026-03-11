@@ -5,12 +5,23 @@ import {
   getPayPalApiBaseUrl,
   getPayPalAccessToken,
 } from "@/lib/paypal";
+import { getDb } from "@/lib/mongodb";
+
+interface CreateOrderLink {
+  rel?: string;
+  href?: string;
+}
+
+interface CreateOrderResponse {
+  id?: string;
+  links?: CreateOrderLink[];
+}
 
 export async function POST(req: Request) {
   try {
-    const { name, email, phone, tickets, total, date, tourTime, tourPackage, packagePrice } = await req.json();
+    const { name, email, phone, tickets, total, date, tourTime, tourPackage, packagePrice, tourSlug, tourName } = await req.json();
 
-    if (!name || !email || !tickets || !total) {
+    if (!name || !email || !phone || !tickets || !total || !date || !tourPackage) {
       return NextResponse.json(
         { message: "Missing required fields." },
         { status: 400 }
@@ -32,16 +43,22 @@ export async function POST(req: Request) {
       ? tourTime === "08:00" ? "8:00 AM" : tourTime === "09:00" ? "9:00 AM" : "10:00 AM"
       : "";
 
-    // PayPal custom_id max length is 127 chars — use compact JSON to carry metadata
+    // PayPal custom_id max length is 127 chars — keep metadata compact to avoid truncation
     const customIdPayload = JSON.stringify({
       tickets,
       time: tourTime ?? null,
       pkg: tourPackage ?? null,
       ppUSD: packagePrice ?? null,
+      tourSlug: tourSlug ?? null,
+      tourName: tourName ?? null,
       date,
     });
-    // Truncate to 127 chars as a safeguard (date is the longest field)
-    const custom_id = customIdPayload.slice(0, 127);
+    const custom_id = customIdPayload.length <= 127 ? customIdPayload : JSON.stringify({
+      tickets,
+      time: tourTime ?? null,
+      pkg: tourPackage ?? null,
+      date,
+    });
 
     // 1) Get OAuth access token
     const accessToken = await getPayPalAccessToken();
@@ -62,14 +79,14 @@ export async function POST(req: Request) {
               currency_code: "USD",
               value: formattedTotal,
             },
-            description: `Reserva: ${tickets} pax - ${packageLabel}${timeLabel ? ` (${timeLabel})` : ""} - ${date}`,
+            description: `Reserva: ${tickets} pax - ${tourName ?? packageLabel}${timeLabel ? ` (${timeLabel})` : ""} - ${date}`,
             custom_id,
           },
         ],
       }),
     });
 
-    const data = await res.json();
+    const data = (await res.json()) as CreateOrderResponse;
 
     if (!res.ok || !data.id) {
       console.error("PayPal Create Order Error:", data);
@@ -79,9 +96,43 @@ export async function POST(req: Request) {
       );
     }
 
+    try {
+      const db = await getDb();
+      await db.collection("paypal_order_contexts").updateOne(
+        { orderId: data.id },
+        {
+          $set: {
+            orderId: data.id,
+            customer: {
+              name,
+              email,
+              phone,
+            },
+            booking: {
+              tickets: Number(tickets),
+              date,
+              tourTime: tourTime ?? null,
+              tourPackage: tourPackage ?? null,
+              packagePrice: packagePrice != null ? Number(packagePrice) : null,
+              tourSlug: tourSlug ?? null,
+              tourName: tourName ?? null,
+              total: Number(total),
+            },
+            updatedAt: new Date(),
+          },
+          $setOnInsert: {
+            createdAt: new Date(),
+          },
+        },
+        { upsert: true }
+      );
+    } catch (contextError) {
+      console.error("Failed to persist PayPal order context:", contextError);
+    }
+
     // Extract approval URL
     const approvalUrl = data.links?.find(
-      (link: any) => link.rel === "approve"
+      (link) => link.rel === "approve"
     )?.href;
 
     if (!approvalUrl) {
@@ -99,11 +150,11 @@ export async function POST(req: Request) {
       orderID: data.id,
       approvalUrl,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Server Error:", error);
 
     return NextResponse.json(
-      { message: "Internal server error.", error: error?.message ?? "Unknown" },
+      { message: "Internal server error.", error: error instanceof Error ? error.message : "Unknown" },
       { status: 500 }
     );
   }

@@ -10,6 +10,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.78.0",
+    "@auth0/nextjs-auth0": "^4.15.0",
     "@vercel/analytics": "^1.6.1",
     "bcryptjs": "^3.0.3",
     "cheerio": "^1.2.0",
@@ -21,10 +23,12 @@
     "lucide-react": "^0.553.0",
     "mongodb": "^7.0.0",
     "next": "^16.1.6",
+    "next-auth": "^5.0.0-beta.30",
     "nodemailer": "^7.0.11",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "recharts": "^3.7.0",
+    "resend": "^6.9.3",
     "swr": "^2.3.6",
     "tailwind-merge": "^3.5.0",
     "twitter-api-v2": "^1.28.0"

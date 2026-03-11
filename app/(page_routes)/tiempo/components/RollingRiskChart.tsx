@@ -13,20 +13,20 @@ import {
 } from "recharts";
 import { parseISO, format } from "date-fns";
 import { es } from "date-fns/locale";
+import type { RollingRiskEntry } from "@/lib/types/index";
 
-type RollingEntry = {
-  fecha:        string;
-  timestampISO: string | null;
-  r3h:          number;
-  r6h:          number;
+type RollingTooltipProps = {
+  active?: boolean;
+  payload?: Array<{ dataKey?: string; color?: string; name?: string; value?: number }>;
+  label?: string;
 };
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload, label }: RollingTooltipProps) => {
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-slate-800/95 border border-slate-600 rounded-lg p-3 shadow-xl text-sm">
       <p className="text-slate-300 font-medium mb-2">{label}</p>
-      {payload.map((p: any) => (
+      {payload.map((p) => (
         <p key={p.dataKey} style={{ color: p.color }}>
           {p.name}: <span className="font-bold">{p.value?.toFixed(1)} mm</span>
         </p>
@@ -35,7 +35,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   );
 };
 
-export default function RollingRiskChart({ data }: { data: RollingEntry[] }) {
+export default function RollingRiskChart({ data }: { data: RollingRiskEntry[] }) {
   const chartData = data.map((d) => {
     let label = d.fecha;
     if (d.timestampISO) {

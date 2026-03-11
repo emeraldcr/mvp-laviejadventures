@@ -8,7 +8,7 @@ export async function GET() {
   let files;
   try {
     files = fs.readdirSync(imagesDir);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ images: [], error: 'Directory not found' }, { status: 500 });
   }
 

@@ -1,5 +1,5 @@
 import { ObjectId } from "mongodb";
-import { getDb } from "../mongodb";
+import { getDb } from "@/lib/mongodb";
 
 export interface OperatorBooking {
   _id?: ObjectId;
@@ -26,6 +26,12 @@ export async function getBookingsCollection() {
 export async function createBooking(data: Omit<OperatorBooking, "_id">) {
   const col = await getBookingsCollection();
   const result = await col.insertOne(data);
+  return result;
+}
+
+export async function createBookings(data: Omit<OperatorBooking, "_id">[]) {
+  const col = await getBookingsCollection();
+  const result = await col.insertMany(data);
   return result;
 }
 

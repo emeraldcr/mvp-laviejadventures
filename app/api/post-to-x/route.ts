@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { TwitterApi } from 'twitter-api-v2';
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     // Auth with X API v2 (OAuth 1.0a – server-side safe)
     const client = new TwitterApi({

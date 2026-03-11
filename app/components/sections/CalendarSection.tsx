@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import { useCalendarContext } from "@/app/context/CalendarContext";
 import Calendar from "@/app/components/calendar/Calendar";
 import { format } from "date-fns";
@@ -34,6 +35,12 @@ export default function CalendarSection({ className }: Props) {
       }`
     : tr.chooseDate;
 
+  const scrollToDetails = useCallback(() => {
+    const details = document.getElementById("reservation-details-card");
+    if (!details) return;
+    details.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
   return (
     <section className={cn("flex items-start mt-6 px-2", className)}>
       <div className="w-full">
@@ -46,12 +53,12 @@ export default function CalendarSection({ className }: Props) {
           </h1>
         </header>
 
-        <div className="space-y-4">
+        <div className="space-y-4 pb-20 sm:pb-0">
           <div className="w-full">
             <Calendar />
           </div>
 
-          <div className="rounded-2xl border bg-zinc-50 dark:bg-zinc-900/40 px-3 py-3 sm:px-4 sm:py-3 shadow-sm flex items-start justify-between gap-3">
+          <div className="rounded-2xl border bg-zinc-50 dark:bg-zinc-900/40 px-3 py-3 sm:px-4 sm:py-3 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="space-y-1">
               <p className="text-[11px] sm:text-xs font-medium text-zinc-700 dark:text-zinc-200">
                 {tr.selectionLabel}
@@ -61,14 +68,36 @@ export default function CalendarSection({ className }: Props) {
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={goToNextAvailableDay}
-              className="whitespace-nowrap rounded-full border border-zinc-300 dark:border-zinc-600 px-3 py-1.5 text-[11px] sm:text-xs font-medium text-zinc-800 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
-            >
-              {tr.nextAvailable}
-            </button>
+            <div className="flex w-full sm:w-auto gap-2">
+              <button
+                type="button"
+                onClick={goToNextAvailableDay}
+                className="flex-1 sm:flex-none whitespace-nowrap rounded-full border border-zinc-300 dark:border-zinc-600 px-3 py-1.5 text-[11px] sm:text-xs font-medium text-zinc-800 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
+              >
+                {tr.nextAvailable}
+              </button>
+              <button
+                type="button"
+                onClick={scrollToDetails}
+                disabled={!selectedDate}
+                className="flex-1 sm:hidden rounded-full border border-teal-500/50 px-3 py-1.5 text-[11px] font-semibold text-teal-300 enabled:hover:bg-teal-500/10 disabled:opacity-40 disabled:cursor-not-allowed transition"
+              >
+                {tr.continueToDetails}
+              </button>
+            </div>
           </div>
+        </div>
+
+        <div className="sm:hidden fixed inset-x-3 bottom-3 z-20 rounded-2xl border border-teal-500/30 bg-zinc-950/95 p-3 shadow-2xl backdrop-blur">
+          <p className="text-[11px] text-zinc-400 mb-1">{tr.mobileFlowHint}</p>
+          <button
+            type="button"
+            onClick={scrollToDetails}
+            disabled={!selectedDate}
+            className="w-full rounded-xl bg-teal-500 px-4 py-2 text-xs font-semibold text-zinc-950 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {selectedDate ? tr.continueToDetails : tr.selectDateFirst}
+          </button>
         </div>
       </div>
     </section>

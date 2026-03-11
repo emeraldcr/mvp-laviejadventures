@@ -2,6 +2,8 @@
 
 import React from "react";
 import { useCalendarContext } from "@/app/context/CalendarContext";
+import { useLanguage } from "@/app/context/LanguageContext";
+import { translations } from "@/lib/translations";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -9,14 +11,6 @@ type Props = {
 };
 
 type Status = "past" | "soldout" | "last" | "few" | "many";
-
-const STATUS_LABEL: Record<Status, (slots: number) => string> = {
-  past: () => "Pasado",
-  soldout: () => "Agotado",
-  last: () => "Último lugar",
-  few: () => "Pocas plazas",
-  many: (slots) => `${slots} lugares`,
-};
 
 const STATUS_CARD_CLASS: Record<Status, string> = {
   past: "bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700",
@@ -43,6 +37,8 @@ const STATUS_BAR_CLASS: Record<Status, string> = {
 };
 
 function CalendarDayBase({ day }: Props) {
+  const { lang } = useLanguage();
+  const tr = translations[lang].calendar;
   const {
     selectedDay,
     selectDay,
@@ -52,14 +48,8 @@ function CalendarDayBase({ day }: Props) {
     maxSlots,
   } = useCalendarContext();
 
-  // Empty cell (padding at start / end of month)
   if (day === null) {
-    return (
-      <div
-        className="h-20 sm:h-24 lg:h-28 rounded-xl"
-        aria-hidden="true"
-      />
-    );
+    return <div className="h-16 sm:h-24 lg:h-28 rounded-xl" aria-hidden="true" />;
   }
 
   const past = isPastDay(day);
@@ -76,7 +66,27 @@ function CalendarDayBase({ day }: Props) {
   else if (slots <= 5) status = "few";
   else status = "many";
 
-  const labelText = STATUS_LABEL[status](slots);
+  const labelText =
+    status === "past"
+      ? tr.statusPast
+      : status === "soldout"
+        ? tr.statusSoldOut
+        : status === "last"
+          ? tr.statusLastSpot
+          : status === "few"
+            ? tr.statusFew
+            : tr.statusMany.replace("{slots}", String(slots));
+
+  const compactLabel =
+    status === "past"
+      ? tr.statusPast
+      : status === "soldout"
+        ? tr.statusSoldOut
+        : status === "last"
+          ? tr.statusLastSpot
+          : status === "few"
+            ? tr.statusFew
+            : `${slots} ${tr.legendAvailable}`;
 
   const capacityRatio =
     maxSlots > 0 && slots > 0 ? Math.min(slots / maxSlots, 1) : 0;
@@ -96,14 +106,16 @@ function CalendarDayBase({ day }: Props) {
       aria-disabled={isDisabled}
       aria-label={
         past
-          ? `Día ${day}, pasado`
+          ? tr.ariaDayPast.replace("{day}", String(day))
           : hasSlots
-          ? `Día ${day}, ${slots} lugares disponibles`
-          : `Día ${day}, agotado`
+            ? tr.ariaDayAvailable
+                .replace("{day}", String(day))
+                .replace("{slots}", String(slots))
+            : tr.ariaDaySoldOut.replace("{day}", String(day))
       }
       aria-pressed={selected}
       className={cn(
-        "flex h-20 sm:h-24 lg:h-28 flex-col rounded-xl border p-2 sm:p-3 text-left shadow-sm outline-none transition duration-150 ease-in-out select-none",
+        "flex h-16 sm:h-24 lg:h-28 flex-col rounded-xl border p-1.5 sm:p-3 text-left shadow-sm outline-none transition duration-150 ease-in-out select-none overflow-hidden",
         hasSlots
           ? "cursor-pointer hover:scale-105 hover:shadow-md active:scale-95"
           : "cursor-not-allowed opacity-60",
@@ -111,16 +123,15 @@ function CalendarDayBase({ day }: Props) {
         selected && "ring-2 ring-teal-500"
       )}
     >
-      {/* top: day + badges */}
       <div className="flex items-start justify-between">
         <span
           className={cn(
-            "text-lg sm:text-xl font-semibold",
+            "text-base sm:text-xl font-semibold",
             past
               ? "text-zinc-500 dark:text-zinc-400"
               : selected
-              ? "text-teal-800 dark:text-teal-100"
-              : "text-zinc-900 dark:text-zinc-50"
+                ? "text-teal-800 dark:text-teal-100"
+                : "text-zinc-900 dark:text-zinc-50"
           )}
         >
           {day}
@@ -128,8 +139,8 @@ function CalendarDayBase({ day }: Props) {
 
         <div className="flex flex-col items-end gap-1">
           {today && (
-            <span className="rounded-full bg-teal-600/10 px-2 py-[2px] text-[10px] font-medium text-teal-700 dark:text-teal-300">
-              Hoy
+            <span className="rounded-full bg-teal-600/10 px-1.5 sm:px-2 py-[1px] sm:py-[2px] text-[9px] sm:text-[10px] font-medium text-teal-700 dark:text-teal-300">
+              {tr.legendToday}
             </span>
           )}
           {!hasSlots && !past && (
@@ -140,8 +151,7 @@ function CalendarDayBase({ day }: Props) {
         </div>
       </div>
 
-      {/* center: status text */}
-      <div className="flex flex-1 items-center justify-center">
+      <div className="hidden sm:flex flex-1 items-center justify-center">
         <span
           className={cn(
             "text-[11px] sm:text-xs font-semibold text-center",
@@ -152,8 +162,18 @@ function CalendarDayBase({ day }: Props) {
         </span>
       </div>
 
-      {/* bottom: capacity bar */}
-      <div className="mt-1 h-1.5 w-full rounded-full bg-zinc-200/70 dark:bg-zinc-700/70 overflow-hidden">
+      <div className="sm:hidden flex flex-1 items-center justify-center">
+        <span
+          className={cn(
+            "text-[9px] font-semibold text-center leading-tight line-clamp-2",
+            STATUS_TEXT_CLASS[status]
+          )}
+        >
+          {compactLabel}
+        </span>
+      </div>
+
+      <div className="mt-1 h-1 w-full rounded-full bg-zinc-200/70 dark:bg-zinc-700/70 overflow-hidden">
         <div
           className={cn(
             "h-full rounded-full transition-[width] duration-200",

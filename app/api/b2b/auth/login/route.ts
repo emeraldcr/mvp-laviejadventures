@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { findOperatorByEmail } from "@/lib/models/operator";
 import { signToken, COOKIE_NAME } from "@/lib/b2b-auth";
+import { createLoginLog } from "@/lib/models/login-log";
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,6 +21,27 @@ export async function POST(req: NextRequest) {
     if (!valid) {
       return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
     }
+
+    // Block login until email is verified
+    // Treat missing emailVerified (legacy accounts) as verified
+    if (operator.emailVerified === false) {
+      return NextResponse.json(
+        { error: "Please verify your email before logging in. Check your inbox for the verification link." },
+        { status: 403 }
+      );
+    }
+
+
+    const userAgent = req.headers.get("user-agent") || "unknown";
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || undefined;
+    await createLoginLog({
+      userType: "operator",
+      userId: operator._id!.toString(),
+      emailOrUsername: operator.email,
+      device: userAgent,
+      ip,
+      createdAt: new Date(),
+    });
 
     const token = signToken({
       id: operator._id!.toString(),
