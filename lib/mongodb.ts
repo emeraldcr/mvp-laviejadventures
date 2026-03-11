@@ -1,7 +1,8 @@
 import { MongoClient, Db } from "mongodb";
+import { DB_NAME } from "@/lib/constants/db";
 
 const uri = process.env.MONGODB_URI!;
-const dbName = process.env.MONGODB_DB || "lva";
+const dbName = process.env.MONGODB_DB || DB_NAME;
 
 declare global {
   var _mongoClient: MongoClient | undefined;

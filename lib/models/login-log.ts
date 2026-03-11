@@ -1,4 +1,5 @@
 import { getDb } from "@/lib/mongodb";
+import { COLLECTIONS } from "@/lib/constants/db";
 
 export interface LoginLog {
   userType: "admin" | "operator" | "user";
@@ -11,7 +12,7 @@ export interface LoginLog {
 
 async function getLoginLogsCollection() {
   const db = await getDb();
-  return db.collection<LoginLog>("login_logs");
+  return db.collection<LoginLog>(COLLECTIONS.LOGIN_LOGS);
 }
 
 export async function createLoginLog(log: LoginLog) {

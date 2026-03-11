@@ -1,6 +1,8 @@
 import { getDb } from "@/lib/mongodb";
 import { B2B_TOURS } from "@/lib/b2b-tours";
 import { getB2BSettings, PackageConfig } from "@/lib/models/b2b-settings";
+import { COLLECTIONS } from "@/lib/constants/db";
+import { DEFAULT_IVA_RATE, B2B_PACKAGE_MULTIPLIERS } from "@/lib/constants/business";
 
 export type B2BTourWithPackages = {
   id: string;
@@ -23,7 +25,7 @@ export async function getB2BCatalog(): Promise<{ tours: B2BTourWithPackages[]; i
   try {
     const db = await getDb();
     const docs = await db
-      .collection("tours")
+      .collection(COLLECTIONS.TOURS)
       .find({ type: { $in: ["b2b", "both"] }, isActive: { $ne: false } })
       .sort({ isFeatured: -1 })
       .toArray();
@@ -53,15 +55,15 @@ export async function getB2BCatalog(): Promise<{ tours: B2BTourWithPackages[]; i
   }
 
   const settings = await getB2BSettings();
-  const ivaRate = settings?.ivaRate ?? 13;
+  const ivaRate = settings?.ivaRate ?? DEFAULT_IVA_RATE;
   const overrides = new Map((settings?.tourPricing ?? []).map((row) => [row.tourId, row.packages]));
 
   const tours = rawTours.map((tour) => {
     const configuredPackages = overrides.get(tour.id);
     const defaultPackages: PackageConfig[] = [
       { id: "regular", name: "Regular", priceCRC: tour.retailPricePerPax },
-      { id: "premium", name: "Premium", priceCRC: Math.round(tour.retailPricePerPax * 1.25) },
-      { id: "vip", name: "VIP", priceCRC: Math.round(tour.retailPricePerPax * 1.5) },
+      { id: "premium", name: "Premium", priceCRC: Math.round(tour.retailPricePerPax * B2B_PACKAGE_MULTIPLIERS.PREMIUM) },
+      { id: "vip", name: "VIP", priceCRC: Math.round(tour.retailPricePerPax * B2B_PACKAGE_MULTIPLIERS.VIP) },
     ];
 
     return {

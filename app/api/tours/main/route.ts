@@ -3,6 +3,7 @@
 
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/mongodb";
+import { COLLECTIONS } from "@/lib/constants/db";
 
 const DEFAULT_MAIN_TOUR = {
   slug: "tour-ciudad-esmeralda",
@@ -66,7 +67,7 @@ const DEFAULT_MAIN_TOUR = {
 export async function GET() {
   try {
     const db = await getDb();
-    const collection = db.collection("tours");
+    const collection = db.collection(COLLECTIONS.TOURS);
 
     let tour = await collection.findOne({ isMain: true, isActive: { $ne: false } });
 

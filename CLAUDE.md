@@ -1,0 +1,1 @@
+This folder contains my main site nextjs for laviejaadventures.com site, my canyon adventure guided tour in San Carlos Costa Rica

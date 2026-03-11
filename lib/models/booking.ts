@@ -1,5 +1,6 @@
 import { ObjectId } from "mongodb";
 import { getDb } from "@/lib/mongodb";
+import { COLLECTIONS } from "@/lib/constants/db";
 
 export interface OperatorBooking {
   _id?: ObjectId;
@@ -20,7 +21,7 @@ export interface OperatorBooking {
 
 export async function getBookingsCollection() {
   const db = await getDb();
-  return db.collection<OperatorBooking>("operator_bookings");
+  return db.collection<OperatorBooking>(COLLECTIONS.OPERATOR_BOOKINGS);
 }
 
 export async function createBooking(data: Omit<OperatorBooking, "_id">) {

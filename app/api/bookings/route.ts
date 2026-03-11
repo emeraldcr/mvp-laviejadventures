@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
+import { COLLECTIONS } from "@/lib/constants/db";
 
 export async function GET() {
   const session = await auth();
@@ -20,7 +21,7 @@ export async function GET() {
     : { email: userEmail };
 
   const docs = await db
-    .collection("Reservations")
+    .collection(COLLECTIONS.RESERVATIONS)
     .find(query)
     .sort({ createdAt: -1 })
     .toArray();

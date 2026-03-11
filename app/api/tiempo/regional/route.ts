@@ -4,8 +4,12 @@
 
 import { NextResponse } from "next/server";
 import type { LocationWeather } from "@/lib/types/index";
-
-const CACHE_TTL = 1800; // 30 min – regional forecast doesn't change as fast
+import {
+  REGIONAL_CACHE_TTL_SECONDS,
+  REGIONAL_FORECAST_DAYS,
+  REGIONAL_FORECAST_HOURS,
+  REGIONAL_LOCATIONS,
+} from "@/lib/constants/tiempo";
 
 // ─── WMO weather code descriptions (Spanish) ─────────────────────────────────
 const WMO: Record<number, { label: string; icon: string }> = {
@@ -39,44 +43,8 @@ function wmo(code: number): { label: string; icon: string } {
   return WMO[code] ?? { label: `Código ${code}`, icon: "🌡️" };
 }
 
-const LOCATIONS: Array<{
-  id: string;
-  name: string;
-  description: string;
-  lat: number;
-  lon: number;
-}> = [
-  {
-    id: "san_carlos",
-    name: "San Carlos (Ciudad Quesada)",
-    description: "Cabecera del cantón de San Carlos, Alajuela",
-    lat: 10.330,
-    lon: -84.430,
-  },
-  {
-    id: "juan_castro_blanco",
-    name: "P.N. Juan Castro Blanco",
-    description: "Parque Nacional Juan Castro Blanco – zona de amortiguamiento",
-    lat: 10.185,
-    lon: -84.370,
-  },
-  {
-    id: "san_jose_montana",
-    name: "San José de la Montaña",
-    description: "Distrito de Barva, Heredia – ladera sur de la cordillera",
-    lat: 10.056,
-    lon: -84.134,
-  },
-  {
-    id: "el_congo",
-    name: "El Congo",
-    description: "Sector El Congo, San Carlos – zona baja norte",
-    lat: 10.375,
-    lon: -84.380,
-  },
-];
 
-async function fetchLocation(loc: (typeof LOCATIONS)[number]): Promise<LocationWeather> {
+async function fetchLocation(loc: (typeof REGIONAL_LOCATIONS)[number]): Promise<LocationWeather> {
   const url = new URL("https://api.open-meteo.com/v1/forecast");
   url.searchParams.set("latitude",  String(loc.lat));
   url.searchParams.set("longitude", String(loc.lon));
@@ -93,8 +61,8 @@ async function fetchLocation(loc: (typeof LOCATIONS)[number]): Promise<LocationW
     "weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum"
   );
   url.searchParams.set("timezone",       "America/Costa_Rica");
-  url.searchParams.set("forecast_days",  "5");
-  url.searchParams.set("forecast_hours", "24");
+  url.searchParams.set("forecast_days",  String(REGIONAL_FORECAST_DAYS));
+  url.searchParams.set("forecast_hours", String(REGIONAL_FORECAST_HOURS));
   url.searchParams.set("wind_speed_unit","kmh");
 
   try {
@@ -122,7 +90,7 @@ async function fetchLocation(loc: (typeof LOCATIONS)[number]): Promise<LocationW
     // ── 24-hour hourly ──────────────────────────────────────────────────────
     const h = json.hourly ?? {};
     const times: string[] = h.time ?? [];
-    const hourly_24h: LocationWeather["hourly_24h"] = times.slice(0, 24).map((t, i) => ({
+    const hourly_24h: LocationWeather["hourly_24h"] = times.slice(0, REGIONAL_FORECAST_HOURS).map((t, i) => ({
       time:         t,
       temp_c:       h.temperature_2m?.[i]           ?? 0,
       hr_pct:       h.relative_humidity_2m?.[i]     ?? 0,
@@ -135,7 +103,7 @@ async function fetchLocation(loc: (typeof LOCATIONS)[number]): Promise<LocationW
     // ── 5-day daily ─────────────────────────────────────────────────────────
     const d = json.daily ?? {};
     const dates: string[] = d.time ?? [];
-    const daily_5d: LocationWeather["daily_5d"] = dates.slice(0, 5).map((date, i) => ({
+    const daily_5d: LocationWeather["daily_5d"] = dates.slice(0, REGIONAL_FORECAST_DAYS).map((date, i) => ({
       date,
       weather_code:   d.weather_code?.[i]        ?? 0,
       weather_label:  wmo(d.weather_code?.[i] ?? 0).label,
@@ -166,7 +134,7 @@ async function fetchLocation(loc: (typeof LOCATIONS)[number]): Promise<LocationW
 }
 
 export async function GET() {
-  const results = await Promise.all(LOCATIONS.map(fetchLocation));
+  const results = await Promise.all(REGIONAL_LOCATIONS.map(fetchLocation));
 
   return NextResponse.json(
     {
@@ -178,7 +146,7 @@ export async function GET() {
     },
     {
       headers: {
-        "Cache-Control": `s-maxage=${CACHE_TTL}, stale-while-revalidate=120`,
+        "Cache-Control": `s-maxage=${REGIONAL_CACHE_TTL_SECONDS}, stale-while-revalidate=120`,
       },
     }
   );

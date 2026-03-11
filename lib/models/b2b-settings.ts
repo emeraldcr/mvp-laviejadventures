@@ -1,4 +1,5 @@
 import { getDb } from "@/lib/mongodb";
+import { COLLECTIONS } from "@/lib/constants/db";
 
 export type PackageConfig = {
   id: string;
@@ -22,7 +23,7 @@ const SETTINGS_KEY = "default";
 
 async function getSettingsCollection() {
   const db = await getDb();
-  return db.collection<B2BSettings & { _id: string }>("b2b_settings");
+  return db.collection<B2BSettings & { _id: string }>(COLLECTIONS.B2B_SETTINGS);
 }
 
 export async function getB2BSettings() {

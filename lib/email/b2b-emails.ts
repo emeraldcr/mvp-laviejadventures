@@ -1,7 +1,8 @@
 import { Resend } from "resend";
+import { EMAIL_FROM_DEFAULT, APP_BASE_URL_DEFAULT } from "@/lib/constants/email";
 
-const FROM = process.env.SMTP_FROM || '"La Vieja Adventures" <noreply@laviejaadventures.com>';
-const BASE_URL = process.env.APP_BASE_URL || "https://www.laviejaadventures.com";
+const FROM = process.env.SMTP_FROM || EMAIL_FROM_DEFAULT;
+const BASE_URL = process.env.APP_BASE_URL || APP_BASE_URL_DEFAULT;
 
 function getResend(): Resend | null {
   const key = process.env.RESEND_API_KEY;

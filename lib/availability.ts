@@ -1,6 +1,7 @@
 // lib/availability.ts
 
 import { AvailabilityMap } from "./types";
+import { DEFAULT_AVAILABILITY } from "@/lib/constants/business";
 
 
 export function generateAvailability(
@@ -17,7 +18,7 @@ export function generateAvailability(
 
     const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
 
-    availability[day] = overrides[day] ?? (isWeekend ? 50 : 20);
+    availability[day] = overrides[day] ?? (isWeekend ? DEFAULT_AVAILABILITY.WEEKEND : DEFAULT_AVAILABILITY.WEEKDAY);
   }
 
   return availability;

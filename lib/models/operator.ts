@@ -1,5 +1,6 @@
 import { ObjectId } from "mongodb";
 import { getDb } from "@/lib/mongodb";
+import { COLLECTIONS } from "@/lib/constants/db";
 
 export interface OperatorAccount {
   _id?: ObjectId;
@@ -21,7 +22,7 @@ export interface OperatorAccount {
 
 export async function getOperatorsCollection() {
   const db = await getDb();
-  return db.collection<OperatorAccount>("operators");
+  return db.collection<OperatorAccount>(COLLECTIONS.OPERATORS);
 }
 
 export async function findOperatorByEmail(email: string) {

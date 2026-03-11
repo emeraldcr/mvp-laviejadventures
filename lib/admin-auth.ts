@@ -1,10 +1,10 @@
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 import { NextRequest } from "next/server";
+import { ADMIN_COOKIE_NAME as ADMIN_COOKIE_NAME_CONST, TOKEN_EXPIRY } from "@/lib/constants/auth";
 
 const ADMIN_JWT_SECRET = process.env.ADMIN_JWT_SECRET || process.env.B2B_JWT_SECRET || "admin-secret-change-in-production";
-export const ADMIN_COOKIE_NAME = "b2b_admin_token";
-const TOKEN_EXPIRY = "7d";
+export const ADMIN_COOKIE_NAME = ADMIN_COOKIE_NAME_CONST;
 
 export interface AdminTokenPayload {
   id: string;

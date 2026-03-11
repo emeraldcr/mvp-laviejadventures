@@ -15,11 +15,32 @@ import {
   weightedMovingAverage,
 } from "./helpers";
 import { ABBREVIATIONS, CACHE_TTL_SECONDS, FETCH_HEADERS, IMN_URL } from "@/lib/types/tiempo-api";
+import {
+  RIVER_BASE_LEVEL_M,
+  RIVER_LEVEL_CRITICAL_M,
+  RIVER_LEVEL_HIGH_M,
+  RIVER_LEVEL_MULTIPLIER,
+  RIVER_LEVEL_NORMAL_M,
+  RELIABILITY_DEDUCTION_FRESHNESS_HIGH,
+  RELIABILITY_DEDUCTION_FRESHNESS_LOW,
+  RELIABILITY_DEDUCTION_FRESHNESS_MED,
+  RELIABILITY_DEDUCTION_NO_SNAPSHOT,
+  RELIABILITY_DEDUCTION_RECORDS_LOW,
+  RELIABILITY_DEDUCTION_RECORDS_MED,
+  RELIABILITY_FRESHNESS_HIGH_MIN,
+  RELIABILITY_FRESHNESS_LOW_MIN,
+  RELIABILITY_FRESHNESS_MED_MIN,
+  RELIABILITY_LEVEL_HIGH_SCORE,
+  RELIABILITY_LEVEL_MED_SCORE,
+  RELIABILITY_RECORDS_THRESHOLD_FULL,
+  RELIABILITY_RECORDS_THRESHOLD_LOW,
+  RELIABILITY_SCORE_MAX,
+} from "@/lib/constants/tiempo";
 
 
 function estimateRiverLevel(sumLluvMm: number) {
-  const level = 0.45 + sumLluvMm * 0.012;
-  if (level >= 1.8) {
+  const level = RIVER_BASE_LEVEL_M + sumLluvMm * RIVER_LEVEL_MULTIPLIER;
+  if (level >= RIVER_LEVEL_CRITICAL_M) {
     return {
       station: "Río La Vieja (Sucre)",
       label: "Crecida fuerte",
@@ -28,7 +49,7 @@ function estimateRiverLevel(sumLluvMm: number) {
       guidance: "Evitar ingresos al cañón. Revisar en sitio antes de operar.",
     };
   }
-  if (level >= 1.4) {
+  if (level >= RIVER_LEVEL_HIGH_M) {
     return {
       station: "Río La Vieja (Sucre)",
       label: "Caudal alto",
@@ -37,7 +58,7 @@ function estimateRiverLevel(sumLluvMm: number) {
       guidance: "Operar solo con alta precaución y monitoreo constante.",
     };
   }
-  if (level >= 0.95) {
+  if (level >= RIVER_LEVEL_NORMAL_M) {
     return {
       station: "Río La Vieja (Sucre)",
       label: "Caudal normal",
@@ -57,35 +78,35 @@ function estimateRiverLevel(sumLluvMm: number) {
 
 function buildReliability(args: { records24h: number; freshnessMinutes: number; hasCurrentSnapshot: boolean; }) {
   const { records24h, freshnessMinutes, hasCurrentSnapshot } = args;
-  let score = 100;
+  let score = RELIABILITY_SCORE_MAX;
   const reasons: string[] = [];
 
-  if (records24h < 18) {
-    score -= 35;
+  if (records24h < RELIABILITY_RECORDS_THRESHOLD_LOW) {
+    score -= RELIABILITY_DEDUCTION_RECORDS_LOW;
     reasons.push("faltan registros horarios en las últimas 24h");
-  } else if (records24h < 24) {
-    score -= 15;
+  } else if (records24h < RELIABILITY_RECORDS_THRESHOLD_FULL) {
+    score -= RELIABILITY_DEDUCTION_RECORDS_MED;
     reasons.push("faltan algunos registros horarios");
   }
 
-  if (freshnessMinutes > 180) {
-    score -= 35;
+  if (freshnessMinutes > RELIABILITY_FRESHNESS_HIGH_MIN) {
+    score -= RELIABILITY_DEDUCTION_FRESHNESS_HIGH;
     reasons.push("datos con más de 3 horas de atraso");
-  } else if (freshnessMinutes > 90) {
-    score -= 20;
+  } else if (freshnessMinutes > RELIABILITY_FRESHNESS_MED_MIN) {
+    score -= RELIABILITY_DEDUCTION_FRESHNESS_MED;
     reasons.push("datos algo desactualizados");
-  } else if (freshnessMinutes > 45) {
-    score -= 10;
+  } else if (freshnessMinutes > RELIABILITY_FRESHNESS_LOW_MIN) {
+    score -= RELIABILITY_DEDUCTION_FRESHNESS_LOW;
     reasons.push("actualización no reciente");
   }
 
   if (!hasCurrentSnapshot) {
-    score -= 10;
+    score -= RELIABILITY_DEDUCTION_NO_SNAPSHOT;
     reasons.push("snapshot actual de estación no disponible");
   }
 
-  score = Math.max(0, Math.min(100, score));
-  const level = score >= 80 ? "alta" : score >= 55 ? "media" : "baja";
+  score = Math.max(0, Math.min(RELIABILITY_SCORE_MAX, score));
+  const level = score >= RELIABILITY_LEVEL_HIGH_SCORE ? "alta" : score >= RELIABILITY_LEVEL_MED_SCORE ? "media" : "baja";
 
   return {
     level,

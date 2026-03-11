@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { headers } from "next/headers";
+import { COLLECTIONS } from "@/lib/constants/db";
 
 type AnalyticsEventName = "page_view" | "click" | "booking_step" | "booking_submitted";
 
@@ -76,7 +77,7 @@ export async function POST(request: Request) {
 
     const db = await getDb();
 
-    await db.collection("analytics_events").insertOne({
+    await db.collection(COLLECTIONS.ANALYTICS_EVENTS).insertOne({
       event: body.event,
       path: body.path ?? null,
       referrer: body.referrer ?? null,

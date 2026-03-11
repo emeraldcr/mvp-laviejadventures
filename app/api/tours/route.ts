@@ -3,6 +3,7 @@
 
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/mongodb";
+import { COLLECTIONS } from "@/lib/constants/db";
 
 const DEFAULT_TOURS = [
   {
@@ -162,7 +163,7 @@ const DEFAULT_TOURS = [
 export async function GET() {
   try {
     const db = await getDb();
-    const collection = db.collection("tours");
+    const collection = db.collection(COLLECTIONS.TOURS);
 
     let tours = await collection
       .find({ type: { $in: ["public", "both"] }, isActive: { $ne: false } })

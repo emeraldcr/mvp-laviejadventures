@@ -3,6 +3,12 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { findOperatorByEmail, createOperator, setVerificationToken } from "@/lib/models/operator";
 import { sendVerificationEmail } from "@/lib/email/b2b-emails";
+import {
+  BCRYPT_SALT_ROUNDS,
+  MIN_PASSWORD_LENGTH,
+  VERIFICATION_TOKEN_EXPIRY_MS,
+} from "@/lib/constants/auth";
+import { DEFAULT_COMMISSION_RATE } from "@/lib/constants/business";
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,7 +18,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "All fields are required." }, { status: 400 });
     }
 
-    if (password.length < 8) {
+    if (password.length < MIN_PASSWORD_LENGTH) {
       return NextResponse.json(
         { error: "Password must be at least 8 characters." },
         { status: 400 }
@@ -24,9 +30,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "An account with this email already exists." }, { status: 409 });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 12);
+    const hashedPassword = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
     const verificationToken = crypto.randomBytes(32).toString("hex");
-    const verificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h
+    const verificationExpiry = new Date(Date.now() + VERIFICATION_TOKEN_EXPIRY_MS);
 
     const result = await createOperator({
       name,
@@ -34,7 +40,7 @@ export async function POST(req: NextRequest) {
       email: email.toLowerCase(),
       password: hashedPassword,
       status: "pending",
-      commissionRate: 10,
+      commissionRate: DEFAULT_COMMISSION_RATE,
       createdAt: new Date(),
       emailVerified: false,
       verificationToken,

@@ -1,5 +1,6 @@
 import { ObjectId } from "mongodb";
 import { getDb } from "@/lib/mongodb";
+import { COLLECTIONS } from "@/lib/constants/db";
 
 export interface AppUser {
   _id?: ObjectId;
@@ -58,7 +59,7 @@ function mergeUserPreferences(preferences?: Partial<UserPreferences> | null): Us
 
 async function getUsersCollection() {
   const db = await getDb();
-  return db.collection<AppUser>("users");
+  return db.collection<AppUser>(COLLECTIONS.USERS);
 }
 
 export async function findUserByEmail(email: string) {

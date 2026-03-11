@@ -4,6 +4,7 @@ import { listOperators } from "@/lib/models/operator";
 import { listUsers } from "@/lib/models/user";
 import { listLoginLogs } from "@/lib/models/login-log";
 import { getDb } from "@/lib/mongodb";
+import { COLLECTIONS } from "@/lib/constants/db";
 
 type BookingAnalyticsEvent = {
   _id: string;
@@ -48,7 +49,7 @@ export async function GET(req: NextRequest) {
       (async () => {
         const db = await getDb();
         const docs = await db
-          .collection("Reservations")
+          .collection(COLLECTIONS.RESERVATIONS)
           .find({})
           .sort({ createdAt: -1 })
           .toArray();
@@ -71,7 +72,7 @@ export async function GET(req: NextRequest) {
       (async (): Promise<BookingAnalyticsEvent[]> => {
         const db = await getDb();
         const docs = await db
-          .collection("analytics_events")
+          .collection(COLLECTIONS.ANALYTICS_EVENTS)
           .find({ event: { $in: ["booking_step", "booking_submitted"] } })
           .sort({ happenedAt: -1 })
           .limit(200)

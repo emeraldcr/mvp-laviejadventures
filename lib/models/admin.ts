@@ -1,6 +1,8 @@
 import bcrypt from "bcryptjs";
 import { ObjectId } from "mongodb";
 import { getDb } from "@/lib/mongodb";
+import { COLLECTIONS } from "@/lib/constants/db";
+import { BCRYPT_SALT_ROUNDS } from "@/lib/constants/auth";
 
 export interface AdminAccount {
   _id?: ObjectId;
@@ -11,7 +13,7 @@ export interface AdminAccount {
 
 export async function getAdminsCollection() {
   const db = await getDb();
-  return db.collection<AdminAccount>("admins");
+  return db.collection<AdminAccount>(COLLECTIONS.ADMINS);
 }
 
 async function ensureDefaultAdmin() {
@@ -20,7 +22,7 @@ async function ensureDefaultAdmin() {
 
   if (total > 0) return;
 
-  const hashedPassword = await bcrypt.hash("admin", 12);
+  const hashedPassword = await bcrypt.hash("admin", BCRYPT_SALT_ROUNDS);
   await col.insertOne({
     username: "admin",
     password: hashedPassword,

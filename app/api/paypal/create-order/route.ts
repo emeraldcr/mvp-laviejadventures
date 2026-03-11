@@ -6,6 +6,8 @@ import {
   getPayPalAccessToken,
 } from "@/lib/paypal";
 import { getDb } from "@/lib/mongodb";
+import { PAYPAL_CURRENCY, PAYPAL_CUSTOM_ID_MAX_LENGTH } from "@/lib/constants/paypal";
+import { COLLECTIONS } from "@/lib/constants/db";
 
 interface CreateOrderLink {
   rel?: string;
@@ -53,7 +55,7 @@ export async function POST(req: Request) {
       tourName: tourName ?? null,
       date,
     });
-    const custom_id = customIdPayload.length <= 127 ? customIdPayload : JSON.stringify({
+    const custom_id = customIdPayload.length <= PAYPAL_CUSTOM_ID_MAX_LENGTH ? customIdPayload : JSON.stringify({
       tickets,
       time: tourTime ?? null,
       pkg: tourPackage ?? null,
@@ -76,7 +78,7 @@ export async function POST(req: Request) {
         purchase_units: [
           {
             amount: {
-              currency_code: "USD",
+              currency_code: PAYPAL_CURRENCY,
               value: formattedTotal,
             },
             description: `Reserva: ${tickets} pax - ${tourName ?? packageLabel}${timeLabel ? ` (${timeLabel})` : ""} - ${date}`,
@@ -98,7 +100,7 @@ export async function POST(req: Request) {
 
     try {
       const db = await getDb();
-      await db.collection("paypal_order_contexts").updateOne(
+      await db.collection(COLLECTIONS.PAYPAL_ORDER_CONTEXTS).updateOne(
         { orderId: data.id },
         {
           $set: {
