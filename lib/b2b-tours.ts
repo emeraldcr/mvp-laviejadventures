@@ -15,9 +15,9 @@ export interface B2BTour {
 export const B2B_TOURS: B2BTour[] = [
   {
     id: "tour-ciudad-esmeralda",
-    name: "Tour Ciudad Esmeralda – Cañón del Río La Vieja",
+    name: "Tour Ciudad Esmeralda · Cañón del Río La Vieja",
     description:
-      "Una experiencia única en el cañón del Río La Vieja. Caminata por senderos selváticos, baño en pozas naturales y vistas impresionantes del cañón.",
+      "Una experiencia insignia en el cañón del Río La Vieja: senderos de bosque, pozas naturales y paisajes imponentes diseñados para conectar aventura, seguridad y memoria.",
     duration: "3–4 horas",
     retailPricePerPax: 25000,
     currency: "CRC",
