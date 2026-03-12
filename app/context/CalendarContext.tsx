@@ -6,6 +6,7 @@ import {
   useContext,
   useMemo,
   useState,
+  useEffect,
   ReactNode,
 } from "react";
 import { AvailabilityMap } from "@/lib/types/index";
@@ -69,10 +70,35 @@ export function CalendarProvider({ children }: Props) {
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [tickets, setTicketsState] = useState<number>(1);
+  const [availabilityOverrides, setAvailabilityOverrides] = useState<Partial<AvailabilityMap>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadAvailability = async () => {
+      try {
+        const res = await fetch(`/api/calendar/availability?year=${currentYear}&month=${currentMonth}`);
+        if (!res.ok) return;
+
+        const data = (await res.json()) as { availability?: AvailabilityMap };
+        if (!cancelled) {
+          setAvailabilityOverrides(data.availability ?? {});
+        }
+      } catch (error) {
+        console.error("Failed to load calendar availability:", error);
+      }
+    };
+
+    loadAvailability();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentMonth, currentYear]);
 
   const availability: AvailabilityMap = useMemo(
-    () => generateAvailability(currentYear, currentMonth),
-    [currentYear, currentMonth]
+    () => generateAvailability(currentYear, currentMonth, availabilityOverrides),
+    [currentYear, currentMonth, availabilityOverrides]
   );
 
   const monthLabel = useMemo(
