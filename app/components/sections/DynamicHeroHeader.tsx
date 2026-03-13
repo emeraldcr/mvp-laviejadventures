@@ -19,6 +19,7 @@ import { useInterval } from "@/app/hooks/useInterval";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/lib/translations";
 import { useSession, signOut } from "next-auth/react";
+import { useHeroSlogan } from "@/app/hooks/useHeroSlogan";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface NavLinkItem {
@@ -402,6 +403,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "1
   const { data: carouselImages = [], error, isLoading } = useSWR<string[]>("/api/images", fetcher);
   const { lang } = useLanguage();
   const tr = translations[lang].hero;
+  const { slogan, loading: sloganLoading } = useHeroSlogan();
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -541,11 +543,26 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "1
               {tr.title}
             </h1>
 
-            {/* Subtitle */}
-            <p className="text-base sm:text-xl md:text-2xl font-light text-white/75 max-w-2xl mb-10 leading-relaxed">
-              {tr.subtitle}{" "}
-              <span className="font-semibold text-teal-300">{tr.subtitleBold}</span>.
-            </p>
+            {/* Subtitle — AI-generated slogan, unique on every load */}
+            <div className="mb-10 max-w-2xl min-h-[2.5rem] flex items-center justify-center">
+              {sloganLoading ? (
+                <div className="flex flex-col items-center gap-2 w-full max-w-md">
+                  <div className="h-4 w-3/4 rounded-full bg-white/10 animate-pulse" />
+                  <div className="h-4 w-1/2 rounded-full bg-white/10 animate-pulse" />
+                </div>
+              ) : (
+                <p
+                  className="text-base sm:text-xl md:text-2xl font-light text-white/80 leading-relaxed text-center transition-opacity duration-700"
+                  style={{ opacity: slogan ? 1 : 0 }}
+                >
+                  {slogan
+                    ? lang === "es"
+                      ? slogan.es
+                      : slogan.en
+                    : `${tr.subtitle} ${tr.subtitleBold}.`}
+                </p>
+              )}
+            </div>
 
             {/* CTA */}
             <a

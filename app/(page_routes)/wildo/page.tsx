@@ -5,6 +5,7 @@ import { useLanguage } from "@/app/context/LanguageContext";
 import {
   BookOpen,
   Heart,
+  Images,
   Leaf,
   ShieldCheck,
   Sparkles,
@@ -12,6 +13,18 @@ import {
   TreePine,
   Users,
 } from "lucide-react";
+import Image from "next/image";
+
+const galleryImages = [
+  { src: "/wildo/wildo1.png", alt: "Wildo la mascota" },
+  { src: "/wildo/20202928-bec8-43d4-8bae-3adb0558a777.jpg", alt: "Wildo en el bosque" },
+  { src: "/wildo/711B2B28-4B16-4DBA-93E9-2A9857A96F44.png", alt: "Wildo aventura" },
+  { src: "/wildo/7C8110E6-8C44-4F17-9D9A-74BBC675383D.png", alt: "Wildo naturaleza" },
+  { src: "/wildo/9F7659E0-F26F-46D0-9E1D-C098545068BE.png", alt: "Wildo selva" },
+  { src: "/wildo/A5A02B7D-2B4E-4AA1-A6A9-CDF9AF990F0A.png", alt: "Wildo guardián" },
+  { src: "/wildo/Adventures in the Verdant Canyon.jpg", alt: "Aventuras en el cañón" },
+
+];
 
 const content = {
   es: {
@@ -143,6 +156,34 @@ export default function WildoPage() {
             <Users size={18} />
             {copy.cta}
           </p>
+        </section>
+
+        {/* Galería de imágenes */}
+        <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
+          <h2 className="mb-6 flex items-center gap-2 text-2xl font-semibold text-zinc-900 dark:text-white">
+            <Images size={20} className="text-emerald-600" />
+            {lang === "es" ? "Galería de Wildo" : "Wildo Gallery"}
+          </h2>
+          <div className="columns-2 gap-3 sm:columns-3 lg:columns-4">
+            {galleryImages.map((img, index) => (
+              <div
+                key={index}
+                className="mb-3 overflow-hidden rounded-xl break-inside-avoid border border-zinc-100 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900"
+              >
+                <Image
+                  src={img.src}
+                  alt={img.alt}
+                  width={400}
+                  height={400}
+                  className="h-auto w-full object-cover transition-transform duration-300 hover:scale-105"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).style.display = "none";
+                    (e.currentTarget.parentElement as HTMLElement).style.display = "none";
+                  }}
+                />
+              </div>
+            ))}
+          </div>
         </section>
       </div>
     </main>
