@@ -22,6 +22,9 @@ import { useLanguage } from "@/app/context/LanguageContext";
 import { useSession, signIn } from "next-auth/react";
 import LogoutButton from "@/app/components/auth/LogoutButton";
 import Profile from "@/app/components/auth/Profile";
+import type { UserPreferences } from "@/lib/types/index";
+import { DEFAULT_USER_PREFERENCES } from "@/lib/constants/user";
+import { isUpcoming } from "@/lib/utils";
 
 type Booking = {
     id: string;
@@ -37,39 +40,6 @@ type Booking = {
     status: string | null;
     createdAt: string | null;
 };
-
-type UserPreferences = {
-    notifications: {
-        emailEnabled: boolean;
-        bookingReminders: boolean;
-        promotions: boolean;
-        weeklySummary: boolean;
-    };
-    dashboard: {
-        compactView: boolean;
-        showSupportCard: boolean;
-        defaultBookingTab: "upcoming" | "past";
-    };
-};
-
-const DEFAULT_USER_PREFERENCES: UserPreferences = {
-    notifications: {
-        emailEnabled: true,
-        bookingReminders: true,
-        promotions: false,
-        weeklySummary: false,
-    },
-    dashboard: {
-        compactView: false,
-        showSupportCard: true,
-        defaultBookingTab: "upcoming",
-    },
-};
-
-function isUpcoming(dateStr: string | null): boolean {
-    if (!dateStr) return false;
-    return new Date(dateStr) >= new Date(new Date().toDateString());
-}
 
 const PACKAGE_LABELS: Record<string, { es: string; en: string }> = {
     basic: { es: "Tour Básico", en: "Basic Tour" },

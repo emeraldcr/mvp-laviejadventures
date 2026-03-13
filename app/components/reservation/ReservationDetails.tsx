@@ -1,7 +1,7 @@
 // components/ReservationDetails.tsx
 import Link from "next/link";
 import { TOUR_INFO } from "@/lib/tour-info";
-import { AvailabilityMap, MainTourInfo } from "@/lib/types/index";
+import { AvailabilityMap, MainTourInfo, TourSummary } from "@/lib/types/index";
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { format } from "date-fns";
 import { es, enUS } from "date-fns/locale";
@@ -41,12 +41,7 @@ interface PackageOption {
   availableOn: "weekdays" | "weekends";
 }
 
-export type TourSummary = {
-  id: string;
-  slug: string;
-  titleEs: string;
-  titleEn: string;
-};
+export type { TourSummary };
 
 const PACKAGES: PackageOption[] = [
   {

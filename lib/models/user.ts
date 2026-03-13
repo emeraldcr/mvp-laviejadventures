@@ -1,6 +1,11 @@
 import { ObjectId } from "mongodb";
 import { getDb } from "@/lib/mongodb";
 import { COLLECTIONS } from "@/lib/constants/db";
+import type { UserPreferences } from "@/lib/types/index";
+import { DEFAULT_USER_PREFERENCES } from "@/lib/constants/user";
+
+export type { UserPreferences };
+export { DEFAULT_USER_PREFERENCES };
 
 export interface AppUser {
   _id?: ObjectId;
@@ -15,34 +20,6 @@ export interface AppUser {
   createdAt: Date;
   updatedAt: Date;
 }
-
-export type UserPreferences = {
-  notifications: {
-    emailEnabled: boolean;
-    bookingReminders: boolean;
-    promotions: boolean;
-    weeklySummary: boolean;
-  };
-  dashboard: {
-    compactView: boolean;
-    showSupportCard: boolean;
-    defaultBookingTab: "upcoming" | "past";
-  };
-};
-
-export const DEFAULT_USER_PREFERENCES: UserPreferences = {
-  notifications: {
-    emailEnabled: true,
-    bookingReminders: true,
-    promotions: false,
-    weeklySummary: false,
-  },
-  dashboard: {
-    compactView: false,
-    showSupportCard: true,
-    defaultBookingTab: "upcoming",
-  },
-};
 
 function mergeUserPreferences(preferences?: Partial<UserPreferences> | null): UserPreferences {
   return {

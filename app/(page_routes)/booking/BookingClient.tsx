@@ -1,6 +1,7 @@
 "use client";
 
 import { useLanguage } from "@/app/context/LanguageContext";
+import { isUpcoming } from "@/lib/utils";
 import DynamicHeroHeader from "@/app/components/sections/DynamicHeroHeader";
 import {
   ArrowRight,
@@ -43,12 +44,6 @@ type Props = {
   userName: string | null;
   userEmail: string | null;
 };
-
-function isUpcoming(dateStr: string | null): boolean {
-  if (!dateStr) return false;
-  const d = new Date(dateStr);
-  return d >= new Date(new Date().toDateString());
-}
 
 function StatusBadge({ status, lang }: { status: string | null; lang: string }) {
   const s = (status ?? "").toUpperCase();
