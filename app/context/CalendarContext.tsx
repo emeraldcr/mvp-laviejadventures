@@ -8,6 +8,7 @@ import {
   useState,
   ReactNode,
 } from "react";
+import { getDaysInMonth, startOfMonth, getDay } from "date-fns";
 import { AvailabilityMap } from "@/lib/types/index";
 import { generateAvailability } from "@/lib/availability";
 import { useLanguage } from "@/app/context/LanguageContext";
@@ -18,6 +19,9 @@ type CalendarContextValue = {
   currentMonth: number;
   monthLabel: string;
   availability: AvailabilityMap;
+
+  // derived grid (42 cells: nulls for padding + day numbers)
+  calendarDays: (number | null)[];
 
   // selection
   selectedDay: number | null;
@@ -89,6 +93,19 @@ export function CalendarProvider({ children }: Props) {
     () => Math.max(0, ...Object.values(availability)),
     [availability]
   );
+
+  const calendarDays = useMemo<(number | null)[]>(() => {
+    const firstOfMonth = new Date(currentYear, currentMonth, 1);
+    const daysInMonth = getDaysInMonth(firstOfMonth);
+    // 0 = domingo … 6 = sábado → remapeamos a 0 = lunes … 6 = domingo
+    const offset = (getDay(startOfMonth(firstOfMonth)) + 6) % 7;
+
+    const days: (number | null)[] = [];
+    for (let i = 0; i < offset; i++) days.push(null);
+    for (let d = 1; d <= daysInMonth; d++) days.push(d);
+    while (days.length < 42) days.push(null); // rellenar hasta 6 semanas
+    return days;
+  }, [currentYear, currentMonth]);
 
   const isPastDay = useCallback(
     (day: number) => {
@@ -194,6 +211,7 @@ export function CalendarProvider({ children }: Props) {
     currentMonth,
     monthLabel,
     availability,
+    calendarDays,
     selectedDay,
     selectedDate,
     setSelectedDate,

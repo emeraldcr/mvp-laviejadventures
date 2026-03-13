@@ -8,143 +8,21 @@ import { format } from "date-fns";
 import { es, enUS } from "date-fns/locale";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/lib/translations";
-import { Camera, ChevronRight, ShieldCheck, Sparkles, TreePalm, Users, UtensilsCrossed, X } from "lucide-react";
+import { Camera, ChevronRight, ShieldCheck, Users, X } from "lucide-react";
 import { trackAnalyticsEvent } from "@/lib/analytics/client";
+import {
+  COUNTRY_CODES,
+  TIME_SLOTS,
+  PACKAGES,
+  PACKAGE_META,
+  type TourTime,
+  type TourPackage,
+  type ReservationFormState,
+  type ReservationOrderPayload,
+} from "@/lib/constants/reservation";
+import { useReservationForm } from "@/app/hooks/useReservationForm";
 
-// ---------------------- CONSTANTS ----------------------
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PHONE_NUMBER_REGEX = /^\d{4}[\s-]?\d{4}$/;
-
-const COUNTRY_CODES = [
-  { code: "+506", name: "Costa Rica" },
-  { code: "+1", name: "EE. UU. / Canadá" },
-  { code: "+52", name: "México" },
-  { code: "+57", name: "Colombia" },
-  { code: "+34", name: "España" },
-];
-
-// ---------------------- TIME SLOTS ----------------------
-const TIME_SLOTS = [
-  { id: "08:00" as const, label: "8:00 AM" },
-  { id: "09:00" as const, label: "9:00 AM" },
-  { id: "10:00" as const, label: "10:00 AM" },
-];
-
-export type TourTime = "08:00" | "09:00" | "10:00";
-
-// ---------------------- PACKAGES ----------------------
-export type TourPackage = "basic" | "full-day" | "private";
-
-interface PackageOption {
-  id: TourPackage;
-  priceUSD: number;
-  priceCRC: number | null;
-  availableOn: "weekdays" | "weekends";
-}
-
-export type { TourSummary };
-
-const PACKAGES: PackageOption[] = [
-  {
-    id: "basic",
-    priceUSD: 30,
-    priceCRC: 15000,
-    availableOn: "weekends",
-  },
-  {
-    id: "full-day",
-    priceUSD: 40,
-    priceCRC: 20000,
-    availableOn: "weekends",
-  },
-  {
-    id: "private",
-    priceUSD: 60,
-    priceCRC: null,
-    availableOn: "weekdays",
-  },
-];
-
-const PACKAGE_META = {
-  basic: {
-    icon: TreePalm,
-    accent: "from-sky-500/20 to-emerald-500/10",
-    highlightEs: ["Guía certificado local", "Ingreso a zonas naturales", "Briefing de seguridad"],
-    highlightEn: ["Certified local guide", "Nature area access", "Safety briefing"],
-  },
-  "full-day": {
-    icon: UtensilsCrossed,
-    accent: "from-violet-500/20 to-indigo-500/10",
-    highlightEs: ["Incluye almuerzo típico", "Paradas fotográficas", "Ruta extendida todo el día"],
-    highlightEn: ["Traditional lunch included", "Photo stops", "Extended full-day route"],
-  },
-  private: {
-    icon: Sparkles,
-    accent: "from-amber-500/20 to-orange-500/10",
-    highlightEs: ["Atención exclusiva", "Ritmo personalizado", "Ideal para parejas o grupos"],
-    highlightEn: ["Exclusive attention", "Custom pace", "Great for couples or groups"],
-  },
-} satisfies Record<TourPackage, {
-  icon: typeof TreePalm;
-  accent: string;
-  highlightEs: string[];
-  highlightEn: string[];
-}>;
-
-// ---------------------- TYPES ----------------------
-interface ReservationFormState {
-  name: string;
-  email: string;
-  phoneCode: string;
-  phoneNumber: string;
-  specialRequests: string;
-  agreeTerms: boolean;
-}
-
-interface ReservationOrderPayload {
-  name: string;
-  email: string;
-  phone: string;
-  tickets: number;
-  total: number;
-  date: string;
-  tourTime: TourTime;
-  tourPackage: TourPackage;
-  tourSlug: string;
-  tourName: string;
-  packagePrice: number;
-  specialRequests: string;
-}
-
-// ---------------------- CUSTOM HOOK ----------------------
-const useReservationForm = (initialState: ReservationFormState) => {
-  const [formState, setFormState] = useState(initialState);
-
-  const handleChange = useCallback(
-    (key: keyof ReservationFormState, value: string | boolean) => {
-      setFormState((prev) => ({ ...prev, [key]: value }));
-    },
-    []
-  );
-
-  const validation = useMemo(() => {
-    const isNameValid = formState.name.trim() !== "";
-    const isEmailValid =
-      formState.email.trim() !== "" && EMAIL_REGEX.test(formState.email.trim());
-    const isPhoneNumberValid =
-      formState.phoneNumber.trim() !== "" &&
-      PHONE_NUMBER_REGEX.test(formState.phoneNumber.trim());
-
-    return {
-      isNameValid,
-      isEmailValid,
-      isPhoneNumberValid,
-      isAgreeTermsValid: formState.agreeTerms,
-    };
-  }, [formState]);
-
-  return { formState, handleChange, validation };
-};
+export type { TourTime, TourPackage, TourSummary };
 
 // ---------------------- CHILD COMPONENTS ----------------------
 

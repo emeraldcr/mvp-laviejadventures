@@ -1,12 +1,11 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React from "react";
 import { useCalendarContext } from "@/app/context/CalendarContext";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/lib/translations";
 import CalendarDay from "./CalendarDay";
 import { cn } from "@/lib/utils";
-import { getDaysInMonth, startOfMonth, getDay } from "date-fns";
 
 function CalendarBase() {
   const {
@@ -16,39 +15,10 @@ function CalendarBase() {
     nextMonth,
     prevMonth,
     selectedDay,
+    calendarDays,
   } = useCalendarContext();
   const { lang } = useLanguage();
   const tr = translations[lang].calendar;
-
-  const calendarDays = useMemo(() => {
-    const firstOfMonth = new Date(currentYear, currentMonth, 1);
-    const daysInMonth = getDaysInMonth(firstOfMonth);
-
-    // 0 = domingo ... 6 = sábado
-    const jsWeekday = getDay(startOfMonth(firstOfMonth));
-
-    // Re-mapeamos para que 0 = lunes ... 6 = domingo
-    const offset = (jsWeekday + 6) % 7;
-
-    const days: (number | null)[] = [];
-
-    // Huecos antes del día 1
-    for (let i = 0; i < offset; i++) {
-      days.push(null);
-    }
-
-    // Días del mes
-    for (let d = 1; d <= daysInMonth; d++) {
-      days.push(d);
-    }
-
-    // Rellenar hasta 6 semanas (6 * 7 = 42 celdas)
-    while (days.length < 42) {
-      days.push(null);
-    }
-
-    return days;
-  }, [currentMonth, currentYear]);
 
   return (
     <section className="mt-4 px-4 sm:px-6 lg:px-8 w-full" id="calendar">

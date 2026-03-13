@@ -4,7 +4,6 @@ import {
   useState,
   useEffect,
   useCallback,
-  useMemo,
   useRef,
   memo,
   type ReactNode,
@@ -629,7 +628,7 @@ export default function DynamicHeroHeader({ children, showHeroSlider = true }: D
   const pathname = usePathname() ?? "";
   const [menuState, setMenuState] = useState({ open: false, pathname });
   const isMenuOpen = menuState.open && menuState.pathname === pathname;
-  const isScrolled = useMemo(() => scrollY > SCROLL_THRESHOLD, [scrollY]);
+  const isScrolled = scrollY > SCROLL_THRESHOLD;
   const toggleMenu = useCallback(() => {
     setMenuState((prev) => ({
       open: !(prev.open && prev.pathname === pathname),

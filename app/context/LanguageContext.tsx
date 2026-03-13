@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useCallback, useContext, useState } from "react";
 
 export type Lang = "es" | "en";
 
@@ -24,16 +24,19 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     return "es";
   });
 
-  const setLang = (l: Lang) => {
+  const setLang = useCallback((l: Lang) => {
     setLangState(l);
     try {
       localStorage.setItem("lva-lang", l);
     } catch {
       // localStorage not available
     }
-  };
+  }, []);
 
-  const toggle = () => setLang(lang === "es" ? "en" : "es");
+  const toggle = useCallback(
+    () => setLang(lang === "es" ? "en" : "es"),
+    [lang, setLang]
+  );
 
   return (
     <LanguageContext.Provider value={{ lang, setLang, toggle }}>
