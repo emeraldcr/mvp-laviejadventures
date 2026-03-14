@@ -2,7 +2,8 @@
 import Link from "next/link";
 import { TOUR_INFO } from "@/lib/tour-info";
 import { AvailabilityMap, MainTourInfo } from "@/lib/types/index";
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { useSession } from "next-auth/react";
 import { format } from "date-fns";
 import { es, enUS } from "date-fns/locale";
 import { useLanguage } from "@/app/context/LanguageContext";
@@ -296,6 +297,8 @@ export default function ReservationDetails({
 }: Props) {
   const { lang } = useLanguage();
   const tr = translations[lang].reservation;
+  const { data: session } = useSession();
+  const hasPrefilledUserData = useRef(false);
   const dateLocale = lang === "es" ? es : enUS;
 
   const resolvedTourInfo = tourInfo ?? TOUR_INFO;
@@ -364,6 +367,54 @@ export default function ReservationDetails({
     specialRequests: "",
     agreeTerms: false,
   });
+
+  useEffect(() => {
+    if (!session?.user || hasPrefilledUserData.current) return;
+
+    hasPrefilledUserData.current = true;
+
+    if (session.user.name) {
+      handleChange("name", session.user.name);
+    }
+
+    if (session.user.email) {
+      handleChange("email", session.user.email);
+    }
+
+    fetch("/api/user/profile")
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => {
+        const profile = data?.profile as { name?: string; email?: string; phone?: string } | undefined;
+        if (!profile) return;
+
+        if (profile.name) {
+          handleChange("name", profile.name);
+        }
+
+        if (profile.email) {
+          handleChange("email", profile.email);
+        }
+
+        if (profile.phone) {
+          const normalizedPhone = profile.phone.trim();
+          const matchedCode = COUNTRY_CODES.find((country) => normalizedPhone.startsWith(country.code));
+
+          if (matchedCode) {
+            handleChange("phoneCode", matchedCode.code);
+            const remainder = normalizedPhone.slice(matchedCode.code.length).trim();
+            if (remainder) {
+              handleChange("phoneNumber", remainder);
+            }
+            return;
+          }
+
+          handleChange("phoneNumber", normalizedPhone);
+        }
+      })
+      .catch(() => {
+        // ignore profile prefill errors
+      });
+  }, [session?.user, handleChange]);
 
   const isStep1Valid =
     isTicketsValid &&
