@@ -437,6 +437,7 @@ export type SendEmailParams = {
   captureId: string | null;
   status: string | null;
   reservationId: string | null;
+  language?: "es" | "en";
   tourName?: string | null;
   tourPackage?: string | null;
   tourTime?: string | null;

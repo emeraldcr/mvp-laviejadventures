@@ -21,7 +21,7 @@ interface CreateOrderResponse {
 
 export async function POST(req: Request) {
   try {
-    const { name, email, phone, tickets, total, date, tourTime, tourPackage, packagePrice, tourSlug, tourName } = await req.json();
+    const { name, email, phone, tickets, total, date, tourTime, tourPackage, packagePrice, tourSlug, tourName, language } = await req.json();
 
     if (!name || !email || !phone || !tickets || !total || !date || !tourPackage) {
       return NextResponse.json(
@@ -54,12 +54,14 @@ export async function POST(req: Request) {
       tourSlug: tourSlug ?? null,
       tourName: tourName ?? null,
       date,
+      lang: language === "en" ? "en" : "es",
     });
     const custom_id = customIdPayload.length <= PAYPAL_CUSTOM_ID_MAX_LENGTH ? customIdPayload : JSON.stringify({
       tickets,
       time: tourTime ?? null,
       pkg: tourPackage ?? null,
       date,
+      lang: language === "en" ? "en" : "es",
     });
 
     // 1) Get OAuth access token
@@ -119,6 +121,7 @@ export async function POST(req: Request) {
               tourSlug: tourSlug ?? null,
               tourName: tourName ?? null,
               total: Number(total),
+              language: language === "en" ? "en" : "es",
             },
             updatedAt: new Date(),
           },
