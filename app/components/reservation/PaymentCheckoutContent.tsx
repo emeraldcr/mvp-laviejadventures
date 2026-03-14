@@ -58,6 +58,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
                 packagePrice,
                 tourSlug,
                 tourName,
+                language: lang,
               }),
             });
 
@@ -117,7 +118,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
         paypalContainer.innerHTML = "";
       }
     };
-  }, [date, email, name, onSuccess, packagePrice, phone, router, tickets, total, tourName, tourPackage, tourSlug, tourTime, tr.error]);
+  }, [date, email, lang, name, onSuccess, packagePrice, phone, router, tickets, total, tourName, tourPackage, tourSlug, tourTime, tr.error]);
 
   const packageName = tr.packages[tourPackage] ?? tourPackage;
 
