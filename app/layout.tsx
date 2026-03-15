@@ -6,7 +6,6 @@ import { Analytics } from "@vercel/analytics/next";
 import { LanguageProvider } from "@/app/context/LanguageContext";
 import SessionProvider from "@/app/components/SessionProvider";
 import AnalyticsTracker from "@/app/components/analytics/AnalyticsTracker";
-import { SpeedInsights } from "@vercel/speed-insights/next"
 
 export const metadata: Metadata = {
   title: "La Vieja Adventures | Ciudad Esmeralda Tour Aventura San Carlos en Rio La Vieja",
@@ -42,7 +41,6 @@ gtag('config', 'AW-18016737230');`}
           </LanguageProvider>
         </SessionProvider>
         <Analytics />
-        <SpeedInsights />
       </body>
     </html>
   );
