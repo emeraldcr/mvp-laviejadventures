@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useCalendarContext } from "@/app/context/CalendarContext";
-import ReservationDetails, { type TourSummary } from "@/app/components/reservation/ReservationDetails";
-import { type MainTourInfo } from "@/lib/types/index";
+import ReservationDetails from "@/app/components/reservation/ReservationDetails";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/lib/translations";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useReservationData, DEFAULT_BOOKABLE_TOUR } from "@/app/hooks/useReservationData";
 
 type OrderPayload = {
   name: string;
@@ -28,13 +27,6 @@ type Props = {
 
 const RESERVATION_RETURN_KEY = "reservationReturnPath";
 
-const DEFAULT_BOOKABLE_TOUR: TourSummary = {
-  id: "tour-ciudad-esmeralda",
-  slug: "tour-ciudad-esmeralda",
-  titleEs: "Tour Ciudad Esmeralda",
-  titleEn: "Ciudad Esmeralda Tour",
-};
-
 export default function ReservationSection({ className }: Props) {
   const {
     selectedDay,
@@ -47,58 +39,13 @@ export default function ReservationSection({ className }: Props) {
 
   const { lang } = useLanguage();
   const tr = translations[lang];
-
-  const [tourInfo, setTourInfo] = useState<MainTourInfo | null>(null);
-  const [tours, setTours] = useState<TourSummary[]>([DEFAULT_BOOKABLE_TOUR]);
-  const [ivaRatePercent, setIvaRatePercent] = useState<number>(13);
+  const { tourInfo, tours, ivaRatePercent } = useReservationData();
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const requestedTourSlug = (searchParams.get("tour") ?? "").trim();
   const initialSelectedTourSlug = requestedTourSlug || DEFAULT_BOOKABLE_TOUR.slug;
   const hasPreselectedTour = requestedTourSlug.length > 0;
-
-  // Fetch tour info from MongoDB on mount
-  useEffect(() => {
-    fetch("/api/tours/main")
-      .then((r) => r.json())
-      .then((data) => {
-        if (data?.tour) setTourInfo(data.tour);
-      })
-      .catch(() => {
-        // silently fall back to static TOUR_INFO inside ReservationDetails
-      });
-
-
-    fetch("/api/settings/iva")
-      .then((r) => r.json())
-      .then((data) => {
-        const nextIvaRate = Number(data?.ivaRate);
-        if (!Number.isNaN(nextIvaRate) && nextIvaRate >= 0) {
-          setIvaRatePercent(nextIvaRate);
-        }
-      })
-      .catch(() => {
-        // keep default IVA when endpoint is unavailable
-      });
-
-    fetch("/api/tours")
-      .then((r) => r.json())
-      .then((data) => {
-        const remoteTours = Array.isArray(data?.tours) ? data.tours : [];
-        const mapped = remoteTours.map((tour: { id?: string; slug?: string; titleEs?: string; titleEn?: string }) => ({
-          id: tour.id ?? tour.slug ?? "",
-          slug: tour.slug ?? "",
-          titleEs: tour.titleEs ?? "Tour",
-          titleEn: tour.titleEn ?? "Tour",
-        })).filter((tour: TourSummary) => Boolean(tour.slug));
-        const hasMain = mapped.some((tour: TourSummary) => tour.slug === DEFAULT_BOOKABLE_TOUR.slug);
-        setTours(hasMain ? mapped : [DEFAULT_BOOKABLE_TOUR, ...mapped]);
-      })
-      .catch(() => {
-        setTours([DEFAULT_BOOKABLE_TOUR]);
-      });
-  }, []);
 
   const handleReserve = (data: OrderPayload) => {
     sessionStorage.setItem("reservationOrderDetails", JSON.stringify(data));

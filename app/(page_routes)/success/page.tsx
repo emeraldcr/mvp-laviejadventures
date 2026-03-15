@@ -67,28 +67,76 @@ function createMailBody({
   captureId,
   status,
   reservationId,
+  language = "es",
   tourName,
   tourPackage,
   tourTime,
 }: SendEmailParams) {
-  const displayName = name ?? "Cliente";
-  const displayDate = date ?? "N/A";
-  const displayTickets = tickets ?? "N/A";
-  const displayAmount =
-    amount != null ? `${amount} ${currency || "USD"}` : "N/A";
-  const displayOrderId = orderId || "N/A";
-  const displayCaptureId = captureId ?? "N/A";
-  const displayStatus = status ?? "N/A";
-  const displayReservationId = reservationId ?? "N/A";
-  const displayPhone = phone ?? "N/A";
-  const displayTourName = tourName ?? "N/A";
-  const displayTourPackage = tourPackage ?? "N/A";
-  const displayTourTime = tourTime ?? "N/A";
+  const isEnglish = language === "en";
+  const copy = isEnglish
+    ? {
+        title: "New Booking - La Vieja Adventures",
+        heading: "New Booking",
+        greeting: "Hello,",
+        intro: "A new booking has been created with the following details:",
+        fullName: "Full Name",
+        email: "Email",
+        phone: "Phone",
+        date: "Experience Date",
+        tickets: "Number of Tickets",
+        tour: "Tour",
+        package: "Selected Package",
+        tourTime: "Tour Time",
+        total: "Total Paid",
+        orderId: "Order ID (PayPal)",
+        paymentId: "Payment / Transaction ID",
+        paymentStatus: "Payment Status",
+        reservationId: "Reservation ID (MongoDB)",
+        assistance: "Contact the reservations manager (Allan) at",
+        assistanceSuffix: "for further assistance.",
+        regards: "Best regards,",
+      }
+    : {
+        title: "Nueva Reservación - La Vieja Adventures",
+        heading: "Nueva Reservación",
+        greeting: "Hola,",
+        intro: "Una nueva reservación se ha creado con los siguientes detalles:",
+        fullName: "Nombre Completo",
+        email: "Correo Electrónico",
+        phone: "Teléfono",
+        date: "Fecha de la experiencia",
+        tickets: "Cantidad de tickets",
+        tour: "Tour",
+        package: "Paquete elegido",
+        tourTime: "Hora del tour",
+        total: "Total Pagado",
+        orderId: "ID de la Orden (PayPal)",
+        paymentId: "ID de Pago / Transacción",
+        paymentStatus: "Estado del pago",
+        reservationId: "ID de Reservación (MongoDB)",
+        assistance: "Contacte al manager de reservas (Allan) al",
+        assistanceSuffix: "para mayor asistencia.",
+        regards: "Saludos,",
+      };
+
+  const naLabel = isEnglish ? "N/A" : "N/D";
+  const displayName = name ?? (isEnglish ? "Customer" : "Cliente");
+  const displayDate = date ?? naLabel;
+  const displayTickets = tickets ?? naLabel;
+  const displayAmount = amount != null ? `${amount} ${currency || "USD"}` : naLabel;
+  const displayOrderId = orderId || naLabel;
+  const displayCaptureId = captureId ?? naLabel;
+  const displayStatus = status ?? naLabel;
+  const displayReservationId = reservationId ?? naLabel;
+  const displayPhone = phone ?? naLabel;
+  const displayTourName = tourName ?? naLabel;
+  const displayTourPackage = tourPackage ?? naLabel;
+  const displayTourTime = tourTime ?? naLabel;
 
   return `<!DOCTYPE html>
 <html>
 <head>
-  <title>Nueva Reservación - La Vieja Adventures</title>
+  <title>${copy.title}</title>
   <style>
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -107,37 +155,37 @@ function createMailBody({
   </style>
 </head>
 <body>
-  <h1>Nueva Reservación</h1>
+  <h1>${copy.heading}</h1>
 
-  <p>Hola,</p>
+  <p>${copy.greeting}</p>
 
-  <p>Una nueva reservación se ha creado con los siguientes detalles:</p>
+  <p>${copy.intro}</p>
 
   <ul>
-    <li><b>Nombre Completo:</b> ${displayName}</li>
-    <li><b>Correo Electrónico:</b> ${to ?? "N/A"}</li>
-    <li><b>Teléfono:</b> ${displayPhone}</li>
-    <li><b>Fecha de la experiencia:</b> ${displayDate}</li>
-    <li><b>Cantidad de tickets:</b> ${displayTickets}</li>
-    <li><b>Tour:</b> ${displayTourName}</li>
-    <li><b>Paquete elegido:</b> ${displayTourPackage}</li>
-    <li><b>Hora del tour:</b> ${displayTourTime}</li>
-    <li><b>Total Pagado:</b> ${displayAmount}</li>
-    <li><b>ID de la Orden (PayPal):</b> ${displayOrderId}</li>
-    <li><b>ID de Pago / Transacción:</b> ${displayCaptureId}</li>
-    <li><b>Estado del pago:</b> ${displayStatus}</li>
-    <li><b>ID de Reservación (MongoDB):</b> ${displayReservationId}</li>
+    <li><b>${copy.fullName}:</b> ${displayName}</li>
+    <li><b>${copy.email}:</b> ${to ?? naLabel}</li>
+    <li><b>${copy.phone}:</b> ${displayPhone}</li>
+    <li><b>${copy.date}:</b> ${displayDate}</li>
+    <li><b>${copy.tickets}:</b> ${displayTickets}</li>
+    <li><b>${copy.tour}:</b> ${displayTourName}</li>
+    <li><b>${copy.package}:</b> ${displayTourPackage}</li>
+    <li><b>${copy.tourTime}:</b> ${displayTourTime}</li>
+    <li><b>${copy.total}:</b> ${displayAmount}</li>
+    <li><b>${copy.orderId}:</b> ${displayOrderId}</li>
+    <li><b>${copy.paymentId}:</b> ${displayCaptureId}</li>
+    <li><b>${copy.paymentStatus}:</b> ${displayStatus}</li>
+    <li><b>${copy.reservationId}:</b> ${displayReservationId}</li>
   </ul>
 
   <p class="marked">
-    Contacte al manager de reservas (Allan) al
+    ${copy.assistance}
     <a href="https://wa.me/message/IVJFG5N6K6VVB1" target="_blank">
       +506 6233 2535
     </a>
-    para mayor asistencia.
+    ${copy.assistanceSuffix}
   </p>
 
-  <p>Saludos,</p>
+  <p>${copy.regards}</p>
   <p>La Vieja Adventures</p>
   <p>Ciudad Esmeralda Tour</p>
 </body>
@@ -164,7 +212,7 @@ async function sendConfirmationEmail(params: SendEmailParams) {
     from,
     to: toEmail,
     cc: adminEmail,
-    subject: `Nueva reservación creada: ${params.orderId}`,
+    subject: `${params.language === "en" ? "New booking created" : "Nueva reservación creada"}: ${params.orderId}`,
     html,
   });
 
@@ -328,6 +376,12 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
   const tourName: string | null =
     (typeof meta?.tourName === "string" ? meta.tourName : null) ||
     (typeof persistedBooking?.tourName === "string" ? persistedBooking.tourName : null);
+  const language: "es" | "en" =
+    (meta?.lang === "en" || meta?.lang === "es"
+      ? (meta.lang as "es" | "en")
+      : persistedBooking?.language === "en" || persistedBooking?.language === "es"
+      ? (persistedBooking.language as "es" | "en")
+      : "es");
 
   const amountStr =
     capture?.amount?.value ||
@@ -399,6 +453,7 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
           captureId,
           status,
           reservationId,
+          language,
           tourName,
           tourPackage,
           tourTime,

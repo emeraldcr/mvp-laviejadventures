@@ -1,3 +1,28 @@
+// ── User preferences ────────────────────────────────────────────────────────
+
+export type UserPreferences = {
+  notifications: {
+    emailEnabled: boolean;
+    bookingReminders: boolean;
+    promotions: boolean;
+    weeklySummary: boolean;
+  };
+  dashboard: {
+    compactView: boolean;
+    showSupportCard: boolean;
+    defaultBookingTab: "upcoming" | "past";
+  };
+};
+
+// ── Tour summary (used in booking UI and reservation hooks) ──────────────────
+
+export type TourSummary = {
+  id: string;
+  slug: string;
+  titleEs: string;
+  titleEn: string;
+};
+
 export type ContactInfo = {
 whatsapp: string;
 email: string;
@@ -412,6 +437,7 @@ export type SendEmailParams = {
   captureId: string | null;
   status: string | null;
   reservationId: string | null;
+  language?: "es" | "en";
   tourName?: string | null;
   tourPackage?: string | null;
   tourTime?: string | null;
