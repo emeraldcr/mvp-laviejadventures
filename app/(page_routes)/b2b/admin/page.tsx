@@ -86,6 +86,17 @@ type BookingAnalytics = {
   recentEvents: BookingAnalyticsEvent[];
 };
 
+type HeroSloganLog = {
+  _id: string;
+  es: string;
+  en: string;
+  model: string;
+  prompt: string;
+  rawResponse: string;
+  createdAt: string | null;
+};
+
+
 const ACCESS_LINKS = [
   { href: "/", label: "Inicio", icon: <Home className="h-4 w-4" />, style: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300" },
   { href: "/dashboard", label: "Usuario normal", icon: <UserRound className="h-4 w-4" />, style: "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200" },
@@ -112,6 +123,7 @@ export default function B2BAdminPage() {
   });
   const [settings, setSettings] = useState<B2BSettings>({ ivaRate: 13, tourPricing: [] });
   const [pricingJson, setPricingJson] = useState("[]");
+  const [heroSlogans, setHeroSlogans] = useState<HeroSloganLog[]>([]);
 
   const [loading, setLoading] = useState(false);
   const [initialSessionLoading, setInitialSessionLoading] = useState(true);
@@ -139,6 +151,7 @@ export default function B2BAdminPage() {
         setOperators([]);
         setReservations([]);
         setBookingAnalytics({ totalEvents: 0, bookingSteps: 0, bookingSubmissions: 0, uniqueSessions: 0, conversionRate: 0, recentEvents: [] });
+        setHeroSlogans([]);
         return;
       }
 
@@ -160,6 +173,7 @@ export default function B2BAdminPage() {
         insightsData.bookingAnalytics ||
           { totalEvents: 0, bookingSteps: 0, bookingSubmissions: 0, uniqueSessions: 0, conversionRate: 0, recentEvents: [] },
       );
+      setHeroSlogans(insightsData.heroSlogans || []);
       const nextSettings = settingsData.settings || { ivaRate: 13, tourPricing: [] };
       setSettings(nextSettings);
       setPricingJson(JSON.stringify(nextSettings.tourPricing || [], null, 2));
@@ -193,6 +207,7 @@ export default function B2BAdminPage() {
         setOperators([]);
         setReservations([]);
         setBookingAnalytics({ totalEvents: 0, bookingSteps: 0, bookingSubmissions: 0, uniqueSessions: 0, conversionRate: 0, recentEvents: [] });
+        setHeroSlogans([]);
         return;
       }
 
@@ -367,6 +382,39 @@ export default function B2BAdminPage() {
                   </td>
                 </tr>
               ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="mt-6 rounded-2xl border border-zinc-200 bg-white p-6">
+        <h2 className="mb-1 text-xl font-semibold">Slogans guardados en MongoDB ({heroSlogans.length})</h2>
+        <p className="mb-4 text-sm text-zinc-500">Historial de slogans generados en el hero para auditoría de contenido AI.</p>
+
+        <div className="max-h-96 overflow-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-zinc-500">
+                <th className="pb-2">Fecha</th>
+                <th className="pb-2">ES</th>
+                <th className="pb-2">EN</th>
+                <th className="pb-2">Modelo</th>
+              </tr>
+            </thead>
+            <tbody>
+              {heroSlogans.map((slogan) => (
+                <tr key={slogan._id} className="border-t border-zinc-100 align-top">
+                  <td className="py-2 whitespace-nowrap">{slogan.createdAt ? new Date(slogan.createdAt).toLocaleString("es-CR") : "-"}</td>
+                  <td className="py-2">{slogan.es}</td>
+                  <td className="py-2">{slogan.en}</td>
+                  <td className="py-2 whitespace-nowrap">{slogan.model || "-"}</td>
+                </tr>
+              ))}
+              {heroSlogans.length === 0 && (
+                <tr>
+                  <td className="py-4 text-zinc-500" colSpan={4}>No hay slogans guardados todavía.</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
