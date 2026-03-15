@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { createHeroSloganLog } from "@/lib/models/hero-slogan-log";
 
 const client = new Anthropic();
+
+const SLOGAN_MODEL = "claude-haiku-4-5-20251001";
+const USER_PROMPT = "Genera un slogan fresco y único para hoy.";
 
 const SYSTEM_PROMPT = `Eres el copywriter creativo de La Vieja Adventures, un tour de cañón en Ciudad Esmeralda sobre el Río La Vieja en San Carlos, Costa Rica. El lugar está dentro de la cuenca del Parque Nacional del Agua Juan Castro Blanco: bosque tropical exuberante, cañones de agua cristalina, cascadas, biodiversidad espectacular y una experiencia de aventura pura e irrepetible.
 
@@ -22,14 +26,14 @@ Sin texto adicional.`;
 export async function GET() {
   try {
     const message = await client.messages.create({
-      model: "claude-haiku-4-5-20251001",
+      model: SLOGAN_MODEL,
       max_tokens: 120,
       temperature: 1,
       system: SYSTEM_PROMPT,
       messages: [
         {
           role: "user",
-          content: "Genera un slogan fresco y único para hoy.",
+          content: USER_PROMPT,
         },
       ],
     });
@@ -39,6 +43,19 @@ export async function GET() {
     // Parse and validate
     const parsed = JSON.parse(raw) as { es?: string; en?: string };
     if (!parsed.es || !parsed.en) throw new Error("Invalid shape");
+
+    try {
+      await createHeroSloganLog({
+        es: parsed.es,
+        en: parsed.en,
+        model: SLOGAN_MODEL,
+        prompt: USER_PROMPT,
+        rawResponse: raw,
+        createdAt: new Date(),
+      });
+    } catch (dbError) {
+      console.error("Failed to save hero slogan log:", dbError);
+    }
 
     return NextResponse.json({ es: parsed.es, en: parsed.en });
   } catch {
