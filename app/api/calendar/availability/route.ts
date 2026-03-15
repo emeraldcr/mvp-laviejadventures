@@ -10,6 +10,18 @@ function parseReservationDate(raw: unknown): Date | null {
 
   const trimmed = raw.trim();
 
+  // Avoid timezone drift for date-only values (e.g. "2026-03-14") which are
+  // parsed as UTC by `new Date(...)` and can shift to the previous day locally.
+  const isoDateOnly = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (isoDateOnly) {
+    const [, yearRaw, monthRaw, dayRaw] = isoDateOnly;
+    const year = Number(yearRaw);
+    const month = Number(monthRaw);
+    const day = Number(dayRaw);
+    const localDate = new Date(year, month - 1, day);
+    if (isValid(localDate)) return localDate;
+  }
+
   const asDate = new Date(trimmed);
   if (isValid(asDate)) return asDate;
 
@@ -35,7 +47,11 @@ export async function GET(req: Request) {
   const docs = await db
     .collection(COLLECTIONS.RESERVATIONS)
     .find(
-      { status: { $ne: "cancelled" } },
+      {
+        status: {
+          $in: ["COMPLETED", "completed", "confirmed", "CONFIRMED"],
+        },
+      },
       { projection: { date: 1, tickets: 1 } }
     )
     .toArray();
@@ -67,4 +83,3 @@ export async function GET(req: Request) {
 
   return NextResponse.json({ availability, bookedByDay });
 }
-
