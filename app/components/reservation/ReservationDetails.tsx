@@ -9,7 +9,7 @@ import { format } from "date-fns";
 import { es, enUS } from "date-fns/locale";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/lib/translations";
-import { Camera, ChevronRight, ShieldCheck, Sparkles, TreePalm, Users, UtensilsCrossed, X } from "lucide-react";
+import { AlertCircle, Camera, ChevronRight, Clock3, Info, MapPin, Route, ShieldCheck, Sparkles, TreePalm, Users, UtensilsCrossed, X } from "lucide-react";
 import { trackAnalyticsEvent } from "@/lib/analytics/client";
 
 // ---------------------- CONSTANTS ----------------------
@@ -333,6 +333,46 @@ export default function ReservationDetails({
   );
   const selectedTourName = selectedTour ? (lang === "es" ? selectedTour.titleEs : selectedTour.titleEn) : (lang === "es" ? "Tour" : "Tour");
 
+  const seemsSpanish = useCallback((value?: string) => {
+    if (!value) return false;
+    return /[áéíóúñ]|\b(entrada|guía|recorrido|cañón|horas|cancelación|solo|adultos|incluye)\b/i.test(value);
+  }, []);
+
+  const localizedDetails = useMemo(() => {
+    if (lang === "es") {
+      return resolvedTourInfo.details;
+    }
+
+    if (!seemsSpanish(resolvedTourInfo.details)) {
+      return resolvedTourInfo.details;
+    }
+
+    return tr.tourInfoFallbackDetails;
+  }, [lang, resolvedTourInfo.details, seemsSpanish, tr.tourInfoFallbackDetails]);
+
+  const localizedDuration = useMemo(() => {
+    if (lang === "es") {
+      return resolvedTourInfo.duration || tr.defaultDuration;
+    }
+
+    if (!seemsSpanish(resolvedTourInfo.duration)) {
+      return resolvedTourInfo.duration || tr.defaultDuration;
+    }
+
+    return tr.defaultDuration;
+  }, [lang, resolvedTourInfo.duration, seemsSpanish, tr.defaultDuration]);
+
+  const localizedCancellationPolicy = useMemo(() => {
+    if (lang === "es") {
+      return resolvedTourInfo.cancellationPolicy || tr.defaultCancellationPolicy;
+    }
+
+    if (!seemsSpanish(resolvedTourInfo.cancellationPolicy)) {
+      return resolvedTourInfo.cancellationPolicy || tr.defaultCancellationPolicy;
+    }
+
+    return tr.defaultCancellationPolicy;
+  }, [lang, resolvedTourInfo.cancellationPolicy, seemsSpanish, tr.defaultCancellationPolicy]);
 
   const selectedPackage = useMemo(
     () => PACKAGES.find((p) => p.id === tourPackage) ?? null,
@@ -584,14 +624,58 @@ export default function ReservationDetails({
         </div>
       </div>
 
-      <div className="bg-teal-50 dark:bg-zinc-900 p-4 rounded-xl border border-zinc-200 dark:border-zinc-700 mb-6">
-        <h3 className="text-xl font-semibold text-teal-900 dark:text-teal-300 mb-2">
-          {tr.tourInfoTitle}
-        </h3>
-        <p className="text-zinc-700 dark:text-zinc-400 mb-4">{resolvedTourInfo.details}</p>
-        <div className="mb-4">
-          <strong className="block text-zinc-800 dark:text-zinc-200">{tr.duration}</strong>
-          <span className="text-zinc-700 dark:text-zinc-400">{resolvedTourInfo.duration || "2-3 horas (aprox.)"}</span>
+      <div className="mb-6 rounded-2xl border border-zinc-200 bg-gradient-to-br from-teal-50 via-white to-cyan-50 p-5 shadow-sm dark:border-zinc-700 dark:from-zinc-900 dark:via-zinc-900 dark:to-teal-950/30">
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div>
+            <h3 className="mb-1 text-xl font-semibold text-teal-900 dark:text-teal-300">
+              {tr.tourInfoTitle}
+            </h3>
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">{tr.tourInfoSubtitle}</p>
+          </div>
+          <span
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-teal-300/60 bg-teal-100/70 text-teal-700 dark:border-teal-700/60 dark:bg-teal-900/30 dark:text-teal-300"
+            title={tr.tooltips.tourInfoCard}
+          >
+            <Info className="h-4 w-4" aria-hidden />
+          </span>
+        </div>
+
+        <p className="mb-4 text-zinc-700 dark:text-zinc-400">{localizedDetails}</p>
+
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div className="rounded-xl border border-zinc-200/70 bg-white/85 p-3 dark:border-zinc-700 dark:bg-zinc-900/70" title={tr.tooltips.durationCard}>
+            <p className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+              <Clock3 className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" aria-hidden />
+              {tr.duration}
+            </p>
+            <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">{localizedDuration}</p>
+          </div>
+          <div className="rounded-xl border border-zinc-200/70 bg-white/85 p-3 dark:border-zinc-700 dark:bg-zinc-900/70" title={tr.tooltips.routeCard}>
+            <p className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+              <Route className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" aria-hidden />
+              {tr.routeLabel}
+            </p>
+            <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">{tr.routeValue}</p>
+          </div>
+          <div className="rounded-xl border border-zinc-200/70 bg-white/85 p-3 dark:border-zinc-700 dark:bg-zinc-900/70" title={tr.tooltips.locationCard}>
+            <p className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+              <MapPin className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" aria-hidden />
+              {tr.locationLabel}
+            </p>
+            <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">{tr.locationValue}</p>
+          </div>
+        </div>
+
+        <div className="mt-4 rounded-xl border border-zinc-200/80 bg-white/80 p-4 dark:border-zinc-700 dark:bg-zinc-900/70">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">{tr.bookingStrategyTitle}</p>
+          <ul className="space-y-1.5 text-sm text-zinc-700 dark:text-zinc-300">
+            {tr.bookingStrategyItems.map((item) => (
+              <li key={item} className="flex items-start gap-2">
+                <ShieldCheck className="mt-0.5 h-4 w-4 text-emerald-600 dark:text-emerald-400" aria-hidden />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
 
@@ -599,13 +683,13 @@ export default function ReservationDetails({
         <>
           <div className={`mb-6 rounded-xl ${!selectedTour ? "ring-2 ring-amber-300/70 p-3" : ""}`}>
             <div className="mb-3 flex items-center justify-between gap-3">
-              <h3 className="text-xl font-semibold">{lang === "es" ? "Tour" : "Tour"}</h3>
+              <h3 className="text-xl font-semibold">{tr.tourLabel}</h3>
               {hasPreselectedTour && (
                 <Link
                   href="/tours"
                   className="inline-flex items-center rounded-full border border-teal-500/40 px-3 py-1 text-xs font-semibold text-teal-700 transition hover:bg-teal-50 dark:text-teal-300 dark:hover:bg-teal-900/20"
                 >
-                  {lang === "es" ? "Buscar tours" : "Search tours"}
+                  {tr.searchToursBtn}
                 </Link>
               )}
             </div>
@@ -614,7 +698,7 @@ export default function ReservationDetails({
             <div className="flex items-center justify-between gap-3 rounded-xl border-2 border-emerald-500 bg-emerald-50 p-4 dark:bg-emerald-900/20">
               <div className="min-w-0">
                 <p className="mb-0.5 text-[11px] font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-                  {lang === "es" ? "Tour seleccionado" : "Selected tour"}
+                  {tr.selectedTourLabel}
                 </p>
                 <p className="truncate font-bold text-base text-zinc-800 dark:text-zinc-100">
                   {selectedTourName}
@@ -626,7 +710,7 @@ export default function ReservationDetails({
                   onClick={() => setShowTourModal(true)}
                   className="shrink-0 inline-flex items-center gap-1 rounded-full border border-emerald-500/50 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-100 dark:text-emerald-300 dark:hover:bg-emerald-900/40"
                 >
-                  {lang === "es" ? "Cambiar" : "Change"}
+                  {tr.changeBtn}
                   <ChevronRight size={12} />
                 </button>
               )}
@@ -645,7 +729,7 @@ export default function ReservationDetails({
               <div className="relative z-10 w-full max-w-lg rounded-3xl bg-white shadow-2xl dark:bg-zinc-900 overflow-hidden">
                 <div className="flex items-center justify-between border-b border-zinc-200 px-6 py-4 dark:border-zinc-700">
                   <h3 className="text-lg font-bold text-zinc-800 dark:text-zinc-100">
-                    {lang === "es" ? "Elegir tour" : "Choose a tour"}
+                    {tr.chooseTourTitle}
                   </h3>
                   <button
                     type="button"
@@ -677,7 +761,7 @@ export default function ReservationDetails({
                           <p className="font-semibold text-sm text-zinc-800 dark:text-zinc-100">{name}</p>
                           {isSelected && (
                             <span className="shrink-0 rounded-full bg-emerald-500 px-2.5 py-0.5 text-[11px] font-bold text-white">
-                              {lang === "es" ? "Activo" : "Active"}
+                              {tr.activeLabel}
                             </span>
                           )}
                         </div>
@@ -692,7 +776,7 @@ export default function ReservationDetails({
 
           <div className={`mb-6 rounded-xl ${!tourTime ? "ring-2 ring-amber-300/70 p-3" : ""}`}>
             <h3 className="text-xl font-semibold mb-3">{tr.tourTimeTitle}</h3>
-            {!tourTime && <p className="mb-3 text-sm font-medium text-amber-700 dark:text-amber-400">👉 {tr.indicators.chooseTourTime}</p>}
+            {!tourTime && <p className="mb-3 flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-400"><AlertCircle className="h-4 w-4" aria-hidden /> {tr.indicators.chooseTourTime}</p>}
             <div className="flex gap-3 flex-wrap">
               {TIME_SLOTS.map((slot) => {
                 const isSelected = tourTime === slot.id;
@@ -716,7 +800,7 @@ export default function ReservationDetails({
 
           <div className={`mb-6 rounded-xl ${!effectiveTourPackage ? "ring-2 ring-amber-300/70 p-3" : ""}`}>
             <h3 className="text-xl font-semibold mb-3">{tr.packageTitle}</h3>
-            {!effectiveTourPackage && <p className="mb-3 text-sm font-medium text-amber-700 dark:text-amber-400">👉 {tr.indicators.choosePackage}</p>}
+            {!effectiveTourPackage && <p className="mb-3 flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-400"><AlertCircle className="h-4 w-4" aria-hidden /> {tr.indicators.choosePackage}</p>}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {PACKAGES.map((pkg) => {
                 const isSelected = effectiveTourPackage === pkg.id;
@@ -804,7 +888,7 @@ export default function ReservationDetails({
 
           <div className={`mb-6 rounded-xl ${!isTicketsValid ? "ring-2 ring-amber-300/70 p-3" : ""}`}>
             <h3 className="text-xl font-semibold mb-4">{tr.ticketsTitle}</h3>
-            {!isTicketsValid && <p className="mb-3 text-sm font-medium text-amber-700 dark:text-amber-400">👉 {tr.indicators.chooseTickets}</p>}
+            {!isTicketsValid && <p className="mb-3 flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-400"><AlertCircle className="h-4 w-4" aria-hidden /> {tr.indicators.chooseTickets}</p>}
             <div className="flex items-center gap-4 mb-4">
               <label htmlFor="tickets" className="font-semibold text-lg">{tr.numPeople}</label>
               <input
@@ -842,7 +926,7 @@ export default function ReservationDetails({
         <>
           <div className={`mb-6 rounded-xl ${!isStep2Valid ? "ring-2 ring-amber-300/70 p-3" : ""}`}>
             <h3 className="text-xl font-semibold mb-4">{tr.travelerTitle}</h3>
-            {!isStep2Valid && <p className="mb-3 text-sm font-medium text-amber-700 dark:text-amber-400">👉 {tr.indicators.completeTravelerData}</p>}
+            {!isStep2Valid && <p className="mb-3 flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-400"><AlertCircle className="h-4 w-4" aria-hidden /> {tr.indicators.completeTravelerData}</p>}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <TravelerInputField id="name" label={tr.fullName} value={formState.name} onChange={(v) => handleChange("name", v)} placeholder={tr.namePlaceholder} isValid={validation.isNameValid} validationMessage={tr.nameRequired} required />
               <TravelerInputField id="email" label={tr.emailLabel} type="email" value={formState.email} onChange={(v) => handleChange("email", v)} placeholder={tr.emailPlaceholder} isValid={validation.isEmailValid} validationMessage={tr.emailInvalid} required />
@@ -869,7 +953,7 @@ export default function ReservationDetails({
       {currentStep === 3 && (
         <>
           <div className="mb-6 bg-zinc-100 dark:bg-zinc-800 p-4 rounded-xl">
-            <div className="flex justify-between mb-2"><span>{lang === "es" ? "Tour" : "Tour"}</span><span className="font-medium">{selectedTourName}</span></div>
+            <div className="flex justify-between mb-2"><span>{tr.tourLabel}</span><span className="font-medium">{selectedTourName}</span></div>
             <div className="flex justify-between mb-2"><span>{tr.packageLabel}</span><span className="font-medium">{effectiveSelectedPackage ? tr.packages[effectiveSelectedPackage.id].name : "—"}</span></div>
             <div className="flex justify-between mb-2"><span>{tr.tourTimeTitle}</span><span>{tourTime ?? "—"}</span></div>
             <div className="flex justify-between mb-2"><span>{tr.subtotalLabel}</span><span>${subtotal.toFixed(2)}</span></div>
@@ -881,7 +965,7 @@ export default function ReservationDetails({
             <h3 className="text-xl font-semibold mb-4">{tr.policiesTitle}</h3>
             <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-xl mb-4 text-zinc-800 dark:text-zinc-300">
               <strong className="block mb-1 text-yellow-900 dark:text-yellow-300">{tr.cancellationLabel}</strong>
-              <p className="text-sm">{resolvedTourInfo.cancellationPolicy || "Cancelación gratuita hasta 24 horas antes del tour."}</p>
+              <p className="text-sm">{localizedCancellationPolicy}</p>
             </div>
             <label htmlFor="agreeTerms" className={`flex items-start gap-3 p-4 rounded-xl border transition-all cursor-pointer ${formState.agreeTerms ? "border-teal-500 bg-teal-50 dark:bg-teal-900/20" : "border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800"}`}>
               <input id="agreeTerms" type="checkbox" checked={formState.agreeTerms} onChange={(e) => handleChange("agreeTerms", e.target.checked)} className="h-5 w-5 text-teal-600 rounded border-zinc-400 focus:ring-teal-500 dark:bg-zinc-700 dark:border-zinc-600 mt-0.5" />
