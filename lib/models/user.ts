@@ -16,6 +16,7 @@ export interface AppUser {
   resetExpiry?: Date | null;
   auth0Sub?: string;
   image?: string;
+  phone?: string;
   preferences?: UserPreferences;
   createdAt: Date;
   updatedAt: Date;
@@ -125,6 +126,65 @@ export async function updateUserPassword(id: string, passwordHash: string) {
       },
     }
   );
+}
+
+export async function updateUserPasswordByEmail(email: string, passwordHash: string) {
+  const users = await getUsersCollection();
+  return users.updateOne(
+    { email: email.toLowerCase() },
+    {
+      $set: {
+        passwordHash,
+        updatedAt: new Date(),
+      },
+    }
+  );
+}
+
+export type UserProfile = {
+  name: string;
+  email: string;
+  phone: string;
+};
+
+export async function getUserProfileByEmail(email: string): Promise<UserProfile | null> {
+  const user = await findUserByEmail(email);
+  if (!user) return null;
+
+  return {
+    name: user.name ?? "",
+    email: user.email,
+    phone: user.phone ?? "",
+  };
+}
+
+export async function updateUserProfileByEmail(
+  email: string,
+  updates: { name: string; phone: string }
+): Promise<UserProfile | null> {
+  const users = await getUsersCollection();
+
+  const result = await users.findOneAndUpdate(
+    { email: email.toLowerCase() },
+    {
+      $set: {
+        name: updates.name.trim(),
+        phone: updates.phone.trim(),
+        updatedAt: new Date(),
+      },
+    },
+    {
+      returnDocument: "after",
+    }
+  );
+
+  if (!result) return null;
+
+  return {
+    name: result.name ?? "",
+    email: result.email,
+    phone: result.phone ?? "",
+  };
 }
 
 export async function upsertUserFromAuth0(input: {

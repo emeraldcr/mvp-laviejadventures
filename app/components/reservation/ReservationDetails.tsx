@@ -143,7 +143,7 @@ const useReservationForm = (initialState: ReservationFormState) => {
     };
   }, [formState]);
 
-  return { formState, handleChange, validation };
+  return { formState, setFormState, handleChange, validation };
 };
 
 // ---------------------- CHILD COMPONENTS ----------------------
@@ -292,6 +292,8 @@ export default function ReservationDetails({
 }: Props) {
   const { lang } = useLanguage();
   const tr = translations[lang].reservation;
+  const { data: session } = useSession();
+  const hasPrefilledUserData = useRef(false);
   const dateLocale = lang === "es" ? es : enUS;
 
   const resolvedTourInfo = tourInfo ?? TOUR_INFO;
@@ -353,7 +355,7 @@ export default function ReservationDetails({
     return { subtotal: sub, taxes: tax, totalWithTaxes: sub + tax };
   }, [tickets, effectiveSelectedPackage, ivaRatePercent]);
 
-  const { formState, handleChange, validation } = useReservationForm({
+  const { formState, setFormState, handleChange, validation } = useReservationForm({
     name: "",
     email: "",
     phoneCode: COUNTRY_CODES[0].code,
@@ -361,6 +363,56 @@ export default function ReservationDetails({
     specialRequests: "",
     agreeTerms: false,
   });
+
+  useEffect(() => {
+    if (!session?.user || hasPrefilledUserData.current) return;
+
+    hasPrefilledUserData.current = true;
+
+    setFormState((prev) => ({
+      ...prev,
+      name: prev.name.trim() ? prev.name : (session.user?.name ?? ""),
+      email: prev.email.trim() ? prev.email : (session.user?.email ?? ""),
+    }));
+
+    fetch("/api/user/profile")
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => {
+        const profile = data?.profile as { name?: string; email?: string; phone?: string } | undefined;
+        if (!profile) return;
+
+        setFormState((prev) => {
+          const next = {
+            ...prev,
+            name: prev.name.trim() ? prev.name : (profile.name ?? prev.name),
+            email: prev.email.trim() ? prev.email : (profile.email ?? prev.email),
+          };
+
+          if (!prev.phoneNumber.trim() && profile.phone?.trim()) {
+            const normalizedPhone = profile.phone.trim();
+            const matchedCode = COUNTRY_CODES.find((country) => normalizedPhone.startsWith(country.code));
+
+            if (matchedCode) {
+              return {
+                ...next,
+                phoneCode: matchedCode.code,
+                phoneNumber: normalizedPhone.slice(matchedCode.code.length).trim(),
+              };
+            }
+
+            return {
+              ...next,
+              phoneNumber: normalizedPhone,
+            };
+          }
+
+          return next;
+        });
+      })
+      .catch(() => {
+        // ignore profile prefill errors
+      });
+  }, [session?.user, setFormState]);
 
   const isStep1Valid =
     isTicketsValid &&
