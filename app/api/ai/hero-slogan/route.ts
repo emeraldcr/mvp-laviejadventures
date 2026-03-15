@@ -23,6 +23,66 @@ Devuelve ÚNICAMENTE un objeto JSON con esta forma exacta:
 {"es": "<slogan en español>", "en": "<slogan en inglés>"}
 Sin texto adicional.`;
 
+type HeroSloganPayload = {
+  es: string;
+  en: string;
+};
+
+const FALLBACKS: HeroSloganPayload[] = [
+  {
+    es: "Donde el cañón guarda secretos que solo el agua conoce.",
+    en: "Where the canyon keeps secrets only the river knows.",
+  },
+  {
+    es: "El río La Vieja te llama — ¿te atreves a responder?",
+    en: "The La Vieja river calls — do you dare to answer?",
+  },
+  {
+    es: "Un cañón vivo, un río salvaje, una aventura que te cambia.",
+    en: "A living canyon, a wild river, an adventure that changes you.",
+  },
+];
+
+function getFallbackSlogan(): HeroSloganPayload {
+  return FALLBACKS[Math.floor(Math.random() * FALLBACKS.length)];
+}
+
+function extractJsonPayload(rawText: string): HeroSloganPayload {
+  const trimmed = rawText.trim();
+
+  const candidate = trimmed.startsWith("```")
+    ? trimmed.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "")
+    : trimmed;
+
+  const parsed = JSON.parse(candidate) as Partial<HeroSloganPayload>;
+  if (!parsed.es || !parsed.en) {
+    throw new Error("Invalid slogan payload");
+  }
+
+  return {
+    es: parsed.es,
+    en: parsed.en,
+  };
+}
+
+async function persistSlogan(
+  slogan: HeroSloganPayload,
+  options: { model: string; prompt: string; rawResponse: string }
+) {
+  try {
+    await createHeroSloganLog({
+      es: slogan.es,
+      en: slogan.en,
+      model: options.model,
+      prompt: options.prompt,
+      rawResponse: options.rawResponse,
+      createdAt: new Date(),
+    });
+  } catch (error) {
+    console.error("Failed to save hero slogan log:", error);
+  }
+}
+
 export async function GET() {
   try {
     const message = await client.messages.create({
@@ -38,43 +98,30 @@ export async function GET() {
       ],
     });
 
-    const raw = (message.content[0] as { type: string; text: string }).text.trim();
+    const contentText = message.content
+      .filter((item): item is { type: "text"; text: string } => item.type === "text")
+      .map((item) => item.text)
+      .join("\n")
+      .trim();
 
-    // Parse and validate
-    const parsed = JSON.parse(raw) as { es?: string; en?: string };
-    if (!parsed.es || !parsed.en) throw new Error("Invalid shape");
+    const parsed = extractJsonPayload(contentText);
 
-    try {
-      await createHeroSloganLog({
-        es: parsed.es,
-        en: parsed.en,
-        model: SLOGAN_MODEL,
-        prompt: USER_PROMPT,
-        rawResponse: raw,
-        createdAt: new Date(),
-      });
-    } catch (dbError) {
-      console.error("Failed to save hero slogan log:", dbError);
-    }
+    await persistSlogan(parsed, {
+      model: SLOGAN_MODEL,
+      prompt: USER_PROMPT,
+      rawResponse: contentText,
+    });
 
-    return NextResponse.json({ es: parsed.es, en: parsed.en });
+    return NextResponse.json(parsed);
   } catch {
-    // Fallback slogans — never show an error to the visitor
-    const FALLBACKS = [
-      {
-        es: "Donde el cañón guarda secretos que solo el agua conoce.",
-        en: "Where the canyon keeps secrets only the river knows.",
-      },
-      {
-        es: "El río La Vieja te llama — ¿te atreves a responder?",
-        en: "The La Vieja river calls — do you dare to answer?",
-      },
-      {
-        es: "Un cañón vivo, un río salvaje, una aventura que te cambia.",
-        en: "A living canyon, a wild river, an adventure that changes you.",
-      },
-    ];
-    const fallback = FALLBACKS[Math.floor(Math.random() * FALLBACKS.length)];
+    const fallback = getFallbackSlogan();
+
+    await persistSlogan(fallback, {
+      model: "fallback",
+      prompt: USER_PROMPT,
+      rawResponse: "fallback",
+    });
+
     return NextResponse.json(fallback);
   }
 }
