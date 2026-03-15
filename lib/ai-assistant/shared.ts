@@ -57,6 +57,6 @@ export const NEXT_FIELD_PROMPTS: Record<string, string> = {
   tickets: "¿Para cuántas personas sería la reserva?",
   name: "¿A nombre de quién hacemos la reserva?",
   email: "¿Cuál es tu correo para enviarte la confirmación?",
-  phone: "¿Cuál es tu número de teléfono?",
+  phone: "¿Cuál es tu número de teléfono? Incluí código de país (ej: +506 8888-9999).",
 };
 
