@@ -6,33 +6,48 @@ import Image from "next/image";
 import { User, Mail, LogOut, ArrowLeft, Phone, KeyRound, Save } from "lucide-react";
 import Link from "next/link";
 
+type UserProfileResponse = {
+  profile?: {
+    name?: string;
+    email?: string;
+    phone?: string;
+  };
+};
+
 export default function ProfilePage() {
   const { data: session, status } = useSession();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [profileMessage, setProfileMessage] = useState<string | null>(null);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [passwordMessage, setPasswordMessage] = useState<string | null>(null);
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
 
   useEffect(() => {
     if (!session?.user) return;
 
+    const sessionName = session.user.name ?? "";
+    const sessionEmail = session.user.email ?? "";
+
+    setName(sessionName);
+    setEmail(sessionEmail);
+
     fetch("/api/user/profile")
       .then((response) => (response.ok ? response.json() : null))
-      .then((data) => {
-        const profile = data?.profile as { name?: string; email?: string; phone?: string } | undefined;
+      .then((data: UserProfileResponse | null) => {
+        const profile = data?.profile;
         if (!profile) return;
 
-        setName(profile.name ?? session.user?.name ?? "");
-        setEmail(profile.email ?? session.user?.email ?? "");
+        setName(profile.name ?? sessionName);
+        setEmail(profile.email ?? sessionEmail);
         setPhone(profile.phone ?? "");
       })
       .catch(() => {
-        setName(session.user?.name ?? "");
-        setEmail(session.user?.email ?? "");
+        // keep fallback values from session
       });
   }, [session?.user]);
 
@@ -47,15 +62,15 @@ export default function ProfilePage() {
   if (!session?.user) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-zinc-50 dark:bg-zinc-950 px-4 text-center gap-6">
-        <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">Sign in to view your profile</h1>
+        <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">Inicia sesión para ver tu perfil</h1>
         <button
           onClick={() => signIn(undefined, { callbackUrl: "/auth/profile" })}
           className="rounded-xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-900/20 active:translate-y-0 active:scale-[0.99] cursor-pointer"
         >
-          Log In
+          Iniciar sesión
         </button>
         <Link href="/" className="flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300">
-          <ArrowLeft size={14} /> Go back home
+          <ArrowLeft size={14} /> Volver al inicio
         </Link>
       </div>
     );
@@ -65,38 +80,64 @@ export default function ProfilePage() {
 
   const saveProfile = async () => {
     setProfileMessage(null);
-    const response = await fetch("/api/user/profile", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, phone }),
-    });
 
-    const data = await response.json();
-    if (!response.ok) {
-      setProfileMessage(data?.error ?? "Could not save profile.");
+    if (!name.trim()) {
+      setProfileMessage("El nombre es obligatorio.");
       return;
     }
 
-    setProfileMessage("Profile saved successfully.");
+    setIsSavingProfile(true);
+    try {
+      const response = await fetch("/api/user/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, phone }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        setProfileMessage(data?.error ?? "No se pudo guardar el perfil.");
+        return;
+      }
+
+      setProfileMessage("Perfil actualizado correctamente.");
+    } catch {
+      setProfileMessage("No se pudo guardar el perfil.");
+    } finally {
+      setIsSavingProfile(false);
+    }
   };
 
   const changePassword = async () => {
     setPasswordMessage(null);
-    const response = await fetch("/api/user/change-password", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ currentPassword, newPassword }),
-    });
 
-    const data = await response.json();
-    if (!response.ok) {
-      setPasswordMessage(data?.error ?? "Could not update password.");
+    if (!currentPassword || !newPassword) {
+      setPasswordMessage("Debes completar ambas contraseñas.");
       return;
     }
 
-    setCurrentPassword("");
-    setNewPassword("");
-    setPasswordMessage("Password updated successfully.");
+    setIsUpdatingPassword(true);
+    try {
+      const response = await fetch("/api/user/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        setPasswordMessage(data?.error ?? "No se pudo actualizar la contraseña.");
+        return;
+      }
+
+      setCurrentPassword("");
+      setNewPassword("");
+      setPasswordMessage("Contraseña actualizada correctamente.");
+    } catch {
+      setPasswordMessage("No se pudo actualizar la contraseña.");
+    } finally {
+      setIsUpdatingPassword(false);
+    }
   };
 
   return (
@@ -136,8 +177,12 @@ export default function ProfilePage() {
               <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+506 8888 9999" className="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2" />
             </label>
           </div>
-          <button onClick={saveProfile} className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">
-            <Save size={14} /> Guardar perfil
+          <button
+            onClick={saveProfile}
+            disabled={isSavingProfile}
+            className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            <Save size={14} /> {isSavingProfile ? "Guardando..." : "Guardar perfil"}
           </button>
           {profileMessage && <p className="text-sm text-zinc-600 dark:text-zinc-300">{profileMessage}</p>}
         </section>
@@ -154,21 +199,25 @@ export default function ProfilePage() {
               <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2" />
             </label>
           </div>
-          <button onClick={changePassword} className="inline-flex items-center gap-2 rounded-xl border border-zinc-300 dark:border-zinc-700 px-4 py-2 text-sm font-semibold text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800">
-            Actualizar contraseña
+          <button
+            onClick={changePassword}
+            disabled={isUpdatingPassword}
+            className="inline-flex items-center gap-2 rounded-xl border border-zinc-300 dark:border-zinc-700 px-4 py-2 text-sm font-semibold text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {isUpdatingPassword ? "Actualizando..." : "Actualizar contraseña"}
           </button>
           {passwordMessage && <p className="text-sm text-zinc-600 dark:text-zinc-300">{passwordMessage}</p>}
         </section>
 
         <div className="flex flex-col gap-3 pt-2 border-t border-zinc-100 dark:border-zinc-800">
           <Link href="/dashboard" className="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700">
-            Go to Dashboard
+            Ir al Dashboard
           </Link>
           <button
             onClick={() => signOut({ callbackUrl: "/" })}
             className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-200 dark:border-zinc-700 px-4 py-3 text-sm font-semibold text-zinc-700 dark:text-zinc-300 transition hover:bg-zinc-100 dark:hover:bg-zinc-800"
           >
-            <LogOut size={15} /> Log Out
+            <LogOut size={15} /> Cerrar sesión
           </button>
         </div>
       </div>

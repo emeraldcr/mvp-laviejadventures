@@ -148,7 +148,7 @@ const useReservationForm = (initialState: ReservationFormState) => {
     };
   }, [formState]);
 
-  return { formState, handleChange, validation };
+  return { formState, setFormState, handleChange, validation };
 };
 
 // ---------------------- CHILD COMPONENTS ----------------------
@@ -359,7 +359,7 @@ export default function ReservationDetails({
     return { subtotal: sub, taxes: tax, totalWithTaxes: sub + tax };
   }, [tickets, effectiveSelectedPackage, ivaRatePercent]);
 
-  const { formState, handleChange, validation } = useReservationForm({
+  const { formState, setFormState, handleChange, validation } = useReservationForm({
     name: "",
     email: "",
     phoneCode: COUNTRY_CODES[0].code,
@@ -373,13 +373,11 @@ export default function ReservationDetails({
 
     hasPrefilledUserData.current = true;
 
-    if (session.user.name) {
-      handleChange("name", session.user.name);
-    }
-
-    if (session.user.email) {
-      handleChange("email", session.user.email);
-    }
+    setFormState((prev) => ({
+      ...prev,
+      name: prev.name.trim() ? prev.name : (session.user?.name ?? ""),
+      email: prev.email.trim() ? prev.email : (session.user?.email ?? ""),
+    }));
 
     fetch("/api/user/profile")
       .then((response) => (response.ok ? response.json() : null))
@@ -387,34 +385,38 @@ export default function ReservationDetails({
         const profile = data?.profile as { name?: string; email?: string; phone?: string } | undefined;
         if (!profile) return;
 
-        if (profile.name) {
-          handleChange("name", profile.name);
-        }
+        setFormState((prev) => {
+          const next = {
+            ...prev,
+            name: prev.name.trim() ? prev.name : (profile.name ?? prev.name),
+            email: prev.email.trim() ? prev.email : (profile.email ?? prev.email),
+          };
 
-        if (profile.email) {
-          handleChange("email", profile.email);
-        }
+          if (!prev.phoneNumber.trim() && profile.phone?.trim()) {
+            const normalizedPhone = profile.phone.trim();
+            const matchedCode = COUNTRY_CODES.find((country) => normalizedPhone.startsWith(country.code));
 
-        if (profile.phone) {
-          const normalizedPhone = profile.phone.trim();
-          const matchedCode = COUNTRY_CODES.find((country) => normalizedPhone.startsWith(country.code));
-
-          if (matchedCode) {
-            handleChange("phoneCode", matchedCode.code);
-            const remainder = normalizedPhone.slice(matchedCode.code.length).trim();
-            if (remainder) {
-              handleChange("phoneNumber", remainder);
+            if (matchedCode) {
+              return {
+                ...next,
+                phoneCode: matchedCode.code,
+                phoneNumber: normalizedPhone.slice(matchedCode.code.length).trim(),
+              };
             }
-            return;
+
+            return {
+              ...next,
+              phoneNumber: normalizedPhone,
+            };
           }
 
-          handleChange("phoneNumber", normalizedPhone);
-        }
+          return next;
+        });
       })
       .catch(() => {
         // ignore profile prefill errors
       });
-  }, [session?.user, handleChange]);
+  }, [session?.user, setFormState]);
 
   const isStep1Valid =
     isTicketsValid &&
