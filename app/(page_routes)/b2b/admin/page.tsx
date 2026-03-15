@@ -286,15 +286,15 @@ export default function B2BAdminPage() {
 
   if (!isLoggedIn) {
     return (
-      <main className="mx-auto flex min-h-screen w-full max-w-md items-center px-4 py-12">
-        <section className="w-full rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+      <main className="mx-auto flex min-h-screen w-full max-w-md items-center px-4 py-12 text-zinc-900 dark:text-zinc-100">
+        <section className="w-full rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
           <h1 className="mb-2 text-2xl font-bold text-zinc-900 dark:text-zinc-50">Admin B2B</h1>
-          <p className="mb-6 text-sm text-zinc-500 dark:text-zinc-400">Acceso interno para aprobación de operadores y settings B2B.</p>
+          <p className="mb-6 text-sm text-zinc-600 dark:text-zinc-400">Acceso interno para aprobación de operadores y settings B2B.</p>
           <div className="mb-6 grid gap-2 sm:grid-cols-3">{ACCESS_LINKS.map((link) => <Link key={link.href} href={link.href} className={`inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${link.style}`}>{link.icon}{link.label}</Link>)}</div>
           {authError && <p className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">{authError}</p>}
           <form onSubmit={handleLogin} className="space-y-4">
-            <input value={username} onChange={(event) => setUsername(event.target.value)} placeholder="Usuario" className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm" />
-            <input value={password} onChange={(event) => setPassword(event.target.value)} type="password" placeholder="Contraseña" className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm" />
+            <input value={username} onChange={(event) => setUsername(event.target.value)} placeholder="Usuario" className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-400" />
+            <input value={password} onChange={(event) => setPassword(event.target.value)} type="password" placeholder="Contraseña" className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-400" />
             <button type="submit" disabled={authLoading} className="flex w-full items-center justify-center gap-2 rounded-xl bg-zinc-900 px-4 py-3 text-sm font-semibold text-white disabled:opacity-60">{authLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}Entrar</button>
           </form>
         </section>
@@ -303,20 +303,20 @@ export default function B2BAdminPage() {
   }
 
   return (
-    <main className="mx-auto min-h-screen w-full max-w-7xl px-4 py-8">
-      <header className="mb-6 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-        <div className="mb-4 flex flex-col gap-2"><h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">Dashboard Admin B2B avanzado</h1><p className="text-sm text-zinc-500 dark:text-zinc-400">Gestiona operadores, paquetes, precios, IVA y auditoría de usuarios/logins.</p></div>
+    <main className="mx-auto min-h-screen w-full max-w-7xl rounded-3xl bg-zinc-50 px-4 py-8 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
+      <header className="mb-6 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
+        <div className="mb-4 flex flex-col gap-2"><h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">Dashboard Admin B2B avanzado</h1><p className="text-sm text-zinc-600 dark:text-zinc-400">Gestiona operadores, paquetes, precios, IVA y auditoría de usuarios/logins.</p></div>
         <div className="flex flex-wrap items-center gap-2">{ACCESS_LINKS.map((link) => <Link key={link.href} href={link.href} className={`inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${link.style}`}>{link.icon}{link.label}</Link>)}<button onClick={handleLogout} className="inline-flex items-center justify-center gap-2 rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white"><LogOut className="h-4 w-4" />Salir</button></div>
       </header>
 
-      {requestError && <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{requestError}</div>}
+      {requestError && <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-200">{requestError}</div>}
 
       <section className="grid gap-6 lg:grid-cols-2 mb-6">
-        <article className="rounded-2xl border border-amber-200 bg-amber-50/50 p-6"><h2 className="mb-4 flex items-center gap-2 text-xl font-semibold text-amber-900"><ShieldAlert className="h-5 w-5" />Pendientes ({pendingOperators.length})</h2>{loading ? <p className="inline-flex items-center gap-2 text-sm text-zinc-600"><Loader2 className="h-4 w-4 animate-spin" />Cargando operadores...</p> : pendingOperators.length === 0 ? <p className="text-sm text-zinc-600">No hay operadores pendientes.</p> : <ul className="space-y-3">{pendingOperators.map((operator) => <li key={operator._id} className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm"><p className="font-semibold text-zinc-900">{operator.company}</p><p className="text-sm text-zinc-500">{operator.name} · {operator.email}</p><button disabled={actionLoadingId === operator._id} onClick={() => updateStatus(operator._id, "approved")} className="mt-3 inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-60">{actionLoadingId === operator._id ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}Aprobar</button></li>)}</ul>}</article>
-        <article className="rounded-2xl border border-zinc-200 bg-white p-6"><h2 className="mb-4 text-xl font-semibold text-zinc-900">Aprobados / activos ({approvedOperators.length})</h2>{loading ? <p className="inline-flex items-center gap-2 text-sm text-zinc-600"><Loader2 className="h-4 w-4 animate-spin" />Cargando operadores...</p> : approvedOperators.length === 0 ? <p className="text-sm text-zinc-600">No hay operadores aprobados aún.</p> : <ul className="space-y-3">{approvedOperators.map((operator) => <li key={operator._id} className="rounded-xl border border-zinc-200 bg-zinc-50 p-4"><p className="font-semibold text-zinc-900">{operator.company}</p><p className="text-sm text-zinc-500">{operator.name} · {operator.email}</p><p className="mt-1 text-xs text-zinc-400">Estado: {operator.status}</p><button disabled={actionLoadingId === operator._id} onClick={() => updateStatus(operator._id, "pending")} className="mt-3 inline-flex items-center gap-2 rounded-lg border border-zinc-300 px-3 py-2 text-sm font-semibold text-zinc-700 disabled:opacity-60">{actionLoadingId === operator._id ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}Volver a pendiente</button></li>)}</ul>}</article>
+        <article className="rounded-2xl border border-amber-300 dark:border-amber-700 bg-amber-50/80 dark:bg-amber-950/30 p-6"><h2 className="mb-4 flex items-center gap-2 text-xl font-semibold text-amber-900 dark:text-amber-200"><ShieldAlert className="h-5 w-5" />Pendientes ({pendingOperators.length})</h2>{loading ? <p className="inline-flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300"><Loader2 className="h-4 w-4 animate-spin" />Cargando operadores...</p> : pendingOperators.length === 0 ? <p className="text-sm text-zinc-600 dark:text-zinc-300">No hay operadores pendientes.</p> : <ul className="space-y-3">{pendingOperators.map((operator) => <li key={operator._id} className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-700 dark:bg-zinc-900"><p className="font-semibold text-zinc-900">{operator.company}</p><p className="text-sm text-zinc-600 dark:text-zinc-300">{operator.name} · {operator.email}</p><button disabled={actionLoadingId === operator._id} onClick={() => updateStatus(operator._id, "approved")} className="mt-3 inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-60">{actionLoadingId === operator._id ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}Aprobar</button></li>)}</ul>}</article>
+        <article className="rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900"><h2 className="mb-4 text-xl font-semibold text-zinc-900">Aprobados / activos ({approvedOperators.length})</h2>{loading ? <p className="inline-flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300"><Loader2 className="h-4 w-4 animate-spin" />Cargando operadores...</p> : approvedOperators.length === 0 ? <p className="text-sm text-zinc-600 dark:text-zinc-300">No hay operadores aprobados aún.</p> : <ul className="space-y-3">{approvedOperators.map((operator) => <li key={operator._id} className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800"><p className="font-semibold text-zinc-900">{operator.company}</p><p className="text-sm text-zinc-600 dark:text-zinc-300">{operator.name} · {operator.email}</p><p className="mt-1 text-xs text-zinc-400">Estado: {operator.status}</p><button disabled={actionLoadingId === operator._id} onClick={() => updateStatus(operator._id, "pending")} className="mt-3 inline-flex items-center gap-2 rounded-lg border border-zinc-300 px-3 py-2 text-sm font-semibold text-zinc-700 disabled:opacity-60">{actionLoadingId === operator._id ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}Volver a pendiente</button></li>)}</ul>}</article>
       </section>
 
-      <section className="mb-6 rounded-2xl border border-zinc-200 bg-white p-6">
+      <section className="mb-6 rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
         <h2 className="text-xl font-semibold mb-3">Configuración de paquetes, precios e IVA</h2>
         <div className="grid gap-4 md:grid-cols-3">
           <div>
@@ -324,34 +324,34 @@ export default function B2BAdminPage() {
             <input type="number" min={0} max={100} value={settings.ivaRate} onChange={(e) => setSettings((prev) => ({ ...prev, ivaRate: Number(e.target.value) }))} className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm" />
           </div>
         </div>
-        <p className="text-xs text-zinc-500 mt-3">Edita el JSON para definir paquetes por tour. Formato ejemplo en el textarea inferior.</p>
+        <p className="text-xs text-zinc-600 dark:text-zinc-300 mt-3">Edita el JSON para definir paquetes por tour. Formato ejemplo en el textarea inferior.</p>
         <textarea value={pricingJson} onChange={(e) => setPricingJson(e.target.value)} rows={8} className="mt-2 w-full rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs font-mono" />
         <button onClick={handleSaveSettings} disabled={savingSettings} className="mt-3 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">{savingSettings ? "Guardando..." : "Guardar configuración"}</button>
       </section>
 
       <section className="grid gap-6 lg:grid-cols-2">
-        <article className="rounded-2xl border border-zinc-200 bg-white p-6">
+        <article className="rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
           <h2 className="mb-4 text-xl font-semibold">Usuarios registrados ({users.length})</h2>
           <div className="max-h-96 overflow-auto">
-            <table className="w-full text-sm"><thead><tr className="text-left text-zinc-500"><th className="pb-2">Nombre</th><th className="pb-2">Email</th><th className="pb-2">Creado</th></tr></thead><tbody>{users.map((user) => <tr key={user._id} className="border-t border-zinc-100"><td className="py-2">{user.name}</td><td className="py-2">{user.email}</td><td className="py-2">{new Date(user.createdAt).toLocaleString("es-CR")}</td></tr>)}</tbody></table>
+            <table className="w-full text-sm"><thead><tr className="text-left text-zinc-600 dark:text-zinc-300"><th className="pb-2">Nombre</th><th className="pb-2">Email</th><th className="pb-2">Creado</th></tr></thead><tbody>{users.map((user) => <tr key={user._id} className="border-t border-zinc-200 dark:border-zinc-700"><td className="py-2">{user.name}</td><td className="py-2">{user.email}</td><td className="py-2">{new Date(user.createdAt).toLocaleString("es-CR")}</td></tr>)}</tbody></table>
           </div>
         </article>
 
-        <article className="rounded-2xl border border-zinc-200 bg-white p-6">
+        <article className="rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
           <h2 className="mb-4 text-xl font-semibold">Logs de acceso ({loginLogs.length})</h2>
           <div className="max-h-96 overflow-auto">
-            <table className="w-full text-sm"><thead><tr className="text-left text-zinc-500"><th className="pb-2">Tipo</th><th className="pb-2">Usuario</th><th className="pb-2">Device/IP</th><th className="pb-2">Fecha</th></tr></thead><tbody>{loginLogs.map((log) => <tr key={log._id} className="border-t border-zinc-100"><td className="py-2">{log.userType}</td><td className="py-2">{log.emailOrUsername}</td><td className="py-2">{log.device}{log.ip ? ` · ${log.ip}` : ""}</td><td className="py-2">{new Date(log.createdAt).toLocaleString("es-CR")}</td></tr>)}</tbody></table>
+            <table className="w-full text-sm"><thead><tr className="text-left text-zinc-600 dark:text-zinc-300"><th className="pb-2">Tipo</th><th className="pb-2">Usuario</th><th className="pb-2">Device/IP</th><th className="pb-2">Fecha</th></tr></thead><tbody>{loginLogs.map((log) => <tr key={log._id} className="border-t border-zinc-200 dark:border-zinc-700"><td className="py-2">{log.userType}</td><td className="py-2">{log.emailOrUsername}</td><td className="py-2">{log.device}{log.ip ? ` · ${log.ip}` : ""}</td><td className="py-2">{new Date(log.createdAt).toLocaleString("es-CR")}</td></tr>)}</tbody></table>
           </div>
         </article>
       </section>
 
-      <section className="mt-6 rounded-2xl border border-zinc-200 bg-white p-6">
+      <section className="mt-6 rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
         <h2 className="mb-4 text-xl font-semibold">Reservas de usuarios normales ({reservations.length})</h2>
-        <p className="mb-4 text-sm text-zinc-500">Este panel ahora unifica B2B + usuarios normales para que admin/admin gestione todo en un solo lugar.</p>
+        <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-300">Este panel ahora unifica B2B + usuarios normales para que admin/admin gestione todo en un solo lugar.</p>
         <div className="max-h-96 overflow-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-zinc-500">
+              <tr className="text-left text-zinc-600 dark:text-zinc-300">
                 <th className="pb-2">Cliente</th>
                 <th className="pb-2">Tour</th>
                 <th className="pb-2">Fecha tour</th>
@@ -363,10 +363,10 @@ export default function B2BAdminPage() {
             </thead>
             <tbody>
               {reservations.map((reservation) => (
-                <tr key={reservation._id} className="border-t border-zinc-100">
+                <tr key={reservation._id} className="border-t border-zinc-200 dark:border-zinc-700">
                   <td className="py-2">
                     <p className="font-medium text-zinc-900">{reservation.name || "Sin nombre"}</p>
-                    <p className="text-xs text-zinc-500">{reservation.email || "Sin email"}</p>
+                    <p className="text-xs text-zinc-600 dark:text-zinc-300">{reservation.email || "Sin email"}</p>
                   </td>
                   <td className="py-2">{reservation.tourName || "Tour principal"}</td>
                   <td className="py-2">{reservation.date || "Sin fecha"}</td>
@@ -387,14 +387,14 @@ export default function B2BAdminPage() {
         </div>
       </section>
 
-      <section className="mt-6 rounded-2xl border border-zinc-200 bg-white p-6">
+      <section className="mt-6 rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
         <h2 className="mb-1 text-xl font-semibold">Slogans guardados en MongoDB ({heroSlogans.length})</h2>
-        <p className="mb-4 text-sm text-zinc-500">Historial de slogans generados en el hero para auditoría de contenido AI.</p>
+        <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-300">Historial de slogans generados en el hero para auditoría de contenido AI.</p>
 
         <div className="max-h-96 overflow-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-zinc-500">
+              <tr className="text-left text-zinc-600 dark:text-zinc-300">
                 <th className="pb-2">Fecha</th>
                 <th className="pb-2">ES</th>
                 <th className="pb-2">EN</th>
@@ -403,7 +403,7 @@ export default function B2BAdminPage() {
             </thead>
             <tbody>
               {heroSlogans.map((slogan) => (
-                <tr key={slogan._id} className="border-t border-zinc-100 align-top">
+                <tr key={slogan._id} className="border-t border-zinc-200 dark:border-zinc-700 align-top">
                   <td className="py-2 whitespace-nowrap">{slogan.createdAt ? new Date(slogan.createdAt).toLocaleString("es-CR") : "-"}</td>
                   <td className="py-2">{slogan.es}</td>
                   <td className="py-2">{slogan.en}</td>
@@ -412,7 +412,7 @@ export default function B2BAdminPage() {
               ))}
               {heroSlogans.length === 0 && (
                 <tr>
-                  <td className="py-4 text-zinc-500" colSpan={4}>No hay slogans guardados todavía.</td>
+                  <td className="py-4 text-zinc-600 dark:text-zinc-300" colSpan={4}>No hay slogans guardados todavía.</td>
                 </tr>
               )}
             </tbody>
@@ -420,29 +420,29 @@ export default function B2BAdminPage() {
         </div>
       </section>
 
-      <section className="mt-6 rounded-2xl border border-zinc-200 bg-white p-6">
+      <section className="mt-6 rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
         <h2 className="mb-1 text-xl font-semibold">Booking analytics (Mongo track)</h2>
-        <p className="mb-4 text-sm text-zinc-500">Eventos nuevos de analytics para seguir el embudo de reserva e insights de conversión.</p>
+        <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-300">Eventos nuevos de analytics para seguir el embudo de reserva e insights de conversión.</p>
 
         <div className="mb-4 grid gap-3 md:grid-cols-5">
-          <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3">
-            <p className="text-xs text-zinc-500">Eventos</p>
+          <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-800">
+            <p className="text-xs text-zinc-600 dark:text-zinc-300">Eventos</p>
             <p className="text-2xl font-semibold">{bookingAnalytics.totalEvents}</p>
           </div>
-          <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3">
-            <p className="text-xs text-zinc-500">Booking steps</p>
+          <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-800">
+            <p className="text-xs text-zinc-600 dark:text-zinc-300">Booking steps</p>
             <p className="text-2xl font-semibold">{bookingAnalytics.bookingSteps}</p>
           </div>
-          <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3">
-            <p className="text-xs text-zinc-500">Submissions</p>
+          <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-800">
+            <p className="text-xs text-zinc-600 dark:text-zinc-300">Submissions</p>
             <p className="text-2xl font-semibold">{bookingAnalytics.bookingSubmissions}</p>
           </div>
-          <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3">
-            <p className="text-xs text-zinc-500">Sesiones únicas</p>
+          <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-800">
+            <p className="text-xs text-zinc-600 dark:text-zinc-300">Sesiones únicas</p>
             <p className="text-2xl font-semibold">{bookingAnalytics.uniqueSessions}</p>
           </div>
-          <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3">
-            <p className="text-xs text-zinc-500">Conversión / sesión</p>
+          <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-800">
+            <p className="text-xs text-zinc-600 dark:text-zinc-300">Conversión / sesión</p>
             <p className="text-2xl font-semibold">{bookingAnalytics.conversionRate}%</p>
           </div>
         </div>
@@ -450,7 +450,7 @@ export default function B2BAdminPage() {
         <div className="max-h-96 overflow-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-zinc-500">
+              <tr className="text-left text-zinc-600 dark:text-zinc-300">
                 <th className="pb-2">Evento</th>
                 <th className="pb-2">Paso</th>
                 <th className="pb-2">Path</th>
@@ -462,7 +462,7 @@ export default function B2BAdminPage() {
             </thead>
             <tbody>
               {bookingAnalytics.recentEvents.map((event) => (
-                <tr key={event._id} className="border-t border-zinc-100">
+                <tr key={event._id} className="border-t border-zinc-200 dark:border-zinc-700">
                   <td className="py-2 font-medium">{event.event}</td>
                   <td className="py-2">{typeof event.metadata.step === "string" ? event.metadata.step : "-"}</td>
                   <td className="py-2">{event.path || "-"}</td>
