@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import Script from "next/script";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
 import { LanguageProvider } from "@/app/context/LanguageContext";
@@ -21,6 +22,17 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
+        <Script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=AW-18016737230"
+          strategy="afterInteractive"
+        />
+        <Script id="google-ads-gtag" strategy="afterInteractive">
+          {`window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'AW-18016737230');`}
+        </Script>
         <SessionProvider>
           <LanguageProvider>
             <Suspense fallback={null}>
