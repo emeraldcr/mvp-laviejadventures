@@ -102,10 +102,12 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
       return;
     }
 
+    const paypalLocale = lang === "es" ? "es_XC" : "en_US";
+
     if (!existingScript) {
       const script = document.createElement("script");
       script.id = "paypal-sdk";
-      script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD`;
+      script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&locale=${paypalLocale}`;
       script.async = true;
       script.onload = initializeButtons;
       document.body.appendChild(script);
