@@ -2,14 +2,21 @@
 
 import { FormEvent, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, CheckCircle2, Chrome, Mail, Shield, Sparkles } from 'lucide-react';
+import { ArrowRight, Building2, Bus, CheckCircle2, Chrome, Compass, Hotel, Shield, Sparkles, UtensilsCrossed } from 'lucide-react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
 const highlights = [
-  'Reservas y disponibilidad en tiempo real',
-  'Panel optimizado para equipos y agencias',
-  'Soporte dedicado para partners de La Vieja',
+  'Reservas y disponibilidad en tiempo real para tours y excursiones',
+  'Coordinación en un mismo panel para hoteles, restaurantes y transporte',
+  'Automatizaciones para cadenas de partners turísticos y equipos comerciales',
+];
+
+const partnerSegments = [
+  { icon: Hotel, label: 'Hoteles' },
+  { icon: UtensilsCrossed, label: 'Restaurantes' },
+  { icon: Bus, label: 'Transporte' },
+  { icon: Building2, label: 'Agencias' },
 ];
 
 export default function AuthLanding() {
@@ -129,17 +136,29 @@ export default function AuthLanding() {
           <div className="space-y-6 text-left">
             <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-4 py-2 text-xs font-medium uppercase tracking-[0.18em] text-emerald-200">
               <Shield className="h-3.5 w-3.5" />
-              Plataforma segura
+              Plataforma segura B2B/B2C
             </span>
 
             <h1 className="text-balance text-4xl font-semibold leading-tight text-white sm:text-5xl lg:text-6xl">
-              La plataforma moderna para gestionar experiencias memorables.
+              Conecta tu ecosistema turístico en una sola plataforma.
             </h1>
 
             <p className="max-w-xl text-pretty text-base text-slate-300 sm:text-lg">
-              Administra operaciones, reservas y clientes desde un mismo lugar. Diseñada para ser rápida en
-              escritorio y súper cómoda en móvil.
+              Impulsa ventas y operación diaria para experiencias turísticas, cadenas hoteleras, restaurantes y
+              aliados de transporte, con una experiencia de acceso moderna y confiable.
             </p>
+
+            <div className="grid grid-cols-2 gap-3 sm:max-w-lg">
+              {partnerSegments.map(({ icon: Icon, label }) => (
+                <div
+                  key={label}
+                  className="flex items-center gap-2 rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-sm text-slate-100"
+                >
+                  <Icon className="h-4 w-4 text-emerald-300" />
+                  <span>{label}</span>
+                </div>
+              ))}
+            </div>
 
             <ul className="space-y-3">
               {highlights.map((item) => (
@@ -151,16 +170,32 @@ export default function AuthLanding() {
             </ul>
           </div>
 
-          <div className="rounded-3xl border border-white/15 bg-white/10 p-5 shadow-2xl shadow-black/30 backdrop-blur-xl sm:p-7">
+          <div className="rounded-3xl border border-white/15 bg-gradient-to-b from-white/15 to-white/5 p-5 shadow-2xl shadow-black/30 backdrop-blur-xl sm:p-7">
             <div className="space-y-4">
               <div>
                 <p className="text-sm font-medium uppercase tracking-[0.2em] text-emerald-200/90">Acceso partner</p>
-                <h2 className="mt-2 text-2xl font-semibold text-white sm:text-3xl">Entra a tu panel</h2>
+                <h2 className="mt-2 text-2xl font-semibold text-white sm:text-3xl">Entra a tu hub de reservas</h2>
               </div>
 
               <p className="text-sm text-slate-300 sm:text-base">
-                Usa tu correo (MongoDB credentials) o Auth0 con Google. Ambos entran al mismo contexto de sesión.
+                Accede con correo o Google para centralizar disponibilidad, confirmaciones y coordinación con toda tu
+                cadena turística.
               </p>
+
+              <div className="grid grid-cols-3 gap-2 rounded-2xl border border-white/10 bg-slate-900/40 p-3 text-center text-xs text-slate-300">
+                <div>
+                  <p className="text-lg font-semibold text-emerald-300">24/7</p>
+                  <p>Operación</p>
+                </div>
+                <div>
+                  <p className="text-lg font-semibold text-sky-300">+1K</p>
+                  <p>Reservas</p>
+                </div>
+                <div>
+                  <p className="text-lg font-semibold text-cyan-300">360°</p>
+                  <p>Partners</p>
+                </div>
+              </div>
 
               <form className="space-y-3" onSubmit={handleCredentialsSubmit}>
                 {mode === 'register' && (
@@ -195,7 +230,7 @@ export default function AuthLanding() {
                   disabled={isSubmitting}
                   className="inline-flex w-full items-center justify-center gap-3 rounded-xl bg-emerald-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-70"
                 >
-                  <Mail className="h-5 w-5" />
+                  <Compass className="h-5 w-5" />
                   {isSubmitting
                     ? 'Procesando...'
                     : mode === 'register'
