@@ -25,6 +25,20 @@ const TAX_RATE = 0.13;
 const AI_BOOKING_SESSION_KEY = "aiBookingConversationState";
 const RESERVATION_RETURN_KEY = "reservationReturnPath";
 
+const PHONE_COUNTRY_OPTIONS = [
+  { label: "Costa Rica (+506)", value: "+506" },
+  { label: "Estados Unidos (+1)", value: "+1" },
+  { label: "Canadá (+1)", value: "+1" },
+  { label: "México (+52)", value: "+52" },
+  { label: "Guatemala (+502)", value: "+502" },
+  { label: "El Salvador (+503)", value: "+503" },
+  { label: "Honduras (+504)", value: "+504" },
+  { label: "Nicaragua (+505)", value: "+505" },
+  { label: "Panamá (+507)", value: "+507" },
+  { label: "Colombia (+57)", value: "+57" },
+  { label: "España (+34)", value: "+34" },
+] as const;
+
 const INITIAL_ASSISTANT_MESSAGE: ChatMessage = {
   role: "assistant",
   content:
@@ -50,6 +64,7 @@ export default function AIAssistantClient() {
   const [guidedDate, setGuidedDate] = useState("");
   const [guidedTickets, setGuidedTickets] = useState<number>(2);
   const [guidedText, setGuidedText] = useState("");
+  const [guidedPhoneCountryCode, setGuidedPhoneCountryCode] = useState<(typeof PHONE_COUNTRY_OPTIONS)[number]["value"]>("+506");
   const [guidedPhone, setGuidedPhone] = useState("");
   const [hasPendingCheckout, setHasPendingCheckout] = useState(false);
 
@@ -369,6 +384,20 @@ export default function AIAssistantClient() {
                 {currentGuidedField === "phone" && (
                   <div className="flex flex-wrap items-end gap-2">
                     <label className="space-y-1">
+                      <span className="text-xs text-zinc-400">País</span>
+                      <select
+                        value={guidedPhoneCountryCode}
+                        onChange={(event) => setGuidedPhoneCountryCode(event.target.value as (typeof PHONE_COUNTRY_OPTIONS)[number]["value"])}
+                        className="rounded-lg border border-white/10 bg-white/5 px-3 py-2"
+                      >
+                        {PHONE_COUNTRY_OPTIONS.map((country) => (
+                          <option key={`${country.label}-${country.value}`} value={country.value} className="bg-zinc-900">
+                            {country.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="space-y-1">
                       <span className="text-xs text-zinc-400">{FIELD_LABELS[currentGuidedField]}</span>
                       <input
                         id="guided-phone"
@@ -380,14 +409,14 @@ export default function AIAssistantClient() {
                         onKeyDown={(event) => {
                           if (event.key === "Enter") {
                             event.preventDefault();
-                            addToPrompt(`${FIELD_LABELS[currentGuidedField]} ${guidedPhone.trim()}`, true);
+                            addToPrompt(`${FIELD_LABELS[currentGuidedField]} ${guidedPhoneCountryCode} ${guidedPhone.trim()}`, true);
                           }
                         }}
-                        placeholder="Tu teléfono"
+                        placeholder="8888-9999"
                         className="rounded-lg border border-white/10 bg-white/5 px-3 py-2"
                       />
                     </label>
-                    <button type="button" onClick={() => addToPrompt(`${FIELD_LABELS[currentGuidedField]} ${guidedPhone.trim()}`, true)} className="rounded-lg border border-emerald-400 bg-emerald-500/20 px-3 py-2 text-emerald-300">
+                    <button type="button" onClick={() => addToPrompt(`${FIELD_LABELS[currentGuidedField]} ${guidedPhoneCountryCode} ${guidedPhone.trim()}`, true)} className="rounded-lg border border-emerald-400 bg-emerald-500/20 px-3 py-2 text-emerald-300">
                       Agregar
                     </button>
                   </div>

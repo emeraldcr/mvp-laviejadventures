@@ -49,9 +49,10 @@ const modelResponseCache = new Map<string, CachedResult>();
 const DATE_PATTERN_ISO = /\b(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})\b/;
 const DATE_PATTERN_DMY = /\b(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})\b/;
 const EMAIL_PATTERN = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i;
-const PHONE_PATTERN = /\+?[\d\s()\-]{8,}/;
+const PHONE_PATTERN_GLOBAL = /\+?\d[\d\s()\-]{7,}\d/g;
 const NAME_PATTERN = /(?:me\s+llamo|mi\s+nombre\s+es|soy|nombre|name)\s*[:=-]?\s*([a-záéíóúñ]+(?:\s+[a-záéíóúñ]+){0,3})/i;
 const TICKETS_PATTERN = /(?:somos|vamos|personas?|tickets?|boletos?|cupos?)\s*[:=]?\s*(\d{1,2})/i;
+const PHONE_CONTEXT_PATTERN = /(?:tel(?:efono)?|cel(?:ular)?|movil|whatsapp|wa\b|phone|numero)/i;
 
 const FAQ_ENTRIES: FaqEntry[] = [
   {
@@ -265,9 +266,10 @@ function extractPackage(raw: string): BookingState["tourPackage"] {
 
 function extractTickets(raw: string): number | null {
   const grouped = raw.match(TICKETS_PATTERN)?.[1];
-  const withPrefix = raw.match(/(?:x|para|seriamos|somos\s+de|grupo\s+de)\s*(\d{1,2})\b/i)?.[1];
+  const withPrefix = raw.match(/(?:x|seriamos|somos\s+de|grupo\s+de)\s*(\d{1,2})\b/i)?.[1];
+  const paraPeople = raw.match(/\bpara\s*(\d{1,2})\s*(?:adultos?|personas?|pax|tickets?|boletos?|cupos?)\b/i)?.[1];
   const withSuffix = raw.match(/\b(\d{1,2})\s*(?:adultos?|personas?|pax|tickets?|boletos?|cupos?)\b/i)?.[1];
-  const parsed = Number(grouped ?? withPrefix ?? withSuffix);
+  const parsed = Number(grouped ?? withPrefix ?? paraPeople ?? withSuffix);
   if (!Number.isFinite(parsed) || parsed <= 0 || parsed > 20) return null;
   return parsed;
 }
@@ -290,11 +292,22 @@ function extractEmail(raw: string): string | null {
 }
 
 function extractPhone(raw: string): string | null {
-  const matched = raw.match(PHONE_PATTERN)?.[0]?.trim();
-  if (!matched) return null;
-  const digits = matched.replace(/\D/g, "");
-  if (digits.length < 8 || digits.length > 15) return null;
-  return matched;
+  const candidates = raw.match(PHONE_PATTERN_GLOBAL) ?? [];
+  const hasPhoneContext = PHONE_CONTEXT_PATTERN.test(raw);
+
+  for (const candidate of candidates) {
+    const matched = candidate.trim();
+    if (/^\d{4}[-\/.]\d{1,2}[-\/.]\d{1,2}$/.test(matched)) continue;
+    if (/^\d{1,2}[-\/.]\d{1,2}[-\/.]\d{2,4}$/.test(matched)) continue;
+
+    const digits = matched.replace(/\D/g, "");
+    if (digits.length < 8 || digits.length > 15) continue;
+
+    if (!hasPhoneContext && !matched.startsWith("+")) continue;
+    return matched;
+  }
+
+  return null;
 }
 
 function extractSpecialRequests(raw: string): string | null {
