@@ -5,6 +5,7 @@ import { listUsers } from "@/lib/models/user";
 import { listLoginLogs } from "@/lib/models/login-log";
 import { getDb } from "@/lib/mongodb";
 import { COLLECTIONS } from "@/lib/constants/db";
+import { listHeroSloganLogs } from "@/lib/models/hero-slogan-log";
 
 type BookingAnalyticsEvent = {
   _id: string;
@@ -42,7 +43,7 @@ export async function GET(req: NextRequest) {
   if (!isAuthorized(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    const [operators, users, loginLogs, reservations, bookingAnalyticsRaw] = await Promise.all([
+    const [operators, users, loginLogs, reservations, bookingAnalyticsRaw, heroSlogans] = await Promise.all([
       listOperators(),
       listUsers(),
       listLoginLogs(),
@@ -100,6 +101,7 @@ export async function GET(req: NextRequest) {
           },
         }));
       })(),
+      listHeroSloganLogs(),
     ]);
 
     const uniqueSessions = new Set(bookingAnalyticsRaw.map((event) => event.sessionId).filter(Boolean));
@@ -117,7 +119,7 @@ export async function GET(req: NextRequest) {
       recentEvents: bookingAnalyticsRaw,
     };
 
-    return NextResponse.json({ operators, users, loginLogs, reservations, bookingAnalytics });
+    return NextResponse.json({ operators, users, loginLogs, reservations, bookingAnalytics, heroSlogans });
   } catch (error) {
     console.error("Admin insights error", error);
     return NextResponse.json({ error: "Failed to load admin insights." }, { status: 500 });

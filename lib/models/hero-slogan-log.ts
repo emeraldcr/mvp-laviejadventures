@@ -19,3 +19,22 @@ export async function createHeroSloganLog(log: HeroSloganLog) {
   const collection = await getHeroSloganCollection();
   return collection.insertOne(log);
 }
+
+export async function listHeroSloganLogs(limit = 200) {
+  const collection = await getHeroSloganCollection();
+  const docs = await collection
+    .find({})
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .toArray();
+
+  return docs.map((doc) => ({
+    _id: doc._id.toString(),
+    es: doc.es,
+    en: doc.en,
+    model: doc.model,
+    prompt: doc.prompt,
+    rawResponse: doc.rawResponse,
+    createdAt: doc.createdAt ? doc.createdAt.toISOString() : null,
+  }));
+}
