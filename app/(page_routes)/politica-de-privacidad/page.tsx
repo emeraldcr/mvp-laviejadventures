@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { useLanguage } from "@/app/context/LanguageContext";
 
 type Section = {
@@ -171,12 +172,28 @@ const privacyContent = {
 } as const;
 
 export default function PrivacyPage() {
-  const { lang } = useLanguage();
+  const { lang, toggle } = useLanguage();
   const content = privacyContent[lang];
 
   return (
-    <main className="min-h-screen bg-zinc-50 dark:bg-black flex justify-center py-10 px-4">
-      <div className="w-full max-w-4xl bg-white dark:bg-zinc-950 rounded-2xl shadow-2xl p-10 border border-zinc-200 dark:border-zinc-800">
+    <main className="min-h-screen bg-zinc-50 dark:bg-black flex flex-col items-center py-10 px-4">
+      <div className="w-full max-w-4xl flex items-center justify-between mb-4">
+        <Link
+          href="/"
+          className="text-sm text-zinc-500 hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400 transition-colors"
+        >
+          ← {lang === "es" ? "Volver al inicio" : "Back to home"}
+        </Link>
+        <button
+          type="button"
+          onClick={toggle}
+          aria-label={lang === "es" ? "Switch to English" : "Cambiar a Español"}
+          className="px-4 py-1.5 rounded-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm font-bold text-zinc-700 dark:text-zinc-300 hover:bg-teal-600 hover:text-white hover:border-teal-600 transition-colors duration-200 shadow-sm"
+        >
+          {lang === "es" ? "EN" : "ES"}
+        </button>
+      </div>
+      <div className="w-full max-w-4xl bg-white dark:bg-zinc-950 rounded-2xl shadow-2xl p-10 border border-zinc-200 dark:border-zinc-800 flex-1">
         <h1 className="text-3xl font-bold mb-6 text-center">{content.title}</h1>
 
         {content.sections.map((section) => (
