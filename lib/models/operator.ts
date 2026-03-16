@@ -18,6 +18,13 @@ export interface OperatorAccount {
   // Password reset
   resetToken?: string | null;
   resetExpiry?: Date | null;
+  notificationPreferences?: {
+    bookingCreated: boolean;
+    bookingReminder24h: boolean;
+    bookingStatusChanges: boolean;
+    weeklyPerformanceDigest: boolean;
+    partnerNetworkUpdates: boolean;
+  };
 }
 
 export async function getOperatorsCollection() {
