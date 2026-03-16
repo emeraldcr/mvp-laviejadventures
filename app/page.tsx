@@ -186,7 +186,7 @@ function BookingSection() {
           className="mb-12 text-center"
         >
           <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.28em] text-teal-400">
-            {lang === "es" ? "Reserva asistida por AI" : "AI assisted booking"}
+            {lang === "es" ? "Crea una nueva reserva" : "Make a new reservation"}
           </p>
           <h2 className="mb-4 text-3xl font-black leading-tight text-white sm:text-4xl md:text-5xl">
             {lang === "es" ? "Tu próximo tour empieza aquí" : "Your next tour starts here"}
