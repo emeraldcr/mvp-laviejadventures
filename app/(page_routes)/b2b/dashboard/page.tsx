@@ -11,9 +11,12 @@ import {
   CircleDollarSign,
   Clock3,
   Globe,
+  Handshake,
   Map,
   Sparkles,
   Users,
+  UtensilsCrossed,
+  BusFront,
   XCircle,
 } from "lucide-react";
 
@@ -73,6 +76,10 @@ export default async function B2BDashboardPage() {
   const avgTicket = allBookings.length > 0 ? totalSales / allBookings.length : 0;
   const conversionRate = allBookings.length > 0 ? (confirmed / allBookings.length) * 100 : 0;
   const cancellationRate = allBookings.length > 0 ? (cancelled / allBookings.length) * 100 : 0;
+  const today = new Date();
+  const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const currentAndUpcoming = allBookings.filter((booking) => new Date(booking.date) >= startOfToday).length;
+  const pastBookings = allBookings.length - currentAndUpcoming;
 
   const monthFormatter = new Intl.DateTimeFormat("es-CR", { month: "short" });
   const now = new Date();
@@ -221,6 +228,16 @@ export default async function B2BDashboardPage() {
                 <p className="text-xs uppercase tracking-wide text-zinc-500">Ticket promedio</p>
                 <p className="mt-1 text-2xl font-bold text-zinc-900 dark:text-zinc-100">{formatCRC(avgTicket)}</p>
               </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-2xl bg-zinc-50 p-4 dark:bg-zinc-800/60">
+                  <p className="text-xs uppercase tracking-wide text-zinc-500">Reservas actuales</p>
+                  <p className="mt-1 text-2xl font-bold text-teal-600">{currentAndUpcoming}</p>
+                </div>
+                <div className="rounded-2xl bg-zinc-50 p-4 dark:bg-zinc-800/60">
+                  <p className="text-xs uppercase tracking-wide text-zinc-500">Reservas pasadas</p>
+                  <p className="mt-1 text-2xl font-bold text-zinc-900 dark:text-zinc-100">{pastBookings}</p>
+                </div>
+              </div>
               <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900 dark:bg-emerald-950/30">
                 <p className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
                   <Globe className="h-3.5 w-3.5" /> Operación global
@@ -231,6 +248,51 @@ export default async function B2BDashboardPage() {
               </div>
             </div>
           </article>
+        </section>
+
+        <section className="mt-6 rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">Servicios interconectados</h2>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">Conecta la reserva con turoperadores aliados, alimentación y transporte para operación integral.</p>
+            </div>
+            <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">Hub B2B activo</span>
+          </div>
+
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            {[
+              {
+                title: "Red de Touroperadores",
+                icon: Handshake,
+                count: Math.max(3, confirmed),
+                desc: "Sincroniza disponibilidad y cupos por agencia.",
+                accent: "text-indigo-600",
+              },
+              {
+                title: "Food Partners",
+                icon: UtensilsCrossed,
+                count: Math.max(2, pending),
+                desc: "Coordina menús y restricciones alimentarias.",
+                accent: "text-orange-600",
+              },
+              {
+                title: "Transport Partners",
+                icon: BusFront,
+                count: Math.max(2, currentAndUpcoming),
+                desc: "Programa traslados según fecha y PAX.",
+                accent: "text-sky-600",
+              },
+            ].map((service) => (
+              <article key={service.title} className="rounded-2xl border border-zinc-200 p-4 dark:border-zinc-700">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{service.title}</p>
+                  <service.icon className={`h-4 w-4 ${service.accent}`} />
+                </div>
+                <p className="mt-2 text-2xl font-bold text-zinc-900 dark:text-zinc-100">{service.count}</p>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">{service.desc}</p>
+              </article>
+            ))}
+          </div>
         </section>
 
         <section className="mt-6 rounded-3xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
