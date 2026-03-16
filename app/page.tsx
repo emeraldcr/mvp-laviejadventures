@@ -8,10 +8,153 @@ import DynamicHeroHeader from "@/app/components/sections/DynamicHeroHeader";
 import ErrorBoundary from "@/lib/errorBoundary";
 import { CalendarProvider } from "@/app/context/CalendarContext";
 import { motion } from "framer-motion";
-import { CalendarDays, ClipboardList } from "lucide-react";
+import { CalendarDays, CheckCircle2, ClipboardList, MessageCircleQuestion, ShieldCheck, Star, TimerReset } from "lucide-react";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { useSession, signIn, signOut } from "next-auth/react";
 import Profile from "@/app/components/auth/Profile";
+
+function ConversionSection() {
+  const { lang } = useLanguage();
+
+  const highlights = [
+    {
+      icon: TimerReset,
+      title: lang === "es" ? "Reserva en 2 minutos" : "Book in 2 minutes",
+      text:
+        lang === "es"
+          ? "Flujo ultra simple: eliges fecha, completas tus datos y confirmas sin pasos innecesarios."
+          : "A simple flow: pick date, complete details, and confirm without unnecessary steps.",
+    },
+    {
+      icon: ShieldCheck,
+      title: lang === "es" ? "Pagos y datos seguros" : "Secure payment and data",
+      text:
+        lang === "es"
+          ? "Checkout protegido y soporte humano para ayudarte antes y después de reservar."
+          : "Protected checkout plus human support before and after booking.",
+    },
+    {
+      icon: MessageCircleQuestion,
+      title: lang === "es" ? "Asistencia AI + equipo local" : "AI help + local team",
+      text:
+        lang === "es"
+          ? "¿Dudas sobre clima, dificultad o transporte? Te respondemos en segundos."
+          : "Questions about weather, difficulty or transport? Get answers in seconds.",
+    },
+  ];
+
+  const faq = [
+    {
+      q: lang === "es" ? "¿Puedo cambiar mi fecha después de reservar?" : "Can I change my date after booking?",
+      a:
+        lang === "es"
+          ? "Sí, nuestro equipo te ayuda a reprogramar según disponibilidad para que no pierdas tu experiencia."
+          : "Yes, our team helps you reschedule based on availability so you never miss the experience.",
+    },
+    {
+      q: lang === "es" ? "¿Cuál tour es mejor para principiantes?" : "Which tour is best for beginners?",
+      a:
+        lang === "es"
+          ? "Usa el botón AI en la reserva y te recomendará la opción ideal por duración e intensidad."
+          : "Use the AI button in booking and it will suggest the best option by duration and intensity.",
+    },
+    {
+      q: lang === "es" ? "¿Qué pasa si llueve?" : "What if it rains?",
+      a:
+        lang === "es"
+          ? "Monitoreamos el clima constantemente y te notificamos alternativas seguras con tiempo."
+          : "We monitor weather constantly and notify you in advance with safe alternatives.",
+    },
+  ];
+
+  return (
+    <section className="relative bg-black pb-12 pt-8 md:pb-16 md:pt-10">
+      <div className="container mx-auto space-y-8 px-4 md:px-8">
+        <motion.div
+          initial={{ opacity: 0, y: 18 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="grid grid-cols-1 gap-4 md:grid-cols-3"
+        >
+          {highlights.map(({ icon: Icon, title, text }) => (
+            <article
+              key={title}
+              className="rounded-2xl border border-white/10 bg-zinc-900/65 p-5 shadow-[0_12px_30px_rgba(0,0,0,0.35)]"
+            >
+              <div className="mb-3 inline-flex rounded-full border border-teal-500/30 bg-teal-400/10 p-2.5">
+                <Icon size={18} className="text-teal-300" />
+              </div>
+              <h3 className="mb-2 text-base font-semibold text-white">{title}</h3>
+              <p className="text-sm leading-relaxed text-zinc-300">{text}</p>
+            </article>
+          ))}
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-40px" }}
+          transition={{ duration: 0.45 }}
+          className="rounded-3xl border border-emerald-500/20 bg-gradient-to-r from-emerald-600/12 via-teal-500/10 to-cyan-500/10 p-6"
+        >
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="mb-2 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-emerald-300">
+                <Star size={14} className="fill-emerald-300 text-emerald-300" />
+                {lang === "es" ? "Más confianza, menos fricción" : "More trust, less friction"}
+              </p>
+              <h3 className="text-2xl font-black text-white md:text-3xl">
+                {lang === "es"
+                  ? "Haz scroll, entiende todo y reserva con claridad"
+                  : "Scroll, understand everything, and book with clarity"}
+              </h3>
+              <p className="mt-2 max-w-2xl text-sm text-zinc-200 md:text-base">
+                {lang === "es"
+                  ? "Reducimos dudas mostrando respuestas rápidas y beneficios reales antes del checkout."
+                  : "We reduce uncertainty by showing quick answers and clear value before checkout."}
+              </p>
+            </div>
+            <a
+              href="#booking"
+              className="inline-flex items-center justify-center rounded-xl bg-emerald-500 px-5 py-3 text-sm font-semibold text-black transition hover:bg-emerald-400"
+            >
+              {lang === "es" ? "Reservar ahora" : "Book now"}
+            </a>
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="grid grid-cols-1 gap-4 md:grid-cols-3"
+        >
+          {faq.map((item) => (
+            <article key={item.q} className="rounded-2xl border border-white/10 bg-zinc-900/55 p-5">
+              <h4 className="mb-2 text-sm font-semibold text-white">{item.q}</h4>
+              <p className="text-sm leading-relaxed text-zinc-300">{item.a}</p>
+            </article>
+          ))}
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+
+function StickyBookingCTA() {
+  const { lang } = useLanguage();
+
+  return (
+    <a
+      href="#booking"
+      className="fixed bottom-4 left-1/2 z-50 inline-flex -translate-x-1/2 items-center gap-2 rounded-full border border-emerald-400/50 bg-emerald-400 px-5 py-2.5 text-sm font-bold text-black shadow-xl shadow-emerald-900/50 md:hidden"
+    >
+      <CheckCircle2 size={16} />
+      {lang === "es" ? "Reservar ahora" : "Book now"}
+    </a>
+  );
+}
 
 function BookingSection() {
   const { lang } = useLanguage();
@@ -164,7 +307,9 @@ export default function Home(): JSX.Element {
       <CalendarProvider>
         <main className="min-h-screen overflow-x-hidden bg-black">
           <DynamicHeroHeader />
+          <ConversionSection />
           <BookingSection />
+          <StickyBookingCTA />
         </main>
       </CalendarProvider>
     </ErrorBoundary>
