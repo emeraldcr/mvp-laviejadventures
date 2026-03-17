@@ -15,6 +15,48 @@ type AnalyticsEventInput = {
   happenedAt?: string;
 };
 
+const VALID_EVENTS: AnalyticsEventName[] = ["page_view", "click", "booking_step", "booking_submitted"];
+
+function sanitizeValue(value: unknown): unknown {
+  if (value === undefined) return null;
+  if (value === null) return null;
+
+  if (Array.isArray(value)) {
+    return value.map((item) => sanitizeValue(item));
+  }
+
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : null;
+  }
+
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value;
+  }
+
+  if (typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>).map(([key, nestedValue]) => [
+        key,
+        sanitizeValue(nestedValue),
+      ])
+    );
+  }
+
+  if (typeof value === "string" || typeof value === "boolean") {
+    return value;
+  }
+
+  return String(value);
+}
+
+async function safeAuthSession() {
+  try {
+    return await auth();
+  } catch {
+    return null;
+  }
+}
+
 function anonymizeIp(rawIp: string | null): string | null {
   if (!rawIp) return null;
 
@@ -61,11 +103,11 @@ function parseDevice(userAgent: string) {
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as AnalyticsEventInput;
-    if (!body?.event) {
-      return NextResponse.json({ error: "Missing event" }, { status: 400 });
+    if (!body?.event || !VALID_EVENTS.includes(body.event)) {
+      return NextResponse.json({ error: "Invalid event" }, { status: 400 });
     }
 
-    const session = await auth();
+    const session = await safeAuthSession();
     const requestHeaders = await headers();
 
     const forwardedFor = requestHeaders.get("x-forwarded-for");
@@ -75,6 +117,11 @@ export async function POST(request: Request) {
     const userAgent = requestHeaders.get("user-agent") || "";
     const device = parseDevice(userAgent);
 
+    const parsedHappenedAt = body.happenedAt ? new Date(body.happenedAt) : null;
+    const happenedAt = parsedHappenedAt && !Number.isNaN(parsedHappenedAt.getTime())
+      ? parsedHappenedAt
+      : new Date();
+
     const db = await getDb();
 
     await db.collection(COLLECTIONS.ANALYTICS_EVENTS).insertOne({
@@ -82,8 +129,8 @@ export async function POST(request: Request) {
       path: body.path ?? null,
       referrer: body.referrer ?? null,
       sessionId: body.sessionId ?? null,
-      metadata: body.metadata ?? {},
-      happenedAt: body.happenedAt ? new Date(body.happenedAt) : new Date(),
+      metadata: sanitizeValue(body.metadata ?? {}),
+      happenedAt,
       user: {
         userId: (session?.user as { id?: string } | undefined)?.id ?? null,
         email: session?.user?.email ?? null,
