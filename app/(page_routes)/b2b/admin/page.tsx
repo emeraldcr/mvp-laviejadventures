@@ -96,6 +96,21 @@ type HeroSloganLog = {
   createdAt: string | null;
 };
 
+type ManualReservationForm = {
+  name: string;
+  email: string;
+  phone: string;
+  date: string;
+  tickets: number;
+  tourName: string;
+  tourPackage: string;
+  tourTime: string;
+  amount: string;
+  currency: string;
+  notes: string;
+  paymentMethod: "cash" | "bank_transfer" | "unpaid";
+};
+
 
 const ACCESS_LINKS = [
   { href: "/", label: "Inicio", icon: <Home className="h-4 w-4" />, style: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300" },
@@ -124,13 +139,29 @@ export default function B2BAdminPage() {
   const [settings, setSettings] = useState<B2BSettings>({ ivaRate: 13, tourPricing: [] });
   const [pricingJson, setPricingJson] = useState("[]");
   const [heroSlogans, setHeroSlogans] = useState<HeroSloganLog[]>([]);
+  const [manualReservation, setManualReservation] = useState<ManualReservationForm>({
+    name: "",
+    email: "",
+    phone: "",
+    date: "",
+    tickets: 1,
+    tourName: "",
+    tourPackage: "",
+    tourTime: "",
+    amount: "",
+    currency: "CRC",
+    notes: "",
+    paymentMethod: "unpaid",
+  });
 
   const [loading, setLoading] = useState(false);
   const [initialSessionLoading, setInitialSessionLoading] = useState(true);
   const [authLoading, setAuthLoading] = useState(false);
   const [savingSettings, setSavingSettings] = useState(false);
+  const [creatingManualReservation, setCreatingManualReservation] = useState(false);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [requestError, setRequestError] = useState("");
+  const [requestSuccess, setRequestSuccess] = useState("");
 
   const pendingOperators = useMemo(() => operators.filter((op) => op.status === "pending"), [operators]);
   const approvedOperators = useMemo(() => operators.filter((op) => op.status !== "pending"), [operators]);
@@ -138,6 +169,7 @@ export default function B2BAdminPage() {
   async function fetchAdminData() {
     setLoading(true);
     setRequestError("");
+    setRequestSuccess("");
 
     try {
       const [operatorsRes, insightsRes, settingsRes] = await Promise.all([
@@ -248,6 +280,53 @@ export default function B2BAdminPage() {
     }
   }
 
+  async function handleCreateManualReservation(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setCreatingManualReservation(true);
+    setRequestError("");
+    setRequestSuccess("");
+
+    try {
+      const response = await fetch("/api/admin/b2b/reservations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...manualReservation,
+          amount: manualReservation.amount ? Number(manualReservation.amount) : null,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setRequestError(data.error || "No se pudo crear la reserva manual.");
+        return;
+      }
+
+      setRequestSuccess("Reserva manual creada correctamente.");
+      setManualReservation({
+        name: "",
+        email: "",
+        phone: "",
+        date: "",
+        tickets: 1,
+        tourName: "",
+        tourPackage: "",
+        tourTime: "",
+        amount: "",
+        currency: "CRC",
+        notes: "",
+        paymentMethod: "unpaid",
+      });
+
+      await fetchAdminData();
+    } catch {
+      setRequestError("Error de conexión al crear la reserva manual.");
+    } finally {
+      setCreatingManualReservation(false);
+    }
+  }
+
   async function handleLogin(event: FormEvent) {
     event.preventDefault();
     setAuthError("");
@@ -310,6 +389,7 @@ export default function B2BAdminPage() {
       </header>
 
       {requestError && <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-200">{requestError}</div>}
+      {requestSuccess && <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200">{requestSuccess}</div>}
 
       <section className="grid gap-6 lg:grid-cols-2 mb-6">
         <article className="rounded-2xl border border-amber-300 dark:border-amber-700 bg-amber-50/80 dark:bg-amber-950/30 p-6"><h2 className="mb-4 flex items-center gap-2 text-xl font-semibold text-amber-900 dark:text-amber-200"><ShieldAlert className="h-5 w-5" />Pendientes ({pendingOperators.length})</h2>{loading ? <p className="inline-flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300"><Loader2 className="h-4 w-4 animate-spin" />Cargando operadores...</p> : pendingOperators.length === 0 ? <p className="text-sm text-zinc-600 dark:text-zinc-300">No hay operadores pendientes.</p> : <ul className="space-y-3">{pendingOperators.map((operator) => <li key={operator._id} className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-700 dark:bg-zinc-900"><p className="font-semibold text-zinc-900">{operator.company}</p><p className="text-sm text-zinc-600 dark:text-zinc-300">{operator.name} · {operator.email}</p><button disabled={actionLoadingId === operator._id} onClick={() => updateStatus(operator._id, "approved")} className="mt-3 inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-60">{actionLoadingId === operator._id ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}Aprobar</button></li>)}</ul>}</article>
@@ -343,6 +423,31 @@ export default function B2BAdminPage() {
             <table className="w-full text-sm"><thead><tr className="text-left text-zinc-600 dark:text-zinc-300"><th className="pb-2">Tipo</th><th className="pb-2">Usuario</th><th className="pb-2">Device/IP</th><th className="pb-2">Fecha</th></tr></thead><tbody>{loginLogs.map((log) => <tr key={log._id} className="border-t border-zinc-200 dark:border-zinc-700"><td className="py-2">{log.userType}</td><td className="py-2">{log.emailOrUsername}</td><td className="py-2">{log.device}{log.ip ? ` · ${log.ip}` : ""}</td><td className="py-2">{new Date(log.createdAt).toLocaleString("es-CR")}</td></tr>)}</tbody></table>
           </div>
         </article>
+      </section>
+
+      <section className="mt-6 rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
+        <h2 className="mb-1 text-xl font-semibold">Crear reserva manual (sin pago web)</h2>
+        <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-300">Para clientes que pagan en efectivo o transferencia local fuera del checkout del sitio.</p>
+
+        <form onSubmit={handleCreateManualReservation} className="grid gap-3 md:grid-cols-2">
+          <input required value={manualReservation.name} onChange={(event) => setManualReservation((prev) => ({ ...prev, name: event.target.value }))} placeholder="Nombre cliente" className="rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm" />
+          <input required type="email" value={manualReservation.email} onChange={(event) => setManualReservation((prev) => ({ ...prev, email: event.target.value }))} placeholder="Email cliente" className="rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm" />
+          <input required value={manualReservation.phone} onChange={(event) => setManualReservation((prev) => ({ ...prev, phone: event.target.value }))} placeholder="Teléfono" className="rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm" />
+          <input required type="date" value={manualReservation.date} onChange={(event) => setManualReservation((prev) => ({ ...prev, date: event.target.value }))} className="rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm" />
+          <input required type="number" min={1} value={manualReservation.tickets} onChange={(event) => setManualReservation((prev) => ({ ...prev, tickets: Number(event.target.value) }))} placeholder="Tickets" className="rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm" />
+          <input required value={manualReservation.tourName} onChange={(event) => setManualReservation((prev) => ({ ...prev, tourName: event.target.value }))} placeholder="Nombre del tour" className="rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm" />
+          <input value={manualReservation.tourPackage} onChange={(event) => setManualReservation((prev) => ({ ...prev, tourPackage: event.target.value }))} placeholder="Paquete (opcional)" className="rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm" />
+          <input value={manualReservation.tourTime} onChange={(event) => setManualReservation((prev) => ({ ...prev, tourTime: event.target.value }))} placeholder="Hora tour (opcional)" className="rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm" />
+          <input type="number" min={0} value={manualReservation.amount} onChange={(event) => setManualReservation((prev) => ({ ...prev, amount: event.target.value }))} placeholder="Monto (opcional)" className="rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm" />
+          <input value={manualReservation.currency} onChange={(event) => setManualReservation((prev) => ({ ...prev, currency: event.target.value.toUpperCase() }))} placeholder="Moneda (CRC, USD)" className="rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm" />
+          <select value={manualReservation.paymentMethod} onChange={(event) => setManualReservation((prev) => ({ ...prev, paymentMethod: event.target.value as ManualReservationForm["paymentMethod"] }))} className="rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm">
+            <option value="unpaid">Sin pago aún</option>
+            <option value="bank_transfer">Transferencia local</option>
+            <option value="cash">Efectivo</option>
+          </select>
+          <input value={manualReservation.notes} onChange={(event) => setManualReservation((prev) => ({ ...prev, notes: event.target.value }))} placeholder="Notas (opcional)" className="rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm" />
+          <button type="submit" disabled={creatingManualReservation} className="md:col-span-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">{creatingManualReservation ? "Guardando..." : "Crear reserva manual"}</button>
+        </form>
       </section>
 
       <section className="mt-6 rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
