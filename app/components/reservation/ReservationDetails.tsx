@@ -9,7 +9,7 @@ import { format } from "date-fns";
 import { es, enUS } from "date-fns/locale";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/lib/translations";
-import { AlertCircle, Camera, ChevronRight, Clock3, Info, MapPin, Route, ShieldCheck, Sparkles, TreePalm, Users, UtensilsCrossed, X } from "lucide-react";
+import { AlertCircle, Camera, ChevronRight, Clock3, Info, MapPin, Minus, Plus, Route, ShieldCheck, Sparkles, TreePalm, Users, UtensilsCrossed, X } from "lucide-react";
 import { trackAnalyticsEvent } from "@/lib/analytics/client";
 
 // ---------------------- CONSTANTS ----------------------
@@ -926,23 +926,48 @@ export default function ReservationDetails({
           <div className={`mb-6 rounded-xl ${!isTicketsValid ? "ring-2 ring-amber-300/70 p-3" : ""}`}>
             <h3 className="text-xl font-semibold mb-4">{tr.ticketsTitle}</h3>
             {!isTicketsValid && <p className="mb-3 flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-400"><AlertCircle className="h-4 w-4" aria-hidden /> {tr.indicators.chooseTickets}</p>}
-            <div className="flex items-center gap-4 mb-4">
+            <div className="mb-4 flex flex-wrap items-center gap-4">
               <label htmlFor="tickets" className="font-semibold text-lg">{tr.numPeople}</label>
-              <input
-                id="tickets"
-                type="number"
-                min={1}
-                max={Math.max(1, slots)}
-                value={tickets}
-                onChange={(e) => {
-                  const val = +e.target.value;
-                  if (val >= 1 && val <= slots) setTickets(val);
-                  else if (val < 1) setTickets(1);
-                  else if (val > slots) setTickets(slots);
-                }}
-                className="w-20 p-2 rounded-lg border bg-white dark:bg-zinc-800"
-                disabled={slots === 0}
-              />
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  aria-label="Decrease participants"
+                  onClick={() => setTickets(Math.max(1, tickets - 1))}
+                  disabled={slots === 0 || tickets <= 1}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-zinc-300 bg-white text-zinc-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200"
+                >
+                  <Minus className="h-4 w-4" aria-hidden />
+                </button>
+                <input
+                  id="tickets"
+                  type="number"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  min={1}
+                  max={Math.max(1, slots)}
+                  value={tickets}
+                  onChange={(e) => {
+                    const raw = e.target.value.trim();
+                    if (raw === "") return;
+                    const val = Number(raw);
+                    if (!Number.isFinite(val)) return;
+                    if (val >= 1 && val <= slots) setTickets(val);
+                    else if (val < 1) setTickets(1);
+                    else if (val > slots) setTickets(slots);
+                  }}
+                  className="w-20 rounded-lg border bg-white p-2 text-center dark:bg-zinc-800"
+                  disabled={slots === 0}
+                />
+                <button
+                  type="button"
+                  aria-label="Increase participants"
+                  onClick={() => setTickets(Math.min(slots, tickets + 1))}
+                  disabled={slots === 0 || tickets >= slots}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-zinc-300 bg-white text-zinc-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200"
+                >
+                  <Plus className="h-4 w-4" aria-hidden />
+                </button>
+              </div>
               <span className="text-sm text-zinc-500">({tr.availablePrefix} {slots})</span>
             </div>
           </div>
