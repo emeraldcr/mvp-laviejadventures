@@ -12,6 +12,7 @@ import {
 import { AvailabilityMap } from "@/lib/types/index";
 import { generateAvailability } from "@/lib/availability";
 import { useLanguage } from "@/app/context/LanguageContext";
+import { getCostaRicaDateParts, getMinBookableDateInCostaRica, toDateKey } from "@/lib/costa-rica-time";
 
 type CalendarContextValue = {
   // calendar state
@@ -60,14 +61,14 @@ type Props = {
 export function CalendarProvider({ children }: Props) {
   const { lang } = useLanguage();
 
-  const today = useMemo(() => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    return d;
-  }, []);
-
-  const [currentMonth, setCurrentMonth] = useState(today.getMonth());
-  const [currentYear, setCurrentYear] = useState(today.getFullYear());
+  const [currentMonth, setCurrentMonth] = useState(() => {
+    const minBookable = getMinBookableDateInCostaRica();
+    return minBookable.month - 1;
+  });
+  const [currentYear, setCurrentYear] = useState(() => {
+    const minBookable = getMinBookableDateInCostaRica();
+    return minBookable.year;
+  });
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [tickets, setTicketsState] = useState<number>(1);
   const [availabilityOverrides, setAvailabilityOverrides] = useState<Partial<AvailabilityMap>>({});
@@ -116,22 +117,31 @@ export function CalendarProvider({ children }: Props) {
     [availability]
   );
 
+  const costaRicaToday = useMemo(() => getCostaRicaDateParts(), []);
+  const minBookableDate = useMemo(() => getMinBookableDateInCostaRica(), []);
+  const costaRicaTodayKey = useMemo(
+    () => toDateKey(costaRicaToday.year, costaRicaToday.month, costaRicaToday.day),
+    [costaRicaToday.day, costaRicaToday.month, costaRicaToday.year]
+  );
+  const minBookableDateKey = useMemo(
+    () => toDateKey(minBookableDate.year, minBookableDate.month, minBookableDate.day),
+    [minBookableDate.day, minBookableDate.month, minBookableDate.year]
+  );
+
   const isPastDay = useCallback(
     (day: number) => {
-      const d = new Date(currentYear, currentMonth, day);
-      d.setHours(0, 0, 0, 0);
-      return d < today;
+      const dateKey = toDateKey(currentYear, currentMonth + 1, day);
+      return dateKey < minBookableDateKey;
     },
-    [currentMonth, currentYear, today]
+    [currentMonth, currentYear, minBookableDateKey]
   );
 
   const isToday = useCallback(
     (day: number) => {
-      const d = new Date(currentYear, currentMonth, day);
-      d.setHours(0, 0, 0, 0);
-      return d.getTime() === today.getTime();
+      const dateKey = toDateKey(currentYear, currentMonth + 1, day);
+      return dateKey === costaRicaTodayKey;
     },
-    [currentMonth, currentYear, today]
+    [currentMonth, currentYear, costaRicaTodayKey]
   );
 
   const getSlotsForDay = useCallback(
@@ -163,6 +173,16 @@ export function CalendarProvider({ children }: Props) {
     const normalizedDate = new Date(date);
     normalizedDate.setHours(0, 0, 0, 0);
 
+    const selectedDateKey = toDateKey(
+      normalizedDate.getFullYear(),
+      normalizedDate.getMonth() + 1,
+      normalizedDate.getDate()
+    );
+    if (selectedDateKey < minBookableDateKey) {
+      selectDay(null);
+      return;
+    }
+
     // Check if it's in the current month/year; if not, navigate to that month/year first
     if (
       normalizedDate.getFullYear() !== currentYear ||
@@ -174,7 +194,7 @@ export function CalendarProvider({ children }: Props) {
 
     // Now select the day in the (possibly updated) current month
     selectDay(normalizedDate.getDate());
-  }, [currentYear, currentMonth, selectDay]);
+  }, [currentYear, currentMonth, minBookableDateKey, selectDay]);
 
   const setTickets = useCallback((count: number) => {
     setTicketsState(Math.max(1, count));
@@ -196,13 +216,13 @@ export function CalendarProvider({ children }: Props) {
   const prevMonth = useCallback(() => changeMonth(-1), [changeMonth]);
 
   const goToToday = useCallback(() => {
-    setCurrentMonth(today.getMonth());
-    setCurrentYear(today.getFullYear());
-    const day = today.getDate();
+    setCurrentMonth(minBookableDate.month - 1);
+    setCurrentYear(minBookableDate.year);
+    const day = minBookableDate.day;
     const slots = availability[day] ?? 0;
     setSelectedDay(slots > 0 ? day : null);
     setTicketsState(1);
-  }, [availability, today]);
+  }, [availability, minBookableDate.day, minBookableDate.month, minBookableDate.year]);
 
   const goToNextAvailableDay = useCallback(() => {
     const candidates = Object.keys(availability)

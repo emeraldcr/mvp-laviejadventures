@@ -495,20 +495,56 @@ export default function ReservationDetails({
   ];
 
   useEffect(() => {
+    const stepLabels: Record<1 | 2 | 3, string> = {
+      1: "schedule",
+      2: "traveler_details",
+      3: "review",
+    };
+
     trackAnalyticsEvent("booking_step", {
       metadata: {
         step: currentStep,
+        stepLabel: stepLabels[currentStep],
+        completion: {
+          step1Valid: isStep1Valid,
+          step2Valid: isStep2Valid,
+          termsAccepted: validation.isAgreeTermsValid,
+          formReadyToSubmit: isFormValid,
+          missingStep1Items,
+          missingStep2Items,
+        },
+        booking: {
+          hasPreselectedTour,
+          selectedTourSlug: selectedTour?.slug ?? null,
+          selectedTourName,
+          selectedDate,
+          currentMonth,
+          currentYear,
+          tickets,
+          hasSelectedTime: Boolean(tourTime),
+          selectedTime: tourTime,
+          hasSelectedPackage: Boolean(effectiveTourPackage),
+          selectedPackage: effectiveTourPackage,
+          subtotal: subtotalRaw,
+          taxes: taxesRaw,
+          totalWithTaxes,
+        },
         selectedDate,
         currentMonth,
         currentYear,
         tickets,
-        hasSelectedTime: Boolean(tourTime),
-        hasSelectedPackage: Boolean(effectiveTourPackage),
-        selectedTourSlug: selectedTour?.slug ?? null,
       },
     });
   }, [
     currentStep,
+    isStep1Valid,
+    isStep2Valid,
+    validation.isAgreeTermsValid,
+    isFormValid,
+    missingStep1Items,
+    missingStep2Items,
+    hasPreselectedTour,
+    selectedTourName,
     selectedDate,
     currentMonth,
     currentYear,
@@ -516,6 +552,7 @@ export default function ReservationDetails({
     tourTime,
     effectiveTourPackage,
     selectedTour?.slug,
+    totalWithTaxes,
   ]);
 
   useEffect(() => {

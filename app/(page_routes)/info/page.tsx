@@ -6,6 +6,7 @@ import {
   Bird,
   CalendarClock,
   Compass,
+  ExternalLink,
   Mail,
   MapPin,
   Mountain,
@@ -58,6 +59,20 @@ const socialLinks = [
       "bg-red-600 hover:bg-red-700 focus-visible:ring-red-300 dark:focus-visible:ring-red-700",
   },
 ];
+
+const youtubeVideos = [
+  "Oy2Hm2g6PJQ",
+  "kqw7n0BQb-Y",
+  "8GKq7rw6ZcQ",
+  "Fuuquz1FsjI",
+];
+
+const googleMapsUrl =
+  "https://www.google.com/maps/search/?api=1&query=La+Vieja+Adventures+Canyon+Tour+Sucre+Ciudad+Quesada";
+const googleMapsEmbedUrl =
+  "https://www.google.com/maps?q=La+Vieja+Adventures+Canyon+Tour+Sucre+Ciudad+Quesada&output=embed";
+const wazeUrl = "https://waze.com/ul?ll=10.330,-84.430&navigate=yes";
+const wazeEmbedUrl = "https://embed.waze.com/iframe?zoom=14&lat=10.330&lon=-84.430";
 
 export default function InfoPage() {
   const { lang } = useLanguage();
@@ -213,7 +228,7 @@ export default function InfoPage() {
                 <MapPin size={16} className="mt-1 text-emerald-600" />
                 <span>
                   <strong>{tr.locationLabel}</strong>{" "}
-                  {lang === "es" ? "Zona Norte, Costa Rica" : "Northern Zone, Costa Rica"}
+                  {tr.locationDetail}
                 </span>
               </li>
             </ul>
@@ -232,6 +247,101 @@ export default function InfoPage() {
               ))}
             </div>
           </article>
+        </section>
+
+        <section className="grid gap-6 md:grid-cols-2">
+          <article className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
+            <h2 className="mb-3 flex items-center gap-2 text-2xl font-semibold text-zinc-900 dark:text-white">
+              <MapPin size={20} className="text-emerald-600" />
+              {tr.mapsTitle}
+            </h2>
+            <p className="mb-4 text-zinc-700 dark:text-zinc-300">{tr.mapsDescription}</p>
+            <div className="mb-4 grid gap-3 sm:grid-cols-2">
+              <a
+                href={googleMapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 font-semibold text-white transition hover:bg-emerald-700"
+              >
+                {tr.openInGoogleMaps}
+                <ExternalLink size={16} />
+              </a>
+              <a
+                href={wazeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-sky-600 px-4 py-3 font-semibold text-white transition hover:bg-sky-700"
+              >
+                {tr.openInWaze}
+                <ExternalLink size={16} />
+              </a>
+            </div>
+            <div className="space-y-4">
+              <div className="overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-800">
+                <iframe
+                  title="La Vieja Adventures en Google Maps"
+                  src={googleMapsEmbedUrl}
+                  loading="lazy"
+                  className="h-64 w-full"
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
+              </div>
+              <div className="overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-800">
+                <iframe
+                  title="La Vieja Adventures en Waze"
+                  src={wazeEmbedUrl}
+                  loading="lazy"
+                  className="h-64 w-full"
+                />
+              </div>
+            </div>
+          </article>
+
+          <article className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
+            <h2 className="mb-4 flex items-center gap-2 text-2xl font-semibold text-zinc-900 dark:text-white">
+              <TreePine size={20} className="text-emerald-600" />
+              {tr.whatToBringTitle}
+            </h2>
+            <ul className="mb-6 space-y-3 text-zinc-700 dark:text-zinc-300">
+              {tr.whatToBringItems.map((item, idx) => (
+                <li key={idx} className="flex gap-2">
+                  <span className="mt-2 h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true" />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+
+            <h3 className="mb-3 text-xl font-semibold text-zinc-900 dark:text-white">{tr.tourFlowTitle}</h3>
+            <ol className="space-y-3 text-zinc-700 dark:text-zinc-300">
+              {tr.tourFlowItems.map((item, idx) => (
+                <li key={idx} className="flex gap-3">
+                  <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-sm font-bold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                    {idx + 1}
+                  </span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ol>
+          </article>
+        </section>
+
+        <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950 md:p-8">
+          <h2 className="mb-5 text-2xl font-semibold text-zinc-900 dark:text-white">{tr.videosTitle}</h2>
+          <div className="grid gap-4 md:grid-cols-2">
+            {youtubeVideos.map((videoId) => (
+              <div key={videoId} className="overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-800">
+                <iframe
+                  className="aspect-video w-full"
+                  src={`https://www.youtube.com/embed/${videoId}`}
+                  title={`YouTube video ${videoId}`}
+                  loading="lazy"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  allowFullScreen
+                />
+              </div>
+            ))}
+          </div>
         </section>
       </div>
     </main>

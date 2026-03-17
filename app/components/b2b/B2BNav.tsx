@@ -15,6 +15,7 @@ import {
   X,
   Sparkles,
   Building2,
+  BellRing,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -29,6 +30,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/b2b/dashboard", label: "Command Center", icon: <LayoutDashboard className="h-4 w-4" /> },
   { href: "/b2b/tours", label: "Tours", icon: <Map className="h-4 w-4" /> },
   { href: "/b2b/bookings", label: "Reservas", icon: <ClipboardList className="h-4 w-4" /> },
+  { href: "/b2b/profile", label: "Perfil", icon: <BellRing className="h-4 w-4" /> },
 ];
 
 const ACCESS_SHORTCUTS = [

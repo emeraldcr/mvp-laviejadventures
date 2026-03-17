@@ -45,6 +45,13 @@ export async function POST(req: NextRequest) {
       emailVerified: false,
       verificationToken,
       verificationExpiry,
+      notificationPreferences: {
+        bookingCreated: true,
+        bookingReminder24h: true,
+        bookingStatusChanges: true,
+        weeklyPerformanceDigest: true,
+        partnerNetworkUpdates: true,
+      },
     });
 
     await setVerificationToken(result.insertedId.toString(), verificationToken, verificationExpiry);

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Send, Tag, Users, CalendarDays } from "lucide-react";
 import type { B2BTourWithPackages } from "@/lib/b2b-catalog";
+import { getMinBookableIsoDateInCostaRica } from "@/lib/costa-rica-time";
 
 interface BookingFormProps {
   tour: B2BTourWithPackages;
@@ -84,7 +85,7 @@ export default function BookingForm({ tour, commissionRate, ivaRate }: BookingFo
     }
   }
 
-  const today = new Date().toISOString().split("T")[0];
+  const minBookableDate = getMinBookableIsoDateInCostaRica();
 
   return (
     <div className="grid gap-6 lg:grid-cols-5">
@@ -171,7 +172,7 @@ export default function BookingForm({ tour, commissionRate, ivaRate }: BookingFo
                 <label htmlFor="date" className={labelClassName}>
                   <span className="flex items-center gap-1.5"><CalendarDays className="h-3.5 w-3.5" />Fecha preferida *</span>
                 </label>
-                <input id="date" name="date" type="date" required min={today} value={form.date} onChange={handleChange} className={fieldClassName} />
+                <input id="date" name="date" type="date" required min={minBookableDate} value={form.date} onChange={handleChange} className={fieldClassName} />
               </div>
             </div>
 

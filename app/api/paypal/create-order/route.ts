@@ -8,6 +8,7 @@ import {
 import { getDb } from "@/lib/mongodb";
 import { PAYPAL_CURRENCY, PAYPAL_CUSTOM_ID_MAX_LENGTH } from "@/lib/constants/paypal";
 import { COLLECTIONS } from "@/lib/constants/db";
+import { isDateOnOrAfterMinBookableInCostaRica } from "@/lib/costa-rica-time";
 
 interface CreateOrderLink {
   rel?: string;
@@ -26,6 +27,13 @@ export async function POST(req: Request) {
     if (!name || !email || !phone || !tickets || !total || !date || !tourPackage) {
       return NextResponse.json(
         { message: "Missing required fields." },
+        { status: 400 }
+      );
+    }
+
+    if (!isDateOnOrAfterMinBookableInCostaRica(String(date))) {
+      return NextResponse.json(
+        { message: "Selected date is no longer available. Please choose the next available day." },
         { status: 400 }
       );
     }
