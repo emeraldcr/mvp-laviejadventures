@@ -228,9 +228,11 @@ async function sendConfirmationEmail(params: SendEmailParams) {
 
 export default async function SuccessPage({ searchParams }: SuccessPageProps) {
   // 🔑 unwrap the Promise from Next
-  const { orderId } = await searchParams;
+  const resolvedSearchParams = (await searchParams) as { orderId?: string; token?: string };
+  const { orderId, token } = resolvedSearchParams;
+  const resolvedOrderId = orderId || token;
 
-  if (!orderId) {
+  if (!resolvedOrderId) {
     return (
       <SuccessClient
         error="No se encontró el ID de la orden."
@@ -254,8 +256,8 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
   try {
     const accessToken = await getPayPalAccessToken();
 
-    const res = await fetch(
-      `${getPayPalApiBaseUrl()}/v2/checkout/orders/${orderId}`,
+    let res = await fetch(
+      `${getPayPalApiBaseUrl()}/v2/checkout/orders/${resolvedOrderId}`,
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -266,6 +268,34 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
     );
 
     paypalOrder = await res.json();
+
+    if (res.ok && paypalOrder?.status === "APPROVED") {
+      const captureRes = await fetch(
+        `${getPayPalApiBaseUrl()}/v2/checkout/orders/${resolvedOrderId}/capture`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({}),
+          cache: "no-store",
+        }
+      );
+
+      const capturedOrder = await captureRes.json();
+
+      if (!captureRes.ok) {
+        console.error("PayPal capture on return ERROR:", capturedOrder);
+        errorMessage =
+          capturedOrder?.message ||
+          capturedOrder?.details?.[0]?.description ||
+          "Error al capturar el pago de PayPal.";
+      } else {
+        paypalOrder = capturedOrder;
+        res = captureRes;
+      }
+    }
 
     if (!res.ok) {
       console.error("PayPal ERROR:", paypalOrder);
@@ -291,6 +321,18 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
     );
   }
 
+  if (!paypalOrder) {
+    return (
+      <SuccessClient
+        error="No se pudieron obtener los detalles del pago de PayPal."
+        name=""
+        email=""
+        date=""
+        tickets=""
+      />
+    );
+  }
+
   // 2) PARSE ORDER DETAILS
   const payer = paypalOrder.payer || {};
   const purchaseUnit = paypalOrder.purchase_units?.[0] ?? {};
@@ -305,7 +347,7 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
   let persistedContext: Record<string, unknown> | null = null;
   try {
     const db = await getDb();
-    persistedContext = (await db.collection("paypal_order_contexts").findOne({ orderId })) as Record<string, unknown> | null;
+    persistedContext = (await db.collection("paypal_order_contexts").findOne({ orderId: resolvedOrderId })) as Record<string, unknown> | null;
   } catch (contextErr) {
     console.warn("Failed to read persisted PayPal context:", contextErr);
   }
@@ -386,8 +428,7 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
   const amountStr =
     capture?.amount?.value ||
     purchaseUnit.amount?.value ||
-    meta?.total ||
-    "";
+    (meta?.total != null ? String(meta.total) : "");
   const currency =
     capture?.amount?.currency_code ||
     purchaseUnit.amount?.currency_code ||
@@ -416,7 +457,7 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
 
   // 3) DB INSERT + EMAIL
   const booking: BookingRecord = {
-    orderId,
+    orderId: resolvedOrderId,
     captureId: captureId || null,
     status: status || null,
     name: name || null,
@@ -449,7 +490,7 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
           tickets: ticketsStr,
           amount: amountStr,
           currency,
-          orderId,
+          orderId: resolvedOrderId,
           captureId,
           status,
           reservationId,
@@ -472,7 +513,7 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
       tickets={ticketsStr}
       amount={amountStr}
       currency={currency}
-      orderId={orderId}
+      orderId={resolvedOrderId}
       captureId={captureId}
       status={status}
     />
