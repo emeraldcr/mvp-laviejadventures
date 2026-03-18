@@ -19,7 +19,11 @@ const partnerSegments = [
   { icon: Building2, label: 'Agencias' },
 ];
 
-export default function AuthLanding() {
+type AuthLandingProps = {
+  currentYear: number;
+};
+
+export default function AuthLanding({ currentYear }: AuthLandingProps) {
   const router = useRouter();
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [name, setName] = useState('');
@@ -280,7 +284,7 @@ export default function AuthLanding() {
         </section>
 
         <footer className="pt-2 text-center text-xs text-slate-400 sm:text-sm">
-          © {new Date().getFullYear()} La Vieja Adventures. Todos los derechos reservados.
+          © {currentYear} La Vieja Adventures. Todos los derechos reservados.
         </footer>
       </div>
     </main>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 
 export type Lang = "es" | "en";
 
@@ -13,16 +13,18 @@ interface LanguageContextValue {
 const LanguageContext = createContext<LanguageContextValue | null>(null);
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [lang, setLangState] = useState<Lang>(() => {
+  const [lang, setLangState] = useState<Lang>("es");
+
+  useEffect(() => {
     try {
       const stored = localStorage.getItem("lva-lang") as Lang | null;
-      if (stored === "es" || stored === "en") return stored;
+      if (stored === "es" || stored === "en") {
+        setLangState(stored);
+      }
     } catch {
       // localStorage not available
     }
-
-    return "es";
-  });
+  }, []);
 
   const setLang = (l: Lang) => {
     setLangState(l);
