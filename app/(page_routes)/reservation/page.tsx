@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import { useLanguage } from "@/app/context/LanguageContext";
 import PaymentCheckoutContent from "@/app/components/reservation/PaymentCheckoutContent";
 import type { OrderDetails } from "@/lib/types/index";
@@ -57,8 +57,14 @@ export default function ReservationPage() {
   const tr = translations[lang];
   const paymentTr = tr.payment;
   const router = useRouter();
-  const orderDetails = getStoredOrderDetails();
-  const returnPath = useMemo(() => getReservationReturnPath(), []);
+  const hasLoadedSessionState = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
+  const orderDetails = hasLoadedSessionState ? getStoredOrderDetails() : null;
+  const returnPath = hasLoadedSessionState ? getReservationReturnPath() : "/#booking";
+
   const returnHref = useMemo(() => getReturnHref(returnPath), [returnPath]);
 
   return (
@@ -110,7 +116,11 @@ export default function ReservationPage() {
           </Link>
         </div>
 
-        {!orderDetails ? (
+        {!hasLoadedSessionState ? (
+          <div className="space-y-4 text-zinc-300">
+            <p>{paymentTr.loadingReservation}</p>
+          </div>
+        ) : !orderDetails ? (
           <div className="space-y-4 text-zinc-300">
             <p>{paymentTr.noActiveReservation}</p>
             <button
