@@ -14,6 +14,8 @@ import type { BookingRecord, SendEmailParams, SuccessPageProps } from "@/lib/typ
 export const dynamic = "force-dynamic";
 
 const googleAdsId = process.env.GOOGLE_ADS_ID ?? process.env.NEXT_PUBLIC_GOOGLE_ADS_ID;
+const googleAdsConversionLabel =
+  process.env.GOOGLE_ADS_CONVERSION_LABEL ?? process.env.NEXT_PUBLIC_GOOGLE_ADS_CONVERSION_LABEL;
 
 
 type PayPalOrderResponse = {
@@ -237,16 +239,18 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
 
   if (!resolvedOrderId) {
     return (
-    <>
-      <GoogleAdsScript googleAdsId={googleAdsId} />
-      <SuccessClient
-        error="No se encontró el ID de la orden."
-        name=""
-        email=""
-        date=""
-        tickets=""
-      />
-       </>
+      <>
+        <GoogleAdsScript googleAdsId={googleAdsId} />
+        <SuccessClient
+          error="No se encontró el ID de la orden."
+          name=""
+          email=""
+          date=""
+          tickets=""
+          googleAdsId={googleAdsId}
+          googleAdsConversionLabel={googleAdsConversionLabel}
+        />
+      </>
     );
   }
 
@@ -317,29 +321,35 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
 
   if (errorMessage) {
     return (
-    <>
-      <GoogleAdsScript googleAdsId={googleAdsId} />
-      <SuccessClient
-        error={errorMessage}
-        name=""
-        email=""
-        date=""
-        tickets=""
-      /></>
+      <>
+        <GoogleAdsScript googleAdsId={googleAdsId} />
+        <SuccessClient
+          error={errorMessage}
+          name=""
+          email=""
+          date=""
+          tickets=""
+          googleAdsId={googleAdsId}
+          googleAdsConversionLabel={googleAdsConversionLabel}
+        />
+      </>
     );
   }
 
   if (!paypalOrder) {
     return (
-    <>
-      <GoogleAdsScript googleAdsId={googleAdsId} />
-      <SuccessClient
-        error="No se pudieron obtener los detalles del pago de PayPal."
-        name=""
-        email=""
-        date=""
-        tickets=""
-      /></>
+      <>
+        <GoogleAdsScript googleAdsId={googleAdsId} />
+        <SuccessClient
+          error="No se pudieron obtener los detalles del pago de PayPal."
+          name=""
+          email=""
+          date=""
+          tickets=""
+          googleAdsId={googleAdsId}
+          googleAdsConversionLabel={googleAdsConversionLabel}
+        />
+      </>
     );
   }
 
@@ -448,16 +458,19 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
 
   if (status !== "COMPLETED" || !captureId) {
     return (
-    <>
-      <GoogleAdsScript googleAdsId={googleAdsId} />
-      <SuccessClient
-        error="El pago de PayPal no está completado. No se creó la reservación."
-        name={name}
-        email={email}
-        phone={phone}
-        date={date}
-        tickets={ticketsStr}
-      /></>
+      <>
+        <GoogleAdsScript googleAdsId={googleAdsId} />
+        <SuccessClient
+          error="El pago de PayPal no está completado. No se creó la reservación."
+          name={name}
+          email={email}
+          phone={phone}
+          date={date}
+          tickets={ticketsStr}
+          googleAdsId={googleAdsId}
+          googleAdsConversionLabel={googleAdsConversionLabel}
+        />
+      </>
     );
   }
 
@@ -530,6 +543,8 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
         orderId={resolvedOrderId}
         captureId={captureId}
         status={status}
+        googleAdsId={googleAdsId}
+        googleAdsConversionLabel={googleAdsConversionLabel}
       />
     </>
   );

@@ -455,6 +455,8 @@ export type SuccessClientProps = {
   captureId?: string | null;
   status?: string | null;
   error?: string | null;
+  googleAdsId?: string | null;
+  googleAdsConversionLabel?: string | null;
 };
 
 export type OrderDetails = {
