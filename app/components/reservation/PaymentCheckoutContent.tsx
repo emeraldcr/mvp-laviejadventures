@@ -147,23 +147,34 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
         nextScript.id = "paypal-sdk";
         nextScript.src = paypalScriptSrc;
         nextScript.async = true;
-        nextScript.crossOrigin = "anonymous";
+        // NOTE: Do NOT set crossOrigin="anonymous" on the PayPal SDK script.
+        // Safari/WebKit on iOS enforces CORS strictly and will block the script
+        // if the CDN response doesn't match the expected CORS headers exactly.
+        // PayPal's official SDK does not require nor recommend the crossorigin attribute.
         nextScript.dataset.loaded = "false";
         document.body.appendChild(nextScript);
       }
 
       await new Promise<void>((resolve, reject) => {
+        // Timeout of 15s for mobile networks (iOS Safari on slow connections)
+        const timeout = setTimeout(() => {
+          reject(new Error("PayPal SDK load timed out"));
+        }, 15000);
+
         const handleLoad = () => {
+          clearTimeout(timeout);
           nextScript.dataset.loaded = "true";
           resolve();
         };
 
         const handleError = () => {
+          clearTimeout(timeout);
           nextScript.dataset.loaded = "false";
           reject(new Error("Failed to load PayPal SDK"));
         };
 
         if (window.paypal) {
+          clearTimeout(timeout);
           nextScript.dataset.loaded = "true";
           resolve();
           return;
@@ -171,11 +182,6 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
 
         nextScript.addEventListener("load", handleLoad, { once: true });
         nextScript.addEventListener("error", handleError, { once: true });
-
-        const scriptElement = nextScript as HTMLScriptElement & { readyState?: string };
-        if (scriptElement.readyState === "complete") {
-          handleLoad();
-        }
       });
 
       await initializeButtons();
