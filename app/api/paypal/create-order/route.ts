@@ -9,6 +9,7 @@ import { getDb } from "@/lib/mongodb";
 import { PAYPAL_CURRENCY, PAYPAL_CUSTOM_ID_MAX_LENGTH } from "@/lib/constants/paypal";
 import { COLLECTIONS } from "@/lib/constants/db";
 import { isDateOnOrAfterMinBookableInCostaRica } from "@/lib/costa-rica-time";
+import { APP_BASE_URL_DEFAULT } from "@/lib/constants/email";
 
 interface CreateOrderLink {
   rel?: string;
@@ -23,6 +24,11 @@ interface CreateOrderResponse {
 export async function POST(req: Request) {
   try {
     const { name, email, phone, tickets, total, date, tourTime, tourPackage, packagePrice, tourSlug, tourName, language } = await req.json();
+    const requestUrl = new URL(req.url);
+    const appBaseUrl =
+      process.env.APP_BASE_URL ||
+      process.env.NEXTAUTH_URL ||
+      (requestUrl.origin !== "null" ? requestUrl.origin : APP_BASE_URL_DEFAULT);
 
     if (!name || !email || !phone || !tickets || !total || !date || !tourPackage) {
       return NextResponse.json(
@@ -85,6 +91,15 @@ export async function POST(req: Request) {
       },
       body: JSON.stringify({
         intent: "CAPTURE",
+        payment_source: {
+          paypal: {
+            experience_context: {
+              user_action: "PAY_NOW",
+              return_url: `${appBaseUrl}/success?orderId={token}`,
+              cancel_url: `${appBaseUrl}/booking?paypal=cancelled`,
+            },
+          },
+        },
         purchase_units: [
           {
             amount: {
