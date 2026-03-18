@@ -30,7 +30,9 @@
       "Bash(node:*)",
       "Bash(tree -L 3 -I node_modules 2>/dev/null || find . -maxdepth 3 -not -path '*/node_modules/*' -type d | sort)",
       "Bash(ls -la app/\\\\\\(page_routes\\\\\\)/)",
-      "Bash(find app/api -type f -name \"*.ts\" -o -name \"*.tsx\" 2>/dev/null | head -30)"
+      "Bash(find app/api -type f -name \"*.ts\" -o -name \"*.tsx\" 2>/dev/null | head -30)",
+      "mcp__ide__getDiagnostics",
+      "Bash(find /c/Users/alrojas/Documents/GitHub/mvp-laviejadventures/app/components -type f \\\\\\(-iname *nav* -o -iname *header* \\\\\\))"
     ]
   }
 }

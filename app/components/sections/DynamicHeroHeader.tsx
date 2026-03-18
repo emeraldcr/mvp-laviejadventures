@@ -304,11 +304,27 @@ const Header = memo<{ isScrolled: boolean; onMenuToggle: () => void; isMenuOpen:
 
     const [openMobileGroup, setOpenMobileGroup] = useState<string | null>(null);
 
+    const operationsLinks: NavLinkItem[] = [
+      { href: "/bitacora-mantenimiento", label: lang === "es" ? "Bitácora de Mantenimiento" : "Maintenance Log" },
+      { href: "/capacitacion-y-certificaciones", label: lang === "es" ? "Capacitación y Certificaciones" : "Training & Certifications" },
+      { href: "/educacion-ambiental", label: lang === "es" ? "Educación Ambiental" : "Environmental Education" },
+      { href: "/practicas-sostenibles", label: lang === "es" ? "Prácticas Sostenibles" : "Sustainable Practices" },
+      { href: "/programas-comunidad", label: lang === "es" ? "Programas Comunidad" : "Community Programs" },
+      { href: "/conservacion-recursos", label: lang === "es" ? "Conservación Recursos" : "Resource Conservation" },
+      { href: "/plan-mercadeo", label: lang === "es" ? "Plan de Mercadeo" : "Marketing Plan" },
+      { href: "/servicio-al-cliente", label: lang === "es" ? "Servicio al Cliente" : "Customer Service" },
+      { href: "/capacitacion-continua", label: lang === "es" ? "Capacitación Continua" : "Ongoing Training" },
+      { href: "/reglamento-operaciones", label: lang === "es" ? "Reglamento Operaciones" : "Operations Regulations" },
+    ];
 
     const navGroups: NavGroup[] = [
       {
         label: lang === "es" ? "Explorar" : "Explore",
         links: navLinks,
+      },
+      {
+        label: lang === "es" ? "Operaciones" : "Operations",
+        links: operationsLinks,
       },
     ];
 

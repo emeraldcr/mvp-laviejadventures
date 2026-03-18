@@ -64,6 +64,10 @@ const nextConfig: NextConfig = {
   // eslint: { ignoreDuringBuilds: true },
 
   // Good: optimize heavy imports
+  turbopack: {
+    root: __dirname,
+  },
+
   experimental: {
     optimizePackageImports: [
       "framer-motion",
