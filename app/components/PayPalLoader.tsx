@@ -12,7 +12,10 @@ export default function PayPalLoader() {
         ? process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID
         : process.env.NEXT_PUBLIC_PAYPAL_SANDBOX_CLIENT_ID;
 
-    if (!clientId) return;
+    if (!clientId) {
+      console.warn("PayPal client ID missing — check environment variables");
+      return;
+    }
 
     const params = new URLSearchParams({
       "client-id": clientId,
@@ -25,6 +28,8 @@ export default function PayPalLoader() {
     script.id = "paypal-sdk";
     script.src = `https://www.paypal.com/sdk/js?${params.toString()}`;
     script.async = true;
+    script.onerror = () => console.error("Failed to load PayPal SDK");
+    script.onload = () => console.log("PayPal SDK loaded successfully");
     document.body.appendChild(script);
   }, []);
 

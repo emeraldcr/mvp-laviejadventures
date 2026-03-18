@@ -46,13 +46,16 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
         setSdkReady(true);
         clearInterval(interval);
       }
-    }, 100);
+    }, 400);
     const timeout = setTimeout(() => {
       clearInterval(interval);
       if (!window.paypal?.Buttons) {
-        setError(tr.error || "PayPal no está disponible en este momento");
+        setError(
+          tr.error ||
+            "PayPal está tardando en cargar. Verifica tu conexión o intenta de nuevo más tarde."
+        );
       }
-    }, 10_000);
+    }, 15_000);
     return () => {
       clearInterval(interval);
       clearTimeout(timeout);
@@ -220,8 +223,9 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
 
       <div className="min-h-[150px] w-full rounded-lg bg-gray-50 dark:bg-gray-800 p-4">
         {!sdkReady && !error && (
-          <div className="flex h-[150px] items-center justify-center">
+          <div className="flex h-[150px] items-center justify-center flex-col gap-3 text-center text-gray-600 dark:text-gray-400">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-yellow-400" />
+            <p className="text-sm">Cargando opciones de pago seguras...</p>
           </div>
         )}
         <div ref={paypalRef} />

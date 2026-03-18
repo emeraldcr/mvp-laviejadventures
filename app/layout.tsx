@@ -26,7 +26,9 @@ export default function RootLayout({
             <Suspense fallback={null}>
               <AnalyticsTracker />
             </Suspense>
-            <PayPalLoader />
+            <Suspense fallback={null}>
+              <PayPalLoader />
+            </Suspense>
             {children}
           </LanguageProvider>
         </SessionProvider>
