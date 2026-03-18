@@ -2,7 +2,7 @@
 // Returns public tours from MongoDB, seeding defaults if the collection is empty
 
 import { NextResponse } from "next/server";
-import { getDb } from "@/lib/mongodb";
+import { getDb, isMongoConfigured } from "@/lib/mongodb";
 import { COLLECTIONS } from "@/lib/constants/db";
 
 const DEFAULT_TOURS = [
@@ -162,6 +162,15 @@ const DEFAULT_TOURS = [
 
 export async function GET() {
   try {
+    if (!isMongoConfigured) {
+      return NextResponse.json({
+        tours: DEFAULT_TOURS.map((tour) => ({
+          ...tour,
+          id: tour.slug,
+        })),
+      });
+    }
+
     const db = await getDb();
     const collection = db.collection(COLLECTIONS.TOURS);
 

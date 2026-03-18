@@ -2,7 +2,7 @@
 // Returns the main booking tour info from MongoDB, seeding defaults if not found
 
 import { NextResponse } from "next/server";
-import { getDb } from "@/lib/mongodb";
+import { getDb, isMongoConfigured } from "@/lib/mongodb";
 import { COLLECTIONS } from "@/lib/constants/db";
 
 const DEFAULT_MAIN_TOUR = {
@@ -66,6 +66,24 @@ const DEFAULT_MAIN_TOUR = {
 
 export async function GET() {
   try {
+    if (!isMongoConfigured) {
+      return NextResponse.json({
+        tour: {
+          name: DEFAULT_MAIN_TOUR.name,
+          operator: DEFAULT_MAIN_TOUR.operator,
+          duration: DEFAULT_MAIN_TOUR.duration,
+          price: DEFAULT_MAIN_TOUR.price,
+          location: DEFAULT_MAIN_TOUR.location,
+          inclusions: DEFAULT_MAIN_TOUR.inclusions,
+          exclusions: DEFAULT_MAIN_TOUR.exclusions,
+          cancellationPolicy: DEFAULT_MAIN_TOUR.cancellationPolicy,
+          details: DEFAULT_MAIN_TOUR.details,
+          restrictions: DEFAULT_MAIN_TOUR.restrictions,
+          contact: DEFAULT_MAIN_TOUR.contact,
+        },
+      });
+    }
+
     const db = await getDb();
     const collection = db.collection(COLLECTIONS.TOURS);
 

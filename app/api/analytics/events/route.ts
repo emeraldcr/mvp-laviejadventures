@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { getDb } from "@/lib/mongodb";
+import { getDb, isMongoConfigured } from "@/lib/mongodb";
 import { headers } from "next/headers";
 import { COLLECTIONS } from "@/lib/constants/db";
 
@@ -100,11 +100,26 @@ function parseDevice(userAgent: string) {
   };
 }
 
+async function parseAnalyticsBody(request: Request): Promise<AnalyticsEventInput | null> {
+  const rawBody = await request.text();
+  if (!rawBody.trim()) return null;
+
+  try {
+    return JSON.parse(rawBody) as AnalyticsEventInput;
+  } catch {
+    return null;
+  }
+}
+
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as AnalyticsEventInput;
+    const body = await parseAnalyticsBody(request);
     if (!body?.event || !VALID_EVENTS.includes(body.event)) {
       return NextResponse.json({ error: "Invalid event" }, { status: 400 });
+    }
+
+    if (!isMongoConfigured) {
+      return NextResponse.json({ ok: true, skipped: "mongo_not_configured" });
     }
 
     const session = await safeAuthSession();
