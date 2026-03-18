@@ -5,6 +5,28 @@ import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/lib/translations";
 import type { SuccessClientProps } from "@/lib/types/index";
 import Link from "next/link";
+import { useEffect } from "react";
+
+declare global {
+  interface Window {
+    gtag?: (...args: unknown[]) => void;
+  }
+}
+
+function normalizeAmount(amount: SuccessClientProps["amount"]): number | null {
+  if (typeof amount === "number" && Number.isFinite(amount)) return amount;
+  if (typeof amount === "string") {
+    const parsed = Number.parseFloat(amount);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+}
+
+function buildGoogleAdsSendTo(googleAdsId?: string | null, conversionLabel?: string | null) {
+  if (!googleAdsId || !conversionLabel) return null;
+  if (conversionLabel.startsWith("AW-")) return conversionLabel;
+  return `${googleAdsId}/${conversionLabel}`;
+}
 
 export function SuccessClient({
   email,
@@ -18,9 +40,40 @@ export function SuccessClient({
   captureId,
   status,
   error,
+  googleAdsId,
+  googleAdsConversionLabel,
 }: SuccessClientProps) {
   const { lang } = useLanguage();
   const tr = translations[lang].success;
+  const conversionValue = normalizeAmount(amount);
+  const sendTo = buildGoogleAdsSendTo(googleAdsId, googleAdsConversionLabel);
+
+  useEffect(() => {
+    if (error || status !== "COMPLETED" || !sendTo || conversionValue == null || conversionValue <= 0) {
+      return;
+    }
+
+    const conversionKey = captureId || orderId;
+    if (!conversionKey) return;
+
+    const sessionStorageKey = `google_ads_conversion_tracked:${conversionKey}`;
+    if (window.sessionStorage.getItem(sessionStorageKey) === "true") {
+      return;
+    }
+
+    if (typeof window.gtag !== "function") {
+      return;
+    }
+
+    window.gtag("event", "conversion", {
+      send_to: sendTo,
+      value: conversionValue,
+      currency: currency || "USD",
+      transaction_id: captureId || orderId,
+    });
+
+    window.sessionStorage.setItem(sessionStorageKey, "true");
+  }, [captureId, conversionValue, currency, error, orderId, sendTo, status]);
 
   if (error) {
     return (
