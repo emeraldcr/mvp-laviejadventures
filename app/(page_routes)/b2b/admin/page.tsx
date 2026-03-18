@@ -2,7 +2,9 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, Home, Loader2, LogIn, LogOut, ShieldAlert, ShieldCheck, UserRound, XCircle } from "lucide-react";
+import { CalendarDays, CheckCircle2, CreditCard, Home, Loader2, LogIn, LogOut, PlusCircle, ShieldAlert, ShieldCheck, UserRound, XCircle } from "lucide-react";
+import { getMinBookableIsoDateInCostaRica } from "@/lib/costa-rica-time";
+import { MANUAL_RESERVATION_PACKAGES, MANUAL_RESERVATION_TIME_SLOTS } from "@/lib/manual-reservation";
 
 type Operator = {
   _id: string;
@@ -97,6 +99,26 @@ type HeroSloganLog = {
 };
 
 
+type PublicTour = {
+  id: string;
+  slug: string;
+  titleEs: string;
+  titleEn: string;
+};
+
+type ManualReservationForm = {
+  name: string;
+  email: string;
+  phone: string;
+  date: string;
+  tickets: number;
+  tourSlug: string;
+  tourName: string;
+  tourTime: string;
+  tourPackage: string;
+  notes: string;
+};
+
 const ACCESS_LINKS = [
   { href: "/", label: "Inicio", icon: <Home className="h-4 w-4" />, style: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300" },
   { href: "/dashboard", label: "Usuario normal", icon: <UserRound className="h-4 w-4" />, style: "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200" },
@@ -124,6 +146,21 @@ export default function B2BAdminPage() {
   const [settings, setSettings] = useState<B2BSettings>({ ivaRate: 13, tourPricing: [] });
   const [pricingJson, setPricingJson] = useState("[]");
   const [heroSlogans, setHeroSlogans] = useState<HeroSloganLog[]>([]);
+  const [publicTours, setPublicTours] = useState<PublicTour[]>([]);
+  const [manualReservationForm, setManualReservationForm] = useState<ManualReservationForm>({
+    name: "",
+    email: "",
+    phone: "",
+    date: "",
+    tickets: 1,
+    tourSlug: "",
+    tourName: "",
+    tourTime: MANUAL_RESERVATION_TIME_SLOTS[0]?.id ?? "08:00",
+    tourPackage: MANUAL_RESERVATION_PACKAGES[0]?.id ?? "basic",
+    notes: "",
+  });
+  const [manualReservationMessage, setManualReservationMessage] = useState("");
+  const [savingManualReservation, setSavingManualReservation] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [initialSessionLoading, setInitialSessionLoading] = useState(true);
@@ -134,16 +171,22 @@ export default function B2BAdminPage() {
 
   const pendingOperators = useMemo(() => operators.filter((op) => op.status === "pending"), [operators]);
   const approvedOperators = useMemo(() => operators.filter((op) => op.status !== "pending"), [operators]);
+  const selectedManualPackage = useMemo(
+    () => MANUAL_RESERVATION_PACKAGES.find((pkg) => pkg.id === manualReservationForm.tourPackage) ?? MANUAL_RESERVATION_PACKAGES[0],
+    [manualReservationForm.tourPackage],
+  );
+  const manualReservationTotal = (selectedManualPackage?.priceUSD ?? 0) * manualReservationForm.tickets;
 
   async function fetchAdminData() {
     setLoading(true);
     setRequestError("");
 
     try {
-      const [operatorsRes, insightsRes, settingsRes] = await Promise.all([
+      const [operatorsRes, insightsRes, settingsRes, toursRes] = await Promise.all([
         fetch("/api/admin/b2b/operators"),
         fetch("/api/admin/b2b/insights"),
         fetch("/api/admin/b2b/settings"),
+        fetch("/api/tours"),
       ]);
 
       if (operatorsRes.status === 401 || insightsRes.status === 401 || settingsRes.status === 401) {
@@ -158,6 +201,7 @@ export default function B2BAdminPage() {
       const operatorsData = await operatorsRes.json();
       const insightsData = await insightsRes.json();
       const settingsData = await settingsRes.json();
+      const toursData = toursRes.ok ? await toursRes.json() : { tours: [] };
 
       if (!operatorsRes.ok) {
         setRequestError(operatorsData.error || "No se pudieron cargar los operadores.");
@@ -174,6 +218,13 @@ export default function B2BAdminPage() {
           { totalEvents: 0, bookingSteps: 0, bookingSubmissions: 0, uniqueSessions: 0, conversionRate: 0, recentEvents: [] },
       );
       setHeroSlogans(insightsData.heroSlogans || []);
+      setPublicTours(toursData.tours || []);
+      const firstTour = (toursData.tours || [])[0];
+      setManualReservationForm((current) => ({
+        ...current,
+        tourSlug: current.tourSlug || firstTour?.slug || "",
+        tourName: current.tourName || firstTour?.titleEs || "",
+      }));
       const nextSettings = settingsData.settings || { ivaRate: 13, tourPricing: [] };
       setSettings(nextSettings);
       setPricingJson(JSON.stringify(nextSettings.tourPricing || [], null, 2));
@@ -245,6 +296,56 @@ export default function B2BAdminPage() {
       setRequestError("JSON de paquetes inválido.");
     } finally {
       setSavingSettings(false);
+    }
+  }
+
+  function handleManualReservationChange(field: keyof ManualReservationForm, value: string | number) {
+    setManualReservationMessage("");
+    setManualReservationForm((current) => {
+      const next = { ...current, [field]: value };
+      if (field === "tourSlug") {
+        const selectedTour = publicTours.find((tour) => tour.slug === value);
+        next.tourName = selectedTour?.titleEs || "";
+      }
+      return next;
+    });
+  }
+
+  async function handleCreateManualReservation(event: FormEvent) {
+    event.preventDefault();
+    setSavingManualReservation(true);
+    setRequestError("");
+    setManualReservationMessage("");
+
+    try {
+      const response = await fetch("/api/admin/b2b/manual-reservations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(manualReservationForm),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setRequestError(data.error || "No se pudo crear la reservación manual.");
+        return;
+      }
+
+      setManualReservationMessage(`Reservación manual creada sin cobro. ID: ${data.reservationId}`);
+      setManualReservationForm((current) => ({
+        ...current,
+        name: "",
+        email: "",
+        phone: "",
+        date: "",
+        tickets: 1,
+        notes: "",
+      }));
+      await fetchAdminData();
+    } catch {
+      setRequestError("No se pudo crear la reservación manual.");
+    } finally {
+      setSavingManualReservation(false);
     }
   }
 
@@ -341,6 +442,99 @@ export default function B2BAdminPage() {
           <h2 className="mb-4 text-xl font-semibold">Logs de acceso ({loginLogs.length})</h2>
           <div className="max-h-96 overflow-auto">
             <table className="w-full text-sm"><thead><tr className="text-left text-zinc-600 dark:text-zinc-300"><th className="pb-2">Tipo</th><th className="pb-2">Usuario</th><th className="pb-2">Device/IP</th><th className="pb-2">Fecha</th></tr></thead><tbody>{loginLogs.map((log) => <tr key={log._id} className="border-t border-zinc-200 dark:border-zinc-700"><td className="py-2">{log.userType}</td><td className="py-2">{log.emailOrUsername}</td><td className="py-2">{log.device}{log.ip ? ` · ${log.ip}` : ""}</td><td className="py-2">{new Date(log.createdAt).toLocaleString("es-CR")}</td></tr>)}</tbody></table>
+          </div>
+        </article>
+      </section>
+
+      <section className="mb-6 grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+        <article className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
+          <div className="mb-5 flex items-start justify-between gap-3">
+            <div>
+              <h2 className="flex items-center gap-2 text-xl font-semibold"><PlusCircle className="h-5 w-5 text-emerald-600" />Nueva reservación manual</h2>
+              <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">Crea una reserva de cliente desde admin sin pasar por PayPal. Se guarda con estado manual sin pago.</p>
+            </div>
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-right dark:border-emerald-900/60 dark:bg-emerald-950/30">
+              <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Total estimado</p>
+              <p className="mt-1 text-2xl font-bold text-emerald-700 dark:text-emerald-200">${manualReservationTotal.toFixed(2)}</p>
+              <p className="text-xs text-emerald-700/80 dark:text-emerald-300/80">{manualReservationForm.tickets} pax · {selectedManualPackage?.label ?? "Paquete"}</p>
+            </div>
+          </div>
+
+          {manualReservationMessage && <p className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300">{manualReservationMessage}</p>}
+
+          <form onSubmit={handleCreateManualReservation} className="grid gap-4 md:grid-cols-2">
+            <div>
+              <label className="mb-1.5 block text-sm font-semibold">Nombre del cliente *</label>
+              <input value={manualReservationForm.name} onChange={(event) => handleManualReservationChange("name", event.target.value)} required className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm dark:border-zinc-700 dark:bg-zinc-800" placeholder="Ej. María Fernández" />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-semibold">Correo electrónico *</label>
+              <input type="email" value={manualReservationForm.email} onChange={(event) => handleManualReservationChange("email", event.target.value)} required className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm dark:border-zinc-700 dark:bg-zinc-800" placeholder="cliente@email.com" />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-semibold">Teléfono *</label>
+              <input value={manualReservationForm.phone} onChange={(event) => handleManualReservationChange("phone", event.target.value)} required className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm dark:border-zinc-700 dark:bg-zinc-800" placeholder="+506 8888 8888" />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-semibold">Tour *</label>
+              <select value={manualReservationForm.tourSlug} onChange={(event) => handleManualReservationChange("tourSlug", event.target.value)} required className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm dark:border-zinc-700 dark:bg-zinc-800">
+                {publicTours.length === 0 ? <option value="">No hay tours disponibles</option> : publicTours.map((tour) => <option key={tour.id} value={tour.slug}>{tour.titleEs}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-semibold">Fecha *</label>
+              <div className="relative">
+                <CalendarDays className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+                <input type="date" min={getMinBookableIsoDateInCostaRica()} value={manualReservationForm.date} onChange={(event) => handleManualReservationChange("date", event.target.value)} required className="w-full rounded-xl border border-zinc-200 bg-zinc-50 py-2.5 pl-10 pr-4 text-sm dark:border-zinc-700 dark:bg-zinc-800" />
+              </div>
+            </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-semibold">Hora del tour *</label>
+              <select value={manualReservationForm.tourTime} onChange={(event) => handleManualReservationChange("tourTime", event.target.value)} required className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm dark:border-zinc-700 dark:bg-zinc-800">
+                {MANUAL_RESERVATION_TIME_SLOTS.map((slot) => <option key={slot.id} value={slot.id}>{slot.label}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-semibold">Paquete *</label>
+              <select value={manualReservationForm.tourPackage} onChange={(event) => handleManualReservationChange("tourPackage", event.target.value)} required className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm dark:border-zinc-700 dark:bg-zinc-800">
+                {MANUAL_RESERVATION_PACKAGES.map((pkg) => <option key={pkg.id} value={pkg.id}>{pkg.label} · ${pkg.priceUSD} USD</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-semibold">Cantidad de tickets *</label>
+              <input type="number" min={1} value={manualReservationForm.tickets} onChange={(event) => handleManualReservationChange("tickets", Math.max(1, Number(event.target.value) || 1))} required className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm dark:border-zinc-700 dark:bg-zinc-800" />
+            </div>
+            <div className="md:col-span-2">
+              <label className="mb-1.5 block text-sm font-semibold">Notas internas</label>
+              <textarea value={manualReservationForm.notes} onChange={(event) => handleManualReservationChange("notes", event.target.value)} rows={4} className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm dark:border-zinc-700 dark:bg-zinc-800" placeholder="Observaciones para el equipo o detalles especiales del cliente." />
+            </div>
+            <div className="md:col-span-2 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-700 dark:bg-zinc-800">
+              <div className="text-sm text-zinc-600 dark:text-zinc-300">
+                <p className="font-semibold text-zinc-900 dark:text-zinc-100">Se guardará sin pago procesado</p>
+                <p>Estado: <span className="font-medium">MANUAL_NO_PAYMENT</span> · Moneda: USD</p>
+              </div>
+              <button type="submit" disabled={savingManualReservation || publicTours.length === 0} className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">
+                {savingManualReservation ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}Crear reserva manual
+              </button>
+            </div>
+          </form>
+        </article>
+
+        <article className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
+          <h2 className="text-xl font-semibold">Resumen rápido</h2>
+          <div className="mt-4 space-y-3 text-sm">
+            <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800">
+              <p className="text-zinc-500 dark:text-zinc-400">Tours públicos listos para reservar</p>
+              <p className="mt-1 text-2xl font-bold">{publicTours.length}</p>
+            </div>
+            <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800">
+              <p className="text-zinc-500 dark:text-zinc-400">Próxima fecha habilitada</p>
+              <p className="mt-1 font-semibold">{getMinBookableIsoDateInCostaRica()}</p>
+            </div>
+            <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800">
+              <p className="text-zinc-500 dark:text-zinc-400">Último modo de creación</p>
+              <p className="mt-1 font-semibold">Manual sin pasarela de pago</p>
+            </div>
           </div>
         </article>
       </section>
