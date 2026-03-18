@@ -14,6 +14,26 @@ type Operator = {
   status: "pending" | "approved" | "active";
   commissionRate: number;
   createdAt: string;
+  accountType?: "operator" | "guide";
+  guideProfile?: {
+    certifications?: Array<{
+      id: string;
+      title: string;
+      issuer: string;
+      status: string;
+      completedAt: string;
+      expiresAt?: string | null;
+      required: boolean;
+    }>;
+    trainingRecords?: Array<{
+      id: string;
+      type: string;
+      title: string;
+      completedAt: string;
+      notes: string;
+      issuer?: string;
+    }>;
+  } | null;
 };
 
 type AppUser = {
@@ -171,6 +191,7 @@ export default function B2BAdminPage() {
 
   const pendingOperators = useMemo(() => operators.filter((op) => op.status === "pending"), [operators]);
   const approvedOperators = useMemo(() => operators.filter((op) => op.status !== "pending"), [operators]);
+  const guides = useMemo(() => operators.filter((op) => op.accountType === "guide"), [operators]);
   const selectedManualPackage = useMemo(
     () => MANUAL_RESERVATION_PACKAGES.find((pkg) => pkg.id === manualReservationForm.tourPackage) ?? MANUAL_RESERVATION_PACKAGES[0],
     [manualReservationForm.tourPackage],
@@ -406,15 +427,82 @@ export default function B2BAdminPage() {
   return (
     <main className="mx-auto min-h-screen w-full max-w-7xl rounded-3xl bg-zinc-50 px-4 py-8 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
       <header className="mb-6 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
-        <div className="mb-4 flex flex-col gap-2"><h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">Dashboard Admin B2B avanzado</h1><p className="text-sm text-zinc-600 dark:text-zinc-400">Gestiona operadores, paquetes, precios, IVA y auditoría de usuarios/logins.</p></div>
+        <div className="mb-4 flex flex-col gap-2"><h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">Dashboard Admin B2B avanzado</h1><p className="text-sm text-zinc-600 dark:text-zinc-400">Gestiona operadores, guías, certificaciones, paquetes, precios, IVA y auditoría de usuarios/logins.</p></div>
         <div className="flex flex-wrap items-center gap-2">{ACCESS_LINKS.map((link) => <Link key={link.href} href={link.href} className={`inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${link.style}`}>{link.icon}{link.label}</Link>)}<button onClick={handleLogout} className="inline-flex items-center justify-center gap-2 rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white"><LogOut className="h-4 w-4" />Salir</button></div>
       </header>
 
       {requestError && <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-200">{requestError}</div>}
 
       <section className="grid gap-6 lg:grid-cols-2 mb-6">
-        <article className="rounded-2xl border border-amber-300 dark:border-amber-700 bg-amber-50/80 dark:bg-amber-950/30 p-6"><h2 className="mb-4 flex items-center gap-2 text-xl font-semibold text-amber-900 dark:text-amber-200"><ShieldAlert className="h-5 w-5" />Pendientes ({pendingOperators.length})</h2>{loading ? <p className="inline-flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300"><Loader2 className="h-4 w-4 animate-spin" />Cargando operadores...</p> : pendingOperators.length === 0 ? <p className="text-sm text-zinc-600 dark:text-zinc-300">No hay operadores pendientes.</p> : <ul className="space-y-3">{pendingOperators.map((operator) => <li key={operator._id} className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-700 dark:bg-zinc-900"><p className="font-semibold text-zinc-900">{operator.company}</p><p className="text-sm text-zinc-600 dark:text-zinc-300">{operator.name} · {operator.email}</p><button disabled={actionLoadingId === operator._id} onClick={() => updateStatus(operator._id, "approved")} className="mt-3 inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-60">{actionLoadingId === operator._id ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}Aprobar</button></li>)}</ul>}</article>
-        <article className="rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900"><h2 className="mb-4 text-xl font-semibold text-zinc-900">Aprobados / activos ({approvedOperators.length})</h2>{loading ? <p className="inline-flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300"><Loader2 className="h-4 w-4 animate-spin" />Cargando operadores...</p> : approvedOperators.length === 0 ? <p className="text-sm text-zinc-600 dark:text-zinc-300">No hay operadores aprobados aún.</p> : <ul className="space-y-3">{approvedOperators.map((operator) => <li key={operator._id} className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800"><p className="font-semibold text-zinc-900">{operator.company}</p><p className="text-sm text-zinc-600 dark:text-zinc-300">{operator.name} · {operator.email}</p><p className="mt-1 text-xs text-zinc-400">Estado: {operator.status}</p><button disabled={actionLoadingId === operator._id} onClick={() => updateStatus(operator._id, "pending")} className="mt-3 inline-flex items-center gap-2 rounded-lg border border-zinc-300 px-3 py-2 text-sm font-semibold text-zinc-700 disabled:opacity-60">{actionLoadingId === operator._id ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}Volver a pendiente</button></li>)}</ul>}</article>
+        <article className="rounded-2xl border border-amber-300 dark:border-amber-700 bg-amber-50/80 dark:bg-amber-950/30 p-6"><h2 className="mb-4 flex items-center gap-2 text-xl font-semibold text-amber-900 dark:text-amber-200"><ShieldAlert className="h-5 w-5" />Pendientes ({pendingOperators.length})</h2>{loading ? <p className="inline-flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300"><Loader2 className="h-4 w-4 animate-spin" />Cargando operadores...</p> : pendingOperators.length === 0 ? <p className="text-sm text-zinc-600 dark:text-zinc-300">No hay operadores pendientes.</p> : <ul className="space-y-3">{pendingOperators.map((operator) => <li key={operator._id} className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-700 dark:bg-zinc-900"><p className="font-semibold text-zinc-900">{operator.company}</p><p className="text-sm text-zinc-600 dark:text-zinc-300">{operator.name} · {operator.email}
+                </p><p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Tipo: {operator.accountType === "guide" ? "Guía" : "Operador / agencia"}</p><button disabled={actionLoadingId === operator._id} onClick={() => updateStatus(operator._id, "approved")} className="mt-3 inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-60">{actionLoadingId === operator._id ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}Aprobar</button></li>)}</ul>}</article>
+        <article className="rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900"><h2 className="mb-4 text-xl font-semibold text-zinc-900">Aprobados / activos ({approvedOperators.length})</h2>{loading ? <p className="inline-flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300"><Loader2 className="h-4 w-4 animate-spin" />Cargando operadores...</p> : approvedOperators.length === 0 ? <p className="text-sm text-zinc-600 dark:text-zinc-300">No hay operadores aprobados aún.</p> : <ul className="space-y-3">{approvedOperators.map((operator) => <li key={operator._id} className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800"><p className="font-semibold text-zinc-900">{operator.company}</p><p className="text-sm text-zinc-600 dark:text-zinc-300">{operator.name} · {operator.email}
+                </p><p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Tipo: {operator.accountType === "guide" ? "Guía" : "Operador / agencia"}</p><p className="mt-1 text-xs text-zinc-400">Estado: {operator.status}</p><button disabled={actionLoadingId === operator._id} onClick={() => updateStatus(operator._id, "pending")} className="mt-3 inline-flex items-center gap-2 rounded-lg border border-zinc-300 px-3 py-2 text-sm font-semibold text-zinc-700 disabled:opacity-60">{actionLoadingId === operator._id ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}Volver a pendiente</button></li>)}</ul>}</article>
+      </section>
+
+
+
+      <section className="mb-6 rounded-2xl border border-emerald-200 bg-white p-6 shadow-sm dark:border-emerald-900/50 dark:bg-zinc-900">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">Guías y certificaciones ({guides.length})</h2>
+            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">El admin puede revisar el expediente de cada guía, sus certificaciones y el registro de capacitaciones para auditorías del ICT.</p>
+          </div>
+          <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">Vista administrativa de guías</span>
+        </div>
+
+        <div className="mt-5 grid gap-4 xl:grid-cols-2">
+          {guides.length === 0 ? (
+            <p className="text-sm text-zinc-600 dark:text-zinc-300">Todavía no hay guías registrados en el portal B2B.</p>
+          ) : (
+            guides.map((guide) => (
+              <article key={guide._id} className="rounded-2xl border border-zinc-200 bg-zinc-50 p-5 dark:border-zinc-700 dark:bg-zinc-800/60">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">{guide.name}</h3>
+                    <p className="text-sm text-zinc-600 dark:text-zinc-300">{guide.email} · {guide.company}</p>
+                    <p className="mt-1 text-xs uppercase tracking-wide text-emerald-600 dark:text-emerald-400">Estado: {guide.status}</p>
+                  </div>
+                  <div className="rounded-xl bg-white px-3 py-2 text-right text-xs shadow-sm dark:bg-zinc-900">
+                    <p className="font-semibold text-zinc-900 dark:text-zinc-100">{guide.guideProfile?.certifications?.length || 0} certificaciones</p>
+                    <p className="text-zinc-500 dark:text-zinc-400">{guide.guideProfile?.trainingRecords?.length || 0} registros</p>
+                  </div>
+                </div>
+
+                <div className="mt-4 grid gap-3 md:grid-cols-2">
+                  <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-4 dark:border-emerald-900/40 dark:bg-emerald-950/20">
+                    <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">Certificaciones</p>
+                    <div className="mt-3 space-y-2">
+                      {(guide.guideProfile?.certifications || []).map((cert) => (
+                        <div key={cert.id} className="rounded-lg bg-white/90 p-3 text-sm dark:bg-zinc-900/70">
+                          <p className="font-semibold text-zinc-900 dark:text-zinc-100">{cert.title}</p>
+                          <p className="text-zinc-600 dark:text-zinc-300">{cert.issuer}</p>
+                          <p className="text-xs text-zinc-500 dark:text-zinc-400">Estado: {cert.status} · Vence: {cert.expiresAt ? new Date(cert.expiresAt).toLocaleDateString("es-CR") : "Sin fecha"}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-900">
+                    <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Registro de capacitaciones</p>
+                    <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">Cada capacitación, simulacro y taller queda documentado en el expediente individual de cada guía. Este registro está disponible para auditorías del ICT y es requerido para renovaciones de licencia.</p>
+                    <div className="mt-3 space-y-2">
+                      {(guide.guideProfile?.trainingRecords || []).map((record) => (
+                        <div key={record.id} className="rounded-lg bg-zinc-50 p-3 text-sm dark:bg-zinc-800">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="font-semibold text-zinc-900 dark:text-zinc-100">{record.title}</p>
+                            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold uppercase text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">{record.type}</span>
+                          </div>
+                          <p className="mt-1 text-zinc-600 dark:text-zinc-300">{record.notes}</p>
+                          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{new Date(record.completedAt).toLocaleDateString("es-CR")} · {record.issuer || "La Vieja Adventures"}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </article>
+            ))
+          )}
+        </div>
       </section>
 
       <section className="mb-6 rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">

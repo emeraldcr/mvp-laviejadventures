@@ -23,15 +23,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
     }
 
-    // Block login until email is verified
-    // Treat missing emailVerified (legacy accounts) as verified
     if (operator.emailVerified === false) {
       return NextResponse.json(
         { error: "Please verify your email before logging in. Check your inbox for the verification link." },
         { status: 403 }
       );
     }
-
 
     const userAgent = req.headers.get("user-agent") || "unknown";
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || undefined;
@@ -51,6 +48,7 @@ export async function POST(req: NextRequest) {
       company: operator.company,
       commissionRate: operator.commissionRate,
       status: operator.status,
+      accountType: operator.accountType || "operator",
     });
 
     const res = NextResponse.json({
@@ -62,6 +60,7 @@ export async function POST(req: NextRequest) {
         email: operator.email,
         status: operator.status,
         commissionRate: operator.commissionRate,
+        accountType: operator.accountType || "operator",
       },
     });
 
