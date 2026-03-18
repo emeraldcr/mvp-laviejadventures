@@ -314,6 +314,11 @@ export default function ReservationDetails({
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
   const [manualSelectedTourSlug, setManualSelectedTourSlug] = useState<string | null>(null);
   const [showTourModal, setShowTourModal] = useState(false);
+  const selectedTourSectionRef = useRef<HTMLDivElement | null>(null);
+  const tourTimeSectionRef = useRef<HTMLDivElement | null>(null);
+  const tourPackageSectionRef = useRef<HTMLDivElement | null>(null);
+  const ticketsSectionRef = useRef<HTMLDivElement | null>(null);
+  const travelerSectionRef = useRef<HTMLDivElement | null>(null);
 
   const selectedTourSlug = useMemo(() => {
     if (manualSelectedTourSlug && tours.some((tour) => tour.slug === manualSelectedTourSlug)) {
@@ -488,6 +493,77 @@ export default function ReservationDetails({
     [isStep1Valid, isStep2Valid, validation.isAgreeTermsValid]
   );
 
+  const scrollAndFocusElement = useCallback((element: HTMLElement | null) => {
+    if (!element) return;
+
+    element.scrollIntoView({ behavior: "smooth", block: "center" });
+
+    window.setTimeout(() => {
+      if (typeof element.focus === "function") {
+        if (!element.hasAttribute("tabindex") && element.tabIndex < 0) {
+          element.setAttribute("tabindex", "-1");
+        }
+        element.focus({ preventScroll: true });
+      }
+    }, 120);
+  }, []);
+
+  const focusFirstMissingInStep1 = useCallback(() => {
+    if (!selectedTour) {
+      scrollAndFocusElement(selectedTourSectionRef.current);
+      return;
+    }
+
+    if (!tourTime) {
+      const firstTimeButton = document.querySelector<HTMLButtonElement>("[data-tour-time-slot='08:00']");
+      scrollAndFocusElement(firstTimeButton ?? tourTimeSectionRef.current);
+      return;
+    }
+
+    if (!effectiveTourPackage) {
+      const firstPackageButton = document.querySelector<HTMLButtonElement>("[data-tour-package='basic']");
+      scrollAndFocusElement(firstPackageButton ?? tourPackageSectionRef.current);
+      return;
+    }
+
+    if (!isTicketsValid) {
+      const ticketsInput = document.getElementById("tickets") as HTMLInputElement | null;
+      scrollAndFocusElement(ticketsInput ?? ticketsSectionRef.current);
+    }
+  }, [selectedTour, tourTime, effectiveTourPackage, isTicketsValid, scrollAndFocusElement]);
+
+  const focusFirstMissingInStep2 = useCallback(() => {
+    if (!validation.isNameValid) {
+      const nameInput = document.getElementById("name") as HTMLInputElement | null;
+      scrollAndFocusElement(nameInput ?? travelerSectionRef.current);
+      return;
+    }
+
+    if (!validation.isEmailValid) {
+      const emailInput = document.getElementById("email") as HTMLInputElement | null;
+      scrollAndFocusElement(emailInput ?? travelerSectionRef.current);
+      return;
+    }
+
+    if (!validation.isPhoneNumberValid) {
+      const phoneInput = document.getElementById("phoneNumber") as HTMLInputElement | null;
+      scrollAndFocusElement(phoneInput ?? travelerSectionRef.current);
+    }
+  }, [validation.isNameValid, validation.isEmailValid, validation.isPhoneNumberValid, scrollAndFocusElement]);
+
+  useEffect(() => {
+    if (currentStep === 2) {
+      const nameInput = document.getElementById("name") as HTMLInputElement | null;
+      scrollAndFocusElement(nameInput ?? travelerSectionRef.current);
+      return;
+    }
+
+    if (currentStep === 3) {
+      const agreeTermsInput = document.getElementById("agreeTerms") as HTMLInputElement | null;
+      scrollAndFocusElement(agreeTermsInput);
+    }
+  }, [currentStep, scrollAndFocusElement]);
+
   const steps = [
     { id: 1 as const, label: tr.steps.schedule },
     { id: 2 as const, label: tr.steps.traveler },
@@ -611,10 +687,16 @@ export default function ReservationDetails({
   ]);
 
   const goToNextStep = useCallback(() => {
-    if (currentStep === 1 && !isStep1Valid) return;
-    if (currentStep === 2 && !isStep2Valid) return;
+    if (currentStep === 1 && !isStep1Valid) {
+      focusFirstMissingInStep1();
+      return;
+    }
+    if (currentStep === 2 && !isStep2Valid) {
+      focusFirstMissingInStep2();
+      return;
+    }
     setCurrentStep((prev) => (prev < 3 ? ((prev + 1) as 1 | 2 | 3) : prev));
-  }, [currentStep, isStep1Valid, isStep2Valid]);
+  }, [currentStep, isStep1Valid, isStep2Valid, focusFirstMissingInStep1, focusFirstMissingInStep2]);
 
   const goToPrevStep = useCallback(() => {
     setCurrentStep((prev) => (prev > 1 ? ((prev - 1) as 1 | 2 | 3) : prev));
@@ -640,8 +722,14 @@ export default function ReservationDetails({
                 type="button"
                 onClick={() => {
                   if (step.id > currentStep) {
-                    if (currentStep === 1 && !isStep1Valid) return;
-                    if (currentStep === 2 && !isStep2Valid) return;
+                    if (currentStep === 1 && !isStep1Valid) {
+                      focusFirstMissingInStep1();
+                      return;
+                    }
+                    if (currentStep === 2 && !isStep2Valid) {
+                      focusFirstMissingInStep2();
+                      return;
+                    }
                   }
                   setCurrentStep(step.id);
                 }}
@@ -720,7 +808,7 @@ export default function ReservationDetails({
 
       {currentStep === 1 && (
         <>
-          <div className={`mb-6 rounded-xl ${!selectedTour ? "ring-2 ring-amber-300/70 p-3" : ""}`}>
+          <div ref={selectedTourSectionRef} className={`mb-6 rounded-xl ${!selectedTour ? "ring-2 ring-amber-300/70 p-3" : ""}`}>
             <div className="mb-3 flex items-center justify-between gap-3">
               <h3 className="text-xl font-semibold">{tr.tourLabel}</h3>
               {hasPreselectedTour && (
@@ -813,7 +901,7 @@ export default function ReservationDetails({
             document.body
           )}
 
-          <div className={`mb-6 rounded-xl ${!tourTime ? "ring-2 ring-amber-300/70 p-3" : ""}`}>
+          <div ref={tourTimeSectionRef} className={`mb-6 rounded-xl ${!tourTime ? "ring-2 ring-amber-300/70 p-3" : ""}`}>
             <h3 className="text-xl font-semibold mb-3">{tr.tourTimeTitle}</h3>
             {!tourTime && <p className="mb-3 flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-400"><AlertCircle className="h-4 w-4" aria-hidden /> {tr.indicators.chooseTourTime}</p>}
             <div className="flex gap-3 flex-wrap">
@@ -823,6 +911,7 @@ export default function ReservationDetails({
                   <button
                     key={slot.id}
                     type="button"
+                    data-tour-time-slot={slot.id}
                     onClick={() => setTourTime(slot.id)}
                     className={`flex-1 min-w-[90px] py-3 px-4 rounded-xl border-2 font-semibold text-base transition-all ${
                       isSelected
@@ -837,7 +926,7 @@ export default function ReservationDetails({
             </div>
           </div>
 
-          <div className={`mb-6 rounded-xl ${!effectiveTourPackage ? "ring-2 ring-amber-300/70 p-3" : ""}`}>
+          <div ref={tourPackageSectionRef} className={`mb-6 rounded-xl ${!effectiveTourPackage ? "ring-2 ring-amber-300/70 p-3" : ""}`}>
             <h3 className="text-xl font-semibold mb-3">{tr.packageTitle}</h3>
             {!effectiveTourPackage && <p className="mb-3 flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-400"><AlertCircle className="h-4 w-4" aria-hidden /> {tr.indicators.choosePackage}</p>}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -854,6 +943,7 @@ export default function ReservationDetails({
                   <button
                     key={pkg.id}
                     type="button"
+                    data-tour-package={pkg.id}
                     onClick={() => !isDisabled && setTourPackage(pkg.id)}
                     disabled={isDisabled}
                     className={`group relative overflow-hidden text-left p-5 rounded-2xl border-2 transition-all ${
@@ -925,7 +1015,7 @@ export default function ReservationDetails({
             )}
           </div>
 
-          <div className={`mb-6 rounded-xl ${!isTicketsValid ? "ring-2 ring-amber-300/70 p-3" : ""}`}>
+          <div ref={ticketsSectionRef} className={`mb-6 rounded-xl ${!isTicketsValid ? "ring-2 ring-amber-300/70 p-3" : ""}`}>
             <h3 className="text-xl font-semibold mb-4">{tr.ticketsTitle}</h3>
             {!isTicketsValid && <p className="mb-3 flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-400"><AlertCircle className="h-4 w-4" aria-hidden /> {tr.indicators.chooseTickets}</p>}
             <div className="mb-4 flex flex-wrap items-center gap-4">
@@ -988,7 +1078,7 @@ export default function ReservationDetails({
 
       {currentStep === 2 && (
         <>
-          <div className={`mb-6 rounded-xl ${!isStep2Valid ? "ring-2 ring-amber-300/70 p-3" : ""}`}>
+          <div ref={travelerSectionRef} className={`mb-6 rounded-xl ${!isStep2Valid ? "ring-2 ring-amber-300/70 p-3" : ""}`}>
             <h3 className="text-xl font-semibold mb-4">{tr.travelerTitle}</h3>
             {!isStep2Valid && <p className="mb-3 flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-400"><AlertCircle className="h-4 w-4" aria-hidden /> {tr.indicators.completeTravelerData}</p>}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1053,8 +1143,12 @@ export default function ReservationDetails({
           <button
             type="button"
             onClick={goToNextStep}
-            disabled={(currentStep === 1 && !isStep1Valid) || (currentStep === 2 && !isStep2Valid)}
-            className="px-8 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-full font-bold shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-disabled={(currentStep === 1 && !isStep1Valid) || (currentStep === 2 && !isStep2Valid)}
+            className={`px-8 py-3 bg-teal-600 text-white rounded-full font-bold shadow-lg transition-all ${
+              (currentStep === 1 && !isStep1Valid) || (currentStep === 2 && !isStep2Valid)
+                ? "opacity-90"
+                : "hover:bg-teal-700"
+            }`}
           >
             {tr.nextBtn}
           </button>
