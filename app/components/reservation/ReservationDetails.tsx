@@ -525,8 +525,8 @@ export default function ReservationDetails({
           selectedTime: tourTime,
           hasSelectedPackage: Boolean(effectiveTourPackage),
           selectedPackage: effectiveTourPackage,
-          subtotal: subtotalRaw,
-          taxes: taxesRaw,
+          subtotal,
+          taxes,
           totalWithTaxes,
         },
         selectedDate,
@@ -552,6 +552,8 @@ export default function ReservationDetails({
     tourTime,
     effectiveTourPackage,
     selectedTour?.slug,
+    subtotal,
+    taxes,
     totalWithTaxes,
   ]);
 
