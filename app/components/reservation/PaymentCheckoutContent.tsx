@@ -4,6 +4,13 @@ import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/lib/translations";
+import {
+  PAYPAL_CURRENCY,
+  PAYPAL_SDK_COMMIT,
+  PAYPAL_SDK_COMPONENTS,
+  PAYPAL_SDK_INTEGRATION_DATE,
+  PAYPAL_SDK_INTENT,
+} from "@/lib/constants/paypal";
 import type { OrderDetails } from "@/lib/types/index";
 
 declare global {
@@ -41,9 +48,11 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
     const paypalLocale = lang === "es" ? "es_XC" : "en_US";
     const paypalScriptParams = new URLSearchParams({
       "client-id": clientId,
-      currency: "USD",
-      intent: "capture",
-      components: "buttons",
+      currency: PAYPAL_CURRENCY,
+      intent: PAYPAL_SDK_INTENT,
+      commit: PAYPAL_SDK_COMMIT,
+      components: PAYPAL_SDK_COMPONENTS,
+      "integration-date": PAYPAL_SDK_INTEGRATION_DATE,
       locale: paypalLocale,
     });
     const paypalScriptSrc = `https://www.paypal.com/sdk/js?${paypalScriptParams.toString()}`;
@@ -90,6 +99,12 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
               });
 
               const data = await res.json();
+
+              if (!res.ok || !data?.orderID) {
+                console.error("PAYPAL CREATE ORDER FAILED:", data);
+                throw new Error(data?.message || "Failed to create PayPal order");
+              }
+
               return data.orderID;
             },
             onApprove: async (data: { orderID: string }) => {
@@ -110,6 +125,9 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
               sessionStorage.removeItem("reservationOrderDetails");
               onSuccess(output);
               router.push(`/success?orderId=${output.id}`);
+            },
+            onCancel: () => {
+              setPaypalError(null);
             },
             onError: (err: unknown) => {
               alert(tr.error);
@@ -147,6 +165,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
         nextScript.id = "paypal-sdk";
         nextScript.src = paypalScriptSrc;
         nextScript.async = true;
+        nextScript.dataset.pageType = "checkout";
         // NOTE: Do NOT set crossOrigin="anonymous" on the PayPal SDK script.
         // Safari/WebKit on iOS enforces CORS strictly and will block the script
         // if the CDN response doesn't match the expected CORS headers exactly.
