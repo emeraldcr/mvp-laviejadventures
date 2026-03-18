@@ -9,14 +9,13 @@ const ContentSecurityPolicy = [
   // Scripts: self, inline (Next.js needs unsafe-inline), PayPal SDK, Google Ads/Analytics
   // checkout.paypal.com is required for mobile Chrome — PayPal's mobile checkout flow
   // loads additional scripts from that domain (differs from the desktop popup flow).
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.paypal.com https://checkout.paypal.com https://www.paypalobjects.com https://www.sandbox.paypal.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://www.google-analytics.com",
-  // Frames: PayPal checkout iframe — checkout.paypal.com is used by mobile Chrome's redirect flow
-  "frame-src 'self' https://www.paypal.com https://checkout.paypal.com https://www.paypalobjects.com https://www.sandbox.paypal.com",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.paypal.com https://www.paypalobjects.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://www.google-analytics.com",
+  // Frames: PayPal checkout iframes — wildcard covers mobile-specific subdomains (c.paypal.com, fpdbs.paypal.com, etc.)
+  "frame-src 'self' https://*.paypal.com https://www.paypalobjects.com",
   // Images: allow PayPal logos + Google/CDN images already used in the app
-  "img-src 'self' data: blob: https://www.paypal.com https://checkout.paypal.com https://www.paypalobjects.com https://lh3.googleusercontent.com https://avatars.githubusercontent.com https://*.googleusercontent.com",
-  // Fetch/XHR: PayPal APIs + Google Analytics
-  // checkout.paypal.com is needed for mobile Chrome's OAuth/token exchange requests
-  "connect-src 'self' https://www.paypal.com https://checkout.paypal.com https://api-m.paypal.com https://api-m.sandbox.paypal.com https://www.sandbox.paypal.com https://www.google-analytics.com https://analytics.google.com https://*.vercel-insights.com https://*.vercel-analytics.com",
+  "img-src 'self' data: blob: https://*.paypal.com https://www.paypalobjects.com https://lh3.googleusercontent.com https://avatars.githubusercontent.com https://*.googleusercontent.com",
+  // Fetch/XHR: PayPal APIs + Google Analytics — wildcard covers mobile redirect/token exchange subdomains
+  "connect-src 'self' https://*.paypal.com https://api-m.paypal.com https://api-m.sandbox.paypal.com https://www.google-analytics.com https://analytics.google.com https://*.vercel-insights.com https://*.vercel-analytics.com",
   // Styles: allow inline styles (Tailwind + framer-motion)
   "style-src 'self' 'unsafe-inline'",
   // Fonts
@@ -81,7 +80,7 @@ const nextConfig: NextConfig = {
 
   // Drop console in prod
   compiler: {
-    removeConsole: process.env.NODE_ENV === "production",
+    removeConsole: process.env.NODE_ENV === "production" ? { exclude: ["error", "warn"] } : false,
   },
 
   // Optional extras for even more speed (if compatible with your app)

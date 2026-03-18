@@ -98,7 +98,6 @@ export async function POST(req: Request) {
         intent: "CAPTURE",
         payment_source: {
           paypal: {
-            email_address: String(email),
             experience_context: {
               user_action: "PAY_NOW",
               shipping_preference: PAYPAL_NO_SHIPPING_PREFERENCE,
