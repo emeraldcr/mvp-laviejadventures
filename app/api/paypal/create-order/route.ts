@@ -6,7 +6,11 @@ import {
   getPayPalAccessToken,
 } from "@/lib/paypal";
 import { getDb } from "@/lib/mongodb";
-import { PAYPAL_CURRENCY, PAYPAL_CUSTOM_ID_MAX_LENGTH } from "@/lib/constants/paypal";
+import {
+  PAYPAL_CURRENCY,
+  PAYPAL_CUSTOM_ID_MAX_LENGTH,
+  PAYPAL_NO_SHIPPING_PREFERENCE,
+} from "@/lib/constants/paypal";
 import { COLLECTIONS } from "@/lib/constants/db";
 import { isDateOnOrAfterMinBookableInCostaRica } from "@/lib/costa-rica-time";
 import { APP_BASE_URL_DEFAULT } from "@/lib/constants/email";
@@ -45,6 +49,7 @@ export async function POST(req: Request) {
     }
 
     const formattedTotal = Number(total).toFixed(2);
+    const paypalLocale = language === "en" ? "en-US" : "es-CR";
 
     const packageLabel =
       tourPackage === "basic"
@@ -93,8 +98,11 @@ export async function POST(req: Request) {
         intent: "CAPTURE",
         payment_source: {
           paypal: {
+            email_address: String(email),
             experience_context: {
               user_action: "PAY_NOW",
+              shipping_preference: PAYPAL_NO_SHIPPING_PREFERENCE,
+              locale: paypalLocale,
               return_url: `${appBaseUrl}/success?orderId={token}`,
               cancel_url: `${appBaseUrl}/booking?paypal=cancelled`,
             },
