@@ -32,7 +32,10 @@
       "Bash(ls -la app/\\\\\\(page_routes\\\\\\)/)",
       "Bash(find app/api -type f -name \"*.ts\" -o -name \"*.tsx\" 2>/dev/null | head -30)",
       "mcp__ide__getDiagnostics",
-      "Bash(find /c/Users/alrojas/Documents/GitHub/mvp-laviejadventures/app/components -type f \\\\\\(-iname *nav* -o -iname *header* \\\\\\))"
+      "Bash(find /c/Users/alrojas/Documents/GitHub/mvp-laviejadventures/app/components -type f \\\\\\(-iname *nav* -o -iname *header* \\\\\\))",
+      "Bash(ls -la /c/Users/alrojas/Documents/GitHub/mvp-laviejadventures/app/\\\\\\(page_routes\\\\\\)/)",
+      "Bash(find /c/Users/alrojas/Documents/GitHub/mvp-laviejadventures -name tailwind.config.* -o -name tsconfig.json)",
+      "Bash(npx tsc:*)"
     ]
   }
 }
