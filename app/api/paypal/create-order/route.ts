@@ -96,16 +96,11 @@ export async function POST(req: Request) {
       },
       body: JSON.stringify({
         intent: "CAPTURE",
-        payment_source: {
-          paypal: {
-            experience_context: {
-              user_action: "PAY_NOW",
-              shipping_preference: PAYPAL_NO_SHIPPING_PREFERENCE,
-              locale: paypalLocale,
-              return_url: `${appBaseUrl}/success?orderId={token}`,
-              cancel_url: `${appBaseUrl}/booking?paypal=cancelled`,
-            },
-          },
+        application_context: {
+          user_action: "PAY_NOW",
+          shipping_preference: PAYPAL_NO_SHIPPING_PREFERENCE,
+          return_url: `${appBaseUrl}/success?orderId={token}`,
+          cancel_url: `${appBaseUrl}/booking?paypal=cancelled`,
         },
         purchase_units: [
           {

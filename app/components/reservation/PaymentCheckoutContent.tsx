@@ -27,6 +27,7 @@ type Props = {
 export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Props) {
   const paypalRef = useRef<HTMLDivElement>(null);
   const [paypalError, setPaypalError] = useState<string | null>(null);
+  const [debugError, setDebugError] = useState<string | null>(null);
   const router = useRouter();
   const { lang } = useLanguage();
   const tr = translations[lang].payment;
@@ -136,14 +137,18 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
               setPaypalError(null);
             },
             onError: (err: unknown) => {
-              alert(tr.error);
+              const msg = err instanceof Error ? err.message : JSON.stringify(err);
               console.error("PAYPAL ERROR:", err);
+              setDebugError(`onError: ${msg}`);
+              setPaypalError(tr.error);
             },
           })
           .render(paypalContainer);
       } catch (error) {
         if (!aborted) {
+          const msg = error instanceof Error ? error.message : JSON.stringify(error);
           console.error("Failed to render PayPal buttons:", error);
+          setDebugError(`render catch: ${msg}`);
           setPaypalError(tr.error);
         }
       }
@@ -218,7 +223,9 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
 
     void loadPayPalScript().catch((error) => {
       if (!aborted) {
+        const msg = error instanceof Error ? error.message : JSON.stringify(error);
         console.error("Failed to initialize PayPal:", error);
+        setDebugError(`script load catch: ${msg}`);
         setPaypalError(tr.error);
       }
     });
@@ -271,6 +278,9 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
       <div ref={paypalRef} className="min-h-[140px] w-full" />
       {paypalError ? (
         <p className="mt-3 text-sm text-red-600 dark:text-red-400">{paypalError}</p>
+      ) : null}
+      {debugError ? (
+        <p className="mt-1 text-xs text-yellow-400 break-all">[debug] {debugError}</p>
       ) : null}
     </>
   );
