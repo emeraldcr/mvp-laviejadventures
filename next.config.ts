@@ -12,10 +12,10 @@ const ContentSecurityPolicy = [
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.paypal.com https://www.paypalobjects.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://www.google-analytics.com",
   // Frames: PayPal checkout iframes — wildcard covers mobile-specific subdomains (c.paypal.com, fpdbs.paypal.com, etc.)
   "frame-src 'self' https://*.paypal.com https://www.paypalobjects.com",
-  // Images: allow PayPal logos + Google/CDN images already used in the app
-  "img-src 'self' data: blob: https://*.paypal.com https://www.paypalobjects.com https://lh3.googleusercontent.com https://avatars.githubusercontent.com https://*.googleusercontent.com",
-  // Fetch/XHR: PayPal APIs + Google Analytics — wildcard covers mobile redirect/token exchange subdomains
-  "connect-src 'self' https://*.paypal.com https://api-m.paypal.com https://api-m.sandbox.paypal.com https://www.google-analytics.com https://analytics.google.com https://*.vercel-insights.com https://*.vercel-analytics.com",
+  // Images: allow PayPal logos + Google/CDN images + GTM/Ads pixel beacons
+  "img-src 'self' data: blob: https://*.paypal.com https://www.paypalobjects.com https://lh3.googleusercontent.com https://avatars.githubusercontent.com https://*.googleusercontent.com https://www.google.com https://www.google.co.cr https://www.googletagmanager.com https://googleads.g.doubleclick.net https://stats.g.doubleclick.net",
+  // Fetch/XHR: PayPal APIs + Google Analytics/Ads/GTM — wildcard covers mobile redirect/token exchange subdomains
+  "connect-src 'self' https://*.paypal.com https://api-m.paypal.com https://api-m.sandbox.paypal.com https://www.google-analytics.com https://analytics.google.com https://*.vercel-insights.com https://*.vercel-analytics.com https://www.google.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://stats.g.doubleclick.net https://www.google.co.cr",
   // Styles: allow inline styles (Tailwind + framer-motion)
   "style-src 'self' 'unsafe-inline'",
   // Fonts

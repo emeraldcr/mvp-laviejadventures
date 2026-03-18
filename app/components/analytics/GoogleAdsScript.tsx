@@ -1,23 +1,26 @@
 "use client";
 
 import Script from "next/script";
+import { useState, useEffect } from "react";
 
 type GoogleAdsScriptProps = {
   googleAdsId?: string;
 };
 
 function shouldLoadAdsTracking() {
-  if (typeof window === "undefined") return false;
-
   const dnt = navigator.doNotTrack === "1" || (window as Window & { doNotTrack?: string }).doNotTrack === "1";
   const gpc = (navigator as Navigator & { globalPrivacyControl?: boolean }).globalPrivacyControl === true;
-
   return !dnt && !gpc;
 }
 
 export default function GoogleAdsScript({ googleAdsId }: GoogleAdsScriptProps) {
-  if (!googleAdsId) return null;
-  if (!shouldLoadAdsTracking()) return null;
+  const [shouldLoad, setShouldLoad] = useState(false);
+
+  useEffect(() => {
+    setShouldLoad(shouldLoadAdsTracking());
+  }, []);
+
+  if (!googleAdsId || !shouldLoad) return null;
 
   return (
     <>

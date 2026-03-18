@@ -61,18 +61,29 @@ export function SuccessClient({
       return;
     }
 
-    if (typeof window.gtag !== "function") {
-      return;
+    const fireConversion = () => {
+      if (typeof window.gtag !== "function") return false;
+      window.gtag("event", "conversion", {
+        send_to: sendTo,
+        value: conversionValue,
+        currency: currency || "USD",
+        transaction_id: captureId || orderId,
+      });
+      window.sessionStorage.setItem(sessionStorageKey, "true");
+      return true;
+    };
+
+    // gtag may not be ready yet if the script is still loading — poll for up to 5s
+    if (!fireConversion()) {
+      let attempts = 0;
+      const interval = setInterval(() => {
+        attempts++;
+        if (fireConversion() || attempts >= 25) {
+          clearInterval(interval);
+        }
+      }, 200);
+      return () => clearInterval(interval);
     }
-
-    window.gtag("event", "conversion", {
-      send_to: sendTo,
-      value: conversionValue,
-      currency: currency || "USD",
-      transaction_id: captureId || orderId,
-    });
-
-    window.sessionStorage.setItem(sessionStorageKey, "true");
   }, [captureId, conversionValue, currency, error, orderId, sendTo, status]);
 
   if (error) {
