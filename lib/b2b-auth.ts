@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 import { NextRequest } from "next/server";
 import { B2B_COOKIE_NAME, TOKEN_EXPIRY } from "@/lib/constants/auth";
+import { AccountType } from "@/lib/models/operator";
 
 const JWT_SECRET = process.env.B2B_JWT_SECRET || "b2b-secret-change-in-production";
 const COOKIE_NAME = B2B_COOKIE_NAME;
@@ -13,6 +14,7 @@ export interface OperatorTokenPayload {
   company: string;
   commissionRate: number;
   status: string;
+  accountType: AccountType;
 }
 
 export function signToken(payload: OperatorTokenPayload): string {

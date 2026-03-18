@@ -26,7 +26,7 @@ export async function PATCH(
     }
 
     const body = await req.json();
-    const allowed = ["status", "commissionRate", "name", "company"];
+    const allowed = ["status", "commissionRate", "name", "company", "accountType", "guideProfile"];
     const update: Record<string, unknown> = {};
 
     for (const key of allowed) {
@@ -39,13 +39,9 @@ export async function PATCH(
 
     await updateOperator(id, update);
 
-    // Send approval email when status changes to approved or active
     const newStatus = update.status as string | undefined;
     const wasAlreadyApproved = existing.status === "approved" || existing.status === "active";
-    if (
-      (newStatus === "approved" || newStatus === "active") &&
-      !wasAlreadyApproved
-    ) {
+    if ((newStatus === "approved" || newStatus === "active") && !wasAlreadyApproved) {
       sendApprovalEmail(existing.email, existing.name).catch(console.error);
     }
 
