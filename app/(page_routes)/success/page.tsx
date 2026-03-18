@@ -246,6 +246,7 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
         date=""
         tickets=""
       />
+       </>
     );
   }
 
@@ -324,7 +325,7 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
         email=""
         date=""
         tickets=""
-      />
+      /></>
     );
   }
 
@@ -338,7 +339,7 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
         email=""
         date=""
         tickets=""
-      />
+      /></>
     );
   }
 
@@ -456,7 +457,7 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
         phone={phone}
         date={date}
         tickets={ticketsStr}
-      />
+      /></>
     );
   }
 
