@@ -10,5 +10,5 @@ export default async function LoginPage() {
         redirect('/booking');
     }
 
-    return <AuthLanding />;
+    return <AuthLanding currentYear={new Date().getFullYear()} />;
 }
