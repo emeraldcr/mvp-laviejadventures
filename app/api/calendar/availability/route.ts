@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { parse, isValid } from "date-fns";
 import { es } from "date-fns/locale";
-import { getDb } from "@/lib/mongodb";
+import { getDb, isMongoConfigured } from "@/lib/mongodb";
 import { COLLECTIONS } from "@/lib/constants/db";
 import { DEFAULT_AVAILABILITY } from "@/lib/constants/business";
 
@@ -43,18 +43,19 @@ export async function GET(req: Request) {
     return NextResponse.json({ message: "Invalid year/month." }, { status: 400 });
   }
 
-  const db = await getDb();
-  const docs = await db
-    .collection(COLLECTIONS.RESERVATIONS)
-    .find(
-      {
-        status: {
-          $in: ["COMPLETED", "completed", "confirmed", "CONFIRMED"],
-        },
-      },
-      { projection: { date: 1, tickets: 1 } }
-    )
-    .toArray();
+  const docs = isMongoConfigured
+    ? await (await getDb())
+        .collection(COLLECTIONS.RESERVATIONS)
+        .find(
+          {
+            status: {
+              $in: ["COMPLETED", "completed", "confirmed", "CONFIRMED"],
+            },
+          },
+          { projection: { date: 1, tickets: 1 } }
+        )
+        .toArray()
+    : [];
 
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const bookedByDay: Record<number, number> = {};

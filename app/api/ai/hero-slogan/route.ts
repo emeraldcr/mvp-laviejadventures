@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { createHeroSloganLog } from "@/lib/models/hero-slogan-log";
+import { isMongoConfigured } from "@/lib/mongodb";
 
 const client = new Anthropic();
 
@@ -69,6 +70,8 @@ async function persistSlogan(
   slogan: HeroSloganPayload,
   options: { model: string; prompt: string; rawResponse: string }
 ) {
+  if (!isMongoConfigured) return;
+
   try {
     await createHeroSloganLog({
       es: slogan.es,
@@ -99,7 +102,7 @@ export async function GET() {
     });
 
     const contentText = message.content
-      .filter((item): item is { type: "text"; text: string } => item.type === "text")
+      .filter((item) => item.type === "text")
       .map((item) => item.text)
       .join("\n")
       .trim();

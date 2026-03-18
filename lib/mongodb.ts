@@ -1,8 +1,21 @@
 import { MongoClient, Db } from "mongodb";
 import { DB_NAME } from "@/lib/constants/db";
 
-const uri = process.env.MONGODB_URI!;
+const uri = process.env.MONGODB_URI?.trim() ?? "";
 const dbName = process.env.MONGODB_DB || DB_NAME;
+
+export const isMongoConfigured = uri.length > 0;
+
+export class MissingMongoConfigError extends Error {
+  constructor() {
+    super(
+      "MONGODB_URI environment variable is not set. " +
+        "Set it to your full MongoDB connection string, e.g. " +
+        "mongodb+srv://user:password@cluster.xxxxx.mongodb.net/dbname"
+    );
+    this.name = "MissingMongoConfigError";
+  }
+}
 
 declare global {
   var _mongoClient: MongoClient | undefined;
@@ -10,23 +23,18 @@ declare global {
 
 function validateMongoUri(connectionUri: string): void {
   if (!connectionUri) {
-    throw new Error(
-      "MONGODB_URI environment variable is not set. " +
-      "Set it to your full MongoDB connection string, e.g. " +
-      "mongodb+srv://user:password@cluster.xxxxx.mongodb.net/dbname"
-    );
+    throw new MissingMongoConfigError();
   }
 
   if (connectionUri.startsWith("mongodb+srv://")) {
     try {
       const url = new URL(connectionUri);
       const hostname = url.hostname;
-      // A valid SRV hostname must contain at least one dot (e.g. cluster.abc.mongodb.net)
       if (!hostname.includes(".")) {
         throw new Error(
           `MONGODB_URI hostname "${hostname}" is not a fully-qualified domain name. ` +
-          `Expected something like "cluster.xxxxx.mongodb.net". ` +
-          `Ensure MONGODB_URI is set to the complete connection string copied from MongoDB Atlas.`
+            `Expected something like "cluster.xxxxx.mongodb.net". ` +
+            `Ensure MONGODB_URI is set to the complete connection string copied from MongoDB Atlas.`
         );
       }
     } catch (err) {

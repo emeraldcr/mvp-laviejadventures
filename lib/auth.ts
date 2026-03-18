@@ -14,7 +14,7 @@ const auth0Issuer = getAuth0Issuer();
 const hasAuth0Config = Boolean(auth0ClientId && auth0ClientSecret && auth0Issuer);
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  secret: process.env.AUTH_SECRET,
+  secret: process.env.AUTH_SECRET || (process.env.NODE_ENV !== "production" ? "dev-only-auth-secret" : undefined),
   trustHost: true,
   session: { strategy: "jwt" },
   providers: [
