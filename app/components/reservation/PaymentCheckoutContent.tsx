@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/lib/translations";
@@ -19,6 +19,7 @@ type Props = {
 
 export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Props) {
   const paypalRef = useRef<HTMLDivElement>(null);
+  const [paypalError, setPaypalError] = useState<string | null>(null);
   const router = useRouter();
   const { lang } = useLanguage();
   const tr = translations[lang].payment;
@@ -38,12 +39,26 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
     }
 
     const paypalLocale = lang === "es" ? "es_XC" : "en_US";
-    const paypalScriptSrc = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&locale=${paypalLocale}`;
+    const paypalScriptParams = new URLSearchParams({
+      "client-id": clientId,
+      currency: "USD",
+      intent: "capture",
+      components: "buttons",
+      locale: paypalLocale,
+    });
+    const paypalScriptSrc = `https://www.paypal.com/sdk/js?${paypalScriptParams.toString()}`;
+
+    const removePayPalScript = () => {
+      const script = document.querySelector<HTMLScriptElement>("#paypal-sdk");
+      script?.remove();
+      delete window.paypal;
+    };
 
     const initializeButtons = async () => {
       if (!window.paypal || !paypalContainer) return;
 
       paypalContainer.innerHTML = "";
+      setPaypalError(null);
 
       try {
         await window.paypal
@@ -104,6 +119,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
           .render(paypalContainer);
       } catch (error) {
         console.error("Failed to render PayPal buttons:", error);
+        setPaypalError(tr.error);
       }
     };
 
@@ -111,42 +127,64 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
       const existingScript = document.querySelector<HTMLScriptElement>("#paypal-sdk");
 
       if (existingScript && existingScript.src !== paypalScriptSrc) {
-        existingScript.remove();
-        delete window.paypal;
+        removePayPalScript();
       }
 
       const currentScript = document.querySelector<HTMLScriptElement>("#paypal-sdk");
-
-      if (!currentScript) {
-        const script = document.createElement("script");
-        script.id = "paypal-sdk";
-        script.src = paypalScriptSrc;
-        script.async = true;
-
-        await new Promise<void>((resolve, reject) => {
-          script.onload = () => resolve();
-          script.onerror = () => reject(new Error("Failed to load PayPal SDK"));
-          document.body.appendChild(script);
-        });
-
-        await initializeButtons();
-        return;
-      }
 
       if (window.paypal) {
         await initializeButtons();
         return;
       }
 
+      if (currentScript?.dataset.loaded === "true" && !window.paypal) {
+        removePayPalScript();
+      }
+
+      const nextScript = document.querySelector<HTMLScriptElement>("#paypal-sdk") ?? document.createElement("script");
+
+      if (!nextScript.isConnected) {
+        nextScript.id = "paypal-sdk";
+        nextScript.src = paypalScriptSrc;
+        nextScript.async = true;
+        nextScript.crossOrigin = "anonymous";
+        nextScript.dataset.loaded = "false";
+        document.body.appendChild(nextScript);
+      }
+
       await new Promise<void>((resolve, reject) => {
-        currentScript.addEventListener("load", () => resolve(), { once: true });
-        currentScript.addEventListener("error", () => reject(new Error("Failed to load PayPal SDK")), { once: true });
+        const handleLoad = () => {
+          nextScript.dataset.loaded = "true";
+          resolve();
+        };
+
+        const handleError = () => {
+          nextScript.dataset.loaded = "false";
+          reject(new Error("Failed to load PayPal SDK"));
+        };
+
+        if (window.paypal) {
+          nextScript.dataset.loaded = "true";
+          resolve();
+          return;
+        }
+
+        nextScript.addEventListener("load", handleLoad, { once: true });
+        nextScript.addEventListener("error", handleError, { once: true });
+
+        const scriptElement = nextScript as HTMLScriptElement & { readyState?: string };
+        if (scriptElement.readyState === "complete") {
+          handleLoad();
+        }
       });
 
       await initializeButtons();
     };
 
-    void loadPayPalScript();
+    void loadPayPalScript().catch((error) => {
+      console.error("Failed to initialize PayPal:", error);
+      setPaypalError(tr.error);
+    });
 
     return () => {
       if (paypalContainer) {
@@ -193,6 +231,9 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
       <p className="text-xl font-bold mb-6">{tr.total}: ${total.toFixed(2)}</p>
 
       <div ref={paypalRef} className="min-h-[140px] w-full" />
+      {paypalError ? (
+        <p className="mt-3 text-sm text-red-600 dark:text-red-400">{paypalError}</p>
+      ) : null}
     </>
   );
 }
