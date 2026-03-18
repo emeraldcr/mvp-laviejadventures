@@ -1,6 +1,7 @@
 // app/(page_routes)/success/page.tsx
 
 import { SuccessClient } from "./SuccessClient";
+import GoogleAdsScript from "@/app/components/analytics/GoogleAdsScript";
 import {
   getPayPalApiBaseUrl,
   getPayPalAccessToken,
@@ -11,6 +12,8 @@ import { getDb } from "@/lib/mongodb";
 import { auth } from "@/lib/auth";
 import type { BookingRecord, SendEmailParams, SuccessPageProps } from "@/lib/types/index";
 export const dynamic = "force-dynamic";
+
+const googleAdsId = process.env.GOOGLE_ADS_ID ?? process.env.NEXT_PUBLIC_GOOGLE_ADS_ID;
 
 
 type PayPalOrderResponse = {
@@ -234,6 +237,8 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
 
   if (!resolvedOrderId) {
     return (
+    <>
+      <GoogleAdsScript googleAdsId={googleAdsId} />
       <SuccessClient
         error="No se encontró el ID de la orden."
         name=""
@@ -311,6 +316,8 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
 
   if (errorMessage) {
     return (
+    <>
+      <GoogleAdsScript googleAdsId={googleAdsId} />
       <SuccessClient
         error={errorMessage}
         name=""
@@ -323,6 +330,8 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
 
   if (!paypalOrder) {
     return (
+    <>
+      <GoogleAdsScript googleAdsId={googleAdsId} />
       <SuccessClient
         error="No se pudieron obtener los detalles del pago de PayPal."
         name=""
@@ -438,6 +447,8 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
 
   if (status !== "COMPLETED" || !captureId) {
     return (
+    <>
+      <GoogleAdsScript googleAdsId={googleAdsId} />
       <SuccessClient
         error="El pago de PayPal no está completado. No se creó la reservación."
         name={name}
@@ -504,18 +515,21 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
 
   // 4) RENDER SUCCESS PAGE
   return (
-    <SuccessClient
-      error={null}
-      name={name}
-      email={email}
-      phone={phone}
-      date={date}
-      tickets={ticketsStr}
-      amount={amountStr}
-      currency={currency}
-      orderId={resolvedOrderId}
-      captureId={captureId}
-      status={status}
-    />
+    <>
+      <GoogleAdsScript googleAdsId={googleAdsId} />
+      <SuccessClient
+        error={null}
+        name={name}
+        email={email}
+        phone={phone}
+        date={date}
+        tickets={ticketsStr}
+        amount={amountStr}
+        currency={currency}
+        orderId={resolvedOrderId}
+        captureId={captureId}
+        status={status}
+      />
+    </>
   );
 }
