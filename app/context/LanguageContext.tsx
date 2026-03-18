@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useSyncExternalStore } from "react";
 
 export type Lang = "es" | "en";
 
@@ -11,23 +11,39 @@ interface LanguageContextValue {
 }
 
 const LanguageContext = createContext<LanguageContextValue | null>(null);
+const LANGUAGE_STORAGE_KEY = "lva-lang";
+const LANGUAGE_CHANGE_EVENT = "lva-lang-change";
+
+const subscribeToLanguage = (callback: () => void) => {
+  window.addEventListener("storage", callback);
+  window.addEventListener(LANGUAGE_CHANGE_EVENT, callback);
+
+  return () => {
+    window.removeEventListener("storage", callback);
+    window.removeEventListener(LANGUAGE_CHANGE_EVENT, callback);
+  };
+};
+
+const getStoredLanguage = (): Lang => {
+  try {
+    const stored = localStorage.getItem(LANGUAGE_STORAGE_KEY) as Lang | null;
+    if (stored === "es" || stored === "en") {
+      return stored;
+    }
+  } catch {
+    // localStorage not available
+  }
+
+  return "es";
+};
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [lang, setLangState] = useState<Lang>(() => {
-    try {
-      const stored = localStorage.getItem("lva-lang") as Lang | null;
-      if (stored === "es" || stored === "en") return stored;
-    } catch {
-      // localStorage not available
-    }
-
-    return "es";
-  });
+  const lang = useSyncExternalStore(subscribeToLanguage, getStoredLanguage, () => "es");
 
   const setLang = (l: Lang) => {
-    setLangState(l);
     try {
-      localStorage.setItem("lva-lang", l);
+      localStorage.setItem(LANGUAGE_STORAGE_KEY, l);
+      window.dispatchEvent(new Event(LANGUAGE_CHANGE_EVENT));
     } catch {
       // localStorage not available
     }
