@@ -3,41 +3,37 @@
 /**
  * Returns the PayPal REST API Base URL
  * Sandbox → https://api-m.sandbox.paypal.com
- * Live → https://api-m.paypal.com
+ * Live   → https://api-m.paypal.com
  */
 export function getPayPalApiBaseUrl() {
-  const mode = process.env.PAYPAL_MODE?.toLowerCase();
-
+  const mode = process.env.PAYPAL_MODE?.toLowerCase() ?? "sandbox";
   return mode === "live"
-    ? "https://api-m.paypal.com" // LIVE
-    : "https://api-m.sandbox.paypal.com"; // SANDBOX
+    ? "https://api-m.paypal.com"
+    : "https://api-m.sandbox.paypal.com";
 }
 
 /**
- * Creates a Basic auth header value for OAuth token request
+ * Creates Basic auth header for OAuth token request
  */
 function getPayPalBasicAuthHeader() {
-  const mode = process.env.PAYPAL_MODE?.toLowerCase();
+  const mode = process.env.PAYPAL_MODE?.toLowerCase() ?? "sandbox";
 
   let clientId: string | undefined;
   let clientSecret: string | undefined;
 
   if (mode === "live") {
-    clientId =
-      process.env.PAYPAL_CLIENT_ID || process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
+    clientId = process.env.PAYPAL_CLIENT_ID;
     clientSecret = process.env.PAYPAL_CLIENT_SECRET;
   } else {
-    // sandbox/dev mode
-    clientId =
-      process.env.PAYPAL_SANDBOX_CLIENT_ID || process.env.NEXT_PUBLIC_PAYPAL_SANDBOX_CLIENT_ID;
+    clientId = process.env.PAYPAL_SANDBOX_CLIENT_ID;
     clientSecret = process.env.PAYPAL_SANDBOX_CLIENT_SECRET;
   }
 
   if (!clientId || !clientSecret) {
+    const missing = !clientId ? "Client ID" : "Client Secret";
     throw new Error(
-      mode === "live"
-        ? "Missing PayPal LIVE API credentials."
-        : "Missing PayPal SANDBOX API credentials."
+      `Missing PayPal ${mode.toUpperCase()} ${missing}. ` +
+      `Check environment variables (PAYPAL_${mode === "live" ? "" : "SANDBOX_"}* prefix).`
     );
   }
 
@@ -45,10 +41,20 @@ function getPayPalBasicAuthHeader() {
   return `Basic ${encoded}`;
 }
 
+// Simple in-memory token cache (tokens last ~9 hours)
+let cachedToken: { value: string; expiresAt: number } | null = null;
+
 /**
- * Get an OAuth access token from PayPal
+ * Get (and cache) a PayPal OAuth access token
  */
-export async function getPayPalAccessToken() {
+export async function getPayPalAccessToken(): Promise<string> {
+  const now = Date.now();
+
+  // Reuse if still valid (with 1-minute safety buffer)
+  if (cachedToken && cachedToken.expiresAt > now + 60_000) {
+    return cachedToken.value;
+  }
+
   const baseUrl = getPayPalApiBaseUrl();
 
   const res = await fetch(`${baseUrl}/v1/oauth2/token`, {
@@ -60,12 +66,28 @@ export async function getPayPalAccessToken() {
     body: "grant_type=client_credentials",
   });
 
-  const data = await res.json();
-
-  if (!res.ok || !data.access_token) {
-    console.error("PayPal OAuth Error:", data);
-    throw new Error("Failed to obtain PayPal access token");
+  if (!res.ok) {
+    let errorData;
+    try {
+      errorData = await res.json();
+    } catch {
+      errorData = { message: res.statusText };
+    }
+    console.error(`PayPal OAuth failed (${res.status}):`, errorData);
+    throw new Error(`Failed to obtain PayPal access token: ${res.status} ${res.statusText}`);
   }
 
-  return data.access_token as string;
+  const data = await res.json();
+
+  if (!data.access_token || typeof data.expires_in !== "number") {
+    console.error("Invalid PayPal token response:", data);
+    throw new Error("Invalid PayPal token response format");
+  }
+
+  cachedToken = {
+    value: data.access_token,
+    expiresAt: now + data.expires_in * 1000,
+  };
+
+  return data.access_token;
 }

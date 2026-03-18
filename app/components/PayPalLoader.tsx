@@ -22,6 +22,7 @@ export default function PayPalLoader() {
       currency: "USD",
       intent: "capture",
       components: "buttons",
+      "enable-funding": "card",
     });
 
     const script = document.createElement("script");
