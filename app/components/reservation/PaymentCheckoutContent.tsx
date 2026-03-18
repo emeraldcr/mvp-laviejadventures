@@ -35,6 +35,12 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
 
   useEffect(() => {
     const paypalContainer = paypalRef.current;
+    // Abort flag: prevents async callbacks from acting after the effect has been
+    // cleaned up. On mobile Chrome, effects can re-run during soft keyboard show/hide,
+    // orientation changes, or viewport resize — without this flag the old async chain
+    // races against the new one and can leave PayPal in a broken state.
+    let aborted = false;
+
     const mode = process.env.NEXT_PUBLIC_PAYPAL_MODE?.toLowerCase() || "sandbox";
     const clientId = mode === "live"
       ? process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID
@@ -64,7 +70,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
     };
 
     const initializeButtons = async () => {
-      if (!window.paypal || !paypalContainer) return;
+      if (aborted || !window.paypal || !paypalContainer) return;
 
       paypalContainer.innerHTML = "";
       setPaypalError(null);
@@ -136,8 +142,10 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
           })
           .render(paypalContainer);
       } catch (error) {
-        console.error("Failed to render PayPal buttons:", error);
-        setPaypalError(tr.error);
+        if (!aborted) {
+          console.error("Failed to render PayPal buttons:", error);
+          setPaypalError(tr.error);
+        }
       }
     };
 
@@ -203,15 +211,20 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
         nextScript.addEventListener("error", handleError, { once: true });
       });
 
-      await initializeButtons();
+      if (!aborted) {
+        await initializeButtons();
+      }
     };
 
     void loadPayPalScript().catch((error) => {
-      console.error("Failed to initialize PayPal:", error);
-      setPaypalError(tr.error);
+      if (!aborted) {
+        console.error("Failed to initialize PayPal:", error);
+        setPaypalError(tr.error);
+      }
     });
 
     return () => {
+      aborted = true;
       if (paypalContainer) {
         paypalContainer.innerHTML = "";
       }

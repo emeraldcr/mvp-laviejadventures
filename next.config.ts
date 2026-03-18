@@ -7,13 +7,16 @@ import type { NextConfig } from "next";
 const ContentSecurityPolicy = [
   "default-src 'self'",
   // Scripts: self, inline (Next.js needs unsafe-inline), PayPal SDK, Google Ads/Analytics
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.paypal.com https://www.paypalobjects.com https://www.sandbox.paypal.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://www.google-analytics.com",
-  // Frames: PayPal checkout iframe (critical for iOS — without this Safari blocks the payment popup)
-  "frame-src 'self' https://www.paypal.com https://www.paypalobjects.com https://www.sandbox.paypal.com",
+  // checkout.paypal.com is required for mobile Chrome — PayPal's mobile checkout flow
+  // loads additional scripts from that domain (differs from the desktop popup flow).
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.paypal.com https://checkout.paypal.com https://www.paypalobjects.com https://www.sandbox.paypal.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://www.google-analytics.com",
+  // Frames: PayPal checkout iframe — checkout.paypal.com is used by mobile Chrome's redirect flow
+  "frame-src 'self' https://www.paypal.com https://checkout.paypal.com https://www.paypalobjects.com https://www.sandbox.paypal.com",
   // Images: allow PayPal logos + Google/CDN images already used in the app
-  "img-src 'self' data: blob: https://www.paypal.com https://www.paypalobjects.com https://lh3.googleusercontent.com https://avatars.githubusercontent.com https://*.googleusercontent.com",
+  "img-src 'self' data: blob: https://www.paypal.com https://checkout.paypal.com https://www.paypalobjects.com https://lh3.googleusercontent.com https://avatars.githubusercontent.com https://*.googleusercontent.com",
   // Fetch/XHR: PayPal APIs + Google Analytics
-  "connect-src 'self' https://www.paypal.com https://api-m.paypal.com https://api-m.sandbox.paypal.com https://www.sandbox.paypal.com https://www.google-analytics.com https://analytics.google.com https://*.vercel-insights.com https://*.vercel-analytics.com",
+  // checkout.paypal.com is needed for mobile Chrome's OAuth/token exchange requests
+  "connect-src 'self' https://www.paypal.com https://checkout.paypal.com https://api-m.paypal.com https://api-m.sandbox.paypal.com https://www.sandbox.paypal.com https://www.google-analytics.com https://analytics.google.com https://*.vercel-insights.com https://*.vercel-analytics.com",
   // Styles: allow inline styles (Tailwind + framer-motion)
   "style-src 'self' 'unsafe-inline'",
   // Fonts
