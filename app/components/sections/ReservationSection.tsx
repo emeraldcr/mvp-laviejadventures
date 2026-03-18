@@ -98,7 +98,7 @@ export default function ReservationSection({ className }: Props) {
   return (
     <div id="reservation-details-card" className={className}>
       <ReservationDetails
-        key={`reservation-${initialSelectedTourSlug}`}
+        key={`reservation-${initialSelectedTourSlug}-${currentYear}-${currentMonth}-${selectedDay}`}
         selectedDate={selectedDay}
         currentMonth={currentMonth}
         monthName={monthName}
