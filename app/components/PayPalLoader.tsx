@@ -1,34 +1,24 @@
 "use client";
 
 import { useEffect } from "react";
+import { getPayPalSdkUrl } from "@/lib/paypal-client";
 
 export default function PayPalLoader() {
   useEffect(() => {
     if (document.getElementById("paypal-sdk")) return;
 
-    const mode = process.env.NEXT_PUBLIC_PAYPAL_MODE?.toLowerCase() || "sandbox";
-    const clientId =
-      mode === "live"
-        ? process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID
-        : process.env.NEXT_PUBLIC_PAYPAL_SANDBOX_CLIENT_ID;
+    const sdkUrl = getPayPalSdkUrl({
+      components: ["buttons", "funding-eligibility"],
+    });
 
-    if (!clientId) {
+    if (!sdkUrl) {
       console.warn("PayPal client ID missing — check environment variables");
       return;
     }
 
-    const params = new URLSearchParams({
-      "client-id": clientId,
-      currency: "USD",
-      intent: "capture",
-      commit: "true",
-      components: "buttons,funding-eligibility",
-      "enable-funding": "card",
-    });
-
     const script = document.createElement("script");
     script.id = "paypal-sdk";
-    script.src = `https://www.paypal.com/sdk/js?${params.toString()}`;
+    script.src = sdkUrl;
     script.async = true;
     script.setAttribute("data-sdk-integration-source", "button-factory");
     script.onerror = () => console.error("Failed to load PayPal SDK");

@@ -1,16 +1,20 @@
 // app/components/reservation/PaymentCheckoutContent.tsx
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/lib/translations";
 import type { OrderDetails } from "@/lib/types/index";
+import { getPayPalClientId, getPayPalMode, getPayPalSdkUrl } from "@/lib/paypal-client";
 
 declare global {
   interface Window {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    paypal?: any;
+    paypal?: {
+      Buttons: (options: Record<string, unknown>) => {
+        render: (container: HTMLElement) => Promise<void>;
+      };
+    };
   }
 }
 
@@ -18,8 +22,6 @@ type Props = {
   orderDetails: OrderDetails;
   onSuccess: (orderData: unknown) => void;
 };
-
-const CLIENT_ID = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID!;
 
 export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Props) {
   const { lang } = useLanguage();
@@ -45,7 +47,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
     tourSlug,
   } = orderDetails;
 
-  const payload = {
+  const payload = useMemo(() => ({
     name: name?.trim() ?? "",
     email: email?.trim() ?? "",
     phone: phone?.trim() ?? "",
@@ -58,7 +60,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
     tourSlug: tourSlug?.trim() ?? "",
     tourName: tourName?.trim() ?? "",
     language: lang,
-  };
+  }), [email, isoDate, lang, name, packagePrice, phone, tickets, total, tourName, tourPackage, tourSlug, tourTime]);
 
   const missingFields: string[] = [];
   if (!payload.name) missingFields.push("name");
@@ -70,45 +72,73 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
   if (!payload.tourPackage) missingFields.push("tourPackage");
 
   const isPayloadValid = missingFields.length === 0;
+  const clientId = getPayPalClientId();
+  const paypalMode = getPayPalMode();
+  const sdkUrl = getPayPalSdkUrl({ components: ["buttons"] });
 
-  // Load PayPal SDK script
+  useEffect(() => {
+    rendered.current = false;
+  }, [payload]);
+
   useEffect(() => {
     if (!isPayloadValid) return;
+
+    if (!clientId || !sdkUrl) {
+      setError(`PayPal is not configured for ${paypalMode} mode.`);
+      return;
+    }
+
+    const existingScript = document.getElementById("paypal-sdk") as HTMLScriptElement | null;
 
     if (window.paypal) {
       setSdkReady(true);
       return;
     }
 
-    if (document.getElementById("paypal-sdk")) return;
+    const handleLoad = () => setSdkReady(true);
+    const handleError = () => setError("Failed to load PayPal SDK");
+
+    if (existingScript) {
+      existingScript.addEventListener("load", handleLoad);
+      existingScript.addEventListener("error", handleError);
+
+      return () => {
+        existingScript.removeEventListener("load", handleLoad);
+        existingScript.removeEventListener("error", handleError);
+      };
+    }
 
     const script = document.createElement("script");
     script.id = "paypal-sdk";
-    script.src = `https://www.paypal.com/sdk/js?client-id=${CLIENT_ID}&currency=USD&intent=capture&components=buttons&enable-funding=card`;
+    script.src = sdkUrl;
     script.async = true;
-    script.onload = () => setSdkReady(true);
-    script.onerror = () => setError("Failed to load PayPal SDK");
+    script.setAttribute("data-sdk-integration-source", "button-factory");
+    script.addEventListener("load", handleLoad);
+    script.addEventListener("error", handleError);
     document.body.appendChild(script);
-  }, [isPayloadValid]);
 
-  // Render PayPal buttons once SDK is ready
+    return () => {
+      script.removeEventListener("load", handleLoad);
+      script.removeEventListener("error", handleError);
+    };
+  }, [clientId, isPayloadValid, paypalMode, sdkUrl]);
+
   useEffect(() => {
     if (!sdkReady || !window.paypal || rendered.current || !containerRef.current) return;
-    rendered.current = true;
 
-    // Capture payload at render time (it's stable at this point)
-    const p = payload;
+    rendered.current = true;
+    setError(null);
+    containerRef.current.innerHTML = "";
 
     window.paypal
       .Buttons({
         style: { layout: "vertical", color: "gold", shape: "pill", label: "paypal", borderRadius: 10 },
-
         createOrder: async () => {
           try {
             const res = await fetch("/api/paypal/create-order", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(p),
+              body: JSON.stringify(payload),
             });
             const data = await res.json();
             if (!data.id) {
@@ -119,13 +149,13 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
                   : data?.message ?? "Unexpected error creating order"
               );
             }
-            return data.id;
+            return data.id as string;
           } catch (err) {
             console.error("createOrder error:", err);
+            setError(tr.error ?? "There was an error creating the order");
             throw err;
           }
         },
-
         onApprove: async (data: { orderID: string }) => {
           const res = await fetch("/api/paypal/capture-order", {
             method: "POST",
@@ -137,6 +167,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
           if (!res.ok || output.status !== "COMPLETED") {
             setError(tr.error ?? "Payment not completed correctly");
             console.error("Capture failed:", output);
+            rendered.current = false;
             return;
           }
 
@@ -144,17 +175,20 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
           onSuccess(output);
           router.push(`/success?orderId=${output.id ?? output.captureID}`);
         },
-
         onCancel: () => setError(null),
-
         onError: (err: unknown) => {
           console.error("PayPal error:", err);
           setError(tr.error ?? "There was an error processing the payment");
+          rendered.current = false;
         },
       })
-      .render(containerRef.current);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sdkReady]);
+      .render(containerRef.current)
+      .catch((renderError: unknown) => {
+        console.error("PayPal render error:", renderError);
+        setError(tr.error ?? "There was an error processing the payment");
+        rendered.current = false;
+      });
+  }, [onSuccess, payload, router, sdkReady, tr.error]);
 
   const packageName = tr.packages?.[tourPackage] ?? tourPackage;
 
@@ -200,6 +234,10 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
         {!isPayloadValid ? (
           <p className="text-sm font-medium text-red-600 dark:text-red-400">
             Reservation data is incomplete: {missingFields.join(", ")}. Please go back and try again.
+          </p>
+        ) : !clientId ? (
+          <p className="text-sm font-medium text-red-600 dark:text-red-400">
+            PayPal is not configured for {paypalMode} mode.
           </p>
         ) : (
           <div ref={containerRef} />
