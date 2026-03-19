@@ -47,12 +47,15 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
     tourSlug,
   } = orderDetails;
 
+  // Fallback: if isoDate is missing but date is already ISO format (from AI flow), use it
+  const resolvedIsoDate = isoDate?.trim() || (date?.match(/^\d{4}-\d{2}-\d{2}$/) ? date.trim() : "");
+
   const payload = useMemo(() => ({
     name: name?.trim() ?? "",
     email: email?.trim() ?? "",
     phone: phone?.trim() ?? "",
     tickets: Number(tickets),
-    date: isoDate?.trim() ?? "",
+    date: resolvedIsoDate,
     total: Number(total),
     tourTime: tourTime ?? "",
     tourPackage: tourPackage?.trim() ?? "",
@@ -60,7 +63,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
     tourSlug: tourSlug?.trim() ?? "",
     tourName: tourName?.trim() ?? "",
     language: lang,
-  }), [email, isoDate, lang, name, packagePrice, phone, tickets, total, tourName, tourPackage, tourSlug, tourTime]);
+  }), [email, resolvedIsoDate, lang, name, packagePrice, phone, tickets, total, tourName, tourPackage, tourSlug, tourTime]);
 
   const missingFields: string[] = [];
   if (!payload.name) missingFields.push("name");
@@ -76,29 +79,72 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
   const paypalMode = getPayPalMode();
   const sdkUrl = getPayPalSdkUrl({ components: ["buttons"] });
 
+  // ── DEBUG: log everything on every render ────────────────────────────────────
+  console.group("[PayPal Checkout] orderDetails received");
+  console.log("raw orderDetails:", JSON.parse(JSON.stringify(orderDetails)));
+  console.log("  name       :", name);
+  console.log("  email      :", email);
+  console.log("  phone      :", phone);
+  console.log("  tickets    :", tickets, "→", Number(tickets));
+  console.log("  total      :", total, "→", Number(total));
+  console.log("  date       :", date, " ← display");
+  console.log("  isoDate    :", isoDate, " ← from orderDetails");
+  console.log("  resolvedIsoDate:", resolvedIsoDate, " ← used as payload.date");
+  console.log("  tourTime   :", tourTime);
+  console.log("  tourPackage:", tourPackage);
+  console.log("  tourName   :", tourName);
+  console.log("  tourSlug   :", tourSlug);
+  console.log("  packagePrice:", packagePrice);
+  console.groupEnd();
+
+  console.group("[PayPal Checkout] payload built");
+  console.log("payload:", payload);
+  console.log("missingFields:", missingFields);
+  console.log("isPayloadValid:", isPayloadValid);
+  console.log("clientId:", clientId ? `${clientId.slice(0, 8)}…` : "MISSING");
+  console.log("paypalMode:", paypalMode);
+  console.log("sdkUrl:", sdkUrl);
+  console.groupEnd();
+  // ────────────────────────────────────────────────────────────────────────────
+
   useEffect(() => {
     rendered.current = false;
   }, [payload]);
 
   useEffect(() => {
-    if (!isPayloadValid) return;
+    if (!isPayloadValid) {
+      console.warn("[PayPal SDK] skipping SDK load — payload invalid. missingFields:", missingFields);
+      return;
+    }
 
     if (!clientId || !sdkUrl) {
+      const msg = `PayPal is not configured for ${paypalMode} mode. clientId="${clientId}" sdkUrl="${sdkUrl}"`;
+      console.error("[PayPal SDK]", msg);
       setError(`PayPal is not configured for ${paypalMode} mode.`);
       return;
     }
 
+    console.log("[PayPal SDK] attempting to load. sdkUrl:", sdkUrl);
+
     const existingScript = document.getElementById("paypal-sdk") as HTMLScriptElement | null;
 
     if (window.paypal) {
+      console.log("[PayPal SDK] window.paypal already present — marking ready");
       setSdkReady(true);
       return;
     }
 
-    const handleLoad = () => setSdkReady(true);
-    const handleError = () => setError("Failed to load PayPal SDK");
+    const handleLoad = () => {
+      console.log("[PayPal SDK] script loaded ✓. window.paypal:", !!window.paypal);
+      setSdkReady(true);
+    };
+    const handleError = (e: Event) => {
+      console.error("[PayPal SDK] script failed to load:", e, "src:", sdkUrl);
+      setError("Failed to load PayPal SDK");
+    };
 
     if (existingScript) {
+      console.log("[PayPal SDK] re-using existing <script> tag:", existingScript.src);
       existingScript.addEventListener("load", handleLoad);
       existingScript.addEventListener("error", handleError);
 
@@ -115,6 +161,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
     script.setAttribute("data-sdk-integration-source", "button-factory");
     script.addEventListener("load", handleLoad);
     script.addEventListener("error", handleError);
+    console.log("[PayPal SDK] injecting <script> tag:", sdkUrl);
     document.body.appendChild(script);
 
     return () => {
@@ -124,16 +171,20 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
   }, [clientId, isPayloadValid, paypalMode, sdkUrl]);
 
   useEffect(() => {
+    console.log("[PayPal Buttons] render effect. sdkReady:", sdkReady, "window.paypal:", !!window.paypal, "rendered.current:", rendered.current, "containerRef:", !!containerRef.current);
     if (!sdkReady || !window.paypal || rendered.current || !containerRef.current) return;
 
     rendered.current = true;
     setError(null);
     containerRef.current.innerHTML = "";
 
+    console.log("[PayPal Buttons] calling window.paypal.Buttons() with payload:", payload);
+
     window.paypal
       .Buttons({
         style: { layout: "vertical", color: "gold", shape: "pill", label: "paypal", borderRadius: 10 },
         createOrder: async () => {
+          console.log("[PayPal createOrder] sending payload to /api/paypal/create-order:", payload);
           try {
             const res = await fetch("/api/paypal/create-order", {
               method: "POST",
@@ -141,50 +192,59 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
               body: JSON.stringify(payload),
             });
             const data = await res.json();
+            console.log("[PayPal createOrder] API response status:", res.status, "body:", data);
             if (!data.id) {
               const detail = data?.details?.[0];
-              throw new Error(
-                detail
-                  ? `${detail.issue} ${detail.description}`
-                  : data?.message ?? "Unexpected error creating order"
-              );
+              const msg = detail
+                ? `${detail.issue} ${detail.description}`
+                : data?.message ?? "Unexpected error creating order";
+              console.error("[PayPal createOrder] no order id in response. msg:", msg, "full response:", data);
+              throw new Error(msg);
             }
+            console.log("[PayPal createOrder] order created ✓ id:", data.id);
             return data.id as string;
           } catch (err) {
-            console.error("createOrder error:", err);
+            console.error("[PayPal createOrder] caught error:", err);
             setError(tr.error ?? "There was an error creating the order");
             throw err;
           }
         },
         onApprove: async (data: { orderID: string }) => {
+          console.log("[PayPal onApprove] orderID:", data.orderID);
           const res = await fetch("/api/paypal/capture-order", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ orderID: data.orderID }),
           });
           const output = await res.json();
+          console.log("[PayPal onApprove] capture response status:", res.status, "body:", output);
 
           if (!res.ok || output.status !== "COMPLETED") {
+            console.error("[PayPal onApprove] capture failed:", output);
             setError(tr.error ?? "Payment not completed correctly");
-            console.error("Capture failed:", output);
             rendered.current = false;
             return;
           }
 
+          console.log("[PayPal onApprove] capture success ✓ status:", output.status);
           sessionStorage.removeItem("reservationOrderDetails");
           onSuccess(output);
           router.push(`/success?orderId=${output.id ?? output.captureID}`);
         },
-        onCancel: () => setError(null),
+        onCancel: () => {
+          console.log("[PayPal onCancel] user cancelled");
+          setError(null);
+        },
         onError: (err: unknown) => {
-          console.error("PayPal error:", err);
+          console.error("[PayPal onError]", err);
           setError(tr.error ?? "There was an error processing the payment");
           rendered.current = false;
         },
       })
       .render(containerRef.current)
+      .then(() => console.log("[PayPal Buttons] render() resolved ✓"))
       .catch((renderError: unknown) => {
-        console.error("PayPal render error:", renderError);
+        console.error("[PayPal Buttons] render() rejected:", renderError);
         setError(tr.error ?? "There was an error processing the payment");
         rendered.current = false;
       });

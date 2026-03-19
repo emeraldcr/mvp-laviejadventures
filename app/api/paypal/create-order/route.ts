@@ -29,7 +29,7 @@ interface CreateOrderResponse {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    console.log("incoming body", body);
+    console.log("[create-order] raw incoming body:", JSON.stringify(body, null, 2));
 
     // Normalize types from the incoming body
     const name: string = String(body.name ?? "").trim();
@@ -44,6 +44,10 @@ export async function POST(req: Request) {
     const tourSlug: string = String(body.tourSlug ?? "").trim();
     const tourName: string = String(body.tourName ?? "").trim();
     const language: string = String(body.language ?? "es").trim();
+
+    console.log("[create-order] normalized fields:", {
+      name, email, phone, tickets, total, date, tourTime, tourPackage, packagePrice, tourSlug, tourName, language,
+    });
 
     // `date` must be an ISO date string (YYYY-MM-DD)
     const requestUrl = new URL(req.url);
@@ -63,6 +67,7 @@ export async function POST(req: Request) {
     if (!tourPackage) missing.push("tourPackage");
 
     if (missing.length > 0) {
+      console.error("[create-order] validation failed. missing:", missing, "received:", { name, email, phone, tickets, total, date, tourPackage });
       return NextResponse.json(
         {
           message: `Missing or invalid fields: ${missing.join(", ")}`,
@@ -72,6 +77,8 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
+
+    console.log("[create-order] validation passed. date:", date);
 
     if (!isDateOnOrAfterMinBookableInCostaRica(String(date))) {
       return NextResponse.json(
@@ -156,9 +163,10 @@ export async function POST(req: Request) {
     });
 
     const data = (await res.json()) as CreateOrderResponse;
+    console.log("[create-order] PayPal API response status:", res.status, "id:", data.id, "full:", JSON.stringify(data, null, 2));
 
     if (!res.ok || !data.id) {
-      console.error("PayPal Create Order Error:", data);
+      console.error("[create-order] PayPal returned error:", data);
       const errorDetail = data.details?.[0];
       const errorMessage = errorDetail
         ? `${errorDetail.issue} ${errorDetail.description} (${data.debug_id})`

@@ -16,13 +16,37 @@ const getStoredOrderDetails = (): OrderDetails | null => {
   }
 
   const stored = sessionStorage.getItem("reservationOrderDetails");
+  console.log("[reservation/page] raw sessionStorage 'reservationOrderDetails':", stored);
+
   if (!stored) {
+    console.warn("[reservation/page] no reservationOrderDetails in sessionStorage");
     return null;
   }
 
   try {
-    return JSON.parse(stored) as OrderDetails;
-  } catch {
+    const parsed = JSON.parse(stored) as OrderDetails;
+    console.group("[reservation/page] parsed orderDetails");
+    console.log("  name       :", parsed.name);
+    console.log("  email      :", parsed.email);
+    console.log("  phone      :", parsed.phone);
+    console.log("  tickets    :", parsed.tickets);
+    console.log("  total      :", parsed.total);
+    console.log("  date       :", parsed.date);
+    console.log("  isoDate    :", parsed.isoDate);
+    console.log("  tourTime   :", parsed.tourTime);
+    console.log("  tourPackage:", parsed.tourPackage);
+    console.log("  tourName   :", parsed.tourName);
+    console.log("  tourSlug   :", parsed.tourSlug);
+    console.log("  packagePrice:", parsed.packagePrice);
+    console.groupEnd();
+
+    if (!parsed.isoDate) {
+      console.warn("[reservation/page] isoDate is missing from stored data! date field is:", parsed.date, " — will attempt fallback in PaymentCheckoutContent");
+    }
+
+    return parsed;
+  } catch (err) {
+    console.error("[reservation/page] failed to parse reservationOrderDetails:", err, "raw:", stored);
     sessionStorage.removeItem("reservationOrderDetails");
     return null;
   }
