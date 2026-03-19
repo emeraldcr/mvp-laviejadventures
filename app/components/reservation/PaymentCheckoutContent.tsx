@@ -48,6 +48,34 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
     tourSlug,
   } = orderDetails;
 
+  // Build an explicit, normalized payload — never spread raw state into the request
+  const payload = {
+    name: name?.trim() ?? "",
+    email: email?.trim() ?? "",
+    phone: phone?.trim() ?? "",
+    tickets: Number(tickets),
+    date: isoDate?.trim() ?? "",
+    total: Number(total),
+    tourTime: tourTime ?? "",
+    tourPackage: tourPackage?.trim() ?? "",
+    packagePrice: Number(packagePrice),
+    tourSlug: tourSlug?.trim() ?? "",
+    tourName: tourName?.trim() ?? "",
+    language: lang,
+  };
+
+  // Gate: only render PayPal buttons when all required fields are present and valid
+  const missingFields: string[] = [];
+  if (!payload.name) missingFields.push("name");
+  if (!payload.email) missingFields.push("email");
+  if (!payload.phone) missingFields.push("phone");
+  if (payload.tickets < 1) missingFields.push("tickets");
+  if (!payload.date) missingFields.push("date");
+  if (payload.total <= 0) missingFields.push("total");
+  if (!payload.tourPackage) missingFields.push("tourPackage");
+
+  const isPayloadValid = missingFields.length === 0;
+
   const packageName = tr.packages?.[tourPackage] ?? tourPackage;
 
   return (
@@ -89,72 +117,66 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
       </p>
 
       <div className="w-full rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
-        <PayPalScriptProvider options={paypalScriptOptions}>
-          <PayPalButtons
-            style={{ layout: "vertical", color: "gold", shape: "pill", label: "paypal", borderRadius: 10 }}
-            createOrder={async () => {
-              try {
-                const res = await fetch("/api/paypal/create-order", {
+        {!isPayloadValid ? (
+          <p className="text-sm font-medium text-red-600 dark:text-red-400">
+            Reservation data is incomplete: {missingFields.join(", ")}. Please go back and try again.
+          </p>
+        ) : (
+          <PayPalScriptProvider options={paypalScriptOptions}>
+            <PayPalButtons
+              style={{ layout: "vertical", color: "gold", shape: "pill", label: "paypal", borderRadius: 10 }}
+              createOrder={async () => {
+                console.log("createOrder payload", payload);
+                try {
+                  const res = await fetch("/api/paypal/create-order", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload),
+                  });
+
+                  const orderData = await res.json();
+
+                  if (!orderData.id) {
+                    const errorDetail = orderData?.details?.[0];
+                    const errorMessage = errorDetail
+                      ? `${errorDetail.issue} ${errorDetail.description} (${orderData.debug_id})`
+                      : orderData?.message || "Unexpected error occurred, please try again.";
+                    throw new Error(errorMessage);
+                  }
+
+                  return orderData.id;
+                } catch (err) {
+                  console.error("createOrder error:", err);
+                  throw err;
+                }
+              }}
+              onApprove={async (data) => {
+                const res = await fetch("/api/paypal/capture-order", {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    name,
-                    email,
-                    phone,
-                    tickets,
-                    date: isoDate,
-                    total,
-                    tourTime,
-                    tourPackage,
-                    packagePrice,
-                    tourSlug,
-                    tourName,
-                    language: lang,
-                  }),
+                  body: JSON.stringify({ orderID: data.orderID }),
                 });
 
-                const orderData = await res.json();
+                const output = await res.json();
 
-                if (!orderData.id) {
-                  const errorDetail = orderData?.details?.[0];
-                  const errorMessage = errorDetail
-                    ? `${errorDetail.issue} ${errorDetail.description} (${orderData.debug_id})`
-                    : orderData?.message || "Unexpected error occurred, please try again.";
-                  throw new Error(errorMessage);
+                if (!res.ok || output.status !== "COMPLETED") {
+                  setError(tr.error || "El pago no se completó correctamente");
+                  console.error("Capture failed:", output);
+                  return;
                 }
 
-                return orderData.id;
-              } catch (err) {
-                console.error("createOrder error:", err);
-                throw err;
-              }
-            }}
-            onApprove={async (data) => {
-              const res = await fetch("/api/paypal/capture-order", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ orderID: data.orderID }),
-              });
-
-              const output = await res.json();
-
-              if (!res.ok || output.status !== "COMPLETED") {
-                setError(tr.error || "El pago no se completó correctamente");
-                console.error("Capture failed:", output);
-                return;
-              }
-
-              sessionStorage.removeItem("reservationOrderDetails");
-              onSuccess(output);
-              router.push(`/success?orderId=${output.id || output.captureID}`);
-            }}
-            onCancel={() => setError(null)}
-            onError={(err) => {
-              console.error("PayPal Buttons error:", err);
-              setError(tr.error || "Hubo un error al procesar el pago");
-            }}
-          />
-        </PayPalScriptProvider>
+                sessionStorage.removeItem("reservationOrderDetails");
+                onSuccess(output);
+                router.push(`/success?orderId=${output.id || output.captureID}`);
+              }}
+              onCancel={() => setError(null)}
+              onError={(err) => {
+                console.error("PayPal Buttons error:", err);
+                setError(tr.error || "Hubo un error al procesar el pago");
+              }}
+            />
+          </PayPalScriptProvider>
+        )}
       </div>
 
       {error && (

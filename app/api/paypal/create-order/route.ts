@@ -28,17 +28,47 @@ interface CreateOrderResponse {
 
 export async function POST(req: Request) {
   try {
-    const { name, email, phone, tickets, total, date, tourTime, tourPackage, packagePrice, tourSlug, tourName, language } = await req.json();
-    // `date` is expected to be an ISO date string (YYYY-MM-DD) sent from the client
+    const body = await req.json();
+    console.log("incoming body", body);
+
+    // Normalize types from the incoming body
+    const name: string = String(body.name ?? "").trim();
+    const email: string = String(body.email ?? "").trim();
+    const phone: string = String(body.phone ?? "").trim();
+    const tickets: number = Number(body.tickets);
+    const total: number = Number(body.total);
+    const date: string = String(body.date ?? "").trim();
+    const tourTime: string = String(body.tourTime ?? "").trim();
+    const tourPackage: string = String(body.tourPackage ?? "").trim();
+    const packagePrice: number | null = body.packagePrice != null ? Number(body.packagePrice) : null;
+    const tourSlug: string = String(body.tourSlug ?? "").trim();
+    const tourName: string = String(body.tourName ?? "").trim();
+    const language: string = String(body.language ?? "es").trim();
+
+    // `date` must be an ISO date string (YYYY-MM-DD)
     const requestUrl = new URL(req.url);
     const appBaseUrl =
       process.env.APP_BASE_URL ||
       process.env.NEXTAUTH_URL ||
       (requestUrl.origin !== "null" ? requestUrl.origin : APP_BASE_URL_DEFAULT);
 
-    if (!name || !email || !phone || !tickets || !total || !date || !tourPackage) {
+    // Per-field validation — return exactly which fields are missing/invalid
+    const missing: string[] = [];
+    if (!name) missing.push("name");
+    if (!email) missing.push("email");
+    if (!phone) missing.push("phone");
+    if (!Number.isFinite(tickets) || tickets < 1) missing.push("tickets");
+    if (!Number.isFinite(total) || total <= 0) missing.push("total");
+    if (!date) missing.push("date");
+    if (!tourPackage) missing.push("tourPackage");
+
+    if (missing.length > 0) {
       return NextResponse.json(
-        { message: "Missing required fields." },
+        {
+          message: `Missing or invalid fields: ${missing.join(", ")}`,
+          missing,
+          received: { name, email, phone, tickets, total, date, tourPackage },
+        },
         { status: 400 }
       );
     }
