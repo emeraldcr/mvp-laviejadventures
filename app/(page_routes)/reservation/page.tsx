@@ -41,7 +41,9 @@ const getStoredOrderDetails = (): OrderDetails | null => {
     console.groupEnd();
 
     if (!parsed.isoDate) {
-      console.warn("[reservation/page] isoDate is missing from stored data! date field is:", parsed.date, " — will attempt fallback in PaymentCheckoutContent");
+      console.warn("[reservation/page] isoDate missing — stale session data. Clearing and redirecting. date was:", parsed.date);
+      sessionStorage.removeItem("reservationOrderDetails");
+      return null;
     }
 
     return parsed;
