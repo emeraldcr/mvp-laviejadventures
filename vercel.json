@@ -1,5 +1,11 @@
 {
   "framework": "nextjs",
+  "crons": [
+    {
+      "path": "/api/cron/pre-tour-reminder",
+      "schedule": "0 16 * * *"
+    }
+  ],
   "buildCommand": "next build",
   "installCommand": "npm ci",
   "redirects": [

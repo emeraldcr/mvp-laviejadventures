@@ -14,6 +14,7 @@ type OrderPayload = {
   tickets: number;
   total: number;
   date: string;
+  isoDate: string;
   tourTime: string;
   tourPackage: string;
   tourSlug: string;

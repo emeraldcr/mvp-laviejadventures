@@ -28,6 +28,7 @@ interface CreateOrderResponse {
 export async function POST(req: Request) {
   try {
     const { name, email, phone, tickets, total, date, tourTime, tourPackage, packagePrice, tourSlug, tourName, language } = await req.json();
+    // `date` is expected to be an ISO date string (YYYY-MM-DD) sent from the client
     const requestUrl = new URL(req.url);
     const appBaseUrl =
       process.env.APP_BASE_URL ||

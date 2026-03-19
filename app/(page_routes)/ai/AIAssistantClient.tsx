@@ -124,6 +124,7 @@ export default function AIAssistantClient() {
       phone: bookingState.phone,
       tickets: bookingState.tickets,
       date: bookingState.date,
+      isoDate: bookingState.date,
       tourTime: bookingState.tourTime,
       tourPackage: bookingState.tourPackage,
       tourSlug: "tour-ciudad-esmeralda",

@@ -375,6 +375,9 @@ export type BookingRecord = {
   packagePrice: number | null;
   userId?: string | null;
   userEmail?: string | null;
+  language?: "es" | "en";
+  reminder48hSent?: boolean;
+  reminder48hSentAt?: Date;
   createdAt?: Date;
   paypalRaw?: unknown;
 };
@@ -466,6 +469,7 @@ export type OrderDetails = {
   tickets: number;
   total: number;
   date: string;
+  isoDate: string;
   tourTime: string;
   tourPackage: string;
   tourSlug: string;

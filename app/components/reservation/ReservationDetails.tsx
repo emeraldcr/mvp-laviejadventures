@@ -109,6 +109,7 @@ interface ReservationOrderPayload {
   tickets: number;
   total: number;
   date: string;
+  isoDate: string;
   tourTime: TourTime;
   tourPackage: TourPackage;
   tourSlug: string;
@@ -307,6 +308,7 @@ export default function ReservationDetails({
     lang === "es" ? "EEEE, dd 'de' MMMM 'de' yyyy" : "EEEE, MMMM dd, yyyy",
     { locale: dateLocale }
   );
+  const isoDate = format(reservationDate, "yyyy-MM-dd");
 
   const isWeekend = reservationDate.getDay() === 0 || reservationDate.getDay() === 6;
   const [tourTime, setTourTime] = useState<TourTime | null>(null);
@@ -661,6 +663,7 @@ export default function ReservationDetails({
     onReserve({
       tickets,
       date: formattedDate,
+      isoDate,
       total: totalWithTaxes,
       name: formState.name,
       email: formState.email,
@@ -680,6 +683,7 @@ export default function ReservationDetails({
     onReserve,
     tickets,
     formattedDate,
+    isoDate,
     totalWithTaxes,
     formState,
     selectedTour,
