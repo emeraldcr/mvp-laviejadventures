@@ -21,7 +21,8 @@ export default function PayPalLoader() {
       "client-id": clientId,
       currency: "USD",
       intent: "capture",
-      components: "buttons",
+      commit: "true",
+      components: "buttons,funding-eligibility",
       "enable-funding": "card",
     });
 
@@ -29,6 +30,7 @@ export default function PayPalLoader() {
     script.id = "paypal-sdk";
     script.src = `https://www.paypal.com/sdk/js?${params.toString()}`;
     script.async = true;
+    script.setAttribute("data-sdk-integration-source", "button-factory");
     script.onerror = () => console.error("Failed to load PayPal SDK");
     script.onload = () => console.log("PayPal SDK loaded successfully");
     document.body.appendChild(script);
