@@ -2,6 +2,27 @@ import { ObjectId } from "mongodb";
 import { getDb } from "@/lib/mongodb";
 import { COLLECTIONS } from "@/lib/constants/db";
 
+export type AccountType = "operator" | "guide";
+
+export interface GuideCertification {
+  id: string;
+  title: string;
+  issuer: string;
+  status: "vigente" | "por_vencer" | "vencida" | "en_progreso";
+  completedAt: Date;
+  expiresAt?: Date | null;
+  required: boolean;
+}
+
+export interface GuideTrainingRecord {
+  id: string;
+  type: "capacitacion" | "simulacro" | "taller";
+  title: string;
+  completedAt: Date;
+  notes: string;
+  issuer?: string;
+}
+
 export interface OperatorAccount {
   _id?: ObjectId;
   name: string;
@@ -11,6 +32,12 @@ export interface OperatorAccount {
   status: "pending" | "approved" | "active";
   commissionRate: number;
   createdAt: Date;
+  accountType?: AccountType;
+  guideProfile?: {
+    bio?: string;
+    certifications: GuideCertification[];
+    trainingRecords: GuideTrainingRecord[];
+  };
   // Email verification
   emailVerified: boolean;
   verificationToken?: string | null;
@@ -24,6 +51,97 @@ export interface OperatorAccount {
     bookingStatusChanges: boolean;
     weeklyPerformanceDigest: boolean;
     partnerNetworkUpdates: boolean;
+  };
+}
+
+export type SerializedGuideCertification = Omit<GuideCertification, "completedAt" | "expiresAt"> & {
+  completedAt: string;
+  expiresAt?: string | null;
+};
+
+export type SerializedGuideTrainingRecord = Omit<GuideTrainingRecord, "completedAt"> & {
+  completedAt: string;
+};
+
+export function getDefaultGuideProfile(name: string) {
+  const today = new Date();
+  const plusMonths = (months: number) => new Date(today.getFullYear(), today.getMonth() + months, today.getDate());
+
+  return {
+    bio: `Guía registrado en La Vieja Adventures: ${name}.`,
+    certifications: [
+      {
+        id: "first-aid",
+        title: "Primeros Auxilios Básico",
+        issuer: "Cruz Roja Costarricense",
+        status: "vigente" as const,
+        completedAt: new Date(today.getFullYear(), today.getMonth() - 2, 15),
+        expiresAt: plusMonths(22),
+        required: true,
+      },
+      {
+        id: "cpr-aed",
+        title: "RCP y DEA",
+        issuer: "American Heart Association",
+        status: "vigente" as const,
+        completedAt: new Date(today.getFullYear(), today.getMonth() - 1, 10),
+        expiresAt: plusMonths(23),
+        required: true,
+      },
+      {
+        id: "ict-guide",
+        title: "Guía de Turismo de Aventura",
+        issuer: "ICT — Instituto Costarricense de Turismo",
+        status: "por_vencer" as const,
+        completedAt: new Date(today.getFullYear() - 1, today.getMonth(), 20),
+        expiresAt: plusMonths(3),
+        required: true,
+      },
+    ],
+    trainingRecords: [
+      {
+        id: "training-log",
+        type: "capacitacion" as const,
+        title: "Registro de Capacitaciones",
+        completedAt: new Date(today.getFullYear(), today.getMonth() - 1, 5),
+        issuer: "La Vieja Adventures",
+        notes:
+          "Cada capacitación, simulacro y taller queda documentado en el expediente individual de cada guía. Este registro está disponible para auditorías del ICT y es requerido para renovaciones de licencia.",
+      },
+      {
+        id: "canyon-drill",
+        type: "simulacro" as const,
+        title: "Simulacro de rescate en cañón",
+        completedAt: new Date(today.getFullYear(), today.getMonth() - 2, 8),
+        issuer: "Operaciones LVA",
+        notes: "Práctica trimestral de rescate vertical, evacuación y comunicación de incidentes.",
+      },
+      {
+        id: "customer-workshop",
+        type: "taller" as const,
+        title: "Taller de atención al cliente",
+        completedAt: new Date(today.getFullYear(), today.getMonth() - 3, 12),
+        issuer: "Experiencia LVA",
+        notes: "Refuerzo de manejo de grupos, servicio bilingüe y protocolos de hospitalidad.",
+      },
+    ],
+  };
+}
+
+export function serializeGuideProfile(profile?: OperatorAccount["guideProfile"]) {
+  if (!profile) return null;
+
+  return {
+    bio: profile.bio || "",
+    certifications: (profile.certifications || []).map((cert) => ({
+      ...cert,
+      completedAt: cert.completedAt.toISOString(),
+      expiresAt: cert.expiresAt ? cert.expiresAt.toISOString() : null,
+    })),
+    trainingRecords: (profile.trainingRecords || []).map((record) => ({
+      ...record,
+      completedAt: record.completedAt.toISOString(),
+    })),
   };
 }
 

@@ -12,13 +12,31 @@ type Props = {
   onSuccess: (orderData: unknown) => void;
 };
 
+type PayPalButtonsInstance = {
+  close?: () => void;
+  render: (container: HTMLElement) => Promise<void>;
+  isEligible?: () => boolean;
+  hasReturned?: () => boolean;
+  resume?: () => Promise<void>;
+};
+
+type PayPalNamespace = {
+  Buttons: (config: Record<string, unknown>) => PayPalButtonsInstance;
+};
+
+declare global {
+  interface Window {
+    paypal?: PayPalNamespace;
+  }
+}
+
 export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Props) {
   const { lang } = useLanguage();
   const tr = translations[lang].payment;
   const router = useRouter();
 
   const paypalRef = useRef<HTMLDivElement>(null);
-  const [sdkReady, setSdkReady] = useState(false);
+  const [sdkReady, setSdkReady] = useState(() => typeof window !== "undefined" && Boolean(window.paypal?.Buttons));
   const [error, setError] = useState<string | null>(null);
 
   const {
@@ -38,10 +56,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
 
   // Poll until the globally-loaded PayPal SDK is ready
   useEffect(() => {
-    if (window.paypal?.Buttons) {
-      setSdkReady(true);
-      return;
-    }
+    if (sdkReady) return;
     const interval = setInterval(() => {
       if (window.paypal?.Buttons) {
         setSdkReady(true);
@@ -61,35 +76,41 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
       clearInterval(interval);
       clearTimeout(timeout);
     };
-  }, [tr.error]);
+  }, [sdkReady, tr.error]);
 
   useEffect(() => {
-    if (!sdkReady) return;
-    if (!paypalRef.current) return;
+    if (!sdkReady || !paypalRef.current || !window.paypal?.Buttons) return;
 
     const container = paypalRef.current;
-    let buttons: any = null;
+    let buttons: PayPalButtonsInstance | null = null;
+    let cancelled = false;
 
     const cleanup = () => {
       if (buttons) {
         try {
           buttons.close?.();
-        } catch {}
+        } catch (closeError) {
+          console.warn("PayPal close warning:", closeError);
+        }
       }
       container.innerHTML = "";
     };
 
-    cleanup(); // always clean before new render
+    cleanup();
 
     const initPayPal = async () => {
       try {
-        buttons = window.paypal.Buttons({
+        setError(null);
+
+        buttons = window.paypal!.Buttons({
           style: {
             layout: "vertical",
             color: "gold",
             shape: "pill",
             label: "paypal",
           },
+          fundingSource: undefined,
+          appSwitchWhenAvailable: true,
 
           createOrder: async () => {
             const res = await fetch("/api/paypal/create-order", {
@@ -120,7 +141,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
             return data.orderID;
           },
 
-          onApprove: async (data) => {
+          onApprove: async (data: { orderID?: string }) => {
             const res = await fetch("/api/paypal/capture-order", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -135,7 +156,6 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
               return;
             }
 
-            // Success path
             sessionStorage.removeItem("reservationOrderDetails");
             onSuccess(output);
             router.push(`/success?orderId=${output.id || output.captureID}`);
@@ -151,8 +171,18 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
           },
         });
 
+        if (!buttons.isEligible?.()) {
+          setError(tr.error || "Este método de pago no está disponible en este dispositivo.");
+          return;
+        }
+
+        if (cancelled) return;
         await buttons.render(container);
+
+        if (cancelled || !buttons?.hasReturned?.()) return;
+        await buttons.resume?.();
       } catch (err) {
+        if (cancelled) return;
         console.error("PayPal render failed:", err);
         setError("No se pudieron mostrar los botones de PayPal");
       }
@@ -161,6 +191,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
     void initPayPal();
 
     return () => {
+      cancelled = true;
       cleanup();
     };
   }, [
@@ -222,9 +253,9 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
         {tr.total}: ${total.toFixed(2)}
       </p>
 
-      <div className="min-h-[150px] w-full rounded-lg bg-gray-50 dark:bg-gray-800 p-4">
+      <div className="min-h-[150px] w-full rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
         {!sdkReady && !error && (
-          <div className="flex h-[150px] items-center justify-center flex-col gap-3 text-center text-gray-600 dark:text-gray-400">
+          <div className="flex h-[150px] flex-col items-center justify-center gap-3 text-center text-gray-600 dark:text-gray-400">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-yellow-400" />
             <p className="text-sm">Cargando opciones de pago seguras...</p>
           </div>
@@ -233,7 +264,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
       </div>
 
       {error && (
-        <p className="text-sm text-red-600 dark:text-red-400 font-medium">
+        <p className="text-sm font-medium text-red-600 dark:text-red-400">
           {error}
         </p>
       )}

@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
-import { findOperatorByEmail, createOperator, setVerificationToken } from "@/lib/models/operator";
+import {
+  findOperatorByEmail,
+  createOperator,
+  getDefaultGuideProfile,
+  setVerificationToken,
+  type AccountType,
+} from "@/lib/models/operator";
 import { sendVerificationEmail } from "@/lib/email/b2b-emails";
 import {
   BCRYPT_SALT_ROUNDS,
@@ -12,9 +18,14 @@ import { DEFAULT_COMMISSION_RATE } from "@/lib/constants/business";
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, company, email, password } = await req.json();
+    const { name, company, email, password, accountType } = await req.json();
+    const normalizedAccountType: AccountType = accountType === "guide" ? "guide" : "operator";
+    const normalizedCompany =
+      normalizedAccountType === "guide"
+        ? company?.trim() || "Guía independiente"
+        : company?.trim();
 
-    if (!name || !company || !email || !password) {
+    if (!name || !email || !password || !normalizedCompany) {
       return NextResponse.json({ error: "All fields are required." }, { status: 400 });
     }
 
@@ -35,13 +46,15 @@ export async function POST(req: NextRequest) {
     const verificationExpiry = new Date(Date.now() + VERIFICATION_TOKEN_EXPIRY_MS);
 
     const result = await createOperator({
-      name,
-      company,
+      name: name.trim(),
+      company: normalizedCompany,
       email: email.toLowerCase(),
       password: hashedPassword,
       status: "pending",
       commissionRate: DEFAULT_COMMISSION_RATE,
       createdAt: new Date(),
+      accountType: normalizedAccountType,
+      guideProfile: normalizedAccountType === "guide" ? getDefaultGuideProfile(name.trim()) : undefined,
       emailVerified: false,
       verificationToken,
       verificationExpiry,
@@ -56,11 +69,14 @@ export async function POST(req: NextRequest) {
 
     await setVerificationToken(result.insertedId.toString(), verificationToken, verificationExpiry);
 
-    // Fire-and-forget — don't block the response
     sendVerificationEmail(email.toLowerCase(), name, verificationToken).catch(console.error);
 
     return NextResponse.json(
-      { message: "Account created. Please check your email to verify your account.", status: "pending" },
+      {
+        message: "Account created. Please check your email to verify your account.",
+        status: "pending",
+        accountType: normalizedAccountType,
+      },
       { status: 201 }
     );
   } catch (err) {
