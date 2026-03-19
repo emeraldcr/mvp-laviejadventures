@@ -15,14 +15,15 @@ import { COLLECTIONS } from "@/lib/constants/db";
 import { isDateOnOrAfterMinBookableInCostaRica } from "@/lib/costa-rica-time";
 import { APP_BASE_URL_DEFAULT } from "@/lib/constants/email";
 
-interface CreateOrderLink {
-  rel?: string;
-  href?: string;
+interface PayPalErrorDetail {
+  issue?: string;
+  description?: string;
 }
 
 interface CreateOrderResponse {
   id?: string;
-  links?: CreateOrderLink[];
+  details?: PayPalErrorDetail[];
+  debug_id?: string;
 }
 
 export async function POST(req: Request) {
@@ -97,12 +98,6 @@ export async function POST(req: Request) {
       },
       body: JSON.stringify({
         intent: "CAPTURE",
-        application_context: {
-          user_action: "PAY_NOW",
-          shipping_preference: PAYPAL_NO_SHIPPING_PREFERENCE,
-          return_url: `${appBaseUrl}/success?orderId={token}`,
-          cancel_url: `${appBaseUrl}/booking?paypal=cancelled`,
-        },
         purchase_units: [
           {
             amount: {
@@ -113,6 +108,20 @@ export async function POST(req: Request) {
             custom_id,
           },
         ],
+        payment_source: {
+          paypal: {
+            experience_context: {
+              payment_method_preference: "IMMEDIATE_PAYMENT_REQUIRED",
+              brand_name: "La Vieja Adventures",
+              locale: paypalLocale,
+              landing_page: "LOGIN",
+              shipping_preference: PAYPAL_NO_SHIPPING_PREFERENCE,
+              user_action: "PAY_NOW",
+              return_url: `${appBaseUrl}/success`,
+              cancel_url: `${appBaseUrl}/booking?paypal=cancelled`,
+            },
+          },
+        },
       }),
     });
 
@@ -120,8 +129,12 @@ export async function POST(req: Request) {
 
     if (!res.ok || !data.id) {
       console.error("PayPal Create Order Error:", data);
+      const errorDetail = data.details?.[0];
+      const errorMessage = errorDetail
+        ? `${errorDetail.issue} ${errorDetail.description} (${data.debug_id})`
+        : "Failed to create PayPal order.";
       return NextResponse.json(
-        { message: "Failed to create PayPal order.", details: data },
+        { message: errorMessage, details: data.details, debug_id: data.debug_id },
         { status: res.status || 500 }
       );
     }
@@ -161,26 +174,7 @@ export async function POST(req: Request) {
       console.error("Failed to persist PayPal order context:", contextError);
     }
 
-    // Extract approval URL
-    const approvalUrl = data.links?.find(
-      (link) => link.rel === "approve"
-    )?.href;
-
-    if (!approvalUrl) {
-      return NextResponse.json(
-        {
-          message: "Order created but no approval URL returned.",
-          orderID: data.id,
-          raw: data,
-        },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({
-      orderID: data.id,
-      approvalUrl,
-    });
+    return NextResponse.json(data);
   } catch (error: unknown) {
     console.error("Server Error:", error);
 

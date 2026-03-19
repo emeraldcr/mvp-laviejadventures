@@ -9,7 +9,7 @@ const ContentSecurityPolicy = [
   // Scripts: self, inline (Next.js needs unsafe-inline), PayPal SDK, Google Ads/Analytics
   // checkout.paypal.com is required for mobile Chrome — PayPal's mobile checkout flow
   // loads additional scripts from that domain (differs from the desktop popup flow).
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.paypal.com https://www.paypalobjects.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://www.google-analytics.com",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.paypal.com https://www.paypalobjects.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://www.google-analytics.com https://vercel.live",
   // Frames: PayPal checkout iframes — wildcard covers mobile-specific subdomains (c.paypal.com, fpdbs.paypal.com, etc.)
   "frame-src 'self' https://*.paypal.com https://www.paypalobjects.com",
   // Images: allow PayPal logos + Google/CDN images + GTM/Ads pixel beacons

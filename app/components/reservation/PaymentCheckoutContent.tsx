@@ -1,8 +1,9 @@
-// app/components/PaymentCheckoutContent.tsx
+// app/components/reservation/PaymentCheckoutContent.tsx
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/lib/translations";
 import type { OrderDetails } from "@/lib/types/index";
@@ -12,31 +13,24 @@ type Props = {
   onSuccess: (orderData: unknown) => void;
 };
 
-type PayPalButtonsInstance = {
-  close?: () => void;
-  render: (container: HTMLElement) => Promise<void>;
-  isEligible?: () => boolean;
-  hasReturned?: () => boolean;
-  resume?: () => Promise<void>;
-};
+const mode = process.env.NEXT_PUBLIC_PAYPAL_MODE?.toLowerCase() || "sandbox";
+const clientId =
+  mode === "live"
+    ? process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID!
+    : process.env.NEXT_PUBLIC_PAYPAL_SANDBOX_CLIENT_ID!;
 
-type PayPalNamespace = {
-  Buttons: (config: Record<string, unknown>) => PayPalButtonsInstance;
+const paypalScriptOptions = {
+  clientId,
+  currency: "USD",
+  intent: "capture",
+  components: "buttons,funding-eligibility",
+  "enable-funding": "card",
 };
-
-declare global {
-  interface Window {
-    paypal?: PayPalNamespace;
-  }
-}
 
 export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Props) {
   const { lang } = useLanguage();
   const tr = translations[lang].payment;
   const router = useRouter();
-
-  const paypalRef = useRef<HTMLDivElement>(null);
-  const [sdkReady, setSdkReady] = useState(() => typeof window !== "undefined" && Boolean(window.paypal?.Buttons));
   const [error, setError] = useState<string | null>(null);
 
   const {
@@ -49,169 +43,10 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
     isoDate,
     tourTime,
     tourPackage,
-    tourSlug,
     tourName,
     packagePrice,
+    tourSlug,
   } = orderDetails;
-
-  // Poll until the globally-loaded PayPal SDK is ready
-  useEffect(() => {
-    if (sdkReady) return;
-    const interval = setInterval(() => {
-      if (window.paypal?.Buttons) {
-        setSdkReady(true);
-        clearInterval(interval);
-      }
-    }, 400);
-    const timeout = setTimeout(() => {
-      clearInterval(interval);
-      if (!window.paypal?.Buttons) {
-        setError(
-          tr.error ||
-            "PayPal está tardando en cargar. Verifica tu conexión o intenta de nuevo más tarde."
-        );
-      }
-    }, 15_000);
-    return () => {
-      clearInterval(interval);
-      clearTimeout(timeout);
-    };
-  }, [sdkReady, tr.error]);
-
-  useEffect(() => {
-    if (!sdkReady || !paypalRef.current || !window.paypal?.Buttons) return;
-
-    const container = paypalRef.current;
-    let buttons: PayPalButtonsInstance | null = null;
-    let cancelled = false;
-
-    const cleanup = () => {
-      if (buttons) {
-        try {
-          buttons.close?.();
-        } catch (closeError) {
-          console.warn("PayPal close warning:", closeError);
-        }
-      }
-      container.innerHTML = "";
-    };
-
-    cleanup();
-
-    const initPayPal = async () => {
-      try {
-        setError(null);
-
-        buttons = window.paypal!.Buttons({
-          style: {
-            layout: "vertical",
-            color: "gold",
-            shape: "pill",
-            label: "paypal",
-          },
-          fundingSource: undefined,
-          appSwitchWhenAvailable: true,
-
-          createOrder: async () => {
-            const res = await fetch("/api/paypal/create-order", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                name,
-                email,
-                phone,
-                tickets,
-                date: isoDate,
-                total,
-                tourTime,
-                tourPackage,
-                packagePrice,
-                tourSlug,
-                tourName,
-                language: lang,
-              }),
-            });
-
-            const data = await res.json();
-
-            if (!res.ok || !data.orderID) {
-              throw new Error(data.message || "No se pudo crear la orden");
-            }
-
-            return data.orderID;
-          },
-
-          onApprove: async (data: { orderID?: string }) => {
-            const res = await fetch("/api/paypal/capture-order", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ orderID: data.orderID }),
-            });
-
-            const output = await res.json();
-
-            if (!res.ok || output.status !== "COMPLETED") {
-              setError(tr.error || "El pago no se completó correctamente");
-              console.error("Capture failed:", output);
-              return;
-            }
-
-            sessionStorage.removeItem("reservationOrderDetails");
-            onSuccess(output);
-            router.push(`/success?orderId=${output.id || output.captureID}`);
-          },
-
-          onCancel: () => {
-            setError(null);
-          },
-
-          onError: (err: unknown) => {
-            console.error("PayPal Buttons error:", err);
-            setError(tr.error || "Hubo un error al procesar el pago");
-          },
-        });
-
-        if (!buttons.isEligible?.()) {
-          setError(tr.error || "Este método de pago no está disponible en este dispositivo.");
-          return;
-        }
-
-        if (cancelled) return;
-        await buttons.render(container);
-
-        if (cancelled || !buttons?.hasReturned?.()) return;
-        await buttons.resume?.();
-      } catch (err) {
-        if (cancelled) return;
-        console.error("PayPal render failed:", err);
-        setError("No se pudieron mostrar los botones de PayPal");
-      }
-    };
-
-    void initPayPal();
-
-    return () => {
-      cancelled = true;
-      cleanup();
-    };
-  }, [
-    sdkReady,
-    lang,
-    tr.error,
-    name,
-    email,
-    phone,
-    tickets,
-    total,
-    date,
-    tourTime,
-    tourPackage,
-    packagePrice,
-    tourSlug,
-    tourName,
-    onSuccess,
-    router,
-  ]);
 
   const packageName = tr.packages?.[tourPackage] ?? tourPackage;
 
@@ -253,14 +88,73 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
         {tr.total}: ${total.toFixed(2)}
       </p>
 
-      <div className="min-h-[150px] w-full rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
-        {!sdkReady && !error && (
-          <div className="flex h-[150px] flex-col items-center justify-center gap-3 text-center text-gray-600 dark:text-gray-400">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-yellow-400" />
-            <p className="text-sm">Cargando opciones de pago seguras...</p>
-          </div>
-        )}
-        <div ref={paypalRef} />
+      <div className="w-full rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
+        <PayPalScriptProvider options={paypalScriptOptions}>
+          <PayPalButtons
+            style={{ layout: "vertical", color: "gold", shape: "pill", label: "paypal", borderRadius: 10 }}
+            createOrder={async () => {
+              try {
+                const res = await fetch("/api/paypal/create-order", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    name,
+                    email,
+                    phone,
+                    tickets,
+                    date: isoDate,
+                    total,
+                    tourTime,
+                    tourPackage,
+                    packagePrice,
+                    tourSlug,
+                    tourName,
+                    language: lang,
+                  }),
+                });
+
+                const orderData = await res.json();
+
+                if (!orderData.id) {
+                  const errorDetail = orderData?.details?.[0];
+                  const errorMessage = errorDetail
+                    ? `${errorDetail.issue} ${errorDetail.description} (${orderData.debug_id})`
+                    : orderData?.message || "Unexpected error occurred, please try again.";
+                  throw new Error(errorMessage);
+                }
+
+                return orderData.id;
+              } catch (err) {
+                console.error("createOrder error:", err);
+                throw err;
+              }
+            }}
+            onApprove={async (data) => {
+              const res = await fetch("/api/paypal/capture-order", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ orderID: data.orderID }),
+              });
+
+              const output = await res.json();
+
+              if (!res.ok || output.status !== "COMPLETED") {
+                setError(tr.error || "El pago no se completó correctamente");
+                console.error("Capture failed:", output);
+                return;
+              }
+
+              sessionStorage.removeItem("reservationOrderDetails");
+              onSuccess(output);
+              router.push(`/success?orderId=${output.id || output.captureID}`);
+            }}
+            onCancel={() => setError(null)}
+            onError={(err) => {
+              console.error("PayPal Buttons error:", err);
+              setError(tr.error || "Hubo un error al procesar el pago");
+            }}
+          />
+        </PayPalScriptProvider>
       </div>
 
       {error && (

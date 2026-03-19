@@ -6,7 +6,6 @@ import { Analytics } from "@vercel/analytics/next";
 import { LanguageProvider } from "@/app/context/LanguageContext";
 import SessionProvider from "@/app/components/SessionProvider";
 import AnalyticsTracker from "@/app/components/analytics/AnalyticsTracker";
-import PayPalLoader from "@/app/components/PayPalLoader";
 
 export const metadata: Metadata = {
   title: "La Vieja Adventures | Ciudad Esmeralda Tour Aventura San Carlos en Rio La Vieja",
@@ -43,9 +42,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
           <LanguageProvider>
             <Suspense fallback={null}>
               <AnalyticsTracker />
-            </Suspense>
-            <Suspense fallback={null}>
-              <PayPalLoader />
             </Suspense>
             {children}
           </LanguageProvider>
