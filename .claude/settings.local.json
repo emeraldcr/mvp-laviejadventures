@@ -36,7 +36,8 @@
       "Bash(ls -la /c/Users/alrojas/Documents/GitHub/mvp-laviejadventures/app/\\\\\\(page_routes\\\\\\)/)",
       "Bash(find /c/Users/alrojas/Documents/GitHub/mvp-laviejadventures -name tailwind.config.* -o -name tsconfig.json)",
       "Bash(npx tsc:*)",
-      "Bash(find /c/Users/alrojas/Documents/GitHub/mvp-laviejadventures -path ./node_modules -prune -o -type f \\\\\\(-name *email* -o -name *mail* \\\\\\) -print)"
+      "Bash(find /c/Users/alrojas/Documents/GitHub/mvp-laviejadventures -path ./node_modules -prune -o -type f \\\\\\(-name *email* -o -name *mail* \\\\\\) -print)",
+      "Bash(npm uninstall:*)"
     ]
   }
 }

@@ -1,37 +1,34 @@
 // app/components/reservation/PaymentCheckoutContent.tsx
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/lib/translations";
 import type { OrderDetails } from "@/lib/types/index";
+
+declare global {
+  interface Window {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    paypal?: any;
+  }
+}
 
 type Props = {
   orderDetails: OrderDetails;
   onSuccess: (orderData: unknown) => void;
 };
 
-const mode = process.env.NEXT_PUBLIC_PAYPAL_MODE?.toLowerCase() || "sandbox";
-const clientId =
-  mode === "live"
-    ? process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID!
-    : process.env.NEXT_PUBLIC_PAYPAL_SANDBOX_CLIENT_ID!;
-
-const paypalScriptOptions = {
-  clientId,
-  currency: "USD",
-  intent: "capture",
-  components: "buttons,funding-eligibility",
-  "enable-funding": "card",
-};
+const CLIENT_ID = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID!;
 
 export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Props) {
   const { lang } = useLanguage();
   const tr = translations[lang].payment;
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  const [sdkReady, setSdkReady] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const rendered = useRef(false);
 
   const {
     name,
@@ -48,7 +45,6 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
     tourSlug,
   } = orderDetails;
 
-  // Build an explicit, normalized payload — never spread raw state into the request
   const payload = {
     name: name?.trim() ?? "",
     email: email?.trim() ?? "",
@@ -64,7 +60,6 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
     language: lang,
   };
 
-  // Gate: only render PayPal buttons when all required fields are present and valid
   const missingFields: string[] = [];
   if (!payload.name) missingFields.push("name");
   if (!payload.email) missingFields.push("email");
@@ -75,6 +70,91 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
   if (!payload.tourPackage) missingFields.push("tourPackage");
 
   const isPayloadValid = missingFields.length === 0;
+
+  // Load PayPal SDK script
+  useEffect(() => {
+    if (!isPayloadValid) return;
+
+    if (window.paypal) {
+      setSdkReady(true);
+      return;
+    }
+
+    if (document.getElementById("paypal-sdk")) return;
+
+    const script = document.createElement("script");
+    script.id = "paypal-sdk";
+    script.src = `https://www.paypal.com/sdk/js?client-id=${CLIENT_ID}&currency=USD&intent=capture&components=buttons&enable-funding=card`;
+    script.async = true;
+    script.onload = () => setSdkReady(true);
+    script.onerror = () => setError("Failed to load PayPal SDK");
+    document.body.appendChild(script);
+  }, [isPayloadValid]);
+
+  // Render PayPal buttons once SDK is ready
+  useEffect(() => {
+    if (!sdkReady || !window.paypal || rendered.current || !containerRef.current) return;
+    rendered.current = true;
+
+    // Capture payload at render time (it's stable at this point)
+    const p = payload;
+
+    window.paypal
+      .Buttons({
+        style: { layout: "vertical", color: "gold", shape: "pill", label: "paypal", borderRadius: 10 },
+
+        createOrder: async () => {
+          try {
+            const res = await fetch("/api/paypal/create-order", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(p),
+            });
+            const data = await res.json();
+            if (!data.id) {
+              const detail = data?.details?.[0];
+              throw new Error(
+                detail
+                  ? `${detail.issue} ${detail.description}`
+                  : data?.message ?? "Unexpected error creating order"
+              );
+            }
+            return data.id;
+          } catch (err) {
+            console.error("createOrder error:", err);
+            throw err;
+          }
+        },
+
+        onApprove: async (data: { orderID: string }) => {
+          const res = await fetch("/api/paypal/capture-order", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ orderID: data.orderID }),
+          });
+          const output = await res.json();
+
+          if (!res.ok || output.status !== "COMPLETED") {
+            setError(tr.error ?? "Payment not completed correctly");
+            console.error("Capture failed:", output);
+            return;
+          }
+
+          sessionStorage.removeItem("reservationOrderDetails");
+          onSuccess(output);
+          router.push(`/success?orderId=${output.id ?? output.captureID}`);
+        },
+
+        onCancel: () => setError(null),
+
+        onError: (err: unknown) => {
+          console.error("PayPal error:", err);
+          setError(tr.error ?? "There was an error processing the payment");
+        },
+      })
+      .render(containerRef.current);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sdkReady]);
 
   const packageName = tr.packages?.[tourPackage] ?? tourPackage;
 
@@ -122,67 +202,12 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
             Reservation data is incomplete: {missingFields.join(", ")}. Please go back and try again.
           </p>
         ) : (
-          <PayPalScriptProvider options={paypalScriptOptions}>
-            <PayPalButtons
-              style={{ layout: "vertical", color: "gold", shape: "pill", label: "paypal", borderRadius: 10 }}
-              createOrder={async () => {
-                console.log("createOrder payload", payload);
-                try {
-                  const res = await fetch("/api/paypal/create-order", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload),
-                  });
-
-                  const orderData = await res.json();
-
-                  if (!orderData.id) {
-                    const errorDetail = orderData?.details?.[0];
-                    const errorMessage = errorDetail
-                      ? `${errorDetail.issue} ${errorDetail.description} (${orderData.debug_id})`
-                      : orderData?.message || "Unexpected error occurred, please try again.";
-                    throw new Error(errorMessage);
-                  }
-
-                  return orderData.id;
-                } catch (err) {
-                  console.error("createOrder error:", err);
-                  throw err;
-                }
-              }}
-              onApprove={async (data) => {
-                const res = await fetch("/api/paypal/capture-order", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ orderID: data.orderID }),
-                });
-
-                const output = await res.json();
-
-                if (!res.ok || output.status !== "COMPLETED") {
-                  setError(tr.error || "El pago no se completó correctamente");
-                  console.error("Capture failed:", output);
-                  return;
-                }
-
-                sessionStorage.removeItem("reservationOrderDetails");
-                onSuccess(output);
-                router.push(`/success?orderId=${output.id || output.captureID}`);
-              }}
-              onCancel={() => setError(null)}
-              onError={(err) => {
-                console.error("PayPal Buttons error:", err);
-                setError(tr.error || "Hubo un error al procesar el pago");
-              }}
-            />
-          </PayPalScriptProvider>
+          <div ref={containerRef} />
         )}
       </div>
 
       {error && (
-        <p className="text-sm font-medium text-red-600 dark:text-red-400">
-          {error}
-        </p>
+        <p className="text-sm font-medium text-red-600 dark:text-red-400">{error}</p>
       )}
     </div>
   );
