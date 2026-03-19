@@ -8,8 +8,7 @@ import { useLanguage } from "@/app/context/LanguageContext";
 import PaymentCheckoutContent from "@/app/components/reservation/PaymentCheckoutContent";
 import type { OrderDetails } from "@/lib/types/index";
 import { translations } from "@/lib/translations";
-
-const RESERVATION_RETURN_KEY = "reservationReturnPath";
+import { RESERVATION_RETURN_KEY } from "@/lib/constants/storage";
 
 const getStoredOrderDetails = (): OrderDetails | null => {
   if (typeof window === "undefined") {

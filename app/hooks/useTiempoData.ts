@@ -8,8 +8,7 @@ import {
 } from "@/lib/tiempoHelpers";
 import type { RainData, RegionalData } from "@/lib/types/index";
 import type { WeatherSnapshot } from "@/lib/weatherMessageHelpers";
-
-const RELOAD_COOLDOWN_SECS = 30;
+import { RELOAD_COOLDOWN_SECS } from "@/lib/constants/tiempo";
 
 export function useTiempoData() {
   const [rain, setRain] = useState<RainData | null>(null);

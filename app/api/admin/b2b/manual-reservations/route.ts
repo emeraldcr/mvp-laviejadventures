@@ -4,6 +4,7 @@ import { COLLECTIONS } from "@/lib/constants/db";
 import { getDb } from "@/lib/mongodb";
 import { getManualReservationPackage } from "@/lib/manual-reservation";
 import { isDateOnOrAfterMinBookableInCostaRica } from "@/lib/costa-rica-time";
+import { EMAIL_REGEX } from "@/lib/constants/validation";
 
 type ManualReservationPayload = {
   name?: string;
@@ -17,8 +18,6 @@ type ManualReservationPayload = {
   tourPackage?: string;
   notes?: string;
 };
-
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(req: NextRequest) {
   if (!getAdminFromRequest(req)) {

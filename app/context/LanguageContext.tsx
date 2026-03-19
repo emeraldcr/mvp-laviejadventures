@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useSyncExternalStore } from "react";
+import { LANGUAGE_STORAGE_KEY, LANGUAGE_CHANGE_EVENT } from "@/lib/constants/storage";
 
 export type Lang = "es" | "en";
 
@@ -11,8 +12,6 @@ interface LanguageContextValue {
 }
 
 const LanguageContext = createContext<LanguageContextValue | null>(null);
-const LANGUAGE_STORAGE_KEY = "lva-lang";
-const LANGUAGE_CHANGE_EVENT = "lva-lang-change";
 
 const subscribeToLanguage = (callback: () => void) => {
   window.addEventListener("storage", callback);

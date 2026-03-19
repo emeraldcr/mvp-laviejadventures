@@ -62,6 +62,11 @@ export const RELIABILITY_LEVEL_HIGH_SCORE = 80;
 /** Puntuación mínima para nivel de confiabilidad "media" */
 export const RELIABILITY_LEVEL_MED_SCORE = 55;
 
+// ─── UI / UX ──────────────────────────────────────────────────────────────────
+
+/** Seconds the user must wait before manually reloading weather data */
+export const RELOAD_COOLDOWN_SECS = 30;
+
 // ─── Caché de pronóstico regional ────────────────────────────────────────────
 
 /** TTL de caché para la ruta de pronóstico regional (segundos) */

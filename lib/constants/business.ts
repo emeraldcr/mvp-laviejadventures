@@ -13,6 +13,16 @@ export const B2B_PACKAGE_MULTIPLIERS = {
   VIP: 1.50,
 } as const;
 
+/** IVA rate as a decimal multiplier (matches DEFAULT_IVA_RATE / 100) */
+export const TAX_RATE = 0.13;
+
+/** Base prices per person in USD for each tour package */
+export const PACKAGE_PRICE_USD: Record<string, number> = {
+  basic: 30,
+  "full-day": 40,
+  private: 60,
+};
+
 /** Slots de disponibilidad por defecto al generar el calendario */
 export const DEFAULT_AVAILABILITY = {
   /** Días de semana (lunes–viernes) */

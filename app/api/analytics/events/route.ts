@@ -3,8 +3,7 @@ import { auth } from "@/lib/auth";
 import { getDb, isMongoConfigured } from "@/lib/mongodb";
 import { headers } from "next/headers";
 import { COLLECTIONS } from "@/lib/constants/db";
-
-type AnalyticsEventName = "page_view" | "click" | "booking_step" | "booking_submitted";
+import { type AnalyticsEventName, VALID_EVENTS } from "@/lib/constants/analytics";
 
 type AnalyticsEventInput = {
   event?: AnalyticsEventName;
@@ -14,8 +13,6 @@ type AnalyticsEventInput = {
   metadata?: Record<string, unknown>;
   happenedAt?: string;
 };
-
-const VALID_EVENTS: AnalyticsEventName[] = ["page_view", "click", "booking_step", "booking_submitted"];
 
 function sanitizeValue(value: unknown): unknown {
   if (value === undefined) return null;

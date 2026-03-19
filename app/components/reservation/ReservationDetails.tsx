@@ -11,10 +11,7 @@ import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/lib/translations";
 import { AlertCircle, Camera, ChevronRight, Clock3, Info, MapPin, Minus, Plus, Route, ShieldCheck, Sparkles, TreePalm, Users, UtensilsCrossed, X } from "lucide-react";
 import { trackAnalyticsEvent } from "@/lib/analytics/client";
-
-// ---------------------- CONSTANTS ----------------------
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PHONE_NUMBER_REGEX = /^\d{4}[\s-]?\d{4}$/;
+import { EMAIL_REGEX, PHONE_NUMBER_REGEX } from "@/lib/constants/validation";
 
 const COUNTRY_CODES = [
   { code: "+506", name: "Costa Rica" },

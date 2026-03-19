@@ -14,16 +14,8 @@ import {
   type BookingState,
   type ChatMessage,
 } from "@/lib/ai-assistant/shared";
-
-const PACKAGE_PRICE_USD: Record<NonNullable<BookingState["tourPackage"]>, number> = {
-  basic: 30,
-  "full-day": 40,
-  private: 60,
-};
-
-const TAX_RATE = 0.13;
-const AI_BOOKING_SESSION_KEY = "aiBookingConversationState";
-const RESERVATION_RETURN_KEY = "reservationReturnPath";
+import { AI_BOOKING_SESSION_KEY, RESERVATION_RETURN_KEY } from "@/lib/constants/storage";
+import { TAX_RATE, PACKAGE_PRICE_USD } from "@/lib/constants/business";
 
 const PHONE_COUNTRY_OPTIONS = [
   { label: "Costa Rica (+506)", value: "+506" },

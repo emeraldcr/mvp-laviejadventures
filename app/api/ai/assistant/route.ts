@@ -9,6 +9,16 @@ import {
   type BookingState,
   type ChatMessage,
 } from "@/lib/ai-assistant/shared";
+import { ASSISTANT_MODEL, ASSISTANT_CACHE_TTL_MS } from "@/lib/constants/ai";
+import {
+  DATE_PATTERN_ISO,
+  DATE_PATTERN_DMY,
+  EMAIL_PATTERN,
+  PHONE_PATTERN_GLOBAL,
+  NAME_PATTERN,
+  TICKETS_PATTERN,
+  PHONE_CONTEXT_PATTERN,
+} from "@/lib/constants/validation";
 
 const client = new Anthropic();
 
@@ -43,16 +53,7 @@ const DEFAULT_RESULT: AssistantResult = {
 };
 
 const AI_HEADERS = { "Cache-Control": "no-store" };
-const MODEL_NAME = "claude-haiku-4-5";
-const MODEL_CACHE_TTL_MS = 1000 * 60 * 10;
 const modelResponseCache = new Map<string, CachedResult>();
-const DATE_PATTERN_ISO = /\b(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})\b/;
-const DATE_PATTERN_DMY = /\b(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})\b/;
-const EMAIL_PATTERN = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i;
-const PHONE_PATTERN_GLOBAL = /\+?\d[\d\s()\-]{7,}\d/g;
-const NAME_PATTERN = /(?:me\s+llamo|mi\s+nombre\s+es|soy|nombre|name)\s*[:=-]?\s*([a-záéíóúñ]+(?:\s+[a-záéíóúñ]+){0,3})/i;
-const TICKETS_PATTERN = /(?:somos|vamos|personas?|tickets?|boletos?|cupos?)\s*[:=]?\s*(\d{1,2})/i;
-const PHONE_CONTEXT_PATTERN = /(?:tel(?:efono)?|cel(?:ular)?|movil|whatsapp|wa\b|phone|numero)/i;
 
 const FAQ_ENTRIES: FaqEntry[] = [
   {
@@ -460,7 +461,7 @@ export async function POST(req: NextRequest) {
     if (cached && cached.expiresAt <= Date.now()) modelResponseCache.delete(cacheKey);
 
     const response = await client.messages.create({
-      model: MODEL_NAME,
+      model: ASSISTANT_MODEL,
       max_tokens: 450,
       temperature: 0.3,
       system: buildSystemPrompt(inferredState),
@@ -482,7 +483,7 @@ export async function POST(req: NextRequest) {
     const sanitizedResult = sanitizeResult(parsed, inferredState);
     modelResponseCache.set(cacheKey, {
       value: sanitizedResult,
-      expiresAt: Date.now() + MODEL_CACHE_TTL_MS,
+      expiresAt: Date.now() + ASSISTANT_CACHE_TTL_MS,
     });
 
     return NextResponse.json(sanitizedResult, {

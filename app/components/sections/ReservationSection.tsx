@@ -6,6 +6,7 @@ import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/lib/translations";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useReservationData, DEFAULT_BOOKABLE_TOUR } from "@/app/hooks/useReservationData";
+import { RESERVATION_RETURN_KEY } from "@/lib/constants/storage";
 
 type OrderPayload = {
   name: string;
@@ -25,8 +26,6 @@ type OrderPayload = {
 type Props = {
   className?: string;
 };
-
-const RESERVATION_RETURN_KEY = "reservationReturnPath";
 
 export default function ReservationSection({ className }: Props) {
   const {
