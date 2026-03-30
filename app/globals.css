@@ -25,6 +25,23 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+.lva-wordmark {
+  font-family: "Trebuchet MS", "Avenir Next", "Segoe UI", sans-serif;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  line-height: 0.95;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.96);
+  text-shadow:
+    0 0 24px rgba(45, 212, 191, 0.24),
+    0 8px 28px rgba(2, 8, 23, 0.38);
+  background-image: linear-gradient(120deg, #ecfeff 0%, #a7f3d0 42%, #f0fdfa 60%, #67e8f9 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  position: relative;
+}
+
 @keyframes bounce-x {
   0%, 100% { transform: translateX(0); }
   50% { transform: translateX(-5px); }

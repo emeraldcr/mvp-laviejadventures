@@ -1,4 +1,4 @@
-import ReservaFlow from "@/components/reserva/ReservaFlow";
+import ReservaFlow from "@/app/components/reservation/ReservaFlow";
 
 export default function ReservaPage() {
   return <ReservaFlow />;

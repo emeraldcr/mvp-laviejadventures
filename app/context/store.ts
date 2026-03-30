@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import type { PackageType, Step, TravelerForm } from "@/components/reserva/types";
+import type { PackageType, Step, TravelerForm } from "@/lib/types/types";
 
 type ValidationErrors = Partial<Record<keyof TravelerForm, string>>;
 

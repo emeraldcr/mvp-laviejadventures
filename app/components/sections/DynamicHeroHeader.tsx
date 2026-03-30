@@ -31,6 +31,7 @@ interface NavLinkItem {
 
 interface NavGroup {
   label: string;
+  description?: string;
   links: NavLinkItem[];
 }
 
@@ -81,6 +82,8 @@ NavLink.displayName = "NavLink";
 const DesktopNavGroup = memo<{ item: NavGroup }>(({ item }) => {
   const [open, setOpen] = useState(false);
   const groupRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
+  const activeCount = item.links.filter((link) => pathname === link.href).length;
 
   useEffect(() => {
     if (!open) return;
@@ -113,25 +116,46 @@ const DesktopNavGroup = memo<{ item: NavGroup }>(({ item }) => {
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-sm font-semibold text-white hover:bg-white/15 transition-colors"
+        className={[
+          "inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition-all duration-300",
+          open || activeCount > 0
+            ? "border-emerald-300/50 bg-white/18 text-white shadow-[0_14px_32px_rgba(6,95,70,0.22)]"
+            : "border-white/15 bg-white/7 text-white/90 hover:bg-white/14",
+        ].join(" ")}
         aria-expanded={open}
       >
         {item.label}
+        <span className="rounded-full border border-white/10 bg-black/20 px-2 py-0.5 text-[10px] uppercase tracking-[0.22em] text-white/55">
+          {item.links.length}
+        </span>
         <ChevronDown size={14} className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
       </button>
 
       {open && (
-        <div className="absolute left-0 top-full z-50 min-w-52 pt-2">
-          <div className="rounded-2xl border border-white/10 bg-teal-950/95 p-2 shadow-2xl backdrop-blur-xl">
+        <div className="absolute left-0 top-full z-50 min-w-[22rem] pt-3">
+          <div className="overflow-hidden rounded-[28px] border border-white/15 bg-[linear-gradient(145deg,rgba(7,89,79,0.88),rgba(2,6,23,0.94))] shadow-[0_30px_80px_rgba(0,0,0,0.45)] backdrop-blur-2xl">
+            <div className="border-b border-white/10 bg-white/6 px-4 py-3">
+              <p className="text-[11px] font-black uppercase tracking-[0.28em] text-emerald-200/85">{item.label}</p>
+              <p className="mt-1 max-w-xs text-sm leading-6 text-white/68">
+                {item.description ?? "Encuentra rÃ¡pido la secciÃ³n correcta y sigue explorando sin perderte."}
+              </p>
+            </div>
+            <div className="p-2">
             {item.links.map((link) => (
               <NavLink
                 key={link.href}
                 {...link}
-                className="block rounded-xl px-3 py-2 text-sm font-medium hover:bg-white/10"
+                className={[
+                  "group block rounded-2xl px-4 py-3 text-sm font-medium transition-all duration-200",
+                  pathname === link.href
+                    ? "bg-white/14 text-emerald-100 ring-1 ring-inset ring-emerald-300/30"
+                    : "text-white/90 hover:bg-white/10 hover:text-white",
+                ].join(" ")}
                 onClick={() => setOpen(false)}
               />
             ))}
           </div>
+        </div>
         </div>
       )}
     </div>
@@ -145,25 +169,36 @@ const MobileNavGroup = memo<{
   open: boolean;
   onToggle: () => void;
 }>(({ item, onNavigate, open, onToggle }) => {
+  const pathname = usePathname();
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5">
+    <div className="overflow-hidden rounded-[24px] border border-white/12 bg-white/6 backdrop-blur-xl">
       <button
         type="button"
-        className="flex w-full items-center justify-between px-4 py-3 text-left text-base font-semibold text-white"
+        className="flex w-full items-center justify-between px-4 py-4 text-left"
         onClick={onToggle}
         aria-expanded={open}
       >
-        {item.label}
+        <div>
+          <p className="text-base font-semibold text-white">{item.label}</p>
+          <p className="mt-1 text-xs uppercase tracking-[0.18em] text-white/45">
+            {item.description ?? "Abre para ver opciones"}
+          </p>
+        </div>
         <ChevronDown size={16} className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
-        <div className="space-y-1 px-2 pb-3">
+        <div className="space-y-1 border-t border-white/10 bg-black/10 px-2 pb-3 pt-3">
           {item.links.map((link) => (
             <NavLink
               key={link.href}
               {...link}
-              className="block rounded-xl px-3 py-2 text-base font-medium hover:bg-white/10"
+              className={[
+                "block rounded-2xl px-3 py-3 text-base font-medium transition-all duration-200",
+                pathname === link.href
+                  ? "bg-white/14 text-emerald-100 ring-1 ring-inset ring-emerald-300/25"
+                  : "text-white/88 hover:bg-white/10 hover:text-white",
+              ].join(" ")}
               onClick={onNavigate}
             />
           ))}
@@ -320,10 +355,18 @@ const Header = memo<{ isScrolled: boolean; onMenuToggle: () => void; isMenuOpen:
     const navGroups: NavGroup[] = [
       {
         label: lang === "es" ? "Explorar" : "Explore",
+        description:
+          lang === "es"
+            ? "Todo lo importante para descubrir tours, informaciÃ³n y contenido clave."
+            : "Everything essential to discover tours, info, and key content.",
         links: navLinks,
       },
       {
         label: lang === "es" ? "Operaciones" : "Operations",
+        description:
+          lang === "es"
+            ? "Documentos y procesos internos organizados para encontrar cada tema mÃ¡s rÃ¡pido."
+            : "Docs and internal processes organized so each topic is easier to find.",
         links: operationsLinks,
       },
     ];
@@ -332,31 +375,49 @@ const Header = memo<{ isScrolled: boolean; onMenuToggle: () => void; isMenuOpen:
       <header
         className={[
           "fixed inset-x-0 top-0 z-50",
-          "backdrop-blur-2xl border-b border-white/10",
-          "transition-all duration-300",
+          "transition-all duration-500",
           isScrolled
-            ? "bg-teal-950/80 shadow-[0_10px_40px_rgba(0,0,0,0.6)]"
-            : "bg-teal-950/40 shadow-none",
+            ? "px-2 pt-2 md:px-4"
+            : "px-3 pt-3 md:px-5",
         ].join(" ")}
       >
-        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 md:px-8">
+        <div
+          className={[
+            "relative mx-auto flex max-w-7xl items-center justify-between overflow-hidden rounded-[28px] border px-4 md:px-6",
+            "bg-[linear-gradient(135deg,rgba(255,255,255,0.16),rgba(255,255,255,0.06))] backdrop-blur-[22px]",
+            "shadow-[0_24px_70px_rgba(2,8,23,0.34)]",
+            isScrolled
+              ? "h-[4.9rem] border-white/16 bg-[linear-gradient(135deg,rgba(8,47,73,0.7),rgba(15,118,110,0.22),rgba(2,6,23,0.72))]"
+              : "h-[5.4rem] border-white/14 bg-[linear-gradient(135deg,rgba(8,47,73,0.5),rgba(16,185,129,0.14),rgba(2,6,23,0.58))]",
+          ].join(" ")}
+        >
+          <div className="pointer-events-none absolute inset-0">
+            <div className="absolute inset-x-0 top-0 h-px bg-white/35" />
+            <div className="absolute -left-10 top-0 h-24 w-24 rounded-full bg-emerald-300/14 blur-2xl" />
+            <div className="absolute right-8 top-1 h-20 w-28 rounded-full bg-cyan-300/12 blur-2xl" />
+          </div>
           <Link href="/">
-            <div className="flex items-center space-x-3 cursor-pointer">
+            <div className="relative z-10 flex items-center gap-3 cursor-pointer">
               <Image
                 src="/logo2.jpg"
                 alt="La Vieja Adventures Logo"
                 width={logoSize}
                 height={logoSize}
-                className="rounded-md object-cover transition-all duration-300 shadow-md shadow-black/30"
+                className="rounded-2xl object-cover transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.3)] ring-1 ring-white/20"
                 priority
               />
-              <span className={`font-black tracking-tight text-white transition-all duration-300 ${textSize}`}>
-                La Vieja Adventures
-              </span>
+              <div className="flex flex-col">
+                <span className="text-[10px] font-semibold uppercase tracking-[0.42em] text-emerald-100/70">
+                  Costa Rica Canyon Experience
+                </span>
+                <span className={`lva-wordmark ${textSize} transition-all duration-300`}>
+                  La Vieja Adventures
+                </span>
+              </div>
             </div>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-3 font-medium text-white">
+          <nav className="relative z-10 hidden items-center gap-3 font-medium text-white md:flex">
             {navGroups.map((group) => (
               <DesktopNavGroup key={group.label} item={group} />
             ))}
@@ -366,7 +427,7 @@ const Header = memo<{ isScrolled: boolean; onMenuToggle: () => void; isMenuOpen:
           </nav>
 
           <button
-            className="text-white md:hidden"
+            className="relative z-10 rounded-full border border-white/15 bg-white/10 p-2 text-white backdrop-blur-xl md:hidden"
             onClick={onMenuToggle}
             aria-label="Toggle menu"
             aria-expanded={isMenuOpen}
@@ -378,7 +439,8 @@ const Header = memo<{ isScrolled: boolean; onMenuToggle: () => void; isMenuOpen:
         <div
           className={[
             "flex flex-col md:hidden text-white",
-            "backdrop-blur-2xl bg-teal-950/80 border-t border-white/10 shadow-[0_18px_40px_rgba(0,0,0,0.75)]",
+            "mx-2 mt-3 overflow-hidden rounded-[28px] border border-white/12 backdrop-blur-2xl shadow-[0_18px_40px_rgba(0,0,0,0.48)]",
+            "bg-[linear-gradient(145deg,rgba(8,47,73,0.8),rgba(15,118,110,0.24),rgba(2,6,23,0.88))]",
             "px-6 py-8 transition-all duration-300",
             isMenuOpen ? "max-h-[40rem] opacity-100 space-y-4" : "max-h-0 opacity-0 overflow-hidden",
           ].join(" ")}
@@ -426,6 +488,8 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "1
 
   const parallaxImageRef = useRef<HTMLDivElement>(null);
   const parallaxOverlayRef = useRef<HTMLDivElement>(null);
+  const parallaxMistRef = useRef<HTMLDivElement>(null);
+  const parallaxOrbRef = useRef<HTMLDivElement>(null);
 
   // Auto-advance
   useInterval(() => {
@@ -437,17 +501,23 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "1
   // Parallax on scroll
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const IMG_SPEED = -0.15;
-    const OVERLAY_SPEED = -0.3;
+    const IMG_SPEED = -0.18;
+    const OVERLAY_SPEED = -0.34;
+    const MIST_SPEED = -0.1;
+    const ORB_SPEED = -0.42;
     let ticking = false;
     const update = () => {
       if (!ticking) {
         window.requestAnimationFrame(() => {
           const sy = window.scrollY;
           if (parallaxImageRef.current)
-            parallaxImageRef.current.style.transform = `translate3d(0,${sy * IMG_SPEED}px,0)`;
+            parallaxImageRef.current.style.transform = `translate3d(0,${sy * IMG_SPEED}px,0) scale(1.08)`;
           if (parallaxOverlayRef.current)
             parallaxOverlayRef.current.style.transform = `translate3d(0,${sy * OVERLAY_SPEED}px,0)`;
+          if (parallaxMistRef.current)
+            parallaxMistRef.current.style.transform = `translate3d(0,${sy * MIST_SPEED}px,0) scale(1.04)`;
+          if (parallaxOrbRef.current)
+            parallaxOrbRef.current.style.transform = `translate3d(0,${sy * ORB_SPEED}px,0) rotate(${sy * 0.02}deg)`;
           ticking = false;
         });
         ticking = true;
@@ -509,6 +579,14 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "1
       <div className="absolute inset-0 z-10 pointer-events-none">
         <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/10 to-black/80" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/20" />
+        <div
+          ref={parallaxMistRef}
+          className="absolute inset-x-0 bottom-[-6%] top-[18%] bg-[radial-gradient(circle_at_20%_20%,rgba(45,212,191,0.20),transparent_30%),radial-gradient(circle_at_80%_30%,rgba(186,230,253,0.16),transparent_24%),radial-gradient(circle_at_50%_100%,rgba(255,255,255,0.10),transparent_34%)] blur-2xl"
+        />
+        <div
+          ref={parallaxOrbRef}
+          className="absolute left-[8%] top-[16%] h-44 w-44 rounded-full bg-[radial-gradient(circle,rgba(110,231,183,0.22),rgba(16,185,129,0.02)_62%,transparent_70%)] blur-xl"
+        />
       </div>
 
       {/* ── Progress bar (top) ── */}

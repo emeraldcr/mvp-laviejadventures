@@ -21,8 +21,8 @@ import {
   Plus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useReservaStore } from "@/components/reserva/store";
-import type { PackageOption, ScheduleOption, Step } from "@/components/reserva/types";
+import { useReservaStore } from "@/app/context/store";
+import type { PackageOption, ScheduleOption, Step } from "@/lib/types/types";
 
 const neon = "#22c55e";
 
