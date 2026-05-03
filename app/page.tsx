@@ -90,38 +90,7 @@ function ConversionSection() {
           ))}
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-40px" }}
-          transition={{ duration: 0.45 }}
-          className="rounded-3xl border border-emerald-500/20 bg-gradient-to-r from-emerald-600/12 via-teal-500/10 to-cyan-500/10 p-6"
-        >
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
-              <p className="mb-2 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-emerald-300">
-                <Star size={14} className="fill-emerald-300 text-emerald-300" />
-                {lang === "es" ? "Más confianza, menos fricción" : "More trust, less friction"}
-              </p>
-              <h3 className="text-2xl font-black text-white md:text-3xl">
-                {lang === "es"
-                  ? "Haz scroll, entiende todo y reserva con claridad"
-                  : "Scroll, understand everything, and book with clarity"}
-              </h3>
-              <p className="mt-2 max-w-2xl text-sm text-zinc-200 md:text-base">
-                {lang === "es"
-                  ? "Reducimos dudas mostrando respuestas rápidas y beneficios reales antes del checkout."
-                  : "We reduce uncertainty by showing quick answers and clear value before checkout."}
-              </p>
-            </div>
-            <a
-              href="#booking"
-              className="inline-flex items-center justify-center rounded-xl bg-emerald-500 px-5 py-3 text-sm font-semibold text-black transition hover:bg-emerald-400"
-            >
-              {lang === "es" ? "Reservar ahora" : "Book now"}
-            </a>
-          </div>
-        </motion.div>
+        
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}

@@ -296,6 +296,7 @@ const Header = memo<{ isScrolled: boolean; onMenuToggle: () => void; isMenuOpen:
       { href: "/info", label: tr.info },
       { href: "/docs", label: tr.docs },
       { href: "/tours", label: tr.tours },
+      { href: "/store", label: tr.store },
       { href: "/galeria", label: tr.gallery },
       { href: "/wildo", label: tr.wildo },
       { href: "/tiempo", label: lang === "es" ? "Pronóstico" : "Forecast" },
