@@ -13,8 +13,8 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.79.0",
     "@auth0/nextjs-auth0": "^4.17.0",
-    "@vercel/analytics": "^1.7.0",
-    "@vercel/speed-insights": "^2.2.0",
+    "@vercel/analytics": "^1.6.1",
+    "@vercel/speed-insights": "^2.0.0",
     "bcryptjs": "^3.0.3",
     "cheerio": "^1.2.0",
     "class-variance-authority": "^0.7.1",
