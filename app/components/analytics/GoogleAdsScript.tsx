@@ -2,20 +2,11 @@
 
 import Script from "next/script";
 
-const GOOGLE_ADS_ID = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID;
-
-function shouldLoadAdsTracking() {
-  if (typeof window === "undefined") return false;
-
-  const dnt = navigator.doNotTrack === "1" || (window as Window & { doNotTrack?: string }).doNotTrack === "1";
-  const gpc = (navigator as Navigator & { globalPrivacyControl?: boolean }).globalPrivacyControl === true;
-
-  return !dnt && !gpc;
-}
+const GOOGLE_ADS_ID = "AW-18010006901"; // Hardcoded for testing
 
 export default function GoogleAdsScript() {
-  if (!GOOGLE_ADS_ID) return null;
-  if (!shouldLoadAdsTracking()) return null;
+  // Temporarily disabled privacy checks for testing
+  // if (!shouldLoadAdsTracking()) return null;
 
   return (
     <>

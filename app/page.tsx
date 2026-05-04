@@ -71,28 +71,6 @@ function ConversionSection() {
     <section className="relative bg-black pb-12 pt-8 md:pb-16 md:pt-10">
       <div className="container mx-auto space-y-8 px-4 md:px-8">
         <motion.div
-          initial={{ opacity: 0, y: 18 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="grid grid-cols-1 gap-4 md:grid-cols-3"
-        >
-          {highlights.map(({ icon: Icon, title, text }) => (
-            <article
-              key={title}
-              className="rounded-2xl border border-white/10 bg-zinc-900/65 p-5 shadow-[0_12px_30px_rgba(0,0,0,0.35)]"
-            >
-              <div className="mb-3 inline-flex rounded-full border border-teal-500/30 bg-teal-400/10 p-2.5">
-                <Icon size={18} className="text-teal-300" />
-              </div>
-              <h3 className="mb-2 text-base font-semibold text-white">{title}</h3>
-              <p className="text-sm leading-relaxed text-zinc-300">{text}</p>
-            </article>
-          ))}
-        </motion.div>
-
-        
-
-        <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -111,19 +89,7 @@ function ConversionSection() {
 }
 
 
-function StickyBookingCTA() {
-  const { lang } = useLanguage();
 
-  return (
-    <a
-      href="#booking"
-      className="fixed bottom-4 left-1/2 z-50 inline-flex -translate-x-1/2 items-center gap-2 rounded-full border border-emerald-400/50 bg-emerald-400 px-5 py-2.5 text-sm font-bold text-black shadow-xl shadow-emerald-900/50 md:hidden"
-    >
-      <CheckCircle2 size={16} />
-      {lang === "es" ? "Reservar ahora" : "Book now"}
-    </a>
-  );
-}
 
 function BookingSection() {
   const { lang } = useLanguage();
@@ -214,52 +180,7 @@ function BookingSection() {
 
       <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black to-transparent" />
 
-      <div className="relative z-10 container mx-auto px-4 pb-16 text-center md:px-8">
-        {user ? (
-          <div className="mx-auto max-w-md rounded-2xl border border-teal-500/20 bg-zinc-900/60 p-8 shadow-xl backdrop-blur-md">
-            <p className="logged-in-message mb-6 text-xl font-bold text-teal-400">
-              {lang === "es" ? "¡Sesión iniciada con éxito!" : "Successfully logged in!"}
-            </p>
-            <Profile />
-            <div className="mt-6 flex flex-col gap-3">
-              <a
-                href="/dashboard"
-                className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition bg-emerald-600 text-white hover:bg-emerald-700"
-              >
-                {lang === "es" ? "Ver mi dashboard" : "Go to Dashboard"}
-              </a>
-              <Link
-                href="/ai"
-                className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition border border-cyan-400/50 text-cyan-200 hover:bg-cyan-400/10"
-              >
-                {lang === "es" ? "Abrir La Vieja AI" : "Open La Vieja AI"}
-              </Link>
-              <button
-                onClick={() => signOut({ callbackUrl: "/" })}
-                className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition border border-zinc-600 text-zinc-300 hover:bg-zinc-800"
-              >
-                {lang === "es" ? "Cerrar sesión" : "Log Out"}
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="mx-auto max-w-md rounded-2xl border border-zinc-700/60 bg-zinc-900/60 p-8 shadow-xl backdrop-blur-md">
-            <p className="action-text mb-6 text-lg text-zinc-300">
-              {lang === "es"
-                ? "Inicia sesión para reservar tu tour."
-                : "Log in to book your tour."}
-            </p>
-            <div className="flex flex-col gap-3">
-              <button
-                onClick={() => signIn(undefined, { callbackUrl: "/dashboard" })}
-                className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-900/30 active:translate-y-0 active:scale-[0.99]"
-              >
-                {lang === "es" ? "Iniciar sesión" : "Log In"}
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+      
     </section>
   );
 }
@@ -278,7 +199,7 @@ export default function Home(): JSX.Element {
           <DynamicHeroHeader />
           <ConversionSection />
           <BookingSection />
-          <StickyBookingCTA />
+        
         </main>
       </CalendarProvider>
     </ErrorBoundary>
