@@ -63,7 +63,13 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
             });
 
             const data = await res.json();
-            return data.orderID;
+
+            if (!res.ok || !data?.orderID) {
+              const reason = data?.message || "PayPal create order response did not include orderID.";
+              throw new Error(reason);
+            }
+
+            return data.orderID as string;
           },
           onApprove: async (data: { orderID: string }) => {
             const res = await fetch("/api/paypal/capture-order", {
