@@ -66,6 +66,24 @@ const PACKAGES: PackageOption[] = [
   },
 ];
 
+// Keep tour selection as a plain helper so production minification does not wrap
+// dependent tour lookups in hook closures that can hit temporal dead zone errors.
+const resolveSelectedTourSlug = (
+  tours: TourSummary[],
+  manualSelectedTourSlug: string | null,
+  initialSelectedTourSlug?: string
+): string => {
+  if (manualSelectedTourSlug && tours.some((tour) => tour.slug === manualSelectedTourSlug)) {
+    return manualSelectedTourSlug;
+  }
+
+  if (initialSelectedTourSlug && tours.some((tour) => tour.slug === initialSelectedTourSlug)) {
+    return initialSelectedTourSlug;
+  }
+
+  return tours[0]?.slug ?? "tour-ciudad-esmeralda";
+};
+
 const PACKAGE_META = {
   basic: {
     icon: TreePalm,
@@ -316,22 +334,8 @@ export default function ReservationDetails({
   const [manualSelectedTourSlug, setManualSelectedTourSlug] = useState<string | null>(null);
   const [showTourModal, setShowTourModal] = useState(false);
 
-  const selectedTourSlug = useMemo(() => {
-    if (manualSelectedTourSlug && tours.some((tour) => tour.slug === manualSelectedTourSlug)) {
-      return manualSelectedTourSlug;
-    }
-
-    if (initialSelectedTourSlug && tours.some((tour) => tour.slug === initialSelectedTourSlug)) {
-      return initialSelectedTourSlug;
-    }
-
-    return tours[0]?.slug ?? "tour-ciudad-esmeralda";
-  }, [manualSelectedTourSlug, initialSelectedTourSlug, tours]);
-
-  const selectedTour = useMemo(
-    () => tours.find((tour) => tour.slug === selectedTourSlug) ?? tours[0] ?? null,
-    [selectedTourSlug, tours]
-  );
+  const selectedTourSlug = resolveSelectedTourSlug(tours, manualSelectedTourSlug, initialSelectedTourSlug);
+  const selectedTour = tours.find((tour) => tour.slug === selectedTourSlug) ?? tours[0] ?? null;
   const selectedTourName = selectedTour ? (lang === "es" ? selectedTour.titleEs : selectedTour.titleEn) : (lang === "es" ? "Tour" : "Tour");
 
   useEffect(() => {
@@ -583,6 +587,8 @@ export default function ReservationDetails({
     tourTime,
     effectiveTourPackage,
     selectedTour?.slug,
+    subtotalRaw,
+    taxesRaw,
     totalWithTaxes,
   ]);
 
