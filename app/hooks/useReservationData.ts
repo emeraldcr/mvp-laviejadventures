@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import type { MainTourInfo, TourSummary } from "@/lib/types/index";
+import type { TourSummary } from "@/lib/types/index";
 
 export const DEFAULT_BOOKABLE_TOUR: TourSummary = {
   id: "tour-ciudad-esmeralda",
@@ -11,16 +11,10 @@ export const DEFAULT_BOOKABLE_TOUR: TourSummary = {
 };
 
 export function useReservationData() {
-  const [tourInfo, setTourInfo] = useState<MainTourInfo | null>(null);
   const [tours, setTours] = useState<TourSummary[]>([DEFAULT_BOOKABLE_TOUR]);
   const [ivaRatePercent, setIvaRatePercent] = useState<number>(13);
 
   useEffect(() => {
-    fetch("/api/tours/main")
-      .then((r) => r.json())
-      .then((data) => { if (data?.tour) setTourInfo(data.tour); })
-      .catch(() => {});
-
     fetch("/api/settings/iva")
       .then((r) => r.json())
       .then((data) => {
@@ -47,5 +41,5 @@ export function useReservationData() {
       .catch(() => { setTours([DEFAULT_BOOKABLE_TOUR]); });
   }, []);
 
-  return { tourInfo, tours, ivaRatePercent };
+  return { tours, ivaRatePercent };
 }

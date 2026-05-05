@@ -297,7 +297,7 @@ export default function ReservationDetails({
   const hasPrefilledUserData = useRef(false);
   const dateLocale = lang === "es" ? es : enUS;
 
-  const resolvedTourInfo = tourInfo ?? TOUR_INFO;
+  const resolvedTourInfo = selectedTourInfo ?? tourInfo ?? TOUR_INFO;
   const slots = availability[selectedDate] ?? 0;
   const isTicketsValid = tickets >= 1 && tickets <= slots;
 
@@ -332,6 +332,29 @@ export default function ReservationDetails({
     [selectedTourSlug, tours]
   );
   const selectedTourName = selectedTour ? (lang === "es" ? selectedTour.titleEs : selectedTour.titleEn) : (lang === "es" ? "Tour" : "Tour");
+
+  const [selectedTourInfo, setSelectedTourInfo] = useState<MainTourInfo | null>(tourInfo ?? null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    fetch(`/api/tours/main?slug=${encodeURIComponent(selectedTourSlug)}`)
+      .then((response) => response.json())
+      .then((data) => {
+        if (isMounted && data?.tour) {
+          setSelectedTourInfo(data.tour as MainTourInfo);
+        }
+      })
+      .catch(() => {
+        if (isMounted && tourInfo) {
+          setSelectedTourInfo(tourInfo);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedTourSlug, tourInfo]);
 
   const seemsSpanish = useCallback((value?: string) => {
     if (!value) return false;
