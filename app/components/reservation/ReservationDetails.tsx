@@ -388,13 +388,22 @@ export default function ReservationDetails({
   const effectiveTourPackage = selectedPackageUnavailable ? null : tourPackage;
   const effectiveSelectedPackage = selectedPackageUnavailable ? null : selectedPackage;
 
-  const { subtotal, taxes, totalWithTaxes } = useMemo(() => {
-    const pricePerPerson = effectiveSelectedPackage?.priceUSD ?? 0;
-    const sub = tickets * pricePerPerson;
-    const normalizedTaxRate = Math.max(0, ivaRatePercent) / 100;
+  const { subtotalRaw, taxesRaw, totalWithTaxesRaw } = useMemo(() => {
+    const safeTickets = Number.isFinite(tickets) ? Math.max(0, tickets) : 0;
+    const pricePerPerson = Number.isFinite(effectiveSelectedPackage?.priceUSD)
+      ? Math.max(0, effectiveSelectedPackage?.priceUSD ?? 0)
+      : 0;
+    const sub = safeTickets * pricePerPerson;
+    const normalizedTaxRate = Number.isFinite(ivaRatePercent)
+      ? Math.max(0, ivaRatePercent) / 100
+      : 0;
     const tax = sub * normalizedTaxRate;
-    return { subtotal: sub, taxes: tax, totalWithTaxes: sub + tax };
+    return { subtotalRaw: sub, taxesRaw: tax, totalWithTaxesRaw: sub + tax };
   }, [tickets, effectiveSelectedPackage, ivaRatePercent]);
+
+  const subtotal = Number.isFinite(subtotalRaw) ? subtotalRaw : 0;
+  const taxes = Number.isFinite(taxesRaw) ? taxesRaw : 0;
+  const totalWithTaxes = Number.isFinite(totalWithTaxesRaw) ? totalWithTaxesRaw : 0;
 
   const { formState, setFormState, handleChange, validation } = useReservationForm({
     name: "",
