@@ -8,7 +8,7 @@ import {
 import { getDb } from "@/lib/mongodb";
 import { PAYPAL_CURRENCY, PAYPAL_CUSTOM_ID_MAX_LENGTH } from "@/lib/constants/paypal";
 import { COLLECTIONS } from "@/lib/constants/db";
-import { isDateOnOrAfterMinBookableInCostaRica } from "@/lib/costa-rica-time";
+import { getMinBookableIsoDateInCostaRica, isDateOnOrAfterMinBookableInCostaRica } from "@/lib/costa-rica-time";
 
 interface CreateOrderLink {
   rel?: string;
@@ -32,8 +32,13 @@ export async function POST(req: Request) {
     }
 
     if (!isDateOnOrAfterMinBookableInCostaRica(String(date))) {
+      const minBookableDate = getMinBookableIsoDateInCostaRica();
       return NextResponse.json(
-        { message: "Selected date is no longer available. Please choose the next available day." },
+        {
+          message: "Selected date is no longer available. Please choose the next available day.",
+          minBookableDate,
+          selectedDate: String(date),
+        },
         { status: 400 }
       );
     }
