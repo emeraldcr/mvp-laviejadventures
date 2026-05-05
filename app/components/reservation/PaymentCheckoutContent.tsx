@@ -107,7 +107,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
     if (!existingScript) {
       const script = document.createElement("script");
       script.id = "paypal-sdk";
-      script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&locale=${paypalLocale}`;
+      script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}`;
       script.async = true;
       script.onload = initializeButtons;
       document.body.appendChild(script);
