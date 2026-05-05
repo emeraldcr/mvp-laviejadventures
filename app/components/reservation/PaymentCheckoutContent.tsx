@@ -66,6 +66,14 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
 
             if (!res.ok || !data?.orderID) {
               const reason = data?.message || "PayPal create order response did not include orderID.";
+              const minDate = typeof data?.minBookableDate === "string" ? data.minBookableDate : null;
+
+              if (minDate) {
+                alert(`${reason} Earliest available date: ${minDate}.`);
+              } else {
+                alert(reason);
+              }
+
               throw new Error(reason);
             }
 
