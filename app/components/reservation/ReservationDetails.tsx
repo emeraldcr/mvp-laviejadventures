@@ -296,6 +296,7 @@ export default function ReservationDetails({
   const { data: session } = useSession();
   const hasPrefilledUserData = useRef(false);
   const dateLocale = lang === "es" ? es : enUS;
+  const [selectedTourInfo, setSelectedTourInfo] = useState<MainTourInfo | null>(tourInfo ?? null);
 
   const resolvedTourInfo = selectedTourInfo ?? tourInfo ?? TOUR_INFO;
   const slots = availability[selectedDate] ?? 0;
@@ -332,8 +333,6 @@ export default function ReservationDetails({
     [selectedTourSlug, tours]
   );
   const selectedTourName = selectedTour ? (lang === "es" ? selectedTour.titleEs : selectedTour.titleEn) : (lang === "es" ? "Tour" : "Tour");
-
-  const [selectedTourInfo, setSelectedTourInfo] = useState<MainTourInfo | null>(tourInfo ?? null);
 
   useEffect(() => {
     let isMounted = true;
