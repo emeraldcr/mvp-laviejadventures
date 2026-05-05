@@ -1,7 +1,7 @@
 // app/api/tours/main/route.ts
-// Returns the main booking tour info from MongoDB, seeding defaults if not found
+// Returns booking tour info from MongoDB by slug (or main tour by default), seeding defaults if not found
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/mongodb";
 import { COLLECTIONS } from "@/lib/constants/db";
 
@@ -36,7 +36,6 @@ const DEFAULT_MAIN_TOUR = {
     twitter: "https://x.com/adventuresvieja",
     instagram: "https://www.instagram.com/laviejadventures",
   },
-  // B2B fields
   type: "both",
   iconName: "Star",
   titleEs: "Tour Ciudad Esmeralda – Cañón del Río La Vieja",
@@ -55,47 +54,44 @@ const DEFAULT_MAIN_TOUR = {
   tagEn: "Adventure",
   accent: "from-teal-900/40 to-teal-950/60",
   border: "border-teal-700/30 hover:border-teal-500/60",
-  includes: [
-    "Guía certificado",
-    "Equipo de seguridad",
-    "Seguro de accidentes",
-    "Acceso al área protegida",
-  ],
+  includes: ["Guía certificado", "Equipo de seguridad", "Seguro de accidentes", "Acceso al área protegida"],
   isFeatured: true,
 };
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const db = await getDb();
     const collection = db.collection(COLLECTIONS.TOURS);
+    const slug = request.nextUrl.searchParams.get("slug")?.trim();
 
-    let tour = await collection.findOne({ isMain: true, isActive: { $ne: false } });
+    let tour = slug
+      ? await collection.findOne({ slug, isActive: { $ne: false } })
+      : await collection.findOne({ isMain: true, isActive: { $ne: false } });
 
-    // Seed default if not found
-    if (!tour) {
+    if (!tour && (!slug || slug === DEFAULT_MAIN_TOUR.slug)) {
       await collection.updateOne(
         { slug: DEFAULT_MAIN_TOUR.slug },
         { $set: DEFAULT_MAIN_TOUR },
         { upsert: true }
       );
-      tour = await collection.findOne({ isMain: true });
+      tour = await collection.findOne({ slug: DEFAULT_MAIN_TOUR.slug, isActive: { $ne: false } });
     }
 
     if (!tour) {
-      return NextResponse.json({ error: "Main tour not found" }, { status: 404 });
+      return NextResponse.json({ error: "Tour not found" }, { status: 404 });
     }
 
     return NextResponse.json({
       tour: {
-        name: tour.name,
-        operator: tour.operator,
-        duration: tour.duration,
-        price: tour.price,
-        location: tour.location,
-        inclusions: tour.inclusions ?? [],
+        name: tour.name ?? tour.titleEs ?? "Tour",
+        operator: tour.operator ?? "",
+        duration: tour.duration ?? "",
+        price: tour.price ?? (typeof tour.priceCRC === "number" ? `₡${tour.priceCRC.toLocaleString("es-CR")} por persona` : ""),
+        location: tour.location ?? "",
+        inclusions: tour.inclusions ?? tour.includes ?? [],
         exclusions: tour.exclusions ?? [],
         cancellationPolicy: tour.cancellationPolicy ?? "",
-        details: tour.details ?? "",
+        details: tour.details ?? tour.descriptionEs ?? "",
         restrictions: tour.restrictions ?? "",
         contact: tour.contact ?? {},
       },

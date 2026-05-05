@@ -39,7 +39,7 @@ export default function ReservationSection({ className }: Props) {
 
   const { lang } = useLanguage();
   const tr = translations[lang];
-  const { tourInfo, tours, ivaRatePercent } = useReservationData();
+  const { tours, ivaRatePercent } = useReservationData();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -107,7 +107,6 @@ export default function ReservationSection({ className }: Props) {
         onReserve={handleReserve}
         availability={availability}
         currentYear={currentYear}
-        tourInfo={tourInfo}
         tours={tours}
         initialSelectedTourSlug={initialSelectedTourSlug}
         hasPreselectedTour={hasPreselectedTour}
