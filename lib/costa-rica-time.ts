@@ -53,11 +53,19 @@ export function getMinBookableIsoDateInCostaRica(referenceDate: Date = new Date(
 }
 
 export function isDateOnOrAfterMinBookableInCostaRica(isoDate: string, referenceDate: Date = new Date()): boolean {
-  const parsedDate = new Date(`${isoDate}T00:00:00Z`);
-  if (Number.isNaN(parsedDate.getTime())) return false;
+  const isoDayMatch = isoDate.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!isoDayMatch) return false;
+
+  const selectedYear = Number(isoDayMatch[1]);
+  const selectedMonth = Number(isoDayMatch[2]);
+  const selectedDay = Number(isoDayMatch[3]);
+
+  if (!selectedYear || selectedMonth < 1 || selectedMonth > 12 || selectedDay < 1 || selectedDay > 31) {
+    return false;
+  }
 
   const minDate = getMinBookableDateInCostaRica(referenceDate);
-  const selectedDateKey = toDateKey(parsedDate.getUTCFullYear(), parsedDate.getUTCMonth() + 1, parsedDate.getUTCDate());
+  const selectedDateKey = toDateKey(selectedYear, selectedMonth, selectedDay);
   const minDateKey = toDateKey(minDate.year, minDate.month, minDate.day);
 
   return selectedDateKey >= minDateKey;
