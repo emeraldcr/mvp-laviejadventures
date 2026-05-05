@@ -120,6 +120,11 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
   }, [date, email, name, onSuccess, packagePrice, phone, router, tickets, total, tourName, tourPackage, tourSlug, tourTime, tr.error]);
 
   const packageName = tr.packages[tourPackage] ?? tourPackage;
+  const displayDate = /^\d{4}-\d{2}-\d{2}$/.test(date)
+    ? new Date(`${date}T12:00:00`).toLocaleDateString(lang === "es" ? "es-CR" : "en-US", {
+        dateStyle: "full",
+      })
+    : date;
 
   return (
     <>
@@ -141,7 +146,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
         {tr.bookingPrefix}{" "}
         <strong>{tickets} {tickets === 1 ? tr.person : tr.persons}</strong>{" "}
         {tr.bookingForDay}{" "}
-        <strong>{date}</strong>.
+        <strong>{displayDate}</strong>.
       </p>
 
       <p className="mb-2 text-lg">

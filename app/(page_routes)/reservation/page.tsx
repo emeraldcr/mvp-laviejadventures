@@ -11,6 +11,41 @@ import { translations } from "@/lib/translations";
 
 const RESERVATION_RETURN_KEY = "reservationReturnPath";
 
+const ORDER_PACKAGES = new Set(["basic", "full-day", "private"]);
+const ORDER_TIMES = new Set(["08:00", "09:00", "10:00"]);
+
+const isNonEmptyString = (value: unknown): value is string =>
+  typeof value === "string" && value.trim().length > 0;
+
+const isPositiveFiniteNumber = (value: unknown): value is number =>
+  typeof value === "number" && Number.isFinite(value) && value > 0;
+
+const isStoredOrderDetails = (value: unknown): value is OrderDetails => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const order = value as Partial<OrderDetails>;
+
+  return (
+    isNonEmptyString(order.name) &&
+    isNonEmptyString(order.email) &&
+    isNonEmptyString(order.phone) &&
+    Number.isInteger(order.tickets) &&
+    Number(order.tickets) > 0 &&
+    isPositiveFiniteNumber(order.total) &&
+    isNonEmptyString(order.date) &&
+    /^\d{4}-\d{2}-\d{2}$/.test(order.date) &&
+    isNonEmptyString(order.tourTime) &&
+    ORDER_TIMES.has(order.tourTime) &&
+    isNonEmptyString(order.tourPackage) &&
+    ORDER_PACKAGES.has(order.tourPackage) &&
+    isNonEmptyString(order.tourSlug) &&
+    isNonEmptyString(order.tourName) &&
+    isPositiveFiniteNumber(order.packagePrice)
+  );
+};
+
 const getStoredOrderDetails = (): OrderDetails | null => {
   if (typeof window === "undefined") {
     return null;
@@ -22,7 +57,13 @@ const getStoredOrderDetails = (): OrderDetails | null => {
   }
 
   try {
-    return JSON.parse(stored) as OrderDetails;
+    const parsed = JSON.parse(stored);
+    if (isStoredOrderDetails(parsed)) {
+      return parsed;
+    }
+
+    sessionStorage.removeItem("reservationOrderDetails");
+    return null;
   } catch {
     sessionStorage.removeItem("reservationOrderDetails");
     return null;
