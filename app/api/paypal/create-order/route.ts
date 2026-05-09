@@ -20,9 +20,32 @@ interface CreateOrderResponse {
   links?: CreateOrderLink[];
 }
 
+function normalizeOrderDate(date: unknown, dateIso: unknown): string | null {
+  const parseIso = (value: string) => {
+    const isoMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!isoMatch) return null;
+    const year = Number(isoMatch[1]);
+    const month = Number(isoMatch[2]);
+    const day = Number(isoMatch[3]);
+    if (!year || month < 1 || month > 12 || day < 1 || day > 31) return null;
+    return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  };
+
+  const tryParseDate = (value: unknown) => {
+    if (typeof value !== "string" || !value.trim()) return null;
+    const iso = parseIso(value);
+    if (iso) return iso;
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return null;
+    return `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, "0")}-${String(parsed.getDate()).padStart(2, "0")}`;
+  };
+
+  return tryParseDate(dateIso) ?? tryParseDate(date);
+}
+
 export async function POST(req: Request) {
   try {
-    const { name, email, phone, tickets, total, date, tourTime, tourPackage, packagePrice, tourSlug, tourName, language } = await req.json();
+    const { name, email, phone, tickets, total, date, dateIso, tourTime, tourPackage, packagePrice, tourSlug, tourName, language } = await req.json();
 
     if (!name || !email || !phone || !tickets || !total || !date || !tourPackage) {
       return NextResponse.json(
@@ -31,13 +54,26 @@ export async function POST(req: Request) {
       );
     }
 
-    if (!isDateOnOrAfterMinBookableInCostaRica(String(date))) {
+    const normalizedDate = normalizeOrderDate(date, dateIso);
+    if (!normalizedDate) {
+      return NextResponse.json(
+        {
+          message: "Invalid reservation date format.",
+          selectedDate: String(date),
+          dateIso: String(dateIso ?? ""),
+        },
+        { status: 400 }
+      );
+    }
+
+    if (!isDateOnOrAfterMinBookableInCostaRica(normalizedDate)) {
       const minBookableDate = getMinBookableIsoDateInCostaRica();
       return NextResponse.json(
         {
           message: "Selected date is no longer available. Please choose the next available day.",
           minBookableDate,
           selectedDate: String(date),
+          dateIso: normalizedDate,
         },
         { status: 400 }
       );
@@ -66,14 +102,14 @@ export async function POST(req: Request) {
       ppUSD: packagePrice ?? null,
       tourSlug: tourSlug ?? null,
       tourName: tourName ?? null,
-      date,
+      date: normalizedDate,
       lang: language === "en" ? "en" : "es",
     });
     const custom_id = customIdPayload.length <= PAYPAL_CUSTOM_ID_MAX_LENGTH ? customIdPayload : JSON.stringify({
       tickets,
       time: tourTime ?? null,
       pkg: tourPackage ?? null,
-      date,
+      date: normalizedDate,
       lang: language === "en" ? "en" : "es",
     });
 
@@ -96,7 +132,7 @@ export async function POST(req: Request) {
               currency_code: PAYPAL_CURRENCY,
               value: formattedTotal,
             },
-            description: `Reserva: ${tickets} pax - ${tourName ?? packageLabel}${timeLabel ? ` (${timeLabel})` : ""} - ${date}`,
+            description: `Reserva: ${tickets} pax - ${tourName ?? packageLabel}${timeLabel ? ` (${timeLabel})` : ""} - ${normalizedDate}`,
             custom_id,
           },
         ],
@@ -127,7 +163,7 @@ export async function POST(req: Request) {
             },
             booking: {
               tickets: Number(tickets),
-              date,
+              date: normalizedDate,
               tourTime: tourTime ?? null,
               tourPackage: tourPackage ?? null,
               packagePrice: packagePrice != null ? Number(packagePrice) : null,

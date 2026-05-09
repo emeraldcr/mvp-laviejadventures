@@ -23,7 +23,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
   const { lang } = useLanguage();
   const tr = translations[lang].payment;
 
-  const { name, email, phone, tickets, total, date, tourTime, tourPackage, tourSlug, tourName, packagePrice } = orderDetails;
+  const { name, email, phone, tickets, total, date, dateIso, tourTime, tourPackage, tourSlug, tourName, packagePrice } = orderDetails;
 
   useEffect(() => {
     const existingScript = document.querySelector("#paypal-sdk");
@@ -51,7 +51,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
                 email,
                 phone,
                 tickets,
-                date,
+                date: dateIso ?? date,
                 total,
                 tourTime,
                 tourPackage,

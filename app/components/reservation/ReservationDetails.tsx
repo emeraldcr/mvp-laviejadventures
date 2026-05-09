@@ -127,6 +127,7 @@ interface ReservationOrderPayload {
   tickets: number;
   total: number;
   date: string;
+  dateIso: string;
   tourTime: TourTime;
   tourPackage: TourPackage;
   tourSlug: string;
@@ -620,6 +621,7 @@ export default function ReservationDetails({
     onReserve({
       tickets,
       date: formattedDate,
+      dateIso: `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(selectedDate).padStart(2, "0")}`,
       total: totalWithTaxes,
       name: formState.name,
       email: formState.email,
