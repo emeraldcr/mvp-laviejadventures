@@ -160,6 +160,71 @@ const DEFAULT_TOURS = [
   },
 ];
 
+const DEFAULT_TOUR_DETAILS: Record<string, {
+  location: string;
+  inclusions: string[];
+  exclusions: string[];
+  restrictions: string;
+  cancellationPolicy: string;
+}> = {
+  "cuadra-tours-aventura": {
+    location: "Senderos privados - Zona Norte",
+    inclusions: ["Guia local", "Equipo de seguridad", "Ruta en senderos privados"],
+    exclusions: ["Transporte", "Alimentos y bebidas no especificadas"],
+    restrictions: "Intermedio",
+    cancellationPolicy: "Cancelacion gratuita hasta 24 horas antes del tour.",
+  },
+  "cascadas-secretas-rio-la-vieja": {
+    location: "Ciudad Esmeralda - Rio La Vieja",
+    inclusions: ["Guia local", "Acceso a senderos", "Paradas fotograficas"],
+    exclusions: ["Transporte", "Alimentos y bebidas no especificadas"],
+    restrictions: "Moderado",
+    cancellationPolicy: "Cancelacion gratuita hasta 24 horas antes del tour.",
+  },
+  "tour-gastronomico-local": {
+    location: "Ciudad Esmeralda - Zona Norte",
+    inclusions: ["Degustacion local", "Anfitrion local", "Experiencia cultural"],
+    exclusions: ["Transporte", "Consumos adicionales"],
+    restrictions: "Facil",
+    cancellationPolicy: "Cancelacion gratuita hasta 24 horas antes del tour.",
+  },
+  "lluvia-en-la-naturaleza": {
+    location: "Bosque de Ciudad Esmeralda",
+    inclusions: ["Guia local", "Equipo especial para lluvia", "Ruta sensorial"],
+    exclusions: ["Transporte", "Alimentos y bebidas no especificadas"],
+    restrictions: "Facil",
+    cancellationPolicy: "Cancelacion gratuita hasta 24 horas antes del tour.",
+  },
+  "avistamiento-aves-norteno": {
+    location: "Corredor biologico Juan Castro Blanco",
+    inclusions: ["Guia local", "Ruta de observacion", "Apoyo para identificacion de especies"],
+    exclusions: ["Transporte", "Binoculares personales"],
+    restrictions: "Facil",
+    cancellationPolicy: "Cancelacion gratuita hasta 24 horas antes del tour.",
+  },
+  "tour-nocturno-la-vieja": {
+    location: "Bosque La Vieja Adventures",
+    inclusions: ["Guia local", "Ruta nocturna", "Briefing de seguridad"],
+    exclusions: ["Transporte", "Linterna personal"],
+    restrictions: "Facil",
+    cancellationPolicy: "Cancelacion gratuita hasta 24 horas antes del tour.",
+  },
+  "rapel-canon-del-rio": {
+    location: "Canon del Rio La Vieja",
+    inclusions: ["Guia certificado", "Equipo profesional", "Briefing de seguridad"],
+    exclusions: ["Transporte", "Alimentos y bebidas no especificadas"],
+    restrictions: "Intermedio a avanzado",
+    cancellationPolicy: "Cancelacion gratuita hasta 24 horas antes del tour.",
+  },
+  "caminata-volcanes-dormidos": {
+    location: "Parque Nacional del Agua Juan Castro Blanco",
+    inclusions: ["Guia local", "Ruta a crateres antiguos", "Miradores naturales"],
+    exclusions: ["Transporte", "Alimentos y bebidas no especificadas"],
+    restrictions: "Moderado",
+    cancellationPolicy: "Cancelacion gratuita hasta 24 horas antes del tour.",
+  },
+};
+
 export async function GET() {
   try {
     const db = await getDb();
@@ -179,24 +244,33 @@ export async function GET() {
         .toArray();
     }
 
-    const result = tours.map((t) => ({
-      id: t._id.toString(),
-      slug: t.slug,
-      iconName: t.iconName,
-      titleEs: t.titleEs,
-      titleEn: t.titleEn,
-      descriptionEs: t.descriptionEs,
-      descriptionEn: t.descriptionEn,
-      duration: t.duration,
-      difficulty: t.difficulty,
-      priceCRC: t.priceCRC,
-      tagEs: t.tagEs,
-      tagEn: t.tagEn,
-      accent: t.accent,
-      border: t.border,
-      isFeatured: t.isFeatured ?? false,
-      isMain: t.isMain ?? false,
-    }));
+    const result = tours.map((t) => {
+      const defaults = DEFAULT_TOUR_DETAILS[t.slug] ?? null;
+
+      return {
+        id: t._id.toString(),
+        slug: t.slug,
+        iconName: t.iconName,
+        titleEs: t.titleEs,
+        titleEn: t.titleEn,
+        descriptionEs: t.descriptionEs,
+        descriptionEn: t.descriptionEn,
+        duration: t.duration,
+        difficulty: t.difficulty,
+        priceCRC: t.priceCRC,
+        location: t.location ?? defaults?.location ?? "",
+        inclusions: t.inclusions ?? t.includes ?? defaults?.inclusions ?? [],
+        exclusions: t.exclusions ?? defaults?.exclusions ?? [],
+        cancellationPolicy: t.cancellationPolicy ?? defaults?.cancellationPolicy ?? "",
+        restrictions: t.restrictions ?? defaults?.restrictions ?? "",
+        tagEs: t.tagEs,
+        tagEn: t.tagEn,
+        accent: t.accent,
+        border: t.border,
+        isFeatured: t.isFeatured ?? false,
+        isMain: t.isMain ?? false,
+      };
+    });
 
     return NextResponse.json({ tours: result });
   } catch (err) {

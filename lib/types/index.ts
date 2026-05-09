@@ -21,6 +21,16 @@ export type TourSummary = {
   slug: string;
   titleEs: string;
   titleEn: string;
+  descriptionEs?: string;
+  descriptionEn?: string;
+  duration?: string;
+  difficulty?: string;
+  priceCRC?: number;
+  location?: string;
+  inclusions?: string[];
+  exclusions?: string[];
+  cancellationPolicy?: string;
+  restrictions?: string;
 };
 
 export type ContactInfo = {

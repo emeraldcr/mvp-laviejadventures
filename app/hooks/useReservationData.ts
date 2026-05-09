@@ -8,6 +8,11 @@ export const DEFAULT_BOOKABLE_TOUR: TourSummary = {
   slug: "tour-ciudad-esmeralda",
   titleEs: "Tour Ciudad Esmeralda",
   titleEn: "Ciudad Esmeralda Tour",
+  descriptionEs: "Experiencia guiada por senderos, rio y canon hacia Cascada El Zafiro.",
+  descriptionEn: "Guided experience through trails, river, and canyon toward El Zafiro Waterfall.",
+  duration: "3-4 horas",
+  priceCRC: 25000,
+  location: "Ciudad Esmeralda - Rio La Vieja",
 };
 
 export function useReservationData() {
@@ -28,11 +33,36 @@ export function useReservationData() {
       .then((data) => {
         const remoteTours = Array.isArray(data?.tours) ? data.tours : [];
         const mapped: TourSummary[] = remoteTours
-          .map((t: { id?: string; slug?: string; titleEs?: string; titleEn?: string }) => ({
+          .map((t: {
+            id?: string;
+            slug?: string;
+            titleEs?: string;
+            titleEn?: string;
+            descriptionEs?: string;
+            descriptionEn?: string;
+            duration?: string;
+            difficulty?: string;
+            priceCRC?: number;
+            location?: string;
+            inclusions?: string[];
+            exclusions?: string[];
+            cancellationPolicy?: string;
+            restrictions?: string;
+          }) => ({
             id: t.id ?? t.slug ?? "",
             slug: t.slug ?? "",
             titleEs: t.titleEs ?? "Tour",
             titleEn: t.titleEn ?? "Tour",
+            descriptionEs: t.descriptionEs,
+            descriptionEn: t.descriptionEn,
+            duration: t.duration,
+            difficulty: t.difficulty,
+            priceCRC: t.priceCRC,
+            location: t.location,
+            inclusions: t.inclusions,
+            exclusions: t.exclusions,
+            cancellationPolicy: t.cancellationPolicy,
+            restrictions: t.restrictions,
           }))
           .filter((t: TourSummary) => Boolean(t.slug));
         const hasMain = mapped.some((t) => t.slug === DEFAULT_BOOKABLE_TOUR.slug);
