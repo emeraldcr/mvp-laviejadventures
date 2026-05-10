@@ -14,6 +14,8 @@ export type UserPreferences = {
   };
 };
 
+
+
 // ── Tour summary (used in booking UI and reservation hooks) ──────────────────
 
 export type TourSummary = {
