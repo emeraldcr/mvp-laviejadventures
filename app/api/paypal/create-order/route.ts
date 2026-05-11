@@ -90,25 +90,30 @@ export async function POST(req: Request) {
         ? "Tour Privado"
         : "Tour";
 
+    const effectiveTourName = tourName || packageLabel;
+
     const timeLabel = tourTime
       ? tourTime === "08:00" ? "8:00 AM" : tourTime === "09:00" ? "9:00 AM" : "10:00 AM"
       : "";
 
     // PayPal custom_id max length is 127 chars — keep metadata compact to avoid truncation
     const customIdPayload = JSON.stringify({
+      customer: { phone },
       tickets,
       time: tourTime ?? null,
       pkg: tourPackage ?? null,
       ppUSD: packagePrice ?? null,
       tourSlug: tourSlug ?? null,
-      tourName: tourName ?? null,
+      tourName: effectiveTourName,
       date: normalizedDate,
       lang: language === "en" ? "en" : "es",
     });
     const custom_id = customIdPayload.length <= PAYPAL_CUSTOM_ID_MAX_LENGTH ? customIdPayload : JSON.stringify({
+      customer: { phone },
       tickets,
       time: tourTime ?? null,
       pkg: tourPackage ?? null,
+      tourName: effectiveTourName,
       date: normalizedDate,
       lang: language === "en" ? "en" : "es",
     });

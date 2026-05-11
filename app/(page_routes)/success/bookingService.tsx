@@ -226,6 +226,8 @@ function parsePayPalOrder(paypalOrder: PayPalOrderResponse) {
   const tourSlug = meta?.tourSlug || persistedBooking?.tourSlug || null;
   const tourName = meta?.tourName || persistedBooking?.tourName || null;
 
+  const effectiveTourName = tourName || (tourPackage === "basic" ? "Paquete Básico" : tourPackage === "full-day" ? "Día Completo con Almuerzo" : tourPackage === "private" ? "Tour Privado" : "Tour");
+
   const language: "es" | "en" = 
     (meta?.lang === "en" || meta?.lang === "es" ? meta.lang : 
      persistedBooking?.language === "en" || persistedBooking?.language === "es" ? persistedBooking.language : "es");
@@ -253,7 +255,7 @@ function parsePayPalOrder(paypalOrder: PayPalOrderResponse) {
     tourTime,
     tourPackage,
     tourSlug,
-    tourName,
+    tourName: effectiveTourName,
     packagePrice,
     language,
   };
