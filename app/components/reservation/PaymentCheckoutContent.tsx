@@ -140,38 +140,19 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
 
   return (
     <>
-      <p className="mb-3 text-lg">
-        <strong>{tr.nameLabel}:</strong> {name}
-      </p>
-      <p className="mb-3 text-lg">
-        <strong>{tr.emailLabel}:</strong> {email}
-      </p>
-      <p className="mb-4 text-lg">
-        <strong>{tr.phoneLabel}:</strong> {phone}
-      </p>
-
-      <p className="mb-2 text-lg">
-        <strong>{tr.package}:</strong> {tourName}
-      </p>
-
-      <p className="mb-2 text-lg">
-        {tr.bookingPrefix}{" "}
-        <strong>{tickets} {tickets === 1 ? tr.person : tr.persons}</strong>{" "}
-        {tr.bookingForDay}{" "}
-        <strong>{date}</strong>.
-      </p>
-
-      <p className="mb-2 text-lg">
-        <strong>{tr.tourTime}:</strong>{" "}
-        {tr.timeLabels[tourTime] ?? tourTime}
-      </p>
-
-      <p className="mb-4 text-lg">
-        <strong>{tr.package}:</strong>{" "}
-        {packageName} (${packagePrice} USD/{tr.pricePerPersonUnit})
-      </p>
-
-      <p className="text-xl font-bold mb-6">{tr.total}: ${total.toFixed(2)}</p>
+      <div className="mb-6 rounded-xl border border-zinc-700/70 bg-zinc-950/50 p-4 text-zinc-100">
+        <p className="text-base font-semibold">{tourName}</p>
+        <p className="mt-1 text-sm text-zinc-300">
+          {tickets} {tickets === 1 ? tr.person : tr.persons} • {date} • {tr.timeLabels[tourTime] ?? tourTime}
+        </p>
+        <p className="mt-2 text-sm text-zinc-300">
+          {name} • {email} • {phone}
+        </p>
+        <p className="mt-2 text-sm text-zinc-300">
+          {packageName} (${packagePrice} USD/{tr.pricePerPersonUnit})
+        </p>
+        <p className="mt-3 text-xl font-bold">{tr.total}: ${total.toFixed(2)}</p>
+      </div>
 
       <div ref={paypalRef} className="min-h-[140px] w-full" />
     </>
