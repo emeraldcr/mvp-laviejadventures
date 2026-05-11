@@ -37,7 +37,7 @@ interface NavGroup {
 // ─── Constants ────────────────────────────────────────────────────────────────
 const SCROLL_THRESHOLD = 80;
 const LOGO_SIZE = { default: 64, scrolled: 42 };
-const TEXT_SIZE = { default: "text-2xl", scrolled: "text-xl" };
+const TEXT_SIZE = { default: "text-xl sm:text-2xl", scrolled: "text-lg sm:text-xl" };
 const SLIDE_DURATION = 5000;
 
 // ─── Scroll hook ──────────────────────────────────────────────────────────────
@@ -324,7 +324,7 @@ const Header = memo<{ isScrolled: boolean; onMenuToggle: () => void; isMenuOpen:
             : "bg-teal-950/40 shadow-none",
         ].join(" ")}
       >
-        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 md:px-8">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-3 sm:h-20 sm:px-4 md:px-8">
           <Link href="/">
             <div className="flex items-center space-x-3 cursor-pointer">
               <Image
@@ -332,7 +332,7 @@ const Header = memo<{ isScrolled: boolean; onMenuToggle: () => void; isMenuOpen:
                 alt="La Vieja Adventures Logo"
                 width={logoSize}
                 height={logoSize}
-                className="rounded-md object-cover transition-all duration-300 shadow-md shadow-black/30"
+                className="h-11 w-11 rounded-md object-cover shadow-md shadow-black/30 transition-all duration-300 sm:h-auto sm:w-auto"
                 priority
               />
               <span className={`font-black tracking-tight text-white transition-all duration-300 ${textSize}`}>
@@ -351,12 +351,12 @@ const Header = memo<{ isScrolled: boolean; onMenuToggle: () => void; isMenuOpen:
           </nav>
 
           <button
-            className="text-white md:hidden"
+            className="rounded-full border border-white/15 bg-white/10 p-2 text-white shadow-lg shadow-black/20 md:hidden"
             onClick={onMenuToggle}
             aria-label="Toggle menu"
             aria-expanded={isMenuOpen}
           >
-            {isMenuOpen ? <X size={32} /> : <Menu size={32} />}
+            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
 
@@ -364,7 +364,7 @@ const Header = memo<{ isScrolled: boolean; onMenuToggle: () => void; isMenuOpen:
           className={[
             "flex flex-col md:hidden text-white",
             "backdrop-blur-2xl bg-teal-950/80 border-t border-white/10 shadow-[0_18px_40px_rgba(0,0,0,0.75)]",
-            "px-6 py-8 transition-all duration-300",
+            "px-4 py-5 transition-all duration-300",
             isMenuOpen ? "max-h-[40rem] opacity-100 space-y-4" : "max-h-0 opacity-0 overflow-hidden",
           ].join(" ")}
           aria-hidden={!isMenuOpen}
@@ -492,7 +492,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "1
 
       {/* ── Cinematic gradient overlay ── */}
       <div className="absolute inset-0 z-10 pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/10 to-black/80" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/20 to-black/90 sm:from-black/55 sm:via-black/10 sm:to-black/80" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/20" />
       </div>
 
@@ -511,14 +511,14 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "1
       {/* ── Prev / Next arrows ── */}
       <button
         onClick={goPrev}
-        className="absolute left-3 md:left-6 top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-black/30 border border-white/15 backdrop-blur-sm flex items-center justify-center text-white hover:bg-teal-500/30 hover:border-teal-400/50 transition-all duration-200"
+        className="absolute left-3 top-1/2 z-30 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/30 text-white backdrop-blur-sm transition-all duration-200 hover:border-teal-400/50 hover:bg-teal-500/30 sm:flex md:left-6"
         aria-label="Previous image"
       >
         <ChevronLeft size={18} />
       </button>
       <button
         onClick={goNext}
-        className="absolute right-3 md:right-6 top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-black/30 border border-white/15 backdrop-blur-sm flex items-center justify-center text-white hover:bg-teal-500/30 hover:border-teal-400/50 transition-all duration-200"
+        className="absolute right-3 top-1/2 z-30 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/30 text-white backdrop-blur-sm transition-all duration-200 hover:border-teal-400/50 hover:bg-teal-500/30 sm:flex md:right-6"
         aria-label="Next image"
       >
         <ChevronRight size={18} />
@@ -527,25 +527,25 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "1
       {/* ── Main text overlay ── */}
       <div
         ref={parallaxOverlayRef}
-        className="relative w-full h-full flex flex-col justify-center items-center text-center z-20 px-4 md:px-8 will-change-transform"
+        className="relative z-20 flex h-full w-full flex-col items-center justify-center px-4 pb-20 pt-24 text-center will-change-transform sm:pb-0 sm:pt-0 md:px-8"
       >
         {overlay || (
           <>
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 mb-6 px-4 py-1.5 rounded-full border border-white/20 bg-white/8 backdrop-blur-md">
+            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 backdrop-blur-md sm:mb-6 sm:px-4">
               <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" />
-              <span className="text-[11px] font-bold text-white/75 uppercase tracking-[0.2em]">
+              <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/75 sm:text-[11px] sm:tracking-[0.2em]">
                 San Carlos · Costa Rica
               </span>
             </div>
 
             {/* Title */}
-            <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-[7rem] font-black mb-5 text-white leading-[0.88] tracking-tight drop-shadow-2xl">
+            <h1 className="mb-5 max-w-[11ch] text-[3.25rem] font-black leading-[0.86] tracking-tight text-white drop-shadow-2xl sm:max-w-none sm:text-7xl md:text-8xl lg:text-[7rem]">
               {tr.title}
             </h1>
 
             {/* Subtitle — AI-generated slogan, unique on every load */}
-            <div className="mb-10 max-w-2xl min-h-[2.5rem] flex items-center justify-center">
+            <div className="mb-7 flex min-h-[3rem] max-w-[22rem] items-center justify-center sm:mb-10 sm:max-w-2xl">
               {sloganLoading ? (
                 <div className="flex flex-col items-center gap-2 w-full max-w-md">
                   <div className="h-4 w-3/4 rounded-full bg-white/10 animate-pulse" />
@@ -553,7 +553,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "1
                 </div>
               ) : (
                 <p
-                  className="text-base sm:text-xl md:text-2xl font-light text-white/80 leading-relaxed text-center transition-opacity duration-700"
+                  className="text-[15px] font-light leading-relaxed text-center text-white/85 transition-opacity duration-700 sm:text-xl md:text-2xl"
                   style={{ opacity: slogan ? 1 : 0 }}
                 >
                   {slogan
@@ -568,7 +568,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "1
             {/* CTA */}
             <a
               href="#booking"
-              className="group inline-flex items-center gap-3 px-8 py-4 rounded-full bg-teal-500 hover:bg-teal-400 text-white font-bold text-base shadow-[0_0_40px_rgba(20,184,166,0.4)] hover:shadow-[0_0_55px_rgba(20,184,166,0.6)] transition-all duration-300"
+              className="group inline-flex min-h-14 w-full max-w-xs items-center justify-center gap-3 rounded-2xl bg-teal-400 px-8 py-4 text-base font-black text-zinc-950 shadow-[0_0_40px_rgba(20,184,166,0.4)] transition-all duration-300 hover:bg-teal-300 hover:shadow-[0_0_55px_rgba(20,184,166,0.6)] sm:w-auto sm:rounded-full sm:text-white"
             >
               <span>{lang === "es" ? "Reservar ahora" : "Book now"}</span>
               <span className="inline-block group-hover:translate-x-1 transition-transform duration-200">→</span>
@@ -577,7 +577,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "1
         )}
 
         {/* ── Bottom controls ── */}
-        <div className="absolute bottom-7 left-0 right-0 flex flex-col items-center gap-3 z-30">
+        <div className="absolute bottom-4 left-0 right-0 z-30 flex flex-col items-center gap-2 sm:bottom-7 sm:gap-3">
           {/* Dot indicators */}
           <div className="flex items-center gap-2">
             {carouselImages.map((_, idx) => (
@@ -602,7 +602,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "1
           {/* Scroll indicator */}
           <a
             href="#booking"
-            className="mt-1 p-2 rounded-full bg-white/8 hover:bg-white/18 transition-colors animate-bounce"
+            className="mt-1 hidden rounded-full bg-white/8 p-2 transition-colors hover:bg-white/18 sm:block sm:animate-bounce"
             aria-label="Scroll to booking"
           >
             <ChevronDown size={22} className="text-white/60" />
@@ -647,7 +647,7 @@ export default function DynamicHeroHeader({ children, showHeroSlider = true }: D
     <>
       <Header isScrolled={isScrolled} onMenuToggle={toggleMenu} isMenuOpen={isMenuOpen} />
       {showHeroSlider && (
-        <section className="relative h-screen min-h-[600px] overflow-hidden">
+        <section className="relative h-[92svh] min-h-[640px] overflow-hidden sm:h-screen sm:min-h-[600px]">
           <HeroCarousel height="100%" overlay={null} />
           {children}
         </section>

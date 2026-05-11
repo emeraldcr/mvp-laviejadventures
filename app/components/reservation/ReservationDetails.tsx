@@ -200,7 +200,7 @@ const TravelerInputField = ({
 
   return (
     <div className={className}>
-      <label htmlFor={id} className="block font-semibold text-lg mb-1">
+      <label htmlFor={id} className="mb-1 block text-sm font-bold text-zinc-800 dark:text-zinc-100 sm:text-base">
         {label}
       </label>
       <input
@@ -208,7 +208,7 @@ const TravelerInputField = ({
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className={`w-full p-3 rounded-lg border focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-zinc-800 ${
+        className={`min-h-12 w-full rounded-xl border bg-white p-3 text-base focus:border-teal-500 focus:ring-teal-500 dark:bg-zinc-800 ${
           showError
             ? "border-red-500"
             : "border-zinc-300 dark:border-zinc-700"
@@ -245,7 +245,7 @@ const TravelerPhoneInput = ({
 
   return (
     <div className="md:col-span-2">
-      <label htmlFor="phoneNumber" className="block font-semibold text-lg mb-1">
+      <label htmlFor="phoneNumber" className="mb-1 block text-sm font-bold text-zinc-800 dark:text-zinc-100 sm:text-base">
         {label}
       </label>
       <div className="flex gap-2">
@@ -253,7 +253,7 @@ const TravelerPhoneInput = ({
           id="phoneCode"
           value={phoneCode}
           onChange={(e) => setPhoneCode(e.target.value)}
-          className="p-3 rounded-lg border bg-white dark:bg-zinc-800 border-zinc-300 dark:border-zinc-700 focus:ring-teal-500 focus:border-teal-500 w-1/3 md:w-1/4"
+          className="min-h-12 w-[40%] rounded-xl border border-zinc-300 bg-white p-3 text-sm focus:border-teal-500 focus:ring-teal-500 dark:border-zinc-700 dark:bg-zinc-800 sm:w-1/3 md:w-1/4"
         >
           {COUNTRY_CODES.map((country) => (
             <option key={country.code} value={country.code}>
@@ -266,7 +266,7 @@ const TravelerPhoneInput = ({
           type="tel"
           value={phoneNumber}
           onChange={(e) => setPhoneNumber(e.target.value)}
-          className={`w-full p-3 rounded-lg border focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-zinc-800 ${
+          className={`min-h-12 w-full rounded-xl border bg-white p-3 text-base focus:border-teal-500 focus:ring-teal-500 dark:bg-zinc-800 ${
             showError ? "border-red-500" : "border-zinc-300 dark:border-zinc-700"
           }`}
           placeholder={placeholder}
@@ -641,6 +641,9 @@ export default function ReservationDetails({
     onReserve,
     tickets,
     formattedDate,
+    currentYear,
+    currentMonth,
+    selectedDate,
     totalWithTaxes,
     formState,
     selectedTour,
@@ -658,16 +661,16 @@ export default function ReservationDetails({
   }, []);
 
   return (
-    <div className="border-t border-zinc-300 dark:border-zinc-700">
-      <h2 className="text-2xl font-bold mb-4">
+    <div className="border-t border-zinc-300 px-4 py-5 text-zinc-900 dark:border-zinc-700 dark:text-zinc-100 sm:px-6 sm:py-6">
+      <h2 className="mb-4 text-xl font-black leading-tight sm:text-2xl">
         {tr.titlePrefix} {formattedDate}
       </h2>
 
-      <div className="mb-8 rounded-2xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-900/60">
+      <div className="sticky top-16 z-20 mb-6 rounded-2xl border border-zinc-200 bg-zinc-50/95 p-3 shadow-lg shadow-black/5 backdrop-blur dark:border-zinc-700 dark:bg-zinc-900/95 sm:static sm:mb-8 sm:p-4">
         <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-zinc-500">
           {tr.flowTitle}
         </p>
-        <div className="grid gap-2 sm:grid-cols-3">
+        <div className="grid grid-cols-3 gap-2">
           {steps.map((step) => {
             const isCurrent = currentStep === step.id;
             const isDone = currentStep > step.id;
@@ -682,7 +685,7 @@ export default function ReservationDetails({
                   }
                   setCurrentStep(step.id);
                 }}
-                className={`rounded-xl border px-3 py-2 text-left text-sm transition-all ${
+                className={`rounded-xl border px-2 py-2 text-center text-[11px] font-bold transition-all sm:px-3 sm:text-left sm:text-sm ${
                   isCurrent
                     ? "border-emerald-400 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300"
                     : isDone
@@ -690,7 +693,7 @@ export default function ReservationDetails({
                     : "border-zinc-200 bg-white text-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400"
                 }`}
               >
-                <span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full border text-xs font-bold">
+                <span className="mx-auto mb-1 flex h-6 w-6 items-center justify-center rounded-full border text-xs font-bold sm:mx-0 sm:mb-0 sm:mr-2 sm:inline-flex">
                   {step.id}
                 </span>
                 {step.label}
@@ -700,10 +703,10 @@ export default function ReservationDetails({
         </div>
       </div>
 
-      <div className="mb-6 rounded-2xl border border-zinc-200 bg-gradient-to-br from-teal-50 via-white to-cyan-50 p-5 shadow-sm dark:border-zinc-700 dark:from-zinc-900 dark:via-zinc-900 dark:to-teal-950/30">
+      <div className="mb-6 rounded-2xl border border-zinc-200 bg-gradient-to-br from-teal-50 via-white to-cyan-50 p-4 shadow-sm dark:border-zinc-700 dark:from-zinc-900 dark:via-zinc-900 dark:to-teal-950/30 sm:p-5">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
-            <h3 className="mb-1 text-xl font-semibold text-teal-900 dark:text-teal-300">
+            <h3 className="mb-1 text-lg font-bold text-teal-900 dark:text-teal-300 sm:text-xl">
               {tr.tourInfoTitle}
             </h3>
             <p className="text-sm text-zinc-600 dark:text-zinc-400">{tr.tourInfoSubtitle}</p>
@@ -716,7 +719,7 @@ export default function ReservationDetails({
           </span>
         </div>
 
-        <p className="mb-4 text-zinc-700 dark:text-zinc-400">{localizedDetails}</p>
+        <p className="mb-4 text-sm leading-relaxed text-zinc-700 dark:text-zinc-400 sm:text-base">{localizedDetails}</p>
 
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="rounded-xl border border-zinc-200/70 bg-white/85 p-3 dark:border-zinc-700 dark:bg-zinc-900/70" title={tr.tooltips.durationCard}>
@@ -850,10 +853,10 @@ export default function ReservationDetails({
             document.body
           )}
 
-          <div className={`mb-6 rounded-xl ${!tourTime ? "ring-2 ring-amber-300/70 p-3" : ""}`}>
-            <h3 className="text-xl font-semibold mb-3">{tr.tourTimeTitle}</h3>
+          <div className={`mb-6 rounded-2xl ${!tourTime ? "ring-2 ring-amber-300/70 p-3" : ""}`}>
+            <h3 className="mb-3 text-lg font-bold sm:text-xl">{tr.tourTimeTitle}</h3>
             {!tourTime && <p className="mb-3 flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-400"><AlertCircle className="h-4 w-4" aria-hidden /> {tr.indicators.chooseTourTime}</p>}
-            <div className="flex gap-3 flex-wrap">
+            <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:gap-3">
               {TIME_SLOTS.map((slot) => {
                 const isSelected = tourTime === slot.id;
                 return (
@@ -861,7 +864,7 @@ export default function ReservationDetails({
                     key={slot.id}
                     type="button"
                     onClick={() => setTourTime(slot.id)}
-                    className={`flex-1 min-w-[90px] py-3 px-4 rounded-xl border-2 font-semibold text-base transition-all ${
+                    className={`min-h-12 rounded-xl border-2 px-2 py-3 text-sm font-bold transition-all sm:min-w-[90px] sm:flex-1 sm:px-4 sm:text-base ${
                       isSelected
                         ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300"
                         : "border-zinc-300 dark:border-zinc-600 hover:border-emerald-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
@@ -875,7 +878,7 @@ export default function ReservationDetails({
           </div>
 
           <div className={`mb-6 rounded-xl ${!effectiveTourPackage ? "ring-2 ring-amber-300/70 p-3" : ""}`}>
-            <h3 className="text-xl font-semibold mb-3">{tr.packageTitle}</h3>
+            <h3 className="mb-3 text-lg font-bold sm:text-xl">{tr.packageTitle}</h3>
             {!effectiveTourPackage && <p className="mb-3 flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-400"><AlertCircle className="h-4 w-4" aria-hidden /> {tr.indicators.choosePackage}</p>}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {PACKAGES.map((pkg) => {
@@ -893,7 +896,7 @@ export default function ReservationDetails({
                     type="button"
                     onClick={() => !isDisabled && setTourPackage(pkg.id)}
                     disabled={isDisabled}
-                    className={`group relative overflow-hidden text-left p-5 rounded-2xl border-2 transition-all ${
+                    className={`group relative overflow-hidden rounded-2xl border-2 p-4 text-left transition-all sm:p-5 ${
                       isDisabled
                         ? "border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800/50 opacity-50 cursor-not-allowed"
                         : isSelected
@@ -965,8 +968,8 @@ export default function ReservationDetails({
           <div className={`mb-6 rounded-xl ${!isTicketsValid ? "ring-2 ring-amber-300/70 p-3" : ""}`}>
             <h3 className="text-xl font-semibold mb-4">{tr.ticketsTitle}</h3>
             {!isTicketsValid && <p className="mb-3 flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-400"><AlertCircle className="h-4 w-4" aria-hidden /> {tr.indicators.chooseTickets}</p>}
-            <div className="flex items-center gap-4 mb-4">
-              <label htmlFor="tickets" className="font-semibold text-lg">{tr.numPeople}</label>
+            <div className="mb-4 flex flex-wrap items-center gap-3 sm:gap-4">
+              <label htmlFor="tickets" className="text-base font-bold sm:text-lg">{tr.numPeople}</label>
               <input
                 id="tickets"
                 type="number"
@@ -979,7 +982,7 @@ export default function ReservationDetails({
                   else if (val < 1) setTickets(1);
                   else if (val > slots) setTickets(slots);
                 }}
-                className="w-20 p-2 rounded-lg border bg-white dark:bg-zinc-800"
+                className="min-h-12 w-24 rounded-xl border bg-white p-3 text-base font-bold dark:bg-zinc-800"
                 disabled={slots === 0}
               />
               <span className="text-sm text-zinc-500">({tr.availablePrefix} {slots})</span>
@@ -1011,7 +1014,7 @@ export default function ReservationDetails({
           </div>
           <div className="mb-6">
             <h3 className="text-xl font-semibold mb-4">{tr.specialTitle}</h3>
-            <textarea id="specialRequests" value={formState.specialRequests} onChange={(e) => handleChange("specialRequests", e.target.value)} className="w-full p-3 rounded-lg border bg-white dark:bg-zinc-800 h-24 border-zinc-300 dark:border-zinc-700 focus:ring-teal-500 focus:border-teal-500" placeholder={tr.specialPlaceholder} />
+            <textarea id="specialRequests" value={formState.specialRequests} onChange={(e) => handleChange("specialRequests", e.target.value)} className="h-28 w-full rounded-xl border border-zinc-300 bg-white p-3 text-base focus:border-teal-500 focus:ring-teal-500 dark:border-zinc-700 dark:bg-zinc-800" placeholder={tr.specialPlaceholder} />
           </div>
           {!isStep2Valid && (
             <div className="mb-6 rounded-xl border border-amber-300 bg-amber-50 p-4 dark:border-amber-700 dark:bg-amber-900/20">
@@ -1055,9 +1058,9 @@ export default function ReservationDetails({
         </>
       )}
 
-      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+      <div className="sticky bottom-0 z-30 -mx-4 -mb-5 flex flex-col-reverse gap-3 border-t border-zinc-200 bg-white/95 p-4 shadow-[0_-16px_35px_rgba(0,0,0,0.12)] backdrop-blur dark:border-zinc-700 dark:bg-zinc-950/95 sm:static sm:m-0 sm:flex-row sm:justify-end sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none">
         {currentStep > 1 && (
-          <button type="button" onClick={goToPrevStep} className="px-6 py-3 rounded-full border border-zinc-300 dark:border-zinc-600 font-semibold">
+          <button type="button" onClick={goToPrevStep} className="min-h-12 rounded-full border border-zinc-300 px-6 py-3 font-semibold dark:border-zinc-600">
             {tr.backBtn}
           </button>
         )}
@@ -1066,7 +1069,7 @@ export default function ReservationDetails({
             type="button"
             onClick={goToNextStep}
             disabled={(currentStep === 1 && !isStep1Valid) || (currentStep === 2 && !isStep2Valid)}
-            className="px-8 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-full font-bold shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="min-h-12 rounded-full bg-teal-500 px-8 py-3 font-black text-zinc-950 shadow-lg transition-all hover:bg-teal-400 disabled:cursor-not-allowed disabled:opacity-50 sm:text-white"
           >
             {tr.nextBtn}
           </button>
@@ -1076,7 +1079,7 @@ export default function ReservationDetails({
             type="button"
             onClick={handleReserve}
             disabled={!isFormValid}
-            className="px-8 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-full font-bold shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="min-h-12 rounded-full bg-teal-500 px-8 py-3 font-black text-zinc-950 shadow-lg transition-all hover:bg-teal-400 disabled:cursor-not-allowed disabled:opacity-50 sm:text-white"
           >
             {tr.proceedBtn}
           </button>
