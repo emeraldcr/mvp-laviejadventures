@@ -61,7 +61,7 @@ export default function ReservationSection({ className }: Props) {
   if (!selectedDay) {
     return (
       <div className={className}>
-        <div className="p-8 md:p-10 flex flex-col items-center justify-center text-center gap-5 min-h-[280px]">
+        <div className="flex min-h-[240px] flex-col items-center justify-center gap-5 p-6 text-center md:min-h-[280px] md:p-10">
           {/* Animated calendar icon */}
           <div className="relative flex items-center justify-center w-16 h-16">
             <div className="absolute inset-0 rounded-2xl bg-teal-500/15 animate-ping opacity-60" style={{ animationDuration: "2.5s" }} />
@@ -79,13 +79,13 @@ export default function ReservationSection({ className }: Props) {
             <p className="text-base font-semibold text-zinc-200 mb-1">
               {tr.reservation.selectDateFirst}
             </p>
-            <p className="text-sm text-zinc-500 max-w-[220px] leading-relaxed">
+            <p className="mx-auto max-w-[260px] text-sm leading-relaxed text-zinc-500">
               {tr.calendar.noDate}
             </p>
           </div>
 
           {/* Arrow pointing left to calendar */}
-          <div className="hidden lg:flex items-center gap-2 text-zinc-600 text-xs">
+          <div className="hidden items-center gap-2 text-xs text-zinc-600 lg:flex">
             <svg className="w-4 h-4 animate-bounce-x" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
             </svg>
