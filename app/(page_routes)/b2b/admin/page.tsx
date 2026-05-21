@@ -44,6 +44,27 @@ type LoginLog = {
   createdAt: string;
 };
 
+type AdminTour = {
+  _id?: string;
+  slug: string;
+  titleEs: string;
+  titleEn: string;
+  descriptionEs: string;
+  descriptionEn: string;
+  duration: string;
+  difficulty: string;
+  location: string;
+  priceCRC: number;
+  retailPricePerPax: number;
+  minPax: number;
+  maxPax: number;
+  includes: string[];
+  type: string;
+  isActive: boolean;
+  isFeatured: boolean;
+  currency: string;
+};
+
 type B2BSettings = {
   ivaRate: number;
   tourPricing: Array<{ tourId: string; packages: Array<{ id: string; name: string; priceCRC: number }> }>;
@@ -139,6 +160,9 @@ export default function B2BAdminPage() {
   const [settings, setSettings] = useState<B2BSettings>({ ivaRate: 13, tourPricing: [] });
   const [pricingJson, setPricingJson] = useState("[]");
   const [heroSlogans, setHeroSlogans] = useState<HeroSloganLog[]>([]);
+  const [tours, setTours] = useState<AdminTour[]>([]);
+  const [tourJson, setTourJson] = useState("{}");
+  const [selectedTourSlug, setSelectedTourSlug] = useState("");
   const [manualReservation, setManualReservation] = useState<ManualReservationForm>({
     name: "",
     email: "",
@@ -172,10 +196,11 @@ export default function B2BAdminPage() {
     setRequestSuccess("");
 
     try {
-      const [operatorsRes, insightsRes, settingsRes] = await Promise.all([
+      const [operatorsRes, insightsRes, settingsRes, toursRes] = await Promise.all([
         fetch("/api/admin/b2b/operators"),
         fetch("/api/admin/b2b/insights"),
         fetch("/api/admin/b2b/settings"),
+        fetch("/api/admin/b2b/tours"),
       ]);
 
       if (operatorsRes.status === 401 || insightsRes.status === 401 || settingsRes.status === 401) {
@@ -190,6 +215,7 @@ export default function B2BAdminPage() {
       const operatorsData = await operatorsRes.json();
       const insightsData = await insightsRes.json();
       const settingsData = await settingsRes.json();
+      const toursData = await toursRes.json();
 
       if (!operatorsRes.ok) {
         setRequestError(operatorsData.error || "No se pudieron cargar los operadores.");
@@ -209,6 +235,9 @@ export default function B2BAdminPage() {
       const nextSettings = settingsData.settings || { ivaRate: 13, tourPricing: [] };
       setSettings(nextSettings);
       setPricingJson(JSON.stringify(nextSettings.tourPricing || [], null, 2));
+      const adminTours = toursData.tours || [];
+      setTours(adminTours);
+      if (adminTours.length > 0) { setSelectedTourSlug(adminTours[0].slug); setTourJson(JSON.stringify(adminTours[0], null, 2)); }
     } catch {
       setRequestError("No se pudo conectar con el servidor.");
     } finally {
@@ -327,6 +356,42 @@ export default function B2BAdminPage() {
     }
   }
 
+
+
+  async function handleCreateTour() {
+    setRequestError("");
+    try {
+      const payload = JSON.parse(tourJson);
+      const response = await fetch("/api/admin/b2b/tours", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+      const data = await response.json();
+      if (!response.ok) return setRequestError(data.error || "No se pudo crear tour");
+      setRequestSuccess("Tour creado correctamente.");
+      await fetchAdminData();
+    } catch { setRequestError("JSON de tour inválido."); }
+  }
+
+  async function handleUpdateTour() {
+    setRequestError("");
+    try {
+      const payload = JSON.parse(tourJson);
+      if (!selectedTourSlug) return setRequestError("Selecciona un tour.");
+      const response = await fetch(`/api/admin/b2b/tours/${selectedTourSlug}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+      const data = await response.json();
+      if (!response.ok) return setRequestError(data.error || "No se pudo actualizar tour");
+      setRequestSuccess("Tour actualizado correctamente.");
+      await fetchAdminData();
+    } catch { setRequestError("JSON de tour inválido."); }
+  }
+
+  async function handleDeleteTour() {
+    if (!selectedTourSlug) return setRequestError("Selecciona un tour.");
+    const response = await fetch(`/api/admin/b2b/tours/${selectedTourSlug}`, { method: "DELETE" });
+    const data = await response.json();
+    if (!response.ok) return setRequestError(data.error || "No se pudo eliminar tour");
+    setRequestSuccess("Tour eliminado.");
+    await fetchAdminData();
+  }
+
   async function handleLogin(event: FormEvent) {
     event.preventDefault();
     setAuthError("");
@@ -394,6 +459,25 @@ export default function B2BAdminPage() {
       <section className="grid gap-6 lg:grid-cols-2 mb-6">
         <article className="rounded-2xl border border-amber-300 dark:border-amber-700 bg-amber-50/80 dark:bg-amber-950/30 p-6"><h2 className="mb-4 flex items-center gap-2 text-xl font-semibold text-amber-900 dark:text-amber-200"><ShieldAlert className="h-5 w-5" />Pendientes ({pendingOperators.length})</h2>{loading ? <p className="inline-flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300"><Loader2 className="h-4 w-4 animate-spin" />Cargando operadores...</p> : pendingOperators.length === 0 ? <p className="text-sm text-zinc-600 dark:text-zinc-300">No hay operadores pendientes.</p> : <ul className="space-y-3">{pendingOperators.map((operator) => <li key={operator._id} className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-700 dark:bg-zinc-900"><p className="font-semibold text-zinc-900">{operator.company}</p><p className="text-sm text-zinc-600 dark:text-zinc-300">{operator.name} · {operator.email}</p><button disabled={actionLoadingId === operator._id} onClick={() => updateStatus(operator._id, "approved")} className="mt-3 inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-60">{actionLoadingId === operator._id ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}Aprobar</button></li>)}</ul>}</article>
         <article className="rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900"><h2 className="mb-4 text-xl font-semibold text-zinc-900">Aprobados / activos ({approvedOperators.length})</h2>{loading ? <p className="inline-flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300"><Loader2 className="h-4 w-4 animate-spin" />Cargando operadores...</p> : approvedOperators.length === 0 ? <p className="text-sm text-zinc-600 dark:text-zinc-300">No hay operadores aprobados aún.</p> : <ul className="space-y-3">{approvedOperators.map((operator) => <li key={operator._id} className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800"><p className="font-semibold text-zinc-900">{operator.company}</p><p className="text-sm text-zinc-600 dark:text-zinc-300">{operator.name} · {operator.email}</p><p className="mt-1 text-xs text-zinc-400">Estado: {operator.status}</p><button disabled={actionLoadingId === operator._id} onClick={() => updateStatus(operator._id, "pending")} className="mt-3 inline-flex items-center gap-2 rounded-lg border border-zinc-300 px-3 py-2 text-sm font-semibold text-zinc-700 disabled:opacity-60">{actionLoadingId === operator._id ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}Volver a pendiente</button></li>)}</ul>}</article>
+      </section>
+
+
+
+      <section className="mb-6 rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
+        <h2 className="text-xl font-semibold mb-3">CRUD de tours (MongoDB)</h2>
+        <div className="grid gap-3 md:grid-cols-3">
+          <select value={selectedTourSlug} onChange={(e) => { const slug = e.target.value; setSelectedTourSlug(slug); const found = tours.find((tour) => tour.slug === slug); if (found) setTourJson(JSON.stringify(found, null, 2)); }} className="rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm">
+            <option value="">Selecciona tour</option>
+            {tours.map((tour) => <option key={tour.slug} value={tour.slug}>{tour.slug}</option>)}
+          </select>
+          <button onClick={handleCreateTour} className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white">Crear</button>
+          <div className="flex gap-2">
+            <button onClick={handleUpdateTour} className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white">Actualizar</button>
+            <button onClick={handleDeleteTour} className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white">Eliminar</button>
+          </div>
+        </div>
+        <p className="mt-3 text-xs text-zinc-500">Incluye campos para B2B: slug, titleEs/titleEn, descriptionEs/descriptionEn, duration, difficulty, location, priceCRC, retailPricePerPax, minPax, maxPax, includes[], type (b2b/both), isActive, isFeatured, currency.</p>
+        <textarea value={tourJson} onChange={(e) => setTourJson(e.target.value)} rows={12} className="mt-2 w-full rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs font-mono" />
       </section>
 
       <section className="mb-6 rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
