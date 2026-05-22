@@ -24,11 +24,12 @@ type OrderPayload = {
 
 type Props = {
   className?: string;
+  preselectedTourSlug?: string | null;
 };
 
 const RESERVATION_RETURN_KEY = "reservationReturnPath";
 
-export default function ReservationSection({ className }: Props) {
+export default function ReservationSection({ className, preselectedTourSlug }: Props) {
   const {
     selectedDay,
     currentMonth,
@@ -44,7 +45,7 @@ export default function ReservationSection({ className }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const requestedTourSlug = (searchParams.get("tour") ?? "").trim();
+  const requestedTourSlug = (preselectedTourSlug ?? searchParams.get("tour") ?? "").trim();
   const initialSelectedTourSlug = requestedTourSlug || DEFAULT_BOOKABLE_TOUR.slug;
   const hasPreselectedTour = requestedTourSlug.length > 0;
 
