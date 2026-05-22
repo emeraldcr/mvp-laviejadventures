@@ -1,6 +1,6 @@
 "use client";
 
-import React, { JSX } from "react";
+import React, { JSX, useState } from "react";
 import Link from "next/link";
 import CalendarSection from "@/app/components/sections/CalendarSection";
 import ReservationSection from "@/app/components/sections/ReservationSection";
@@ -12,6 +12,27 @@ import { CalendarDays, CheckCircle2, ClipboardList, MessageCircleQuestion, Shiel
 import { useLanguage } from "@/app/context/LanguageContext";
 import { useSession, signIn, signOut } from "next-auth/react";
 import Profile from "@/app/components/auth/Profile";
+
+const TOUR_OPTIONS = [
+  {
+    slug: "ciudad-esmeralda",
+    image: "/image/IMG_4671.jpg",
+    tagEs: "Tour estrella",
+    tagEn: "Star tour",
+  },
+  {
+    slug: "aventuras-cataratas",
+    image: "/image/IMG_6812.jpg",
+    tagEs: "Temporada lluviosa",
+    tagEn: "Rainy season pick",
+  },
+  {
+    slug: "pozas-cristalinas",
+    image: "/image/IMG_4257.jpg",
+    tagEs: "Más vendido",
+    tagEn: "Best seller",
+  },
+];
 
 function ConversionSection() {
   const { lang } = useLanguage();
@@ -91,7 +112,53 @@ function ConversionSection() {
 
 
 
-function BookingSection() {
+function ToursImmersionSection({ onSelectTour }: { onSelectTour: (slug: string) => void }) {
+  const { lang } = useLanguage();
+
+  return (
+    <section className="relative bg-black pb-10 pt-4 md:pb-14">
+      <div className="container mx-auto px-4 md:px-8">
+        <div className="mb-8 text-center">
+          <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.28em] text-cyan-300">
+            {lang === "es" ? "Explora primero" : "Explore first"}
+          </p>
+          <h2 className="text-3xl font-black text-white md:text-5xl">
+            {lang === "es" ? "Elige tu aventura ideal" : "Choose your ideal adventure"}
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+          {TOUR_OPTIONS.map((tour) => (
+            <button
+              key={tour.slug}
+              onClick={() => onSelectTour(tour.slug)}
+              className="group relative h-[340px] overflow-hidden rounded-3xl border border-white/10 text-left"
+            >
+              <img
+                src={tour.image}
+                alt={tour.slug}
+                className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-110"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/10" />
+              <div className="absolute inset-0 bg-cyan-500/0 transition group-hover:bg-cyan-500/20" />
+              <div className="absolute bottom-0 w-full p-5">
+                <span className="mb-2 inline-block rounded-full bg-white/20 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-white">
+                  {lang === "es" ? tour.tagEs : tour.tagEn}
+                </span>
+                <h3 className="text-xl font-black capitalize text-white">{tour.slug.replaceAll("-", " ")}</h3>
+                <p className="mt-2 text-sm text-zinc-200">
+                  {lang === "es" ? "Toca para reservar este tour" : "Tap to reserve this tour"}
+                </p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function BookingSection({ selectedTourSlug }: { selectedTourSlug: string }) {
   const { lang } = useLanguage();
   const { data: session, status } = useSession();
   const user = session?.user;
@@ -172,7 +239,7 @@ function BookingSection() {
 
           <div className="lg:sticky lg:top-24 lg:col-span-3">
             <div className="rounded-3xl border border-white/[0.07] bg-white/[0.025] shadow-[0_20px_60px_rgba(0,0,0,0.45)] backdrop-blur-sm">
-              <ReservationSection />
+              <ReservationSection preselectedTourSlug={selectedTourSlug} />
             </div>
           </div>
         </motion.div>
@@ -186,6 +253,14 @@ function BookingSection() {
 }
 
 export default function Home(): JSX.Element {
+  const [selectedTourSlug, setSelectedTourSlug] = useState("ciudad-esmeralda");
+
+  const handleSelectTour = (slug: string) => {
+    setSelectedTourSlug(slug);
+    window.history.replaceState({}, "", `/?tour=${slug}#booking`);
+    document.getElementById("booking")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   return (
     <ErrorBoundary
       fallback={
@@ -198,7 +273,8 @@ export default function Home(): JSX.Element {
         <main className="min-h-screen overflow-x-hidden bg-black">
           <DynamicHeroHeader />
           <ConversionSection />
-          <BookingSection />
+          <ToursImmersionSection onSelectTour={handleSelectTour} />
+          <BookingSection selectedTourSlug={selectedTourSlug} />
         
         </main>
       </CalendarProvider>
