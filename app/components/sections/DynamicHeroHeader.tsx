@@ -19,7 +19,6 @@ import { useInterval } from "@/app/hooks/useInterval";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/lib/translations";
 import { useSession, signOut } from "next-auth/react";
-import { useHeroSlogan } from "@/app/hooks/useHeroSlogan";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface NavLinkItem {
@@ -403,8 +402,6 @@ interface HeroCarouselProps {
 export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "100%" }) => {
   const { data: carouselImages = [], error, isLoading } = useSWR<string[]>("/api/images", fetcher);
   const { lang } = useLanguage();
-  const tr = translations[lang].hero;
-  const { slogan, loading: sloganLoading } = useHeroSlogan();
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -492,8 +489,9 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "1
 
       {/* ── Cinematic gradient overlay ── */}
       <div className="absolute inset-0 z-10 pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/10 to-black/80" />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/20" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/30 to-black/90" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/25 via-transparent to-black/25" />
+        <div className="absolute inset-x-0 bottom-0 h-[46%] bg-gradient-to-t from-black/95 via-black/70 to-transparent" />
       </div>
 
       {/* ── Progress bar (top) ── */}
@@ -534,45 +532,45 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "1
             {/* Badge */}
             <div className="inline-flex items-center gap-2 mb-6 px-4 py-1.5 rounded-full border border-white/20 bg-white/8 backdrop-blur-md">
               <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" />
-              <span className="text-[11px] font-bold text-white/75 uppercase tracking-[0.2em]">
+              <span className="text-[11px] font-bold text-white/80 uppercase tracking-[0.2em]">
                 San Carlos · Costa Rica
               </span>
             </div>
 
             {/* Title */}
-            <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-[7rem] font-black mb-5 text-white leading-[0.88] tracking-tight drop-shadow-2xl">
-              {tr.title}
+            <h1 className="max-w-5xl text-balance text-4xl sm:text-6xl md:text-7xl lg:text-[5.8rem] font-black mb-4 text-white leading-[0.95] tracking-tight drop-shadow-2xl">
+              {lang === "es" ? "Aventuras en San Carlos, Costa Rica" : "Adventures in San Carlos, Costa Rica"}
             </h1>
 
-            {/* Subtitle — AI-generated slogan, unique on every load */}
-            <div className="mb-10 max-w-2xl min-h-[2.5rem] flex items-center justify-center">
-              {sloganLoading ? (
-                <div className="flex flex-col items-center gap-2 w-full max-w-md">
-                  <div className="h-4 w-3/4 rounded-full bg-white/10 animate-pulse" />
-                  <div className="h-4 w-1/2 rounded-full bg-white/10 animate-pulse" />
-                </div>
-              ) : (
-                <p
-                  className="text-base sm:text-xl md:text-2xl font-light text-white/80 leading-relaxed text-center transition-opacity duration-700"
-                  style={{ opacity: slogan ? 1 : 0 }}
-                >
-                  {slogan
-                    ? lang === "es"
-                      ? slogan.es
-                      : slogan.en
-                    : `${tr.subtitle} ${tr.subtitleBold}.`}
-                </p>
-              )}
-            </div>
+            <h2 className="max-w-4xl text-balance text-lg sm:text-2xl md:text-3xl font-semibold text-white/95 leading-tight mb-5 drop-shadow-xl">
+              {lang === "es"
+                ? "Cañones, cascadas y pozas secretas en el Parque Nacional Juan Castro Blanco"
+                : "Canyons, waterfalls, and hidden pools in Juan Castro Blanco National Water Park"}
+            </h2>
+
+            <p className="mb-9 max-w-3xl text-sm sm:text-lg md:text-xl text-white/85 leading-relaxed">
+              {lang === "es"
+                ? "Descubre 6 experiencias únicas con guías locales. Desde el icónico Ciudad Esmeralda hasta pozas cristalinas, selva nublada y cañonismo extremo."
+                : "Discover 6 unique experiences with local guides, from iconic Ciudad Esmeralda to crystal-clear pools, cloud forest, and extreme canyoning."}
+            </p>
 
             {/* CTA */}
-            <a
-              href="#booking"
-              className="group inline-flex items-center gap-3 px-8 py-4 rounded-full bg-teal-500 hover:bg-teal-400 text-white font-bold text-base shadow-[0_0_40px_rgba(20,184,166,0.4)] hover:shadow-[0_0_55px_rgba(20,184,166,0.6)] transition-all duration-300"
-            >
-              <span>{lang === "es" ? "Reservar ahora" : "Book now"}</span>
-              <span className="inline-block group-hover:translate-x-1 transition-transform duration-200">→</span>
-            </a>
+            <div className="flex w-full max-w-2xl flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
+              <a
+                href="#tours"
+                className="group inline-flex w-full sm:w-auto items-center justify-center gap-3 px-7 py-3.5 rounded-full bg-teal-500 hover:bg-teal-400 text-white font-bold text-base shadow-[0_0_40px_rgba(20,184,166,0.4)] hover:shadow-[0_0_55px_rgba(20,184,166,0.6)] transition-all duration-300"
+              >
+                <span>{lang === "es" ? "Explorar Todas las Aventuras" : "Explore All Adventures"}</span>
+                <span className="inline-block group-hover:translate-x-1 transition-transform duration-200">→</span>
+              </a>
+
+              <a
+                href="#booking"
+                className="inline-flex w-full sm:w-auto items-center justify-center px-7 py-3.5 rounded-full border border-white/70 bg-white/10 hover:bg-white/20 text-white font-semibold text-base backdrop-blur-sm transition-colors duration-300"
+              >
+                {lang === "es" ? "Ver Fechas Disponibles" : "View Available Dates"}
+              </a>
+            </div>
           </>
         )}
 
@@ -601,9 +599,9 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "1
 
           {/* Scroll indicator */}
           <a
-            href="#booking"
+            href="#tours"
             className="mt-1 p-2 rounded-full bg-white/8 hover:bg-white/18 transition-colors animate-bounce"
-            aria-label="Scroll to booking"
+            aria-label="Scroll to tours"
           >
             <ChevronDown size={22} className="text-white/60" />
           </a>
