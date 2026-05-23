@@ -12,27 +12,36 @@ import { CalendarDays, CheckCircle2, ClipboardList, MessageCircleQuestion, Shiel
 import { useLanguage } from "@/app/context/LanguageContext";
 import { useSession, signIn, signOut } from "next-auth/react";
 import Profile from "@/app/components/auth/Profile";
+import { useReservationData } from "@/app/hooks/useReservationData";
+import type { TourSummary } from "@/lib/types";
 
-const TOUR_OPTIONS = [
+const TOUR_IMAGE_BY_SLUG: Record<string, string> = {
+  "tour-ciudad-esmeralda": "/image/IMG_4671.jpg",
+  "ciudad-esmeralda": "/image/IMG_4671.jpg",
+  "aventuras-cataratas": "/image/IMG_6812.jpg",
+  "pozas-cristalinas": "/image/IMG_4257.jpg",
+};
+
+const TOUR_TAGS_BY_SLUG: Record<string, { tagEs: string; tagEn: string }> = [
   {
     slug: "ciudad-esmeralda",
-    image: "/image/IMG_4671.jpg",
     tagEs: "Tour estrella",
     tagEn: "Star tour",
   },
   {
     slug: "aventuras-cataratas",
-    image: "/image/IMG_6812.jpg",
     tagEs: "Temporada lluviosa",
     tagEn: "Rainy season pick",
   },
   {
     slug: "pozas-cristalinas",
-    image: "/image/IMG_4257.jpg",
     tagEs: "Más vendido",
     tagEn: "Best seller",
   },
-];
+].reduce((acc, t) => {
+  acc[t.slug] = { tagEs: t.tagEs, tagEn: t.tagEn };
+  return acc;
+}, {} as Record<string, { tagEs: string; tagEn: string }>);
 
 function ConversionSection() {
   const { lang } = useLanguage();
@@ -114,6 +123,17 @@ function ConversionSection() {
 
 function ToursImmersionSection({ onSelectTour }: { onSelectTour: (slug: string) => void }) {
   const { lang } = useLanguage();
+  const { tours } = useReservationData();
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  const cardsPerView = 3;
+  const slidesCount = Math.max(1, Math.ceil(tours.length / cardsPerView));
+  const visibleTours: TourSummary[][] = Array.from({ length: slidesCount }, (_, idx) =>
+    tours.slice(idx * cardsPerView, idx * cardsPerView + cardsPerView),
+  );
+
+  const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % slidesCount);
+  const previousSlide = () => setCurrentSlide((prev) => (prev - 1 + slidesCount) % slidesCount);
 
   return (
     <section id="tours" className="relative bg-black pb-10 pt-4 md:pb-14">
@@ -127,31 +147,87 @@ function ToursImmersionSection({ onSelectTour }: { onSelectTour: (slug: string) 
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
-          {TOUR_OPTIONS.map((tour) => (
-            <button
-              key={tour.slug}
-              onClick={() => onSelectTour(tour.slug)}
-              className="group relative h-[340px] overflow-hidden rounded-3xl border border-white/10 text-left"
-            >
-              <img
-                src={tour.image}
-                alt={tour.slug}
-                className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-110"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/10" />
-              <div className="absolute inset-0 bg-cyan-500/0 transition group-hover:bg-cyan-500/20" />
-              <div className="absolute bottom-0 w-full p-5">
-                <span className="mb-2 inline-block rounded-full bg-white/20 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-white">
-                  {lang === "es" ? tour.tagEs : tour.tagEn}
-                </span>
-                <h3 className="text-xl font-black capitalize text-white">{tour.slug.replaceAll("-", " ")}</h3>
-                <p className="mt-2 text-sm text-zinc-200">
-                  {lang === "es" ? "Toca para reservar este tour" : "Tap to reserve this tour"}
-                </p>
+        <div className="relative overflow-hidden">
+          <div
+            className="flex transition-transform duration-500 ease-out"
+            style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+          >
+            {visibleTours.map((group, groupIndex) => (
+              <div key={`slide-${groupIndex}`} className="min-w-full grid grid-cols-1 gap-5 md:grid-cols-3">
+                {group.map((tour) => {
+                  const tag = TOUR_TAGS_BY_SLUG[tour.slug] ?? {
+                    tagEs: "Nuevo tour",
+                    tagEn: "New tour",
+                  };
+                  const tourTitle = lang === "es" ? tour.titleEs : tour.titleEn;
+                  return (
+                    <button
+                      key={tour.slug}
+                      onClick={() => onSelectTour(tour.slug)}
+                      className="group relative h-[350px] overflow-hidden rounded-3xl border border-white/15 bg-zinc-950 text-left shadow-[0_12px_40px_rgba(0,0,0,0.45)]"
+                    >
+                      <img
+                        src={TOUR_IMAGE_BY_SLUG[tour.slug] ?? "/image/IMG_6810.jpg"}
+                        alt={tourTitle}
+                        className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-110"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/55 to-black/15" />
+                      <div className="absolute inset-0 bg-cyan-500/0 transition duration-500 group-hover:bg-cyan-500/20" />
+                      <div className="absolute inset-x-0 bottom-0 p-5">
+                        <span className="mb-2 inline-block rounded-full border border-white/25 bg-black/35 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-200">
+                          {lang === "es" ? tag.tagEs : tag.tagEn}
+                        </span>
+                        <h3 className="line-clamp-2 text-xl font-black text-white">{tourTitle}</h3>
+                        <p className="mt-2 line-clamp-2 text-sm text-zinc-200">
+                          {lang === "es" ? tour.descriptionEs : tour.descriptionEn}
+                        </p>
+                        <p className="mt-3 text-xs font-bold uppercase tracking-[0.2em] text-cyan-300">
+                          {lang === "es" ? "Toca para reservar" : "Tap to reserve"}
+                        </p>
+                      </div>
+                    </button>
+                  );
+                })}
+                {group.length < cardsPerView &&
+                  Array.from({ length: cardsPerView - group.length }).map((_, idx) => (
+                    <div key={`empty-${idx}`} className="hidden rounded-3xl border border-transparent md:block" />
+                  ))}
               </div>
-            </button>
-          ))}
+            ))}
+          </div>
+
+          {slidesCount > 1 && (
+            <>
+              <button
+                type="button"
+                onClick={previousSlide}
+                className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full border border-white/20 bg-black/50 px-3 py-2 text-white backdrop-blur"
+                aria-label={lang === "es" ? "Slide anterior" : "Previous slide"}
+              >
+                ←
+              </button>
+              <button
+                type="button"
+                onClick={nextSlide}
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full border border-white/20 bg-black/50 px-3 py-2 text-white backdrop-blur"
+                aria-label={lang === "es" ? "Siguiente slide" : "Next slide"}
+              >
+                →
+              </button>
+
+              <div className="mt-5 flex items-center justify-center gap-2">
+                {Array.from({ length: slidesCount }).map((_, idx) => (
+                  <button
+                    key={`dot-${idx}`}
+                    type="button"
+                    onClick={() => setCurrentSlide(idx)}
+                    className={`h-2.5 rounded-full transition-all ${idx === currentSlide ? "w-8 bg-cyan-300" : "w-2.5 bg-zinc-600"}`}
+                    aria-label={`Go to slide ${idx + 1}`}
+                  />
+                ))}
+              </div>
+            </>
+          )}
         </div>
       </div>
     </section>
