@@ -116,7 +116,7 @@ function ToursImmersionSection({ onSelectTour }: { onSelectTour: (slug: string) 
   const { lang } = useLanguage();
 
   return (
-    <section className="relative bg-black pb-10 pt-4 md:pb-14">
+    <section id="tours" className="relative bg-black pb-10 pt-4 md:pb-14">
       <div className="container mx-auto px-4 md:px-8">
         <div className="mb-8 text-center">
           <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.28em] text-cyan-300">
