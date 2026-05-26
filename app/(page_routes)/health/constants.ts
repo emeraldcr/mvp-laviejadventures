@@ -1,11 +1,11 @@
-import type { Person, Timeframe, TimeframeConfig } from "./types";
-
-export const PERSONS: Person[] = ["ALLAN", "VERO"];
+import type { Timeframe, TimeframeConfig } from "./types";
 
 export const MAX_WEIGHT_DIGITS = 5;
 export const MIN_REASONABLE_WEIGHT_KG = 25;
 export const MAX_REASONABLE_WEIGHT_KG = 250;
 export const THEME_STORAGE_KEY = "health-theme";
+export const LANGUAGE_STORAGE_KEY = "health-language";
+export const PEOPLE_STORAGE_KEY = "health-people";
 
 export const TIMEFRAMES: TimeframeConfig[] = [
   { key: "minute", label: "Last 15 Minutes", hours: 0.25, unit: "minute" },
@@ -24,4 +24,3 @@ export const BAR_GROUP_INTERVAL_MS: Record<Timeframe, number> = {
   month: 24 * 60 * 60 * 1000,
   all: 24 * 60 * 60 * 1000,
 };
-

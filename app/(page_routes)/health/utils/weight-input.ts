@@ -3,6 +3,8 @@ import {
   MAX_WEIGHT_DIGITS,
   MIN_REASONABLE_WEIGHT_KG,
 } from "../constants";
+import { t } from "../i18n";
+import type { Language } from "../types";
 
 export class WeightInputHelper {
   static sanitizeDigits(value: string) {
@@ -27,30 +29,29 @@ export class WeightInputHelper {
     return value !== sanitizedValue && value.replace(/[.\s,kgKG]/g, "") !== sanitizedValue;
   }
 
-  static validate(digits: string) {
+  static validate(digits: string, language: Language) {
     if (!digits) {
-      return "Enter a weight first.";
+      return t(language, "enterWeight");
     }
 
     if (digits.length > MAX_WEIGHT_DIGITS) {
-      return "Use 5 digits or fewer.";
+      return t(language, "useFiveDigits");
     }
 
     const weight = WeightInputHelper.parse(digits);
 
     if (!Number.isFinite(weight)) {
-      return "Use numbers only.";
+      return t(language, "useNumbersOnly");
     }
 
     if (weight < MIN_REASONABLE_WEIGHT_KG) {
-      return `That looks too low: ${weight.toFixed(3)} kg.`;
+      return t(language, "tooLow", { weight: weight.toFixed(3) });
     }
 
     if (weight > MAX_REASONABLE_WEIGHT_KG) {
-      return `That looks too high: ${weight.toFixed(3)} kg.`;
+      return t(language, "tooHigh", { weight: weight.toFixed(3) });
     }
 
     return "";
   }
 }
-

@@ -1,6 +1,7 @@
 "use client";
 
 import { HealthHeader } from "./components/HealthHeader";
+import { WeightRecordsTable } from "./components/WeightRecordsTable";
 import { WeightChartsGrid } from "./components/WeightChartsGrid";
 import { WeightEntryForm } from "./components/WeightEntryForm";
 import { HealthProvider, useHealth } from "./context/HealthContext";
@@ -25,6 +26,7 @@ function HealthPageContent() {
 
         <WeightEntryForm />
         <WeightChartsGrid />
+        <WeightRecordsTable />
       </div>
     </main>
   );
@@ -37,4 +39,3 @@ export default function WeightTracker() {
     </HealthProvider>
   );
 }
-

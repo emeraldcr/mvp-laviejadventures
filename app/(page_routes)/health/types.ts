@@ -5,8 +5,9 @@ export type WeightEntry = {
   timestamp: string;
 };
 
-export type Person = "ALLAN" | "VERO";
+export type Person = string;
 export type Theme = "light" | "dark";
+export type Language = "en" | "es";
 export type Timeframe = "minute" | "hour" | "day" | "week" | "month" | "all";
 
 export type TimeframeConfig = {
@@ -15,4 +16,3 @@ export type TimeframeConfig = {
   hours?: number;
   unit: "minute" | "hour" | "day";
 };
-

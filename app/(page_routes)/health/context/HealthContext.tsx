@@ -5,83 +5,135 @@ import {
   useContext,
   useMemo,
   useState,
+  useSyncExternalStore,
   type ClipboardEvent,
   type FormEvent,
   type KeyboardEvent,
   type ReactNode,
 } from "react";
 import useSWR from "swr";
-import { THEME_STORAGE_KEY, TIMEFRAMES } from "../constants";
-import type { Person, Theme, Timeframe, WeightEntry } from "../types";
+import { TIMEFRAMES } from "../constants";
+import { t } from "../i18n";
+import type { Person, Timeframe } from "../types";
+import type { HealthContextValue } from "./types";
+import { languageStore, peopleStore, themeStore } from "../utils/health-storage";
+import { PeopleHelper } from "../utils/people";
 import { WeightDataHelper, fetchWeightEntries } from "../utils/weight-data";
+import { WeightEntryService } from "../utils/weight-entry-service";
 import { WeightInputHelper } from "../utils/weight-input";
-
-type HealthContextValue = {
-  selectedPerson: Person;
-  setSelectedPerson: (person: Person) => void;
-  weightDigits: string;
-  formattedWeight: string;
-  saving: boolean;
-  error: string;
-  isLoading: boolean;
-  theme: Theme;
-  isDark: boolean;
-  personEntries: WeightEntry[];
-  latestEntryTime?: number;
-  toggleTheme: () => void;
-  handleWeightChange: (value: string) => void;
-  handleWeightKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
-  handleWeightPaste: (event: ClipboardEvent<HTMLInputElement>) => void;
-  handleSubmit: (event: FormEvent) => Promise<void>;
-  getFilteredEntries: (timeframe: Timeframe) => WeightEntry[];
-};
 
 const HealthContext = createContext<HealthContextValue | null>(null);
 
-function getInitialTheme(): Theme {
-  if (typeof window === "undefined") return "light";
-  return window.localStorage.getItem(THEME_STORAGE_KEY) === "dark" ? "dark" : "light";
-}
-
 export function HealthProvider({ children }: { children: ReactNode }) {
-  const [selectedPerson, setSelectedPerson] = useState<Person>("ALLAN");
+  const [selectedPerson, setSelectedPersonState] = useState<Person>("");
+  const [addingPerson, setAddingPerson] = useState(false);
+  const [newPersonName, setNewPersonName] = useState("");
+  const [personError, setPersonError] = useState("");
   const [weightDigits, setWeightDigits] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [inputError, setInputError] = useState("");
-  const [theme, setTheme] = useState<Theme>(getInitialTheme);
+  const theme = useSyncExternalStore(
+    themeStore.subscribe,
+    themeStore.getSnapshot,
+    themeStore.getServerSnapshot
+  );
+  const language = useSyncExternalStore(
+    languageStore.subscribe,
+    languageStore.getSnapshot,
+    languageStore.getServerSnapshot
+  );
+  const storedPeople = useSyncExternalStore(
+    peopleStore.subscribe,
+    peopleStore.getSnapshot,
+    peopleStore.getServerSnapshot
+  );
   const { data: entries = [], error: loadError, isLoading, mutate } = useSWR(
     "/api/weight",
     fetchWeightEntries
   );
 
+  const people = useMemo(() => PeopleHelper.mergePeople(storedPeople, entries), [entries, storedPeople]);
+  const activePerson = selectedPerson || people[0] || "";
   const personEntries = useMemo(
     () =>
       WeightDataHelper.sortByTimestamp(
-        entries.filter((entry) => entry.name === selectedPerson)
+        entries.filter((entry) => entry.name === activePerson)
       ),
-    [entries, selectedPerson]
+    [activePerson, entries]
   );
   const latestEntryTime = personEntries.length
     ? new Date(personEntries[personEntries.length - 1].timestamp).getTime()
     : undefined;
   const formattedWeight = WeightInputHelper.format(weightDigits);
   const isDark = theme === "dark";
-  const error = inputError || saveError || (loadError ? "Could not load the saved weights." : "");
+  const error = personError || inputError || saveError || (loadError ? t(language, "loadError") : "");
 
   const toggleTheme = () => {
-    setTheme((current) => {
-      const next = current === "dark" ? "light" : "dark";
-      window.localStorage.setItem(THEME_STORAGE_KEY, next);
-      return next;
-    });
+    themeStore.set(theme === "dark" ? "light" : "dark");
+  };
+
+  const toggleLanguage = () => {
+    languageStore.set(language === "en" ? "es" : "en");
+  };
+
+  const setSelectedPerson = (person: Person) => {
+    setSelectedPersonState(person);
+    setPersonError("");
+  };
+
+  const startAddingPerson = () => {
+    setAddingPerson(true);
+    setPersonError("");
+  };
+
+  const cancelAddingPerson = () => {
+    setAddingPerson(false);
+    setNewPersonName("");
+    setPersonError("");
+  };
+
+  const addPerson = () => {
+    const { error, normalizedName } = PeopleHelper.validateNewPerson(
+      newPersonName,
+      people,
+      language
+    );
+
+    if (error) {
+      setPersonError(error);
+      if (normalizedName) {
+        setSelectedPersonState(normalizedName);
+        setAddingPerson(false);
+        setNewPersonName("");
+      }
+      return;
+    }
+
+    if (!normalizedName) {
+      setPersonError(t(language, "personNameRequired"));
+      return;
+    }
+
+    if (people.includes(normalizedName)) {
+      setSelectedPersonState(normalizedName);
+      setAddingPerson(false);
+      setNewPersonName("");
+      return;
+    }
+
+    peopleStore.set([...storedPeople, normalizedName].sort());
+    setSelectedPersonState(normalizedName);
+    setAddingPerson(false);
+    setNewPersonName("");
+    setPersonError("");
   };
 
   const handleWeightChange = (value: string) => {
     const nextDigits = WeightInputHelper.sanitizeDigits(value);
     setWeightDigits(nextDigits);
     setInputError(
-      WeightInputHelper.hasInvalidCharacters(value, nextDigits) ? "Use numbers only." : ""
+      WeightInputHelper.hasInvalidCharacters(value, nextDigits) ? t(language, "useNumbersOnly") : ""
     );
   };
 
@@ -116,7 +168,7 @@ export function HealthProvider({ children }: { children: ReactNode }) {
     }
 
     event.preventDefault();
-    setInputError("Use numbers only.");
+    setInputError(t(language, "useNumbersOnly"));
   };
 
   const handleWeightPaste = (event: ClipboardEvent<HTMLInputElement>) => {
@@ -125,15 +177,24 @@ export function HealthProvider({ children }: { children: ReactNode }) {
     const nextDigits = WeightInputHelper.sanitizeDigits(pasted);
 
     setWeightDigits(nextDigits);
-    setInputError(nextDigits ? "" : "Use numbers only.");
+    setInputError(nextDigits ? "" : t(language, "useNumbersOnly"));
   };
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    const validationError = WeightInputHelper.validate(weightDigits);
+    const validationError = WeightEntryService.validateSubmit({
+      activePerson,
+      weightDigits,
+      language,
+    });
 
-    if (validationError) {
-      setInputError(validationError);
+    if (validationError?.field === "person") {
+      setPersonError(validationError.error);
+      return;
+    }
+
+    if (validationError?.field === "weight") {
+      setInputError(validationError.error);
       return;
     }
 
@@ -141,23 +202,54 @@ export function HealthProvider({ children }: { children: ReactNode }) {
     try {
       setSaveError("");
       setInputError("");
-      const res = await fetch("/api/weight", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: selectedPerson,
-          weight: WeightInputHelper.parse(weightDigits),
-          timestamp: new Date().toISOString(),
-        }),
-      });
-
-      if (!res.ok) throw new Error("Failed to save weight entry");
-
+      await WeightEntryService.save({ activePerson, weightDigits });
       setWeightDigits("");
       await mutate();
     } catch (error) {
       console.error(error);
-      setSaveError("Could not save the weight entry.");
+      setSaveError(t(language, "saveError"));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const updateEntry = async (entry: (typeof entries)[number]) => {
+    setSaving(true);
+    try {
+      setSaveError("");
+      const res = await fetch(`/api/weight?id=${encodeURIComponent(entry.id)}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: entry.name,
+          weight: entry.weight,
+          timestamp: entry.timestamp,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to update weight entry");
+      await mutate();
+    } catch (error) {
+      console.error(error);
+      setSaveError(t(language, "updateError"));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const deleteEntry = async (id: string) => {
+    setSaving(true);
+    try {
+      setSaveError("");
+      const res = await fetch(`/api/weight?id=${encodeURIComponent(id)}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) throw new Error("Failed to delete weight entry");
+      await mutate();
+    } catch (error) {
+      console.error(error);
+      setSaveError(t(language, "deleteError"));
     } finally {
       setSaving(false);
     }
@@ -169,22 +261,35 @@ export function HealthProvider({ children }: { children: ReactNode }) {
   };
 
   const value: HealthContextValue = {
-    selectedPerson,
+    selectedPerson: activePerson,
     setSelectedPerson,
+    people,
+    addingPerson,
+    newPersonName,
+    personError,
     weightDigits,
     formattedWeight,
     saving,
     error,
     isLoading,
     theme,
+    language,
     isDark,
+    entries,
     personEntries,
     latestEntryTime,
     toggleTheme,
+    toggleLanguage,
+    startAddingPerson,
+    cancelAddingPerson,
+    setNewPersonName,
+    addPerson,
     handleWeightChange,
     handleWeightKeyDown,
     handleWeightPaste,
     handleSubmit,
+    updateEntry,
+    deleteEntry,
     getFilteredEntries,
   };
 
@@ -200,4 +305,3 @@ export function useHealth() {
 
   return context;
 }
-

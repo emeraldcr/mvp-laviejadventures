@@ -1,6 +1,7 @@
 import type { ChartData, ChartOptions } from "chart.js";
 import { BAR_GROUP_INTERVAL_MS, TIMEFRAMES } from "../constants";
-import type { Person, Theme, Timeframe, WeightEntry } from "../types";
+import { t } from "../i18n";
+import type { Language, Person, Theme, Timeframe, WeightEntry } from "../types";
 
 export class WeightChartHelper {
   static getDomain(entries: WeightEntry[]) {
@@ -10,14 +11,11 @@ export class WeightChartHelper {
       : 70;
     const minWeight = weights.length ? Math.min(...weights) : average;
     const maxWeight = weights.length ? Math.max(...weights) : average;
-    const spreadPadding = (maxWeight - minWeight) / 2 + 3;
-    const radius = Math.max(8, Math.min(14, average * 0.16), spreadPadding);
-    const min = Math.max(0, Math.floor((average - radius) / 5) * 5);
-    let max = Math.ceil((average + radius) / 5) * 5;
-
-    if (max - min < 16) {
-      max = min + 16;
-    }
+    const center = (minWeight + maxWeight) / 2;
+    const spread = maxWeight - minWeight;
+    const range = Math.min(2, Math.max(0.6, spread + 0.4));
+    const min = Math.max(0, Math.floor((center - range / 2) * 10) / 10);
+    const max = Math.ceil((center + range / 2) * 10) / 10;
 
     return { min, max };
   }
@@ -53,7 +51,15 @@ export class WeightChartHelper {
 
     entries.forEach((entry) => {
       const time = new Date(entry.timestamp).getTime();
-      const bucket = Math.floor(time / interval) * interval;
+      const entryDate = new Date(entry.timestamp);
+      const bucket =
+        timeframe === "week" || timeframe === "month" || timeframe === "all"
+          ? new Date(
+              entryDate.getFullYear(),
+              entryDate.getMonth(),
+              entryDate.getDate()
+            ).getTime()
+          : Math.floor(time / interval) * interval;
       groups.set(bucket, [...(groups.get(bucket) ?? []), entry]);
     });
 
@@ -66,7 +72,10 @@ export class WeightChartHelper {
           id: `${timeframe}-${bucket}`,
           name: group[0].name,
           weight: averageWeight,
-          timestamp: new Date(bucket + interval / 2).toISOString(),
+          timestamp:
+            timeframe === "week" || timeframe === "month" || timeframe === "all"
+              ? new Date(bucket + 12 * 60 * 60 * 1000).toISOString()
+              : new Date(bucket + interval / 2).toISOString(),
         };
       })
       .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
@@ -110,6 +119,7 @@ export class WeightChartHelper {
     timeframe: Timeframe;
     latestEntryTime?: number;
     theme: Theme;
+    language: Language;
   }): ChartOptions<"bar"> {
     const groupedEntries = WeightChartHelper.groupForBars(
       WeightChartHelper.getVisibleEntries(params.entries),
@@ -176,7 +186,7 @@ export class WeightChartHelper {
           },
           title: {
             display: true,
-            text: "Date & Time",
+            text: params.language === "es" ? "Fecha y hora" : "Date & Time",
             color: titleColor,
             font: { weight: 600 },
           },
@@ -196,7 +206,7 @@ export class WeightChartHelper {
           },
           title: {
             display: true,
-            text: "Weight (kg)",
+            text: t(params.language, "weightKg"),
             color: titleColor,
             font: { weight: 600 },
           },
@@ -207,4 +217,3 @@ export class WeightChartHelper {
     };
   }
 }
-
