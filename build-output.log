@@ -1,0 +1,3041 @@
+﻿
+> nextjs@0.1.0 build
+> next build
+
+Γû▓ Next.js 16.2.4 (Turbopack)
+- Environments: .env
+- Experiments (use with caution):
+  ┬╖ optimizePackageImports
+  Γ£ô turbopackFileSystemCacheForBuild
+
+  Creating an optimized production build ...
+node.exe : Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Users\alrojas\AppData\Roamin ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Error: Can't re...cuments\GitHub':String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}
+Error: Can't resolve 'tailwindcss' in 'C:\Users\alrojas\Documents\GitHub'
+    [2m[at finishWithoutResolve 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:909:18)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1001:14][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:16:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m
+    [2m[at 
+C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\enhanced-resolve\lib\Resolver.js:1080:5][0m
+    [2m[at eval (eval at create 
+(C:\Users\alrojas\Documents\GitHub\mvp-laviejadventures\node_modules\tapable\lib\HookCodeFactory.js:31:10), 
+<anonymous>:15:1)][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\alrojas\\Documents\\GitHub'\n" +
+    '  Parsed request is a module\n' +
+    '  No description file found in C:\\Users\\alrojas\\Documents\\GitHub or above\n' +
+    '  resolve as module\n' +
+    '    looking for modules in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\n' +
+    '      single file module\n' +
+    '        No description file found in C:\\Users\\alrojas\\Documents\\GitHub\\node_modules or above\n' +
+    '        no extension\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    '        .css\n' +
+    "          C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "      C:\\Users\\alrojas\\Documents\\GitHub\\node_modules\\tailwindcss doesn't exist\n" +
+    "    C:\\Users\\alrojas\\Documents\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\alrojas\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "    C:\\node_modules doesn't exist or is not a directory"
+}

@@ -13,7 +13,6 @@ export const metadata: Metadata = {
   description:
     "La Vieja Adventures | Ciudad Esmeralda Tour Aventura San Carlos en Rio La Vieja y Parque Nacional del Agua Juan Castro Blanco",
 };
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -37,7 +36,6 @@ export default function RootLayout({
           }}
         />
       </head>
-
       <body className="antialiased">
         {/* Google Tag Manager (noscript) */}
         <noscript>
@@ -48,10 +46,7 @@ export default function RootLayout({
             style={{ display: "none", visibility: "hidden" }}
           />
         </noscript>
-
-       
-        
-        <SessionProvider>
+         <SessionProvider>
           <LanguageProvider>
             <Suspense fallback={null}>
               <AnalyticsTracker />
@@ -59,7 +54,6 @@ export default function RootLayout({
             {children}
           </LanguageProvider>
         </SessionProvider>
-
         <Analytics />
       </body>
     </html>
