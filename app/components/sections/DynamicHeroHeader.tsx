@@ -196,17 +196,7 @@ const AuthNav = memo<{ onMobileClose?: () => void; isMobile?: boolean }>(({ onMo
     return <div className="w-8 h-8 rounded-full bg-white/20 animate-pulse" />;
   }
 
-  if (!session?.user) {
-    return (
-      <Link
-        href="/platform"
-        onClick={onMobileClose}
-        className="emerald-wave-button cursor-pointer rounded-full border border-emerald-100/35 bg-white/10 px-5 py-2 text-sm font-semibold text-white shadow-[0_8px_24px_rgba(6,78,59,0.22),inset_0_1px_0_rgba(255,255,255,0.2)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-100/70 hover:bg-emerald-100/20 hover:text-white active:translate-y-0 active:scale-[0.99]"
-      >
-        {lang === "es" ? "Iniciar sesión" : "Log In"}
-      </Link>
-    );
-  }
+  if (!session?.user) return null;
 
   const { name, image } = session.user;
 
