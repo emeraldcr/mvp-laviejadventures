@@ -7,6 +7,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { LanguageProvider } from "@/app/context/LanguageContext";
 import SessionProvider from "@/app/components/SessionProvider";
 import AnalyticsTracker from "@/app/components/analytics/AnalyticsTracker";
+import GoogleAdsScript from "@/app/components/analytics/GoogleAdsScript";
 
 export const metadata: Metadata = {
   title: "La Vieja Adventures | Ciudad Esmeralda Tour Aventura San Carlos en Rio La Vieja",
@@ -48,6 +49,7 @@ export default function RootLayout({
         </noscript>
          <SessionProvider>
           <LanguageProvider>
+            <GoogleAdsScript />
             <Suspense fallback={null}>
               <AnalyticsTracker />
             </Suspense>

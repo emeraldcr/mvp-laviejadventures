@@ -2,15 +2,21 @@
 
 import Script from "next/script";
 
-const GOOGLE_ADS_ID = "AW-18010006901"; // Hardcoded for testing
+const RAW_GOOGLE_ADS_ID = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID?.trim();
+const GOOGLE_ADS_ID =
+  RAW_GOOGLE_ADS_ID && RAW_GOOGLE_ADS_ID.startsWith("AW-")
+    ? RAW_GOOGLE_ADS_ID
+    : RAW_GOOGLE_ADS_ID
+      ? `AW-${RAW_GOOGLE_ADS_ID}`
+      : "";
 
 export default function GoogleAdsScript() {
-  // Temporarily disabled privacy checks for testing
-  // if (!shouldLoadAdsTracking()) return null;
+  if (!GOOGLE_ADS_ID) return null;
 
   return (
     <>
       <Script
+        id="google-ads-loader"
         async
         src={`https://www.googletagmanager.com/gtag/js?id=${GOOGLE_ADS_ID}`}
         strategy="afterInteractive"

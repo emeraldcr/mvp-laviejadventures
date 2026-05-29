@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, Home, Loader2, LogIn, LogOut, ShieldAlert, ShieldCheck, UserRound, XCircle } from "lucide-react";
+import { AlertTriangle, BarChart3, CheckCircle2, CreditCard, DollarSign, Home, Loader2, LogIn, LogOut, MousePointerClick, ShieldAlert, ShieldCheck, TrendingUp, UserRound, XCircle } from "lucide-react";
 
 type Operator = {
   _id: string;
@@ -72,13 +72,22 @@ type B2BSettings = {
 
 type BookingAnalyticsEvent = {
   _id: string;
-  event: "booking_step" | "booking_submitted";
+  event:
+    | "booking_step"
+    | "booking_submitted"
+    | "booking_checkout_started"
+    | "payment_order_created"
+    | "payment_approved"
+    | "payment_error"
+    | "booking_completed";
   path: string | null;
   sessionId: string | null;
   happenedAt: string | null;
   createdAt: string | null;
   metadata: {
-    step?: string;
+    step?: string | number;
+    stepLabel?: string;
+    stage?: string;
     tickets?: number;
     amount?: number;
     currency?: string;
@@ -98,12 +107,51 @@ type BookingAnalyticsEvent = {
   };
 };
 
+type AnalyticsCount = { label: string; count: number };
+
+type ReservationIntent = {
+  _id: string;
+  event: BookingAnalyticsEvent["event"];
+  step: string | number | null;
+  stepLabel: string | null;
+  stage: string | null;
+  happenedAt: string | null;
+  path: string | null;
+  sessionId: string | null;
+  tourSlug: string | null;
+  tourName: string | null;
+  tourPackage: string | null;
+  tourTime: string | null;
+  date: string | null;
+  tickets: number | null;
+  amount: number | null;
+  currency: string | null;
+  user: BookingAnalyticsEvent["user"];
+  request: BookingAnalyticsEvent["request"];
+};
+
 type BookingAnalytics = {
   totalEvents: number;
   bookingSteps: number;
   bookingSubmissions: number;
+  checkoutStarts: number;
+  paymentOrders: number;
+  paymentApprovals: number;
+  paymentErrors: number;
+  completedBookings: number;
   uniqueSessions: number;
   conversionRate: number;
+  completionRate: number;
+  paymentApprovalRate: number;
+  completedRevenue: number;
+  reservationRevenue: number;
+  eventCounts: AnalyticsCount[];
+  funnel: AnalyticsCount[];
+  topTours: AnalyticsCount[];
+  topPackages: AnalyticsCount[];
+  deviceBreakdown: AnalyticsCount[];
+  browserBreakdown: AnalyticsCount[];
+  recentIntents: ReservationIntent[];
   recentEvents: BookingAnalyticsEvent[];
 };
 
@@ -139,6 +187,72 @@ const ACCESS_LINKS = [
   { href: "/b2b/login", label: "Login B2B", icon: <ShieldCheck className="h-4 w-4" />, style: "bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300" },
 ];
 
+const EMPTY_BOOKING_ANALYTICS: BookingAnalytics = {
+  totalEvents: 0,
+  bookingSteps: 0,
+  bookingSubmissions: 0,
+  checkoutStarts: 0,
+  paymentOrders: 0,
+  paymentApprovals: 0,
+  paymentErrors: 0,
+  completedBookings: 0,
+  uniqueSessions: 0,
+  conversionRate: 0,
+  completionRate: 0,
+  paymentApprovalRate: 0,
+  completedRevenue: 0,
+  reservationRevenue: 0,
+  eventCounts: [],
+  funnel: [],
+  topTours: [],
+  topPackages: [],
+  deviceBreakdown: [],
+  browserBreakdown: [],
+  recentIntents: [],
+  recentEvents: [],
+};
+
+const EVENT_LABELS: Record<BookingAnalyticsEvent["event"], string> = {
+  booking_step: "Paso",
+  booking_submitted: "Reserva enviada",
+  booking_checkout_started: "Checkout",
+  payment_order_created: "Orden PayPal",
+  payment_approved: "Pago aprobado",
+  payment_error: "Error pago",
+  booking_completed: "Reserva final",
+};
+
+function formatMoney(value: number, currency = "USD") {
+  return new Intl.NumberFormat("es-CR", {
+    style: "currency",
+    currency,
+    maximumFractionDigits: currency === "CRC" ? 0 : 2,
+  }).format(value);
+}
+
+function formatAnalyticsStep(event: Pick<BookingAnalyticsEvent, "event" | "metadata">) {
+  const step = event.metadata.step;
+  const stepLabel = typeof event.metadata.stepLabel === "string" ? event.metadata.stepLabel : "";
+  const stage = typeof event.metadata.stage === "string" ? event.metadata.stage : "";
+
+  if (step != null && stepLabel) return `${step} - ${stepLabel}`;
+  if (step != null) return String(step);
+  if (stepLabel) return stepLabel;
+  if (stage) return stage;
+  return EVENT_LABELS[event.event] ?? "-";
+}
+
+function formatIntentStep(intent: ReservationIntent) {
+  const step = intent.step;
+  const stepLabel = intent.stepLabel ?? "";
+
+  if (step != null && stepLabel) return `${step} - ${stepLabel}`;
+  if (step != null) return String(step);
+  if (stepLabel) return stepLabel;
+  if (intent.stage) return intent.stage;
+  return EVENT_LABELS[intent.event] ?? "-";
+}
+
 export default function B2BAdminPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -149,14 +263,7 @@ export default function B2BAdminPage() {
   const [users, setUsers] = useState<AppUser[]>([]);
   const [loginLogs, setLoginLogs] = useState<LoginLog[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [bookingAnalytics, setBookingAnalytics] = useState<BookingAnalytics>({
-    totalEvents: 0,
-    bookingSteps: 0,
-    bookingSubmissions: 0,
-    uniqueSessions: 0,
-    conversionRate: 0,
-    recentEvents: [],
-  });
+  const [bookingAnalytics, setBookingAnalytics] = useState<BookingAnalytics>(EMPTY_BOOKING_ANALYTICS);
   const [settings, setSettings] = useState<B2BSettings>({ ivaRate: 13, tourPricing: [] });
   const [pricingJson, setPricingJson] = useState("[]");
   const [heroSlogans, setHeroSlogans] = useState<HeroSloganLog[]>([]);
@@ -189,6 +296,22 @@ export default function B2BAdminPage() {
 
   const pendingOperators = useMemo(() => operators.filter((op) => op.status === "pending"), [operators]);
   const approvedOperators = useMemo(() => operators.filter((op) => op.status !== "pending"), [operators]);
+  const maxFunnelCount = useMemo(
+    () => Math.max(1, ...bookingAnalytics.funnel.map((item) => item.count)),
+    [bookingAnalytics.funnel],
+  );
+  const uniqueHeroSlogans = useMemo(() => {
+    const seen = new Set<string>();
+
+    return heroSlogans
+      .filter((slogan) => slogan.model?.toLowerCase().startsWith("claude"))
+      .filter((slogan) => {
+        const key = `${(slogan.es ?? "").trim().toLowerCase()}|${(slogan.en ?? "").trim().toLowerCase()}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+  }, [heroSlogans]);
 
   async function fetchAdminData() {
     setLoading(true);
@@ -207,7 +330,7 @@ export default function B2BAdminPage() {
         setIsLoggedIn(false);
         setOperators([]);
         setReservations([]);
-        setBookingAnalytics({ totalEvents: 0, bookingSteps: 0, bookingSubmissions: 0, uniqueSessions: 0, conversionRate: 0, recentEvents: [] });
+        setBookingAnalytics(EMPTY_BOOKING_ANALYTICS);
         setHeroSlogans([]);
         return;
       }
@@ -229,7 +352,7 @@ export default function B2BAdminPage() {
       setReservations(insightsData.reservations || []);
       setBookingAnalytics(
         insightsData.bookingAnalytics ||
-          { totalEvents: 0, bookingSteps: 0, bookingSubmissions: 0, uniqueSessions: 0, conversionRate: 0, recentEvents: [] },
+          EMPTY_BOOKING_ANALYTICS,
       );
       setHeroSlogans(insightsData.heroSlogans || []);
       const nextSettings = settingsData.settings || { ivaRate: 13, tourPricing: [] };
@@ -267,7 +390,7 @@ export default function B2BAdminPage() {
         setIsLoggedIn(false);
         setOperators([]);
         setReservations([]);
-        setBookingAnalytics({ totalEvents: 0, bookingSteps: 0, bookingSubmissions: 0, uniqueSessions: 0, conversionRate: 0, recentEvents: [] });
+        setBookingAnalytics(EMPTY_BOOKING_ANALYTICS);
         setHeroSlogans([]);
         return;
       }
@@ -510,6 +633,139 @@ export default function B2BAdminPage() {
       </section>
 
       <section className="mt-6 rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
+        <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 className="mb-1 text-xl font-semibold">Analytics de reservaciones</h2>
+            <p className="text-sm text-zinc-600 dark:text-zinc-300">Embudo completo: formulario, checkout, PayPal y reserva final.</p>
+          </div>
+          <p className="text-xs text-zinc-500">Ultimos {bookingAnalytics.totalEvents} eventos guardados</p>
+        </div>
+
+        <div className="mb-5 grid gap-3 md:grid-cols-3 xl:grid-cols-6">
+          <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-800">
+            <p className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-300"><MousePointerClick className="h-3.5 w-3.5" />Sesiones</p>
+            <p className="text-2xl font-semibold">{bookingAnalytics.uniqueSessions}</p>
+          </div>
+          <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-800">
+            <p className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-300"><TrendingUp className="h-3.5 w-3.5" />Enviadas</p>
+            <p className="text-2xl font-semibold">{bookingAnalytics.bookingSubmissions}</p>
+            <p className="text-xs text-zinc-500">{bookingAnalytics.conversionRate}% de sesion</p>
+          </div>
+          <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-800">
+            <p className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-300"><CreditCard className="h-3.5 w-3.5" />Checkout</p>
+            <p className="text-2xl font-semibold">{bookingAnalytics.checkoutStarts}</p>
+            <p className="text-xs text-zinc-500">{bookingAnalytics.paymentOrders} ordenes PayPal</p>
+          </div>
+          <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-800">
+            <p className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-300"><CheckCircle2 className="h-3.5 w-3.5" />Pagos OK</p>
+            <p className="text-2xl font-semibold">{bookingAnalytics.paymentApprovals}</p>
+            <p className="text-xs text-zinc-500">{bookingAnalytics.paymentApprovalRate}% aprobacion</p>
+          </div>
+          <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-800">
+            <p className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-300"><AlertTriangle className="h-3.5 w-3.5" />Errores pago</p>
+            <p className="text-2xl font-semibold">{bookingAnalytics.paymentErrors}</p>
+          </div>
+          <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-800">
+            <p className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-300"><DollarSign className="h-3.5 w-3.5" />Revenue web</p>
+            <p className="text-2xl font-semibold">{formatMoney(bookingAnalytics.reservationRevenue || bookingAnalytics.completedRevenue, "USD")}</p>
+            <p className="text-xs text-zinc-500">{bookingAnalytics.completedBookings} finales por analytics</p>
+          </div>
+        </div>
+
+        <div className="grid gap-5 xl:grid-cols-[1.15fr_0.85fr]">
+          <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800">
+            <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold"><BarChart3 className="h-4 w-4" />Embudo</h3>
+            <div className="space-y-3">
+              {bookingAnalytics.funnel.map((item) => (
+                <div key={item.label}>
+                  <div className="mb-1 flex items-center justify-between text-xs">
+                    <span className="font-medium text-zinc-700 dark:text-zinc-200">{item.label}</span>
+                    <span className="tabular-nums text-zinc-500">{item.count}</span>
+                  </div>
+                  <div className="h-2 rounded-full bg-zinc-200 dark:bg-zinc-700">
+                    <div className="h-2 rounded-full bg-emerald-500" style={{ width: `${Math.max(4, (item.count / maxFunnelCount) * 100)}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
+            <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800">
+              <h3 className="mb-3 text-sm font-semibold">Tours con mas intencion</h3>
+              <ul className="space-y-2 text-sm">
+                {bookingAnalytics.topTours.map((item) => (
+                  <li key={item.label} className="flex items-center justify-between gap-3">
+                    <span className="truncate text-zinc-700 dark:text-zinc-200">{item.label}</span>
+                    <span className="rounded-full bg-white px-2 py-0.5 text-xs font-semibold text-zinc-700 dark:bg-zinc-900 dark:text-zinc-200">{item.count}</span>
+                  </li>
+                ))}
+                {bookingAnalytics.topTours.length === 0 && <li className="text-zinc-500">Sin datos todavia.</li>}
+              </ul>
+            </div>
+            <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800">
+              <h3 className="mb-3 text-sm font-semibold">Paquetes y dispositivos</h3>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <ul className="space-y-2 text-sm">
+                  {bookingAnalytics.topPackages.map((item) => (
+                    <li key={item.label} className="flex items-center justify-between gap-3"><span>{item.label}</span><span className="font-semibold">{item.count}</span></li>
+                  ))}
+                  {bookingAnalytics.topPackages.length === 0 && <li className="text-zinc-500">Sin paquetes.</li>}
+                </ul>
+                <ul className="space-y-2 text-sm">
+                  {bookingAnalytics.deviceBreakdown.map((item) => (
+                    <li key={item.label} className="flex items-center justify-between gap-3"><span>{item.label}</span><span className="font-semibold">{item.count}</span></li>
+                  ))}
+                  {bookingAnalytics.deviceBreakdown.length === 0 && <li className="text-zinc-500">Sin dispositivos.</li>}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-5 max-h-96 overflow-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-zinc-600 dark:text-zinc-300">
+                <th className="pb-2">Evento</th>
+                <th className="pb-2">Tour</th>
+                <th className="pb-2">Fecha/Hora</th>
+                <th className="pb-2">Tickets</th>
+                <th className="pb-2">Monto</th>
+                <th className="pb-2">Usuario</th>
+                <th className="pb-2">Dispositivo</th>
+                <th className="pb-2">Sesion</th>
+                <th className="pb-2">Registrado</th>
+              </tr>
+            </thead>
+            <tbody>
+              {bookingAnalytics.recentIntents.map((intent) => (
+                <tr key={intent._id} className="border-t border-zinc-200 dark:border-zinc-700">
+                  <td className="py-2 font-medium">{EVENT_LABELS[intent.event]}</td>
+                  <td className="py-2">
+                    <p className="max-w-52 truncate">{intent.tourName || intent.tourSlug || "-"}</p>
+                    <p className="text-xs text-zinc-500">{intent.tourPackage || "-"}</p>
+                  </td>
+                  <td className="py-2">{intent.date || "-"}{intent.tourTime ? ` - ${intent.tourTime}` : ""}</td>
+                  <td className="py-2">{intent.tickets ?? "-"}</td>
+                  <td className="py-2">{intent.amount != null ? formatMoney(intent.amount, intent.currency || "USD") : "-"}</td>
+                  <td className="py-2">{intent.user.email || intent.user.name || "Anonimo"}</td>
+                  <td className="py-2">{intent.request.deviceType || "-"} - {intent.request.browser || "-"}</td>
+                  <td className="py-2">{intent.sessionId ? intent.sessionId.slice(0, 8) : "-"}</td>
+                  <td className="py-2">{intent.happenedAt ? new Date(intent.happenedAt).toLocaleString("es-CR") : "-"}</td>
+                </tr>
+              ))}
+              {bookingAnalytics.recentIntents.length === 0 && (
+                <tr>
+                  <td className="py-4 text-zinc-600 dark:text-zinc-300" colSpan={9}>Todavia no hay eventos de reservacion.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="mt-6 rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
         <h2 className="mb-1 text-xl font-semibold">Crear reserva manual (sin pago web)</h2>
         <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-300">Para clientes que pagan en efectivo o transferencia local fuera del checkout del sitio.</p>
 
@@ -577,8 +833,8 @@ export default function B2BAdminPage() {
       </section>
 
       <section className="mt-6 rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
-        <h2 className="mb-1 text-xl font-semibold">Slogans guardados en MongoDB ({heroSlogans.length})</h2>
-        <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-300">Historial de slogans generados en el hero para auditoría de contenido AI.</p>
+        <h2 className="mb-1 text-xl font-semibold">Slogans guardados en MongoDB ({uniqueHeroSlogans.length})</h2>
+        <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-300">Historial de slogans generados con Claude en el hero. Los fallbacks y repetidos se ocultan; ya no se guardan nuevos slogans.</p>
 
         <div className="max-h-96 overflow-auto">
           <table className="w-full text-sm">
@@ -591,7 +847,7 @@ export default function B2BAdminPage() {
               </tr>
             </thead>
             <tbody>
-              {heroSlogans.map((slogan) => (
+              {uniqueHeroSlogans.map((slogan) => (
                 <tr key={slogan._id} className="border-t border-zinc-200 dark:border-zinc-700 align-top">
                   <td className="py-2 whitespace-nowrap">{slogan.createdAt ? new Date(slogan.createdAt).toLocaleString("es-CR") : "-"}</td>
                   <td className="py-2">{slogan.es}</td>
@@ -599,9 +855,9 @@ export default function B2BAdminPage() {
                   <td className="py-2 whitespace-nowrap">{slogan.model || "-"}</td>
                 </tr>
               ))}
-              {heroSlogans.length === 0 && (
+              {uniqueHeroSlogans.length === 0 && (
                 <tr>
-                  <td className="py-4 text-zinc-600 dark:text-zinc-300" colSpan={4}>No hay slogans guardados todavía.</td>
+                  <td className="py-4 text-zinc-600 dark:text-zinc-300" colSpan={4}>No hay slogans de Claude guardados todavía.</td>
                 </tr>
               )}
             </tbody>
@@ -609,8 +865,8 @@ export default function B2BAdminPage() {
         </div>
       </section>
 
-      <section className="mt-6 rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
-        <h2 className="mb-1 text-xl font-semibold">Booking analytics (Mongo track)</h2>
+      <section className="hidden">
+        <h2 className="mb-1 text-xl font-semibold">Analytics de reservaciones</h2>
         <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-300">Eventos nuevos de analytics para seguir el embudo de reserva e insights de conversión.</p>
 
         <div className="mb-4 grid gap-3 md:grid-cols-5">

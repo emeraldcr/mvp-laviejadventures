@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
-import { createHeroSloganLog } from "@/lib/models/hero-slogan-log";
 
 const client = new Anthropic();
 
@@ -65,24 +64,6 @@ function extractJsonPayload(rawText: string): HeroSloganPayload {
   };
 }
 
-async function persistSlogan(
-  slogan: HeroSloganPayload,
-  options: { model: string; prompt: string; rawResponse: string }
-) {
-  try {
-    await createHeroSloganLog({
-      es: slogan.es,
-      en: slogan.en,
-      model: options.model,
-      prompt: options.prompt,
-      rawResponse: options.rawResponse,
-      createdAt: new Date(),
-    });
-  } catch (error) {
-    console.error("Failed to save hero slogan log:", error);
-  }
-}
-
 export async function GET() {
   try {
     const message = await client.messages.create({
@@ -99,28 +80,15 @@ export async function GET() {
     });
 
     const contentText = message.content
-      .filter((item): item is { type: "text"; text: string } => item.type === "text")
-      .map((item) => item.text)
+      .map((item) => (item.type === "text" ? item.text : ""))
       .join("\n")
       .trim();
 
     const parsed = extractJsonPayload(contentText);
 
-    await persistSlogan(parsed, {
-      model: SLOGAN_MODEL,
-      prompt: USER_PROMPT,
-      rawResponse: contentText,
-    });
-
     return NextResponse.json(parsed);
   } catch {
     const fallback = getFallbackSlogan();
-
-    await persistSlogan(fallback, {
-      model: "fallback",
-      prompt: USER_PROMPT,
-      rawResponse: "fallback",
-    });
 
     return NextResponse.json(fallback);
   }

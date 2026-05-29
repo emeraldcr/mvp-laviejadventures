@@ -1,13 +1,32 @@
 "use client";
 
 import { useLanguage } from "@/app/context/LanguageContext";
+import { trackAnalyticsEvent } from "@/lib/analytics/client";
 import { translations } from "@/lib/translations";
 import Link from "next/link";
+import { useEffect } from "react";
 import type { SuccessClientProps } from "@/lib/types";
 
 export function SuccessClient(props: SuccessClientProps) {
   const { lang } = useLanguage();
   const tr = translations[lang].success;
+
+  useEffect(() => {
+    if (props.error || !props.orderId) return;
+
+    trackAnalyticsEvent("booking_completed", {
+      metadata: {
+        orderId: props.orderId,
+        captureId: props.captureId,
+        status: props.status,
+        date: props.date,
+        tickets: props.tickets,
+        amount: props.amount,
+        currency: props.currency,
+        language: lang,
+      },
+    });
+  }, [lang, props.amount, props.captureId, props.currency, props.date, props.error, props.orderId, props.status, props.tickets]);
 
   return props.error ? (
     <ErrorState error={props.error} translations={tr} />
@@ -61,7 +80,7 @@ function SuccessState({
         <h1 className="text-3xl font-bold mb-4 text-teal-600">{tr.title}</h1>
 
         <ThankYouMessage name={displayName} translations={tr} />
-        <EmailConfirmationMessage email={email} translations={tr} />
+        <EmailConfirmationMessage email={email ?? undefined} translations={tr} />
 
         <div className="mt-8 grid gap-6 sm:grid-cols-2">
           <BookingDetails

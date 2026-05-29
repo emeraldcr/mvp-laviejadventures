@@ -4,7 +4,12 @@ export type AnalyticsEventName =
   | "page_view"
   | "click"
   | "booking_step"
-  | "booking_submitted";
+  | "booking_submitted"
+  | "booking_checkout_started"
+  | "payment_order_created"
+  | "payment_approved"
+  | "payment_error"
+  | "booking_completed";
 
 export type AnalyticsPayload = {
   path?: string;

@@ -33,3 +33,68 @@ body {
 .animate-bounce-x {
   animation: bounce-x 1.4s ease-in-out infinite;
 }
+
+@keyframes emerald-sheen {
+  0% { transform: translateX(-130%) skewX(-18deg); opacity: 0; }
+  20% { opacity: 0.9; }
+  100% { transform: translateX(150%) skewX(-18deg); opacity: 0; }
+}
+
+@keyframes emerald-logo-breathe {
+  0%, 100% {
+    box-shadow:
+      0 12px 34px rgba(0, 0, 0, 0.32),
+      inset 0 1px 0 rgba(255, 255, 255, 0.24),
+      0 0 0 rgba(52, 211, 153, 0);
+  }
+  50% {
+    box-shadow:
+      0 16px 42px rgba(0, 0, 0, 0.34),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3),
+      0 0 28px rgba(52, 211, 153, 0.28);
+  }
+}
+
+.emerald-wave-button::before {
+  content: "";
+  position: absolute;
+  inset: -40% auto -40% -55%;
+  width: 48%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(167, 243, 208, 0.18),
+    rgba(255, 255, 255, 0.42),
+    rgba(16, 185, 129, 0.18),
+    transparent
+  );
+  pointer-events: none;
+  transform: translateX(-130%) skewX(-18deg);
+}
+
+.emerald-wave-button:hover::before {
+  animation: emerald-sheen 900ms ease;
+}
+
+.emerald-logo-shell {
+  animation: emerald-logo-breathe 5.5s ease-in-out infinite;
+}
+
+.emerald-logo-shell::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(167, 243, 208, 0.26), transparent 34%, rgba(16, 185, 129, 0.2));
+  opacity: 0;
+  transition: opacity 350ms ease;
+  pointer-events: none;
+}
+
+.group\/logo:hover .emerald-logo-shell::after {
+  opacity: 1;
+}
+
+.brand-glow-text {
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.45), 0 0 24px rgba(52, 211, 153, 0.22);
+}

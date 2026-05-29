@@ -11,6 +11,7 @@ import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/lib/translations";
 import { AlertCircle, Camera, ChevronRight, Clock3, Info, MapPin, Route, ShieldCheck, Sparkles, TreePalm, Users, UtensilsCrossed, X } from "lucide-react";
 import { trackAnalyticsEvent } from "@/lib/analytics/client";
+import TourSelectionCards from "@/app/components/tours/TourSelectionCards";
 
 // ---------------------- CONSTANTS ----------------------
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -674,6 +675,8 @@ export default function ReservationDetails({
 
     trackAnalyticsEvent("booking_submitted", {
       metadata: {
+        step: 3,
+        stepLabel: "review",
         tickets,
         tourTime,
         tourPackage: effectiveTourPackage,
@@ -821,50 +824,17 @@ export default function ReservationDetails({
                 <X size={18} className="text-zinc-500" />
               </button>
             </div>
-            <div className="max-h-[60vh] space-y-2 overflow-y-auto p-4">
-              {tours.map((tour) => {
-                const isSelected = selectedTourSlug === tour.slug;
-                const name = lang === "es" ? tour.titleEs : tour.titleEn;
-                const description = (lang === "es" ? tour.descriptionEs : tour.descriptionEn) ?? tour.descriptionEs ?? tour.descriptionEn;
-                const price = typeof tour.priceCRC === "number"
-                  ? new Intl.NumberFormat("es-CR", {
-                      style: "currency",
-                      currency: "CRC",
-                      maximumFractionDigits: 0,
-                    }).format(tour.priceCRC)
-                  : null;
-
-                return (
-                  <button
-                    key={tour.slug}
-                    type="button"
-                    onClick={() => {
-                      setManualSelectedTourSlug(tour.slug);
-                      setShowTourModal(false);
-                    }}
-                    className={`w-full rounded-2xl border-2 p-4 text-left transition-all ${
-                      isSelected
-                        ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20"
-                        : "border-zinc-200 hover:border-emerald-400 hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="font-semibold text-sm text-zinc-800 dark:text-zinc-100">{name}</p>
-                      {isSelected && (
-                        <span className="shrink-0 rounded-full bg-emerald-500 px-2.5 py-0.5 text-[11px] font-bold text-white">
-                          {tr.activeLabel}
-                        </span>
-                      )}
-                    </div>
-                    {(description || price) && (
-                      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-500 dark:text-zinc-400">
-                        {description && <span className="line-clamp-1">{description}</span>}
-                        {price && <span className="font-semibold text-emerald-700 dark:text-emerald-300">{tr.priceFrom} {price}</span>}
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
+            <div className="max-h-[70vh] overflow-y-auto bg-black p-4">
+              <TourSelectionCards
+                tours={tours}
+                selectedTourSlug={selectedTourSlug}
+                onSelectTour={(slug) => {
+                  setManualSelectedTourSlug(slug);
+                  setShowTourModal(false);
+                }}
+                className="grid grid-cols-1 gap-4 sm:grid-cols-2"
+                cardClassName="h-[260px]"
+              />
             </div>
           </div>
         </div>,

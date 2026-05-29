@@ -62,11 +62,11 @@ const NavLink = memo<NavLinkItem & { onClick?: () => void; className?: string }>
     const pathname = usePathname();
     const isAnchor = href.startsWith("/#");
     const isActive = !isAnchor && pathname === href;
-    const base = "transition-colors duration-200";
+    const base = "relative overflow-hidden transition-all duration-300";
     const style =
       variant === "primary"
-        ? "px-5 py-2 rounded-full font-semibold border border-white/40 bg-white/10 backdrop-blur-md shadow-sm shadow-black/20 hover:bg-white hover:text-teal-900 hover:border-white"
-        : `hover:text-teal-200 ${isActive ? "text-teal-200" : "text-white"}`;
+        ? "emerald-wave-button px-5 py-2 rounded-full font-semibold border border-emerald-200/[0.45] bg-emerald-300/[0.15] text-white backdrop-blur-xl shadow-[0_8px_26px_rgba(6,78,59,0.28),inset_0_1px_0_rgba(255,255,255,0.28)] hover:-translate-y-0.5 hover:border-emerald-100/80 hover:bg-emerald-200/25 hover:text-white hover:shadow-[0_12px_34px_rgba(16,185,129,0.28),inset_0_1px_0_rgba(255,255,255,0.42)]"
+        : `rounded-full px-3 py-1.5 hover:bg-emerald-300/10 hover:text-emerald-100 ${isActive ? "bg-emerald-300/10 text-emerald-100" : "text-white"}`;
     const linkProps = external ? { target: "_blank", rel: "noopener noreferrer" } : {};
     return (
       <Link href={href} {...linkProps} className={`${base} ${style} ${className}`} onClick={onClick}>
@@ -112,7 +112,7 @@ const DesktopNavGroup = memo<{ item: NavGroup }>(({ item }) => {
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-sm font-semibold text-white hover:bg-white/15 transition-colors"
+        className="emerald-wave-button inline-flex items-center gap-1.5 rounded-full border border-emerald-100/20 bg-white/[0.08] px-3 py-1.5 text-sm font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-100/[0.45] hover:bg-emerald-300/[0.15] hover:text-emerald-50"
         aria-expanded={open}
       >
         {item.label}
@@ -121,7 +121,7 @@ const DesktopNavGroup = memo<{ item: NavGroup }>(({ item }) => {
 
       {open && (
         <div className="absolute left-0 top-full z-50 min-w-52 pt-2">
-          <div className="rounded-2xl border border-white/10 bg-teal-950/95 p-2 shadow-2xl backdrop-blur-xl">
+          <div className="rounded-2xl border border-emerald-100/20 bg-teal-950/[0.88] p-2 shadow-[0_24px_70px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-2xl">
             {item.links.map((link) => (
               <NavLink
                 key={link.href}
@@ -146,7 +146,7 @@ const MobileNavGroup = memo<{
 }>(({ item, onNavigate, open, onToggle }) => {
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5">
+    <div className="rounded-2xl border border-emerald-100/[0.15] bg-white/[0.07] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
       <button
         type="button"
         className="flex w-full items-center justify-between px-4 py-3 text-left text-base font-semibold text-white"
@@ -179,7 +179,7 @@ const LangToggle = memo<{ onClick: () => void; currentLang: string }>(({ onClick
     type="button"
     onClick={onClick}
     aria-label={currentLang === "es" ? "Switch to English" : "Cambiar a Español"}
-    className="px-3 py-1.5 rounded-full border border-white/40 bg-white/10 backdrop-blur-md text-white text-sm font-bold hover:bg-white hover:text-teal-900 hover:border-white transition-colors duration-200 shadow-sm shadow-black/20 min-w-[40px] text-center"
+    className="emerald-wave-button min-w-[40px] rounded-full border border-emerald-100/35 bg-white/10 px-3 py-1.5 text-center text-sm font-bold text-white shadow-[0_8px_24px_rgba(6,78,59,0.22),inset_0_1px_0_rgba(255,255,255,0.2)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-100/70 hover:bg-emerald-100/20 hover:text-white"
   >
     {currentLang === "es" ? "EN" : "ES"}
   </button>
@@ -201,7 +201,7 @@ const AuthNav = memo<{ onMobileClose?: () => void; isMobile?: boolean }>(({ onMo
       <Link
         href="/platform"
         onClick={onMobileClose}
-        className="px-5 py-2 rounded-full font-semibold border border-white/40 bg-white/10 backdrop-blur-md shadow-sm shadow-black/20 transition-all duration-200 text-white text-sm hover:-translate-y-0.5 hover:bg-white hover:text-teal-900 hover:border-white hover:shadow-md hover:shadow-black/30 active:translate-y-0 active:scale-[0.99] cursor-pointer"
+        className="emerald-wave-button cursor-pointer rounded-full border border-emerald-100/35 bg-white/10 px-5 py-2 text-sm font-semibold text-white shadow-[0_8px_24px_rgba(6,78,59,0.22),inset_0_1px_0_rgba(255,255,255,0.2)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-100/70 hover:bg-emerald-100/20 hover:text-white active:translate-y-0 active:scale-[0.99]"
       >
         {lang === "es" ? "Iniciar sesión" : "Log In"}
       </Link>
@@ -240,7 +240,7 @@ const AuthNav = memo<{ onMobileClose?: () => void; isMobile?: boolean }>(({ onMo
     <div className="relative">
       <button
         onClick={() => setDropdownOpen((p) => !p)}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/30 bg-white/10 backdrop-blur-md hover:bg-white/20 transition-colors duration-200"
+        className="emerald-wave-button flex items-center gap-2 rounded-full border border-emerald-100/30 bg-white/10 px-3 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-100/55 hover:bg-emerald-200/15"
         aria-label="User menu"
       >
         {image ? (
@@ -257,7 +257,7 @@ const AuthNav = memo<{ onMobileClose?: () => void; isMobile?: boolean }>(({ onMo
       {dropdownOpen && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setDropdownOpen(false)} />
-          <div className="absolute right-0 top-full mt-2 z-50 w-52 rounded-2xl border border-white/10 bg-teal-950/95 backdrop-blur-xl shadow-2xl overflow-hidden">
+          <div className="absolute right-0 top-full mt-2 z-50 w-52 overflow-hidden rounded-2xl border border-emerald-100/20 bg-teal-950/90 shadow-[0_24px_70px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-2xl">
             <div className="px-4 py-3 border-b border-white/10">
               <p className="text-white text-sm font-semibold truncate">{name}</p>
               <p className="text-white/50 text-xs truncate">{session.user.email}</p>
@@ -316,25 +316,28 @@ const Header = memo<{ isScrolled: boolean; onMenuToggle: () => void; isMenuOpen:
       <header
         className={[
           "fixed inset-x-0 top-0 z-50",
-          "backdrop-blur-2xl border-b border-white/10",
+          "border-b border-emerald-100/15 backdrop-blur-2xl",
           "transition-all duration-300",
           isScrolled
-            ? "bg-teal-950/80 shadow-[0_10px_40px_rgba(0,0,0,0.6)]"
-            : "bg-teal-950/40 shadow-none",
+            ? "bg-[linear-gradient(120deg,rgba(6,78,59,0.86),rgba(4,47,46,0.78)_48%,rgba(5,150,105,0.34))] shadow-[0_14px_48px_rgba(0,0,0,0.48),inset_0_1px_0_rgba(255,255,255,0.12)]"
+            : "bg-[linear-gradient(120deg,rgba(6,78,59,0.48),rgba(4,47,46,0.34)_50%,rgba(16,185,129,0.18))] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]",
         ].join(" ")}
       >
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-emerald-200/45 to-transparent" />
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 md:px-8">
-          <Link href="/">
-            <div className="flex items-center space-x-3 cursor-pointer">
-              <Image
-                src="/logo2.jpg"
-                alt="La Vieja Adventures Logo"
-                width={logoSize}
-                height={logoSize}
-                className="rounded-md object-cover transition-all duration-300 shadow-md shadow-black/30"
-                priority
-              />
-              <span className={`font-black tracking-tight text-white transition-all duration-300 ${textSize}`}>
+          <Link href="/" className="group/logo">
+            <div className="flex cursor-pointer items-center gap-3">
+              <span className="emerald-logo-shell relative grid place-items-center rounded-2xl border border-emerald-100/25 bg-white/10 p-1.5 shadow-[0_12px_34px_rgba(0,0,0,0.32),inset_0_1px_0_rgba(255,255,255,0.24)] backdrop-blur-xl transition-all duration-500 group-hover/logo:-translate-y-0.5 group-hover/logo:border-emerald-100/[0.55] group-hover/logo:bg-emerald-100/[0.16]">
+                <Image
+                  src="/logo2.jpg"
+                  alt="La Vieja Adventures Logo"
+                  width={logoSize}
+                  height={logoSize}
+                  className="rounded-xl object-cover transition-all duration-500 group-hover/logo:scale-[1.03]"
+                  priority
+                />
+              </span>
+              <span className={`brand-glow-text font-black tracking-tight text-white transition-all duration-300 ${textSize}`}>
                 La Vieja Adventures
               </span>
             </div>
@@ -350,7 +353,7 @@ const Header = memo<{ isScrolled: boolean; onMenuToggle: () => void; isMenuOpen:
           </nav>
 
           <button
-            className="text-white md:hidden"
+            className="emerald-wave-button rounded-full border border-emerald-100/25 bg-white/10 p-2 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-xl transition-all duration-300 hover:bg-emerald-200/15 md:hidden"
             onClick={onMenuToggle}
             aria-label="Toggle menu"
             aria-expanded={isMenuOpen}
@@ -362,7 +365,7 @@ const Header = memo<{ isScrolled: boolean; onMenuToggle: () => void; isMenuOpen:
         <div
           className={[
             "flex flex-col md:hidden text-white",
-            "backdrop-blur-2xl bg-teal-950/80 border-t border-white/10 shadow-[0_18px_40px_rgba(0,0,0,0.75)]",
+            "border-t border-emerald-100/15 bg-[linear-gradient(145deg,rgba(6,78,59,0.94),rgba(4,47,46,0.9)_55%,rgba(5,150,105,0.34))] shadow-[0_18px_40px_rgba(0,0,0,0.62)] backdrop-blur-2xl",
             "px-6 py-8 transition-all duration-300",
             isMenuOpen ? "max-h-[40rem] opacity-100 space-y-4" : "max-h-0 opacity-0 overflow-hidden",
           ].join(" ")}

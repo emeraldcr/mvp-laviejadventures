@@ -3,6 +3,7 @@
 import React, { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/app/context/LanguageContext";
+import { trackAnalyticsEvent } from "@/lib/analytics/client";
 import { translations } from "@/lib/translations";
 import type { OrderDetails } from "@/lib/types/index";
 
@@ -25,9 +26,26 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
 
   const { name, email, phone, tickets, total, date, dateIso, tourTime, tourPackage, tourSlug, tourName, packagePrice } = orderDetails;
 
+  const bookingAnalyticsMetadata = {
+    tickets,
+    date: dateIso ?? date,
+    tourTime,
+    tourPackage,
+    tourSlug,
+    tourName,
+    packagePrice,
+    amount: total,
+    currency: "USD",
+    language: lang,
+  };
+
   useEffect(() => {
     const existingScript = document.querySelector("#paypal-sdk");
     const paypalContainer = paypalRef.current;
+
+    trackAnalyticsEvent("booking_checkout_started", {
+      metadata: bookingAnalyticsMetadata,
+    });
 
     const initializeButtons = () => {
       if (!window.paypal || !paypalContainer) return;
@@ -77,6 +95,13 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
               throw new Error(reason);
             }
 
+            trackAnalyticsEvent("payment_order_created", {
+              metadata: {
+                ...bookingAnalyticsMetadata,
+                orderId: data.orderID,
+              },
+            });
+
             return data.orderID as string;
           },
           onApprove: async (data: { orderID: string }) => {
@@ -90,9 +115,27 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
 
             if (!res.ok || !output?.captureID || output?.status !== "COMPLETED") {
               console.error("PAYPAL CAPTURE FAILED:", output);
+              trackAnalyticsEvent("payment_error", {
+                metadata: {
+                  ...bookingAnalyticsMetadata,
+                  orderId: data.orderID,
+                  stage: "capture",
+                  status: output?.status ?? null,
+                  reason: output?.message ?? "capture_failed",
+                },
+              });
               alert(tr.error);
               return;
             }
+
+            trackAnalyticsEvent("payment_approved", {
+              metadata: {
+                ...bookingAnalyticsMetadata,
+                orderId: data.orderID,
+                captureId: output.captureID,
+                status: output.status,
+              },
+            });
 
             sessionStorage.removeItem("reservationOrderDetails");
             onSuccess(output);
@@ -100,6 +143,13 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
           },
           onError: (err: unknown) => {
             alert(tr.error);
+            trackAnalyticsEvent("payment_error", {
+              metadata: {
+                ...bookingAnalyticsMetadata,
+                stage: "paypal_buttons",
+                reason: err instanceof Error ? err.message : "paypal_error",
+              },
+            });
             console.error("PAYPAL ERROR:", err);
           },
         })
@@ -134,7 +184,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
         paypalContainer.innerHTML = "";
       }
     };
-  }, [date, email, lang, name, onSuccess, packagePrice, phone, router, tickets, total, tourName, tourPackage, tourSlug, tourTime, tr.error]);
+  }, [date, dateIso, email, lang, name, onSuccess, packagePrice, phone, router, tickets, total, tourName, tourPackage, tourSlug, tourTime, tr.error]);
 
   const packageName = tr.packages[tourPackage] ?? tourPackage;
 

@@ -46,7 +46,7 @@ export default function RollingRiskChart({ data }: { data: RollingRiskEntry[] })
 
   return (
     <div className="h-[300px] w-full">
-      <ResponsiveContainer>
+      <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
         <LineChart data={chartData} margin={{ top: 10, right: 60, left: 10, bottom: 50 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
           <XAxis
