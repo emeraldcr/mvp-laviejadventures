@@ -595,3 +595,339 @@ body {
     width: 100%;
   }
 }
+
+/* Admin dashboard visual system: keep this page readable regardless of app theme. */
+.admin-loading,
+.admin-login-page,
+.admin-page {
+  color: #172033;
+  background:
+    linear-gradient(180deg, rgba(20, 184, 166, 0.1), rgba(255, 255, 255, 0) 320px),
+    linear-gradient(135deg, rgba(251, 191, 36, 0.14), rgba(255, 255, 255, 0) 260px),
+    #f5f7fb;
+}
+
+.admin-page {
+  width: min(100%, 1500px);
+  padding: clamp(14px, 2.5vw, 34px);
+}
+
+.admin-loading p,
+.admin-login-card,
+.admin-hero,
+.admin-page section:not(.hidden),
+.admin-page article,
+.admin-page .rounded-xl {
+  border: 1px solid #d9e2ee;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #172033;
+  box-shadow: 0 16px 48px rgba(15, 23, 42, 0.08);
+}
+
+.admin-hero {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+  padding: clamp(18px, 3vw, 30px);
+  background:
+    linear-gradient(135deg, rgba(13, 148, 136, 0.12), rgba(255, 255, 255, 0.94) 42%),
+    #ffffff;
+}
+
+.admin-hero-copy h1 {
+  max-width: 980px;
+  color: #111827;
+  font-size: clamp(2rem, 4vw, 4rem);
+  line-height: 1;
+}
+
+.admin-hero-copy p,
+.admin-muted,
+.admin-page section > p,
+.admin-page article > p {
+  color: #536175;
+}
+
+.admin-eyebrow {
+  color: #0f766e;
+}
+
+.admin-hero-stats {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.admin-hero-stats div {
+  min-height: 96px;
+  border-color: #dbeafe;
+  background: linear-gradient(180deg, #f8fbff, #eef7f4);
+  box-shadow: none;
+}
+
+.admin-hero-stats span {
+  color: #0f766e;
+}
+
+.admin-hero-stats small {
+  color: #66758a;
+}
+
+.admin-toolbar {
+  gap: 8px;
+}
+
+.admin-login-links a,
+.admin-toolbar a,
+.admin-toolbar button,
+.admin-page button,
+.admin-primary-button {
+  border-color: #cad6e5;
+  background: #ffffff;
+  color: #172033;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+}
+
+.admin-login-links a:hover,
+.admin-toolbar a:hover,
+.admin-toolbar button:hover,
+.admin-page button:hover {
+  border-color: #14b8a6;
+  background: #ecfdf5;
+  color: #0f766e;
+  box-shadow: 0 10px 24px rgba(20, 184, 166, 0.14);
+}
+
+.admin-primary-button,
+.admin-page button[class*="bg-emerald"] {
+  border-color: #0f766e;
+  background: #0f766e;
+  color: #ffffff;
+}
+
+.admin-page button[class*="bg-blue"] {
+  border-color: #2563eb;
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.admin-page button[class*="bg-red"] {
+  border-color: #dc2626;
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.admin-page button[class*="border-zinc"] {
+  background: #ffffff;
+  color: #334155;
+}
+
+.admin-alert-error {
+  border-color: #fecaca;
+  background: #fff1f2;
+  color: #9f1239;
+}
+
+.admin-alert-success {
+  border-color: #bbf7d0;
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.admin-page section h2,
+.admin-page article h2,
+.admin-page h3 {
+  color: #172033;
+}
+
+.admin-page input,
+.admin-page select,
+.admin-page textarea,
+.admin-login-card input {
+  border-color: #cbd5e1;
+  background: #ffffff;
+  color: #172033;
+}
+
+.admin-page input::placeholder,
+.admin-page textarea::placeholder,
+.admin-login-card input::placeholder {
+  color: #8793a6;
+}
+
+.admin-page input:focus,
+.admin-page select:focus,
+.admin-page textarea:focus,
+.admin-login-card input:focus {
+  border-color: #0f766e;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.14);
+}
+
+.admin-page label,
+.admin-page th {
+  color: #475569;
+}
+
+.admin-page .max-h-96 {
+  border-color: #d9e2ee;
+  background: #ffffff;
+}
+
+.admin-page table {
+  color: #172033;
+}
+
+.admin-page thead tr {
+  background: #f1f5f9;
+}
+
+.admin-page td {
+  border-top-color: #e2e8f0;
+  color: #334155;
+}
+
+.admin-page tbody tr:hover {
+  background: #f0fdfa;
+}
+
+.admin-page ul {
+  color: #334155;
+}
+
+.admin-page li {
+  border-color: #d9e2ee !important;
+  background: #ffffff !important;
+  color: #334155;
+}
+
+.admin-page .bg-white,
+.admin-page .dark\:bg-zinc-900,
+.admin-page .bg-zinc-50,
+.admin-page .dark\:bg-zinc-800 {
+  background: #ffffff !important;
+}
+
+.admin-page .text-white,
+.admin-page .text-zinc-900,
+.admin-page .dark\:text-zinc-50,
+.admin-page .text-zinc-700,
+.admin-page .dark\:text-zinc-200 {
+  color: #172033 !important;
+}
+
+.admin-page .text-zinc-600,
+.admin-page .text-zinc-500,
+.admin-page .text-zinc-400,
+.admin-page .dark\:text-zinc-300 {
+  color: #64748b !important;
+}
+
+.admin-page .bg-amber-50\/80,
+.admin-page .dark\:bg-amber-950\/30 {
+  background: #fffbeb !important;
+}
+
+.admin-page .text-amber-900,
+.admin-page .dark\:text-amber-200 {
+  color: #92400e !important;
+}
+
+.admin-page .border-amber-300,
+.admin-page .dark\:border-amber-700 {
+  border-color: #fcd34d !important;
+}
+
+.admin-page .bg-amber-50\/70,
+.admin-page .dark\:bg-amber-950\/20 {
+  background: #fffbeb !important;
+}
+
+.admin-page .text-amber-950,
+.admin-page .text-amber-900,
+.admin-page .dark\:text-amber-100 {
+  color: #78350f !important;
+}
+
+.admin-page .text-amber-800,
+.admin-page .dark\:text-amber-200 {
+  color: #92400e !important;
+}
+
+.admin-page .bg-zinc-200,
+.admin-page .dark\:bg-zinc-700 {
+  background: #e2e8f0 !important;
+}
+
+.admin-page .bg-emerald-500 {
+  background: #0f766e !important;
+}
+
+.admin-page .bg-amber-500 {
+  background: #f59e0b !important;
+}
+
+.admin-page .rounded-full.bg-white,
+.admin-page .dark\:bg-zinc-900 {
+  background: #f8fafc !important;
+}
+
+.admin-page [class*="max-w-52"],
+.admin-page .truncate {
+  min-width: 0;
+}
+
+.admin-page button[class*="bg-emerald"],
+.admin-page button[class*="bg-blue"],
+.admin-page button[class*="bg-red"],
+.admin-page button.text-white,
+.admin-primary-button {
+  color: #ffffff !important;
+}
+
+@media (min-width: 1180px) {
+  .admin-hero {
+    grid-template-columns: minmax(0, 1fr) minmax(520px, 0.8fr);
+  }
+}
+
+@media (max-width: 980px) {
+  .admin-hero-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-page table {
+    min-width: 820px;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-page,
+  .admin-login-page {
+    padding: 12px;
+  }
+
+  .admin-hero-stats,
+  .admin-login-links {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-hero-copy h1 {
+    font-size: clamp(1.85rem, 11vw, 2.55rem);
+  }
+
+  .admin-page section:not(.hidden),
+  .admin-page article,
+  .admin-hero,
+  .admin-login-card {
+    padding: 16px;
+  }
+
+  .admin-page .grid {
+    min-width: 0;
+  }
+
+  .admin-page button,
+  .admin-toolbar a,
+  .admin-toolbar button {
+    width: 100%;
+  }
+}
