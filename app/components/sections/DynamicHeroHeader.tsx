@@ -19,6 +19,7 @@ import { useInterval } from "@/app/hooks/useInterval";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/lib/translations";
 import { useSession, signOut } from "next-auth/react";
+import { principalContent } from "@/lib/constants/principal";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface NavLinkItem {
@@ -190,6 +191,7 @@ LangToggle.displayName = "LangToggle";
 const AuthNav = memo<{ onMobileClose?: () => void; isMobile?: boolean }>(({ onMobileClose, isMobile }) => {
   const { data: session, status } = useSession();
   const { lang } = useLanguage();
+  const copy = principalContent[lang].header;
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   if (status === "loading") {
@@ -214,13 +216,13 @@ const AuthNav = memo<{ onMobileClose?: () => void; isMobile?: boolean }>(({ onMo
           <span className="text-white font-medium text-sm truncate">{name}</span>
         </div>
         <Link href="/dashboard" onClick={onMobileClose} className="flex items-center gap-2 text-white/80 hover:text-white text-sm font-semibold">
-          <LayoutDashboard size={15} /> Dashboard
+          <LayoutDashboard size={15} /> {copy.dashboard}
         </Link>
         <button
           onClick={() => { signOut({ callbackUrl: "/" }); onMobileClose?.(); }}
           className="flex items-center gap-2 text-white/80 hover:text-white text-sm font-semibold"
         >
-          <LogOut size={15} /> {lang === "es" ? "Cerrar sesión" : "Log Out"}
+          <LogOut size={15} /> {copy.logout}
         </button>
       </div>
     );
@@ -231,7 +233,7 @@ const AuthNav = memo<{ onMobileClose?: () => void; isMobile?: boolean }>(({ onMo
       <button
         onClick={() => setDropdownOpen((p) => !p)}
         className="emerald-wave-button flex items-center gap-2 rounded-full border border-emerald-100/30 bg-white/10 px-3 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-100/55 hover:bg-emerald-200/15"
-        aria-label="User menu"
+        aria-label={copy.userMenuAria}
       >
         {image ? (
           <Image src={image} alt={name || "User"} width={28} height={28} className="rounded-full" referrerPolicy="no-referrer" />
@@ -257,13 +259,13 @@ const AuthNav = memo<{ onMobileClose?: () => void; isMobile?: boolean }>(({ onMo
               onClick={() => setDropdownOpen(false)}
               className="flex items-center gap-2.5 px-4 py-3 text-sm text-white/80 hover:text-white hover:bg-white/10 transition-colors"
             >
-              <LayoutDashboard size={15} /> Dashboard
+              <LayoutDashboard size={15} /> {copy.dashboard}
             </Link>
             <button
               onClick={() => { setDropdownOpen(false); signOut({ callbackUrl: "/" }); }}
               className="flex w-full items-center gap-2.5 px-4 py-3 text-sm text-white/80 hover:text-white hover:bg-white/10 transition-colors border-t border-white/10"
             >
-              <LogOut size={15} /> {lang === "es" ? "Cerrar sesión" : "Log Out"}
+              <LogOut size={15} /> {copy.logout}
             </button>
           </div>
         </>
@@ -280,6 +282,7 @@ const Header = memo<{ isScrolled: boolean; onMenuToggle: () => void; isMenuOpen:
     const textSize = isScrolled ? TEXT_SIZE.scrolled : TEXT_SIZE.default;
     const { lang, toggle } = useLanguage();
     const tr = translations[lang].nav;
+    const copy = principalContent[lang].header;
 
     const navLinks: NavLinkItem[] = [
       { href: "/info", label: tr.info },
@@ -288,7 +291,7 @@ const Header = memo<{ isScrolled: boolean; onMenuToggle: () => void; isMenuOpen:
      
       { href: "/galeria", label: tr.gallery },
      
-      { href: "/tiempo", label: lang === "es" ? "Pronóstico" : "Forecast" },
+      { href: "/tiempo", label: copy.forecast },
      
     ];
 
@@ -297,7 +300,7 @@ const Header = memo<{ isScrolled: boolean; onMenuToggle: () => void; isMenuOpen:
 
     const navGroups: NavGroup[] = [
       {
-        label: lang === "es" ? "Explorar" : "Explore",
+        label: copy.exploreGroup,
         links: navLinks,
       },
     ];
@@ -345,7 +348,7 @@ const Header = memo<{ isScrolled: boolean; onMenuToggle: () => void; isMenuOpen:
           <button
             className="emerald-wave-button rounded-full border border-emerald-100/25 bg-white/10 p-2 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-xl transition-all duration-300 hover:bg-emerald-200/15 md:hidden"
             onClick={onMenuToggle}
-            aria-label="Toggle menu"
+            aria-label={copy.toggleMenuAria}
             aria-expanded={isMenuOpen}
           >
             {isMenuOpen ? <X size={32} /> : <Menu size={32} />}
@@ -395,6 +398,7 @@ interface HeroCarouselProps {
 export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "100%" }) => {
   const { data: carouselImages = [], error, isLoading } = useSWR<string[]>("/api/images", fetcher);
   const { lang } = useLanguage();
+  const copy = principalContent[lang].hero;
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -445,7 +449,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "1
   if (error)
     return (
       <div className="flex items-center justify-center bg-zinc-950 text-red-400 text-sm" style={{ height }}>
-        Error loading images
+        {copy.errorLoadingImages}
       </div>
     );
 
@@ -503,14 +507,14 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "1
       <button
         onClick={goPrev}
         className="absolute left-3 md:left-6 top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-black/30 border border-white/15 backdrop-blur-sm flex items-center justify-center text-white hover:bg-teal-500/30 hover:border-teal-400/50 transition-all duration-200"
-        aria-label="Previous image"
+        aria-label={copy.previousImageAria}
       >
         <ChevronLeft size={18} />
       </button>
       <button
         onClick={goNext}
         className="absolute right-3 md:right-6 top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-black/30 border border-white/15 backdrop-blur-sm flex items-center justify-center text-white hover:bg-teal-500/30 hover:border-teal-400/50 transition-all duration-200"
-        aria-label="Next image"
+        aria-label={copy.nextImageAria}
       >
         <ChevronRight size={18} />
       </button>
@@ -526,25 +530,21 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "1
             <div className="inline-flex items-center gap-2 mb-6 px-4 py-1.5 rounded-full border border-white/20 bg-white/8 backdrop-blur-md">
               <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" />
               <span className="text-[11px] font-bold text-white/80 uppercase tracking-[0.2em]">
-                San Carlos · Costa Rica
+                {copy.locationBadge}
               </span>
             </div>
 
             {/* Title */}
             <h1 className="max-w-5xl text-balance text-4xl sm:text-6xl md:text-7xl lg:text-[5.8rem] font-black mb-4 text-white leading-[0.95] tracking-tight drop-shadow-2xl">
-              {lang === "es" ? "Aventuras en San Carlos, Costa Rica" : "Adventures in San Carlos, Costa Rica"}
+              {copy.title}
             </h1>
 
             <h2 className="max-w-4xl text-balance text-lg sm:text-2xl md:text-3xl font-semibold text-white/95 leading-tight mb-5 drop-shadow-xl">
-              {lang === "es"
-                ? "Cañones, cascadas y pozas secretas en el Parque Nacional Juan Castro Blanco"
-                : "Canyons, waterfalls, and hidden pools in Juan Castro Blanco National Water Park"}
+              {copy.subtitle}
             </h2>
 
             <p className="mb-9 max-w-3xl text-sm sm:text-lg md:text-xl text-white/85 leading-relaxed">
-              {lang === "es"
-                ? "Descubre 6 experiencias únicas con guías locales. Desde el icónico Ciudad Esmeralda hasta pozas cristalinas, selva nublada y cañonismo extremo."
-                : "Discover 6 unique experiences with local guides, from iconic Ciudad Esmeralda to crystal-clear pools, cloud forest, and extreme canyoning."}
+              {copy.description}
             </p>
 
             {/* CTA */}
@@ -553,7 +553,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "1
                 href="#tours"
                 className="group inline-flex w-full sm:w-auto items-center justify-center gap-3 px-7 py-3.5 rounded-full bg-teal-500 hover:bg-teal-400 text-white font-bold text-base shadow-[0_0_40px_rgba(20,184,166,0.4)] hover:shadow-[0_0_55px_rgba(20,184,166,0.6)] transition-all duration-300"
               >
-                <span>{lang === "es" ? "Explorar Todas las Aventuras" : "Explore All Adventures"}</span>
+                <span>{copy.exploreCta}</span>
                 <span className="inline-block group-hover:translate-x-1 transition-transform duration-200">→</span>
               </a>
 
@@ -561,7 +561,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "1
                 href="#booking"
                 className="inline-flex w-full sm:w-auto items-center justify-center px-7 py-3.5 rounded-full border border-white/70 bg-white/10 hover:bg-white/20 text-white font-semibold text-base backdrop-blur-sm transition-colors duration-300"
               >
-                {lang === "es" ? "Ver Fechas Disponibles" : "View Available Dates"}
+                {copy.datesCta}
               </a>
             </div>
           </>
@@ -580,7 +580,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "1
                     ? "w-7 h-2 bg-teal-400"
                     : "w-2 h-2 bg-white/30 hover:bg-white/55"
                 }`}
-                aria-label={`Go to slide ${idx + 1}`}
+                aria-label={copy.goToSlideAria.replace("{slide}", String(idx + 1))}
               />
             ))}
           </div>
@@ -594,7 +594,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "1
           <a
             href="#tours"
             className="mt-1 p-2 rounded-full bg-white/8 hover:bg-white/18 transition-colors animate-bounce"
-            aria-label="Scroll to tours"
+            aria-label={copy.scrollToToursAria}
           >
             <ChevronDown size={22} className="text-white/60" />
           </a>

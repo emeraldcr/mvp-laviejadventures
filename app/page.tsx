@@ -12,33 +12,11 @@ import { useLanguage } from "@/app/context/LanguageContext";
 import { useSession } from "next-auth/react";
 import { DEFAULT_BOOKABLE_TOUR, useReservationData } from "@/app/hooks/useReservationData";
 import TourSelectionCards from "@/app/components/tours/TourSelectionCards";
+import { principalContent } from "@/lib/constants/principal";
 
 function ConversionSection() {
   const { lang } = useLanguage();
-
-  const faq = [
-    {
-      q: lang === "es" ? "Puedo cambiar mi fecha despues de reservar?" : "Can I change my date after booking?",
-      a:
-        lang === "es"
-          ? "Si, nuestro equipo te ayuda a reprogramar segun disponibilidad para que no pierdas tu experiencia."
-          : "Yes, our team helps you reschedule based on availability so you never miss the experience.",
-    },
-    {
-      q: lang === "es" ? "Cual tour es mejor para principiantes?" : "Which tour is best for beginners?",
-      a:
-        lang === "es"
-          ? "Usa el boton AI en la reserva y te recomendara la opcion ideal por duracion e intensidad."
-          : "Use the AI button in booking and it will suggest the best option by duration and intensity.",
-    },
-    {
-      q: lang === "es" ? "Que pasa si llueve?" : "What if it rains?",
-      a:
-        lang === "es"
-          ? "Monitoreamos el clima constantemente y te notificamos alternativas seguras con tiempo."
-          : "We monitor weather constantly and notify you in advance with safe alternatives.",
-    },
-  ];
+  const copy = principalContent[lang].conversion;
 
   return (
     <section className="relative bg-black pb-12 pt-8 md:pb-16 md:pt-10">
@@ -49,10 +27,10 @@ function ConversionSection() {
           viewport={{ once: true }}
           className="grid grid-cols-1 gap-4 md:grid-cols-3"
         >
-          {faq.map((item) => (
-            <article key={item.q} className="rounded-2xl border border-white/10 bg-zinc-900/55 p-5">
-              <h4 className="mb-2 text-sm font-semibold text-white">{item.q}</h4>
-              <p className="text-sm leading-relaxed text-zinc-300">{item.a}</p>
+          {copy.faqs.map((item) => (
+            <article key={item.question} className="rounded-2xl border border-white/10 bg-zinc-900/55 p-5">
+              <h4 className="mb-2 text-sm font-semibold text-white">{item.question}</h4>
+              <p className="text-sm leading-relaxed text-zinc-300">{item.answer}</p>
             </article>
           ))}
         </motion.div>
@@ -64,16 +42,17 @@ function ConversionSection() {
 function ToursImmersionSection({ onSelectTour }: { onSelectTour: (slug: string) => void }) {
   const { lang } = useLanguage();
   const { tours } = useReservationData();
+  const copy = principalContent[lang].tours;
 
   return (
     <section id="tours" className="relative bg-black pb-10 pt-4 md:pb-14">
       <div className="container mx-auto px-4 md:px-8">
         <div className="mb-8 text-center">
           <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.28em] text-cyan-300">
-            {lang === "es" ? "Explora primero" : "Explore first"}
+            {copy.eyebrow}
           </p>
           <h2 className="text-3xl font-black text-white md:text-5xl">
-            {lang === "es" ? "Elige tu aventura ideal" : "Choose your ideal adventure"}
+            {copy.title}
           </h2>
         </div>
 
@@ -86,12 +65,13 @@ function ToursImmersionSection({ onSelectTour }: { onSelectTour: (slug: string) 
 function BookingSection({ selectedTourSlug }: { selectedTourSlug: string }) {
   const { lang } = useLanguage();
   const { status } = useSession();
+  const copy = principalContent[lang].booking;
 
   if (status === "loading") {
     return (
       <div className="relative z-10 container mx-auto px-4 py-16 text-center md:px-8 md:py-28">
         <div className="text-lg text-zinc-400">
-          {lang === "es" ? "Preparando tu panel de reserva..." : "Preparing your booking panel..."}
+          {copy.loading}
         </div>
       </div>
     );
@@ -112,15 +92,13 @@ function BookingSection({ selectedTourSlug }: { selectedTourSlug: string }) {
           className="mb-12 text-center"
         >
           <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.28em] text-teal-400">
-            {lang === "es" ? "Crea una nueva reserva" : "Make a new reservation"}
+            {copy.eyebrow}
           </p>
           <h2 className="mb-4 text-3xl font-black leading-tight text-white sm:text-4xl md:text-5xl">
-            {lang === "es" ? "Tu proximo tour empieza aqui" : "Your next tour starts here"}
+            {copy.title}
           </h2>
           <p className="mx-auto max-w-xl text-base leading-relaxed text-zinc-400 md:text-lg">
-            {lang === "es"
-              ? "Elige la fecha, completa tus detalles y si tienes dudas usa el boton de AI para resolver todo al instante."
-              : "Pick your date, complete your details, and use the AI button whenever you need instant help."}
+            {copy.description}
           </p>
         </motion.div>
 
@@ -134,7 +112,7 @@ function BookingSection({ selectedTourSlug }: { selectedTourSlug: string }) {
           <div className="flex items-center gap-2 rounded-full border border-teal-500/25 bg-teal-500/12 px-4 py-2 shadow-[0_0_18px_rgba(20,184,166,0.12)]">
             <CalendarDays size={13} className="text-teal-400" />
             <span className="text-[11px] font-bold uppercase tracking-widest text-teal-300">
-              {lang === "es" ? "Paso 1 - Fecha" : "Step 1 - Date"}
+              {copy.steps.date}
             </span>
           </div>
           <div className="flex items-center gap-1">
@@ -145,7 +123,7 @@ function BookingSection({ selectedTourSlug }: { selectedTourSlug: string }) {
           <div className="flex items-center gap-2 rounded-full border border-zinc-700/60 bg-zinc-800/50 px-4 py-2">
             <ClipboardList size={13} className="text-zinc-500" />
             <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">
-              {lang === "es" ? "Paso 2 - Detalles" : "Step 2 - Details"}
+              {copy.steps.details}
             </span>
           </div>
         </motion.div>
@@ -176,12 +154,20 @@ function BookingSection({ selectedTourSlug }: { selectedTourSlug: string }) {
 
 export default function Home(): JSX.Element {
   const [selectedTourSlug, setSelectedTourSlug] = useState(DEFAULT_BOOKABLE_TOUR.slug);
+  const { lang } = useLanguage();
+  const copy = principalContent[lang].errors;
 
   useEffect(() => {
     const requestedTourSlug = new URLSearchParams(window.location.search).get("tour")?.trim();
+    let frameId: number | undefined;
+
     if (requestedTourSlug) {
-      setSelectedTourSlug(requestedTourSlug);
+      frameId = window.requestAnimationFrame(() => setSelectedTourSlug(requestedTourSlug));
     }
+
+    return () => {
+      if (frameId) window.cancelAnimationFrame(frameId);
+    };
   }, []);
 
   const handleSelectTour = (slug: string) => {
@@ -194,7 +180,7 @@ export default function Home(): JSX.Element {
     <ErrorBoundary
       fallback={
         <div className="flex h-screen items-center justify-center bg-black text-xl text-red-600">
-          Critical System Failure: Cannot load the booking engine.
+          {copy.criticalFallback}
         </div>
       }
     >

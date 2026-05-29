@@ -6,6 +6,8 @@ import Image from "next/image";
 import { useInterval } from "@/app/hooks/useInterval";
 import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
+import { useLanguage } from "@/app/context/LanguageContext";
+import { principalContent } from "@/lib/constants/principal";
 
 // New: overlay prop to allow custom content (text or an image) and height prop
 interface HeroCarouselProps {
@@ -14,6 +16,9 @@ interface HeroCarouselProps {
 }
 
 export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "50vh" }) => {
+  const { lang } = useLanguage();
+  const copy = principalContent[lang].hero;
+
   // --- Data Fetching ---
   const {
     data: carouselImages = [],
@@ -67,9 +72,9 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "5
     return () => window.removeEventListener("scroll", update);
   }, []);
 
-  if (error) return <div className="text-red-500 p-8">Error loading images: {error.message}</div>;
+  if (error) return <div className="text-red-500 p-8">{copy.errorLoadingImages}: {error.message}</div>;
   if (isLoading || carouselImages.length === 0)
-    return <div className="h-[50vh] flex items-center justify-center">Loading...</div>;
+    return <div className="h-[50vh] flex items-center justify-center">{copy.loadingImages}</div>;
 
   return (
     <section className="relative w-full" style={{ height }}>
@@ -106,10 +111,10 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "5
         ) : (
           <>
             <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black mb-6 text-white drop-shadow-2xl">
-              Ciudad Esmeralda
+              {copy.title}
             </h1>
             <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-light text-white max-w-3xl drop-shadow-xl">
-              Selecciona tu fecha para <span className="font-semibold">vivir la aventura</span>.
+              {copy.subtitle}
             </p>
           </>
         )}
@@ -118,7 +123,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "5
         <a
           href="#calendar"
           className="absolute bottom-12 animate-bounce p-3 rounded-full bg-white/20 hover:bg-white/40 transition"
-          aria-label="Scroll down to main content"
+          aria-label={copy.scrollToMainAria}
         >
           <ChevronDown size={32} className="text-white" />
         </a>
