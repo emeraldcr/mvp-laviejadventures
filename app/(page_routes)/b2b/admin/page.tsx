@@ -74,6 +74,11 @@ type BookingAnalyticsEvent = {
   _id: string;
   event:
     | "booking_step"
+    | "booking_step_completed"
+    | "booking_step_blocked"
+    | "booking_step_abandoned"
+    | "booking_field_blur"
+    | "booking_selection_changed"
     | "booking_submitted"
     | "booking_checkout_started"
     | "payment_order_created"
@@ -133,6 +138,10 @@ type ReservationIntent = {
 type BookingAnalytics = {
   totalEvents: number;
   bookingSteps: number;
+  blockedSteps: number;
+  abandonedSteps: number;
+  fieldIssuesTotal: number;
+  selectionChanges: number;
   bookingSubmissions: number;
   checkoutStarts: number;
   paymentOrders: number;
@@ -151,6 +160,12 @@ type BookingAnalytics = {
   topPackages: AnalyticsCount[];
   deviceBreakdown: AnalyticsCount[];
   browserBreakdown: AnalyticsCount[];
+  frictionPoints: AnalyticsCount[];
+  blockedActions: AnalyticsCount[];
+  stepDropoffs: AnalyticsCount[];
+  fieldIssues: AnalyticsCount[];
+  averageStepSeconds: AnalyticsCount[];
+  selectionBreakdown: AnalyticsCount[];
   recentIntents: ReservationIntent[];
   recentEvents: BookingAnalyticsEvent[];
 };
@@ -190,6 +205,10 @@ const ACCESS_LINKS = [
 const EMPTY_BOOKING_ANALYTICS: BookingAnalytics = {
   totalEvents: 0,
   bookingSteps: 0,
+  blockedSteps: 0,
+  abandonedSteps: 0,
+  fieldIssuesTotal: 0,
+  selectionChanges: 0,
   bookingSubmissions: 0,
   checkoutStarts: 0,
   paymentOrders: 0,
@@ -208,12 +227,23 @@ const EMPTY_BOOKING_ANALYTICS: BookingAnalytics = {
   topPackages: [],
   deviceBreakdown: [],
   browserBreakdown: [],
+  frictionPoints: [],
+  blockedActions: [],
+  stepDropoffs: [],
+  fieldIssues: [],
+  averageStepSeconds: [],
+  selectionBreakdown: [],
   recentIntents: [],
   recentEvents: [],
 };
 
 const EVENT_LABELS: Record<BookingAnalyticsEvent["event"], string> = {
   booking_step: "Paso",
+  booking_step_completed: "Paso completado",
+  booking_step_blocked: "Bloqueo",
+  booking_step_abandoned: "Salida de paso",
+  booking_field_blur: "Campo revisado",
+  booking_selection_changed: "Seleccion",
   booking_submitted: "Reserva enviada",
   booking_checkout_started: "Checkout",
   payment_order_created: "Orden PayPal",
@@ -228,6 +258,29 @@ function formatMoney(value: number, currency = "USD") {
     currency,
     maximumFractionDigits: currency === "CRC" ? 0 : 2,
   }).format(value);
+}
+
+function formatAnalyticsLabel(label: string) {
+  const labels: Record<string, string> = {
+    tour_time: "Hora del tour",
+    tour_package: "Paquete",
+    tour: "Tour",
+    tickets: "Tickets",
+    name: "Nombre",
+    email: "Email",
+    phone: "Telefono",
+    terms: "Terminos",
+    available_package: "Paquete no disponible",
+    next_button: "Boton siguiente",
+    step_chip: "Click en pasos",
+    checkout_button: "Boton checkout",
+    disabled_package: "Paquete deshabilitado",
+    schedule: "Paso 1: fecha/paquete",
+    traveler_details: "Paso 2: datos",
+    review: "Paso 3: revision",
+  };
+
+  return labels[label] ?? label.replaceAll("_", " ");
 }
 
 export default function B2BAdminPage() {
@@ -276,6 +329,10 @@ export default function B2BAdminPage() {
   const maxFunnelCount = useMemo(
     () => Math.max(1, ...bookingAnalytics.funnel.map((item) => item.count)),
     [bookingAnalytics.funnel],
+  );
+  const maxFrictionCount = useMemo(
+    () => Math.max(1, ...bookingAnalytics.frictionPoints.map((item) => item.count)),
+    [bookingAnalytics.frictionPoints],
   );
   const uniqueHeroSlogans = useMemo(() => {
     const seen = new Set<string>();
@@ -664,7 +721,61 @@ export default function B2BAdminPage() {
           <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-800">
             <p className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-300"><DollarSign className="h-3.5 w-3.5" />Revenue web</p>
             <p className="text-2xl font-semibold">{formatMoney(bookingAnalytics.reservationRevenue || bookingAnalytics.completedRevenue, "USD")}</p>
-            <p className="text-xs text-zinc-500">{bookingAnalytics.completedBookings} finales por analytics</p>
+            <p className="text-xs text-zinc-500">{bookingAnalytics.completedBookings} pagos con total</p>
+          </div>
+        </div>
+
+        <div className="mb-5 grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
+          <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-4 dark:border-amber-800 dark:bg-amber-950/20">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h3 className="flex items-center gap-2 text-sm font-semibold text-amber-900 dark:text-amber-100">
+                <AlertTriangle className="h-4 w-4" />Radar de friccion
+              </h3>
+              <span className="text-xs text-amber-800 dark:text-amber-200">
+                {bookingAnalytics.blockedSteps} bloqueos · {bookingAnalytics.fieldIssuesTotal} campos invalidos
+              </span>
+            </div>
+            <div className="space-y-3">
+              {bookingAnalytics.frictionPoints.map((item) => (
+                <div key={item.label}>
+                  <div className="mb-1 flex items-center justify-between text-xs">
+                    <span className="font-medium text-amber-950 dark:text-amber-100">{formatAnalyticsLabel(item.label)}</span>
+                    <span className="tabular-nums text-amber-800 dark:text-amber-200">{item.count}</span>
+                  </div>
+                  <div className="h-2 rounded-full bg-amber-200/70 dark:bg-amber-900">
+                    <div className="h-2 rounded-full bg-amber-500" style={{ width: `${Math.max(5, (item.count / maxFrictionCount) * 100)}%` }} />
+                  </div>
+                </div>
+              ))}
+              {bookingAnalytics.frictionPoints.length === 0 && <p className="text-sm text-amber-800 dark:text-amber-200">Aun no hay friccion registrada con los eventos nuevos.</p>}
+            </div>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
+            <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800">
+              <h3 className="mb-3 text-sm font-semibold">Donde se bloquean</h3>
+              <ul className="space-y-2 text-sm">
+                {bookingAnalytics.blockedActions.map((item) => (
+                  <li key={item.label} className="flex items-center justify-between gap-3">
+                    <span>{formatAnalyticsLabel(item.label)}</span>
+                    <span className="font-semibold">{item.count}</span>
+                  </li>
+                ))}
+                {bookingAnalytics.blockedActions.length === 0 && <li className="text-zinc-500">Sin bloqueos todavia.</li>}
+              </ul>
+            </div>
+            <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800">
+              <h3 className="mb-3 text-sm font-semibold">Campos con errores</h3>
+              <ul className="space-y-2 text-sm">
+                {bookingAnalytics.fieldIssues.map((item) => (
+                  <li key={item.label} className="flex items-center justify-between gap-3">
+                    <span>{formatAnalyticsLabel(item.label)}</span>
+                    <span className="font-semibold">{item.count}</span>
+                  </li>
+                ))}
+                {bookingAnalytics.fieldIssues.length === 0 && <li className="text-zinc-500">Sin errores de campos.</li>}
+              </ul>
+            </div>
           </div>
         </div>
 
@@ -688,7 +799,7 @@ export default function B2BAdminPage() {
 
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
             <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800">
-              <h3 className="mb-3 text-sm font-semibold">Tours con mas intencion</h3>
+              <h3 className="mb-3 text-sm font-semibold">Tours pagados</h3>
               <ul className="space-y-2 text-sm">
                 {bookingAnalytics.topTours.map((item) => (
                   <li key={item.label} className="flex items-center justify-between gap-3">
@@ -700,7 +811,7 @@ export default function B2BAdminPage() {
               </ul>
             </div>
             <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800">
-              <h3 className="mb-3 text-sm font-semibold">Paquetes y dispositivos</h3>
+              <h3 className="mb-3 text-sm font-semibold">Paquetes pagados y dispositivos</h3>
               <div className="grid gap-3 sm:grid-cols-2">
                 <ul className="space-y-2 text-sm">
                   {bookingAnalytics.topPackages.map((item) => (
@@ -716,6 +827,47 @@ export default function B2BAdminPage() {
                 </ul>
               </div>
             </div>
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-4 lg:grid-cols-3">
+          <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800">
+            <h3 className="mb-3 text-sm font-semibold">Salidas por paso</h3>
+            <ul className="space-y-2 text-sm">
+              {bookingAnalytics.stepDropoffs.map((item) => (
+                <li key={item.label} className="flex items-center justify-between gap-3">
+                  <span>{formatAnalyticsLabel(item.label)}</span>
+                  <span className="font-semibold">{item.count}</span>
+                </li>
+              ))}
+              {bookingAnalytics.stepDropoffs.length === 0 && <li className="text-zinc-500">Sin salidas incompletas.</li>}
+            </ul>
+          </div>
+
+          <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800">
+            <h3 className="mb-3 text-sm font-semibold">Tiempo promedio por paso</h3>
+            <ul className="space-y-2 text-sm">
+              {bookingAnalytics.averageStepSeconds.map((item) => (
+                <li key={item.label} className="flex items-center justify-between gap-3">
+                  <span>{formatAnalyticsLabel(item.label)}</span>
+                  <span className="font-semibold">{item.count}s</span>
+                </li>
+              ))}
+              {bookingAnalytics.averageStepSeconds.length === 0 && <li className="text-zinc-500">Sin tiempos todavia.</li>}
+            </ul>
+          </div>
+
+          <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800">
+            <h3 className="mb-3 text-sm font-semibold">Selecciones mas usadas</h3>
+            <ul className="space-y-2 text-sm">
+              {bookingAnalytics.selectionBreakdown.map((item) => (
+                <li key={item.label} className="flex items-center justify-between gap-3">
+                  <span className="truncate">{formatAnalyticsLabel(item.label)}</span>
+                  <span className="font-semibold">{item.count}</span>
+                </li>
+              ))}
+              {bookingAnalytics.selectionBreakdown.length === 0 && <li className="text-zinc-500">Sin selecciones nuevas.</li>}
+            </ul>
           </div>
         </div>
 

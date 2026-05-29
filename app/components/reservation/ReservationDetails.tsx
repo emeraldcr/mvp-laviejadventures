@@ -33,6 +33,7 @@ const TIME_SLOTS = [
 ];
 
 export type TourTime = "08:00" | "09:00" | "10:00";
+type BookingStepId = 1 | 2 | 3;
 
 // ---------------------- PACKAGES ----------------------
 export type TourPackage = "basic" | "full-day" | "private";
@@ -158,6 +159,7 @@ const TravelerInputField = ({
   type = "text",
   value,
   onChange,
+  onBlur,
   placeholder,
   isValid,
   validationMessage,
@@ -169,6 +171,7 @@ const TravelerInputField = ({
   type?: string;
   value: string;
   onChange: (value: string) => void;
+  onBlur?: () => void;
   placeholder: string;
   isValid: boolean;
   validationMessage: string;
@@ -188,6 +191,7 @@ const TravelerInputField = ({
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        onBlur={onBlur}
         className={`w-full p-3 rounded-lg border focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-zinc-800 ${
           showError
             ? "border-red-500"
@@ -206,6 +210,7 @@ const TravelerPhoneInput = ({
   phoneNumber,
   setPhoneCode,
   setPhoneNumber,
+  onBlur,
   isValid,
   label,
   placeholder,
@@ -215,6 +220,7 @@ const TravelerPhoneInput = ({
   phoneNumber: string;
   setPhoneCode: (code: string) => void;
   setPhoneNumber: (number: string) => void;
+  onBlur?: () => void;
   isValid: boolean;
   label: string;
   placeholder: string;
@@ -246,6 +252,7 @@ const TravelerPhoneInput = ({
           type="tel"
           value={phoneNumber}
           onChange={(e) => setPhoneNumber(e.target.value)}
+          onBlur={onBlur}
           className={`w-full p-3 rounded-lg border focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-zinc-800 ${
             showError ? "border-red-500" : "border-zinc-300 dark:border-zinc-700"
           }`}
@@ -309,9 +316,12 @@ export default function ReservationDetails({
   const isWeekend = reservationDate.getDay() === 0 || reservationDate.getDay() === 6;
   const [tourTime, setTourTime] = useState<TourTime | null>(null);
   const [tourPackage, setTourPackage] = useState<TourPackage | null>(null);
-  const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
+  const [currentStep, setCurrentStep] = useState<BookingStepId>(1);
   const [manualSelectedTourSlug, setManualSelectedTourSlug] = useState<string | null>(null);
   const [showTourModal, setShowTourModal] = useState(false);
+  const currentStepRef = useRef<BookingStepId>(1);
+  const stepEnteredAtRef = useRef(0);
+  const completedStepsRef = useRef<Set<BookingStepId>>(new Set());
 
   const selectedTourSlug = resolveSelectedTourSlug(tours, manualSelectedTourSlug, initialSelectedTourSlug);
   const selectedTour = tours.find((tour) => tour.slug === selectedTourSlug) ?? tours[0] ?? null;
@@ -595,13 +605,78 @@ export default function ReservationDetails({
     { id: 3 as const, label: tr.steps.review },
   ];
 
-  useEffect(() => {
-    const stepLabels: Record<1 | 2 | 3, string> = {
-      1: "schedule",
-      2: "traveler_details",
-      3: "review",
-    };
+  const stepLabels = useMemo<Record<BookingStepId, string>>(() => ({
+    1: "schedule",
+    2: "traveler_details",
+    3: "review",
+  }), []);
 
+  useEffect(() => {
+    if (stepEnteredAtRef.current === 0) {
+      stepEnteredAtRef.current = Date.now();
+    }
+  }, []);
+
+  const missingStep1Keys = useMemo(() => {
+    const missing: string[] = [];
+
+    if (!tourTime) missing.push("tour_time");
+    if (!effectiveTourPackage) missing.push("tour_package");
+    if (!selectedTour) missing.push("tour");
+    if (!isTicketsValid) missing.push("tickets");
+
+    return missing;
+  }, [tourTime, effectiveTourPackage, isTicketsValid, selectedTour]);
+
+  const missingStep2Keys = useMemo(() => {
+    const missing: string[] = [];
+
+    if (!validation.isNameValid) missing.push("name");
+    if (!validation.isEmailValid) missing.push("email");
+    if (!validation.isPhoneNumberValid) missing.push("phone");
+
+    return missing;
+  }, [validation.isNameValid, validation.isEmailValid, validation.isPhoneNumberValid]);
+
+  const getMissingKeysForStep = useCallback((step: BookingStepId) => {
+    if (step === 1) return missingStep1Keys;
+    if (step === 2) return missingStep2Keys;
+    return validation.isAgreeTermsValid ? [] : ["terms"];
+  }, [missingStep1Keys, missingStep2Keys, validation.isAgreeTermsValid]);
+
+  const getAnalyticsBookingSnapshot = useCallback(() => ({
+    hasPreselectedTour,
+    selectedTourSlug: selectedTour?.slug ?? null,
+    selectedTourName,
+    selectedDate,
+    currentMonth,
+    currentYear,
+    tickets,
+    slots,
+    hasSelectedTime: Boolean(tourTime),
+    selectedTime: tourTime,
+    hasSelectedPackage: Boolean(effectiveTourPackage),
+    selectedPackage: effectiveTourPackage,
+    subtotal: subtotalRaw,
+    taxes: taxesRaw,
+    totalWithTaxes,
+  }), [
+    hasPreselectedTour,
+    selectedTour?.slug,
+    selectedTourName,
+    selectedDate,
+    currentMonth,
+    currentYear,
+    tickets,
+    slots,
+    tourTime,
+    effectiveTourPackage,
+    subtotalRaw,
+    taxesRaw,
+    totalWithTaxes,
+  ]);
+
+  useEffect(() => {
     trackAnalyticsEvent("booking_step", {
       metadata: {
         step: currentStep,
@@ -613,23 +688,10 @@ export default function ReservationDetails({
           formReadyToSubmit: isFormValid,
           missingStep1Items,
           missingStep2Items,
+          missingStep1Keys,
+          missingStep2Keys,
         },
-        booking: {
-          hasPreselectedTour,
-          selectedTourSlug: selectedTour?.slug ?? null,
-          selectedTourName,
-          selectedDate,
-          currentMonth,
-          currentYear,
-          tickets,
-          hasSelectedTime: Boolean(tourTime),
-          selectedTime: tourTime,
-          hasSelectedPackage: Boolean(effectiveTourPackage),
-          selectedPackage: effectiveTourPackage,
-          subtotal: subtotalRaw,
-          taxes: taxesRaw,
-          totalWithTaxes,
-        },
+        booking: getAnalyticsBookingSnapshot(),
         selectedDate,
         currentMonth,
         currentYear,
@@ -644,18 +706,14 @@ export default function ReservationDetails({
     isFormValid,
     missingStep1Items,
     missingStep2Items,
-    hasPreselectedTour,
-    selectedTourName,
+    missingStep1Keys,
+    missingStep2Keys,
+    getAnalyticsBookingSnapshot,
     selectedDate,
     currentMonth,
     currentYear,
     tickets,
-    tourTime,
-    effectiveTourPackage,
-    selectedTour?.slug,
-    subtotalRaw,
-    taxesRaw,
-    totalWithTaxes,
+    stepLabels,
   ]);
 
   useEffect(() => {
@@ -670,8 +728,124 @@ export default function ReservationDetails({
     };
   }, [showTourModal]);
 
+  useEffect(() => {
+    const previousStep = currentStepRef.current;
+    if (previousStep !== currentStep) {
+      const durationMs = Date.now() - stepEnteredAtRef.current;
+
+      trackAnalyticsEvent("booking_step_abandoned", {
+        metadata: {
+          step: previousStep,
+          stepLabel: stepLabels[previousStep],
+          durationMs,
+          durationSeconds: Math.round(durationMs / 1000),
+          missingKeys: getMissingKeysForStep(previousStep),
+          completed: completedStepsRef.current.has(previousStep),
+          nextStep: currentStep,
+          nextStepLabel: stepLabels[currentStep],
+          booking: getAnalyticsBookingSnapshot(),
+        },
+      });
+
+      currentStepRef.current = currentStep;
+      stepEnteredAtRef.current = Date.now();
+    }
+  }, [currentStep, getAnalyticsBookingSnapshot, getMissingKeysForStep, stepLabels]);
+
+  useEffect(() => {
+    const handlePageHide = () => {
+      const activeStep = currentStepRef.current;
+      const durationMs = Date.now() - stepEnteredAtRef.current;
+
+      trackAnalyticsEvent("booking_step_abandoned", {
+        metadata: {
+          step: activeStep,
+          stepLabel: stepLabels[activeStep],
+          durationMs,
+          durationSeconds: Math.round(durationMs / 1000),
+          missingKeys: getMissingKeysForStep(activeStep),
+          completed: completedStepsRef.current.has(activeStep),
+          nextStep: null,
+          nextStepLabel: null,
+          source: "pagehide",
+          booking: getAnalyticsBookingSnapshot(),
+        },
+      });
+    };
+
+    window.addEventListener("pagehide", handlePageHide);
+    return () => window.removeEventListener("pagehide", handlePageHide);
+  }, [getAnalyticsBookingSnapshot, getMissingKeysForStep, stepLabels]);
+
+  const trackBlockedStep = useCallback((targetStep: BookingStepId | "checkout", source: string) => {
+    const missingKeys = getMissingKeysForStep(currentStep);
+
+    trackAnalyticsEvent("booking_step_blocked", {
+      metadata: {
+        step: currentStep,
+        stepLabel: stepLabels[currentStep],
+        targetStep,
+        targetStepLabel: targetStep === "checkout" ? "checkout" : stepLabels[targetStep],
+        source,
+        missingKeys,
+        missingStep1Keys,
+        missingStep2Keys,
+        termsAccepted: validation.isAgreeTermsValid,
+        booking: getAnalyticsBookingSnapshot(),
+      },
+    });
+  }, [
+    currentStep,
+    getAnalyticsBookingSnapshot,
+    getMissingKeysForStep,
+    missingStep1Keys,
+    missingStep2Keys,
+    stepLabels,
+    validation.isAgreeTermsValid,
+  ]);
+
+  const trackStepCompleted = useCallback((step: BookingStepId, targetStep: BookingStepId | "checkout", source: string) => {
+    completedStepsRef.current.add(step);
+
+    trackAnalyticsEvent("booking_step_completed", {
+      metadata: {
+        step,
+        stepLabel: stepLabels[step],
+        targetStep,
+        targetStepLabel: targetStep === "checkout" ? "checkout" : stepLabels[targetStep],
+        source,
+        durationMs: Date.now() - stepEnteredAtRef.current,
+        durationSeconds: Math.round((Date.now() - stepEnteredAtRef.current) / 1000),
+        booking: getAnalyticsBookingSnapshot(),
+      },
+    });
+  }, [getAnalyticsBookingSnapshot, stepLabels]);
+
+  const goToStep = useCallback((targetStep: BookingStepId, source: string) => {
+    if (targetStep > currentStep) {
+      if (currentStep === 1 && !isStep1Valid) {
+        trackBlockedStep(targetStep, source);
+        return;
+      }
+
+      if (currentStep === 2 && !isStep2Valid) {
+        trackBlockedStep(targetStep, source);
+        return;
+      }
+
+      trackStepCompleted(currentStep, targetStep, source);
+    }
+
+    setCurrentStep(targetStep);
+  }, [currentStep, isStep1Valid, isStep2Valid, trackBlockedStep, trackStepCompleted]);
+
   const handleReserve = useCallback(() => {
-    if (!isFormValid || !effectiveSelectedPackage || !tourTime || !effectiveTourPackage || !selectedTour) return;
+    if (!isFormValid || !effectiveSelectedPackage || !tourTime || !effectiveTourPackage || !selectedTour) {
+      trackBlockedStep("checkout", "checkout_button");
+      return;
+    }
+
+    trackStepCompleted(3, "checkout", "checkout_button");
 
     trackAnalyticsEvent("booking_submitted", {
       metadata: {
@@ -715,17 +889,158 @@ export default function ReservationDetails({
     formState,
     selectedTour,
     selectedTourName,
+    trackBlockedStep,
+    trackStepCompleted,
   ]);
 
   const goToNextStep = useCallback(() => {
-    if (currentStep === 1 && !isStep1Valid) return;
-    if (currentStep === 2 && !isStep2Valid) return;
-    setCurrentStep((prev) => (prev < 3 ? ((prev + 1) as 1 | 2 | 3) : prev));
-  }, [currentStep, isStep1Valid, isStep2Valid]);
+    const targetStep = currentStep < 3 ? ((currentStep + 1) as BookingStepId) : currentStep;
+    goToStep(targetStep, "next_button");
+  }, [currentStep, goToStep]);
 
   const goToPrevStep = useCallback(() => {
-    setCurrentStep((prev) => (prev > 1 ? ((prev - 1) as 1 | 2 | 3) : prev));
-  }, []);
+    const targetStep = currentStep > 1 ? ((currentStep - 1) as BookingStepId) : currentStep;
+    setCurrentStep(targetStep);
+  }, [currentStep]);
+
+  const handleTourTimeSelect = useCallback((slot: TourTime) => {
+    setTourTime(slot);
+    trackAnalyticsEvent("booking_selection_changed", {
+      metadata: {
+        step: 1,
+        stepLabel: stepLabels[1],
+        field: "tour_time",
+        value: slot,
+        booking: {
+          ...getAnalyticsBookingSnapshot(),
+          selectedTime: slot,
+          hasSelectedTime: true,
+        },
+      },
+    });
+  }, [getAnalyticsBookingSnapshot, stepLabels]);
+
+  const handlePackageSelect = useCallback((pkg: PackageOption, isDisabled: boolean) => {
+    if (isDisabled) {
+      trackAnalyticsEvent("booking_step_blocked", {
+        metadata: {
+          step: 1,
+          stepLabel: stepLabels[1],
+          source: "disabled_package",
+          targetStep: 1,
+          targetStepLabel: stepLabels[1],
+          missingKeys: ["available_package"],
+          attemptedPackage: pkg.id,
+          packageAvailableOn: pkg.availableOn,
+          isWeekend,
+          booking: getAnalyticsBookingSnapshot(),
+        },
+      });
+      return;
+    }
+
+    setTourPackage(pkg.id);
+    trackAnalyticsEvent("booking_selection_changed", {
+      metadata: {
+        step: 1,
+        stepLabel: stepLabels[1],
+        field: "tour_package",
+        value: pkg.id,
+        priceUSD: pkg.priceUSD,
+        packageAvailableOn: pkg.availableOn,
+        booking: {
+          ...getAnalyticsBookingSnapshot(),
+          selectedPackage: pkg.id,
+          hasSelectedPackage: true,
+        },
+      },
+    });
+  }, [getAnalyticsBookingSnapshot, isWeekend, stepLabels]);
+
+  const handleTicketsChange = useCallback((rawValue: string) => {
+    const parsedValue = Number(rawValue);
+    const nextTickets = parsedValue >= 1 && parsedValue <= slots
+      ? parsedValue
+      : parsedValue < 1
+      ? 1
+      : slots;
+
+    setTickets(nextTickets);
+    trackAnalyticsEvent("booking_selection_changed", {
+      metadata: {
+        step: 1,
+        stepLabel: stepLabels[1],
+        field: "tickets",
+        rawValue: Number.isFinite(parsedValue) ? parsedValue : null,
+        value: nextTickets,
+        wasClamped: nextTickets !== parsedValue,
+        slots,
+        booking: {
+          ...getAnalyticsBookingSnapshot(),
+          tickets: nextTickets,
+        },
+      },
+    });
+  }, [getAnalyticsBookingSnapshot, setTickets, slots, stepLabels]);
+
+  const trackFieldBlur = useCallback((field: "name" | "email" | "phone" | "specialRequests" | "terms") => {
+    const fieldState = {
+      name: {
+        isValid: validation.isNameValid,
+        isEmpty: formState.name.trim() === "",
+        valueLength: formState.name.trim().length,
+      },
+      email: {
+        isValid: validation.isEmailValid,
+        isEmpty: formState.email.trim() === "",
+        valueLength: formState.email.trim().length,
+      },
+      phone: {
+        isValid: validation.isPhoneNumberValid,
+        isEmpty: formState.phoneNumber.trim() === "",
+        valueLength: formState.phoneNumber.trim().length,
+        phoneCode: formState.phoneCode,
+      },
+      specialRequests: {
+        isValid: true,
+        isEmpty: formState.specialRequests.trim() === "",
+        valueLength: formState.specialRequests.trim().length,
+      },
+      terms: {
+        isValid: validation.isAgreeTermsValid,
+        isEmpty: !validation.isAgreeTermsValid,
+        valueLength: validation.isAgreeTermsValid ? 1 : 0,
+      },
+    }[field];
+
+    trackAnalyticsEvent("booking_field_blur", {
+      metadata: {
+        step: field === "terms" ? 3 : 2,
+        stepLabel: field === "terms" ? stepLabels[3] : stepLabels[2],
+        field,
+        ...fieldState,
+        missingStep2Keys,
+        termsAccepted: validation.isAgreeTermsValid,
+        booking: getAnalyticsBookingSnapshot(),
+      },
+    });
+  }, [formState, getAnalyticsBookingSnapshot, missingStep2Keys, stepLabels, validation]);
+
+  const handleTourSelect = useCallback((slug: string) => {
+    setManualSelectedTourSlug(slug);
+    setShowTourModal(false);
+    trackAnalyticsEvent("booking_selection_changed", {
+      metadata: {
+        step: currentStep,
+        stepLabel: stepLabels[currentStep],
+        field: "tour",
+        value: slug,
+        previousValue: selectedTourSlug,
+        source: "tour_modal",
+        booking: getAnalyticsBookingSnapshot(),
+      },
+    });
+  }, [currentStep, getAnalyticsBookingSnapshot, selectedTourSlug, stepLabels]);
 
   return (
     <div className="border-t border-zinc-300 dark:border-zinc-700">
@@ -746,11 +1061,7 @@ export default function ReservationDetails({
                 key={step.id}
                 type="button"
                 onClick={() => {
-                  if (step.id > currentStep) {
-                    if (currentStep === 1 && !isStep1Valid) return;
-                    if (currentStep === 2 && !isStep2Valid) return;
-                  }
-                  setCurrentStep(step.id);
+                  goToStep(step.id, "step_chip");
                 }}
                 className={`rounded-xl border px-3 py-2 text-left text-sm transition-all ${
                   isCurrent
@@ -828,10 +1139,7 @@ export default function ReservationDetails({
               <TourSelectionCards
                 tours={tours}
                 selectedTourSlug={selectedTourSlug}
-                onSelectTour={(slug) => {
-                  setManualSelectedTourSlug(slug);
-                  setShowTourModal(false);
-                }}
+                onSelectTour={handleTourSelect}
                 className="grid grid-cols-1 gap-4 sm:grid-cols-2"
                 cardClassName="h-[260px]"
               />
@@ -918,7 +1226,7 @@ export default function ReservationDetails({
                   <button
                     key={slot.id}
                     type="button"
-                    onClick={() => setTourTime(slot.id)}
+                    onClick={() => handleTourTimeSelect(slot.id)}
                     className={`flex-1 min-w-[90px] py-3 px-4 rounded-xl border-2 font-semibold text-base transition-all ${
                       isSelected
                         ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300"
@@ -949,8 +1257,8 @@ export default function ReservationDetails({
                   <button
                     key={pkg.id}
                     type="button"
-                    onClick={() => !isDisabled && setTourPackage(pkg.id)}
-                    disabled={isDisabled}
+                    onClick={() => handlePackageSelect(pkg, isDisabled)}
+                    aria-disabled={isDisabled}
                     className={`group relative overflow-hidden text-left p-5 rounded-2xl border-2 transition-all ${
                       isDisabled
                         ? "border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800/50 opacity-50 cursor-not-allowed"
@@ -1032,10 +1340,7 @@ export default function ReservationDetails({
                 max={Math.max(1, slots)}
                 value={tickets}
                 onChange={(e) => {
-                  const val = +e.target.value;
-                  if (val >= 1 && val <= slots) setTickets(val);
-                  else if (val < 1) setTickets(1);
-                  else if (val > slots) setTickets(slots);
+                  handleTicketsChange(e.target.value);
                 }}
                 className="w-20 p-2 rounded-lg border bg-white dark:bg-zinc-800"
                 disabled={slots === 0}
@@ -1062,14 +1367,14 @@ export default function ReservationDetails({
             <h3 className="text-xl font-semibold mb-4">{tr.travelerTitle}</h3>
             {!isStep2Valid && <p className="mb-3 flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-400"><AlertCircle className="h-4 w-4" aria-hidden /> {tr.indicators.completeTravelerData}</p>}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <TravelerInputField id="name" label={tr.fullName} value={formState.name} onChange={(v) => handleChange("name", v)} placeholder={tr.namePlaceholder} isValid={validation.isNameValid} validationMessage={tr.nameRequired} required />
-              <TravelerInputField id="email" label={tr.emailLabel} type="email" value={formState.email} onChange={(v) => handleChange("email", v)} placeholder={tr.emailPlaceholder} isValid={validation.isEmailValid} validationMessage={tr.emailInvalid} required />
-              <TravelerPhoneInput phoneCode={formState.phoneCode} phoneNumber={formState.phoneNumber} setPhoneCode={(v) => handleChange("phoneCode", v)} setPhoneNumber={(v) => handleChange("phoneNumber", v)} isValid={validation.isPhoneNumberValid} label={tr.phoneLabel} placeholder={tr.phonePlaceholder} validationMessage={tr.phoneInvalid} />
+              <TravelerInputField id="name" label={tr.fullName} value={formState.name} onChange={(v) => handleChange("name", v)} onBlur={() => trackFieldBlur("name")} placeholder={tr.namePlaceholder} isValid={validation.isNameValid} validationMessage={tr.nameRequired} required />
+              <TravelerInputField id="email" label={tr.emailLabel} type="email" value={formState.email} onChange={(v) => handleChange("email", v)} onBlur={() => trackFieldBlur("email")} placeholder={tr.emailPlaceholder} isValid={validation.isEmailValid} validationMessage={tr.emailInvalid} required />
+              <TravelerPhoneInput phoneCode={formState.phoneCode} phoneNumber={formState.phoneNumber} setPhoneCode={(v) => handleChange("phoneCode", v)} setPhoneNumber={(v) => handleChange("phoneNumber", v)} onBlur={() => trackFieldBlur("phone")} isValid={validation.isPhoneNumberValid} label={tr.phoneLabel} placeholder={tr.phonePlaceholder} validationMessage={tr.phoneInvalid} />
             </div>
           </div>
           <div className="mb-6">
             <h3 className="text-xl font-semibold mb-4">{tr.specialTitle}</h3>
-            <textarea id="specialRequests" value={formState.specialRequests} onChange={(e) => handleChange("specialRequests", e.target.value)} className="w-full p-3 rounded-lg border bg-white dark:bg-zinc-800 h-24 border-zinc-300 dark:border-zinc-700 focus:ring-teal-500 focus:border-teal-500" placeholder={tr.specialPlaceholder} />
+            <textarea id="specialRequests" value={formState.specialRequests} onChange={(e) => handleChange("specialRequests", e.target.value)} onBlur={() => trackFieldBlur("specialRequests")} className="w-full p-3 rounded-lg border bg-white dark:bg-zinc-800 h-24 border-zinc-300 dark:border-zinc-700 focus:ring-teal-500 focus:border-teal-500" placeholder={tr.specialPlaceholder} />
           </div>
           {!isStep2Valid && (
             <div className="mb-6 rounded-xl border border-amber-300 bg-amber-50 p-4 dark:border-amber-700 dark:bg-amber-900/20">
@@ -1102,7 +1407,28 @@ export default function ReservationDetails({
               <p className="text-sm">{localizedCancellationPolicy}</p>
             </div>
             <label htmlFor="agreeTerms" className={`flex items-start gap-3 p-4 rounded-xl border transition-all cursor-pointer ${formState.agreeTerms ? "border-teal-500 bg-teal-50 dark:bg-teal-900/20" : "border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800"}`}>
-              <input id="agreeTerms" type="checkbox" checked={formState.agreeTerms} onChange={(e) => handleChange("agreeTerms", e.target.checked)} className="h-5 w-5 text-teal-600 rounded border-zinc-400 focus:ring-teal-500 dark:bg-zinc-700 dark:border-zinc-600 mt-0.5" />
+              <input
+                id="agreeTerms"
+                type="checkbox"
+                checked={formState.agreeTerms}
+                onChange={(e) => {
+                  const accepted = e.target.checked;
+                  handleChange("agreeTerms", accepted);
+                  trackAnalyticsEvent("booking_field_blur", {
+                    metadata: {
+                      step: 3,
+                      stepLabel: stepLabels[3],
+                      field: "terms",
+                      isValid: accepted,
+                      isEmpty: !accepted,
+                      valueLength: accepted ? 1 : 0,
+                      termsAccepted: accepted,
+                      booking: getAnalyticsBookingSnapshot(),
+                    },
+                  });
+                }}
+                className="h-5 w-5 text-teal-600 rounded border-zinc-400 focus:ring-teal-500 dark:bg-zinc-700 dark:border-zinc-600 mt-0.5"
+              />
               <span className="text-zinc-700 dark:text-zinc-400 text-base">
                 {tr.agreeText}
                 <Link href="/terminos-y-condiciones" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-teal-600 underline ml-1">{tr.termsLink}</Link>{" "}{tr.andThe}{" "}
@@ -1123,8 +1449,12 @@ export default function ReservationDetails({
           <button
             type="button"
             onClick={goToNextStep}
-            disabled={(currentStep === 1 && !isStep1Valid) || (currentStep === 2 && !isStep2Valid)}
-            className="px-8 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-full font-bold shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-disabled={(currentStep === 1 && !isStep1Valid) || (currentStep === 2 && !isStep2Valid)}
+            className={`px-8 py-3 bg-teal-600 text-white rounded-full font-bold shadow-lg transition-all ${
+              (currentStep === 1 && !isStep1Valid) || (currentStep === 2 && !isStep2Valid)
+                ? "cursor-not-allowed opacity-50"
+                : "hover:bg-teal-700"
+            }`}
           >
             {tr.nextBtn}
           </button>
@@ -1133,8 +1463,10 @@ export default function ReservationDetails({
           <button
             type="button"
             onClick={handleReserve}
-            disabled={!isFormValid}
-            className="px-8 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-full font-bold shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-disabled={!isFormValid}
+            className={`px-8 py-3 bg-teal-600 text-white rounded-full font-bold shadow-lg transition-all ${
+              !isFormValid ? "cursor-not-allowed opacity-50" : "hover:bg-teal-700"
+            }`}
           >
             {tr.proceedBtn}
           </button>

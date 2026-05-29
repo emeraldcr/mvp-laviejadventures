@@ -8,6 +8,11 @@ type AnalyticsEventName =
   | "page_view"
   | "click"
   | "booking_step"
+  | "booking_step_completed"
+  | "booking_step_blocked"
+  | "booking_step_abandoned"
+  | "booking_field_blur"
+  | "booking_selection_changed"
   | "booking_submitted"
   | "booking_checkout_started"
   | "payment_order_created"
@@ -28,6 +33,11 @@ const VALID_EVENTS: AnalyticsEventName[] = [
   "page_view",
   "click",
   "booking_step",
+  "booking_step_completed",
+  "booking_step_blocked",
+  "booking_step_abandoned",
+  "booking_field_blur",
+  "booking_selection_changed",
   "booking_submitted",
   "booking_checkout_started",
   "payment_order_created",
