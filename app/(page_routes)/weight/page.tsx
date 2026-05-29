@@ -961,18 +961,18 @@ export default function WeightPage() {
 
   return (
     <main className={`min-h-screen ${ui.page}`}>
-      <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-5 sm:px-6 lg:px-8">
+      <div className="mx-auto flex max-w-7xl flex-col gap-5 px-3 py-4 sm:gap-6 sm:px-6 sm:py-5 lg:px-8">
         <header className={`flex flex-col gap-4 border-b pb-5 md:flex-row md:items-center md:justify-between ${ui.headerBorder}`}>
-          <div>
+          <div className="min-w-0">
             <p className="text-sm font-bold uppercase text-sky-600 dark:text-sky-300">{copy.eyebrow}</p>
-            <h1 className={`text-3xl font-black tracking-normal sm:text-4xl ${ui.title}`}>{copy.title}</h1>
+            <h1 className={`text-2xl font-black tracking-normal sm:text-4xl ${ui.title}`}>{copy.title}</h1>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
             <button
               type="button"
               onClick={() => languageStore.set(language === "es" ? "en" : "es")}
               aria-label={copy.switchLanguage}
-              className={`inline-flex h-11 items-center gap-2 rounded-lg border px-3 text-sm font-bold shadow-sm transition ${ui.buttonSecondary}`}
+              className={`inline-flex h-11 items-center justify-center gap-2 rounded-lg border px-3 text-sm font-bold shadow-sm transition ${ui.buttonSecondary}`}
             >
               <Languages className="h-4 w-4" />
               {language === "es" ? "EN" : "ES"}
@@ -981,7 +981,7 @@ export default function WeightPage() {
               type="button"
               onClick={() => themeStore.set(isDark ? "light" : "dark")}
               aria-label={copy.switchTheme}
-              className={`inline-flex h-11 items-center gap-2 rounded-lg border px-3 text-sm font-bold shadow-sm transition ${ui.buttonSecondary}`}
+              className={`inline-flex h-11 items-center justify-center gap-2 rounded-lg border px-3 text-sm font-bold shadow-sm transition ${ui.buttonSecondary}`}
             >
               {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
               {isDark ? copy.light : copy.dark}
@@ -989,7 +989,7 @@ export default function WeightPage() {
             <select
               value={selectedProfileId}
               onChange={(event) => setSelectedProfileId(event.target.value)}
-              className={`h-11 rounded-lg border px-3 text-sm font-bold shadow-sm ${ui.input}`}
+              className={`col-span-2 h-11 min-w-0 rounded-lg border px-3 text-sm font-bold shadow-sm sm:col-span-1 sm:w-auto ${ui.input}`}
             >
               {state.profiles.map((item) => (
                 <option key={item.id} value={item.id}>
@@ -1000,7 +1000,7 @@ export default function WeightPage() {
             <button
               type="button"
               onClick={addProfile}
-              className={`inline-flex h-11 items-center gap-2 rounded-lg px-4 text-sm font-bold transition ${ui.buttonPrimary}`}
+              className={`col-span-2 inline-flex h-11 items-center justify-center gap-2 rounded-lg px-4 text-sm font-bold transition sm:col-span-1 ${ui.buttonPrimary}`}
             >
               <Plus className="h-4 w-4" /> {copy.addProfile}
             </button>
@@ -1015,7 +1015,7 @@ export default function WeightPage() {
           </div>
         )}
 
-        <nav className="flex gap-2 overflow-x-auto pb-1">
+        <nav className="-mx-3 flex gap-2 overflow-x-auto px-3 pb-1 sm:mx-0 sm:px-0">
           {[
             ["dashboard", Flame, copy.tabs.dashboard],
             ["comidas", Utensils, copy.tabs.comidas],
@@ -1031,7 +1031,7 @@ export default function WeightPage() {
                 key={key as string}
                 type="button"
                 onClick={() => setActiveTab(key as string)}
-                className={`inline-flex h-10 shrink-0 items-center gap-2 rounded-lg border px-3 text-sm font-bold transition ${
+                className={`inline-flex h-10 shrink-0 items-center gap-2 rounded-lg border px-3 text-sm font-bold transition sm:h-11 ${
                   activeTab === key ? ui.tabActive : ui.tabIdle
                 }`}
               >
@@ -1214,7 +1214,7 @@ function StatCard({
         <Icon className="h-5 w-5" />
       </div>
       <p className={`text-sm font-bold ${ui.muted}`}>{label}</p>
-      <p className="mt-1 text-3xl font-black tracking-normal">{value}</p>
+      <p className="mt-1 text-2xl font-black tracking-normal sm:text-3xl">{value}</p>
       <p className={`mt-2 text-sm ${ui.muted}`}>{detail}</p>
     </section>
   );
@@ -1271,7 +1271,7 @@ function Dashboard({
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+      <div className="grid gap-3 sm:grid-cols-2 md:gap-4 xl:grid-cols-5">
         <StatCard
           icon={Flame}
           label={copy.stats.calories}
@@ -1311,7 +1311,7 @@ function Dashboard({
               {projection?.label ?? copy.stats.noProjection}
             </span>
           </div>
-          <div className="h-72">
+          <div className="h-64 sm:h-72">
             <ChartContainer ui={ui}>
               <AreaChart data={weights}>
                 <CartesianGrid strokeDasharray="3 3" stroke={ui.chartGrid} />
@@ -1326,7 +1326,7 @@ function Dashboard({
 
         <section className={`rounded-lg border p-5 shadow-sm ${ui.card}`}>
           <h2 className="text-lg font-black">{copy.stats.macroDistribution}</h2>
-          <div className="h-72">
+          <div className="h-64 sm:h-72">
             <ChartContainer ui={ui}>
               <PieChart>
                 <Pie data={macroPie.length ? macroPie : [{ name: copy.stats.noData, value: 1, color: "#cbd5e1" }]} dataKey="value" innerRadius={55} outerRadius={90}>
@@ -1419,17 +1419,55 @@ function InventoryPanel({
   };
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[360px_minmax(0,1fr)]">
-      <form onSubmit={submit} className={`rounded-lg border p-5 shadow-sm ${ui.card}`}>
+    <div className="grid gap-4 lg:grid-cols-[360px_minmax(0,1fr)] lg:gap-5">
+      <form onSubmit={submit} className={`rounded-lg border p-4 shadow-sm sm:p-5 ${ui.card}`}>
         <h2 className="mb-4 text-lg font-black">{copy.inventory.food}</h2>
         <FoodFields draft={draft} setDraft={setDraft} copy={copy} ui={ui} />
         <button className={`mt-4 h-11 w-full rounded-lg text-sm font-bold transition ${ui.buttonPrimary}`} type="submit">
           {copy.inventory.saveFood}
         </button>
       </form>
-      <section className={`rounded-lg border p-5 shadow-sm ${ui.card}`}>
+      <section className={`rounded-lg border p-4 shadow-sm sm:p-5 ${ui.card}`}>
         <Filters query={query} category={category} setQuery={setQuery} setCategory={setCategory} copy={copy} ui={ui} />
-        <div className="mt-4 overflow-x-auto">
+        <div className="mt-4 grid gap-3 md:hidden">
+          {foods.map((food) => (
+            <article key={food.id} className={`rounded-lg border p-3 ${ui.cardSoft}`}>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate font-black">{food.name}</p>
+                  <p className={`mt-1 text-xs font-bold uppercase ${ui.muted}`}>{copy.categories[food.category]}</p>
+                </div>
+                <div className="flex shrink-0 gap-2">
+                  <button type="button" onClick={() => setDraft(food)} className={`rounded-lg border px-3 py-2 text-xs font-bold ${ui.buttonSecondary}`}>
+                    {copy.inventory.edit}
+                  </button>
+                  <button type="button" onClick={() => onDelete(food.id)} className={`rounded-lg border p-2 ${ui.dangerButton}`}>
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+              <div className="mt-3 grid grid-cols-3 gap-2 text-sm">
+                <div>
+                  <p className={`text-xs font-bold uppercase ${ui.muted}`}>{copy.inventory.quantity}</p>
+                  <p className="font-bold">
+                    {food.quantity} {food.unit}
+                  </p>
+                </div>
+                <div>
+                  <p className={`text-xs font-bold uppercase ${ui.muted}`}>{copy.inventory.calories}</p>
+                  <p className="font-bold">{food.calories}</p>
+                </div>
+                <div>
+                  <p className={`text-xs font-bold uppercase ${ui.muted}`}>{copy.inventory.macros}</p>
+                  <p className="font-bold">
+                    {food.protein}/{food.fat}/{food.carbs}
+                  </p>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+        <div className="mt-4 hidden overflow-x-auto md:block">
           <table className="w-full min-w-[760px] text-left text-sm">
             <thead className={`border-b text-xs uppercase ${ui.divider} ${ui.muted}`}>
               <tr>
@@ -1476,7 +1514,7 @@ function FoodFields({ draft, setDraft, copy, ui }: { draft: Food; setDraft: (foo
   return (
     <div className="grid gap-3">
       <input value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} placeholder={copy.inventory.name} className={`h-11 rounded-lg border px-3 ${ui.input}`} />
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid gap-3 sm:grid-cols-2">
         <select value={draft.category} onChange={(event) => setDraft({ ...draft, category: event.target.value as Category })} className={`h-11 rounded-lg border px-3 ${ui.input}`}>
           {categories.map((item) => (
             <option key={item} value={item}>{copy.categories[item]}</option>
@@ -1489,7 +1527,7 @@ function FoodFields({ draft, setDraft, copy, ui }: { draft: Food; setDraft: (foo
         </select>
       </div>
       <input value={draft.quantity || ""} onChange={(event) => numeric("quantity", event.target.value)} type="number" placeholder={copy.inventory.currentQuantity} className={`h-11 rounded-lg border px-3 ${ui.input}`} />
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid gap-3 sm:grid-cols-2">
         <input value={draft.calories || ""} onChange={(event) => numeric("calories", event.target.value)} type="number" placeholder={copy.inventory.caloriesPer100} className={`h-11 rounded-lg border px-3 ${ui.input}`} />
         <input value={draft.protein || ""} onChange={(event) => numeric("protein", event.target.value)} type="number" placeholder={copy.inventory.protein} className={`h-11 rounded-lg border px-3 ${ui.input}`} />
         <input value={draft.fat || ""} onChange={(event) => numeric("fat", event.target.value)} type="number" placeholder={copy.inventory.fat} className={`h-11 rounded-lg border px-3 ${ui.input}`} />
@@ -1563,8 +1601,8 @@ function MealsPanel({
   };
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[390px_minmax(0,1fr)]">
-      <section className={`space-y-4 rounded-lg border p-5 shadow-sm ${ui.card}`}>
+    <div className="grid gap-4 lg:grid-cols-[390px_minmax(0,1fr)] lg:gap-5">
+      <section className={`space-y-4 rounded-lg border p-4 shadow-sm sm:p-5 ${ui.card}`}>
         <h2 className="text-lg font-black">{copy.meals.register}</h2>
         <Filters query={query} category={category} setQuery={setQuery} setCategory={setCategory} copy={copy} ui={ui} />
         <select value={foodId} onChange={(event) => setFoodId(event.target.value)} className={`h-11 w-full rounded-lg border px-3 ${ui.input}`}>
@@ -1582,7 +1620,7 @@ function MealsPanel({
           <h3 className="mb-3 font-black">{copy.meals.manual}</h3>
           <div className="grid gap-3">
             <input value={manual.name} onChange={(event) => setManual({ ...manual, name: event.target.value })} placeholder={copy.inventory.name} className={`h-11 rounded-lg border px-3 ${ui.input}`} />
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-3 sm:grid-cols-2">
               {(["calories", "protein", "fat", "carbs"] as const).map((key) => (
                 <input
                   key={key}
@@ -1600,12 +1638,12 @@ function MealsPanel({
           </div>
         </div>
       </section>
-      <section className={`rounded-lg border p-5 shadow-sm ${ui.card}`}>
+      <section className={`rounded-lg border p-4 shadow-sm sm:p-5 ${ui.card}`}>
         <h2 className="mb-4 text-lg font-black">{copy.meals.today}</h2>
         <div className="space-y-3">
           {meals.map((meal) => (
             <div key={meal.id} className={`flex items-center justify-between gap-3 rounded-lg border p-3 ${ui.cardSoft}`}>
-              <div>
+              <div className="min-w-0">
                 <p className="font-black">{meal.foodName}</p>
                 <p className={`text-sm ${ui.muted}`}>
                   {Math.round(meal.calories)} kcal - {Math.round(meal.protein)}P/{Math.round(meal.fat)}G/{Math.round(meal.carbs)}C
@@ -1646,8 +1684,8 @@ function WeightPanel({
   const [weight, setWeight] = useState("");
   const [date, setDate] = useState(today());
   return (
-    <div className="grid gap-5 lg:grid-cols-[360px_minmax(0,1fr)]">
-      <section className={`rounded-lg border p-5 shadow-sm ${ui.card}`}>
+    <div className="grid gap-4 lg:grid-cols-[360px_minmax(0,1fr)] lg:gap-5">
+      <section className={`rounded-lg border p-4 shadow-sm sm:p-5 ${ui.card}`}>
         <h2 className="mb-4 text-lg font-black">{copy.weight.tracker}</h2>
         <div className="grid gap-3">
           <input value={weight} onChange={(event) => setWeight(event.target.value)} type="number" placeholder={copy.weight.weightKg} className={`h-11 rounded-lg border px-3 ${ui.input}`} />
@@ -1666,8 +1704,8 @@ function WeightPanel({
           </div>
         </div>
       </section>
-      <section className={`rounded-lg border p-5 shadow-sm ${ui.card}`}>
-        <div className="h-72">
+      <section className={`rounded-lg border p-4 shadow-sm sm:p-5 ${ui.card}`}>
+        <div className="h-64 sm:h-72">
           <ChartContainer ui={ui}>
             <ReLineChart data={weights}>
               <CartesianGrid strokeDasharray="3 3" stroke={ui.chartGrid} />
@@ -1680,8 +1718,8 @@ function WeightPanel({
         </div>
         <div className="mt-4 grid gap-2">
           {weights.map((entry) => (
-            <div key={entry.id} className={`flex items-center justify-between rounded-lg border px-3 py-2 text-sm ${ui.cardSoft}`}>
-              <span>
+            <div key={entry.id} className={`flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm ${ui.cardSoft}`}>
+              <span className="min-w-0">
                 {entry.date} - <b>{entry.weight} kg</b>
               </span>
               <button type="button" onClick={() => onDelete(entry.id)} className={ui.dangerButton}>
@@ -1714,14 +1752,14 @@ function WaterPanel({
 }) {
   const pct = Math.min(100, Math.round((consumed / goal) * 100));
   return (
-    <section className={`rounded-lg border p-5 shadow-sm ${ui.card}`}>
+    <section className={`rounded-lg border p-4 shadow-sm sm:p-5 ${ui.card}`}>
       <div className="grid gap-5 lg:grid-cols-[320px_minmax(0,1fr)]">
         <div className="space-y-4">
           <h2 className="text-lg font-black">{copy.water.tracker}</h2>
           <input value={goal || ""} onChange={(event) => onGoalChange(Number(event.target.value) || 0)} type="number" className={`h-11 w-full rounded-lg border px-3 ${ui.input}`} />
           <div className="grid grid-cols-3 gap-2">
             {[250, 500, 1000].map((ml) => (
-              <button key={ml} type="button" onClick={() => onAdd(ml)} className={`h-11 rounded-lg text-sm font-bold transition ${ui.buttonAccent}`}>
+              <button key={ml} type="button" onClick={() => onAdd(ml)} className={`h-11 rounded-lg text-xs font-bold transition sm:text-sm ${ui.buttonAccent}`}>
                 {ml === 1000 ? "1L" : `${ml}ml`}
               </button>
             ))}
@@ -1729,7 +1767,7 @@ function WaterPanel({
         </div>
         <div>
           <div className="mb-3 flex items-end justify-between">
-            <p className="text-4xl font-black tracking-normal">{consumed} ml</p>
+            <p className="text-3xl font-black tracking-normal sm:text-4xl">{consumed} ml</p>
             <p className={`font-bold ${ui.muted}`}>{pct}%</p>
           </div>
           <div className={`h-8 overflow-hidden rounded-lg ${ui.progressTrack}`}>
@@ -1762,9 +1800,9 @@ function ProfilesPanel({
   onPhoto: (event: ChangeEvent<HTMLInputElement>) => void;
 }) {
   return (
-    <section className={`rounded-lg border p-5 shadow-sm ${ui.card}`}>
+    <section className={`rounded-lg border p-4 shadow-sm sm:p-5 ${ui.card}`}>
       <div className="grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)]">
-        <div>
+        <div className="mx-auto w-full max-w-56 lg:max-w-none">
           <div className={`flex aspect-square items-center justify-center overflow-hidden rounded-lg ${ui.photoBg}`}>
             {profile.photo ? (
               <Image
@@ -1835,11 +1873,11 @@ function ReportsPanel({
 }) {
   return (
     <div className="space-y-5">
-      <div className="grid gap-5 xl:grid-cols-2">
+      <div className="grid gap-4 xl:grid-cols-2 xl:gap-5">
         <ReportChart title={copy.reports.weekly} data={weeklyData} copy={copy} ui={ui} />
         <ReportChart title={copy.reports.monthly} data={monthlyData} copy={copy} ui={ui} />
       </div>
-      <div className="grid gap-5 xl:grid-cols-2">
+      <div className="grid gap-4 xl:grid-cols-2 xl:gap-5">
         {weightReportFrames.map((frame) => (
           <WeightReportChart key={frame.key} frame={frame} weights={weights} copy={copy} ui={ui} />
         ))}
@@ -1948,9 +1986,9 @@ function buildWeightReportData(weights: WeightEntry[], frame: WeightReportFrame)
 
 function ReportChart({ title, data, copy, ui }: { title: string; data: ReportPoint[]; copy: WeightCopy; ui: WeightUi }) {
   return (
-    <section className={`rounded-lg border p-5 shadow-sm ${ui.card}`}>
+    <section className={`rounded-lg border p-4 shadow-sm sm:p-5 ${ui.card}`}>
       <h2 className="mb-4 text-lg font-black">{title}</h2>
-      <div className="h-72">
+      <div className="h-64 sm:h-72">
         <ChartContainer ui={ui}>
           <BarChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke={ui.chartGrid} />
@@ -1965,7 +2003,7 @@ function ReportChart({ title, data, copy, ui }: { title: string; data: ReportPoi
           </BarChart>
         </ChartContainer>
       </div>
-      <div className="mt-6 h-64">
+      <div className="mt-6 h-56 sm:h-64">
         <ChartContainer ui={ui}>
           <ReLineChart data={data.filter((item) => item.weight)}>
             <CartesianGrid strokeDasharray="3 3" stroke={ui.chartGrid} />
@@ -1996,7 +2034,7 @@ function WeightReportChart({
   const chartMax = bars.length ? Math.ceil((Math.max(...bars.map((item) => item.weight)) + 0.6) * 10) / 10 : 100;
 
   return (
-    <section className={`rounded-lg border p-5 shadow-sm ${ui.card}`}>
+    <section className={`rounded-lg border p-4 shadow-sm sm:p-5 ${ui.card}`}>
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="text-lg font-black">{copy.reports[frame.label]}</h2>
@@ -2011,7 +2049,7 @@ function WeightReportChart({
           </div>
         )}
       </div>
-      <div className={`h-80 rounded-lg border p-3 ${ui.cardSoft}`}>
+      <div className={`h-64 rounded-lg border p-2 sm:h-80 sm:p-3 ${ui.cardSoft}`}>
         {bars.length ? (
           <ChartContainer ui={ui}>
             <BarChart data={bars}>

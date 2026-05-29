@@ -3,7 +3,8 @@ import { getPayPalApiBaseUrl, getPayPalAccessToken } from "@/lib/paypal";
 import { getDb } from "@/lib/mongodb";
 import { auth } from "@/lib/auth";
 import { sendConfirmationEmail } from "./emailService";
-import type { BookingRecord, SuccessPageResult } from "@/lib/types";
+import { COLLECTIONS } from "@/lib/constants/db";
+import type { BookingRecord } from "@/lib/types";
 
 type PayPalOrderResponse = {
   status?: string;
@@ -27,6 +28,68 @@ type PayPalOrderResponse = {
   }>;
 };
 
+type PayPalOrderContext = {
+  customer?: {
+    name?: string | null;
+    email?: string | null;
+    phone?: string | null;
+  } | null;
+  booking?: {
+    tickets?: number | string | null;
+    date?: string | null;
+    tourTime?: string | null;
+    tourPackage?: string | null;
+    tourSlug?: string | null;
+    tourName?: string | null;
+    packagePrice?: number | string | null;
+    total?: number | string | null;
+    language?: "es" | "en" | string | null;
+  } | null;
+};
+
+type CustomerMeta = {
+  name?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  tickets?: number | string | null;
+  date?: string | null;
+};
+
+type BookingMeta = {
+  tickets?: number | string | null;
+  date?: string | null;
+  tourTime?: string | null;
+  tourPackage?: string | null;
+  tourSlug?: string | null;
+  tourName?: string | null;
+  packagePrice?: number | string | null;
+};
+
+type PayPalCustomMeta = CustomerMeta &
+  BookingMeta & {
+    customer?: CustomerMeta | null;
+    booking?: BookingMeta | null;
+    time?: string | null;
+    pkg?: string | null;
+    ppUSD?: number | string | null;
+    total?: number | string | null;
+    lang?: string | null;
+  };
+
+type SuccessPageResult = {
+  error: string | null;
+  name?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  date?: string | null;
+  tickets?: string | number | null;
+  amount?: string | number | null;
+  currency?: string | null;
+  orderId?: string | null;
+  captureId?: string | null;
+  status?: string | null;
+};
+
 export async function processSuccessfulBooking(orderId: string): Promise<SuccessPageResult> {
   const session = await auth();
   const userId = (session?.user as { id?: string })?.id ?? null;
@@ -40,8 +103,9 @@ export async function processSuccessfulBooking(orderId: string): Promise<Success
 
   const paypalOrder = paypalResult.data;
 
-  // 2. Parse data
-  const parsed = parsePayPalOrder(paypalOrder);
+  // 2. Parse data, backed by the context saved when the PayPal order was created.
+  const persistedContext = await fetchPayPalOrderContext(orderId);
+  const parsed = parsePayPalOrder(paypalOrder, persistedContext);
 
   if (parsed.status !== "COMPLETED" || !parsed.captureId) {
     return {
@@ -144,10 +208,42 @@ async function fetchPayPalOrder(orderId: string) {
 async function saveBookingToDb(record: BookingRecord): Promise<string | null> {
   try {
     const db = await getDb();
-    const col = db.collection("Reservations");
+    const col = db.collection(COLLECTIONS.RESERVATIONS);
 
     const existing = await col.findOne({ orderId: record.orderId });
-    if (existing) return existing._id.toString();
+    if (existing) {
+      const backfill: Partial<BookingRecord> = {};
+      const fieldsToBackfill: Array<keyof BookingRecord> = [
+        "captureId",
+        "status",
+        "name",
+        "email",
+        "phone",
+        "date",
+        "tickets",
+        "amount",
+        "currency",
+        "tourTime",
+        "tourPackage",
+        "tourSlug",
+        "tourName",
+        "packagePrice",
+        "userId",
+        "userEmail",
+      ];
+
+      fieldsToBackfill.forEach((field) => {
+        if ((existing[field] == null || existing[field] === "") && record[field] != null && record[field] !== "") {
+          backfill[field] = record[field] as never;
+        }
+      });
+
+      if (Object.keys(backfill).length > 0) {
+        await col.updateOne({ _id: existing._id }, { $set: { ...backfill, updatedAt: new Date() } });
+      }
+
+      return existing._id.toString();
+    }
 
     const result = await col.insertOne({
       ...record,
@@ -160,7 +256,21 @@ async function saveBookingToDb(record: BookingRecord): Promise<string | null> {
   }
 }
 
-function parsePayPalOrder(paypalOrder: PayPalOrderResponse) {
+async function fetchPayPalOrderContext(orderId: string): Promise<PayPalOrderContext | null> {
+  try {
+    const db = await getDb();
+    const context = await db
+      .collection<PayPalOrderContext & { orderId: string }>(COLLECTIONS.PAYPAL_ORDER_CONTEXTS)
+      .findOne({ orderId });
+
+    return context ?? null;
+  } catch (err) {
+    console.error("Mongo PayPal context read error:", err);
+    return null;
+  }
+}
+
+function parsePayPalOrder(paypalOrder: PayPalOrderResponse, persistedContext: PayPalOrderContext | null) {
   const payer = paypalOrder.payer || {};
   const purchaseUnit = paypalOrder.purchase_units?.[0] ?? {};
   const payments = purchaseUnit.payments ?? {};
@@ -169,15 +279,13 @@ function parsePayPalOrder(paypalOrder: PayPalOrderResponse) {
   const payerName = `${payer.name?.given_name || ""} ${payer.name?.surname || ""}`.trim();
   const payerEmail = payer.email_address || "";
 
-  // Try to get persisted context
-  let persistedContext: any = null;
-  // Note: You can keep this async if needed, but for simplicity we're skipping DB read here
-  // Or you can move it to processSuccessfulBooking if you prefer.
-
-  let meta: any = null;
+  let meta: PayPalCustomMeta | null = null;
   if (purchaseUnit.custom_id) {
     try {
-      meta = JSON.parse(purchaseUnit.custom_id);
+      const parsedMeta = JSON.parse(purchaseUnit.custom_id) as unknown;
+      if (parsedMeta && typeof parsedMeta === "object" && !Array.isArray(parsedMeta)) {
+        meta = parsedMeta as PayPalCustomMeta;
+      }
     } catch (e) {
       console.warn("Failed to parse custom_id JSON:", e);
     }
@@ -222,7 +330,8 @@ function parsePayPalOrder(paypalOrder: PayPalOrderResponse) {
 
   const tourTime = meta?.time || persistedBooking?.tourTime || null;
   const tourPackage = meta?.pkg || persistedBooking?.tourPackage || null;
-  const packagePrice = meta?.ppUSD != null ? Number(meta.ppUSD) : persistedBooking?.packagePrice ?? null;
+  const rawPackagePrice = meta?.ppUSD ?? persistedBooking?.packagePrice ?? null;
+  const packagePrice = rawPackagePrice != null && rawPackagePrice !== "" ? Number(rawPackagePrice) : null;
   const tourSlug = meta?.tourSlug || persistedBooking?.tourSlug || null;
   const tourName = meta?.tourName || persistedBooking?.tourName || null;
 
