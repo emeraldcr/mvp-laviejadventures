@@ -230,29 +230,6 @@ function formatMoney(value: number, currency = "USD") {
   }).format(value);
 }
 
-function formatAnalyticsStep(event: Pick<BookingAnalyticsEvent, "event" | "metadata">) {
-  const step = event.metadata.step;
-  const stepLabel = typeof event.metadata.stepLabel === "string" ? event.metadata.stepLabel : "";
-  const stage = typeof event.metadata.stage === "string" ? event.metadata.stage : "";
-
-  if (step != null && stepLabel) return `${step} - ${stepLabel}`;
-  if (step != null) return String(step);
-  if (stepLabel) return stepLabel;
-  if (stage) return stage;
-  return EVENT_LABELS[event.event] ?? "-";
-}
-
-function formatIntentStep(intent: ReservationIntent) {
-  const step = intent.step;
-  const stepLabel = intent.stepLabel ?? "";
-
-  if (step != null && stepLabel) return `${step} - ${stepLabel}`;
-  if (step != null) return String(step);
-  if (stepLabel) return stepLabel;
-  if (intent.stage) return intent.stage;
-  return EVENT_LABELS[intent.event] ?? "-";
-}
-
 export default function B2BAdminPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -370,7 +347,11 @@ export default function B2BAdminPage() {
   }
 
   useEffect(() => {
-    fetchAdminData();
+    const loadAdminData = window.setTimeout(() => {
+      void fetchAdminData();
+    }, 0);
+
+    return () => window.clearTimeout(loadAdminData);
   }, []);
 
   async function updateStatus(id: string, status: "approved" | "pending") {
@@ -549,20 +530,22 @@ export default function B2BAdminPage() {
     setReservations([]);
   }
 
-  if (initialSessionLoading) return <main className="mx-auto flex min-h-screen w-full max-w-md items-center justify-center px-4 py-12"><p className="inline-flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300"><Loader2 className="h-4 w-4 animate-spin" />Verificando sesión de administrador...</p></main>;
+  if (initialSessionLoading) return <main className="admin-loading"><p><Loader2 className="h-4 w-4 animate-spin" />Verificando sesión de administrador...</p></main>;
 
   if (!isLoggedIn) {
     return (
-      <main className="mx-auto flex min-h-screen w-full max-w-md items-center px-4 py-12 text-zinc-900 dark:text-zinc-100">
-        <section className="w-full rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
-          <h1 className="mb-2 text-2xl font-bold text-zinc-900 dark:text-zinc-50">Admin B2B</h1>
-          <p className="mb-6 text-sm text-zinc-600 dark:text-zinc-400">Acceso interno para aprobación de operadores y settings B2B.</p>
-          <div className="mb-6 grid gap-2 sm:grid-cols-3">{ACCESS_LINKS.map((link) => <Link key={link.href} href={link.href} className={`inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${link.style}`}>{link.icon}{link.label}</Link>)}</div>
-          {authError && <p className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">{authError}</p>}
+      <main className="admin-login-page">
+        <section className="admin-login-card">
+          <div className="admin-login-mark"><ShieldCheck className="h-6 w-6" /></div>
+          <p className="admin-eyebrow">Acceso interno</p>
+          <h1>Admin B2B</h1>
+          <p className="admin-muted">Gestiona operadores, precios, reservas y auditoría desde un panel más claro y seguro.</p>
+          <div className="admin-login-links">{ACCESS_LINKS.map((link) => <Link key={link.href} href={link.href}>{link.icon}{link.label}</Link>)}</div>
+          {authError && <p className="admin-alert admin-alert-error">{authError}</p>}
           <form onSubmit={handleLogin} className="space-y-4">
-            <input value={username} onChange={(event) => setUsername(event.target.value)} placeholder="Usuario" className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-400" />
-            <input value={password} onChange={(event) => setPassword(event.target.value)} type="password" placeholder="Contraseña" className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-400" />
-            <button type="submit" disabled={authLoading} className="flex w-full items-center justify-center gap-2 rounded-xl bg-zinc-900 px-4 py-3 text-sm font-semibold text-white disabled:opacity-60">{authLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}Entrar</button>
+            <input value={username} onChange={(event) => setUsername(event.target.value)} placeholder="Usuario" />
+            <input value={password} onChange={(event) => setPassword(event.target.value)} type="password" placeholder="Contraseña" />
+            <button type="submit" disabled={authLoading} className="admin-primary-button">{authLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}Entrar</button>
           </form>
         </section>
       </main>
@@ -570,14 +553,27 @@ export default function B2BAdminPage() {
   }
 
   return (
-    <main className="mx-auto min-h-screen w-full max-w-7xl rounded-3xl bg-zinc-50 px-4 py-8 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
-      <header className="mb-6 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
-        <div className="mb-4 flex flex-col gap-2"><h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">Dashboard Admin B2B avanzado</h1><p className="text-sm text-zinc-600 dark:text-zinc-400">Gestiona operadores, paquetes, precios, IVA y auditoría de usuarios/logins.</p></div>
-        <div className="flex flex-wrap items-center gap-2">{ACCESS_LINKS.map((link) => <Link key={link.href} href={link.href} className={`inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${link.style}`}>{link.icon}{link.label}</Link>)}<button onClick={handleLogout} className="inline-flex items-center justify-center gap-2 rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white"><LogOut className="h-4 w-4" />Salir</button></div>
+    <main className="admin-page">
+      <header className="admin-hero">
+        <div className="admin-hero-copy">
+          <p className="admin-eyebrow">La Vieja Adventures</p>
+          <h1>Dashboard Admin B2B avanzado</h1>
+          <p>Gestiona operadores, tours, precios, IVA, reservas y auditoría con una vista más elegante y escaneable.</p>
+        </div>
+        <div className="admin-hero-stats" aria-label="Resumen administrativo">
+          <div><span>{pendingOperators.length}</span><small>Pendientes</small></div>
+          <div><span>{approvedOperators.length}</span><small>Operadores</small></div>
+          <div><span>{reservations.length}</span><small>Reservas</small></div>
+          <div><span>{bookingAnalytics.conversionRate}%</span><small>Conversión</small></div>
+        </div>
+        <nav className="admin-toolbar" aria-label="Accesos rápidos">
+          {ACCESS_LINKS.map((link) => <Link key={link.href} href={link.href}>{link.icon}{link.label}</Link>)}
+          <button onClick={handleLogout}><LogOut className="h-4 w-4" />Salir</button>
+        </nav>
       </header>
 
-      {requestError && <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-200">{requestError}</div>}
-      {requestSuccess && <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200">{requestSuccess}</div>}
+      {requestError && <div className="admin-alert admin-alert-error">{requestError}</div>}
+      {requestSuccess && <div className="admin-alert admin-alert-success">{requestSuccess}</div>}
 
       <section className="grid gap-6 lg:grid-cols-2 mb-6">
         <article className="rounded-2xl border border-amber-300 dark:border-amber-700 bg-amber-50/80 dark:bg-amber-950/30 p-6"><h2 className="mb-4 flex items-center gap-2 text-xl font-semibold text-amber-900 dark:text-amber-200"><ShieldAlert className="h-5 w-5" />Pendientes ({pendingOperators.length})</h2>{loading ? <p className="inline-flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300"><Loader2 className="h-4 w-4 animate-spin" />Cargando operadores...</p> : pendingOperators.length === 0 ? <p className="text-sm text-zinc-600 dark:text-zinc-300">No hay operadores pendientes.</p> : <ul className="space-y-3">{pendingOperators.map((operator) => <li key={operator._id} className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-700 dark:bg-zinc-900"><p className="font-semibold text-zinc-900">{operator.company}</p><p className="text-sm text-zinc-600 dark:text-zinc-300">{operator.name} · {operator.email}</p><button disabled={actionLoadingId === operator._id} onClick={() => updateStatus(operator._id, "approved")} className="mt-3 inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-60">{actionLoadingId === operator._id ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}Aprobar</button></li>)}</ul>}</article>

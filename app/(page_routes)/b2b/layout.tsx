@@ -12,9 +12,9 @@ export const metadata: Metadata = {
 
 export default function B2BLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
-      <div className="sticky top-0 z-40 border-b border-zinc-200/80 bg-white/95 backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-950/90">
-        <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-center gap-3 px-4 py-3">
+    <div className="b2b-shell min-h-screen bg-zinc-50 dark:bg-zinc-950">
+      <div className="b2b-topbar sticky top-0 z-40 border-b border-zinc-200/80 bg-white/95 backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-950/90">
+        <div className="b2b-topbar-inner mx-auto flex w-full max-w-6xl flex-wrap items-center justify-center gap-3 px-4 py-3">
           <Link
             href="/"
             className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 shadow-sm transition-all hover:-translate-y-0.5 hover:bg-emerald-100 hover:shadow-md dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300"
