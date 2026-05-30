@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { getDb } from "@/lib/mongodb";
 import {
   INITIAL_BOOKING_STATE,
   NEXT_FIELD_PROMPTS,
@@ -15,6 +16,7 @@ const client = new Anthropic();
 type AssistantPayload = {
   messages: ChatMessage[];
   state: BookingState;
+  conversationId?: string;
 };
 
 type AssistantResult = {
@@ -29,11 +31,6 @@ type FaqEntry = {
   answer: string;
 };
 
-type CachedResult = {
-  expiresAt: number;
-  value: AssistantResult;
-};
-
 const DEFAULT_RESULT: AssistantResult = {
   reply:
     "¡Pura vida! Te ayudo con la reserva. Para empezar, decime fecha, hora (08:00/09:00/10:00), paquete (basic/full-day/private), cantidad de personas, nombre, correo y teléfono.",
@@ -44,8 +41,6 @@ const DEFAULT_RESULT: AssistantResult = {
 
 const AI_HEADERS = { "Cache-Control": "no-store" };
 const MODEL_NAME = "claude-haiku-4-5";
-const MODEL_CACHE_TTL_MS = 1000 * 60 * 10;
-const modelResponseCache = new Map<string, CachedResult>();
 const DATE_PATTERN_ISO = /\b(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})\b/;
 const DATE_PATTERN_DMY = /\b(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})\b/;
 const EMAIL_PATTERN = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i;
@@ -408,43 +403,74 @@ function shouldUseModel(previousState: BookingState, inferredState: BookingState
   return /\?/.test(normalized) && nextMissing > 0;
 }
 
-function buildCacheKey(state: BookingState, latestMessage: string): string {
-  return JSON.stringify({
-    state,
-    message: normalizeText(latestMessage).replace(/\s+/g, " ").trim(),
-  });
+function buildConversationId(raw?: string): string {
+  const normalized = raw?.trim();
+  if (normalized && /^[a-zA-Z0-9_-]{8,120}$/.test(normalized)) return normalized;
+  return `conv_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+}
+
+async function persistConversation(params: {
+  conversationId: string;
+  messages: ChatMessage[];
+  updatedState: BookingState;
+  missingFields: string[];
+  readyToBook: boolean;
+}) {
+  const db = await getDb();
+  await db.collection("ai_conversations").updateOne(
+    { conversationId: params.conversationId },
+    {
+      $set: {
+        conversationId: params.conversationId,
+        messages: params.messages,
+        updatedState: params.updatedState,
+        missingFields: params.missingFields,
+        readyToBook: params.readyToBook,
+        updatedAt: new Date(),
+      },
+      $setOnInsert: {
+        createdAt: new Date(),
+      },
+    },
+    { upsert: true },
+  );
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const { messages, state } = (await req.json()) as AssistantPayload;
+    const { messages, state, conversationId: incomingConversationId } = (await req.json()) as AssistantPayload;
+    const conversationId = buildConversationId(incomingConversationId);
     const normalizedIncomingState = normalizeState(state ?? INITIAL_BOOKING_STATE);
     const latestUserMessage = [...messages].reverse().find((msg) => msg.role === "user")?.content ?? "";
 
     const inferredState = inferFromConversation(normalizedIncomingState, messages);
-    if (!shouldUseModel(normalizedIncomingState, inferredState, latestUserMessage)) {
+    const forceAnthropic = true;
+
+    if (!forceAnthropic && !shouldUseModel(normalizedIncomingState, inferredState, latestUserMessage)) {
       const missingFields = getMissingFields(inferredState);
+      const localResult = {
+        reply: buildLocalReply(inferredState, latestUserMessage),
+        updatedState: inferredState,
+        missingFields,
+        readyToBook: missingFields.length === 0,
+      } satisfies AssistantResult;
+      const finalMessages = [...messages, { role: "assistant" as const, content: localResult.reply }];
+      await persistConversation({
+        conversationId,
+        messages: finalMessages,
+        updatedState: localResult.updatedState,
+        missingFields: localResult.missingFields,
+        readyToBook: localResult.readyToBook,
+      });
+
       return NextResponse.json(
         {
-          reply: buildLocalReply(inferredState, latestUserMessage),
-          updatedState: inferredState,
-          missingFields,
-          readyToBook: missingFields.length === 0,
-        } satisfies AssistantResult,
-        {
-          headers: { ...AI_HEADERS, "X-AI-Mode": "local-rules" },
+          ...localResult,
+          conversationId,
         },
+        { headers: { ...AI_HEADERS, "X-AI-Mode": "local-rules" } },
       );
     }
-
-    const cacheKey = buildCacheKey(inferredState, latestUserMessage);
-    const cached = modelResponseCache.get(cacheKey);
-    if (cached && cached.expiresAt > Date.now()) {
-      return NextResponse.json(cached.value, {
-        headers: { ...AI_HEADERS, "X-AI-Mode": "anthropic-cache-hit" },
-      });
-    }
-    if (cached && cached.expiresAt <= Date.now()) modelResponseCache.delete(cacheKey);
 
     const response = await client.messages.create({
       model: MODEL_NAME,
@@ -467,12 +493,16 @@ export async function POST(req: NextRequest) {
     }
 
     const sanitizedResult = sanitizeResult(parsed, inferredState);
-    modelResponseCache.set(cacheKey, {
-      value: sanitizedResult,
-      expiresAt: Date.now() + MODEL_CACHE_TTL_MS,
+    const finalMessages = [...messages, { role: "assistant" as const, content: sanitizedResult.reply }];
+    await persistConversation({
+      conversationId,
+      messages: finalMessages,
+      updatedState: sanitizedResult.updatedState,
+      missingFields: sanitizedResult.missingFields,
+      readyToBook: sanitizedResult.readyToBook,
     });
 
-    return NextResponse.json(sanitizedResult, {
+    return NextResponse.json({ ...sanitizedResult, conversationId }, {
       headers: { ...AI_HEADERS, "X-AI-Mode": "anthropic" },
     });
   } catch (error) {

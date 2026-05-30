@@ -32,17 +32,23 @@ const INITIAL_ASSISTANT_MESSAGE: ChatMessage = {
 };
 
 type PersistedAIState = {
+  conversationId: string;
   messages: ChatMessage[];
   state: BookingState;
   missingFields: string[];
   input: string;
 };
 
+function createConversationId() {
+  return `conv_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+}
+
 export default function AIAssistantClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const returnedFromReservation = searchParams.get("from") === "reservation";
   const [messages, setMessages] = useState<ChatMessage[]>([INITIAL_ASSISTANT_MESSAGE]);
+  const [conversationId, setConversationId] = useState<string>(() => createConversationId());
   const [state, setState] = useState<BookingState>(INITIAL_BOOKING_STATE);
   const [missingFields, setMissingFields] = useState<string[]>(REQUIRED_BOOKING_FIELDS);
   const [input, setInput] = useState("");
@@ -62,6 +68,7 @@ export default function AIAssistantClient() {
 
     try {
       const persisted = JSON.parse(raw) as PersistedAIState;
+      if (persisted.conversationId) setConversationId(persisted.conversationId);
       if (persisted.messages?.length) setMessages(persisted.messages);
       if (persisted.state) setState(persisted.state);
       if (persisted.missingFields) setMissingFields(persisted.missingFields);
@@ -73,6 +80,7 @@ export default function AIAssistantClient() {
 
   useEffect(() => {
     const payload: PersistedAIState = {
+      conversationId,
       messages,
       state,
       missingFields,
@@ -80,7 +88,7 @@ export default function AIAssistantClient() {
     };
 
     sessionStorage.setItem(AI_BOOKING_SESSION_KEY, JSON.stringify(payload));
-  }, [input, messages, missingFields, state]);
+  }, [conversationId, input, messages, missingFields, state]);
 
   useEffect(() => {
     const storedOrder = sessionStorage.getItem("reservationOrderDetails");
@@ -123,6 +131,7 @@ export default function AIAssistantClient() {
     if (!orderDetails) return;
 
     const payload: PersistedAIState = {
+      conversationId,
       messages,
       state: bookingState,
       missingFields,
@@ -134,7 +143,22 @@ export default function AIAssistantClient() {
     sessionStorage.setItem(RESERVATION_RETURN_KEY, "/ai");
     hasRedirectedRef.current = true;
     router.push("/reservation");
-  }, [buildOrderDetails, input, messages, missingFields, router]);
+  }, [buildOrderDetails, conversationId, input, messages, missingFields, router]);
+
+  const resetConversation = useCallback(() => {
+    const nextConversationId = createConversationId();
+    setConversationId(nextConversationId);
+    setMessages([INITIAL_ASSISTANT_MESSAGE]);
+    setState(INITIAL_BOOKING_STATE);
+    setMissingFields(REQUIRED_BOOKING_FIELDS);
+    setInput("");
+    setGuidedDate("");
+    setGuidedTickets(2);
+    setGuidedText("");
+    setGuidedPhone("");
+    hasRedirectedRef.current = false;
+    sessionStorage.removeItem("reservationOrderDetails");
+  }, []);
 
   useEffect(() => {
     const container = messagesContainerRef.current;
@@ -166,12 +190,16 @@ export default function AIAssistantClient() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          conversationId,
           messages: nextMessages,
           state,
         }),
       });
 
       const data = await response.json();
+      if (typeof data.conversationId === "string") {
+        setConversationId(data.conversationId);
+      }
 
       setMessages((prev) => [...prev, { role: "assistant", content: data.reply }]);
       setState(data.updatedState ?? INITIAL_BOOKING_STATE);
@@ -194,7 +222,7 @@ export default function AIAssistantClient() {
     } finally {
       setLoading(false);
     }
-  }, [loading, messages, redirectToReservation, state]);
+  }, [conversationId, loading, messages, redirectToReservation, state]);
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -218,13 +246,22 @@ export default function AIAssistantClient() {
     <main className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950 px-4 pt-6 pb-4 text-zinc-100 md:pt-8">
       <section className="mx-auto flex h-[calc(100vh-2.5rem)] w-full max-w-4xl flex-col rounded-3xl border border-white/10 bg-white/[0.03] p-4 shadow-2xl backdrop-blur md:h-[calc(100vh-3rem)] md:p-6">
           <div className="mb-4">
-            <Link
-              href="/"
-              className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold tracking-wide text-zinc-200 transition hover:border-emerald-400 hover:text-emerald-300"
-            >
-              <ArrowLeft size={14} />
-              Volver a La Vieja Adventures
-            </Link>
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href="/"
+                className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold tracking-wide text-zinc-200 transition hover:border-emerald-400 hover:text-emerald-300"
+              >
+                <ArrowLeft size={14} />
+                Volver a La Vieja Adventures
+              </Link>
+              <button
+                type="button"
+                onClick={resetConversation}
+                className="inline-flex items-center rounded-lg border border-emerald-400/50 bg-emerald-500/15 px-3 py-2 text-xs font-semibold tracking-wide text-emerald-200 transition hover:bg-emerald-500/25"
+              >
+                Nueva conversación
+              </button>
+            </div>
           </div>
 
           <div className="mb-5 flex items-center gap-3">
