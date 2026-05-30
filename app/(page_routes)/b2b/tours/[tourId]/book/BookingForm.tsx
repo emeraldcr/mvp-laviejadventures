@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Send, Tag, Users, CalendarDays } from "lucide-react";
-import type { B2BTourWithPackages } from "@/lib/b2b-catalog";
+import type { B2BTourWithPackages } from "@/lib/b2b/catalog";
 
 interface BookingFormProps {
   tour: B2BTourWithPackages;

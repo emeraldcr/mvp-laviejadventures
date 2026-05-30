@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useLanguage } from "@/app/context/LanguageContext";
-import { translations } from "@/lib/translations";
+import { translations } from "@/lib/content/translations";
 import DynamicHeroHeader from "@/app/components/sections/DynamicHeroHeader";
 
 const ICON_MAP: Record<string, LucideIcon> = {

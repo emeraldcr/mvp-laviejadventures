@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminFromRequest } from "@/lib/admin-auth";
+import { getAdminFromRequest } from "@/lib/auth/admin";
 import { getB2BSettings, upsertB2BSettings } from "@/lib/models/b2b-settings";
 
 function isAuthorized(req: NextRequest): boolean {

@@ -3,7 +3,7 @@
 import React from "react";
 import Image from "next/image";
 import { useLanguage } from "@/app/context/LanguageContext";
-import { translations } from "@/lib/translations";
+import { translations } from "@/lib/content/translations";
 
 type Props = {
   images: string[];

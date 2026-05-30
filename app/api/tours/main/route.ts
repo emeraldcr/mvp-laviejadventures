@@ -2,7 +2,7 @@
 // Returns the main booking tour info from MongoDB, seeding defaults if not found
 
 import { NextResponse } from "next/server";
-import { getDb } from "@/lib/mongodb";
+import { getDb } from "@/lib/data/mongodb";
 
 const DEFAULT_MAIN_TOUR = {
   slug: "tour-ciudad-esmeralda",

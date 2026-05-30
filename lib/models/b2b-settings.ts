@@ -1,4 +1,4 @@
-import { getDb } from "@/lib/mongodb";
+import { getDb } from "@/lib/data/mongodb";
 
 export type PackageConfig = {
   id: string;

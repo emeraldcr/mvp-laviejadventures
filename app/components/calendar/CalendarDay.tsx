@@ -3,7 +3,7 @@
 import React from "react";
 import { useCalendarContext } from "@/app/context/CalendarContext";
 import { useLanguage } from "@/app/context/LanguageContext";
-import { translations } from "@/lib/translations";
+import { translations } from "@/lib/content/translations";
 import { cn } from "@/lib/utils";
 
 type Props = {

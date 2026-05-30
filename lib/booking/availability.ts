@@ -1,6 +1,6 @@
 // lib/availability.ts
 
-import { AvailabilityMap } from "./types";
+import { AvailabilityMap } from "@/lib/types";
 
 
 export function generateAvailability(

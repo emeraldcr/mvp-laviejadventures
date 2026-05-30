@@ -1,5 +1,5 @@
-import { getDb } from "@/lib/mongodb";
-import { B2B_TOURS } from "@/lib/b2b-tours";
+import { getDb } from "@/lib/data/mongodb";
+import { B2B_TOURS } from "@/lib/b2b/tours";
 import { getB2BSettings, PackageConfig } from "@/lib/models/b2b-settings";
 
 export type B2BTourWithPackages = {

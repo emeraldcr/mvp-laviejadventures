@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getOperatorFromRequest } from "@/lib/b2b-auth";
-import { getB2BCatalog } from "@/lib/b2b-catalog";
+import { getOperatorFromRequest } from "@/lib/auth/b2b";
+import { getB2BCatalog } from "@/lib/b2b/catalog";
 
 export async function GET(req: NextRequest) {
   const operator = getOperatorFromRequest(req);

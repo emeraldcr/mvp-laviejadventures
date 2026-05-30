@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { getOperatorFromCookies } from "@/lib/b2b-auth";
+import { getOperatorFromCookies } from "@/lib/auth/b2b";
 import { findBookingsByOperator } from "@/lib/models/booking";
 import B2BNav from "@/app/components/b2b/B2BNav";
 import {

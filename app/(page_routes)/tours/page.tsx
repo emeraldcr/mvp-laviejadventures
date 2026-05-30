@@ -1,7 +1,7 @@
 // app/(page_routes)/tours/page.tsx
 // Server component: fetches tours from MongoDB and passes to client component
 
-import { getDb } from "@/lib/mongodb";
+import { getDb } from "@/lib/data/mongodb";
 import { ToursClient, type TourData } from "./ToursClient";
 
 export const dynamic = "force-dynamic";

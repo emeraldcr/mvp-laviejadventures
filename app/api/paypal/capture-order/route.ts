@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import {
   getPayPalApiBaseUrl,
   getPayPalAccessToken,
-} from "@/lib/paypal";
+} from "@/lib/payments/paypal";
 
 interface CaptureRequest {
   orderID: string;

@@ -14,10 +14,10 @@ import { Menu, X, ChevronDown, ChevronLeft, ChevronRight, LogOut, User, LayoutDa
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import useSWR from "swr";
-import { fetcher } from "@/lib/fetcher";
+import { fetcher } from "@/lib/http/fetcher";
 import { useInterval } from "@/app/hooks/useInterval";
 import { useLanguage } from "@/app/context/LanguageContext";
-import { translations } from "@/lib/translations";
+import { translations } from "@/lib/content/translations";
 import { useSession, signOut } from "next-auth/react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────

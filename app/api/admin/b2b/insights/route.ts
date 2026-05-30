@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminFromRequest } from "@/lib/admin-auth";
+import { getAdminFromRequest } from "@/lib/auth/admin";
 import { listOperators } from "@/lib/models/operator";
 import { listUsers } from "@/lib/models/user";
 import { listLoginLogs } from "@/lib/models/login-log";
-import { getDb } from "@/lib/mongodb";
+import { getDb } from "@/lib/data/mongodb";
 
 type BookingAnalyticsEvent = {
   _id: string;

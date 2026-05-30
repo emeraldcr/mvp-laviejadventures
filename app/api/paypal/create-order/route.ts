@@ -4,8 +4,8 @@ import { NextResponse } from "next/server";
 import {
   getPayPalApiBaseUrl,
   getPayPalAccessToken,
-} from "@/lib/paypal";
-import { getDb } from "@/lib/mongodb";
+} from "@/lib/payments/paypal";
+import { getDb } from "@/lib/data/mongodb";
 import {
   isISODateOnly,
   isSafeText,

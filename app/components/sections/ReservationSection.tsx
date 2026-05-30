@@ -5,7 +5,7 @@ import { useCalendarContext } from "@/app/context/CalendarContext";
 import ReservationDetails, { type TourSummary } from "@/app/components/reservation/ReservationDetails";
 import { type MainTourInfo } from "@/lib/types/index";
 import { useLanguage } from "@/app/context/LanguageContext";
-import { translations } from "@/lib/translations";
+import { translations } from "@/lib/content/translations";
 import { useRouter, useSearchParams } from "next/navigation";
 
 type OrderPayload = {

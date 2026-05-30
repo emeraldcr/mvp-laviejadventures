@@ -2,7 +2,7 @@
 "use client";
 
 import { useLanguage } from "@/app/context/LanguageContext";
-import { translations } from "@/lib/translations";
+import { translations } from "@/lib/content/translations";
 import type { SuccessClientProps } from "@/lib/types/index";
 import Link from "next/link";
 

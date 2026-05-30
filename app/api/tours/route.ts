@@ -2,7 +2,7 @@
 // Returns public tours from MongoDB, seeding defaults if the collection is empty
 
 import { NextResponse } from "next/server";
-import { getDb } from "@/lib/mongodb";
+import { getDb } from "@/lib/data/mongodb";
 
 const DEFAULT_TOURS = [
   {

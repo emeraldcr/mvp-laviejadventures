@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getOperatorFromRequest } from "@/lib/b2b-auth";
+import { getOperatorFromRequest } from "@/lib/auth/b2b";
 import { getBookingStats, findBookingsByOperator } from "@/lib/models/booking";
 
 export async function GET(req: NextRequest) {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getOperatorFromRequest } from "./b2b-auth";
+import { getOperatorFromRequest } from "@/lib/auth/b2b";
 
 const PUBLIC_B2B_PATHS = ["/b2b/login", "/b2b/register"];
 

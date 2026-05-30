@@ -3,7 +3,7 @@ import Auth0Provider from "next-auth/providers/auth0";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { findUserByEmail, getUserPreferencesByEmail, upsertUserFromAuth0 } from "@/lib/models/user";
-import { getAuth0AuthorizationParams, getAuth0Issuer } from "@/lib/auth0-config";
+import { getAuth0AuthorizationParams, getAuth0Issuer } from "@/lib/auth/auth0-config";
 import { sendLoginNotificationEmail } from "@/lib/email/login-email";
 import { createLoginLog } from "@/lib/models/login-log";
 

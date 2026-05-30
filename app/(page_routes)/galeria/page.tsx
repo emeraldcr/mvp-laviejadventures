@@ -1,5 +1,5 @@
 import React from "react";
-import { getImages } from "@/lib/getImages";
+import { getImages } from "@/lib/content/images";
 import DynamicHeroHeader from "@/app/components/sections/DynamicHeroHeader";
 import { GaleriaContent } from "./GaleriaContent";
 

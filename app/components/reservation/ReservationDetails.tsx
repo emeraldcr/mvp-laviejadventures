@@ -1,12 +1,12 @@
 // components/ReservationDetails.tsx
 import Link from "next/link";
-import { TOUR_INFO } from "@/lib/tour-info";
+import { TOUR_INFO } from "@/lib/content/tour-info";
 import { AvailabilityMap, MainTourInfo } from "@/lib/types/index";
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { format } from "date-fns";
 import { es, enUS } from "date-fns/locale";
 import { useLanguage } from "@/app/context/LanguageContext";
-import { translations } from "@/lib/translations";
+import { translations } from "@/lib/content/translations";
 import { Camera, ShieldCheck, Sparkles, TreePalm, Users, UtensilsCrossed } from "lucide-react";
 import { trackAnalyticsEvent } from "@/lib/analytics/client";
 

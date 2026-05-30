@@ -1,4 +1,4 @@
-import { getDb } from "@/lib/mongodb";
+import { getDb } from "@/lib/data/mongodb";
 
 export interface LoginLog {
   userType: "admin" | "operator" | "user";

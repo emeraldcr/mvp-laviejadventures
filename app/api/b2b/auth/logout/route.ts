@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { COOKIE_NAME } from "@/lib/b2b-auth";
+import { COOKIE_NAME } from "@/lib/auth/b2b";
 
 function withClearedSessionCookie(response: NextResponse) {
   response.cookies.set(COOKIE_NAME, "", {

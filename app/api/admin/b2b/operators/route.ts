@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { listOperators } from "@/lib/models/operator";
-import { getAdminFromRequest } from "@/lib/admin-auth";
+import { getAdminFromRequest } from "@/lib/auth/admin";
 
 function isAuthorized(req: NextRequest): boolean {
   return Boolean(getAdminFromRequest(req));

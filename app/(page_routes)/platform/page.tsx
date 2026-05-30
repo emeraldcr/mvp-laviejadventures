@@ -1,6 +1,6 @@
 // app/(page_routes)/platform/page.tsx
 import { redirect } from 'next/navigation';
-import { auth } from '@/lib/auth';
+import { auth } from '@/lib/auth/next-auth';
 import AuthLanding from '@/app/components/auth/AuthLanding';
 
 export default async function LoginPage() {

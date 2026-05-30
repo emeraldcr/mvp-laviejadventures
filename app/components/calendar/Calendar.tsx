@@ -3,7 +3,7 @@
 import React, { useMemo } from "react";
 import { useCalendarContext } from "@/app/context/CalendarContext";
 import { useLanguage } from "@/app/context/LanguageContext";
-import { translations } from "@/lib/translations";
+import { translations } from "@/lib/content/translations";
 import CalendarDay from "./CalendarDay";
 import { cn } from "@/lib/utils";
 import { getDaysInMonth, startOfMonth, getDay } from "date-fns";

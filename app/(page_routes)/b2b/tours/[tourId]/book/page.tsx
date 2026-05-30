@@ -1,8 +1,8 @@
 import { redirect, notFound } from "next/navigation";
-import { getOperatorFromCookies } from "@/lib/b2b-auth";
+import { getOperatorFromCookies } from "@/lib/auth/b2b";
 import B2BNav from "@/app/components/b2b/B2BNav";
 import BookingForm from "./BookingForm";
-import { getB2BCatalog } from "@/lib/b2b-catalog";
+import { getB2BCatalog } from "@/lib/b2b/catalog";
 
 export default async function BookTourPage({
   params,

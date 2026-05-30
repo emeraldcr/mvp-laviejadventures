@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { findOperatorByEmail } from "@/lib/models/operator";
-import { signToken, COOKIE_NAME } from "@/lib/b2b-auth";
+import { signToken, COOKIE_NAME } from "@/lib/auth/b2b";
 import { createLoginLog } from "@/lib/models/login-log";
 
 export async function POST(req: NextRequest) {

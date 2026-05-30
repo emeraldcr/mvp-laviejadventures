@@ -4,11 +4,11 @@ import { SuccessClient } from "./SuccessClient";
 import {
   getPayPalApiBaseUrl,
   getPayPalAccessToken,
-} from "@/lib/paypal";
+} from "@/lib/payments/paypal";
 
 import { Resend } from "resend";
-import { getDb } from "@/lib/mongodb";
-import { auth } from "@/lib/auth";
+import { getDb } from "@/lib/data/mongodb";
+import { auth } from "@/lib/auth/next-auth";
 import type { BookingRecord, SendEmailParams, SuccessPageProps } from "@/lib/types/index";
 export const dynamic = "force-dynamic";
 

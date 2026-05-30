@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { findAdminByUsername } from "@/lib/models/admin";
-import { ADMIN_COOKIE_NAME, signAdminToken } from "@/lib/admin-auth";
+import { ADMIN_COOKIE_NAME, signAdminToken } from "@/lib/auth/admin";
 import { createLoginLog } from "@/lib/models/login-log";
 
 export async function POST(req: NextRequest) {

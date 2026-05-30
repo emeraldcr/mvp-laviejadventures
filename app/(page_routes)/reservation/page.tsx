@@ -7,7 +7,7 @@ import { useMemo } from "react";
 import { useLanguage } from "@/app/context/LanguageContext";
 import PaymentCheckoutContent from "@/app/components/reservation/PaymentCheckoutContent";
 import type { OrderDetails } from "@/lib/types/index";
-import { translations } from "@/lib/translations";
+import { translations } from "@/lib/content/translations";
 
 const RESERVATION_RETURN_KEY = "reservationReturnPath";
 

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
-import { getOperatorFromRequest } from "@/lib/b2b-auth";
+import { getOperatorFromRequest } from "@/lib/auth/b2b";
 import { createBooking, createBookings, findBookingsByOperator } from "@/lib/models/booking";
 import { sendBookingConfirmationEmail } from "@/lib/email/b2b-emails";
-import { getB2BCatalog } from "@/lib/b2b-catalog";
+import { getB2BCatalog } from "@/lib/b2b/catalog";
 import {
   isISODateOnly,
   isSafeText,

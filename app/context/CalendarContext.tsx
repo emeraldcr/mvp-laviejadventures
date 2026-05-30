@@ -9,7 +9,7 @@ import {
   ReactNode,
 } from "react";
 import { AvailabilityMap } from "@/lib/types/index";
-import { generateAvailability } from "@/lib/availability";
+import { generateAvailability } from "@/lib/booking/availability";
 import { useLanguage } from "@/app/context/LanguageContext";
 
 type CalendarContextValue = {

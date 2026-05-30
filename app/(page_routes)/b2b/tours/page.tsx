@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { getOperatorFromCookies } from "@/lib/b2b-auth";
+import { getOperatorFromCookies } from "@/lib/auth/b2b";
 import B2BNav from "@/app/components/b2b/B2BNav";
 import { Clock, Users, MapPin, ArrowRight, Tag } from "lucide-react";
-import { getB2BCatalog } from "@/lib/b2b-catalog";
+import { getB2BCatalog } from "@/lib/b2b/catalog";
 
 function formatCRC(amount: number) {
   return `₡${amount.toLocaleString("es-CR")}`;

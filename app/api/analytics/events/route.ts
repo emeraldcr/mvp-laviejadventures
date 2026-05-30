@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { getDb } from "@/lib/mongodb";
+import { auth } from "@/lib/auth/next-auth";
+import { getDb } from "@/lib/data/mongodb";
 import { headers } from "next/headers";
 
 type AnalyticsEventName = "page_view" | "click" | "booking_step" | "booking_submitted";
