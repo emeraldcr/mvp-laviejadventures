@@ -113,15 +113,31 @@ export async function POST(req: Request) {
     const dbPackages = normalizeTourPackages(tour?.packages);
     const availablePackages = dbPackages.length > 0 ? dbPackages : fallbackPackagesForTour(tourSlug);
 
-    const packageLookup = resolveLegacyPackageId(packageId || tourPackage);
-    const selectedPackage = availablePackages.find((pkg) => {
-      const candidates = [pkg.id, pkg.name, pkg.nameEs].map(normalizePackageLookup);
-      return candidates.includes(packageLookup);
-    });
+    // === Improved Package Lookup ===
+    const selectedPackage = findPackageByLegacyOrCurrentId(availablePackages, packageId || tourPackage);
 
     if (!selectedPackage) {
+      console.error("Package lookup failed - Selected package is no longer available", {
+        tourSlug,
+        packageId,
+        tourPackage,
+        availablePackages: availablePackages.map((p) => ({
+          id: p.id,
+          name: p.name,
+          nameEs: p.nameEs,
+        })),
+      });
+
       return NextResponse.json(
-        { success: false, message: "Selected package is no longer available" },
+        { 
+          success: false, 
+          message: "Selected package is no longer available",
+          debug: {
+            input: packageId || tourPackage,
+            availableCount: availablePackages.length,
+            tourSlug,
+          }
+        },
         { status: 400 }
       );
     }
@@ -178,7 +194,7 @@ export async function POST(req: Request) {
     const data: CreateOrderResponse = await res.json();
 
     if (!res.ok || !data.id) {
-      console.error("PayPal Create Order Error:", { status: res.status, data, orderPayload: body });
+      console.error("PayPal Create Order Error:", { status: res.status, data });
       return NextResponse.json(
         { success: false, message: "Failed to create PayPal order", error: data },
         { status: res.status || 500 }
@@ -259,10 +275,39 @@ function normalizePackageLookup(value: unknown): string {
 
 function resolveLegacyPackageId(value: unknown): string {
   const normalized = normalizePackageLookup(value);
-  if (normalized === "basic") return "essential-package";
-  if (normalized === "full-day") return "lunch-package";
-  if (normalized === "private") return "private-package";
-  return normalized;
+
+  const legacyMap: Record<string, string> = {
+    "basic": "essential-package",
+    "full-day": "lunch-package",
+    "full_day": "lunch-package",
+    "private": "private-package",
+    "standard": "essential-package",
+    // Add more mappings as needed
+  };
+
+  return legacyMap[normalized] || normalized;
+}
+
+function findPackageByLegacyOrCurrentId(
+  packages: any[], 
+  input: string | undefined
+): any | null {
+  if (!input || !packages?.length) return null;
+
+  const normalizedInput = normalizePackageLookup(input);
+  const legacyMapped = resolveLegacyPackageId(input);
+
+  return packages.find((pkg) => {
+    const candidates = [
+      pkg.id,
+      pkg.name,
+      pkg.nameEs,
+      pkg._id?.toString?.(), // in case of ObjectId
+    ].filter(Boolean).map(normalizePackageLookup);
+
+    return candidates.includes(normalizedInput) || 
+           candidates.includes(normalizePackageLookup(legacyMapped));
+  });
 }
 
 function getPackageLabel(tourPackage: string | undefined, selectedPackage: any, language: string): string {
@@ -311,6 +356,5 @@ async function saveOrderContext(orderId: string, bookingData: any) {
     );
   } catch (err) {
     console.error("Failed to save PayPal order context:", err);
-    // Don't throw - we still want to return the orderID to frontend
   }
 }
