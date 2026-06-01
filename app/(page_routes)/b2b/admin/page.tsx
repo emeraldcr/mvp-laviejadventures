@@ -347,7 +347,7 @@ export default function B2BAdminPage() {
       });
   }, [heroSlogans]);
 
-  async function fetchAdminData() {
+  async function fetchAdminData(preferredTourSlug?: string) {
     setLoading(true);
     setRequestError("");
     setRequestSuccess("");
@@ -394,7 +394,13 @@ export default function B2BAdminPage() {
       setPricingJson(JSON.stringify(nextSettings.tourPricing || [], null, 2));
       const adminTours = toursData.tours || [];
       setTours(adminTours);
-      if (adminTours.length > 0) { setSelectedTourSlug(adminTours[0].slug); setTourJson(JSON.stringify(adminTours[0], null, 2)); }
+      if (adminTours.length > 0) {
+        const nextSelectedTour =
+          adminTours.find((tour: AdminTour) => tour.slug === (preferredTourSlug || selectedTourSlug)) ||
+          adminTours[0];
+        setSelectedTourSlug(nextSelectedTour.slug);
+        setTourJson(JSON.stringify(nextSelectedTour, null, 2));
+      }
     } catch {
       setRequestError("No se pudo conectar con el servidor.");
     } finally {
@@ -527,7 +533,7 @@ export default function B2BAdminPage() {
       const data = await response.json();
       if (!response.ok) return setRequestError(data.error || "No se pudo crear tour");
       setRequestSuccess("Tour creado correctamente.");
-      await fetchAdminData();
+      await fetchAdminData(String(payload.slug ?? ""));
     } catch { setRequestError("JSON de tour inválido."); }
   }
 
@@ -540,7 +546,7 @@ export default function B2BAdminPage() {
       const data = await response.json();
       if (!response.ok) return setRequestError(data.error || "No se pudo actualizar tour");
       setRequestSuccess("Tour actualizado correctamente.");
-      await fetchAdminData();
+      await fetchAdminData(String(data.slug ?? payload.slug ?? selectedTourSlug));
     } catch { setRequestError("JSON de tour inválido."); }
   }
 

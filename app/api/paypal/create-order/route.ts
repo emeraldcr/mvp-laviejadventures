@@ -9,6 +9,8 @@ import { getDb } from "@/lib/mongodb";
 import { PAYPAL_CURRENCY, PAYPAL_CUSTOM_ID_MAX_LENGTH } from "@/lib/constants/paypal";
 import { COLLECTIONS } from "@/lib/constants/db";
 import { getMinBookableIsoDateInCostaRica, isDateOnOrAfterMinBookableInCostaRica } from "@/lib/costa-rica-time";
+import { fallbackPackagesForTour, normalizeTourPackages } from "@/lib/tour-packages";
+import { getB2BSettings } from "@/lib/models/b2b-settings";
 
 interface CreateOrderLink {
   rel?: string;
@@ -43,11 +45,27 @@ function normalizeOrderDate(date: unknown, dateIso: unknown): string | null {
   return tryParseDate(dateIso) ?? tryParseDate(date);
 }
 
+function normalizePackageLookup(value: unknown) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function resolveLegacyPackageId(value: unknown) {
+  const normalized = normalizePackageLookup(value);
+  if (normalized === "basic") return "essential-package";
+  if (normalized === "full-day") return "lunch-package";
+  if (normalized === "private") return "private-package";
+  return normalized;
+}
+
 export async function POST(req: Request) {
   try {
-    const { name, email, phone, tickets, total, date, dateIso, tourTime, tourPackage, packagePrice, tourSlug, tourName, language } = await req.json();
+    const { name, email, phone, tickets, total, date, dateIso, tourTime, packageId, tourPackage, tourSlug, tourName, language } = await req.json();
 
-    if (!name || !email || !phone || !tickets || !total || !date || !tourPackage) {
+    if (!name || !email || !phone || !tickets || !date || !tourPackage) {
       return NextResponse.json(
         { message: "Missing required fields." },
         { status: 400 }
@@ -79,7 +97,37 @@ export async function POST(req: Request) {
       );
     }
 
-    const formattedTotal = Number(total).toFixed(2);
+    const safeTickets = Number(tickets);
+    if (!Number.isFinite(safeTickets) || safeTickets < 1) {
+      return NextResponse.json({ message: "Invalid ticket quantity." }, { status: 400 });
+    }
+
+    const db = await getDb();
+    const tour = tourSlug
+      ? await db.collection(COLLECTIONS.TOURS).findOne({ slug: tourSlug, isActive: { $ne: false } })
+      : null;
+    const dbPackages = normalizeTourPackages(tour?.packages);
+    const availablePackages = dbPackages.length > 0 ? dbPackages : fallbackPackagesForTour(tourSlug);
+    const packageLookup = resolveLegacyPackageId(packageId || tourPackage);
+    const selectedPackage = availablePackages.find((pkg) => {
+      const candidates = [pkg.id, pkg.name, pkg.nameEs].map(normalizePackageLookup);
+      return candidates.includes(packageLookup);
+    });
+
+    if (!selectedPackage) {
+      return NextResponse.json(
+        { message: "Selected package is no longer available. Please choose the package again." },
+        { status: 400 }
+      );
+    }
+
+    const settings = await getB2BSettings();
+    const ivaRate = Number(settings?.ivaRate ?? 13);
+    const normalizedTaxRate = Number.isFinite(ivaRate) && ivaRate > 0 ? ivaRate / 100 : 0;
+    const serverPackagePrice = Number(selectedPackage.price);
+    const serverSubtotal = safeTickets * serverPackagePrice;
+    const serverTotal = serverSubtotal + serverSubtotal * normalizedTaxRate;
+    const formattedTotal = serverTotal.toFixed(2);
 
     const packageLabel =
       tourPackage === "basic"
@@ -88,18 +136,19 @@ export async function POST(req: Request) {
         ? "Día Completo con Almuerzo"
         : tourPackage === "private"
         ? "Tour Privado"
-        : "Tour";
+        : language === "en" ? selectedPackage.name : selectedPackage.nameEs || selectedPackage.name;
 
     const timeLabel = tourTime
-      ? tourTime === "08:00" ? "8:00 AM" : tourTime === "09:00" ? "9:00 AM" : "10:00 AM"
+      ? String(tourTime)
       : "";
 
     // PayPal custom_id max length is 127 chars — keep metadata compact to avoid truncation
     const customIdPayload = JSON.stringify({
       tickets,
       time: tourTime ?? null,
-      pkg: tourPackage ?? null,
-      ppUSD: packagePrice ?? null,
+      pkg: packageLabel,
+      packageId: selectedPackage.id ?? null,
+      ppUSD: serverPackagePrice,
       tourSlug: tourSlug ?? null,
       tourName: tourName ?? null,
       date: normalizedDate,
@@ -108,7 +157,7 @@ export async function POST(req: Request) {
     const custom_id = customIdPayload.length <= PAYPAL_CUSTOM_ID_MAX_LENGTH ? customIdPayload : JSON.stringify({
       tickets,
       time: tourTime ?? null,
-      pkg: tourPackage ?? null,
+      pkg: selectedPackage.id ?? packageLabel,
       date: normalizedDate,
       lang: language === "en" ? "en" : "es",
     });
@@ -165,11 +214,14 @@ export async function POST(req: Request) {
               tickets: Number(tickets),
               date: normalizedDate,
               tourTime: tourTime ?? null,
-              tourPackage: tourPackage ?? null,
-              packagePrice: packagePrice != null ? Number(packagePrice) : null,
+              packageId: selectedPackage.id ?? packageId ?? null,
+              tourPackage: packageLabel,
+              packagePrice: serverPackagePrice,
               tourSlug: tourSlug ?? null,
               tourName: tourName ?? null,
-              total: Number(total),
+              clientTotal: total != null ? Number(total) : null,
+              total: serverTotal,
+              ivaRate,
               language: language === "en" ? "en" : "es",
             },
             updatedAt: new Date(),

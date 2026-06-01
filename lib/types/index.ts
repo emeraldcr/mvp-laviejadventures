@@ -33,6 +33,21 @@ export type TourSummary = {
   exclusions?: string[];
   cancellationPolicy?: string;
   restrictions?: string;
+  packages?: TourPackageOption[];
+};
+
+export type TourPackageOption = {
+  id?: string;
+  name: string;
+  nameEs?: string;
+  price: number;
+  priceCRC?: number | null;
+  descriptionEn?: string;
+  descriptionEs?: string;
+  includes?: string[];
+  groupTour?: boolean;
+  departureTimes?: string[];
+  scheduleNote?: string;
 };
 
 export type ContactInfo = {
@@ -413,7 +428,9 @@ export type TourDocument = {
   minPax?: number;
   maxPax?: number;
   includes?: string[];
+  inclusions?: string[];
   exclusions?: string[];
+  packages?: TourPackageOption[];
   restrictions?: string;
   location?: string;
   cancellationPolicy?: string;
@@ -478,6 +495,7 @@ export type OrderDetails = {
   date: string;
   dateIso?: string;
   tourTime: string;
+  packageId?: string;
   tourPackage: string;
   tourSlug: string;
   tourName: string;

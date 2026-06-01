@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { createPortal } from "react-dom";
 import { TOUR_INFO } from "@/lib/tour-info";
-import { AvailabilityMap, MainTourInfo, TourSummary } from "@/lib/types/index";
+import { AvailabilityMap, MainTourInfo, TourPackageOption, TourSummary } from "@/lib/types/index";
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { format } from "date-fns";
@@ -25,24 +25,20 @@ const COUNTRY_CODES = [
   { code: "+34", name: "España" },
 ];
 
-// ---------------------- TIME SLOTS ----------------------
-const TIME_SLOTS = [
-  { id: "08:00" as const, label: "8:00 AM" },
-  { id: "09:00" as const, label: "9:00 AM" },
-  { id: "10:00" as const, label: "10:00 AM" },
-];
+const DEFAULT_DEPARTURE_TIMES = ["08:00", "09:00", "10:00"];
 
-export type TourTime = "08:00" | "09:00" | "10:00";
+export type TourTime = string;
 type BookingStepId = 1 | 2 | 3;
 
 // ---------------------- PACKAGES ----------------------
-export type TourPackage = "basic" | "full-day" | "private";
+export type TourPackage = string;
 
-interface PackageOption {
+interface PackageOption extends TourPackageOption {
   id: TourPackage;
-  priceUSD: number;
+  name: string;
+  price: number;
   priceCRC: number | null;
-  availableOn: "weekdays" | "weekends";
+  departureTimes: string[];
 }
 
 export type { TourSummary };
@@ -65,31 +61,56 @@ const resolveSelectedTourSlug = (
   return tours[0]?.slug ?? "tour-ciudad-esmeralda";
 };
 
-const PACKAGE_META = {
-  basic: {
+const PACKAGE_META = [
+  {
     icon: TreePalm,
     accent: "from-sky-500/20 to-emerald-500/10",
     highlightEs: ["Guía certificado local", "Ingreso a zonas naturales", "Briefing de seguridad"],
     highlightEn: ["Certified local guide", "Nature area access", "Safety briefing"],
   },
-  "full-day": {
+  {
     icon: UtensilsCrossed,
     accent: "from-violet-500/20 to-indigo-500/10",
     highlightEs: ["Incluye almuerzo típico", "Paradas fotográficas", "Ruta extendida todo el día"],
     highlightEn: ["Traditional lunch included", "Photo stops", "Extended full-day route"],
   },
-  private: {
+  {
     icon: Sparkles,
     accent: "from-amber-500/20 to-orange-500/10",
     highlightEs: ["Atención exclusiva", "Ritmo personalizado", "Ideal para parejas o grupos"],
     highlightEn: ["Exclusive attention", "Custom pace", "Great for couples or groups"],
   },
-} satisfies Record<TourPackage, {
+];
+
+const slugifyPackageId = (value: string, index: number) => {
+  const slug = value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  return slug || `package-${index + 1}`;
+};
+
+const formatDepartureLabel = (value: string) => {
+  const normalized = value.trim();
+  const match = normalized.match(/^(\d{1,2}):(\d{2})$/);
+  if (!match) return normalized;
+
+  const hour24 = Number(match[1]);
+  const minute = match[2];
+  const period = hour24 >= 12 ? "PM" : "AM";
+  const hour12 = hour24 % 12 || 12;
+  return `${hour12}:${minute} ${period}`;
+};
+
+type PackageMeta = {
   icon: typeof TreePalm;
   accent: string;
   highlightEs: string[];
   highlightEn: string[];
-}>;
+};
 
 // ---------------------- TYPES ----------------------
 interface ReservationFormState {
@@ -110,6 +131,7 @@ interface ReservationOrderPayload {
   date: string;
   dateIso: string;
   tourTime: TourTime;
+  packageId: string;
   tourPackage: TourPackage;
   tourSlug: string;
   tourName: string;
@@ -313,7 +335,6 @@ export default function ReservationDetails({
     { locale: dateLocale }
   );
 
-  const isWeekend = reservationDate.getDay() === 0 || reservationDate.getDay() === 6;
   const [tourTime, setTourTime] = useState<TourTime | null>(null);
   const [tourPackage, setTourPackage] = useState<TourPackage | null>(null);
   const [currentStep, setCurrentStep] = useState<BookingStepId>(1);
@@ -377,30 +398,40 @@ export default function ReservationDetails({
 
   const PACKAGES = useMemo<PackageOption[]>(() => {
     if (!selectedTour) return [];
-    const exchangeRate = 625;
-    const baseUSD = (selectedTour.priceCRC ?? 25000) / exchangeRate;
-    const baseMultiplier = baseUSD / 30;
-    return [
-      {
-        id: "basic",
-        priceUSD: Math.round(30 * baseMultiplier),
-        priceCRC: Math.round(30 * baseMultiplier * exchangeRate),
-        availableOn: "weekends",
-      },
-      {
-        id: "full-day",
-        priceUSD: Math.round(40 * baseMultiplier),
-        priceCRC: Math.round(40 * baseMultiplier * exchangeRate),
-        availableOn: "weekends",
-      },
-      {
-        id: "private",
-        priceUSD: Math.round(60 * baseMultiplier),
-        priceCRC: null,
-        availableOn: "weekdays",
-      },
-    ];
-  }, [selectedTour]);
+
+    const dbPackages = Array.isArray(selectedTour.packages) ? selectedTour.packages : [];
+    if (dbPackages.length > 0) {
+      return dbPackages
+        .filter((pkg) => typeof pkg.name === "string" && pkg.name.trim() && Number.isFinite(Number(pkg.price)))
+        .map((pkg, index) => ({
+          ...pkg,
+          id: pkg.id?.trim() || slugifyPackageId(pkg.nameEs || pkg.name, index),
+          name: pkg.name,
+          price: Number(pkg.price),
+          priceCRC: typeof pkg.priceCRC === "number" ? pkg.priceCRC : null,
+          includes: Array.isArray(pkg.includes) ? pkg.includes : [],
+          departureTimes: Array.isArray(pkg.departureTimes) && pkg.departureTimes.length > 0
+            ? pkg.departureTimes
+            : DEFAULT_DEPARTURE_TIMES,
+        }));
+    }
+
+    const exchangeRate = 525;
+    const fallbackPriceUSD = selectedTour.priceCRC ? Math.round(selectedTour.priceCRC / exchangeRate) : 40;
+
+    return [{
+      id: "standard-package",
+      name: lang === "es" ? "Paquete Estandar" : "Standard Package",
+      nameEs: "Paquete Estandar",
+      price: fallbackPriceUSD,
+      priceCRC: selectedTour.priceCRC ?? null,
+      descriptionEs: selectedTour.descriptionEs,
+      descriptionEn: selectedTour.descriptionEn,
+      includes: selectedTour.inclusions ?? [],
+      groupTour: true,
+      departureTimes: DEFAULT_DEPARTURE_TIMES,
+    }];
+  }, [lang, selectedTour]);
 
   useEffect(() => {
     let isMounted = true;
@@ -481,19 +512,34 @@ export default function ReservationDetails({
     [tourPackage, PACKAGES]
   );
 
-  const selectedPackageUnavailable = selectedPackage
-    ? selectedPackage.availableOn === "weekdays"
-      ? isWeekend
-      : !isWeekend
-    : false;
+  const availableTimeSlots = useMemo(() => {
+    const sourceTimes = selectedPackage
+      ? selectedPackage.departureTimes
+      : PACKAGES.flatMap((pkg) => pkg.departureTimes);
+    const uniqueTimes = Array.from(new Set(sourceTimes.map((time) => time.trim()).filter(Boolean)));
+    return uniqueTimes.length > 0 ? uniqueTimes : DEFAULT_DEPARTURE_TIMES;
+  }, [PACKAGES, selectedPackage]);
 
-  const effectiveTourPackage = selectedPackageUnavailable ? null : tourPackage;
-  const effectiveSelectedPackage = selectedPackageUnavailable ? null : selectedPackage;
+  const effectiveTourPackage = tourPackage;
+  const effectiveSelectedPackage = selectedPackage;
+  const selectedPackageUnavailable = false;
+
+  useEffect(() => {
+    if (tourPackage && !PACKAGES.some((pkg) => pkg.id === tourPackage)) {
+      setTourPackage(null);
+    }
+  }, [PACKAGES, tourPackage]);
+
+  useEffect(() => {
+    if (tourTime && !availableTimeSlots.includes(tourTime)) {
+      setTourTime(null);
+    }
+  }, [availableTimeSlots, tourTime]);
 
   const { subtotalRaw, taxesRaw, totalWithTaxesRaw } = useMemo(() => {
     const safeTickets = Number.isFinite(tickets) ? Math.max(0, tickets) : 0;
-    const pricePerPerson = Number.isFinite(effectiveSelectedPackage?.priceUSD)
-      ? Math.max(0, effectiveSelectedPackage?.priceUSD ?? 0)
+    const pricePerPerson = Number.isFinite(effectiveSelectedPackage?.price)
+      ? Math.max(0, effectiveSelectedPackage?.price ?? 0)
       : 0;
     const sub = safeTickets * pricePerPerson;
     const normalizedTaxRate = Number.isFinite(ivaRatePercent)
@@ -869,10 +915,11 @@ export default function ReservationDetails({
       phone: `${formState.phoneCode} ${formState.phoneNumber}`,
       specialRequests: formState.specialRequests,
       tourTime,
-      tourPackage: effectiveTourPackage,
+      packageId: effectiveSelectedPackage.id,
+      tourPackage: lang === "es" ? (effectiveSelectedPackage.nameEs || effectiveSelectedPackage.name) : effectiveSelectedPackage.name,
       tourSlug: selectedTour.slug,
       tourName: selectedTourName,
-      packagePrice: effectiveSelectedPackage.priceUSD,
+      packagePrice: effectiveSelectedPackage.price,
     });
   }, [
     isFormValid,
@@ -889,6 +936,7 @@ export default function ReservationDetails({
     formState,
     selectedTour,
     selectedTourName,
+    lang,
     trackBlockedStep,
     trackStepCompleted,
   ]);
@@ -920,42 +968,30 @@ export default function ReservationDetails({
     });
   }, [getAnalyticsBookingSnapshot, stepLabels]);
 
-  const handlePackageSelect = useCallback((pkg: PackageOption, isDisabled: boolean) => {
-    if (isDisabled) {
-      trackAnalyticsEvent("booking_step_blocked", {
-        metadata: {
-          step: 1,
-          stepLabel: stepLabels[1],
-          source: "disabled_package",
-          targetStep: 1,
-          targetStepLabel: stepLabels[1],
-          missingKeys: ["available_package"],
-          attemptedPackage: pkg.id,
-          packageAvailableOn: pkg.availableOn,
-          isWeekend,
-          booking: getAnalyticsBookingSnapshot(),
-        },
-      });
-      return;
+  const handlePackageSelect = useCallback((pkg: PackageOption) => {
+    setTourPackage(pkg.id);
+    const firstPackageTime = pkg.departureTimes[0] ?? null;
+    if (tourTime && !pkg.departureTimes.includes(tourTime)) {
+      setTourTime(firstPackageTime);
     }
 
-    setTourPackage(pkg.id);
     trackAnalyticsEvent("booking_selection_changed", {
       metadata: {
         step: 1,
         stepLabel: stepLabels[1],
         field: "tour_package",
         value: pkg.id,
-        priceUSD: pkg.priceUSD,
-        packageAvailableOn: pkg.availableOn,
+        priceUSD: pkg.price,
+        departureTimes: pkg.departureTimes,
         booking: {
           ...getAnalyticsBookingSnapshot(),
           selectedPackage: pkg.id,
           hasSelectedPackage: true,
+          selectedTime: tourTime && pkg.departureTimes.includes(tourTime) ? tourTime : firstPackageTime,
         },
       },
     });
-  }, [getAnalyticsBookingSnapshot, isWeekend, stepLabels]);
+  }, [getAnalyticsBookingSnapshot, stepLabels, tourTime]);
 
   const handleTicketsChange = useCallback((rawValue: string) => {
     const parsedValue = Number(rawValue);
@@ -1220,20 +1256,20 @@ export default function ReservationDetails({
             <h3 className="text-xl font-semibold mb-3">{tr.tourTimeTitle}</h3>
             {!tourTime && <p className="mb-3 flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-400"><AlertCircle className="h-4 w-4" aria-hidden /> {tr.indicators.chooseTourTime}</p>}
             <div className="flex gap-3 flex-wrap">
-              {TIME_SLOTS.map((slot) => {
-                const isSelected = tourTime === slot.id;
+              {availableTimeSlots.map((slot) => {
+                const isSelected = tourTime === slot;
                 return (
                   <button
-                    key={slot.id}
+                    key={slot}
                     type="button"
-                    onClick={() => handleTourTimeSelect(slot.id)}
+                    onClick={() => handleTourTimeSelect(slot)}
                     className={`flex-1 min-w-[90px] py-3 px-4 rounded-xl border-2 font-semibold text-base transition-all ${
                       isSelected
                         ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300"
                         : "border-zinc-300 dark:border-zinc-600 hover:border-emerald-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
                     }`}
                   >
-                    {slot.label}
+                    {formatDepartureLabel(slot)}
                   </button>
                 );
               })}
@@ -1244,25 +1280,25 @@ export default function ReservationDetails({
             <h3 className="text-xl font-semibold mb-3">{tr.packageTitle}</h3>
             {!effectiveTourPackage && <p className="mb-3 flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-400"><AlertCircle className="h-4 w-4" aria-hidden /> {tr.indicators.choosePackage}</p>}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {PACKAGES.map((pkg) => {
+              {PACKAGES.map((pkg, index) => {
                 const isSelected = effectiveTourPackage === pkg.id;
-                const isDisabled =
-                  pkg.availableOn === "weekdays" ? isWeekend : !isWeekend;
-                const pkgTr = tr.packages[pkg.id];
-                const pkgMeta = PACKAGE_META[pkg.id];
+                const pkgName = lang === "es" ? (pkg.nameEs || pkg.name) : pkg.name;
+                const pkgDescription = lang === "es"
+                  ? (pkg.descriptionEs || pkg.descriptionEn || "")
+                  : (pkg.descriptionEn || pkg.descriptionEs || "");
+                const pkgMeta: PackageMeta = PACKAGE_META[index % PACKAGE_META.length];
                 const Icon = pkgMeta.icon;
-                const packageHighlights = lang === "es" ? pkgMeta.highlightEs : pkgMeta.highlightEn;
+                const packageHighlights = pkg.includes && pkg.includes.length > 0
+                  ? pkg.includes
+                  : lang === "es" ? pkgMeta.highlightEs : pkgMeta.highlightEn;
 
                 return (
                   <button
                     key={pkg.id}
                     type="button"
-                    onClick={() => handlePackageSelect(pkg, isDisabled)}
-                    aria-disabled={isDisabled}
+                    onClick={() => handlePackageSelect(pkg)}
                     className={`group relative overflow-hidden text-left p-5 rounded-2xl border-2 transition-all ${
-                      isDisabled
-                        ? "border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800/50 opacity-50 cursor-not-allowed"
-                        : isSelected
+                      isSelected
                         ? "border-emerald-500 bg-emerald-50/90 dark:bg-emerald-900/20 shadow-lg shadow-emerald-500/10"
                         : "border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 hover:-translate-y-0.5 hover:border-emerald-400 hover:shadow-lg hover:shadow-emerald-500/10 cursor-pointer"
                     }`}
@@ -1273,19 +1309,19 @@ export default function ReservationDetails({
                         <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/90 text-emerald-700 shadow-sm dark:bg-zinc-800/90 dark:text-emerald-300">
                           <Icon className="h-5 w-5" aria-hidden />
                         </span>
-                        {pkg.availableOn === "weekdays" && (
+                        {pkg.groupTour === false && (
                           <span className="inline-block text-xs font-semibold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 rounded px-2 py-0.5">
-                            {tr.weekdaysOnly}
+                            {lang === "es" ? "Privado" : "Private"}
                           </span>
                         )}
-                        {pkg.availableOn === "weekends" && (
+                        {pkg.groupTour !== false && (
                           <span className="inline-block text-xs font-semibold bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-300 rounded px-2 py-0.5">
-                            {tr.weekendsOnly}
+                            {lang === "es" ? "Grupal" : "Group"}
                           </span>
                         )}
                       </div>
-                      <p className="font-bold text-base mb-1 text-zinc-800 dark:text-zinc-100">{pkgTr.name}</p>
-                      <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-4 leading-snug">{pkgTr.description}</p>
+                      <p className="font-bold text-base mb-1 text-zinc-800 dark:text-zinc-100">{pkgName}</p>
+                      <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-4 leading-snug">{pkgDescription}</p>
                       <ul className="mb-4 space-y-1.5">
                         {packageHighlights.map((item) => (
                           <li key={item} className="flex items-center gap-2 text-xs text-zinc-700 dark:text-zinc-300">
@@ -1297,10 +1333,13 @@ export default function ReservationDetails({
                       <div className="flex items-end justify-between gap-3 border-t border-zinc-200/70 pt-3 dark:border-zinc-700/80">
                         <div>
                           <p className="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">{tr.priceFrom}</p>
-                          <p className="font-bold text-xl text-zinc-900 dark:text-zinc-100">${pkg.priceUSD}</p>
+                          <p className="font-bold text-xl text-zinc-900 dark:text-zinc-100">${pkg.price}</p>
                         </div>
                         <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">USD / {tr.perPerson}</p>
                       </div>
+                      {pkg.scheduleNote && (
+                        <p className="mt-3 text-xs text-zinc-500 dark:text-zinc-400">{pkg.scheduleNote}</p>
+                      )}
                     </div>
                   </button>
                 );
@@ -1393,7 +1432,7 @@ export default function ReservationDetails({
         <>
           <div className="mb-6 bg-zinc-100 dark:bg-zinc-800 p-4 rounded-xl">
             <div className="flex justify-between mb-2"><span>{tr.tourLabel}</span><span className="font-medium">{selectedTourName}</span></div>
-            <div className="flex justify-between mb-2"><span>{tr.packageLabel}</span><span className="font-medium">{effectiveSelectedPackage ? tr.packages[effectiveSelectedPackage.id].name : "—"}</span></div>
+            <div className="flex justify-between mb-2"><span>{tr.packageLabel}</span><span className="font-medium">{effectiveSelectedPackage ? (lang === "es" ? effectiveSelectedPackage.nameEs || effectiveSelectedPackage.name : effectiveSelectedPackage.name) : "—"}</span></div>
             <div className="flex justify-between mb-2"><span>{tr.tourTimeTitle}</span><span>{tourTime ?? "—"}</span></div>
             <div className="flex justify-between mb-2"><span>{tr.subtotalLabel}</span><span>${subtotal.toFixed(2)}</span></div>
             <div className="flex justify-between mb-2"><span>{tr.taxes} ({ivaRatePercent}%)</span><span>${taxes.toFixed(2)}</span></div>

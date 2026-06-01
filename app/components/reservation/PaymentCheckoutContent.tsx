@@ -30,7 +30,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
   const { lang } = useLanguage();
   const tr = translations[lang].payment;
 
-  const { name, email, phone, tickets, total, date, dateIso, tourTime, tourPackage, tourSlug, tourName, packagePrice } = orderDetails;
+  const { name, email, phone, tickets, total, date, dateIso, tourTime, packageId, tourPackage, tourSlug, tourName, packagePrice } = orderDetails;
 
   const checkoutKey = useMemo(
     () => [
@@ -41,13 +41,14 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
       total,
       dateIso ?? date,
       tourTime,
+      packageId,
       tourPackage,
       tourSlug,
       tourName,
       packagePrice,
       lang,
     ].join("|"),
-    [date, dateIso, email, lang, name, packagePrice, phone, tickets, total, tourName, tourPackage, tourSlug, tourTime],
+    [date, dateIso, email, lang, name, packageId, packagePrice, phone, tickets, total, tourName, tourPackage, tourSlug, tourTime],
   );
 
   const bookingAnalyticsMetadata = useMemo(
@@ -55,6 +56,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
       tickets,
       date: dateIso ?? date,
       tourTime,
+      packageId,
       tourPackage,
       tourSlug,
       tourName,
@@ -63,7 +65,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
       currency: "USD",
       language: lang,
     }),
-    [date, dateIso, lang, packagePrice, tickets, total, tourName, tourPackage, tourSlug, tourTime],
+    [date, dateIso, lang, packageId, packagePrice, tickets, total, tourName, tourPackage, tourSlug, tourTime],
   );
 
   const isPaypalLoading = loadedPaypalKey !== checkoutKey;
@@ -106,6 +108,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
                 date: dateIso ?? date,
                 total,
                 tourTime,
+                packageId,
                 tourPackage,
                 packagePrice,
                 tourSlug,
@@ -274,9 +277,9 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
         paypalContainer.innerHTML = "";
       }
     };
-  }, [bookingAnalyticsMetadata, checkoutKey, date, dateIso, email, lang, name, onSuccess, packagePrice, phone, router, tickets, total, tourName, tourPackage, tourSlug, tourTime, tr.error]);
+  }, [bookingAnalyticsMetadata, checkoutKey, date, dateIso, email, lang, name, onSuccess, packageId, packagePrice, phone, router, tickets, total, tourName, tourPackage, tourSlug, tourTime, tr.error]);
 
-  const packageName = tr.packages[tourPackage] ?? tourPackage;
+  const packageName = (tr.packages as Record<string, string>)[tourPackage] ?? tourPackage;
 
   return (
     <>

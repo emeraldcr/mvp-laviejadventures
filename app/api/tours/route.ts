@@ -4,6 +4,7 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/mongodb";
 import { COLLECTIONS } from "@/lib/constants/db";
+import { fallbackPackagesForTour, normalizeTourPackages } from "@/lib/tour-packages";
 
 const DEFAULT_TOURS = [
   {
@@ -247,6 +248,9 @@ export async function GET() {
     const result = tours.map((t) => {
       const defaults = DEFAULT_TOUR_DETAILS[t.slug] ?? null;
 
+      const sourcePackages = normalizeTourPackages(t.packages);
+      const packages = sourcePackages.length > 0 ? sourcePackages : fallbackPackagesForTour(t.slug);
+
       return {
         id: t._id.toString(),
         slug: t.slug,
@@ -263,6 +267,19 @@ export async function GET() {
         exclusions: t.exclusions ?? defaults?.exclusions ?? [],
         cancellationPolicy: t.cancellationPolicy ?? defaults?.cancellationPolicy ?? "",
         restrictions: t.restrictions ?? defaults?.restrictions ?? "",
+        packages: packages.map((pkg) => ({
+          id: pkg.id,
+          name: pkg.name,
+          nameEs: pkg.nameEs,
+          price: pkg.price,
+          priceCRC: pkg.priceCRC,
+          descriptionEn: pkg.descriptionEn,
+          descriptionEs: pkg.descriptionEs,
+          includes: Array.isArray(pkg.includes) ? pkg.includes : [],
+          groupTour: pkg.groupTour,
+          departureTimes: Array.isArray(pkg.departureTimes) ? pkg.departureTimes : [],
+          scheduleNote: pkg.scheduleNote,
+        })),
         tagEs: t.tagEs,
         tagEn: t.tagEn,
         accent: t.accent,
