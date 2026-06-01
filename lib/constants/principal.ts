@@ -11,43 +11,60 @@ export const principalContent = {
       toggleMenuAria: "Abrir o cerrar menu",
     },
     hero: {
-      errorLoadingImages: "Error al cargar imagenes",
-      loadingImages: "Cargando imagenes...",
-      previousImageAria: "Imagen anterior",
-      nextImageAria: "Imagen siguiente",
-      goToSlideAria: "Ir a imagen {slide}",
-      scrollToToursAria: "Ir a tours",
-      scrollToMainAria: "Ir al contenido principal",
-      locationBadge: "San Carlos - Costa Rica",
-      title: "Aventuras en San Carlos, Costa Rica",
-      subtitle: "Canones, cascadas y pozas secretas en el Parque Nacional Juan Castro Blanco",
-      description:
-        "Descubre 6 experiencias unicas con guias locales. Desde el iconico Ciudad Esmeralda hasta pozas cristalinas, selva nublada y canonismo extremo.",
-      exploreCta: "Explorar Todas las Aventuras",
-      datesCta: "Ver Fechas Disponibles",
-    },
-    tours: {
-      eyebrow: "Explora primero",
-      title: "Elige tu aventura ideal",
-    },
+  errorLoadingImages: "Error al cargar las imágenes",
+  loadingImages: "Cargando imágenes...",
+  previousImageAria: "Imagen anterior",
+  nextImageAria: "Imagen siguiente",
+  goToSlideAria: "Ir a imagen {slide}",
+  scrollToToursAria: "Ir a los tours",
+  scrollToMainAria: "Ir al contenido principal",
+  locationBadge: "San Carlos, Costa Rica",
+  title: "Aventuras Inolvidables en San Carlos",
+  subtitle: "Cañones, cascadas secretas y pozas esmeralda en el corazón de Alajuela Norte",
+  description:
+    "Vive 6 experiencias únicas guiadas por locales expertos. Desde el icónico Tour Ciudad Esmeralda hasta rapel en cañones, avistamiento de aves, tours nocturnos y gastronomía auténtica.",
+  exploreCta: "Explorar Todas las Aventuras",
+  datesCta: "Ver Fechas Disponibles",
+},
+
+tours: {
+  eyebrow: "Elige tu próxima aventura",
+  title: "Nuestras Experiencias",
+  subtitle: "Desde emocionantes descensos en cañones hasta caminatas tranquilas en la selva, encuentra la aventura perfecta para ti.",
+},
     conversion: {
+      title: "Preguntas frecuentes",
+      subtitle: "Respuestas rapidas para planear tu aventura con mas confianza.",
       faqs: [
-        {
-          question: "Puedo cambiar mi fecha despues de reservar?",
-          answer:
-            "Si, nuestro equipo te ayuda a reprogramar segun disponibilidad para que no pierdas tu experiencia.",
-        },
-        {
-          question: "Cual tour es mejor para principiantes?",
-          answer:
-            "Usa el boton AI en la reserva y te recomendara la opcion ideal por duracion e intensidad.",
-        },
-        {
-          question: "Que pasa si llueve?",
-          answer:
-            "Monitoreamos el clima constantemente y te notificamos alternativas seguras con tiempo.",
-        },
-      ],
+  {
+    question: "¿Puedo cambiar la fecha de mi tour después de reservar?",
+    answer: "Sí, puedes solicitar el cambio de fecha con al menos 48 horas de anticipación. Nuestro equipo te ayudará a reprogramar según la disponibilidad disponible.",
+  },
+  {
+    question: "¿Cuál es el tour más recomendado para principiantes?",
+    answer: "Los tours más adecuados para principiantes son **Cascadas Secretas**, **Lluvia en la Naturaleza** y el **Tour Gastronómico**. Son de baja o moderada intensidad y no requieren experiencia previa.",
+  },
+  {
+    question: "¿Qué pasa si llueve el día del tour?",
+    answer: "La mayoría de nuestros tours operan con lluvia ligera. En caso de tormenta fuerte, te contactaremos con anticipación para ofrecerte una fecha alternativa o cambiar a otra actividad segura.",
+  },
+  {
+    question: "¿Qué debo llevar al tour?",
+    answer: "Depende del tour, pero en general recomendamos: ropa cómoda, zapatos que se puedan mojar, traje de baño, toalla, repelente, protector solar y una muda de ropa. Te enviaremos una lista específica al confirmar tu reserva.",
+  },
+  {
+    question: "¿Hay edad mínima para participar?",
+    answer: "La mayoría de los tours permiten desde los 10-12 años acompañados por un adulto. Los tours extremos como Rapel y Cuatrimotos tienen edad mínima de 14 y 16 años respectivamente.",
+  },
+  {
+    question: "¿El transporte está incluido?",
+    answer: "No, el transporte no está incluido. Podemos ayudarte a coordinar un traslado privado desde tu hotel por un costo adicional.",
+  },
+  {
+    question: "¿Cuál es la política de cancelación?",
+    answer: "Tienes cancelación gratuita hasta 48 horas antes del tour. Cancelaciones con menos de 48 horas no tienen reembolso.",
+  }
+],
     },
     booking: {
       loading: "Preparando tu panel de reserva...",
@@ -94,6 +111,8 @@ export const principalContent = {
       title: "Choose your ideal adventure",
     },
     conversion: {
+      title: "Frequently Asked Questions",
+      subtitle: "Quick answers to help you plan your adventure with confidence.",
       faqs: [
         {
           question: "Can I change my date after booking?",

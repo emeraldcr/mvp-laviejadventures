@@ -417,7 +417,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "1
   useEffect(() => {
     if (typeof window === "undefined") return;
     const IMG_SPEED = -0.15;
-    const OVERLAY_SPEED = -0.3;
+    const OVERLAY_SPEED = 0;
     let ticking = false;
     const update = () => {
       if (!ticking) {
@@ -520,65 +520,65 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "1
       </button>
 
       {/* ── Main text overlay ── */}
-      <div
-        ref={parallaxOverlayRef}
-        className="relative w-full h-full flex flex-col justify-center items-center text-center z-20 px-4 md:px-8 will-change-transform"
-      >
-        {overlay || (
-          <>
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 mb-6 px-4 py-1.5 rounded-full border border-white/20 bg-white/8 backdrop-blur-md">
-              <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" />
-              <span className="text-[11px] font-bold text-white/80 uppercase tracking-[0.2em]">
-                {copy.locationBadge}
-              </span>
-            </div>
+      <div className="relative z-20 flex h-full w-full items-center justify-center px-4 pb-36 pt-28 text-center sm:pb-40 md:px-8 md:pb-44 md:pt-32">
+        <div ref={parallaxOverlayRef} className="mx-auto flex max-w-6xl flex-col items-center will-change-transform">
+          {overlay || (
+            <>
+              {/* Badge */}
+              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/20 px-4 py-1.5 backdrop-blur-md sm:mb-6">
+                <span className="h-1.5 w-1.5 rounded-full bg-teal-400 shadow-[0_0_16px_rgba(45,212,191,0.85)]" />
+                <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/85">
+                  {copy.locationBadge}
+                </span>
+              </div>
 
-            {/* Title */}
-            <h1 className="max-w-5xl text-balance text-4xl sm:text-6xl md:text-7xl lg:text-[5.8rem] font-black mb-4 text-white leading-[0.95] tracking-tight drop-shadow-2xl">
-              {copy.title}
-            </h1>
+              {/* Title */}
+              <h1 className="max-w-6xl text-balance text-[clamp(2.75rem,7vw,5.5rem)] font-black leading-[0.98] text-white drop-shadow-2xl">
+                {copy.title}
+              </h1>
 
-            <h2 className="max-w-4xl text-balance text-lg sm:text-2xl md:text-3xl font-semibold text-white/95 leading-tight mb-5 drop-shadow-xl">
-              {copy.subtitle}
-            </h2>
+              <h2 className="mt-4 max-w-4xl text-balance text-[clamp(1.25rem,2.8vw,2.45rem)] font-bold leading-tight text-white/95 drop-shadow-xl">
+                {copy.subtitle}
+              </h2>
 
-            <p className="mb-9 max-w-3xl text-sm sm:text-lg md:text-xl text-white/85 leading-relaxed">
-              {copy.description}
-            </p>
+              <p className="mt-6 max-w-4xl text-balance text-base font-medium leading-relaxed text-white/82 drop-shadow-lg sm:text-lg md:text-xl">
+                {copy.description}
+              </p>
 
-            {/* CTA */}
-            <div className="flex w-full max-w-2xl flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
-              <a
-                href="#tours"
-                className="group inline-flex w-full sm:w-auto items-center justify-center gap-3 px-7 py-3.5 rounded-full bg-teal-500 hover:bg-teal-400 text-white font-bold text-base shadow-[0_0_40px_rgba(20,184,166,0.4)] hover:shadow-[0_0_55px_rgba(20,184,166,0.6)] transition-all duration-300"
-              >
-                <span>{copy.exploreCta}</span>
-                <span className="inline-block group-hover:translate-x-1 transition-transform duration-200">→</span>
-              </a>
+              {/* CTA */}
+              <div className="mt-8 flex w-full max-w-2xl flex-col items-center justify-center gap-3 sm:mt-9 sm:flex-row sm:gap-4">
+                <a
+                  href="#tours"
+                  className="group inline-flex min-h-14 w-full items-center justify-center gap-3 rounded-full bg-teal-500 px-7 py-3 text-base font-bold text-white shadow-[0_18px_45px_rgba(20,184,166,0.34)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-teal-400 hover:shadow-[0_22px_60px_rgba(20,184,166,0.46)] sm:w-auto"
+                >
+                  <span>{copy.exploreCta}</span>
+                  <span className="inline-block group-hover:translate-x-1 transition-transform duration-200">→</span>
+                </a>
 
-              <a
-                href="#booking"
-                className="inline-flex w-full sm:w-auto items-center justify-center px-7 py-3.5 rounded-full border border-white/70 bg-white/10 hover:bg-white/20 text-white font-semibold text-base backdrop-blur-sm transition-colors duration-300"
-              >
-                {copy.datesCta}
-              </a>
-            </div>
-          </>
-        )}
+                <a
+                  href="#booking"
+                  className="inline-flex min-h-14 w-full items-center justify-center rounded-full border border-white/55 bg-black/20 px-7 py-3 text-base font-bold text-white shadow-[0_16px_40px_rgba(0,0,0,0.22)] backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-white/80 hover:bg-white/18 sm:w-auto"
+                >
+                  {copy.datesCta}
+                </a>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
 
         {/* ── Bottom controls ── */}
-        <div className="absolute bottom-7 left-0 right-0 flex flex-col items-center gap-3 z-30">
+      <div className="absolute inset-x-0 bottom-6 z-30 flex flex-col items-center gap-3 px-4 sm:bottom-7 md:bottom-8">
           {/* Dot indicators */}
-          <div className="flex items-center gap-2">
+        <div className="flex max-w-[min(82vw,44rem)] items-center gap-2 overflow-hidden rounded-full border border-white/10 bg-black/28 px-3 py-2 shadow-[0_12px_30px_rgba(0,0,0,0.28)] backdrop-blur-md">
             {carouselImages.map((_, idx) => (
               <button
                 key={idx}
                 onClick={() => goTo(idx)}
-                className={`rounded-full transition-all duration-300 ${
+              className={`h-2 shrink-0 rounded-full transition-all duration-300 ${
                   idx === currentIndex
-                    ? "w-7 h-2 bg-teal-400"
-                    : "w-2 h-2 bg-white/30 hover:bg-white/55"
+                  ? "w-8 bg-teal-400 shadow-[0_0_16px_rgba(45,212,191,0.7)]"
+                  : "w-2 bg-white/36 hover:bg-white/65"
                 }`}
                 aria-label={copy.goToSlideAria.replace("{slide}", String(idx + 1))}
               />
@@ -586,19 +586,18 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "1
           </div>
 
           {/* Counter */}
-          <span className="text-[10px] font-medium text-white/35 tabular-nums tracking-widest">
+        <span className="rounded-full bg-black/18 px-2 py-0.5 text-[10px] font-semibold tabular-nums tracking-widest text-white/55 backdrop-blur-sm">
             {String(currentIndex + 1).padStart(2, "0")} / {String(carouselImages.length).padStart(2, "0")}
           </span>
 
           {/* Scroll indicator */}
           <a
             href="#tours"
-            className="mt-1 p-2 rounded-full bg-white/8 hover:bg-white/18 transition-colors animate-bounce"
+          className="mt-0 flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/10 text-white/75 shadow-[0_12px_32px_rgba(0,0,0,0.25)] backdrop-blur-md transition-colors hover:bg-white/18"
             aria-label={copy.scrollToToursAria}
           >
-            <ChevronDown size={22} className="text-white/60" />
+          <ChevronDown size={22} />
           </a>
-        </div>
       </div>
       <style jsx>{`
         @keyframes lva-progress {
