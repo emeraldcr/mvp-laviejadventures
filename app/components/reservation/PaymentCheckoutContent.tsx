@@ -13,6 +13,11 @@ declare global {
   }
 }
 
+const isLivePayPalMode = (mode: string | undefined) => {
+  const normalizedMode = mode?.trim().toLowerCase();
+  return normalizedMode === "live" || normalizedMode === "production" || normalizedMode === "prod";
+};
+
 type Props = {
   orderDetails: OrderDetails;
   onSuccess: (orderData: unknown) => void;
@@ -199,19 +204,30 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
         });
     };
 
-    const mode = process.env.NEXT_PUBLIC_PAYPAL_MODE?.toLowerCase() || "dev";
-    const clientId = mode === "live"
+    const mode = process.env.NEXT_PUBLIC_PAYPAL_MODE;
+    const isLiveMode = isLivePayPalMode(mode);
+    const clientId = (isLiveMode
       ? process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID
-      : process.env.NEXT_PUBLIC_PAYPAL_SANDBOX_CLIENT_ID;
+      : process.env.NEXT_PUBLIC_PAYPAL_SANDBOX_CLIENT_ID)?.trim();
 
     if (!clientId) {
-      console.error("Missing PayPal client ID for the current mode:", mode);
+      console.error("Missing PayPal client ID for the current mode:", mode || "sandbox");
       finishLoading();
       return;
     }
 
     const paypalLocale = lang === "es" ? "es_XC" : "en_US";
+    const sdkUrl = new URL("https://www.paypal.com/sdk/js");
+    sdkUrl.search = new URLSearchParams({
+      "client-id": clientId,
+      components: "buttons",
+      currency: "USD",
+      intent: "capture",
+      locale: paypalLocale,
+    }).toString();
+    const sdkSrc = sdkUrl.toString();
     const handleScriptError = () => {
+      document.querySelector<HTMLScriptElement>("#paypal-sdk")?.remove();
       finishLoading();
       trackAnalyticsEvent("payment_error", {
         metadata: {
@@ -223,25 +239,37 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
       alert(tr.error);
     };
 
-    if (!existingScript) {
+    if (existingScript && existingScript.src !== sdkSrc) {
+      existingScript.remove();
+    }
+
+    const activeScript = existingScript?.src === sdkSrc ? existingScript : null;
+
+    if (!activeScript) {
       const script = document.createElement("script");
       script.id = "paypal-sdk";
-      script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&locale=${paypalLocale}`;
+      script.src = sdkSrc;
       script.async = true;
-      script.onload = initializeButtons;
-      script.onerror = handleScriptError;
+      script.onload = () => {
+        script.dataset.paypalStatus = "loaded";
+        initializeButtons();
+      };
+      script.onerror = () => {
+        script.dataset.paypalStatus = "error";
+        handleScriptError();
+      };
       document.body.appendChild(script);
     } else if (window.paypal) {
       initializeButtons();
     } else {
-      existingScript.addEventListener("load", initializeButtons);
-      existingScript.addEventListener("error", handleScriptError);
+      activeScript.addEventListener("load", initializeButtons);
+      activeScript.addEventListener("error", handleScriptError);
     }
 
     return () => {
       isMounted = false;
-      existingScript?.removeEventListener("load", initializeButtons);
-      existingScript?.removeEventListener("error", handleScriptError);
+      activeScript?.removeEventListener("load", initializeButtons);
+      activeScript?.removeEventListener("error", handleScriptError);
       if (paypalContainer) {
         paypalContainer.innerHTML = "";
       }

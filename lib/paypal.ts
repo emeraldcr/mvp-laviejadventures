@@ -5,10 +5,15 @@
  * Sandbox → https://api-m.sandbox.paypal.com
  * Live → https://api-m.paypal.com
  */
-export function getPayPalApiBaseUrl() {
-  const mode = process.env.PAYPAL_MODE?.toLowerCase();
+function isLivePayPalMode(mode: string | undefined) {
+  const normalizedMode = mode?.trim().toLowerCase();
+  return normalizedMode === "live" || normalizedMode === "production" || normalizedMode === "prod";
+}
 
-  return mode === "live"
+export function getPayPalApiBaseUrl() {
+  const mode = process.env.PAYPAL_MODE;
+
+  return isLivePayPalMode(mode)
     ? "https://api-m.paypal.com" // LIVE
     : "https://api-m.sandbox.paypal.com"; // SANDBOX
 }
@@ -17,25 +22,26 @@ export function getPayPalApiBaseUrl() {
  * Creates a Basic auth header value for OAuth token request
  */
 function getPayPalBasicAuthHeader() {
-  const mode = process.env.PAYPAL_MODE?.toLowerCase();
+  const mode = process.env.PAYPAL_MODE;
+  const isLiveMode = isLivePayPalMode(mode);
 
   let clientId: string | undefined;
   let clientSecret: string | undefined;
 
-  if (mode === "live") {
+  if (isLiveMode) {
     clientId =
-      process.env.PAYPAL_CLIENT_ID || process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
-    clientSecret = process.env.PAYPAL_CLIENT_SECRET;
+      process.env.PAYPAL_CLIENT_ID?.trim() || process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID?.trim();
+    clientSecret = process.env.PAYPAL_CLIENT_SECRET?.trim();
   } else {
     // sandbox/dev mode
     clientId =
-      process.env.PAYPAL_SANDBOX_CLIENT_ID || process.env.NEXT_PUBLIC_PAYPAL_SANDBOX_CLIENT_ID;
-    clientSecret = process.env.PAYPAL_SANDBOX_CLIENT_SECRET;
+      process.env.PAYPAL_SANDBOX_CLIENT_ID?.trim() || process.env.NEXT_PUBLIC_PAYPAL_SANDBOX_CLIENT_ID?.trim();
+    clientSecret = process.env.PAYPAL_SANDBOX_CLIENT_SECRET?.trim();
   }
 
   if (!clientId || !clientSecret) {
     throw new Error(
-      mode === "live"
+      isLiveMode
         ? "Missing PayPal LIVE API credentials."
         : "Missing PayPal SANDBOX API credentials."
     );
