@@ -10,7 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import Image from "next/image";
-import { Menu, X, ChevronDown, ChevronLeft, ChevronRight, LogOut, User, LayoutDashboard } from "lucide-react";
+import { Menu, X, ChevronDown, ChevronLeft, ChevronRight, User, LayoutDashboard } from "lucide-react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import useSWR from "swr";
@@ -18,7 +18,6 @@ import { fetcher } from "@/lib/fetcher";
 import { useInterval } from "@/app/hooks/useInterval";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/lib/translations";
-import { useSession, signOut } from "next-auth/react";
 import { principalContent } from "@/lib/constants/principal";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -187,93 +186,6 @@ const LangToggle = memo<{ onClick: () => void; currentLang: string }>(({ onClick
 ));
 LangToggle.displayName = "LangToggle";
 
-// ─── AuthNav ──────────────────────────────────────────────────────────────────
-const AuthNav = memo<{ onMobileClose?: () => void; isMobile?: boolean }>(({ onMobileClose, isMobile }) => {
-  const { data: session, status } = useSession();
-  const { lang } = useLanguage();
-  const copy = principalContent[lang].header;
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-
-  if (status === "loading") {
-    return <div className="w-8 h-8 rounded-full bg-white/20 animate-pulse" />;
-  }
-
-  if (!session?.user) return null;
-
-  const { name, image } = session.user;
-
-  if (isMobile) {
-    return (
-      <div className="space-y-3 pt-2 border-t border-white/10">
-        <div className="flex items-center gap-3">
-          {image ? (
-            <Image src={image} alt={name || "User"} width={36} height={36} className="rounded-full border border-white/30" referrerPolicy="no-referrer" />
-          ) : (
-            <div className="w-9 h-9 rounded-full bg-teal-700 flex items-center justify-center">
-              <User size={16} className="text-white" />
-            </div>
-          )}
-          <span className="text-white font-medium text-sm truncate">{name}</span>
-        </div>
-        <Link href="/dashboard" onClick={onMobileClose} className="flex items-center gap-2 text-white/80 hover:text-white text-sm font-semibold">
-          <LayoutDashboard size={15} /> {copy.dashboard}
-        </Link>
-        <button
-          onClick={() => { signOut({ callbackUrl: "/" }); onMobileClose?.(); }}
-          className="flex items-center gap-2 text-white/80 hover:text-white text-sm font-semibold"
-        >
-          <LogOut size={15} /> {copy.logout}
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="relative">
-      <button
-        onClick={() => setDropdownOpen((p) => !p)}
-        className="emerald-wave-button flex items-center gap-2 rounded-full border border-emerald-100/30 bg-white/10 px-3 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-100/55 hover:bg-emerald-200/15"
-        aria-label={copy.userMenuAria}
-      >
-        {image ? (
-          <Image src={image} alt={name || "User"} width={28} height={28} className="rounded-full" referrerPolicy="no-referrer" />
-        ) : (
-          <div className="w-7 h-7 rounded-full bg-teal-700 flex items-center justify-center">
-            <User size={14} className="text-white" />
-          </div>
-        )}
-        <span className="text-white text-sm font-medium hidden lg:block max-w-[100px] truncate">{name?.split(" ")[0]}</span>
-        <ChevronDown size={14} className={`text-white/70 transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`} />
-      </button>
-
-      {dropdownOpen && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setDropdownOpen(false)} />
-          <div className="absolute right-0 top-full mt-2 z-50 w-52 overflow-hidden rounded-2xl border border-emerald-100/20 bg-teal-950/90 shadow-[0_24px_70px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-2xl">
-            <div className="px-4 py-3 border-b border-white/10">
-              <p className="text-white text-sm font-semibold truncate">{name}</p>
-              <p className="text-white/50 text-xs truncate">{session.user.email}</p>
-            </div>
-            <Link
-              href="/dashboard"
-              onClick={() => setDropdownOpen(false)}
-              className="flex items-center gap-2.5 px-4 py-3 text-sm text-white/80 hover:text-white hover:bg-white/10 transition-colors"
-            >
-              <LayoutDashboard size={15} /> {copy.dashboard}
-            </Link>
-            <button
-              onClick={() => { setDropdownOpen(false); signOut({ callbackUrl: "/" }); }}
-              className="flex w-full items-center gap-2.5 px-4 py-3 text-sm text-white/80 hover:text-white hover:bg-white/10 transition-colors border-t border-white/10"
-            >
-              <LogOut size={15} /> {copy.logout}
-            </button>
-          </div>
-        </>
-      )}
-    </div>
-  );
-});
-AuthNav.displayName = "AuthNav";
 
 // ─── Header ───────────────────────────────────────────────────────────────────
 const Header = memo<{ isScrolled: boolean; onMenuToggle: () => void; isMenuOpen: boolean }>(
@@ -342,7 +254,6 @@ const Header = memo<{ isScrolled: boolean; onMenuToggle: () => void; isMenuOpen:
             ))}
             <NavLink href="/#booking" label={tr.reserve} variant="primary" className="ml-1" />
             <LangToggle onClick={toggle} currentLang={lang} />
-            <AuthNav />
           </nav>
 
           <button
@@ -381,7 +292,6 @@ const Header = memo<{ isScrolled: boolean; onMenuToggle: () => void; isMenuOpen:
           <div className="pt-2">
             <LangToggle onClick={toggle} currentLang={lang} />
           </div>
-          <AuthNav isMobile onMobileClose={onMenuToggle} />
         </div>
       </header>
     );

@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useSession } from "next-auth/react";
 import { trackAnalyticsEvent } from "@/lib/analytics/client";
 
 function getTrackableElement(target: EventTarget | null): HTMLElement | null {
@@ -14,21 +13,12 @@ export default function AnalyticsTracker() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const queryString = searchParams.toString();
-  const { data: session, status } = useSession();
 
   useEffect(() => {
     if (!pathname) return;
 
     trackAnalyticsEvent("page_view", {
       path: queryString ? `${pathname}?${queryString}` : pathname,
-      metadata: {
-        auth: {
-          status,
-          userId: (session?.user as { id?: string } | undefined)?.id ?? null,
-          email: session?.user?.email ?? null,
-          provider: session?.user?.email?.includes("@") ? "credentials_or_auth0" : null,
-        },
-      },
     });
 
   }, [pathname, queryString, session?.user, status]);

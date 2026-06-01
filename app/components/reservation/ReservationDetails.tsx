@@ -3,7 +3,6 @@ import Link from "next/link";
 import { TOUR_INFO } from "@/lib/tour-info";
 import { AvailabilityMap, MainTourInfo, TourPackageOption, TourSummary } from "@/lib/types/index";
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
-import { useSession } from "next-auth/react";
 import { format } from "date-fns";
 import { es, enUS } from "date-fns/locale";
 import { useLanguage } from "@/app/context/LanguageContext";
@@ -319,8 +318,6 @@ export default function ReservationDetails({
 }: Props) {
   const { lang } = useLanguage();
   const tr = translations[lang].reservation;
-  const { data: session } = useSession();
-  const hasPrefilledUserData = useRef(false);
   const dateLocale = lang === "es" ? es : enUS;
   const [selectedTourInfo, setSelectedTourInfo] = useState<{ slug: string; tour: MainTourInfo } | null>(null);
   const slots = availability[selectedDate] ?? 0;
@@ -557,56 +554,6 @@ export default function ReservationDetails({
     specialRequests: "",
     agreeTerms: false,
   });
-
-  useEffect(() => {
-    if (!session?.user || hasPrefilledUserData.current) return;
-
-    hasPrefilledUserData.current = true;
-
-    setFormState((prev) => ({
-      ...prev,
-      name: prev.name.trim() ? prev.name : (session.user?.name ?? ""),
-      email: prev.email.trim() ? prev.email : (session.user?.email ?? ""),
-    }));
-
-    fetch("/api/user/profile")
-      .then((response) => (response.ok ? response.json() : null))
-      .then((data) => {
-        const profile = data?.profile as { name?: string; email?: string; phone?: string } | undefined;
-        if (!profile) return;
-
-        setFormState((prev) => {
-          const next = {
-            ...prev,
-            name: prev.name.trim() ? prev.name : (profile.name ?? prev.name),
-            email: prev.email.trim() ? prev.email : (profile.email ?? prev.email),
-          };
-
-          if (!prev.phoneNumber.trim() && profile.phone?.trim()) {
-            const normalizedPhone = profile.phone.trim();
-            const matchedCode = COUNTRY_CODES.find((country) => normalizedPhone.startsWith(country.code));
-
-            if (matchedCode) {
-              return {
-                ...next,
-                phoneCode: matchedCode.code,
-                phoneNumber: normalizedPhone.slice(matchedCode.code.length).trim(),
-              };
-            }
-
-            return {
-              ...next,
-              phoneNumber: normalizedPhone,
-            };
-          }
-
-          return next;
-        });
-      })
-      .catch(() => {
-        // ignore profile prefill errors
-      });
-  }, [session?.user, setFormState]);
 
   const isStep1Valid =
     isTicketsValid &&

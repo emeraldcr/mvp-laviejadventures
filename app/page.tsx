@@ -10,7 +10,6 @@ import { useCalendarContext } from "@/app/context/CalendarContext";
 import { motion } from "framer-motion";
 import { CalendarDays, ChevronLeft, ChevronRight, ClipboardList } from "lucide-react";
 import { useLanguage } from "@/app/context/LanguageContext";
-import { useSession } from "next-auth/react";
 import { useReservationData } from "@/app/hooks/useReservationData";
 import TourSelectionCards from "@/app/components/tours/TourSelectionCards";
 import { principalContent } from "@/lib/constants/principal";
@@ -138,23 +137,12 @@ function ToursImmersionSection({
 
 function BookingSection({ selectedTourSlug }: { selectedTourSlug: string | null }) {
   const { lang } = useLanguage();
-  const { status } = useSession();
   const { selectDay } = useCalendarContext();
   const copy = principalContent[lang].booking;
 
   useEffect(() => {
     selectDay(null);
   }, [selectedTourSlug, selectDay]);
-
-  if (status === "loading") {
-    return (
-      <div className="relative z-10 container mx-auto px-4 py-16 text-center md:px-8 md:py-28">
-        <div className="text-lg text-zinc-400">
-          {copy.loading}
-        </div>
-      </div>
-    );
-  }
 
   return (
     <section id="booking" className="relative overflow-hidden bg-zinc-950">
