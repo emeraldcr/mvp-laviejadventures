@@ -9,6 +9,12 @@ const TOUR_IMAGE_BY_SLUG: Record<string, string> = {
   "aventuras-cataratas": "/image/IMG_6812.jpg",
   "pozas-cristalinas": "/image/IMG_4257.jpg",
   "caminata-volcanes-dormidos": "/ads/IMG_5666.jpg",
+  "avistamiento-aves": "/ads/IMG_5668.jpg",
+  "lluvia-en-la-naturaleza": "/ads/IMG_5669.jpg",
+  "tour-gastronomico-local": "/ads/IMG_5670.jpg",
+  "tour-nocturno-la-vieja" : "/ads/IMG_5671.jpg",
+  "cuadra-tours-aventura": "/ads/IMG_5672.jpg",
+  "rapel-canon-del-rio": "/ads/IMG_5673.jpg",
 };
 
 const TOUR_TAGS_BY_SLUG: Record<string, { tagEs: string; tagEn: string }> = [
@@ -32,10 +38,72 @@ const TOUR_TAGS_BY_SLUG: Record<string, { tagEs: string; tagEn: string }> = [
     tagEs: "Mas vendido",
     tagEn: "Best seller",
   },
+  {
+    slug: "cuadra-tours-aventura",
+    tagEs: "Adrenalina",
+    tagEn: "Adrenaline",
+  },
+  {
+    slug: "cascadas-secretas-rio-la-vieja",
+    tagEs: "Cataratas",
+    tagEn: "Waterfalls",
+  },
+  {
+    slug: "tour-gastronomico-local",
+    tagEs: "Cultura local",
+    tagEn: "Local culture",
+  },
+  {
+    slug: "lluvia-en-la-naturaleza",
+    tagEs: "Sensorial",
+    tagEn: "Sensory",
+  },
+  {
+    slug: "avistamiento-aves-norteno",
+    tagEs: "Fauna",
+    tagEn: "Wildlife",
+  },
+  {
+    slug: "avistamiento-aves",
+    tagEs: "Fauna",
+    tagEn: "Wildlife",
+  },
+  {
+    slug: "tour-nocturno-la-vieja",
+    tagEs: "Nocturno",
+    tagEn: "Nocturnal",
+  },
+  {
+    slug: "rapel-canon-del-rio",
+    tagEs: "Extremo",
+    tagEn: "Extreme",
+  },
+  {
+    slug: "caminata-volcanes-dormidos",
+    tagEs: "Volcanes",
+    tagEn: "Volcanoes",
+  },
 ].reduce((acc, t) => {
   acc[t.slug] = { tagEs: t.tagEs, tagEn: t.tagEn };
   return acc;
 }, {} as Record<string, { tagEs: string; tagEn: string }>);
+
+function inferTourTag(tour: TourSummary): { tagEs: string; tagEn: string } {
+  const text = `${tour.slug} ${tour.titleEs} ${tour.titleEn} ${tour.descriptionEs ?? ""} ${tour.descriptionEn ?? ""}`.toLowerCase();
+
+  if (text.includes("catarata") || text.includes("waterfall")) return { tagEs: "Cataratas", tagEn: "Waterfalls" };
+  if (text.includes("canon") || text.includes("cañon") || text.includes("cañón") || text.includes("canyon")) return { tagEs: "Cañonismo", tagEn: "Canyoning" };
+  if (text.includes("cuadra") || text.includes("atv")) return { tagEs: "Adrenalina", tagEn: "Adrenaline" };
+  if (text.includes("gastronom") || text.includes("culinary") || text.includes("food")) return { tagEs: "Cultura local", tagEn: "Local culture" };
+  if (text.includes("ave") || text.includes("bird")) return { tagEs: "Fauna", tagEn: "Wildlife" };
+  if (text.includes("nocturn") || text.includes("night")) return { tagEs: "Nocturno", tagEn: "Nocturnal" };
+  if (text.includes("volcan") || text.includes("volcano")) return { tagEs: "Volcanes", tagEn: "Volcanoes" };
+  if (text.includes("lluvia") || text.includes("rain")) return { tagEs: "Bosque lluvioso", tagEn: "Rainforest" };
+  if (tour.difficulty?.toLowerCase().includes("avanz")) return { tagEs: "Alta intensidad", tagEn: "High intensity" };
+  if (tour.difficulty?.toLowerCase().includes("moder")) return { tagEs: "Aventura moderada", tagEn: "Moderate adventure" };
+
+  return { tagEs: "Experiencia local", tagEn: "Local experience" };
+}
 
 type Props = {
   tours: TourSummary[];
@@ -57,9 +125,10 @@ export default function TourSelectionCards({
   return (
     <div className={className}>
       {tours.map((tour) => {
-        const tag = TOUR_TAGS_BY_SLUG[tour.slug] ?? {
-          tagEs: "Nuevo tour",
-          tagEn: "New tour",
+        const tag = {
+          ...inferTourTag(tour),
+          ...TOUR_TAGS_BY_SLUG[tour.slug],
+          ...(tour.tagEs || tour.tagEn ? { tagEs: tour.tagEs ?? inferTourTag(tour).tagEs, tagEn: tour.tagEn ?? inferTourTag(tour).tagEn } : {}),
         };
         const tourTitle = lang === "es" ? tour.titleEs : tour.titleEn;
         const isSelected = selectedTourSlug === tour.slug;

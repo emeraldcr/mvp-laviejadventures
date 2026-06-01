@@ -34,6 +34,8 @@ export type TourSummary = {
   cancellationPolicy?: string;
   restrictions?: string;
   packages?: TourPackageOption[];
+  tagEs?: string;
+  tagEn?: string;
 };
 
 export type TourPackageOption = {

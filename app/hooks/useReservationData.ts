@@ -51,6 +51,8 @@ export function useReservationData() {
             cancellationPolicy?: string;
             restrictions?: string;
             packages?: TourSummary["packages"];
+            tagEs?: string;
+            tagEn?: string;
           }) => ({
             id: t.id ?? t.slug ?? "",
             slug: t.slug ?? "",
@@ -67,6 +69,8 @@ export function useReservationData() {
             cancellationPolicy: t.cancellationPolicy,
             restrictions: t.restrictions,
             packages: Array.isArray(t.packages) ? t.packages : [],
+            tagEs: t.tagEs,
+            tagEn: t.tagEn,
           }))
           .filter((t: TourSummary) => Boolean(t.slug));
         const hasMain = mapped.some((t) => t.slug === DEFAULT_BOOKABLE_TOUR.slug);

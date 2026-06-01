@@ -6,11 +6,12 @@ import ReservationSection from "@/app/components/sections/ReservationSection";
 import DynamicHeroHeader from "@/app/components/sections/DynamicHeroHeader";
 import ErrorBoundary from "@/lib/errorBoundary";
 import { CalendarProvider } from "@/app/context/CalendarContext";
+import { useCalendarContext } from "@/app/context/CalendarContext";
 import { motion } from "framer-motion";
 import { CalendarDays, ClipboardList } from "lucide-react";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { useSession } from "next-auth/react";
-import { DEFAULT_BOOKABLE_TOUR, useReservationData } from "@/app/hooks/useReservationData";
+import { useReservationData } from "@/app/hooks/useReservationData";
 import TourSelectionCards from "@/app/components/tours/TourSelectionCards";
 import { principalContent } from "@/lib/constants/principal";
 
@@ -39,7 +40,13 @@ function ConversionSection() {
   );
 }
 
-function ToursImmersionSection({ onSelectTour }: { onSelectTour: (slug: string) => void }) {
+function ToursImmersionSection({
+  onSelectTour,
+  selectedTourSlug,
+}: {
+  onSelectTour: (slug: string) => void;
+  selectedTourSlug?: string | null;
+}) {
   const { lang } = useLanguage();
   const { tours } = useReservationData();
   const copy = principalContent[lang].tours;
@@ -56,16 +63,21 @@ function ToursImmersionSection({ onSelectTour }: { onSelectTour: (slug: string) 
           </h2>
         </div>
 
-        <TourSelectionCards tours={tours} onSelectTour={onSelectTour} />
+        <TourSelectionCards tours={tours} onSelectTour={onSelectTour} selectedTourSlug={selectedTourSlug} />
       </div>
     </section>
   );
 }
 
-function BookingSection({ selectedTourSlug }: { selectedTourSlug: string }) {
+function BookingSection({ selectedTourSlug }: { selectedTourSlug: string | null }) {
   const { lang } = useLanguage();
   const { status } = useSession();
+  const { selectDay } = useCalendarContext();
   const copy = principalContent[lang].booking;
+
+  useEffect(() => {
+    selectDay(null);
+  }, [selectedTourSlug, selectDay]);
 
   if (status === "loading") {
     return (
@@ -128,23 +140,31 @@ function BookingSection({ selectedTourSlug }: { selectedTourSlug: string }) {
           </div>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.6, delay: 0.15 }}
-          className="grid grid-cols-1 items-start gap-5 lg:grid-cols-7"
-        >
-          <div className="rounded-3xl border border-white/[0.07] bg-white/[0.025] shadow-[0_20px_60px_rgba(0,0,0,0.45)] backdrop-blur-sm lg:col-span-4">
-            <CalendarSection />
-          </div>
-
-          <div className="lg:sticky lg:top-24 lg:col-span-3">
-            <div className="rounded-3xl border border-white/[0.07] bg-white/[0.025] shadow-[0_20px_60px_rgba(0,0,0,0.45)] backdrop-blur-sm">
-              <ReservationSection preselectedTourSlug={selectedTourSlug} />
+        {selectedTourSlug ? (
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 0.6, delay: 0.15 }}
+            className="grid grid-cols-1 items-start gap-5 lg:grid-cols-7"
+          >
+            <div className="rounded-3xl border border-white/[0.07] bg-white/[0.025] shadow-[0_20px_60px_rgba(0,0,0,0.45)] backdrop-blur-sm lg:col-span-4">
+              <CalendarSection />
             </div>
+
+            <div className="lg:sticky lg:top-24 lg:col-span-3">
+              <div className="rounded-3xl border border-white/[0.07] bg-white/[0.025] shadow-[0_20px_60px_rgba(0,0,0,0.45)] backdrop-blur-sm">
+                <ReservationSection preselectedTourSlug={selectedTourSlug} />
+              </div>
+            </div>
+          </motion.div>
+        ) : (
+          <div className="mx-auto max-w-2xl rounded-3xl border border-teal-500/20 bg-teal-500/8 px-6 py-8 text-center shadow-[0_20px_60px_rgba(0,0,0,0.32)]">
+            <p className="text-sm font-semibold text-teal-300">
+              {lang === "es" ? "Primero elegí el tour que querés reservar arriba." : "Choose the tour you want to book above first."}
+            </p>
           </div>
-        </motion.div>
+        )}
       </div>
 
       <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black to-transparent" />
@@ -153,7 +173,7 @@ function BookingSection({ selectedTourSlug }: { selectedTourSlug: string }) {
 }
 
 export default function Home(): JSX.Element {
-  const [selectedTourSlug, setSelectedTourSlug] = useState(DEFAULT_BOOKABLE_TOUR.slug);
+  const [selectedTourSlug, setSelectedTourSlug] = useState<string | null>(null);
   const { lang } = useLanguage();
   const copy = principalContent[lang].errors;
 
@@ -187,7 +207,7 @@ export default function Home(): JSX.Element {
       <CalendarProvider>
         <main className="min-h-screen overflow-x-hidden bg-black">
           <DynamicHeroHeader />
-          <ToursImmersionSection onSelectTour={handleSelectTour} />
+          <ToursImmersionSection onSelectTour={handleSelectTour} selectedTourSlug={selectedTourSlug} />
           <ConversionSection />
           <BookingSection selectedTourSlug={selectedTourSlug} />
         </main>

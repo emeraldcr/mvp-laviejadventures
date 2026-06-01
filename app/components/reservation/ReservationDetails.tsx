@@ -1,6 +1,5 @@
 // components/ReservationDetails.tsx
 import Link from "next/link";
-import { createPortal } from "react-dom";
 import { TOUR_INFO } from "@/lib/tour-info";
 import { AvailabilityMap, MainTourInfo, TourPackageOption, TourSummary } from "@/lib/types/index";
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
@@ -9,9 +8,8 @@ import { format } from "date-fns";
 import { es, enUS } from "date-fns/locale";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/lib/translations";
-import { AlertCircle, Camera, ChevronRight, Clock3, Info, MapPin, Route, ShieldCheck, Sparkles, TreePalm, Users, UtensilsCrossed, X } from "lucide-react";
+import { AlertCircle, Camera, Clock3, Info, MapPin, Route, ShieldCheck, Sparkles, TreePalm, Users, UtensilsCrossed } from "lucide-react";
 import { trackAnalyticsEvent } from "@/lib/analytics/client";
-import TourSelectionCards from "@/app/components/tours/TourSelectionCards";
 
 // ---------------------- CONSTANTS ----------------------
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -338,13 +336,11 @@ export default function ReservationDetails({
   const [tourTime, setTourTime] = useState<TourTime | null>(null);
   const [tourPackage, setTourPackage] = useState<TourPackage | null>(null);
   const [currentStep, setCurrentStep] = useState<BookingStepId>(1);
-  const [manualSelectedTourSlug, setManualSelectedTourSlug] = useState<string | null>(null);
-  const [showTourModal, setShowTourModal] = useState(false);
   const currentStepRef = useRef<BookingStepId>(1);
   const stepEnteredAtRef = useRef(0);
   const completedStepsRef = useRef<Set<BookingStepId>>(new Set());
 
-  const selectedTourSlug = resolveSelectedTourSlug(tours, manualSelectedTourSlug, initialSelectedTourSlug);
+  const selectedTourSlug = resolveSelectedTourSlug(tours, null, initialSelectedTourSlug);
   const selectedTour = tours.find((tour) => tour.slug === selectedTourSlug) ?? tours[0] ?? null;
   const selectedTourName = selectedTour ? (lang === "es" ? selectedTour.titleEs : selectedTour.titleEn) : (lang === "es" ? "Tour" : "Tour");
   const selectedTourDescription = selectedTour
@@ -622,8 +618,8 @@ export default function ReservationDetails({
   const missingStep1Items = useMemo(() => {
     const missing: string[] = [];
 
-    if (!tourTime) missing.push(tr.missing.time);
     if (!effectiveTourPackage) missing.push(tr.missing.package);
+    if (effectiveTourPackage && !tourTime) missing.push(tr.missing.time);
     if (!selectedTour) missing.push(lang === "es" ? "Elegir un tour." : "Choose a tour.");
     if (!isTicketsValid) missing.push(tr.missing.tickets);
 
@@ -666,8 +662,8 @@ export default function ReservationDetails({
   const missingStep1Keys = useMemo(() => {
     const missing: string[] = [];
 
-    if (!tourTime) missing.push("tour_time");
     if (!effectiveTourPackage) missing.push("tour_package");
+    if (effectiveTourPackage && !tourTime) missing.push("tour_time");
     if (!selectedTour) missing.push("tour");
     if (!isTicketsValid) missing.push("tickets");
 
@@ -761,18 +757,6 @@ export default function ReservationDetails({
     tickets,
     stepLabels,
   ]);
-
-  useEffect(() => {
-    if (!showTourModal) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setShowTourModal(false); };
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.body.style.overflow = prev;
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [showTourModal]);
 
   useEffect(() => {
     const previousStep = currentStepRef.current;
@@ -970,10 +954,7 @@ export default function ReservationDetails({
 
   const handlePackageSelect = useCallback((pkg: PackageOption) => {
     setTourPackage(pkg.id);
-    const firstPackageTime = pkg.departureTimes[0] ?? null;
-    if (tourTime && !pkg.departureTimes.includes(tourTime)) {
-      setTourTime(firstPackageTime);
-    }
+    setTourTime(null);
 
     trackAnalyticsEvent("booking_selection_changed", {
       metadata: {
@@ -987,11 +968,12 @@ export default function ReservationDetails({
           ...getAnalyticsBookingSnapshot(),
           selectedPackage: pkg.id,
           hasSelectedPackage: true,
-          selectedTime: tourTime && pkg.departureTimes.includes(tourTime) ? tourTime : firstPackageTime,
+          selectedTime: null,
+          hasSelectedTime: false,
         },
       },
     });
-  }, [getAnalyticsBookingSnapshot, stepLabels, tourTime]);
+  }, [getAnalyticsBookingSnapshot, stepLabels]);
 
   const handleTicketsChange = useCallback((rawValue: string) => {
     const parsedValue = Number(rawValue);
@@ -1062,147 +1044,70 @@ export default function ReservationDetails({
     });
   }, [formState, getAnalyticsBookingSnapshot, missingStep2Keys, stepLabels, validation]);
 
-  const handleTourSelect = useCallback((slug: string) => {
-    setManualSelectedTourSlug(slug);
-    setShowTourModal(false);
-    trackAnalyticsEvent("booking_selection_changed", {
-      metadata: {
-        step: currentStep,
-        stepLabel: stepLabels[currentStep],
-        field: "tour",
-        value: slug,
-        previousValue: selectedTourSlug,
-        source: "tour_modal",
-        booking: getAnalyticsBookingSnapshot(),
-      },
-    });
-  }, [currentStep, getAnalyticsBookingSnapshot, selectedTourSlug, stepLabels]);
-
   return (
     <div className="border-t border-zinc-300 dark:border-zinc-700">
-      <h2 className="text-2xl font-bold mb-4">
+      <h2 className="mb-5 text-center text-2xl font-black leading-tight text-zinc-900 dark:text-zinc-50">
         {tr.titlePrefix} {formattedDate}
       </h2>
 
-      <div className="mb-8 rounded-2xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-900/60">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-          {tr.flowTitle}
-        </p>
-        <div className="grid gap-2 sm:grid-cols-3">
+      <div className="mb-8 border-y border-zinc-200 py-3 dark:border-zinc-800" aria-label={tr.flowTitle}>
+        <div className="flex items-center gap-2">
           {steps.map((step) => {
             const isCurrent = currentStep === step.id;
             const isDone = currentStep > step.id;
             return (
-              <button
+              <div
                 key={step.id}
-                type="button"
-                onClick={() => {
-                  goToStep(step.id, "step_chip");
-                }}
-                className={`rounded-xl border px-3 py-2 text-left text-sm transition-all ${
-                  isCurrent
-                    ? "border-emerald-400 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300"
-                    : isDone
-                    ? "border-teal-300 bg-teal-50 text-teal-700 dark:border-teal-700 dark:bg-teal-900/20 dark:text-teal-300"
-                    : "border-zinc-200 bg-white text-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400"
-                }`}
+                className="flex flex-1 items-center gap-2"
+                aria-current={isCurrent ? "step" : undefined}
               >
-                <span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full border text-xs font-bold">
+                <span
+                  className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-bold transition-colors ${
+                    isCurrent
+                      ? "border-emerald-400 bg-emerald-500 text-zinc-950"
+                      : isDone
+                      ? "border-teal-400 bg-teal-400/20 text-teal-300"
+                      : "border-zinc-700 bg-zinc-900 text-zinc-500"
+                  }`}
+                >
                   {step.id}
                 </span>
-                {step.label}
-              </button>
+                <span className={`hidden min-w-0 truncate text-xs font-semibold sm:inline ${isCurrent ? "text-emerald-300" : isDone ? "text-teal-300" : "text-zinc-500"}`}>
+                  {step.label}
+                </span>
+                {step.id < steps.length && (
+                  <span className={`h-px flex-1 ${isDone ? "bg-teal-500/60" : "bg-zinc-800"}`} aria-hidden />
+                )}
+              </div>
             );
           })}
         </div>
       </div>
 
-      <div className={`mb-6 rounded-xl ${!selectedTour ? "ring-2 ring-amber-300/70 p-3" : ""}`}>
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <h3 className="text-xl font-semibold">{tr.tourLabel}</h3>
-          {hasPreselectedTour && (
-            <Link
-              href="/tours"
-              className="inline-flex items-center rounded-full border border-teal-500/40 px-3 py-1 text-xs font-semibold text-teal-700 transition hover:bg-teal-50 dark:text-teal-300 dark:hover:bg-teal-900/20"
-            >
-              {tr.searchToursBtn}
-            </Link>
-          )}
-        </div>
-
-        <div className="flex items-center justify-between gap-3 rounded-xl border-2 border-emerald-500 bg-emerald-50 p-4 dark:bg-emerald-900/20">
-          <div className="min-w-0">
-            <p className="mb-0.5 text-[11px] font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-              {tr.selectedTourLabel}
-            </p>
-            <p className="truncate font-bold text-base text-zinc-800 dark:text-zinc-100">
-              {selectedTourName}
-            </p>
-          </div>
-          {tours.length > 1 && (
-            <button
-              type="button"
-              onClick={() => setShowTourModal(true)}
-              className="shrink-0 inline-flex items-center gap-1 rounded-full border border-emerald-500/50 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-100 dark:text-emerald-300 dark:hover:bg-emerald-900/40"
-            >
-              {tr.changeBtn}
-              <ChevronRight size={12} />
-            </button>
-          )}
-        </div>
+      <div className={`mb-6 text-center ${!selectedTour ? "rounded-xl ring-2 ring-amber-300/70 p-3" : ""}`}>
+        <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.22em] text-emerald-400">
+          {tr.selectedTourLabel}
+        </p>
+        <h3 className="mx-auto max-w-xl text-2xl font-black leading-tight text-zinc-900 dark:text-zinc-50">
+          {selectedTourName}
+        </h3>
       </div>
 
-      {showTourModal && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => setShowTourModal(false)}
-          />
-          <div className="relative z-10 w-full max-w-lg rounded-3xl bg-white shadow-2xl dark:bg-zinc-900 overflow-hidden">
-            <div className="flex items-center justify-between border-b border-zinc-200 px-6 py-4 dark:border-zinc-700">
-              <h3 className="text-lg font-bold text-zinc-800 dark:text-zinc-100">
-                {tr.chooseTourTitle}
-              </h3>
-              <button
-                type="button"
-                onClick={() => setShowTourModal(false)}
-                className="flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800"
-              >
-                <X size={18} className="text-zinc-500" />
-              </button>
-            </div>
-            <div className="max-h-[70vh] overflow-y-auto bg-black p-4">
-              <TourSelectionCards
-                tours={tours}
-                selectedTourSlug={selectedTourSlug}
-                onSelectTour={handleTourSelect}
-                className="grid grid-cols-1 gap-4 sm:grid-cols-2"
-                cardClassName="h-[260px]"
-              />
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
-
       <div className="mb-6 rounded-2xl border border-zinc-200 bg-gradient-to-br from-teal-50 via-white to-cyan-50 p-5 shadow-sm dark:border-zinc-700 dark:from-zinc-900 dark:via-zinc-900 dark:to-teal-950/30">
-        <div className="mb-4 flex items-start justify-between gap-3">
+        <div className="mb-4 text-center">
+          <div className="mx-auto mb-3 inline-flex h-9 w-9 items-center justify-center rounded-full border border-teal-300/60 bg-teal-100/70 text-teal-700 dark:border-teal-700/60 dark:bg-teal-900/30 dark:text-teal-300" title={tr.tooltips.tourInfoCard}>
+            <Info className="h-4 w-4" aria-hidden />
+          </div>
           <div>
-            <h3 className="mb-1 text-xl font-semibold text-teal-900 dark:text-teal-300">
+            <h3 className="mb-1 text-xl font-black text-teal-900 dark:text-teal-300">
               {tr.tourInfoTitle}
             </h3>
             <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">{selectedTourName}</p>
             <p className="text-sm text-zinc-600 dark:text-zinc-400">{tr.tourInfoSubtitle}</p>
           </div>
-          <span
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-teal-300/60 bg-teal-100/70 text-teal-700 dark:border-teal-700/60 dark:bg-teal-900/30 dark:text-teal-300"
-            title={tr.tooltips.tourInfoCard}
-          >
-            <Info className="h-4 w-4" aria-hidden />
-          </span>
         </div>
 
-        <p className="mb-4 text-zinc-700 dark:text-zinc-400">{localizedDetails}</p>
+        <p className="mx-auto mb-4 max-w-2xl text-center text-zinc-700 dark:text-zinc-400">{localizedDetails}</p>
 
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <div className="rounded-xl border border-zinc-200/70 bg-white/85 p-3 dark:border-zinc-700 dark:bg-zinc-900/70" title={tr.tooltips.durationCard}>
@@ -1252,30 +1157,6 @@ export default function ReservationDetails({
 
       {currentStep === 1 && (
         <>
-          <div className={`mb-6 rounded-xl ${!tourTime ? "ring-2 ring-amber-300/70 p-3" : ""}`}>
-            <h3 className="text-xl font-semibold mb-3">{tr.tourTimeTitle}</h3>
-            {!tourTime && <p className="mb-3 flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-400"><AlertCircle className="h-4 w-4" aria-hidden /> {tr.indicators.chooseTourTime}</p>}
-            <div className="flex gap-3 flex-wrap">
-              {availableTimeSlots.map((slot) => {
-                const isSelected = tourTime === slot;
-                return (
-                  <button
-                    key={slot}
-                    type="button"
-                    onClick={() => handleTourTimeSelect(slot)}
-                    className={`flex-1 min-w-[90px] py-3 px-4 rounded-xl border-2 font-semibold text-base transition-all ${
-                      isSelected
-                        ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300"
-                        : "border-zinc-300 dark:border-zinc-600 hover:border-emerald-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
-                    }`}
-                  >
-                    {formatDepartureLabel(slot)}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
           <div className={`mb-6 rounded-xl ${!effectiveTourPackage ? "ring-2 ring-amber-300/70 p-3" : ""}`}>
             <h3 className="text-xl font-semibold mb-3">{tr.packageTitle}</h3>
             {!effectiveTourPackage && <p className="mb-3 flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-400"><AlertCircle className="h-4 w-4" aria-hidden /> {tr.indicators.choosePackage}</p>}
@@ -1366,6 +1247,32 @@ export default function ReservationDetails({
               </div>
             )}
           </div>
+
+          {effectiveSelectedPackage && (
+            <div className={`mb-6 rounded-xl ${!tourTime ? "ring-2 ring-amber-300/70 p-3" : ""}`}>
+              <h3 className="text-xl font-semibold mb-3">{tr.tourTimeTitle}</h3>
+              {!tourTime && <p className="mb-3 flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-400"><AlertCircle className="h-4 w-4" aria-hidden /> {tr.indicators.chooseTourTime}</p>}
+              <div className="flex gap-3 flex-wrap">
+                {availableTimeSlots.map((slot) => {
+                  const isSelected = tourTime === slot;
+                  return (
+                    <button
+                      key={slot}
+                      type="button"
+                      onClick={() => handleTourTimeSelect(slot)}
+                      className={`flex-1 min-w-[90px] py-3 px-4 rounded-xl border-2 font-semibold text-base transition-all ${
+                        isSelected
+                          ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300"
+                          : "border-zinc-300 dark:border-zinc-600 hover:border-emerald-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
+                      }`}
+                    >
+                      {formatDepartureLabel(slot)}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           <div className={`mb-6 rounded-xl ${!isTicketsValid ? "ring-2 ring-amber-300/70 p-3" : ""}`}>
             <h3 className="text-xl font-semibold mb-4">{tr.ticketsTitle}</h3>

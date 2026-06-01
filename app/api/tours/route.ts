@@ -84,9 +84,9 @@ const DEFAULT_TOURS = [
     isMain: false,
   },
   {
-    slug: "avistamiento-aves-norteno",
+    slug: "avistamiento-aves",
     iconName: "Binoculars",
-    titleEs: "Avistamiento de Aves Norteño",
+    titleEs: "Avistamiento de Aves",
     titleEn: "Northern Birdwatching",
     descriptionEs: "Observa especies únicas del corredor biológico del Parque Nacional del Agua Juan Castro Blanco.",
     descriptionEn: "Observe unique species from the biological corridor of Juan Castro Blanco National Water Park.",
@@ -196,7 +196,7 @@ const DEFAULT_TOUR_DETAILS: Record<string, {
     restrictions: "Facil",
     cancellationPolicy: "Cancelacion gratuita hasta 24 horas antes del tour.",
   },
-  "avistamiento-aves-norteno": {
+  "avistamiento-aves": {
     location: "Corredor biologico Juan Castro Blanco",
     inclusions: ["Guia local", "Ruta de observacion", "Apoyo para identificacion de especies"],
     exclusions: ["Transporte", "Binoculares personales"],
