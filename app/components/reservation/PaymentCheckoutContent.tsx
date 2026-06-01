@@ -80,7 +80,6 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
   const isPaypalLoading = !paypalLoadError && loadedPaypalKey !== checkoutKey;
 
   useEffect(() => {
-    const existingScript = document.querySelector<HTMLScriptElement>("#paypal-sdk");
     const paypalContainer = paypalRef.current;
     let isMounted = true;
     let scriptForCleanup: HTMLScriptElement | null = null;
@@ -249,54 +248,50 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
       return;
     }
 
-    const paypalLocale = lang === "es" ? "es_XC" : "en_US";
-    const sdkUrl = new URL("https://www.paypal.com/sdk/js");
-    sdkUrl.search = new URLSearchParams({
-      "client-id": clientId,
-      components: "buttons",
-      currency: "USD",
-      intent: "capture",
-      locale: paypalLocale,
-    }).toString();
-    const sdkSrc = sdkUrl.toString();
+    // Simple SDK URL (https://developer.paypal.com/sdk/js/reference/)
+    // No locale — PayPal auto-detects language from browser (recommended best practice)
+    const sdkSrc = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(clientId)}&components=buttons&currency=USD&intent=capture`;
+
     const handleScriptError = () => {
       document.querySelector<HTMLScriptElement>("#paypal-sdk")?.remove();
       failPayPalLoad("paypal_sdk_load", "paypal_sdk_load_error");
       alert(tr.error);
     };
 
-    if (existingScript && existingScript.src !== sdkSrc) {
-      existingScript.remove();
+    // Clean up any previous script that had a different src (rare now that we use a stable simple URL)
+    const existing = document.querySelector<HTMLScriptElement>("#paypal-sdk");
+    if (existing && existing.src !== sdkSrc) {
+      existing.remove();
     }
 
-    const activeScript = existingScript?.src === sdkSrc ? existingScript : null;
+    const activeScript = document.querySelector<HTMLScriptElement>("#paypal-sdk");
 
     if (!activeScript) {
+      // Load the SDK script once - simple and reliable
       const script = document.createElement("script");
       script.id = "paypal-sdk";
       script.src = sdkSrc;
       script.async = true;
       scriptForCleanup = script;
+
       script.onload = () => {
-        script.dataset.paypalStatus = "loaded";
-        initializeButtons();
+        if (isMounted) initializeButtons();
       };
-      script.onerror = () => {
-        script.dataset.paypalStatus = "error";
-        handleScriptError();
-      };
+      script.onerror = handleScriptError;
+
       document.body.appendChild(script);
     } else if (window.paypal) {
+      // Already loaded and ready
       initializeButtons();
-    } else if (activeScript.dataset.paypalStatus === "loaded" || activeScript.dataset.paypalStatus === "error") {
-      failPayPalLoad("paypal_sdk_load", "PayPal SDK script is present but unavailable.");
     } else {
-      activeScript.addEventListener("load", initializeButtons);
-      activeScript.addEventListener("error", handleScriptError);
+      // Script tag exists but not yet executed — wait for it
+      activeScript.addEventListener("load", initializeButtons, { once: true });
+      activeScript.addEventListener("error", handleScriptError, { once: true });
     }
 
     return () => {
       isMounted = false;
+      // Best-effort cleanup of listeners (the {once:true} helps)
       activeScript?.removeEventListener("load", initializeButtons);
       activeScript?.removeEventListener("error", handleScriptError);
       if (scriptForCleanup) {
@@ -307,7 +302,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
         paypalContainer.innerHTML = "";
       }
     };
-  }, [bookingAnalyticsMetadata, checkoutKey, date, dateIso, email, lang, name, onSuccess, packageId, packagePrice, phone, router, tickets, total, tourName, tourPackage, tourSlug, tourTime, tr.error]);
+  }, [checkoutKey]); // Only re-evaluate when the logical checkout session changes
 
   const packageName = (tr.packages as Record<string, string>)[tourPackage] ?? tourPackage;
 
