@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { trackAnalyticsEvent } from "@/lib/analytics/client";
@@ -9,7 +9,7 @@ import type { OrderDetails } from "@/lib/types/index";
 
 declare global {
   interface Window {
-    paypal?: { Buttons: (config: unknown) => { render: (container: HTMLDivElement) => void } };
+    paypal?: { Buttons: (config: unknown) => { render: (container: HTMLDivElement) => Promise<void> | void } };
   }
 }
 
@@ -20,39 +20,68 @@ type Props = {
 
 export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Props) {
   const paypalRef = useRef<HTMLDivElement>(null);
+  const [loadedPaypalKey, setLoadedPaypalKey] = useState<string | null>(null);
   const router = useRouter();
   const { lang } = useLanguage();
   const tr = translations[lang].payment;
 
   const { name, email, phone, tickets, total, date, dateIso, tourTime, tourPackage, tourSlug, tourName, packagePrice } = orderDetails;
 
-  const bookingAnalyticsMetadata = {
-    tickets,
-    date: dateIso ?? date,
-    tourTime,
-    tourPackage,
-    tourSlug,
-    tourName,
-    packagePrice,
-    amount: total,
-    currency: "USD",
-    language: lang,
-  };
+  const checkoutKey = useMemo(
+    () => [
+      name,
+      email,
+      phone,
+      tickets,
+      total,
+      dateIso ?? date,
+      tourTime,
+      tourPackage,
+      tourSlug,
+      tourName,
+      packagePrice,
+      lang,
+    ].join("|"),
+    [date, dateIso, email, lang, name, packagePrice, phone, tickets, total, tourName, tourPackage, tourSlug, tourTime],
+  );
+
+  const bookingAnalyticsMetadata = useMemo(
+    () => ({
+      tickets,
+      date: dateIso ?? date,
+      tourTime,
+      tourPackage,
+      tourSlug,
+      tourName,
+      packagePrice,
+      amount: total,
+      currency: "USD",
+      language: lang,
+    }),
+    [date, dateIso, lang, packagePrice, tickets, total, tourName, tourPackage, tourSlug, tourTime],
+  );
+
+  const isPaypalLoading = loadedPaypalKey !== checkoutKey;
 
   useEffect(() => {
-    const existingScript = document.querySelector("#paypal-sdk");
+    const existingScript = document.querySelector<HTMLScriptElement>("#paypal-sdk");
     const paypalContainer = paypalRef.current;
+    let isMounted = true;
 
     trackAnalyticsEvent("booking_checkout_started", {
       metadata: bookingAnalyticsMetadata,
     });
+
+    const finishLoading = () => {
+      if (isMounted) setLoadedPaypalKey(checkoutKey);
+    };
 
     const initializeButtons = () => {
       if (!window.paypal || !paypalContainer) return;
 
       paypalContainer.innerHTML = "";
 
-      window.paypal
+      const buttons = window.paypal
         .Buttons({
           style: {
             layout: "vertical",
@@ -152,8 +181,22 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
             });
             console.error("PAYPAL ERROR:", err);
           },
-        })
-        .render(paypalContainer);
+        });
+
+      Promise.resolve(buttons.render(paypalContainer))
+        .then(finishLoading)
+        .catch((err: unknown) => {
+          finishLoading();
+          trackAnalyticsEvent("payment_error", {
+            metadata: {
+              ...bookingAnalyticsMetadata,
+              stage: "paypal_render",
+              reason: err instanceof Error ? err.message : "paypal_render_error",
+            },
+          });
+          console.error("PAYPAL RENDER ERROR:", err);
+          alert(tr.error);
+        });
     };
 
     const mode = process.env.NEXT_PUBLIC_PAYPAL_MODE?.toLowerCase() || "dev";
@@ -163,28 +206,47 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
 
     if (!clientId) {
       console.error("Missing PayPal client ID for the current mode:", mode);
+      finishLoading();
       return;
     }
 
     const paypalLocale = lang === "es" ? "es_XC" : "en_US";
+    const handleScriptError = () => {
+      finishLoading();
+      trackAnalyticsEvent("payment_error", {
+        metadata: {
+          ...bookingAnalyticsMetadata,
+          stage: "paypal_sdk_load",
+          reason: "paypal_sdk_load_error",
+        },
+      });
+      alert(tr.error);
+    };
 
     if (!existingScript) {
       const script = document.createElement("script");
       script.id = "paypal-sdk";
-      script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}`;
+      script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&locale=${paypalLocale}`;
       script.async = true;
       script.onload = initializeButtons;
+      script.onerror = handleScriptError;
       document.body.appendChild(script);
-    } else {
+    } else if (window.paypal) {
       initializeButtons();
+    } else {
+      existingScript.addEventListener("load", initializeButtons);
+      existingScript.addEventListener("error", handleScriptError);
     }
 
     return () => {
+      isMounted = false;
+      existingScript?.removeEventListener("load", initializeButtons);
+      existingScript?.removeEventListener("error", handleScriptError);
       if (paypalContainer) {
         paypalContainer.innerHTML = "";
       }
     };
-  }, [date, dateIso, email, lang, name, onSuccess, packagePrice, phone, router, tickets, total, tourName, tourPackage, tourSlug, tourTime, tr.error]);
+  }, [bookingAnalyticsMetadata, checkoutKey, date, dateIso, email, lang, name, onSuccess, packagePrice, phone, router, tickets, total, tourName, tourPackage, tourSlug, tourTime, tr.error]);
 
   const packageName = tr.packages[tourPackage] ?? tourPackage;
 
@@ -223,7 +285,19 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
 
       <p className="text-xl font-bold mb-6">{tr.total}: ${total.toFixed(2)}</p>
 
-      <div ref={paypalRef} className="min-h-[140px] w-full" />
+      <div className="relative min-h-[140px] w-full">
+        {isPaypalLoading && (
+          <div
+            className="absolute inset-0 flex min-h-[140px] items-center justify-center rounded-lg border border-emerald-100 bg-white/85 px-4 text-center text-sm font-medium text-emerald-900 shadow-sm"
+            role="status"
+            aria-live="polite"
+          >
+            <span className="mr-3 h-5 w-5 animate-spin rounded-full border-2 border-emerald-200 border-t-emerald-700" aria-hidden="true" />
+            {tr.loadingPaymentInfo}
+          </div>
+        )}
+        <div ref={paypalRef} className="min-h-[140px] w-full" />
+      </div>
     </>
   );
 }

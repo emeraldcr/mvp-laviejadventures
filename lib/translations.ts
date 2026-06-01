@@ -190,6 +190,7 @@ const es = {
     package: "Paquete",
     total: "Total",
     error: "Hubo un error con PayPal. Intenta nuevamente.",
+    loadingPaymentInfo: "Cargando info de pago...",
     person: "persona",
     persons: "personas",
     packages: {
@@ -517,6 +518,7 @@ const en = {
     package: "Package",
     total: "Total",
     error: "There was an error with PayPal. Please try again.",
+    loadingPaymentInfo: "Loading payment info...",
     person: "person",
     persons: "people",
     packages: {
