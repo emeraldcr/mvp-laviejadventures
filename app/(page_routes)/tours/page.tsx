@@ -12,7 +12,7 @@ async function getTours(): Promise<TourData[]> {
     const collection = db.collection("tours");
 
     const docs = await collection
-      .find({ type: { $in: ["public", "both"] }, isActive: { $ne: false }, isMain: { $ne: true } })
+      .find({ type: { $in: ["public", "both"] }, isActive: { $ne: false } })
       .sort({ isFeatured: -1, priceCRC: 1 })
       .toArray();
 

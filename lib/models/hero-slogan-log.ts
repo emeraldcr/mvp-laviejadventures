@@ -23,18 +23,28 @@ export async function createHeroSloganLog(log: HeroSloganLog) {
 export async function listHeroSloganLogs(limit = 200) {
   const collection = await getHeroSloganCollection();
   const docs = await collection
-    .find({})
+    .find({ model: /^claude/i })
     .sort({ createdAt: -1 })
-    .limit(limit)
+    .limit(limit * 3)
     .toArray();
 
-  return docs.map((doc) => ({
-    _id: doc._id.toString(),
-    es: doc.es,
-    en: doc.en,
-    model: doc.model,
-    prompt: doc.prompt,
-    rawResponse: doc.rawResponse,
-    createdAt: doc.createdAt ? doc.createdAt.toISOString() : null,
-  }));
+  const seen = new Set<string>();
+
+  return docs
+    .filter((doc) => {
+      const key = `${(doc.es ?? "").trim().toLowerCase()}|${(doc.en ?? "").trim().toLowerCase()}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .slice(0, limit)
+    .map((doc) => ({
+      _id: doc._id.toString(),
+      es: doc.es,
+      en: doc.en,
+      model: doc.model,
+      prompt: doc.prompt,
+      rawResponse: doc.rawResponse,
+      createdAt: doc.createdAt ? doc.createdAt.toISOString() : null,
+    }));
 }

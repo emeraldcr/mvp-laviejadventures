@@ -7,13 +7,13 @@ import { Analytics } from "@vercel/analytics/next";
 import { LanguageProvider } from "@/app/context/LanguageContext";
 import SessionProvider from "@/app/components/SessionProvider";
 import AnalyticsTracker from "@/app/components/analytics/AnalyticsTracker";
+import GoogleAdsScript from "@/app/components/analytics/GoogleAdsScript";
 
 export const metadata: Metadata = {
   title: "La Vieja Adventures | Ciudad Esmeralda Tour Aventura San Carlos en Rio La Vieja",
   description:
     "La Vieja Adventures | Ciudad Esmeralda Tour Aventura San Carlos en Rio La Vieja y Parque Nacional del Agua Juan Castro Blanco",
 };
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -37,7 +37,6 @@ export default function RootLayout({
           }}
         />
       </head>
-
       <body className="antialiased">
         {/* Google Tag Manager (noscript) */}
         <noscript>
@@ -48,18 +47,15 @@ export default function RootLayout({
             style={{ display: "none", visibility: "hidden" }}
           />
         </noscript>
-
-       
-        
-        <SessionProvider>
+         <SessionProvider>
           <LanguageProvider>
+            <GoogleAdsScript />
             <Suspense fallback={null}>
               <AnalyticsTracker />
             </Suspense>
             {children}
           </LanguageProvider>
         </SessionProvider>
-
         <Analytics />
       </body>
     </html>

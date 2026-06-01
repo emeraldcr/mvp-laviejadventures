@@ -4,6 +4,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/mongodb";
 import { COLLECTIONS } from "@/lib/constants/db";
+import { fallbackPackagesForTour, normalizeTourPackages } from "@/lib/tour-packages";
 
 const DEFAULT_MAIN_TOUR = {
   slug: "tour-ciudad-esmeralda",
@@ -55,6 +56,7 @@ const DEFAULT_MAIN_TOUR = {
   accent: "from-teal-900/40 to-teal-950/60",
   border: "border-teal-700/30 hover:border-teal-500/60",
   includes: ["Guía certificado", "Equipo de seguridad", "Seguro de accidentes", "Acceso al área protegida"],
+  packages: fallbackPackagesForTour("tour-ciudad-esmeralda"),
   isFeatured: true,
 };
 
@@ -94,6 +96,9 @@ export async function GET(request: NextRequest) {
         details: tour.details ?? tour.descriptionEs ?? "",
         restrictions: tour.restrictions ?? "",
         contact: tour.contact ?? {},
+        packages: normalizeTourPackages(tour.packages).length > 0
+          ? normalizeTourPackages(tour.packages)
+          : fallbackPackagesForTour(tour.slug),
       },
     });
   } catch (err) {

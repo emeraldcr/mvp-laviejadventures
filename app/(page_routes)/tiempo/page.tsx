@@ -295,7 +295,7 @@ export default function TourWeatherDashboard() {
             )}
           </div>
           {hourlyChart.length > 0 ? (
-            <ResponsiveContainer width="100%" height={120}>
+            <ResponsiveContainer width="100%" height={120} minWidth={1} minHeight={1}>
               <BarChart data={hourlyChart} barSize={18} margin={{ top: 4, right: 0, bottom: 0, left: -20 }}>
                 <XAxis dataKey="hora" tick={{ fontSize: 9, fill: "#71717a" }} tickLine={false} axisLine={false} interval={1} />
                 <YAxis tick={{ fontSize: 9, fill: "#71717a" }} tickLine={false} axisLine={false} />
@@ -331,7 +331,7 @@ export default function TourWeatherDashboard() {
               <Thermometer size={14} className="text-zinc-400" />
               <span className="text-xs font-bold text-zinc-300 uppercase tracking-wide">Temperatura & Humedad · 12h</span>
             </div>
-            <ResponsiveContainer width="100%" height={100}>
+            <ResponsiveContainer width="100%" height={100} minWidth={1} minHeight={1}>
               <LineChart data={hourlyChart} margin={{ top: 4, right: 0, bottom: 0, left: -20 }}>
                 <XAxis dataKey="hora" tick={{ fontSize: 9, fill: "#71717a" }} tickLine={false} axisLine={false} interval={1} />
                 <YAxis tick={{ fontSize: 9, fill: "#71717a" }} tickLine={false} axisLine={false} />
@@ -356,7 +356,7 @@ export default function TourWeatherDashboard() {
               <p className="text-xs text-zinc-500 mb-3">
                 Acumulación de lluvia en ventanas de 3h y 6h. Rojo = riesgo de crecida.
               </p>
-              <ResponsiveContainer width="100%" height={130}>
+              <ResponsiveContainer width="100%" height={130} minWidth={1} minHeight={1}>
                 <AreaChart data={riskChart} margin={{ top: 4, right: 0, bottom: 0, left: -20 }}>
                   <defs>
                     <linearGradient id="g3h" x1="0" y1="0" x2="0" y2="1">
@@ -415,7 +415,7 @@ export default function TourWeatherDashboard() {
             </div>
           </div>
           {forecastChart.length > 0 && (
-            <ResponsiveContainer width="100%" height={100}>
+            <ResponsiveContainer width="100%" height={100} minWidth={1} minHeight={1}>
               <BarChart data={forecastChart} barSize={24} margin={{ top: 4, right: 0, bottom: 0, left: -20 }}>
                 <XAxis dataKey="name" tick={{ fontSize: 9, fill: "#71717a" }} tickLine={false} axisLine={false} />
                 <YAxis tick={{ fontSize: 9, fill: "#71717a" }} tickLine={false} axisLine={false} />
@@ -446,7 +446,7 @@ export default function TourWeatherDashboard() {
         {/* ═══ LLUVIA DIARIA · ÚLTIMOS 7 DÍAS ═════════════════════════════════ */}
         <CollapsibleSection title="Lluvia diaria · últimos 7 días (estación)" icon={Gauge}>
           {dailyChart.length > 0 ? (
-            <ResponsiveContainer width="100%" height={110}>
+            <ResponsiveContainer width="100%" height={110} minWidth={1} minHeight={1}>
               <BarChart data={dailyChart} barSize={28} margin={{ top: 4, right: 0, bottom: 0, left: -20 }}>
                 <XAxis dataKey="fecha" tick={{ fontSize: 9, fill: "#71717a" }} tickLine={false} axisLine={false} />
                 <YAxis tick={{ fontSize: 9, fill: "#71717a" }} tickLine={false} axisLine={false} />

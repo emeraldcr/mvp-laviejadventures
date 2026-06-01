@@ -4,6 +4,7 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/mongodb";
 import { COLLECTIONS } from "@/lib/constants/db";
+import { fallbackPackagesForTour, normalizeTourPackages } from "@/lib/tour-packages";
 
 const DEFAULT_TOURS = [
   {
@@ -83,9 +84,9 @@ const DEFAULT_TOURS = [
     isMain: false,
   },
   {
-    slug: "avistamiento-aves-norteno",
+    slug: "avistamiento-aves",
     iconName: "Binoculars",
-    titleEs: "Avistamiento de Aves Norteño",
+    titleEs: "Avistamiento de Aves",
     titleEn: "Northern Birdwatching",
     descriptionEs: "Observa especies únicas del corredor biológico del Parque Nacional del Agua Juan Castro Blanco.",
     descriptionEn: "Observe unique species from the biological corridor of Juan Castro Blanco National Water Park.",
@@ -195,7 +196,7 @@ const DEFAULT_TOUR_DETAILS: Record<string, {
     restrictions: "Facil",
     cancellationPolicy: "Cancelacion gratuita hasta 24 horas antes del tour.",
   },
-  "avistamiento-aves-norteno": {
+  "avistamiento-aves": {
     location: "Corredor biologico Juan Castro Blanco",
     inclusions: ["Guia local", "Ruta de observacion", "Apoyo para identificacion de especies"],
     exclusions: ["Transporte", "Binoculares personales"],
@@ -247,6 +248,9 @@ export async function GET() {
     const result = tours.map((t) => {
       const defaults = DEFAULT_TOUR_DETAILS[t.slug] ?? null;
 
+      const sourcePackages = normalizeTourPackages(t.packages);
+      const packages = sourcePackages.length > 0 ? sourcePackages : fallbackPackagesForTour(t.slug);
+
       return {
         id: t._id.toString(),
         slug: t.slug,
@@ -263,6 +267,19 @@ export async function GET() {
         exclusions: t.exclusions ?? defaults?.exclusions ?? [],
         cancellationPolicy: t.cancellationPolicy ?? defaults?.cancellationPolicy ?? "",
         restrictions: t.restrictions ?? defaults?.restrictions ?? "",
+        packages: packages.map((pkg) => ({
+          id: pkg.id,
+          name: pkg.name,
+          nameEs: pkg.nameEs,
+          price: pkg.price,
+          priceCRC: pkg.priceCRC,
+          descriptionEn: pkg.descriptionEn,
+          descriptionEs: pkg.descriptionEs,
+          includes: Array.isArray(pkg.includes) ? pkg.includes : [],
+          groupTour: pkg.groupTour,
+          departureTimes: Array.isArray(pkg.departureTimes) ? pkg.departureTimes : [],
+          scheduleNote: pkg.scheduleNote,
+        })),
         tagEs: t.tagEs,
         tagEn: t.tagEn,
         accent: t.accent,

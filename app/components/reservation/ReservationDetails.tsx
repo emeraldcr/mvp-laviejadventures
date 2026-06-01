@@ -1,15 +1,14 @@
 // components/ReservationDetails.tsx
 import Link from "next/link";
-import { createPortal } from "react-dom";
 import { TOUR_INFO } from "@/lib/tour-info";
-import { AvailabilityMap, MainTourInfo, TourSummary } from "@/lib/types/index";
+import { AvailabilityMap, MainTourInfo, TourPackageOption, TourSummary } from "@/lib/types/index";
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { format } from "date-fns";
 import { es, enUS } from "date-fns/locale";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { translations } from "@/lib/translations";
-import { AlertCircle, Camera, ChevronRight, Clock3, Info, MapPin, Route, ShieldCheck, Sparkles, TreePalm, Users, UtensilsCrossed, X } from "lucide-react";
+import { AlertCircle, Camera, Clock3, Info, MapPin, Route, ShieldCheck, Sparkles, TreePalm, Users, UtensilsCrossed } from "lucide-react";
 import { trackAnalyticsEvent } from "@/lib/analytics/client";
 
 // ---------------------- CONSTANTS ----------------------
@@ -24,23 +23,20 @@ const COUNTRY_CODES = [
   { code: "+34", name: "España" },
 ];
 
-// ---------------------- TIME SLOTS ----------------------
-const TIME_SLOTS = [
-  { id: "08:00" as const, label: "8:00 AM" },
-  { id: "09:00" as const, label: "9:00 AM" },
-  { id: "10:00" as const, label: "10:00 AM" },
-];
+const DEFAULT_DEPARTURE_TIMES = ["08:00", "09:00", "10:00"];
 
-export type TourTime = "08:00" | "09:00" | "10:00";
+export type TourTime = string;
+type BookingStepId = 1 | 2 | 3;
 
 // ---------------------- PACKAGES ----------------------
-export type TourPackage = "basic" | "full-day" | "private";
+export type TourPackage = string;
 
-interface PackageOption {
+interface PackageOption extends TourPackageOption {
   id: TourPackage;
-  priceUSD: number;
+  name: string;
+  price: number;
   priceCRC: number | null;
-  availableOn: "weekdays" | "weekends";
+  departureTimes: string[];
 }
 
 export type { TourSummary };
@@ -63,31 +59,56 @@ const resolveSelectedTourSlug = (
   return tours[0]?.slug ?? "tour-ciudad-esmeralda";
 };
 
-const PACKAGE_META = {
-  basic: {
+const PACKAGE_META = [
+  {
     icon: TreePalm,
     accent: "from-sky-500/20 to-emerald-500/10",
     highlightEs: ["Guía certificado local", "Ingreso a zonas naturales", "Briefing de seguridad"],
     highlightEn: ["Certified local guide", "Nature area access", "Safety briefing"],
   },
-  "full-day": {
+  {
     icon: UtensilsCrossed,
     accent: "from-violet-500/20 to-indigo-500/10",
     highlightEs: ["Incluye almuerzo típico", "Paradas fotográficas", "Ruta extendida todo el día"],
     highlightEn: ["Traditional lunch included", "Photo stops", "Extended full-day route"],
   },
-  private: {
+  {
     icon: Sparkles,
     accent: "from-amber-500/20 to-orange-500/10",
     highlightEs: ["Atención exclusiva", "Ritmo personalizado", "Ideal para parejas o grupos"],
     highlightEn: ["Exclusive attention", "Custom pace", "Great for couples or groups"],
   },
-} satisfies Record<TourPackage, {
+];
+
+const slugifyPackageId = (value: string, index: number) => {
+  const slug = value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  return slug || `package-${index + 1}`;
+};
+
+const formatDepartureLabel = (value: string) => {
+  const normalized = value.trim();
+  const match = normalized.match(/^(\d{1,2}):(\d{2})$/);
+  if (!match) return normalized;
+
+  const hour24 = Number(match[1]);
+  const minute = match[2];
+  const period = hour24 >= 12 ? "PM" : "AM";
+  const hour12 = hour24 % 12 || 12;
+  return `${hour12}:${minute} ${period}`;
+};
+
+type PackageMeta = {
   icon: typeof TreePalm;
   accent: string;
   highlightEs: string[];
   highlightEn: string[];
-}>;
+};
 
 // ---------------------- TYPES ----------------------
 interface ReservationFormState {
@@ -108,6 +129,7 @@ interface ReservationOrderPayload {
   date: string;
   dateIso: string;
   tourTime: TourTime;
+  packageId: string;
   tourPackage: TourPackage;
   tourSlug: string;
   tourName: string;
@@ -157,6 +179,7 @@ const TravelerInputField = ({
   type = "text",
   value,
   onChange,
+  onBlur,
   placeholder,
   isValid,
   validationMessage,
@@ -168,6 +191,7 @@ const TravelerInputField = ({
   type?: string;
   value: string;
   onChange: (value: string) => void;
+  onBlur?: () => void;
   placeholder: string;
   isValid: boolean;
   validationMessage: string;
@@ -187,6 +211,7 @@ const TravelerInputField = ({
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        onBlur={onBlur}
         className={`w-full p-3 rounded-lg border focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-zinc-800 ${
           showError
             ? "border-red-500"
@@ -205,6 +230,7 @@ const TravelerPhoneInput = ({
   phoneNumber,
   setPhoneCode,
   setPhoneNumber,
+  onBlur,
   isValid,
   label,
   placeholder,
@@ -214,6 +240,7 @@ const TravelerPhoneInput = ({
   phoneNumber: string;
   setPhoneCode: (code: string) => void;
   setPhoneNumber: (number: string) => void;
+  onBlur?: () => void;
   isValid: boolean;
   label: string;
   placeholder: string;
@@ -245,6 +272,7 @@ const TravelerPhoneInput = ({
           type="tel"
           value={phoneNumber}
           onChange={(e) => setPhoneNumber(e.target.value)}
+          onBlur={onBlur}
           className={`w-full p-3 rounded-lg border focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-zinc-800 ${
             showError ? "border-red-500" : "border-zinc-300 dark:border-zinc-700"
           }`}
@@ -305,14 +333,14 @@ export default function ReservationDetails({
     { locale: dateLocale }
   );
 
-  const isWeekend = reservationDate.getDay() === 0 || reservationDate.getDay() === 6;
   const [tourTime, setTourTime] = useState<TourTime | null>(null);
   const [tourPackage, setTourPackage] = useState<TourPackage | null>(null);
-  const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
-  const [manualSelectedTourSlug, setManualSelectedTourSlug] = useState<string | null>(null);
-  const [showTourModal, setShowTourModal] = useState(false);
+  const [currentStep, setCurrentStep] = useState<BookingStepId>(1);
+  const currentStepRef = useRef<BookingStepId>(1);
+  const stepEnteredAtRef = useRef(0);
+  const completedStepsRef = useRef<Set<BookingStepId>>(new Set());
 
-  const selectedTourSlug = resolveSelectedTourSlug(tours, manualSelectedTourSlug, initialSelectedTourSlug);
+  const selectedTourSlug = resolveSelectedTourSlug(tours, null, initialSelectedTourSlug);
   const selectedTour = tours.find((tour) => tour.slug === selectedTourSlug) ?? tours[0] ?? null;
   const selectedTourName = selectedTour ? (lang === "es" ? selectedTour.titleEs : selectedTour.titleEn) : (lang === "es" ? "Tour" : "Tour");
   const selectedTourDescription = selectedTour
@@ -366,30 +394,40 @@ export default function ReservationDetails({
 
   const PACKAGES = useMemo<PackageOption[]>(() => {
     if (!selectedTour) return [];
-    const exchangeRate = 625;
-    const baseUSD = (selectedTour.priceCRC ?? 25000) / exchangeRate;
-    const baseMultiplier = baseUSD / 30;
-    return [
-      {
-        id: "basic",
-        priceUSD: Math.round(30 * baseMultiplier),
-        priceCRC: Math.round(30 * baseMultiplier * exchangeRate),
-        availableOn: "weekends",
-      },
-      {
-        id: "full-day",
-        priceUSD: Math.round(40 * baseMultiplier),
-        priceCRC: Math.round(40 * baseMultiplier * exchangeRate),
-        availableOn: "weekends",
-      },
-      {
-        id: "private",
-        priceUSD: Math.round(60 * baseMultiplier),
-        priceCRC: null,
-        availableOn: "weekdays",
-      },
-    ];
-  }, [selectedTour]);
+
+    const dbPackages = Array.isArray(selectedTour.packages) ? selectedTour.packages : [];
+    if (dbPackages.length > 0) {
+      return dbPackages
+        .filter((pkg) => typeof pkg.name === "string" && pkg.name.trim() && Number.isFinite(Number(pkg.price)))
+        .map((pkg, index) => ({
+          ...pkg,
+          id: pkg.id?.trim() || slugifyPackageId(pkg.nameEs || pkg.name, index),
+          name: pkg.name,
+          price: Number(pkg.price),
+          priceCRC: typeof pkg.priceCRC === "number" ? pkg.priceCRC : null,
+          includes: Array.isArray(pkg.includes) ? pkg.includes : [],
+          departureTimes: Array.isArray(pkg.departureTimes) && pkg.departureTimes.length > 0
+            ? pkg.departureTimes
+            : DEFAULT_DEPARTURE_TIMES,
+        }));
+    }
+
+    const exchangeRate = 525;
+    const fallbackPriceUSD = selectedTour.priceCRC ? Math.round(selectedTour.priceCRC / exchangeRate) : 40;
+
+    return [{
+      id: "standard-package",
+      name: lang === "es" ? "Paquete Estandar" : "Standard Package",
+      nameEs: "Paquete Estandar",
+      price: fallbackPriceUSD,
+      priceCRC: selectedTour.priceCRC ?? null,
+      descriptionEs: selectedTour.descriptionEs,
+      descriptionEn: selectedTour.descriptionEn,
+      includes: selectedTour.inclusions ?? [],
+      groupTour: true,
+      departureTimes: DEFAULT_DEPARTURE_TIMES,
+    }];
+  }, [lang, selectedTour]);
 
   useEffect(() => {
     let isMounted = true;
@@ -470,19 +508,34 @@ export default function ReservationDetails({
     [tourPackage, PACKAGES]
   );
 
-  const selectedPackageUnavailable = selectedPackage
-    ? selectedPackage.availableOn === "weekdays"
-      ? isWeekend
-      : !isWeekend
-    : false;
+  const availableTimeSlots = useMemo(() => {
+    const sourceTimes = selectedPackage
+      ? selectedPackage.departureTimes
+      : PACKAGES.flatMap((pkg) => pkg.departureTimes);
+    const uniqueTimes = Array.from(new Set(sourceTimes.map((time) => time.trim()).filter(Boolean)));
+    return uniqueTimes.length > 0 ? uniqueTimes : DEFAULT_DEPARTURE_TIMES;
+  }, [PACKAGES, selectedPackage]);
 
-  const effectiveTourPackage = selectedPackageUnavailable ? null : tourPackage;
-  const effectiveSelectedPackage = selectedPackageUnavailable ? null : selectedPackage;
+  const effectiveTourPackage = tourPackage;
+  const effectiveSelectedPackage = selectedPackage;
+  const selectedPackageUnavailable = false;
+
+  useEffect(() => {
+    if (tourPackage && !PACKAGES.some((pkg) => pkg.id === tourPackage)) {
+      setTourPackage(null);
+    }
+  }, [PACKAGES, tourPackage]);
+
+  useEffect(() => {
+    if (tourTime && !availableTimeSlots.includes(tourTime)) {
+      setTourTime(null);
+    }
+  }, [availableTimeSlots, tourTime]);
 
   const { subtotalRaw, taxesRaw, totalWithTaxesRaw } = useMemo(() => {
     const safeTickets = Number.isFinite(tickets) ? Math.max(0, tickets) : 0;
-    const pricePerPerson = Number.isFinite(effectiveSelectedPackage?.priceUSD)
-      ? Math.max(0, effectiveSelectedPackage?.priceUSD ?? 0)
+    const pricePerPerson = Number.isFinite(effectiveSelectedPackage?.price)
+      ? Math.max(0, effectiveSelectedPackage?.price ?? 0)
       : 0;
     const sub = safeTickets * pricePerPerson;
     const normalizedTaxRate = Number.isFinite(ivaRatePercent)
@@ -565,8 +618,8 @@ export default function ReservationDetails({
   const missingStep1Items = useMemo(() => {
     const missing: string[] = [];
 
-    if (!tourTime) missing.push(tr.missing.time);
     if (!effectiveTourPackage) missing.push(tr.missing.package);
+    if (effectiveTourPackage && !tourTime) missing.push(tr.missing.time);
     if (!selectedTour) missing.push(lang === "es" ? "Elegir un tour." : "Choose a tour.");
     if (!isTicketsValid) missing.push(tr.missing.tickets);
 
@@ -594,13 +647,78 @@ export default function ReservationDetails({
     { id: 3 as const, label: tr.steps.review },
   ];
 
-  useEffect(() => {
-    const stepLabels: Record<1 | 2 | 3, string> = {
-      1: "schedule",
-      2: "traveler_details",
-      3: "review",
-    };
+  const stepLabels = useMemo<Record<BookingStepId, string>>(() => ({
+    1: "schedule",
+    2: "traveler_details",
+    3: "review",
+  }), []);
 
+  useEffect(() => {
+    if (stepEnteredAtRef.current === 0) {
+      stepEnteredAtRef.current = Date.now();
+    }
+  }, []);
+
+  const missingStep1Keys = useMemo(() => {
+    const missing: string[] = [];
+
+    if (!effectiveTourPackage) missing.push("tour_package");
+    if (effectiveTourPackage && !tourTime) missing.push("tour_time");
+    if (!selectedTour) missing.push("tour");
+    if (!isTicketsValid) missing.push("tickets");
+
+    return missing;
+  }, [tourTime, effectiveTourPackage, isTicketsValid, selectedTour]);
+
+  const missingStep2Keys = useMemo(() => {
+    const missing: string[] = [];
+
+    if (!validation.isNameValid) missing.push("name");
+    if (!validation.isEmailValid) missing.push("email");
+    if (!validation.isPhoneNumberValid) missing.push("phone");
+
+    return missing;
+  }, [validation.isNameValid, validation.isEmailValid, validation.isPhoneNumberValid]);
+
+  const getMissingKeysForStep = useCallback((step: BookingStepId) => {
+    if (step === 1) return missingStep1Keys;
+    if (step === 2) return missingStep2Keys;
+    return validation.isAgreeTermsValid ? [] : ["terms"];
+  }, [missingStep1Keys, missingStep2Keys, validation.isAgreeTermsValid]);
+
+  const getAnalyticsBookingSnapshot = useCallback(() => ({
+    hasPreselectedTour,
+    selectedTourSlug: selectedTour?.slug ?? null,
+    selectedTourName,
+    selectedDate,
+    currentMonth,
+    currentYear,
+    tickets,
+    slots,
+    hasSelectedTime: Boolean(tourTime),
+    selectedTime: tourTime,
+    hasSelectedPackage: Boolean(effectiveTourPackage),
+    selectedPackage: effectiveTourPackage,
+    subtotal: subtotalRaw,
+    taxes: taxesRaw,
+    totalWithTaxes,
+  }), [
+    hasPreselectedTour,
+    selectedTour?.slug,
+    selectedTourName,
+    selectedDate,
+    currentMonth,
+    currentYear,
+    tickets,
+    slots,
+    tourTime,
+    effectiveTourPackage,
+    subtotalRaw,
+    taxesRaw,
+    totalWithTaxes,
+  ]);
+
+  useEffect(() => {
     trackAnalyticsEvent("booking_step", {
       metadata: {
         step: currentStep,
@@ -612,23 +730,10 @@ export default function ReservationDetails({
           formReadyToSubmit: isFormValid,
           missingStep1Items,
           missingStep2Items,
+          missingStep1Keys,
+          missingStep2Keys,
         },
-        booking: {
-          hasPreselectedTour,
-          selectedTourSlug: selectedTour?.slug ?? null,
-          selectedTourName,
-          selectedDate,
-          currentMonth,
-          currentYear,
-          tickets,
-          hasSelectedTime: Boolean(tourTime),
-          selectedTime: tourTime,
-          hasSelectedPackage: Boolean(effectiveTourPackage),
-          selectedPackage: effectiveTourPackage,
-          subtotal: subtotalRaw,
-          taxes: taxesRaw,
-          totalWithTaxes,
-        },
+        booking: getAnalyticsBookingSnapshot(),
         selectedDate,
         currentMonth,
         currentYear,
@@ -643,37 +748,139 @@ export default function ReservationDetails({
     isFormValid,
     missingStep1Items,
     missingStep2Items,
-    hasPreselectedTour,
-    selectedTourName,
+    missingStep1Keys,
+    missingStep2Keys,
+    getAnalyticsBookingSnapshot,
     selectedDate,
     currentMonth,
     currentYear,
     tickets,
-    tourTime,
-    effectiveTourPackage,
-    selectedTour?.slug,
-    subtotalRaw,
-    taxesRaw,
-    totalWithTaxes,
+    stepLabels,
   ]);
 
   useEffect(() => {
-    if (!showTourModal) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setShowTourModal(false); };
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.body.style.overflow = prev;
-      document.removeEventListener("keydown", onKey);
+    const previousStep = currentStepRef.current;
+    if (previousStep !== currentStep) {
+      const durationMs = Date.now() - stepEnteredAtRef.current;
+
+      trackAnalyticsEvent("booking_step_abandoned", {
+        metadata: {
+          step: previousStep,
+          stepLabel: stepLabels[previousStep],
+          durationMs,
+          durationSeconds: Math.round(durationMs / 1000),
+          missingKeys: getMissingKeysForStep(previousStep),
+          completed: completedStepsRef.current.has(previousStep),
+          nextStep: currentStep,
+          nextStepLabel: stepLabels[currentStep],
+          booking: getAnalyticsBookingSnapshot(),
+        },
+      });
+
+      currentStepRef.current = currentStep;
+      stepEnteredAtRef.current = Date.now();
+    }
+  }, [currentStep, getAnalyticsBookingSnapshot, getMissingKeysForStep, stepLabels]);
+
+  useEffect(() => {
+    const handlePageHide = () => {
+      const activeStep = currentStepRef.current;
+      const durationMs = Date.now() - stepEnteredAtRef.current;
+
+      trackAnalyticsEvent("booking_step_abandoned", {
+        metadata: {
+          step: activeStep,
+          stepLabel: stepLabels[activeStep],
+          durationMs,
+          durationSeconds: Math.round(durationMs / 1000),
+          missingKeys: getMissingKeysForStep(activeStep),
+          completed: completedStepsRef.current.has(activeStep),
+          nextStep: null,
+          nextStepLabel: null,
+          source: "pagehide",
+          booking: getAnalyticsBookingSnapshot(),
+        },
+      });
     };
-  }, [showTourModal]);
+
+    window.addEventListener("pagehide", handlePageHide);
+    return () => window.removeEventListener("pagehide", handlePageHide);
+  }, [getAnalyticsBookingSnapshot, getMissingKeysForStep, stepLabels]);
+
+  const trackBlockedStep = useCallback((targetStep: BookingStepId | "checkout", source: string) => {
+    const missingKeys = getMissingKeysForStep(currentStep);
+
+    trackAnalyticsEvent("booking_step_blocked", {
+      metadata: {
+        step: currentStep,
+        stepLabel: stepLabels[currentStep],
+        targetStep,
+        targetStepLabel: targetStep === "checkout" ? "checkout" : stepLabels[targetStep],
+        source,
+        missingKeys,
+        missingStep1Keys,
+        missingStep2Keys,
+        termsAccepted: validation.isAgreeTermsValid,
+        booking: getAnalyticsBookingSnapshot(),
+      },
+    });
+  }, [
+    currentStep,
+    getAnalyticsBookingSnapshot,
+    getMissingKeysForStep,
+    missingStep1Keys,
+    missingStep2Keys,
+    stepLabels,
+    validation.isAgreeTermsValid,
+  ]);
+
+  const trackStepCompleted = useCallback((step: BookingStepId, targetStep: BookingStepId | "checkout", source: string) => {
+    completedStepsRef.current.add(step);
+
+    trackAnalyticsEvent("booking_step_completed", {
+      metadata: {
+        step,
+        stepLabel: stepLabels[step],
+        targetStep,
+        targetStepLabel: targetStep === "checkout" ? "checkout" : stepLabels[targetStep],
+        source,
+        durationMs: Date.now() - stepEnteredAtRef.current,
+        durationSeconds: Math.round((Date.now() - stepEnteredAtRef.current) / 1000),
+        booking: getAnalyticsBookingSnapshot(),
+      },
+    });
+  }, [getAnalyticsBookingSnapshot, stepLabels]);
+
+  const goToStep = useCallback((targetStep: BookingStepId, source: string) => {
+    if (targetStep > currentStep) {
+      if (currentStep === 1 && !isStep1Valid) {
+        trackBlockedStep(targetStep, source);
+        return;
+      }
+
+      if (currentStep === 2 && !isStep2Valid) {
+        trackBlockedStep(targetStep, source);
+        return;
+      }
+
+      trackStepCompleted(currentStep, targetStep, source);
+    }
+
+    setCurrentStep(targetStep);
+  }, [currentStep, isStep1Valid, isStep2Valid, trackBlockedStep, trackStepCompleted]);
 
   const handleReserve = useCallback(() => {
-    if (!isFormValid || !effectiveSelectedPackage || !tourTime || !effectiveTourPackage || !selectedTour) return;
+    if (!isFormValid || !effectiveSelectedPackage || !tourTime || !effectiveTourPackage || !selectedTour) {
+      trackBlockedStep("checkout", "checkout_button");
+      return;
+    }
+
+    trackStepCompleted(3, "checkout", "checkout_button");
 
     trackAnalyticsEvent("booking_submitted", {
       metadata: {
+        step: 3,
+        stepLabel: "review",
         tickets,
         tourTime,
         tourPackage: effectiveTourPackage,
@@ -692,10 +899,11 @@ export default function ReservationDetails({
       phone: `${formState.phoneCode} ${formState.phoneNumber}`,
       specialRequests: formState.specialRequests,
       tourTime,
-      tourPackage: effectiveTourPackage,
+      packageId: effectiveSelectedPackage.id,
+      tourPackage: lang === "es" ? (effectiveSelectedPackage.nameEs || effectiveSelectedPackage.name) : effectiveSelectedPackage.name,
       tourSlug: selectedTour.slug,
       tourName: selectedTourName,
-      packagePrice: effectiveSelectedPackage.priceUSD,
+      packagePrice: effectiveSelectedPackage.price,
     });
   }, [
     isFormValid,
@@ -712,183 +920,194 @@ export default function ReservationDetails({
     formState,
     selectedTour,
     selectedTourName,
+    lang,
+    trackBlockedStep,
+    trackStepCompleted,
   ]);
 
   const goToNextStep = useCallback(() => {
-    if (currentStep === 1 && !isStep1Valid) return;
-    if (currentStep === 2 && !isStep2Valid) return;
-    setCurrentStep((prev) => (prev < 3 ? ((prev + 1) as 1 | 2 | 3) : prev));
-  }, [currentStep, isStep1Valid, isStep2Valid]);
+    const targetStep = currentStep < 3 ? ((currentStep + 1) as BookingStepId) : currentStep;
+    goToStep(targetStep, "next_button");
+  }, [currentStep, goToStep]);
 
   const goToPrevStep = useCallback(() => {
-    setCurrentStep((prev) => (prev > 1 ? ((prev - 1) as 1 | 2 | 3) : prev));
-  }, []);
+    const targetStep = currentStep > 1 ? ((currentStep - 1) as BookingStepId) : currentStep;
+    setCurrentStep(targetStep);
+  }, [currentStep]);
+
+  const handleTourTimeSelect = useCallback((slot: TourTime) => {
+    setTourTime(slot);
+    trackAnalyticsEvent("booking_selection_changed", {
+      metadata: {
+        step: 1,
+        stepLabel: stepLabels[1],
+        field: "tour_time",
+        value: slot,
+        booking: {
+          ...getAnalyticsBookingSnapshot(),
+          selectedTime: slot,
+          hasSelectedTime: true,
+        },
+      },
+    });
+  }, [getAnalyticsBookingSnapshot, stepLabels]);
+
+  const handlePackageSelect = useCallback((pkg: PackageOption) => {
+    setTourPackage(pkg.id);
+    setTourTime(null);
+
+    trackAnalyticsEvent("booking_selection_changed", {
+      metadata: {
+        step: 1,
+        stepLabel: stepLabels[1],
+        field: "tour_package",
+        value: pkg.id,
+        priceUSD: pkg.price,
+        departureTimes: pkg.departureTimes,
+        booking: {
+          ...getAnalyticsBookingSnapshot(),
+          selectedPackage: pkg.id,
+          hasSelectedPackage: true,
+          selectedTime: null,
+          hasSelectedTime: false,
+        },
+      },
+    });
+  }, [getAnalyticsBookingSnapshot, stepLabels]);
+
+  const handleTicketsChange = useCallback((rawValue: string) => {
+    const parsedValue = Number(rawValue);
+    const nextTickets = parsedValue >= 1 && parsedValue <= slots
+      ? parsedValue
+      : parsedValue < 1
+      ? 1
+      : slots;
+
+    setTickets(nextTickets);
+    trackAnalyticsEvent("booking_selection_changed", {
+      metadata: {
+        step: 1,
+        stepLabel: stepLabels[1],
+        field: "tickets",
+        rawValue: Number.isFinite(parsedValue) ? parsedValue : null,
+        value: nextTickets,
+        wasClamped: nextTickets !== parsedValue,
+        slots,
+        booking: {
+          ...getAnalyticsBookingSnapshot(),
+          tickets: nextTickets,
+        },
+      },
+    });
+  }, [getAnalyticsBookingSnapshot, setTickets, slots, stepLabels]);
+
+  const trackFieldBlur = useCallback((field: "name" | "email" | "phone" | "specialRequests" | "terms") => {
+    const fieldState = {
+      name: {
+        isValid: validation.isNameValid,
+        isEmpty: formState.name.trim() === "",
+        valueLength: formState.name.trim().length,
+      },
+      email: {
+        isValid: validation.isEmailValid,
+        isEmpty: formState.email.trim() === "",
+        valueLength: formState.email.trim().length,
+      },
+      phone: {
+        isValid: validation.isPhoneNumberValid,
+        isEmpty: formState.phoneNumber.trim() === "",
+        valueLength: formState.phoneNumber.trim().length,
+        phoneCode: formState.phoneCode,
+      },
+      specialRequests: {
+        isValid: true,
+        isEmpty: formState.specialRequests.trim() === "",
+        valueLength: formState.specialRequests.trim().length,
+      },
+      terms: {
+        isValid: validation.isAgreeTermsValid,
+        isEmpty: !validation.isAgreeTermsValid,
+        valueLength: validation.isAgreeTermsValid ? 1 : 0,
+      },
+    }[field];
+
+    trackAnalyticsEvent("booking_field_blur", {
+      metadata: {
+        step: field === "terms" ? 3 : 2,
+        stepLabel: field === "terms" ? stepLabels[3] : stepLabels[2],
+        field,
+        ...fieldState,
+        missingStep2Keys,
+        termsAccepted: validation.isAgreeTermsValid,
+        booking: getAnalyticsBookingSnapshot(),
+      },
+    });
+  }, [formState, getAnalyticsBookingSnapshot, missingStep2Keys, stepLabels, validation]);
 
   return (
     <div className="border-t border-zinc-300 dark:border-zinc-700">
-      <h2 className="text-2xl font-bold mb-4">
+      <h2 className="mb-5 text-center text-2xl font-black leading-tight text-zinc-900 dark:text-zinc-50">
         {tr.titlePrefix} {formattedDate}
       </h2>
 
-      <div className="mb-8 rounded-2xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-900/60">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-          {tr.flowTitle}
-        </p>
-        <div className="grid gap-2 sm:grid-cols-3">
+      <div className="mb-8 border-y border-zinc-200 py-3 dark:border-zinc-800" aria-label={tr.flowTitle}>
+        <div className="flex items-center gap-2">
           {steps.map((step) => {
             const isCurrent = currentStep === step.id;
             const isDone = currentStep > step.id;
             return (
-              <button
+              <div
                 key={step.id}
-                type="button"
-                onClick={() => {
-                  if (step.id > currentStep) {
-                    if (currentStep === 1 && !isStep1Valid) return;
-                    if (currentStep === 2 && !isStep2Valid) return;
-                  }
-                  setCurrentStep(step.id);
-                }}
-                className={`rounded-xl border px-3 py-2 text-left text-sm transition-all ${
-                  isCurrent
-                    ? "border-emerald-400 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300"
-                    : isDone
-                    ? "border-teal-300 bg-teal-50 text-teal-700 dark:border-teal-700 dark:bg-teal-900/20 dark:text-teal-300"
-                    : "border-zinc-200 bg-white text-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400"
-                }`}
+                className="flex flex-1 items-center gap-2"
+                aria-current={isCurrent ? "step" : undefined}
               >
-                <span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full border text-xs font-bold">
+                <span
+                  className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-bold transition-colors ${
+                    isCurrent
+                      ? "border-emerald-400 bg-emerald-500 text-zinc-950"
+                      : isDone
+                      ? "border-teal-400 bg-teal-400/20 text-teal-300"
+                      : "border-zinc-700 bg-zinc-900 text-zinc-500"
+                  }`}
+                >
                   {step.id}
                 </span>
-                {step.label}
-              </button>
+                <span className={`hidden min-w-0 truncate text-xs font-semibold sm:inline ${isCurrent ? "text-emerald-300" : isDone ? "text-teal-300" : "text-zinc-500"}`}>
+                  {step.label}
+                </span>
+                {step.id < steps.length && (
+                  <span className={`h-px flex-1 ${isDone ? "bg-teal-500/60" : "bg-zinc-800"}`} aria-hidden />
+                )}
+              </div>
             );
           })}
         </div>
       </div>
 
-      <div className={`mb-6 rounded-xl ${!selectedTour ? "ring-2 ring-amber-300/70 p-3" : ""}`}>
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <h3 className="text-xl font-semibold">{tr.tourLabel}</h3>
-          {hasPreselectedTour && (
-            <Link
-              href="/tours"
-              className="inline-flex items-center rounded-full border border-teal-500/40 px-3 py-1 text-xs font-semibold text-teal-700 transition hover:bg-teal-50 dark:text-teal-300 dark:hover:bg-teal-900/20"
-            >
-              {tr.searchToursBtn}
-            </Link>
-          )}
-        </div>
-
-        <div className="flex items-center justify-between gap-3 rounded-xl border-2 border-emerald-500 bg-emerald-50 p-4 dark:bg-emerald-900/20">
-          <div className="min-w-0">
-            <p className="mb-0.5 text-[11px] font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-              {tr.selectedTourLabel}
-            </p>
-            <p className="truncate font-bold text-base text-zinc-800 dark:text-zinc-100">
-              {selectedTourName}
-            </p>
-          </div>
-          {tours.length > 1 && (
-            <button
-              type="button"
-              onClick={() => setShowTourModal(true)}
-              className="shrink-0 inline-flex items-center gap-1 rounded-full border border-emerald-500/50 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-100 dark:text-emerald-300 dark:hover:bg-emerald-900/40"
-            >
-              {tr.changeBtn}
-              <ChevronRight size={12} />
-            </button>
-          )}
-        </div>
+      <div className={`mb-6 text-center ${!selectedTour ? "rounded-xl ring-2 ring-amber-300/70 p-3" : ""}`}>
+        <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.22em] text-emerald-400">
+          {tr.selectedTourLabel}
+        </p>
+        <h3 className="mx-auto max-w-xl text-2xl font-black leading-tight text-zinc-900 dark:text-zinc-50">
+          {selectedTourName}
+        </h3>
       </div>
 
-      {showTourModal && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => setShowTourModal(false)}
-          />
-          <div className="relative z-10 w-full max-w-lg rounded-3xl bg-white shadow-2xl dark:bg-zinc-900 overflow-hidden">
-            <div className="flex items-center justify-between border-b border-zinc-200 px-6 py-4 dark:border-zinc-700">
-              <h3 className="text-lg font-bold text-zinc-800 dark:text-zinc-100">
-                {tr.chooseTourTitle}
-              </h3>
-              <button
-                type="button"
-                onClick={() => setShowTourModal(false)}
-                className="flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800"
-              >
-                <X size={18} className="text-zinc-500" />
-              </button>
-            </div>
-            <div className="max-h-[60vh] space-y-2 overflow-y-auto p-4">
-              {tours.map((tour) => {
-                const isSelected = selectedTourSlug === tour.slug;
-                const name = lang === "es" ? tour.titleEs : tour.titleEn;
-                const description = (lang === "es" ? tour.descriptionEs : tour.descriptionEn) ?? tour.descriptionEs ?? tour.descriptionEn;
-                const price = typeof tour.priceCRC === "number"
-                  ? new Intl.NumberFormat("es-CR", {
-                      style: "currency",
-                      currency: "CRC",
-                      maximumFractionDigits: 0,
-                    }).format(tour.priceCRC)
-                  : null;
-
-                return (
-                  <button
-                    key={tour.slug}
-                    type="button"
-                    onClick={() => {
-                      setManualSelectedTourSlug(tour.slug);
-                      setShowTourModal(false);
-                    }}
-                    className={`w-full rounded-2xl border-2 p-4 text-left transition-all ${
-                      isSelected
-                        ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20"
-                        : "border-zinc-200 hover:border-emerald-400 hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="font-semibold text-sm text-zinc-800 dark:text-zinc-100">{name}</p>
-                      {isSelected && (
-                        <span className="shrink-0 rounded-full bg-emerald-500 px-2.5 py-0.5 text-[11px] font-bold text-white">
-                          {tr.activeLabel}
-                        </span>
-                      )}
-                    </div>
-                    {(description || price) && (
-                      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-500 dark:text-zinc-400">
-                        {description && <span className="line-clamp-1">{description}</span>}
-                        {price && <span className="font-semibold text-emerald-700 dark:text-emerald-300">{tr.priceFrom} {price}</span>}
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
-
       <div className="mb-6 rounded-2xl border border-zinc-200 bg-gradient-to-br from-teal-50 via-white to-cyan-50 p-5 shadow-sm dark:border-zinc-700 dark:from-zinc-900 dark:via-zinc-900 dark:to-teal-950/30">
-        <div className="mb-4 flex items-start justify-between gap-3">
+        <div className="mb-4 text-center">
+          <div className="mx-auto mb-3 inline-flex h-9 w-9 items-center justify-center rounded-full border border-teal-300/60 bg-teal-100/70 text-teal-700 dark:border-teal-700/60 dark:bg-teal-900/30 dark:text-teal-300" title={tr.tooltips.tourInfoCard}>
+            <Info className="h-4 w-4" aria-hidden />
+          </div>
           <div>
-            <h3 className="mb-1 text-xl font-semibold text-teal-900 dark:text-teal-300">
+            <h3 className="mb-1 text-xl font-black text-teal-900 dark:text-teal-300">
               {tr.tourInfoTitle}
             </h3>
             <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">{selectedTourName}</p>
             <p className="text-sm text-zinc-600 dark:text-zinc-400">{tr.tourInfoSubtitle}</p>
           </div>
-          <span
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-teal-300/60 bg-teal-100/70 text-teal-700 dark:border-teal-700/60 dark:bg-teal-900/30 dark:text-teal-300"
-            title={tr.tooltips.tourInfoCard}
-          >
-            <Info className="h-4 w-4" aria-hidden />
-          </span>
         </div>
 
-        <p className="mb-4 text-zinc-700 dark:text-zinc-400">{localizedDetails}</p>
+        <p className="mx-auto mb-4 max-w-2xl text-center text-zinc-700 dark:text-zinc-400">{localizedDetails}</p>
 
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <div className="rounded-xl border border-zinc-200/70 bg-white/85 p-3 dark:border-zinc-700 dark:bg-zinc-900/70" title={tr.tooltips.durationCard}>
@@ -938,53 +1157,29 @@ export default function ReservationDetails({
 
       {currentStep === 1 && (
         <>
-          <div className={`mb-6 rounded-xl ${!tourTime ? "ring-2 ring-amber-300/70 p-3" : ""}`}>
-            <h3 className="text-xl font-semibold mb-3">{tr.tourTimeTitle}</h3>
-            {!tourTime && <p className="mb-3 flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-400"><AlertCircle className="h-4 w-4" aria-hidden /> {tr.indicators.chooseTourTime}</p>}
-            <div className="flex gap-3 flex-wrap">
-              {TIME_SLOTS.map((slot) => {
-                const isSelected = tourTime === slot.id;
-                return (
-                  <button
-                    key={slot.id}
-                    type="button"
-                    onClick={() => setTourTime(slot.id)}
-                    className={`flex-1 min-w-[90px] py-3 px-4 rounded-xl border-2 font-semibold text-base transition-all ${
-                      isSelected
-                        ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300"
-                        : "border-zinc-300 dark:border-zinc-600 hover:border-emerald-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
-                    }`}
-                  >
-                    {slot.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
           <div className={`mb-6 rounded-xl ${!effectiveTourPackage ? "ring-2 ring-amber-300/70 p-3" : ""}`}>
             <h3 className="text-xl font-semibold mb-3">{tr.packageTitle}</h3>
             {!effectiveTourPackage && <p className="mb-3 flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-400"><AlertCircle className="h-4 w-4" aria-hidden /> {tr.indicators.choosePackage}</p>}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {PACKAGES.map((pkg) => {
+              {PACKAGES.map((pkg, index) => {
                 const isSelected = effectiveTourPackage === pkg.id;
-                const isDisabled =
-                  pkg.availableOn === "weekdays" ? isWeekend : !isWeekend;
-                const pkgTr = tr.packages[pkg.id];
-                const pkgMeta = PACKAGE_META[pkg.id];
+                const pkgName = lang === "es" ? (pkg.nameEs || pkg.name) : pkg.name;
+                const pkgDescription = lang === "es"
+                  ? (pkg.descriptionEs || pkg.descriptionEn || "")
+                  : (pkg.descriptionEn || pkg.descriptionEs || "");
+                const pkgMeta: PackageMeta = PACKAGE_META[index % PACKAGE_META.length];
                 const Icon = pkgMeta.icon;
-                const packageHighlights = lang === "es" ? pkgMeta.highlightEs : pkgMeta.highlightEn;
+                const packageHighlights = pkg.includes && pkg.includes.length > 0
+                  ? pkg.includes
+                  : lang === "es" ? pkgMeta.highlightEs : pkgMeta.highlightEn;
 
                 return (
                   <button
                     key={pkg.id}
                     type="button"
-                    onClick={() => !isDisabled && setTourPackage(pkg.id)}
-                    disabled={isDisabled}
+                    onClick={() => handlePackageSelect(pkg)}
                     className={`group relative overflow-hidden text-left p-5 rounded-2xl border-2 transition-all ${
-                      isDisabled
-                        ? "border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800/50 opacity-50 cursor-not-allowed"
-                        : isSelected
+                      isSelected
                         ? "border-emerald-500 bg-emerald-50/90 dark:bg-emerald-900/20 shadow-lg shadow-emerald-500/10"
                         : "border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 hover:-translate-y-0.5 hover:border-emerald-400 hover:shadow-lg hover:shadow-emerald-500/10 cursor-pointer"
                     }`}
@@ -995,19 +1190,19 @@ export default function ReservationDetails({
                         <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/90 text-emerald-700 shadow-sm dark:bg-zinc-800/90 dark:text-emerald-300">
                           <Icon className="h-5 w-5" aria-hidden />
                         </span>
-                        {pkg.availableOn === "weekdays" && (
+                        {pkg.groupTour === false && (
                           <span className="inline-block text-xs font-semibold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 rounded px-2 py-0.5">
-                            {tr.weekdaysOnly}
+                            {lang === "es" ? "Privado" : "Private"}
                           </span>
                         )}
-                        {pkg.availableOn === "weekends" && (
+                        {pkg.groupTour !== false && (
                           <span className="inline-block text-xs font-semibold bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-300 rounded px-2 py-0.5">
-                            {tr.weekendsOnly}
+                            {lang === "es" ? "Grupal" : "Group"}
                           </span>
                         )}
                       </div>
-                      <p className="font-bold text-base mb-1 text-zinc-800 dark:text-zinc-100">{pkgTr.name}</p>
-                      <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-4 leading-snug">{pkgTr.description}</p>
+                      <p className="font-bold text-base mb-1 text-zinc-800 dark:text-zinc-100">{pkgName}</p>
+                      <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-4 leading-snug">{pkgDescription}</p>
                       <ul className="mb-4 space-y-1.5">
                         {packageHighlights.map((item) => (
                           <li key={item} className="flex items-center gap-2 text-xs text-zinc-700 dark:text-zinc-300">
@@ -1019,10 +1214,13 @@ export default function ReservationDetails({
                       <div className="flex items-end justify-between gap-3 border-t border-zinc-200/70 pt-3 dark:border-zinc-700/80">
                         <div>
                           <p className="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">{tr.priceFrom}</p>
-                          <p className="font-bold text-xl text-zinc-900 dark:text-zinc-100">${pkg.priceUSD}</p>
+                          <p className="font-bold text-xl text-zinc-900 dark:text-zinc-100">${pkg.price}</p>
                         </div>
                         <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">USD / {tr.perPerson}</p>
                       </div>
+                      {pkg.scheduleNote && (
+                        <p className="mt-3 text-xs text-zinc-500 dark:text-zinc-400">{pkg.scheduleNote}</p>
+                      )}
                     </div>
                   </button>
                 );
@@ -1050,6 +1248,32 @@ export default function ReservationDetails({
             )}
           </div>
 
+          {effectiveSelectedPackage && (
+            <div className={`mb-6 rounded-xl ${!tourTime ? "ring-2 ring-amber-300/70 p-3" : ""}`}>
+              <h3 className="text-xl font-semibold mb-3">{tr.tourTimeTitle}</h3>
+              {!tourTime && <p className="mb-3 flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-400"><AlertCircle className="h-4 w-4" aria-hidden /> {tr.indicators.chooseTourTime}</p>}
+              <div className="flex gap-3 flex-wrap">
+                {availableTimeSlots.map((slot) => {
+                  const isSelected = tourTime === slot;
+                  return (
+                    <button
+                      key={slot}
+                      type="button"
+                      onClick={() => handleTourTimeSelect(slot)}
+                      className={`flex-1 min-w-[90px] py-3 px-4 rounded-xl border-2 font-semibold text-base transition-all ${
+                        isSelected
+                          ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300"
+                          : "border-zinc-300 dark:border-zinc-600 hover:border-emerald-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
+                      }`}
+                    >
+                      {formatDepartureLabel(slot)}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <div className={`mb-6 rounded-xl ${!isTicketsValid ? "ring-2 ring-amber-300/70 p-3" : ""}`}>
             <h3 className="text-xl font-semibold mb-4">{tr.ticketsTitle}</h3>
             {!isTicketsValid && <p className="mb-3 flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-400"><AlertCircle className="h-4 w-4" aria-hidden /> {tr.indicators.chooseTickets}</p>}
@@ -1062,10 +1286,7 @@ export default function ReservationDetails({
                 max={Math.max(1, slots)}
                 value={tickets}
                 onChange={(e) => {
-                  const val = +e.target.value;
-                  if (val >= 1 && val <= slots) setTickets(val);
-                  else if (val < 1) setTickets(1);
-                  else if (val > slots) setTickets(slots);
+                  handleTicketsChange(e.target.value);
                 }}
                 className="w-20 p-2 rounded-lg border bg-white dark:bg-zinc-800"
                 disabled={slots === 0}
@@ -1092,14 +1313,14 @@ export default function ReservationDetails({
             <h3 className="text-xl font-semibold mb-4">{tr.travelerTitle}</h3>
             {!isStep2Valid && <p className="mb-3 flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-400"><AlertCircle className="h-4 w-4" aria-hidden /> {tr.indicators.completeTravelerData}</p>}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <TravelerInputField id="name" label={tr.fullName} value={formState.name} onChange={(v) => handleChange("name", v)} placeholder={tr.namePlaceholder} isValid={validation.isNameValid} validationMessage={tr.nameRequired} required />
-              <TravelerInputField id="email" label={tr.emailLabel} type="email" value={formState.email} onChange={(v) => handleChange("email", v)} placeholder={tr.emailPlaceholder} isValid={validation.isEmailValid} validationMessage={tr.emailInvalid} required />
-              <TravelerPhoneInput phoneCode={formState.phoneCode} phoneNumber={formState.phoneNumber} setPhoneCode={(v) => handleChange("phoneCode", v)} setPhoneNumber={(v) => handleChange("phoneNumber", v)} isValid={validation.isPhoneNumberValid} label={tr.phoneLabel} placeholder={tr.phonePlaceholder} validationMessage={tr.phoneInvalid} />
+              <TravelerInputField id="name" label={tr.fullName} value={formState.name} onChange={(v) => handleChange("name", v)} onBlur={() => trackFieldBlur("name")} placeholder={tr.namePlaceholder} isValid={validation.isNameValid} validationMessage={tr.nameRequired} required />
+              <TravelerInputField id="email" label={tr.emailLabel} type="email" value={formState.email} onChange={(v) => handleChange("email", v)} onBlur={() => trackFieldBlur("email")} placeholder={tr.emailPlaceholder} isValid={validation.isEmailValid} validationMessage={tr.emailInvalid} required />
+              <TravelerPhoneInput phoneCode={formState.phoneCode} phoneNumber={formState.phoneNumber} setPhoneCode={(v) => handleChange("phoneCode", v)} setPhoneNumber={(v) => handleChange("phoneNumber", v)} onBlur={() => trackFieldBlur("phone")} isValid={validation.isPhoneNumberValid} label={tr.phoneLabel} placeholder={tr.phonePlaceholder} validationMessage={tr.phoneInvalid} />
             </div>
           </div>
           <div className="mb-6">
             <h3 className="text-xl font-semibold mb-4">{tr.specialTitle}</h3>
-            <textarea id="specialRequests" value={formState.specialRequests} onChange={(e) => handleChange("specialRequests", e.target.value)} className="w-full p-3 rounded-lg border bg-white dark:bg-zinc-800 h-24 border-zinc-300 dark:border-zinc-700 focus:ring-teal-500 focus:border-teal-500" placeholder={tr.specialPlaceholder} />
+            <textarea id="specialRequests" value={formState.specialRequests} onChange={(e) => handleChange("specialRequests", e.target.value)} onBlur={() => trackFieldBlur("specialRequests")} className="w-full p-3 rounded-lg border bg-white dark:bg-zinc-800 h-24 border-zinc-300 dark:border-zinc-700 focus:ring-teal-500 focus:border-teal-500" placeholder={tr.specialPlaceholder} />
           </div>
           {!isStep2Valid && (
             <div className="mb-6 rounded-xl border border-amber-300 bg-amber-50 p-4 dark:border-amber-700 dark:bg-amber-900/20">
@@ -1118,7 +1339,7 @@ export default function ReservationDetails({
         <>
           <div className="mb-6 bg-zinc-100 dark:bg-zinc-800 p-4 rounded-xl">
             <div className="flex justify-between mb-2"><span>{tr.tourLabel}</span><span className="font-medium">{selectedTourName}</span></div>
-            <div className="flex justify-between mb-2"><span>{tr.packageLabel}</span><span className="font-medium">{effectiveSelectedPackage ? tr.packages[effectiveSelectedPackage.id].name : "—"}</span></div>
+            <div className="flex justify-between mb-2"><span>{tr.packageLabel}</span><span className="font-medium">{effectiveSelectedPackage ? (lang === "es" ? effectiveSelectedPackage.nameEs || effectiveSelectedPackage.name : effectiveSelectedPackage.name) : "—"}</span></div>
             <div className="flex justify-between mb-2"><span>{tr.tourTimeTitle}</span><span>{tourTime ?? "—"}</span></div>
             <div className="flex justify-between mb-2"><span>{tr.subtotalLabel}</span><span>${subtotal.toFixed(2)}</span></div>
             <div className="flex justify-between mb-2"><span>{tr.taxes} ({ivaRatePercent}%)</span><span>${taxes.toFixed(2)}</span></div>
@@ -1132,7 +1353,28 @@ export default function ReservationDetails({
               <p className="text-sm">{localizedCancellationPolicy}</p>
             </div>
             <label htmlFor="agreeTerms" className={`flex items-start gap-3 p-4 rounded-xl border transition-all cursor-pointer ${formState.agreeTerms ? "border-teal-500 bg-teal-50 dark:bg-teal-900/20" : "border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800"}`}>
-              <input id="agreeTerms" type="checkbox" checked={formState.agreeTerms} onChange={(e) => handleChange("agreeTerms", e.target.checked)} className="h-5 w-5 text-teal-600 rounded border-zinc-400 focus:ring-teal-500 dark:bg-zinc-700 dark:border-zinc-600 mt-0.5" />
+              <input
+                id="agreeTerms"
+                type="checkbox"
+                checked={formState.agreeTerms}
+                onChange={(e) => {
+                  const accepted = e.target.checked;
+                  handleChange("agreeTerms", accepted);
+                  trackAnalyticsEvent("booking_field_blur", {
+                    metadata: {
+                      step: 3,
+                      stepLabel: stepLabels[3],
+                      field: "terms",
+                      isValid: accepted,
+                      isEmpty: !accepted,
+                      valueLength: accepted ? 1 : 0,
+                      termsAccepted: accepted,
+                      booking: getAnalyticsBookingSnapshot(),
+                    },
+                  });
+                }}
+                className="h-5 w-5 text-teal-600 rounded border-zinc-400 focus:ring-teal-500 dark:bg-zinc-700 dark:border-zinc-600 mt-0.5"
+              />
               <span className="text-zinc-700 dark:text-zinc-400 text-base">
                 {tr.agreeText}
                 <Link href="/terminos-y-condiciones" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-teal-600 underline ml-1">{tr.termsLink}</Link>{" "}{tr.andThe}{" "}
@@ -1153,8 +1395,12 @@ export default function ReservationDetails({
           <button
             type="button"
             onClick={goToNextStep}
-            disabled={(currentStep === 1 && !isStep1Valid) || (currentStep === 2 && !isStep2Valid)}
-            className="px-8 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-full font-bold shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-disabled={(currentStep === 1 && !isStep1Valid) || (currentStep === 2 && !isStep2Valid)}
+            className={`px-8 py-3 bg-teal-600 text-white rounded-full font-bold shadow-lg transition-all ${
+              (currentStep === 1 && !isStep1Valid) || (currentStep === 2 && !isStep2Valid)
+                ? "cursor-not-allowed opacity-50"
+                : "hover:bg-teal-700"
+            }`}
           >
             {tr.nextBtn}
           </button>
@@ -1163,8 +1409,10 @@ export default function ReservationDetails({
           <button
             type="button"
             onClick={handleReserve}
-            disabled={!isFormValid}
-            className="px-8 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-full font-bold shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-disabled={!isFormValid}
+            className={`px-8 py-3 bg-teal-600 text-white rounded-full font-bold shadow-lg transition-all ${
+              !isFormValid ? "cursor-not-allowed opacity-50" : "hover:bg-teal-700"
+            }`}
           >
             {tr.proceedBtn}
           </button>

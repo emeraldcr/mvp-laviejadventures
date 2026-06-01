@@ -1,13 +1,68 @@
 "use client";
 
 import { useLanguage } from "@/app/context/LanguageContext";
+import { trackAnalyticsEvent } from "@/lib/analytics/client";
 import { translations } from "@/lib/translations";
 import Link from "next/link";
+import { useEffect } from "react";
 import type { SuccessClientProps } from "@/lib/types";
+
+const PURCHASE_CONVERSION_SEND_TO = "AW-18010006901/uUBECMPq76kcEPXK64tD";
+
+type GtagArguments = [
+  command: "event",
+  eventName: string,
+  params: Record<string, unknown>,
+];
+
+type SuccessTranslations = (typeof translations)[keyof typeof translations]["success"];
+
+declare global {
+  interface Window {
+    dataLayer?: unknown[];
+    gtag?: (...args: GtagArguments) => void;
+  }
+}
 
 export function SuccessClient(props: SuccessClientProps) {
   const { lang } = useLanguage();
   const tr = translations[lang].success;
+
+  useEffect(() => {
+    if (props.error || !props.orderId) return;
+
+    trackAnalyticsEvent("booking_completed", {
+      metadata: {
+        orderId: props.orderId,
+        captureId: props.captureId,
+        status: props.status,
+        date: props.date,
+        tickets: props.tickets,
+        amount: props.amount,
+        currency: props.currency,
+        language: lang,
+      },
+    });
+
+    const transactionId = props.captureId || props.orderId || "";
+    const conversionStorageKey = `google-ads-purchase-conversion:${transactionId}`;
+
+    if (typeof window !== "undefined" && !sessionStorage.getItem(conversionStorageKey)) {
+      sessionStorage.setItem(conversionStorageKey, "sent");
+
+      const gtag =
+        window.gtag ??
+        ((...args: GtagArguments) => {
+          window.dataLayer = window.dataLayer || [];
+          window.dataLayer.push(args);
+        });
+
+      gtag("event", "conversion", {
+        send_to: PURCHASE_CONVERSION_SEND_TO,
+        transaction_id: transactionId,
+      });
+    }
+  }, [lang, props.amount, props.captureId, props.currency, props.date, props.error, props.orderId, props.status, props.tickets]);
 
   return props.error ? (
     <ErrorState error={props.error} translations={tr} />
@@ -23,7 +78,7 @@ function ErrorState({
   translations: tr,
 }: {
   error: string;
-  translations: any;
+  translations: SuccessTranslations;
 }) {
   return (
     <section className="max-w-xl mx-auto px-4 py-20 text-center">
@@ -52,7 +107,7 @@ function SuccessState({
   captureId,
   status,
   translations: tr,
-}: SuccessClientProps & { translations: any }) {
+}: SuccessClientProps & { translations: SuccessTranslations }) {
   const displayName = name || (tr.defaultCustomer || "Cliente");
 
   return (
@@ -61,7 +116,7 @@ function SuccessState({
         <h1 className="text-3xl font-bold mb-4 text-teal-600">{tr.title}</h1>
 
         <ThankYouMessage name={displayName} translations={tr} />
-        <EmailConfirmationMessage email={email} translations={tr} />
+        <EmailConfirmationMessage email={email ?? undefined} translations={tr} />
 
         <div className="mt-8 grid gap-6 sm:grid-cols-2">
           <BookingDetails
@@ -99,7 +154,7 @@ function SuccessState({
 function ThankYouMessage({
   name,
   translations: tr,
-}: { name: string; translations: any }) {
+}: { name: string; translations: SuccessTranslations }) {
   return (
     <p className="text-zinc-700 dark:text-zinc-300">
       {tr.thanksPrefix} <strong>{name}</strong>
@@ -111,7 +166,7 @@ function ThankYouMessage({
 function EmailConfirmationMessage({
   email,
   translations: tr,
-}: { email?: string; translations: any }) {
+}: { email?: string; translations: SuccessTranslations }) {
   return (
     <p className="mt-4 text-zinc-700 dark:text-zinc-300">
       {tr.emailSentPrefix}{" "}
@@ -126,7 +181,9 @@ function BookingDetails({
   amount,
   currency,
   translations: tr,
-}: any) {
+}: Pick<SuccessClientProps, "date" | "tickets" | "amount" | "currency"> & {
+  translations: SuccessTranslations;
+}) {
   return (
     <div className="rounded-xl bg-zinc-100 dark:bg-zinc-800 p-4 text-left">
       <h2 className="font-semibold mb-3 text-zinc-900 dark:text-zinc-100">
@@ -142,7 +199,14 @@ function BookingDetails({
   );
 }
 
-function ContactDetails({ name, email, phone, translations: tr }: any) {
+function ContactDetails({
+  name,
+  email,
+  phone,
+  translations: tr,
+}: Pick<SuccessClientProps, "name" | "email" | "phone"> & {
+  translations: SuccessTranslations;
+}) {
   return (
     <div className="rounded-xl bg-zinc-100 dark:bg-zinc-800 p-4 text-left">
       <h2 className="font-semibold mb-3 text-zinc-900 dark:text-zinc-100">
@@ -155,7 +219,14 @@ function ContactDetails({ name, email, phone, translations: tr }: any) {
   );
 }
 
-function PaymentInfo({ status, orderId, captureId, translations: tr }: any) {
+function PaymentInfo({
+  status,
+  orderId,
+  captureId,
+  translations: tr,
+}: Pick<SuccessClientProps, "status" | "orderId" | "captureId"> & {
+  translations: SuccessTranslations;
+}) {
   return (
     <div className="mt-6 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 p-4 text-xs text-left text-zinc-600 dark:text-zinc-400 space-y-1">
       <DetailLine label={tr.paymentStatus} value={status || "N/A"} />

@@ -109,7 +109,7 @@ export default function HourlyRainChart({ hourly }: { hourly: HourlyRainEntry[] 
 
   return (
     <div className="h-[320px] md:h-[400px] w-full">
-      <ResponsiveContainer>
+      <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
         <AreaChart
           data={chartData}
           margin={{ top: 20, right: 30, left: 10, bottom: 60 }}

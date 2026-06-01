@@ -47,7 +47,7 @@ export default function DailyRainBarChart({ daily }: { daily: DailyRainEntry[] }
 
   return (
     <div className="h-[300px] w-full">
-      <ResponsiveContainer>
+      <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
         <BarChart data={chartData} margin={{ top: 10, right: 20, left: 10, bottom: 65 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
           <XAxis

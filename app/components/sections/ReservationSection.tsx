@@ -16,6 +16,7 @@ type OrderPayload = {
   date: string;
   dateIso: string;
   tourTime: string;
+  packageId?: string;
   tourPackage: string;
   tourSlug: string;
   tourName: string;

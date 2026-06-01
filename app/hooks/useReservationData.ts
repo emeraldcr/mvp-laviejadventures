@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { CIUDAD_ESMERALDA_PACKAGES } from "@/lib/tour-packages";
 import type { TourSummary } from "@/lib/types/index";
 
 export const DEFAULT_BOOKABLE_TOUR: TourSummary = {
@@ -11,8 +12,9 @@ export const DEFAULT_BOOKABLE_TOUR: TourSummary = {
   descriptionEs: "Experiencia guiada por senderos, rio y canon hacia Cascada El Zafiro.",
   descriptionEn: "Guided experience through trails, river, and canyon toward El Zafiro Waterfall.",
   duration: "3-4 horas",
-  priceCRC: 25000,
+  priceCRC: 21000,
   location: "Ciudad Esmeralda - Rio La Vieja",
+  packages: CIUDAD_ESMERALDA_PACKAGES,
 };
 
 export function useReservationData() {
@@ -48,6 +50,9 @@ export function useReservationData() {
             exclusions?: string[];
             cancellationPolicy?: string;
             restrictions?: string;
+            packages?: TourSummary["packages"];
+            tagEs?: string;
+            tagEn?: string;
           }) => ({
             id: t.id ?? t.slug ?? "",
             slug: t.slug ?? "",
@@ -63,6 +68,9 @@ export function useReservationData() {
             exclusions: t.exclusions,
             cancellationPolicy: t.cancellationPolicy,
             restrictions: t.restrictions,
+            packages: Array.isArray(t.packages) ? t.packages : [],
+            tagEs: t.tagEs,
+            tagEn: t.tagEn,
           }))
           .filter((t: TourSummary) => Boolean(t.slug));
         const hasMain = mapped.some((t) => t.slug === DEFAULT_BOOKABLE_TOUR.slug);

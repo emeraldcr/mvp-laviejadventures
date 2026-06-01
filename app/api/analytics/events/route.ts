@@ -4,7 +4,21 @@ import { getDb } from "@/lib/mongodb";
 import { headers } from "next/headers";
 import { COLLECTIONS } from "@/lib/constants/db";
 
-type AnalyticsEventName = "page_view" | "click" | "booking_step" | "booking_submitted";
+type AnalyticsEventName =
+  | "page_view"
+  | "click"
+  | "booking_step"
+  | "booking_step_completed"
+  | "booking_step_blocked"
+  | "booking_step_abandoned"
+  | "booking_field_blur"
+  | "booking_selection_changed"
+  | "booking_submitted"
+  | "booking_checkout_started"
+  | "payment_order_created"
+  | "payment_approved"
+  | "payment_error"
+  | "booking_completed";
 
 type AnalyticsEventInput = {
   event?: AnalyticsEventName;
@@ -15,7 +29,22 @@ type AnalyticsEventInput = {
   happenedAt?: string;
 };
 
-const VALID_EVENTS: AnalyticsEventName[] = ["page_view", "click", "booking_step", "booking_submitted"];
+const VALID_EVENTS: AnalyticsEventName[] = [
+  "page_view",
+  "click",
+  "booking_step",
+  "booking_step_completed",
+  "booking_step_blocked",
+  "booking_step_abandoned",
+  "booking_field_blur",
+  "booking_selection_changed",
+  "booking_submitted",
+  "booking_checkout_started",
+  "payment_order_created",
+  "payment_approved",
+  "payment_error",
+  "booking_completed",
+];
 
 function sanitizeValue(value: unknown): unknown {
   if (value === undefined) return null;
