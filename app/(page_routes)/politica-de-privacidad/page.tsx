@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { useLanguage } from "@/app/context/LanguageContext";
+import { useLanguage } from "@/lib/LanguageContext";
 
 type Section = {
   title: string;

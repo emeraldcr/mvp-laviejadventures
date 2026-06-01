@@ -15,7 +15,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
-import { useLanguage } from "@/app/context/LanguageContext";
+import { useLanguage } from "@/lib/LanguageContext";
 import { translations } from "@/lib/translations";
 import DynamicHeroHeader from "@/app/components/sections/DynamicHeroHeader";
 

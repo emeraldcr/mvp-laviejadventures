@@ -2,7 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
-import { useLanguage } from "@/app/context/LanguageContext";
+import { useLanguage } from "@/lib/LanguageContext";
 import { translations } from "@/lib/translations";
 
 type Props = {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useLanguage } from "@/app/context/LanguageContext";
+import { useLanguage } from "@/lib/LanguageContext";
 import { trackAnalyticsEvent } from "@/lib/analytics/client";
 import { translations } from "@/lib/translations";
 import Link from "next/link";

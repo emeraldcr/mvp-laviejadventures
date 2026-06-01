@@ -11,7 +11,7 @@ import {
 } from "react";
 import { AvailabilityMap } from "@/lib/types/index";
 import { generateAvailability } from "@/lib/availability";
-import { useLanguage } from "@/app/context/LanguageContext";
+import { useLanguage } from "@/lib/LanguageContext";
 import { getCostaRicaDateParts, getMinBookableDateInCostaRica, toDateKey } from "@/lib/costa-rica-time";
 
 type CalendarContextValue = {

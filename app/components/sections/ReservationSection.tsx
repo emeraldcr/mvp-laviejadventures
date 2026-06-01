@@ -1,8 +1,8 @@
 "use client";
 
-import { useCalendarContext } from "@/app/context/CalendarContext";
+import { useCalendarContext } from "@/lib/CalendarContext";
 import ReservationDetails from "@/app/components/reservation/ReservationDetails";
-import { useLanguage } from "@/app/context/LanguageContext";
+import { useLanguage } from "@/lib/LanguageContext";
 import { translations } from "@/lib/translations";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useReservationData, DEFAULT_BOOKABLE_TOUR } from "@/app/hooks/useReservationData";

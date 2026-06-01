@@ -1,8 +1,8 @@
 "use client";
 
 import React from "react";
-import { useCalendarContext } from "@/app/context/CalendarContext";
-import { useLanguage } from "@/app/context/LanguageContext";
+import { useCalendarContext } from "@/lib/CalendarContext";
+import { useLanguage } from "@/lib/LanguageContext";
 import { translations } from "@/lib/translations";
 import { cn } from "@/lib/utils";
 

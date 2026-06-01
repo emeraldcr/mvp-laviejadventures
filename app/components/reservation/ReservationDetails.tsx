@@ -5,7 +5,7 @@ import { AvailabilityMap, MainTourInfo, TourPackageOption, TourSummary } from "@
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { format } from "date-fns";
 import { es, enUS } from "date-fns/locale";
-import { useLanguage } from "@/app/context/LanguageContext";
+import { useLanguage } from "@/lib/LanguageContext";
 import { translations } from "@/lib/translations";
 import { AlertCircle, Camera, Clock3, Info, MapPin, Route, ShieldCheck, Sparkles, TreePalm, Users, UtensilsCrossed } from "lucide-react";
 import { trackAnalyticsEvent } from "@/lib/analytics/client";

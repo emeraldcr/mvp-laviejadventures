@@ -21,7 +21,7 @@ export default function AnalyticsTracker() {
       path: queryString ? `${pathname}?${queryString}` : pathname,
     });
 
-  }, [pathname, queryString, session?.user, status]);
+  }, [pathname, queryString, status]);
 
   useEffect(() => {
     const clickHandler = (event: MouseEvent) => {

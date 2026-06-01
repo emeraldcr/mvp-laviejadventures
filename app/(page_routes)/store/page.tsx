@@ -1,7 +1,7 @@
 "use client";
 
 import DynamicHeroHeader from "@/app/components/sections/DynamicHeroHeader";
-import { useLanguage } from "@/app/context/LanguageContext";
+import { useLanguage } from "@/lib/LanguageContext";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";

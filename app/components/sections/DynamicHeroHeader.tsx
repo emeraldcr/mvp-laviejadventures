@@ -16,7 +16,7 @@ import Link from "next/link";
 import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
 import { useInterval } from "@/app/hooks/useInterval";
-import { useLanguage } from "@/app/context/LanguageContext";
+import { useLanguage } from "@/lib/LanguageContext";
 import { translations } from "@/lib/translations";
 import { principalContent } from "@/lib/constants/principal";
 

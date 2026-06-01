@@ -1,4 +1,4 @@
-import type { Lang } from "@/app/context/LanguageContext";
+import type { Lang } from "@/lib/LanguageContext";
 
 const es = {
   nav: {

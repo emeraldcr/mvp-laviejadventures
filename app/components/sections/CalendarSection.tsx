@@ -1,12 +1,12 @@
 "use client";
 
 import { useCallback } from "react";
-import { useCalendarContext } from "@/app/context/CalendarContext";
+import { useCalendarContext } from "@/lib/CalendarContext";
 import Calendar from "@/app/components/calendar/Calendar";
 import { format } from "date-fns";
 import { es, enUS } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { useLanguage } from "@/app/context/LanguageContext";
+import { useLanguage } from "@/lib/LanguageContext";
 import { translations } from "@/lib/translations";
 
 type Props = {

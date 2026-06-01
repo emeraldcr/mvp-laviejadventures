@@ -1,7 +1,7 @@
 "use client";
 
 import DynamicHeroHeader from "@/app/components/sections/DynamicHeroHeader";
-import { useLanguage } from "@/app/context/LanguageContext";
+import { useLanguage } from "@/lib/LanguageContext";
 import { CircleHelp, LifeBuoy } from "lucide-react";
 import Link from "next/link";
 

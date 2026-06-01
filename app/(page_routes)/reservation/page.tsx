@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
-import { useLanguage } from "@/app/context/LanguageContext";
+import { useLanguage } from "@/lib/LanguageContext";
 import PaymentCheckoutContent from "@/app/components/reservation/PaymentCheckoutContent";
 import type { OrderDetails } from "@/lib/types/index";
 import { translations } from "@/lib/translations";

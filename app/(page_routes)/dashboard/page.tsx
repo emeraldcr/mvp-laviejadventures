@@ -18,7 +18,7 @@ import {
     User,
 } from "lucide-react";
 import React, { useState, useEffect } from "react";
-import { useLanguage } from "@/app/context/LanguageContext";
+import { useLanguage } from "@/lib/LanguageContext";
 import { useSession, signIn } from "next-auth/react";
 import LogoutButton from "@/app/components/auth/LogoutButton";
 import Profile from "@/app/components/auth/Profile";

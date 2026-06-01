@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef } from "react";
-import { useLanguage } from "@/app/context/LanguageContext";
+import { useLanguage } from "@/lib/LanguageContext";
 import { translations } from "@/lib/translations";
 import type { PaymentModalProps } from "@/lib/types/index";
 import PaymentCheckoutContent from "@/app/components/reservation/PaymentCheckoutContent";

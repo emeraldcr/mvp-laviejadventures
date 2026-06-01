@@ -6,7 +6,7 @@ import Image from "next/image";
 import { useInterval } from "@/app/hooks/useInterval";
 import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
-import { useLanguage } from "@/app/context/LanguageContext";
+import { useLanguage } from "@/lib/LanguageContext";
 import { principalContent } from "@/lib/constants/principal";
 
 // New: overlay prop to allow custom content (text or an image) and height prop

@@ -1,6 +1,6 @@
 "use client";
 
-import { useLanguage } from "@/app/context/LanguageContext";
+import { useLanguage } from "@/lib/LanguageContext";
 import { TourSummary } from "@/lib/types/index";
 
 const TOUR_IMAGE_BY_SLUG: Record<string, string> = {
