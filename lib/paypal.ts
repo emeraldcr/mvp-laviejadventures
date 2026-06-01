@@ -10,6 +10,13 @@ function isLivePayPalMode(mode: string | undefined) {
   return normalizedMode === "live" || normalizedMode === "production" || normalizedMode === "prod";
 }
 
+function isConfiguredPayPalCredential(value: string | undefined) {
+  if (!value) return false;
+
+  const normalizedValue = value.trim().toLowerCase();
+  return Boolean(normalizedValue) && !normalizedValue.startsWith("your-");
+}
+
 export function getPayPalApiBaseUrl() {
   const mode = process.env.PAYPAL_MODE;
 
@@ -39,7 +46,7 @@ function getPayPalBasicAuthHeader() {
     clientSecret = process.env.PAYPAL_SANDBOX_CLIENT_SECRET?.trim();
   }
 
-  if (!clientId || !clientSecret) {
+  if (!isConfiguredPayPalCredential(clientId) || !isConfiguredPayPalCredential(clientSecret)) {
     throw new Error(
       isLiveMode
         ? "Missing PayPal LIVE API credentials."
@@ -69,8 +76,17 @@ export async function getPayPalAccessToken() {
   const data = await res.json();
 
   if (!res.ok || !data.access_token) {
-    console.error("PayPal OAuth Error:", data);
-    throw new Error("Failed to obtain PayPal access token");
+    const reason =
+      typeof data?.error_description === "string"
+        ? data.error_description
+        : typeof data?.message === "string"
+        ? data.message
+        : typeof data?.error === "string"
+        ? data.error
+        : "Unknown PayPal OAuth error";
+
+    console.error("PayPal OAuth Error:", { status: res.status, reason, details: data });
+    throw new Error(`Failed to obtain PayPal access token (${res.status}): ${reason}`);
   }
 
   return data.access_token as string;
