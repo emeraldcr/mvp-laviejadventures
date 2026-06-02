@@ -66,8 +66,9 @@ const getReturnHref = (returnPath: string): string => {
 };
 
 export default function ReservationPage() {
-  const { lang } = useLanguage();
+  const { lang, toggle } = useLanguage();
   const tr = translations[lang];
+  const navTr = tr.nav;
   const paymentTr = tr.payment;
   const router = useRouter();
   const isReservationLoaded = useSyncExternalStore(
@@ -107,15 +108,23 @@ export default function ReservationPage() {
           </Link>
 
           <nav className="flex items-center gap-2 text-xs font-semibold text-zinc-200 md:gap-4 md:text-sm">
-            <Link href="/tours" className="transition-colors hover:text-white">Tours</Link>
-            <Link href="/galeria" className="transition-colors hover:text-white">Galería</Link>
+            <Link href="/tours" className="transition-colors hover:text-white">{navTr.tours}</Link>
+            <Link href="/galeria" className="transition-colors hover:text-white">{navTr.gallery}</Link>
             <Link href="/ai" className="transition-colors hover:text-white">AI</Link>
             <Link
               href="/#booking"
               className="rounded-full border border-teal-300/40 bg-teal-400/10 px-3 py-1 text-teal-200 transition hover:bg-teal-400/20"
             >
-              Reservar
+              {navTr.reserve}
             </Link>
+            <button
+              type="button"
+              onClick={toggle}
+              aria-label={lang === "es" ? "Switch to English" : "Cambiar a Espanol"}
+              className="min-w-10 rounded-full border border-zinc-500/80 bg-white/10 px-3 py-1 text-center font-bold text-white transition hover:border-teal-200 hover:bg-teal-400/20"
+            >
+              {lang === "es" ? "EN" : "ES"}
+            </button>
           </nav>
         </div>
       </header>
