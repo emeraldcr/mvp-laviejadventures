@@ -1,4 +1,5 @@
-import { load, type Cheerio, type CheerioAPI, type Element } from "cheerio";
+import { load, type Cheerio, type CheerioAPI } from "cheerio";
+import type { AnyNode } from "domhandler";
 import { isValid, parse } from "date-fns";
 import { es } from "date-fns/locale";
 import type {
@@ -128,13 +129,15 @@ export function round1(v: number): number {
   return Math.round(v * 10) / 10;
 }
 
-function parseTableRows($: CheerioAPI, table: Cheerio<Element>): string[][] {
+function parseTableRows($: CheerioAPI, table: Cheerio<AnyNode>): string[][] {
   const rows: string[][] = [];
   table.find("tr").each((_, tr) => {
     const cells: string[] = [];
     $(tr)
       .find("td, th")
-      .each((_, td) => cells.push($(td).text().trim()));
+      .each((_, td) => {
+        cells.push($(td).text().trim());
+      });
 
     if (cells.length >= 2 && !cells[0].toLowerCase().match(/^(fecha|date|hora)$/)) {
       rows.push(cells);
@@ -165,7 +168,7 @@ export function extractSections(html: string): TiempoSections {
 
     if (!key) return;
 
-    let table = $(el).nextAll("table").first();
+    let table: Cheerio<AnyNode> = $(el).nextAll("table").first();
     if (!table.length) table = $(el).parent().nextAll("table").first();
     if (!table.length) table = $(el).closest("table").length ? $(el).closest("table") : $();
     if (!table.length) return;
@@ -185,7 +188,9 @@ export function extractSections(html: string): TiempoSections {
         const cells: string[] = [];
         $(tr)
           .find("td, th")
-          .each((_, td) => cells.push($(td).text().trim()));
+          .each((_, td) => {
+            cells.push($(td).text().trim());
+          });
         if (cells.length >= 2) allRows.push(cells);
       });
 

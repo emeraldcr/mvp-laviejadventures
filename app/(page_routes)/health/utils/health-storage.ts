@@ -12,9 +12,11 @@ type StorageConfig<T> = {
 
 class LocalStorageStore<T> {
   private cachedRawValue: string | null | undefined;
-  private cachedSnapshot: T = this.config.defaultValue;
+  private cachedSnapshot: T;
 
-  constructor(private readonly config: StorageConfig<T>) {}
+  constructor(private readonly config: StorageConfig<T>) {
+    this.cachedSnapshot = config.defaultValue;
+  }
 
   getSnapshot = (): T => {
     if (typeof window === "undefined") return this.config.defaultValue;

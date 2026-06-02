@@ -31,6 +31,10 @@ export async function POST(req: NextRequest) {
       passwordHash,
     });
 
+    if (!user) {
+      return NextResponse.json({ error: "Unexpected error creating account." }, { status: 500 });
+    }
+
     sendUserWelcomeEmail(user.email, user.name).catch((emailError) => {
       console.error("Welcome email error:", emailError);
     });
@@ -39,9 +43,9 @@ export async function POST(req: NextRequest) {
       {
         message: "Account created successfully.",
         user: {
-          id: user?._id?.toString(),
-          email: user?.email,
-          name: user?.name,
+          id: user._id?.toString(),
+          email: user.email,
+          name: user.name,
         },
       },
       { status: 201 }

@@ -180,6 +180,8 @@ function LocationCard({ loc }: { loc: LocationWeather }) {
 
 export default function RegionalWeatherPanel({ locations, fetchedAt }: RegionalWeatherPanelProps) {
   const fetchTime = (() => {
+    if (!fetchedAt) return "N/D";
+
     try {
       return new Date(fetchedAt).toLocaleTimeString("es-CR", {
         timeZone: "America/Costa_Rica",

@@ -339,7 +339,7 @@ function parsePayPalOrder(paypalOrder: PayPalOrderResponse, persistedContext: Pa
     (meta?.lang === "en" || meta?.lang === "es" ? meta.lang : 
      persistedBooking?.language === "en" || persistedBooking?.language === "es" ? persistedBooking.language : "es");
 
-  const amountStr = capture?.amount?.value || purchaseUnit.amount?.value || meta?.total || "";
+  const amountStr = String(capture?.amount?.value || purchaseUnit.amount?.value || meta?.total || "");
   const currency = capture?.amount?.currency_code || purchaseUnit.amount?.currency_code || "USD";
   const status = capture?.status || paypalOrder.status || "";
   const captureId = capture?.id || "";

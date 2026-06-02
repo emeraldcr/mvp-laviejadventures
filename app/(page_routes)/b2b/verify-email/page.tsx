@@ -6,6 +6,11 @@ import Link from "next/link";
 import { Compass, CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { Suspense } from "react";
 
+type VerificationState = {
+  status: "loading" | "success" | "error";
+  message: string;
+};
+
 function VerifyEmailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -14,7 +19,7 @@ function VerifyEmailContent() {
   const missingTokenMessage = "No se encontró el token de verificación.";
   const successMessage = "¡Correo verificado! Redirigiendo al login...";
 
-  const initialState = useMemo(
+  const initialState = useMemo<VerificationState>(
     () =>
       token
         ? { status: "loading" as const, message: "" }

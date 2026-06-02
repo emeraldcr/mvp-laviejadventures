@@ -108,7 +108,8 @@ function SuccessState({
   status,
   translations: tr,
 }: SuccessClientProps & { translations: SuccessTranslations }) {
-  const displayName = name || (tr.defaultCustomer || "Cliente");
+  const defaultCustomer = tr.title.startsWith("Booking") ? "Customer" : "Cliente";
+  const displayName = name || defaultCustomer;
 
   return (
     <section className="max-w-2xl mx-auto px-4 py-20">
@@ -170,7 +171,7 @@ function EmailConfirmationMessage({
   return (
     <p className="mt-4 text-zinc-700 dark:text-zinc-300">
       {tr.emailSentPrefix}{" "}
-      <strong>{email || (tr.defaultEmail || "tu correo electrónico")}</strong>.
+      <strong>{email || (tr.title.startsWith("Booking") ? "your email" : "tu correo electrónico")}</strong>.
     </p>
   );
 }

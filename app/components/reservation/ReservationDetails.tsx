@@ -1377,28 +1377,44 @@ export default function ReservationDetails({
                     key={pkg.id}
                     type="button"
                     onClick={() => handlePackageSelect(pkg)}
-                    className={`group relative flex h-full min-h-[430px] overflow-hidden text-left p-5 rounded-2xl border-2 transition-all ${
+                    aria-pressed={isSelected}
+                    className={`group relative flex h-full min-h-[430px] overflow-hidden text-left p-5 rounded-2xl border-2 outline-none transition-all focus-visible:ring-4 focus-visible:ring-emerald-300/60 ${
                       isSelected
-                        ? "border-emerald-500 bg-emerald-50/90 dark:bg-emerald-900/20 shadow-lg shadow-emerald-500/10"
+                        ? "scale-[1.015] border-emerald-500 bg-emerald-50/95 shadow-2xl shadow-emerald-500/25 ring-4 ring-emerald-300/45 dark:bg-emerald-950/35 dark:shadow-emerald-900/35 dark:ring-emerald-400/25"
                         : "border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 hover:-translate-y-0.5 hover:border-emerald-400 hover:shadow-lg hover:shadow-emerald-500/10 cursor-pointer"
                     }`}
                   >
-                    <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${pkgMeta.accent} opacity-70`} />
+                    {isSelected && (
+                      <>
+                        <div className="pointer-events-none absolute -left-12 -top-12 h-44 w-44 rounded-full bg-emerald-400/35 blur-3xl" />
+                        <div className="pointer-events-none absolute -bottom-16 -right-10 h-52 w-52 rounded-full bg-cyan-400/30 blur-3xl" />
+                        <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br from-emerald-400/20 via-cyan-300/10 to-amber-300/20" />
+                      </>
+                    )}
+                    <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${pkgMeta.accent} ${isSelected ? "opacity-95" : "opacity-70"}`} />
                     <div className="relative z-10 flex h-full w-full flex-col">
                       <div className="mb-4 flex items-start justify-between gap-3">
                         <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/90 text-emerald-700 shadow-sm dark:bg-zinc-800/90 dark:text-emerald-300">
                           <Icon className="h-5 w-5" aria-hidden />
                         </span>
-                        {pkg.groupTour === false && (
-                          <span className="inline-flex shrink-0 items-center rounded-md bg-amber-100 px-2 py-1 text-xs font-semibold leading-none text-amber-700 dark:bg-amber-900/40 dark:text-amber-400">
-                            {lang === "es" ? "Privado" : "Private"}
-                          </span>
-                        )}
-                        {pkg.groupTour !== false && (
-                          <span className="inline-flex shrink-0 items-center rounded-md bg-sky-100 px-2 py-1 text-xs font-semibold leading-none text-sky-700 dark:bg-sky-900/40 dark:text-sky-300">
-                            {lang === "es" ? "Grupal" : "Group"}
-                          </span>
-                        )}
+                        <div className="flex shrink-0 flex-col items-end gap-2">
+                          {isSelected && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-black uppercase tracking-wide text-white shadow-lg shadow-emerald-700/20 dark:bg-emerald-400 dark:text-zinc-950">
+                              <Check className="h-3.5 w-3.5" aria-hidden />
+                              {lang === "es" ? "Seleccionado" : "Selected"}
+                            </span>
+                          )}
+                          {pkg.groupTour === false && (
+                            <span className="inline-flex items-center rounded-md bg-amber-100 px-2 py-1 text-xs font-semibold leading-none text-amber-700 dark:bg-amber-900/40 dark:text-amber-400">
+                              {lang === "es" ? "Privado" : "Private"}
+                            </span>
+                          )}
+                          {pkg.groupTour !== false && (
+                            <span className="inline-flex items-center rounded-md bg-sky-100 px-2 py-1 text-xs font-semibold leading-none text-sky-700 dark:bg-sky-900/40 dark:text-sky-300">
+                              {lang === "es" ? "Grupal" : "Group"}
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <div className="mb-4 min-h-[126px]">
                         <p className="mb-2 text-lg font-bold leading-tight text-zinc-800 dark:text-zinc-100">{pkgName}</p>
@@ -1412,10 +1428,14 @@ export default function ReservationDetails({
                           </li>
                         ))}
                       </ul>
-                      <div className="mt-auto flex items-end justify-between gap-3 border-t border-zinc-200/70 pt-4 dark:border-zinc-700/80">
+                      <div className={`mt-auto flex items-end justify-between gap-3 border-t pt-4 ${
+                        isSelected
+                          ? "border-emerald-300/80 dark:border-emerald-500/40"
+                          : "border-zinc-200/70 dark:border-zinc-700/80"
+                      }`}>
                         <div>
                           <p className="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">{tr.priceFrom}</p>
-                          <p className="font-bold text-xl text-zinc-900 dark:text-zinc-100">${pkg.price}</p>
+                          <p className={`font-bold text-xl ${isSelected ? "text-emerald-800 dark:text-emerald-200" : "text-zinc-900 dark:text-zinc-100"}`}>${pkg.price}</p>
                         </div>
                         <p className="max-w-[7rem] text-right text-xs font-semibold leading-tight text-zinc-500 dark:text-zinc-400">USD / {tr.perPerson}</p>
                       </div>
