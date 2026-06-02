@@ -10,6 +10,7 @@ import { principalContent } from "@/lib/constants/principal";
 import ConversionSection from "@/app/components/sections/ConversionSection";
 import ToursImmersionSection from "@/app/components/sections/ToursImmersionSection";
 import BookingSection from "@/app/components/sections/BookingSection";
+import SiteFooter from "@/app/components/sections/SiteFooter";
 
 export default function Home(): JSX.Element {
   const [selectedTourSlug, setSelectedTourSlug] = useState<string | null>(null);
@@ -53,6 +54,7 @@ export default function Home(): JSX.Element {
           />
           <BookingSection selectedTourSlug={selectedTourSlug} />
           <ConversionSection />
+          <SiteFooter />
         </main>
       </CalendarProvider>
     </ErrorBoundary>

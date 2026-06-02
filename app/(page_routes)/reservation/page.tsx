@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import { useLanguage } from "@/lib/LanguageContext";
 import PaymentCheckoutContent from "@/app/components/reservation/PaymentCheckoutContent";
 import type { OrderDetails } from "@/lib/types/index";
@@ -11,26 +11,37 @@ import { translations } from "@/lib/translations";
 
 const RESERVATION_RETURN_KEY = "reservationReturnPath";
 
-const getStoredOrderDetails = (): OrderDetails | null => {
+const subscribeToClientSnapshot = () => () => {};
+
+const getClientReadySnapshot = () => true;
+
+const getServerReadySnapshot = () => false;
+
+const getStoredOrderDetailsSnapshot = (): string | null => {
   if (typeof window === "undefined") {
     return null;
   }
 
-  const stored = sessionStorage.getItem("reservationOrderDetails");
-  if (!stored) {
-    return null;
-  }
+  return sessionStorage.getItem("reservationOrderDetails");
+};
+
+const getServerOrderDetailsSnapshot = () => null;
+
+const parseStoredOrderDetails = (stored: string | null): OrderDetails | null => {
+  if (!stored) return null;
 
   try {
     return JSON.parse(stored) as OrderDetails;
   } catch {
-    sessionStorage.removeItem("reservationOrderDetails");
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("reservationOrderDetails");
+    }
     return null;
   }
 };
 
 
-const getReservationReturnPath = (): string => {
+const getReservationReturnPathSnapshot = (): string => {
   if (typeof window === "undefined") {
     return "/#booking";
   }
@@ -42,6 +53,8 @@ const getReservationReturnPath = (): string => {
 
   return returnPath;
 };
+
+const getServerReservationReturnPathSnapshot = () => "/#booking";
 
 
 const getReturnHref = (returnPath: string): string => {
@@ -57,8 +70,22 @@ export default function ReservationPage() {
   const tr = translations[lang];
   const paymentTr = tr.payment;
   const router = useRouter();
-  const orderDetails = getStoredOrderDetails();
-  const returnPath = useMemo(() => getReservationReturnPath(), []);
+  const isReservationLoaded = useSyncExternalStore(
+    subscribeToClientSnapshot,
+    getClientReadySnapshot,
+    getServerReadySnapshot,
+  );
+  const storedOrderDetails = useSyncExternalStore(
+    subscribeToClientSnapshot,
+    getStoredOrderDetailsSnapshot,
+    getServerOrderDetailsSnapshot,
+  );
+  const returnPath = useSyncExternalStore(
+    subscribeToClientSnapshot,
+    getReservationReturnPathSnapshot,
+    getServerReservationReturnPathSnapshot,
+  );
+  const orderDetails = useMemo(() => parseStoredOrderDetails(storedOrderDetails), [storedOrderDetails]);
   const returnHref = useMemo(() => getReturnHref(returnPath), [returnPath]);
 
   return (
@@ -110,7 +137,11 @@ export default function ReservationPage() {
           </Link>
         </div>
 
-        {!orderDetails ? (
+        {!isReservationLoaded ? (
+          <div className="flex min-h-[180px] items-center justify-center text-sm font-medium text-zinc-300" role="status">
+            {paymentTr.loadingPaymentInfo}
+          </div>
+        ) : !orderDetails ? (
           <div className="space-y-4 text-zinc-300">
             <p>{paymentTr.noActiveReservation}</p>
             <button

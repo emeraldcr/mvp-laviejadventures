@@ -2,7 +2,7 @@
 
 import React, { useEffect } from "react";
 import { motion } from "framer-motion";
-import { CalendarDays, ClipboardList } from "lucide-react";
+import { ArrowLeft, CalendarDays, ClipboardList } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
 import { useCalendarContext } from "@/lib/CalendarContext";
 import CalendarSection from "@/app/components/sections/CalendarSection";
@@ -15,12 +15,15 @@ type Props = {
 
 export default function BookingSection({ selectedTourSlug }: Props) {
   const { lang } = useLanguage();
-  const { selectDay } = useCalendarContext();
+  const { selectedDay, selectDay } = useCalendarContext();
   const copy = principalContent[lang].booking;
+  const isDateStep = !selectedDay;
 
   useEffect(() => {
     selectDay(null);
   }, [selectedTourSlug, selectDay]);
+
+  const changeDateLabel = lang === "es" ? "Cambiar fecha" : "Change date";
 
   return (
     <section id="booking" className="relative overflow-hidden bg-zinc-950">
@@ -54,43 +57,68 @@ export default function BookingSection({ selectedTourSlug }: Props) {
           transition={{ duration: 0.45, delay: 0.1 }}
           className="mb-12 flex items-center justify-center gap-3"
         >
-          <div className="flex items-center gap-2 rounded-full border border-teal-500/25 bg-teal-500/12 px-4 py-2 shadow-[0_0_18px_rgba(20,184,166,0.12)]">
-            <CalendarDays size={13} className="text-teal-400" />
-            <span className="text-[11px] font-bold uppercase tracking-widest text-teal-300">
+          <div className={`flex items-center gap-2 rounded-full border px-4 py-2 transition-colors ${
+            isDateStep
+              ? "border-teal-500/25 bg-teal-500/12 shadow-[0_0_18px_rgba(20,184,166,0.12)]"
+              : "border-teal-400/35 bg-teal-400/10"
+          }`}>
+            <CalendarDays size={13} className={isDateStep ? "text-teal-400" : "text-teal-300"} />
+            <span className={`text-[11px] font-bold uppercase tracking-widest ${isDateStep ? "text-teal-300" : "text-teal-200"}`}>
               {copy.steps.date}
             </span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="h-px w-3 bg-zinc-700" />
-            <div className="h-1.5 w-1.5 rounded-full bg-zinc-700" />
-            <div className="h-px w-3 bg-zinc-700" />
+            <div className={`h-px w-3 ${isDateStep ? "bg-zinc-700" : "bg-teal-500/60"}`} />
+            <div className={`h-1.5 w-1.5 rounded-full ${isDateStep ? "bg-zinc-700" : "bg-teal-400"}`} />
+            <div className={`h-px w-3 ${isDateStep ? "bg-zinc-700" : "bg-teal-500/60"}`} />
           </div>
-          <div className="flex items-center gap-2 rounded-full border border-zinc-700/60 bg-zinc-800/50 px-4 py-2">
-            <ClipboardList size={13} className="text-zinc-500" />
-            <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">
+          <div className={`flex items-center gap-2 rounded-full border px-4 py-2 transition-colors ${
+            isDateStep
+              ? "border-zinc-700/60 bg-zinc-800/50"
+              : "border-teal-500/25 bg-teal-500/12 shadow-[0_0_18px_rgba(20,184,166,0.12)]"
+          }`}>
+            <ClipboardList size={13} className={isDateStep ? "text-zinc-500" : "text-teal-400"} />
+            <span className={`text-[11px] font-bold uppercase tracking-widest ${isDateStep ? "text-zinc-500" : "text-teal-300"}`}>
               {copy.steps.details}
             </span>
           </div>
         </motion.div>
 
         {selectedTourSlug ? (
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.6, delay: 0.15 }}
-            className="grid grid-cols-1 items-start gap-5 lg:grid-cols-7"
-          >
-            <div className="rounded-3xl border border-white/[0.07] bg-white/[0.025] shadow-[0_20px_60px_rgba(0,0,0,0.45)] backdrop-blur-sm lg:col-span-4">
+          isDateStep ? (
+            <motion.div
+              key="booking-calendar"
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-80px" }}
+              transition={{ duration: 0.6, delay: 0.15 }}
+              className="mx-auto max-w-7xl rounded-3xl border border-white/[0.07] bg-white/[0.025] shadow-[0_20px_60px_rgba(0,0,0,0.45)] backdrop-blur-sm"
+            >
               <CalendarSection />
-            </div>
-
-            <div className="lg:sticky lg:top-24 lg:col-span-3">
+            </motion.div>
+          ) : (
+            <motion.div
+              key="booking-details"
+              initial={{ opacity: 0, y: 28 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.45 }}
+              className="mx-auto max-w-7xl"
+            >
+              <div className="mb-4 flex justify-start">
+                <button
+                  type="button"
+                  onClick={() => selectDay(null)}
+                  className="inline-flex items-center gap-2 rounded-full border border-teal-500/30 bg-teal-500/10 px-4 py-2 text-xs font-bold uppercase tracking-widest text-teal-300 transition hover:bg-teal-500/15"
+                >
+                  <ArrowLeft className="h-4 w-4" aria-hidden />
+                  {changeDateLabel}
+                </button>
+              </div>
               <div className="rounded-3xl border border-white/[0.07] bg-white/[0.025] shadow-[0_20px_60px_rgba(0,0,0,0.45)] backdrop-blur-sm">
                 <ReservationSection preselectedTourSlug={selectedTourSlug} />
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          )
         ) : (
           <div className="mx-auto max-w-2xl rounded-3xl border border-teal-500/20 bg-teal-500/8 px-6 py-8 text-center shadow-[0_20px_60px_rgba(0,0,0,0.32)]">
             <p className="text-sm font-semibold text-teal-300">

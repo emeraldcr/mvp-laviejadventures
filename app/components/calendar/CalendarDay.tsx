@@ -49,7 +49,7 @@ function CalendarDayBase({ day }: Props) {
   } = useCalendarContext();
 
   if (day === null) {
-    return <div className="h-16 sm:h-24 lg:h-28 rounded-xl" aria-hidden="true" />;
+    return <div className="h-16 rounded-xl sm:h-24 lg:h-28 xl:h-32" aria-hidden="true" />;
   }
 
   const past = isPastDay(day);
@@ -115,7 +115,7 @@ function CalendarDayBase({ day }: Props) {
       }
       aria-pressed={selected}
       className={cn(
-        "flex h-16 sm:h-24 lg:h-28 flex-col rounded-xl border p-1.5 sm:p-3 text-left shadow-sm outline-none transition duration-150 ease-in-out select-none overflow-hidden",
+        "flex h-16 flex-col overflow-hidden rounded-xl border p-1.5 text-left shadow-sm outline-none transition duration-150 ease-in-out select-none sm:h-24 sm:p-3 lg:h-28 xl:h-32 xl:p-4",
         hasSlots
           ? "cursor-pointer hover:scale-105 hover:shadow-md active:scale-95"
           : "cursor-not-allowed opacity-60",

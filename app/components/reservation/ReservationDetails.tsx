@@ -298,6 +298,7 @@ type Props = {
   tourInfo?: MainTourInfo | null;
   tours: TourSummary[];
   initialSelectedTourSlug?: string;
+  initialSelectedPackageId?: string;
   hasPreselectedTour?: boolean;
   ivaRatePercent?: number;
 };
@@ -313,6 +314,7 @@ export default function ReservationDetails({
   tourInfo,
   tours,
   initialSelectedTourSlug,
+  initialSelectedPackageId,
   hasPreselectedTour = false,
   ivaRatePercent = 13,
 }: Props) {
@@ -504,6 +506,15 @@ export default function ReservationDetails({
     () => PACKAGES.find((p) => p.id === tourPackage) ?? null,
     [tourPackage, PACKAGES]
   );
+
+  useEffect(() => {
+    if (!initialSelectedPackageId) return;
+
+    const matchingPackage = PACKAGES.find((pkg) => pkg.id === initialSelectedPackageId);
+    if (!matchingPackage) return;
+
+    setTourPackage(matchingPackage.id);
+  }, [PACKAGES, initialSelectedPackageId]);
 
   const availableTimeSlots = useMemo(() => {
     const sourceTimes = selectedPackage
@@ -1107,7 +1118,7 @@ export default function ReservationDetails({
           <div className={`mb-6 rounded-xl ${!effectiveTourPackage ? "ring-2 ring-amber-300/70 p-3" : ""}`}>
             <h3 className="text-xl font-semibold mb-3">{tr.packageTitle}</h3>
             {!effectiveTourPackage && <p className="mb-3 flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-400"><AlertCircle className="h-4 w-4" aria-hidden /> {tr.indicators.choosePackage}</p>}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
               {PACKAGES.map((pkg, index) => {
                 const isSelected = effectiveTourPackage === pkg.id;
                 const pkgName = lang === "es" ? (pkg.nameEs || pkg.name) : pkg.name;
@@ -1125,48 +1136,50 @@ export default function ReservationDetails({
                     key={pkg.id}
                     type="button"
                     onClick={() => handlePackageSelect(pkg)}
-                    className={`group relative overflow-hidden text-left p-5 rounded-2xl border-2 transition-all ${
+                    className={`group relative flex h-full min-h-[430px] overflow-hidden text-left p-5 rounded-2xl border-2 transition-all ${
                       isSelected
                         ? "border-emerald-500 bg-emerald-50/90 dark:bg-emerald-900/20 shadow-lg shadow-emerald-500/10"
                         : "border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 hover:-translate-y-0.5 hover:border-emerald-400 hover:shadow-lg hover:shadow-emerald-500/10 cursor-pointer"
                     }`}
                   >
                     <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${pkgMeta.accent} opacity-70`} />
-                    <div className="relative z-10">
-                      <div className="mb-3 flex items-start justify-between gap-2">
-                        <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/90 text-emerald-700 shadow-sm dark:bg-zinc-800/90 dark:text-emerald-300">
+                    <div className="relative z-10 flex h-full w-full flex-col">
+                      <div className="mb-4 flex items-start justify-between gap-3">
+                        <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/90 text-emerald-700 shadow-sm dark:bg-zinc-800/90 dark:text-emerald-300">
                           <Icon className="h-5 w-5" aria-hidden />
                         </span>
                         {pkg.groupTour === false && (
-                          <span className="inline-block text-xs font-semibold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 rounded px-2 py-0.5">
+                          <span className="inline-flex shrink-0 items-center rounded-md bg-amber-100 px-2 py-1 text-xs font-semibold leading-none text-amber-700 dark:bg-amber-900/40 dark:text-amber-400">
                             {lang === "es" ? "Privado" : "Private"}
                           </span>
                         )}
                         {pkg.groupTour !== false && (
-                          <span className="inline-block text-xs font-semibold bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-300 rounded px-2 py-0.5">
+                          <span className="inline-flex shrink-0 items-center rounded-md bg-sky-100 px-2 py-1 text-xs font-semibold leading-none text-sky-700 dark:bg-sky-900/40 dark:text-sky-300">
                             {lang === "es" ? "Grupal" : "Group"}
                           </span>
                         )}
                       </div>
-                      <p className="font-bold text-base mb-1 text-zinc-800 dark:text-zinc-100">{pkgName}</p>
-                      <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-4 leading-snug">{pkgDescription}</p>
-                      <ul className="mb-4 space-y-1.5">
+                      <div className="mb-4 min-h-[126px]">
+                        <p className="mb-2 text-lg font-bold leading-tight text-zinc-800 dark:text-zinc-100">{pkgName}</p>
+                        <p className="text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">{pkgDescription}</p>
+                      </div>
+                      <ul className="mb-5 space-y-2">
                         {packageHighlights.map((item) => (
-                          <li key={item} className="flex items-center gap-2 text-xs text-zinc-700 dark:text-zinc-300">
-                            <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" aria-hidden />
-                            <span>{item}</span>
+                          <li key={item} className="flex items-start gap-2 text-xs leading-snug text-zinc-700 dark:text-zinc-300">
+                            <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden />
+                            <span className="min-w-0">{item}</span>
                           </li>
                         ))}
                       </ul>
-                      <div className="flex items-end justify-between gap-3 border-t border-zinc-200/70 pt-3 dark:border-zinc-700/80">
+                      <div className="mt-auto flex items-end justify-between gap-3 border-t border-zinc-200/70 pt-4 dark:border-zinc-700/80">
                         <div>
                           <p className="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">{tr.priceFrom}</p>
                           <p className="font-bold text-xl text-zinc-900 dark:text-zinc-100">${pkg.price}</p>
                         </div>
-                        <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">USD / {tr.perPerson}</p>
+                        <p className="max-w-[7rem] text-right text-xs font-semibold leading-tight text-zinc-500 dark:text-zinc-400">USD / {tr.perPerson}</p>
                       </div>
                       {pkg.scheduleNote && (
-                        <p className="mt-3 text-xs text-zinc-500 dark:text-zinc-400">{pkg.scheduleNote}</p>
+                        <p className="mt-3 text-xs leading-snug text-zinc-500 dark:text-zinc-400">{pkg.scheduleNote}</p>
                       )}
                     </div>
                   </button>

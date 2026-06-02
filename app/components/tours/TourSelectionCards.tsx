@@ -1,21 +1,10 @@
 "use client";
 
+import Link from "next/link";
+import { ChevronRight, Info } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
+import { getTourImage } from "@/lib/tour-display";
 import { TourSummary } from "@/lib/types/index";
-
-const TOUR_IMAGE_BY_SLUG: Record<string, string> = {
-  "tour-ciudad-esmeralda": "/image/IMG_4671.jpg",
-  "ciudad-esmeralda": "/image/IMG_4671.jpg",
-  "aventuras-cataratas": "/image/IMG_6812.jpg",
-  "pozas-cristalinas": "/image/IMG_4257.jpg",
-  "caminata-volcanes-dormidos": "/ads/IMG_5666.jpg",
-  "avistamiento-aves": "/ads/IMG_5668.jpg",
-  "lluvia-en-la-naturaleza": "/ads/IMG_5669.jpg",
-  "tour-gastronomico-local": "/ads/IMG_5670.jpg",
-  "tour-nocturno-la-vieja" : "/ads/IMG_5671.jpg",
-  "cuadra-tours-aventura": "/ads/IMG_5672.jpg",
-  "rapel-canon-del-rio": "/ads/IMG_5673.jpg",
-};
 
 const TOUR_TAGS_BY_SLUG: Record<string, { tagEs: string; tagEn: string }> = [
   {
@@ -133,11 +122,12 @@ export default function TourSelectionCards({
         const tourTitle = lang === "es" ? tour.titleEs : tour.titleEn;
         const isSelected = selectedTourSlug === tour.slug;
 
+        const tourHref = `/tour/${encodeURIComponent(tour.slug)}`;
+
         return (
-          <button
+          <article
             key={tour.slug}
-            type="button"
-            onClick={() => onSelectTour(tour.slug)}
+            data-carousel-card
             className={`group relative overflow-hidden rounded-3xl border bg-zinc-950 text-left shadow-[0_12px_40px_rgba(0,0,0,0.45)] transition ${
               isSelected
                 ? "border-emerald-400 ring-2 ring-emerald-400/70"
@@ -145,7 +135,7 @@ export default function TourSelectionCards({
             } ${cardClassName}`}
           >
             <img
-              src={TOUR_IMAGE_BY_SLUG[tour.slug] ?? "/image/IMG_6810.jpg"}
+              src={getTourImage(tour.slug)}
               alt={tourTitle}
               className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-110"
             />
@@ -159,11 +149,25 @@ export default function TourSelectionCards({
               <p className="mt-2 line-clamp-2 text-sm text-zinc-200">
                 {lang === "es" ? tour.descriptionEs : tour.descriptionEn}
               </p>
-              <p className="mt-3 text-xs font-bold uppercase tracking-[0.2em] text-cyan-300">
-                {lang === "es" ? "Toca para reservar" : "Tap to reserve"}
-              </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => onSelectTour(tour.slug)}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-cyan-300 px-4 py-2 text-[11px] font-black uppercase tracking-[0.16em] text-black shadow-lg shadow-cyan-950/50 transition hover:bg-white"
+                >
+                  {lang === "es" ? "Reservar" : "Reserve"}
+                  <ChevronRight className="h-3.5 w-3.5" aria-hidden />
+                </button>
+                <Link
+                  href={tourHref}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-black/45 px-4 py-2 text-[11px] font-black uppercase tracking-[0.16em] text-white backdrop-blur transition hover:border-cyan-300 hover:text-cyan-200"
+                >
+                  <Info className="h-3.5 w-3.5" aria-hidden />
+                  {lang === "es" ? "Ver mas" : "More info"}
+                </Link>
+              </div>
             </div>
-          </button>
+          </article>
         );
       })}
     </div>

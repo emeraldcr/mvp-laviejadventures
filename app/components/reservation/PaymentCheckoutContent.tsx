@@ -230,7 +230,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
         .then(finishLoading)
         .catch((err: unknown) => {
           failPayPalLoad("paypal_render", err instanceof Error ? err.message : "paypal_render_error", err);
-          alert(tr.error);
+          //alert(tr.error);
         });
     };
 
