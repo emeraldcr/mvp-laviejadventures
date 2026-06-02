@@ -7,6 +7,8 @@ import { useLanguage } from "@/lib/LanguageContext";
 import { trackAnalyticsEvent } from "@/lib/analytics/client";
 import { translations } from "@/lib/translations";
 import type { OrderDetails } from "@/lib/types/index";
+import { PHONE_COUNTRIES } from "@/app/components/reservation/phoneCountries";
+import { getPayPalLocaleForCountry } from "@/app/components/reservation/paypalLocales";
 
 declare global {
   interface Window {
@@ -28,20 +30,15 @@ const isConfiguredPayPalClientId = (clientId: string | undefined): clientId is s
 
 const DEFAULT_BUYER_COUNTRY = "CR";
 
-const COUNTRY_BY_PHONE_PREFIX: Record<string, string> = {
-  "506": "CR",
-  "1": "US",
-  "52": "MX",
-  "57": "CO",
-  "34": "ES",
-};
-
 const getBuyerCountryFromPhone = (phone: string) => {
   const normalizedPhone = phone.trim().replace(/[^\d+]/g, "");
-  const match = normalizedPhone.match(/^\+(\d{1,3})/);
-  if (!match) return DEFAULT_BUYER_COUNTRY;
+  if (!normalizedPhone.startsWith("+")) return DEFAULT_BUYER_COUNTRY;
 
-  return COUNTRY_BY_PHONE_PREFIX[match[1]] ?? DEFAULT_BUYER_COUNTRY;
+  const matchingCountry = PHONE_COUNTRIES
+    .filter((country) => normalizedPhone.startsWith(country.code))
+    .sort((a, b) => b.code.length - a.code.length)[0];
+
+  return matchingCountry?.flag ?? DEFAULT_BUYER_COUNTRY;
 };
 
 const SummaryRow = ({
@@ -144,6 +141,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
     const paypalContainer = paypalRef.current;
     let isMounted = true;
     let scriptForCleanup: HTMLScriptElement | null = null;
+    let loadFallbackAttempted = false;
 
     trackAnalyticsEvent("booking_checkout_started", {
       metadata: bookingAnalyticsMetadata,
@@ -310,20 +308,60 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
       return;
     }
 
-    // Keep the SDK URL minimal; PayPal rejects some locale/country combinations at script-load time.
-    const sdkParams = new URLSearchParams({
-      "client-id": clientId,
-      components: "buttons",
-      currency: "USD",
-      intent: "capture",
-    });
+    const buildSdkSrc = (locale?: string) => {
+      const sdkParams = new URLSearchParams({
+        "client-id": clientId,
+        components: "buttons",
+        currency: "USD",
+        intent: "capture",
+      });
 
-    const sdkSrc = `https://www.paypal.com/sdk/js?${sdkParams.toString()}`;
+      if (locale) {
+        sdkParams.set("locale", locale);
+      }
 
-    const handleScriptError = () => {
+      return `https://www.paypal.com/sdk/js?${sdkParams.toString()}`;
+    };
+
+    const requestedLocale = getPayPalLocaleForCountry(buyerCountryCode, lang);
+    const sdkSrc = buildSdkSrc(requestedLocale);
+    const fallbackSdkSrc = buildSdkSrc();
+
+    const handleScriptError = (failedSrc: string) => {
       document.querySelector<HTMLScriptElement>("#paypal-sdk")?.remove();
+
+      if (failedSrc !== fallbackSdkSrc && !loadFallbackAttempted) {
+        loadFallbackAttempted = true;
+        trackAnalyticsEvent("payment_error", {
+          metadata: {
+            ...bookingAnalyticsMetadata,
+            stage: "paypal_sdk_locale_fallback",
+            reason: "paypal_sdk_locale_load_error",
+            requestedLocale,
+            buyerCountryCode,
+          },
+        });
+        loadSdkScript(fallbackSdkSrc);
+        return;
+      }
+
       failPayPalLoad("paypal_sdk_load", "paypal_sdk_load_error");
       alert(tr.error);
+    };
+
+    const loadSdkScript = (src: string) => {
+      const script = document.createElement("script");
+      script.id = "paypal-sdk";
+      script.src = src;
+      script.async = true;
+      scriptForCleanup = script;
+
+      script.onload = () => {
+        if (isMounted) initializeButtons();
+      };
+      script.onerror = () => handleScriptError(src);
+
+      document.body.appendChild(script);
     };
 
     // Clean up any previous script that had a different src (rare now that we use a stable simple URL)
@@ -336,32 +374,20 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
 
     if (!activeScript) {
       // Load the SDK script once - simple and reliable
-      const script = document.createElement("script");
-      script.id = "paypal-sdk";
-      script.src = sdkSrc;
-      script.async = true;
-      scriptForCleanup = script;
-
-      script.onload = () => {
-        if (isMounted) initializeButtons();
-      };
-      script.onerror = handleScriptError;
-
-      document.body.appendChild(script);
+      loadSdkScript(sdkSrc);
     } else if (window.paypal) {
       // Already loaded and ready
       initializeButtons();
     } else {
       // Script tag exists but not yet executed — wait for it
       activeScript.addEventListener("load", initializeButtons, { once: true });
-      activeScript.addEventListener("error", handleScriptError, { once: true });
+      activeScript.addEventListener("error", () => handleScriptError(activeScript.src), { once: true });
     }
 
     return () => {
       isMounted = false;
       // Best-effort cleanup of listeners (the {once:true} helps)
       activeScript?.removeEventListener("load", initializeButtons);
-      activeScript?.removeEventListener("error", handleScriptError);
       if (scriptForCleanup) {
         scriptForCleanup.onload = null;
         scriptForCleanup.onerror = null;

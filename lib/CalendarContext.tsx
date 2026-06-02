@@ -56,9 +56,10 @@ export function useCalendarContext() {
 
 type Props = {
   children: ReactNode;
+  selectedTourSlug?: string | null;
 };
 
-export function CalendarProvider({ children }: Props) {
+export function CalendarProvider({ children, selectedTourSlug }: Props) {
   const { lang } = useLanguage();
 
   const [currentMonth, setCurrentMonth] = useState(() => {
@@ -78,7 +79,16 @@ export function CalendarProvider({ children }: Props) {
 
     const loadAvailability = async () => {
       try {
-        const res = await fetch(`/api/calendar/availability?year=${currentYear}&month=${currentMonth}`);
+        const params = new URLSearchParams({
+          year: String(currentYear),
+          month: String(currentMonth),
+        });
+
+        if (selectedTourSlug) {
+          params.set("tourSlug", selectedTourSlug);
+        }
+
+        const res = await fetch(`/api/calendar/availability?${params.toString()}`);
         if (!res.ok) return;
 
         const data = (await res.json()) as { availability?: AvailabilityMap };
@@ -95,7 +105,7 @@ export function CalendarProvider({ children }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [currentMonth, currentYear]);
+  }, [currentMonth, currentYear, selectedTourSlug]);
 
   const availability: AvailabilityMap = useMemo(
     () => generateAvailability(currentYear, currentMonth, availabilityOverrides),

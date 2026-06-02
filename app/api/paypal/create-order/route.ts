@@ -9,6 +9,7 @@ import {
 import { getDb } from "@/lib/mongodb";
 import { PAYPAL_CURRENCY, PAYPAL_CUSTOM_ID_MAX_LENGTH } from "@/lib/constants/paypal";
 import { COLLECTIONS } from "@/lib/constants/db";
+import { DEFAULT_AVAILABILITY } from "@/lib/constants/business";
 
 import {
   getMinBookableIsoDateInCostaRica,
@@ -139,6 +140,26 @@ export async function POST(req: Request) {
             availableCount: availablePackages.length,
             tourSlug,
           }
+        },
+        { status: 400 }
+      );
+    }
+
+    const remainingCapacity = await getRemainingCapacityForTourDate({
+      db,
+      tourSlug,
+      date: normalizedDate,
+    });
+
+    if (safeTickets > remainingCapacity) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Not enough availability remains for this tour and date.",
+          selectedDate: normalizedDate,
+          tourSlug,
+          requestedTickets: safeTickets,
+          remainingCapacity,
         },
         { status: 400 }
       );
@@ -322,6 +343,47 @@ function getPackageLabel(tourPackage: string | undefined, selectedPackage: any, 
   return language === "en"
     ? selectedPackage.name
     : selectedPackage.nameEs || selectedPackage.name;
+}
+
+async function getRemainingCapacityForTourDate({
+  db,
+  tourSlug,
+  date,
+}: {
+  db: Awaited<ReturnType<typeof getDb>>;
+  tourSlug?: string;
+  date: string;
+}): Promise<number> {
+  const dateParts = date.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!dateParts) return 0;
+
+  const [, yearRaw, monthRaw, dayRaw] = dateParts;
+  const localDate = new Date(Number(yearRaw), Number(monthRaw) - 1, Number(dayRaw));
+  const isWeekend = localDate.getDay() === 0 || localDate.getDay() === 6;
+  const capacity = isWeekend ? DEFAULT_AVAILABILITY.WEEKEND : DEFAULT_AVAILABILITY.WEEKDAY;
+
+  const query: Record<string, unknown> = {
+    date,
+    status: {
+      $in: ["COMPLETED", "completed", "confirmed", "CONFIRMED"],
+    },
+  };
+
+  if (tourSlug?.trim()) {
+    query.tourSlug = tourSlug.trim();
+  }
+
+  const existingReservations = await db
+    .collection(COLLECTIONS.RESERVATIONS)
+    .find(query, { projection: { tickets: 1 } })
+    .toArray();
+
+  const reserved = existingReservations.reduce((sum, doc) => {
+    const tickets = typeof doc.tickets === "number" ? doc.tickets : Number(doc.tickets ?? 0);
+    return Number.isFinite(tickets) && tickets > 0 ? sum + tickets : sum;
+  }, 0);
+
+  return Math.max(0, capacity - reserved);
 }
 
 function createCustomId(data: Record<string, any>): string {

@@ -45,7 +45,7 @@ export default function Home(): JSX.Element {
         </div>
       }
     >
-      <CalendarProvider>
+      <CalendarProvider selectedTourSlug={selectedTourSlug}>
         <main className="min-h-screen overflow-x-hidden bg-black">
           <DynamicHeroHeader />
           <ToursImmersionSection

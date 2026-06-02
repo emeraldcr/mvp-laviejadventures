@@ -38,21 +38,28 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const year = Number(searchParams.get("year"));
   const month = Number(searchParams.get("month"));
+  const tourSlug = searchParams.get("tourSlug")?.trim();
 
   if (!Number.isInteger(year) || !Number.isInteger(month) || month < 0 || month > 11) {
     return NextResponse.json({ message: "Invalid year/month." }, { status: 400 });
   }
 
   const db = await getDb();
+  const reservationQuery: Record<string, unknown> = {
+    status: {
+      $in: ["COMPLETED", "completed", "confirmed", "CONFIRMED"],
+    },
+  };
+
+  if (tourSlug) {
+    reservationQuery.tourSlug = tourSlug;
+  }
+
   const docs = await db
     .collection(COLLECTIONS.RESERVATIONS)
     .find(
-      {
-        status: {
-          $in: ["COMPLETED", "completed", "confirmed", "CONFIRMED"],
-        },
-      },
-      { projection: { date: 1, tickets: 1 } }
+      reservationQuery,
+      { projection: { date: 1, tickets: 1, tourSlug: 1 } }
     )
     .toArray();
 
@@ -81,5 +88,5 @@ export async function GET(req: Request) {
     availability[day] = Math.max(0, capacity - reserved);
   }
 
-  return NextResponse.json({ availability, bookedByDay });
+  return NextResponse.json({ availability, bookedByDay, tourSlug: tourSlug ?? null });
 }
