@@ -32,6 +32,7 @@ interface CreateOrderRequest {
   tourSlug?: string;
   tourName?: string;
   language?: string;
+  countryCode?: string;
 }
 
 interface CreateOrderResponse {
@@ -57,6 +58,7 @@ export async function POST(req: Request) {
       tourSlug,
       tourName,
       language = "es",
+      countryCode,
     } = body;
 
     // Basic validation
@@ -167,6 +169,7 @@ export async function POST(req: Request) {
       lang: language === "en" ? "en" : "es",
     });
 
+    const payer = createPayPalPayer({ name, email, phone, countryCode });
     const accessToken = await getPayPalAccessToken();
 
     const res = await fetch(`${getPayPalApiBaseUrl()}/v2/checkout/orders`, {
@@ -178,6 +181,7 @@ export async function POST(req: Request) {
       },
       body: JSON.stringify({
         intent: "CAPTURE",
+        payer,
         purchase_units: [
           {
             amount: {
@@ -332,6 +336,55 @@ function createCustomId(data: Record<string, any>): string {
     date: data.date,
     lang: data.lang,
   });
+}
+
+function normalizeCountryCode(countryCode: unknown): string {
+  const normalizedCountryCode = String(countryCode ?? "").trim().toUpperCase();
+  return /^[A-Z]{2}$/.test(normalizedCountryCode) ? normalizedCountryCode : "CR";
+}
+
+function createPayPalPayer({
+  name,
+  email,
+  phone,
+  countryCode,
+}: {
+  name?: string;
+  email?: string;
+  phone?: string;
+  countryCode?: string;
+}) {
+  const trimmedName = String(name ?? "").trim().replace(/\s+/g, " ");
+  const nameParts = trimmedName.split(" ").filter(Boolean);
+  const givenName = nameParts[0] ?? undefined;
+  const surname = nameParts.length > 1 ? nameParts.slice(1).join(" ") : undefined;
+  const nationalPhone = String(phone ?? "").replace(/^\+\d{1,3}\s*/, "").replace(/\D/g, "");
+  const normalizedCountryCode = normalizeCountryCode(countryCode);
+
+  return {
+    email_address: String(email ?? "").trim(),
+    address: {
+      country_code: normalizedCountryCode,
+    },
+    ...(givenName && surname
+      ? {
+          name: {
+            given_name: givenName,
+            surname,
+          },
+        }
+      : {}),
+    ...(nationalPhone
+      ? {
+          phone: {
+            phone_type: "MOBILE",
+            phone_number: {
+              national_number: nationalPhone,
+            },
+          },
+        }
+      : {}),
+  };
 }
 
 async function saveOrderContext(orderId: string, bookingData: any) {

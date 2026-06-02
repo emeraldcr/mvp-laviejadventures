@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { CalendarDays, Clock3, CreditCard, Mail, Phone, ShieldCheck, Ticket, UserRound } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
 import { trackAnalyticsEvent } from "@/lib/analytics/client";
 import { translations } from "@/lib/translations";
@@ -24,6 +25,48 @@ const isConfiguredPayPalClientId = (clientId: string | undefined): clientId is s
   const normalizedClientId = clientId.trim().toLowerCase();
   return Boolean(normalizedClientId) && !normalizedClientId.startsWith("your-");
 };
+
+const DEFAULT_BUYER_COUNTRY = "CR";
+
+const COUNTRY_BY_PHONE_PREFIX: Record<string, string> = {
+  "506": "CR",
+  "1": "US",
+  "52": "MX",
+  "57": "CO",
+  "34": "ES",
+};
+
+const getBuyerCountryFromPhone = (phone: string) => {
+  const normalizedPhone = phone.trim().replace(/[^\d+]/g, "");
+  const match = normalizedPhone.match(/^\+(\d{1,3})/);
+  if (!match) return DEFAULT_BUYER_COUNTRY;
+
+  return COUNTRY_BY_PHONE_PREFIX[match[1]] ?? DEFAULT_BUYER_COUNTRY;
+};
+
+const SummaryRow = ({
+  icon,
+  label,
+  value,
+  prominent = false,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: React.ReactNode;
+  prominent?: boolean;
+}) => (
+  <div className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/[0.04] p-3">
+    <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-400/10 text-teal-300">
+      {icon}
+    </span>
+    <div className="min-w-0">
+      <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-zinc-500">{label}</p>
+      <p className={`mt-0.5 break-words leading-snug text-zinc-100 ${prominent ? "text-lg font-black" : "text-sm font-semibold"}`}>
+        {value}
+      </p>
+    </div>
+  </div>
+);
 
 type Props = {
   orderDetails: OrderDetails;
@@ -78,6 +121,24 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
 
   const paypalLoadError = paypalLoadFailure?.checkoutKey === checkoutKey ? paypalLoadFailure.message : null;
   const isPaypalLoading = !paypalLoadError && loadedPaypalKey !== checkoutKey;
+  const packageName = (tr.packages as Record<string, string>)[tourPackage] ?? tourPackage;
+  const formattedTime = tr.timeLabels[tourTime] ?? tourTime;
+  const buyerCountryCode = getBuyerCountryFromPhone(phone);
+  const paymentCopy = {
+    contactTitle: lang === "es" ? "Datos del viajero" : "Traveler details",
+    bookingTitle: lang === "es" ? "Resumen de reserva" : "Booking summary",
+    paymentTitle: lang === "es" ? "Pago seguro" : "Secure payment",
+    paymentSubtitle: lang === "es"
+      ? "PayPal puede pedir dirección de facturación para validar la tarjeta. Ya enviamos tu nombre, email y teléfono a la orden."
+      : "PayPal may request billing address to validate the card. Your name, email, and phone are already attached to the order.",
+    checkoutHint: lang === "es"
+      ? "Elige PayPal o tarjeta. La confirmación se genera apenas el pago quede aprobado."
+      : "Choose PayPal or card. Your confirmation is created as soon as payment is approved.",
+    dateLabel: lang === "es" ? "Fecha" : "Date",
+    guestsLabel: lang === "es" ? "Personas" : "Guests",
+    tourLabel: lang === "es" ? "Experiencia" : "Experience",
+    packagePriceLabel: lang === "es" ? "Tarifa" : "Rate",
+  };
 
   useEffect(() => {
     const paypalContainer = paypalRef.current;
@@ -149,6 +210,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
                 tourSlug,
                 tourName,
                 language: lang,
+                countryCode: buyerCountryCode,
               }),
             });
 
@@ -248,9 +310,15 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
       return;
     }
 
-    // Simple SDK URL (https://developer.paypal.com/sdk/js/reference/)
-    // No locale — PayPal auto-detects language from browser (recommended best practice)
-    const sdkSrc = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(clientId)}&components=buttons&currency=USD&intent=capture`;
+    // Keep the SDK URL minimal; PayPal rejects some locale/country combinations at script-load time.
+    const sdkParams = new URLSearchParams({
+      "client-id": clientId,
+      components: "buttons",
+      currency: "USD",
+      intent: "capture",
+    });
+
+    const sdkSrc = `https://www.paypal.com/sdk/js?${sdkParams.toString()}`;
 
     const handleScriptError = () => {
       document.querySelector<HTMLScriptElement>("#paypal-sdk")?.remove();
@@ -304,65 +372,86 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
     };
   }, [checkoutKey]); // Only re-evaluate when the logical checkout session changes
 
-  const packageName = (tr.packages as Record<string, string>)[tourPackage] ?? tourPackage;
-
   return (
-    <>
-      <p className="mb-3 text-lg">
-        <strong>{tr.nameLabel}:</strong> {name}
-      </p>
-      <p className="mb-3 text-lg">
-        <strong>{tr.emailLabel}:</strong> {email}
-      </p>
-      <p className="mb-4 text-lg">
-        <strong>{tr.phoneLabel}:</strong> {phone}
-      </p>
-
-      <p className="mb-2 text-lg">
-        <strong>{tr.package}:</strong> {tourName}
-      </p>
-
-      <p className="mb-2 text-lg">
-        {tr.bookingPrefix}{" "}
-        <strong>{tickets} {tickets === 1 ? tr.person : tr.persons}</strong>{" "}
-        {tr.bookingForDay}{" "}
-        <strong>{date}</strong>.
-      </p>
-
-      <p className="mb-2 text-lg">
-        <strong>{tr.tourTime}:</strong>{" "}
-        {tr.timeLabels[tourTime] ?? tourTime}
-      </p>
-
-      <p className="mb-4 text-lg">
-        <strong>{tr.package}:</strong>{" "}
-        {packageName} (${packagePrice} USD/{tr.pricePerPersonUnit})
-      </p>
-
-      <p className="text-xl font-bold mb-6">{tr.total}: ${total.toFixed(2)}</p>
-
-      <div className="relative min-h-[140px] w-full">
-        {isPaypalLoading && (
-          <div
-            className="absolute inset-0 flex min-h-[140px] items-center justify-center rounded-lg border border-emerald-100 bg-white/85 px-4 text-center text-sm font-medium text-emerald-900 shadow-sm"
-            role="status"
-            aria-live="polite"
-          >
-            <span className="mr-3 h-5 w-5 animate-spin rounded-full border-2 border-emerald-200 border-t-emerald-700" aria-hidden="true" />
-            {tr.loadingPaymentInfo}
+    <div className="grid gap-5 lg:grid-cols-[minmax(0,0.92fr)_minmax(360px,1.08fr)]">
+      <aside className="space-y-4">
+        <section className="rounded-2xl border border-white/10 bg-zinc-950/45 p-4 shadow-inner shadow-black/20">
+          <div className="mb-3 flex items-center gap-2">
+            <UserRound className="h-4 w-4 text-teal-300" aria-hidden />
+            <h2 className="text-sm font-black uppercase tracking-[0.16em] text-zinc-300">{paymentCopy.contactTitle}</h2>
           </div>
-        )}
-        {paypalLoadError && (
-          <div
-            className="min-h-[140px] rounded-lg border border-red-200 bg-red-50 px-4 py-5 text-sm text-red-800 shadow-sm dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200"
-            role="alert"
-          >
-            <p className="font-semibold">{tr.error}</p>
-            <p className="mt-2 break-words text-xs opacity-90">{paypalLoadError}</p>
+          <div className="space-y-3">
+            <SummaryRow icon={<UserRound className="h-4 w-4" aria-hidden />} label={tr.nameLabel} value={name} />
+            <SummaryRow icon={<Mail className="h-4 w-4" aria-hidden />} label={tr.emailLabel} value={email} />
+            <SummaryRow icon={<Phone className="h-4 w-4" aria-hidden />} label={tr.phoneLabel} value={phone} />
           </div>
-        )}
-        <div ref={paypalRef} className="min-h-[140px] w-full" />
-      </div>
-    </>
+        </section>
+
+        <section className="rounded-2xl border border-white/10 bg-zinc-950/45 p-4 shadow-inner shadow-black/20">
+          <div className="mb-3 flex items-center gap-2">
+            <Ticket className="h-4 w-4 text-teal-300" aria-hidden />
+            <h2 className="text-sm font-black uppercase tracking-[0.16em] text-zinc-300">{paymentCopy.bookingTitle}</h2>
+          </div>
+          <div className="space-y-3">
+            <SummaryRow icon={<Ticket className="h-4 w-4" aria-hidden />} label={paymentCopy.tourLabel} value={tourName} />
+            <SummaryRow icon={<CalendarDays className="h-4 w-4" aria-hidden />} label={paymentCopy.dateLabel} value={date} />
+            <SummaryRow icon={<Clock3 className="h-4 w-4" aria-hidden />} label={tr.tourTime} value={formattedTime} />
+            <SummaryRow
+              icon={<UserRound className="h-4 w-4" aria-hidden />}
+              label={paymentCopy.guestsLabel}
+              value={`${tickets} ${tickets === 1 ? tr.person : tr.persons}`}
+            />
+            <SummaryRow
+              icon={<CreditCard className="h-4 w-4" aria-hidden />}
+              label={paymentCopy.packagePriceLabel}
+              value={`${packageName} ($${packagePrice} USD/${tr.pricePerPersonUnit})`}
+            />
+          </div>
+        </section>
+      </aside>
+
+      <section className="rounded-2xl border border-teal-300/20 bg-[radial-gradient(circle_at_top_right,rgba(20,184,166,0.18),transparent_34%),rgba(10,10,12,0.72)] p-4 shadow-2xl shadow-black/30 sm:p-5">
+        <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-teal-300/25 bg-teal-400/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-teal-200">
+              <ShieldCheck className="h-3.5 w-3.5" aria-hidden />
+              {paymentCopy.paymentTitle}
+            </div>
+            <p className="max-w-xl text-sm leading-relaxed text-zinc-400">{paymentCopy.paymentSubtitle}</p>
+          </div>
+          <div className="rounded-2xl border border-teal-300/20 bg-teal-400/10 px-4 py-3 text-right">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-teal-200">{tr.total}</p>
+            <p className="text-3xl font-black leading-none text-white">${total.toFixed(2)}</p>
+          </div>
+        </div>
+
+        <div className="mb-4 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm font-medium text-zinc-300">
+          {paymentCopy.checkoutHint}
+        </div>
+
+        <div className="relative min-h-[160px] w-full overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+          {isPaypalLoading && (
+            <div
+              className="absolute inset-3 z-10 flex min-h-[140px] items-center justify-center rounded-xl border border-emerald-100/20 bg-zinc-950/90 px-4 text-center text-sm font-medium text-emerald-100 shadow-sm"
+              role="status"
+              aria-live="polite"
+            >
+              <span className="mr-3 h-5 w-5 animate-spin rounded-full border-2 border-emerald-200/30 border-t-emerald-300" aria-hidden="true" />
+              {tr.loadingPaymentInfo}
+            </div>
+          )}
+          {paypalLoadError && (
+            <div
+              className="min-h-[140px] rounded-xl border border-red-400/30 bg-red-950/40 px-4 py-5 text-sm text-red-100 shadow-sm"
+              role="alert"
+            >
+              <p className="font-semibold">{tr.error}</p>
+              <p className="mt-2 break-words text-xs opacity-90">{paypalLoadError}</p>
+            </div>
+          )}
+          <div ref={paypalRef} className="min-h-[140px] w-full" />
+        </div>
+      </section>
+    </div>
   );
 }

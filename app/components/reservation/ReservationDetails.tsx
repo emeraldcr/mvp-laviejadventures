@@ -2,25 +2,18 @@
 import Link from "next/link";
 import { TOUR_INFO } from "@/lib/tour-info";
 import { AvailabilityMap, MainTourInfo, TourPackageOption, TourSummary } from "@/lib/types/index";
-import { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef, type KeyboardEvent, type RefObject } from "react";
 import { format } from "date-fns";
 import { es, enUS } from "date-fns/locale";
 import { useLanguage } from "@/lib/LanguageContext";
 import { translations } from "@/lib/translations";
-import { AlertCircle, Camera, Clock3, Info, MapPin, Route, ShieldCheck, Sparkles, TreePalm, Users, UtensilsCrossed } from "lucide-react";
+import { AlertCircle, Camera, Check, ChevronDown, Clock3, Info, MapPin, Minus, Plus, Route, Search, ShieldCheck, Sparkles, TreePalm, Users, UtensilsCrossed } from "lucide-react";
 import { trackAnalyticsEvent } from "@/lib/analytics/client";
+import { PHONE_COUNTRIES as ALL_PHONE_COUNTRIES } from "@/app/components/reservation/phoneCountries";
 
 // ---------------------- CONSTANTS ----------------------
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PHONE_NUMBER_REGEX = /^\d{4}[\s-]?\d{4}$/;
-
-const COUNTRY_CODES = [
-  { code: "+506", name: "Costa Rica" },
-  { code: "+1", name: "EE. UU. / Canadá" },
-  { code: "+52", name: "México" },
-  { code: "+57", name: "Colombia" },
-  { code: "+34", name: "España" },
-];
+const PHONE_NUMBER_REGEX = /^[\d\s().-]{6,20}$/;
 
 const DEFAULT_DEPARTURE_TIMES = ["08:00", "09:00", "10:00"];
 
@@ -153,7 +146,8 @@ const useReservationForm = (initialState: ReservationFormState) => {
       formState.email.trim() !== "" && EMAIL_REGEX.test(formState.email.trim());
     const isPhoneNumberValid =
       formState.phoneNumber.trim() !== "" &&
-      PHONE_NUMBER_REGEX.test(formState.phoneNumber.trim());
+      PHONE_NUMBER_REGEX.test(formState.phoneNumber.trim()) &&
+      formState.phoneNumber.replace(/\D/g, "").length >= 6;
 
     return {
       isNameValid,
@@ -179,6 +173,8 @@ const TravelerInputField = ({
   value,
   onChange,
   onBlur,
+  onKeyDown,
+  inputRef,
   placeholder,
   isValid,
   validationMessage,
@@ -191,6 +187,8 @@ const TravelerInputField = ({
   value: string;
   onChange: (value: string) => void;
   onBlur?: () => void;
+  onKeyDown?: (event: KeyboardEvent<HTMLInputElement>) => void;
+  inputRef?: RefObject<HTMLInputElement | null>;
   placeholder: string;
   isValid: boolean;
   validationMessage: string;
@@ -211,6 +209,8 @@ const TravelerInputField = ({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onBlur={onBlur}
+        onKeyDown={onKeyDown}
+        ref={inputRef}
         className={`w-full p-3 rounded-lg border focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-zinc-800 ${
           showError
             ? "border-red-500"
@@ -230,6 +230,8 @@ const TravelerPhoneInput = ({
   setPhoneCode,
   setPhoneNumber,
   onBlur,
+  onKeyDown,
+  inputRef,
   isValid,
   label,
   placeholder,
@@ -240,6 +242,8 @@ const TravelerPhoneInput = ({
   setPhoneCode: (code: string) => void;
   setPhoneNumber: (number: string) => void;
   onBlur?: () => void;
+  onKeyDown?: (event: KeyboardEvent<HTMLInputElement>) => void;
+  inputRef?: RefObject<HTMLInputElement | null>;
   isValid: boolean;
   label: string;
   placeholder: string;
@@ -247,31 +251,124 @@ const TravelerPhoneInput = ({
 }) => {
   const isTouched = phoneNumber.trim() !== "";
   const showError = isTouched && !isValid;
+  const [isCountryOpen, setIsCountryOpen] = useState(false);
+  const [countrySearch, setCountrySearch] = useState("");
+  const countryPickerRef = useRef<HTMLDivElement | null>(null);
+  const selectedCountry = ALL_PHONE_COUNTRIES.find((country) => country.code === phoneCode) ?? ALL_PHONE_COUNTRIES[0];
+  const normalizedCountrySearch = countrySearch.trim().toLowerCase();
+  const filteredCountries = ALL_PHONE_COUNTRIES.filter((country) => {
+    if (!normalizedCountrySearch) return true;
+
+    return [country.name, country.code, country.flag]
+      .some((value) => value.toLowerCase().includes(normalizedCountrySearch));
+  });
+
+  useEffect(() => {
+    if (!isCountryOpen) return;
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!countryPickerRef.current?.contains(event.target as Node)) {
+        setIsCountryOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    return () => document.removeEventListener("mousedown", handlePointerDown);
+  }, [isCountryOpen]);
+
+  const handleCountrySelect = (countryCode: string) => {
+    setPhoneCode(countryCode);
+    setCountrySearch("");
+    setIsCountryOpen(false);
+    window.setTimeout(() => inputRef?.current?.focus({ preventScroll: true }), 80);
+  };
 
   return (
     <div className="md:col-span-2">
       <label htmlFor="phoneNumber" className="block font-semibold text-lg mb-1">
         {label}
       </label>
-      <div className="flex gap-2">
-        <select
-          id="phoneCode"
-          value={phoneCode}
-          onChange={(e) => setPhoneCode(e.target.value)}
-          className="p-3 rounded-lg border bg-white dark:bg-zinc-800 border-zinc-300 dark:border-zinc-700 focus:ring-teal-500 focus:border-teal-500 w-1/3 md:w-1/4"
-        >
-          {COUNTRY_CODES.map((country) => (
-            <option key={country.code} value={country.code}>
-              {country.code} ({country.name})
-            </option>
-          ))}
-        </select>
+      <div className="grid gap-2 sm:grid-cols-[minmax(210px,0.85fr)_minmax(0,1fr)]">
+        <div ref={countryPickerRef} className="relative">
+          <button
+            id="phoneCode"
+            type="button"
+            onClick={() => setIsCountryOpen((prev) => !prev)}
+            className="flex h-12 w-full items-center justify-between gap-2 rounded-lg border border-zinc-300 bg-white px-3 text-left text-sm font-semibold text-zinc-900 transition hover:border-teal-500 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/25 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+            aria-haspopup="listbox"
+            aria-expanded={isCountryOpen}
+          >
+            <span className="flex min-w-0 items-center gap-2">
+              <span className="shrink-0 rounded-md bg-zinc-100 px-2 py-1 text-xs font-black text-zinc-700 dark:bg-zinc-700 dark:text-zinc-100">
+                {selectedCountry.flag}
+              </span>
+              <span className="min-w-0 truncate">{selectedCountry.name}</span>
+            </span>
+            <span className="flex shrink-0 items-center gap-1 text-zinc-500">
+              {selectedCountry.code}
+              <ChevronDown className={`h-4 w-4 transition-transform ${isCountryOpen ? "rotate-180" : ""}`} aria-hidden />
+            </span>
+          </button>
+
+          {isCountryOpen && (
+            <div className="absolute left-0 right-0 top-full z-30 mt-2 overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-2xl shadow-black/20 dark:border-zinc-700 dark:bg-zinc-900">
+              <div className="border-b border-zinc-200 p-2 dark:border-zinc-700">
+                <div className="flex items-center gap-2 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-800">
+                  <Search className="h-4 w-4 shrink-0 text-zinc-400" aria-hidden />
+                  <input
+                    type="search"
+                    value={countrySearch}
+                    onChange={(event) => setCountrySearch(event.target.value)}
+                    placeholder="Search country or code"
+                    className="w-full bg-transparent text-sm text-zinc-900 outline-none placeholder:text-zinc-400 dark:text-zinc-100"
+                    autoFocus
+                  />
+                </div>
+              </div>
+              <div className="max-h-64 overflow-y-auto p-1" role="listbox" aria-labelledby="phoneCode">
+                {filteredCountries.map((country) => {
+                  const isSelected = country.code === phoneCode;
+                  return (
+                    <button
+                      key={`${country.code}-${country.flag}`}
+                      type="button"
+                      onClick={() => handleCountrySelect(country.code)}
+                      className={`flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-left text-sm transition ${
+                        isSelected
+                          ? "bg-teal-500/10 text-teal-700 dark:text-teal-300"
+                          : "text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                      }`}
+                      role="option"
+                      aria-selected={isSelected}
+                    >
+                      <span className="flex min-w-0 items-center gap-2">
+                        <span className="shrink-0 rounded bg-zinc-100 px-2 py-1 text-xs font-black text-zinc-600 dark:bg-zinc-800 dark:text-zinc-200">
+                          {country.flag}
+                        </span>
+                        <span className="min-w-0 truncate">{country.name}</span>
+                      </span>
+                      <span className="flex shrink-0 items-center gap-2 font-bold">
+                        {country.code}
+                        {isSelected && <Check className="h-4 w-4" aria-hidden />}
+                      </span>
+                    </button>
+                  );
+                })}
+                {filteredCountries.length === 0 && (
+                  <p className="px-3 py-4 text-center text-sm text-zinc-500">No country found</p>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
         <input
           id="phoneNumber"
           type="tel"
           value={phoneNumber}
           onChange={(e) => setPhoneNumber(e.target.value)}
           onBlur={onBlur}
+          onKeyDown={onKeyDown}
+          ref={inputRef}
           className={`w-full p-3 rounded-lg border focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-zinc-800 ${
             showError ? "border-red-500" : "border-zinc-300 dark:border-zinc-700"
           }`}
@@ -338,6 +435,17 @@ export default function ReservationDetails({
   const currentStepRef = useRef<BookingStepId>(1);
   const stepEnteredAtRef = useRef(0);
   const completedStepsRef = useRef<Set<BookingStepId>>(new Set());
+  const nextStepFocusRef = useRef<BookingStepId | null>(null);
+  const step1FieldFocusRef = useRef<"schedule" | "tickets" | null>(null);
+  const packageSectionRef = useRef<HTMLDivElement | null>(null);
+  const scheduleSectionRef = useRef<HTMLElement | null>(null);
+  const ticketsInputRef = useRef<HTMLInputElement | null>(null);
+  const travelerSectionRef = useRef<HTMLDivElement | null>(null);
+  const nameInputRef = useRef<HTMLInputElement | null>(null);
+  const emailInputRef = useRef<HTMLInputElement | null>(null);
+  const phoneInputRef = useRef<HTMLInputElement | null>(null);
+  const reviewSectionRef = useRef<HTMLDivElement | null>(null);
+  const termsCheckboxRef = useRef<HTMLInputElement | null>(null);
 
   const selectedTourSlug = resolveSelectedTourSlug(tours, null, initialSelectedTourSlug);
   const selectedTour = tours.find((tour) => tour.slug === selectedTourSlug) ?? tours[0] ?? null;
@@ -560,7 +668,7 @@ export default function ReservationDetails({
   const { formState, setFormState, handleChange, validation } = useReservationForm({
     name: "",
     email: "",
-    phoneCode: COUNTRY_CODES[0].code,
+    phoneCode: ALL_PHONE_COUNTRIES[0].code,
     phoneNumber: "",
     specialRequests: "",
     agreeTerms: false,
@@ -809,27 +917,95 @@ export default function ReservationDetails({
     });
   }, [getAnalyticsBookingSnapshot, stepLabels]);
 
+  const guideToElement = useCallback((element: HTMLElement | null, focus = false) => {
+    if (!element) return;
+
+    window.setTimeout(() => {
+      element.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+
+      if (focus && "focus" in element) {
+        window.setTimeout(() => {
+          element.focus({ preventScroll: true });
+        }, 180);
+      }
+    }, 80);
+  }, []);
+
+  const getStep1GuideTarget = useCallback(() => {
+    if (!effectiveTourPackage) return { element: packageSectionRef.current, focus: false };
+    if (!tourTime) return { element: scheduleSectionRef.current, focus: false };
+    if (!isTicketsValid) return { element: ticketsInputRef.current, focus: true };
+    return { element: ticketsInputRef.current, focus: true };
+  }, [effectiveTourPackage, isTicketsValid, tourTime]);
+
+  const getStep2GuideTarget = useCallback(() => {
+    if (!validation.isNameValid) return { element: nameInputRef.current, focus: true };
+    if (!validation.isEmailValid) return { element: emailInputRef.current, focus: true };
+    if (!validation.isPhoneNumberValid) return { element: phoneInputRef.current, focus: true };
+    return { element: travelerSectionRef.current, focus: false };
+  }, [validation.isEmailValid, validation.isNameValid, validation.isPhoneNumberValid]);
+
+  const getStep3GuideTarget = useCallback(() => {
+    if (!validation.isAgreeTermsValid) return { element: termsCheckboxRef.current, focus: true };
+    return { element: reviewSectionRef.current, focus: false };
+  }, [validation.isAgreeTermsValid]);
+
+  const guideToStep = useCallback((step: BookingStepId) => {
+    const target =
+      step === 1 ? getStep1GuideTarget() :
+      step === 2 ? getStep2GuideTarget() :
+      getStep3GuideTarget();
+
+    guideToElement(target.element, target.focus);
+  }, [getStep1GuideTarget, getStep2GuideTarget, getStep3GuideTarget, guideToElement]);
+
   const goToStep = useCallback((targetStep: BookingStepId, source: string) => {
     if (targetStep > currentStep) {
       if (currentStep === 1 && !isStep1Valid) {
         trackBlockedStep(targetStep, source);
+        guideToStep(1);
         return;
       }
 
       if (currentStep === 2 && !isStep2Valid) {
         trackBlockedStep(targetStep, source);
+        guideToStep(2);
         return;
       }
 
       trackStepCompleted(currentStep, targetStep, source);
     }
 
+    nextStepFocusRef.current = targetStep;
     setCurrentStep(targetStep);
-  }, [currentStep, isStep1Valid, isStep2Valid, trackBlockedStep, trackStepCompleted]);
+  }, [currentStep, guideToStep, isStep1Valid, isStep2Valid, trackBlockedStep, trackStepCompleted]);
+
+  useEffect(() => {
+    if (nextStepFocusRef.current !== currentStep) return;
+
+    nextStepFocusRef.current = null;
+    guideToStep(currentStep);
+  }, [currentStep, guideToStep]);
+
+  useEffect(() => {
+    if (currentStep !== 1 || !step1FieldFocusRef.current) return;
+
+    if (step1FieldFocusRef.current === "schedule" && effectiveSelectedPackage) {
+      step1FieldFocusRef.current = null;
+      guideToElement(scheduleSectionRef.current, false);
+      return;
+    }
+
+    if (step1FieldFocusRef.current === "tickets" && tourTime) {
+      step1FieldFocusRef.current = null;
+      guideToElement(ticketsInputRef.current, true);
+    }
+  }, [currentStep, effectiveSelectedPackage, guideToElement, tourTime]);
 
   const handleReserve = useCallback(() => {
     if (!isFormValid || !effectiveSelectedPackage || !tourTime || !effectiveTourPackage || !selectedTour) {
       trackBlockedStep("checkout", "checkout_button");
+      guideToStep(currentStep);
       return;
     }
 
@@ -881,6 +1057,8 @@ export default function ReservationDetails({
     lang,
     trackBlockedStep,
     trackStepCompleted,
+    guideToStep,
+    currentStep,
   ]);
 
   const goToNextStep = useCallback(() => {
@@ -890,11 +1068,73 @@ export default function ReservationDetails({
 
   const goToPrevStep = useCallback(() => {
     const targetStep = currentStep > 1 ? ((currentStep - 1) as BookingStepId) : currentStep;
+    nextStepFocusRef.current = targetStep;
     setCurrentStep(targetStep);
   }, [currentStep]);
 
+  const handleStep1Enter = useCallback((event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== "Enter") return;
+
+    event.preventDefault();
+    if (isStep1Valid) {
+      goToNextStep();
+      return;
+    }
+
+    guideToStep(1);
+  }, [goToNextStep, guideToStep, isStep1Valid]);
+
+  const handleNameEnter = useCallback((event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== "Enter") return;
+
+    event.preventDefault();
+    if (validation.isNameValid) {
+      guideToElement(emailInputRef.current, true);
+      return;
+    }
+
+    guideToElement(nameInputRef.current, true);
+  }, [guideToElement, validation.isNameValid]);
+
+  const handleEmailEnter = useCallback((event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== "Enter") return;
+
+    event.preventDefault();
+    if (validation.isEmailValid) {
+      guideToElement(phoneInputRef.current, true);
+      return;
+    }
+
+    guideToElement(emailInputRef.current, true);
+  }, [guideToElement, validation.isEmailValid]);
+
+  const handlePhoneEnter = useCallback((event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== "Enter") return;
+
+    event.preventDefault();
+    if (isStep2Valid) {
+      goToNextStep();
+      return;
+    }
+
+    guideToStep(2);
+  }, [goToNextStep, guideToStep, isStep2Valid]);
+
+  const handleTermsEnter = useCallback((event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== "Enter") return;
+
+    event.preventDefault();
+    if (!validation.isAgreeTermsValid) {
+      handleChange("agreeTerms", true);
+      return;
+    }
+
+    handleReserve();
+  }, [handleChange, handleReserve, validation.isAgreeTermsValid]);
+
   const handleTourTimeSelect = useCallback((slot: TourTime) => {
     setTourTime(slot);
+    step1FieldFocusRef.current = "tickets";
     trackAnalyticsEvent("booking_selection_changed", {
       metadata: {
         step: 1,
@@ -913,6 +1153,7 @@ export default function ReservationDetails({
   const handlePackageSelect = useCallback((pkg: PackageOption) => {
     setTourPackage(pkg.id);
     setTourTime(null);
+    step1FieldFocusRef.current = "schedule";
 
     trackAnalyticsEvent("booking_selection_changed", {
       metadata: {
@@ -1115,7 +1356,7 @@ export default function ReservationDetails({
 
       {currentStep === 1 && (
         <>
-          <div className={`mb-6 rounded-xl ${!effectiveTourPackage ? "ring-2 ring-amber-300/70 p-3" : ""}`}>
+          <div ref={packageSectionRef} className={`mb-6 rounded-xl ${!effectiveTourPackage ? "ring-2 ring-amber-300/70 p-3" : ""}`}>
             <h3 className="text-xl font-semibold mb-3">{tr.packageTitle}</h3>
             {!effectiveTourPackage && <p className="mb-3 flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-400"><AlertCircle className="h-4 w-4" aria-hidden /> {tr.indicators.choosePackage}</p>}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -1208,51 +1449,120 @@ export default function ReservationDetails({
             )}
           </div>
 
-          {effectiveSelectedPackage && (
-            <div className={`mb-6 rounded-xl ${!tourTime ? "ring-2 ring-amber-300/70 p-3" : ""}`}>
-              <h3 className="text-xl font-semibold mb-3">{tr.tourTimeTitle}</h3>
-              {!tourTime && <p className="mb-3 flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-400"><AlertCircle className="h-4 w-4" aria-hidden /> {tr.indicators.chooseTourTime}</p>}
-              <div className="flex gap-3 flex-wrap">
-                {availableTimeSlots.map((slot) => {
-                  const isSelected = tourTime === slot;
-                  return (
-                    <button
-                      key={slot}
-                      type="button"
-                      onClick={() => handleTourTimeSelect(slot)}
-                      className={`flex-1 min-w-[90px] py-3 px-4 rounded-xl border-2 font-semibold text-base transition-all ${
-                        isSelected
-                          ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300"
-                          : "border-zinc-300 dark:border-zinc-600 hover:border-emerald-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
-                      }`}
-                    >
-                      {formatDepartureLabel(slot)}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+          <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(280px,0.9fr)]">
+            {effectiveSelectedPackage && (
+              <section
+                ref={scheduleSectionRef}
+                className={`rounded-2xl border bg-white p-4 shadow-sm transition-all dark:bg-zinc-900/70 sm:p-5 ${
+                  !tourTime
+                    ? "border-amber-300 ring-2 ring-amber-300/35 dark:border-amber-600"
+                    : "border-zinc-200 dark:border-zinc-700"
+                }`}
+              >
+                <div className="mb-4 flex items-start justify-between gap-3">
+                  <div className="flex min-w-0 items-start gap-3">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-300">
+                      <Clock3 className="h-5 w-5" aria-hidden />
+                    </span>
+                    <div className="min-w-0">
+                      <h3 className="text-lg font-black leading-tight text-zinc-900 dark:text-zinc-50 sm:text-xl">{tr.tourTimeTitle}</h3>
+                      {!tourTime && (
+                        <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-amber-700 dark:text-amber-400">
+                          <AlertCircle className="h-4 w-4 shrink-0" aria-hidden /> {tr.indicators.chooseTourTime}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
 
-          <div className={`mb-6 rounded-xl ${!isTicketsValid ? "ring-2 ring-amber-300/70 p-3" : ""}`}>
-            <h3 className="text-xl font-semibold mb-4">{tr.ticketsTitle}</h3>
-            {!isTicketsValid && <p className="mb-3 flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-400"><AlertCircle className="h-4 w-4" aria-hidden /> {tr.indicators.chooseTickets}</p>}
-            <div className="flex items-center gap-4 mb-4">
-              <label htmlFor="tickets" className="font-semibold text-lg">{tr.numPeople}</label>
-              <input
-                id="tickets"
-                type="number"
-                min={1}
-                max={Math.max(1, slots)}
-                value={tickets}
-                onChange={(e) => {
-                  handleTicketsChange(e.target.value);
-                }}
-                className="w-20 p-2 rounded-lg border bg-white dark:bg-zinc-800"
-                disabled={slots === 0}
-              />
-              <span className="text-sm text-zinc-500">({tr.availablePrefix} {slots})</span>
-            </div>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                  {availableTimeSlots.map((slot) => {
+                    const isSelected = tourTime === slot;
+                    return (
+                      <button
+                        key={slot}
+                        type="button"
+                        onClick={() => handleTourTimeSelect(slot)}
+                        className={`min-h-14 rounded-xl border-2 px-4 py-3 text-center text-base font-black transition-all ${
+                          isSelected
+                            ? "border-emerald-500 bg-emerald-500 text-white shadow-lg shadow-emerald-900/15 dark:bg-emerald-500 dark:text-zinc-950"
+                            : "border-zinc-200 bg-zinc-50 text-zinc-800 hover:-translate-y-0.5 hover:border-emerald-400 hover:bg-emerald-50 dark:border-zinc-700 dark:bg-zinc-950/40 dark:text-zinc-200 dark:hover:bg-emerald-950/30"
+                        }`}
+                      >
+                        {formatDepartureLabel(slot)}
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
+
+            <section
+              className={`rounded-2xl border bg-white p-4 shadow-sm transition-all dark:bg-zinc-900/70 sm:p-5 ${
+                !isTicketsValid
+                  ? "border-amber-300 ring-2 ring-amber-300/35 dark:border-amber-600"
+                  : "border-zinc-200 dark:border-zinc-700"
+              }`}
+            >
+              <div className="mb-4 flex items-start justify-between gap-3">
+                <div className="flex min-w-0 items-start gap-3">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-300">
+                    <Users className="h-5 w-5" aria-hidden />
+                  </span>
+                  <div className="min-w-0">
+                    <h3 className="text-lg font-black leading-tight text-zinc-900 dark:text-zinc-50 sm:text-xl">{tr.ticketsTitle}</h3>
+                    {!isTicketsValid && (
+                      <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-amber-700 dark:text-amber-400">
+                        <AlertCircle className="h-4 w-4 shrink-0" aria-hidden /> {tr.indicators.chooseTickets}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <span className="shrink-0 rounded-full border border-teal-500/30 bg-teal-500/10 px-3 py-1 text-xs font-bold text-teal-700 dark:text-teal-300">
+                  {tr.availablePrefix} {slots}
+                </span>
+              </div>
+
+              <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-950/35">
+                <label htmlFor="tickets" className="mb-3 block text-sm font-bold text-zinc-700 dark:text-zinc-300">
+                  {tr.numPeople}
+                </label>
+                <div className="grid grid-cols-[44px_minmax(0,1fr)_44px] items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleTicketsChange(String(tickets - 1))}
+                    disabled={slots === 0 || tickets <= 1}
+                    className="flex h-11 w-11 items-center justify-center rounded-xl border border-zinc-300 bg-white text-zinc-700 transition hover:border-teal-500 hover:text-teal-700 disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+                    aria-label={lang === "es" ? "Reducir personas" : "Decrease guests"}
+                  >
+                    <Minus className="h-4 w-4" aria-hidden />
+                  </button>
+                  <input
+                    ref={ticketsInputRef}
+                    id="tickets"
+                    type="number"
+                    min={1}
+                    max={Math.max(1, slots)}
+                    value={tickets}
+                    onChange={(e) => {
+                      handleTicketsChange(e.target.value);
+                    }}
+                    onKeyDown={handleStep1Enter}
+                    className="h-11 w-full rounded-xl border border-zinc-300 bg-white text-center text-lg font-black text-zinc-900 outline-none transition focus:border-teal-500 focus:ring-4 focus:ring-teal-500/15 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+                    disabled={slots === 0}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleTicketsChange(String(tickets + 1))}
+                    disabled={slots === 0 || tickets >= slots}
+                    className="flex h-11 w-11 items-center justify-center rounded-xl border border-zinc-300 bg-white text-zinc-700 transition hover:border-teal-500 hover:text-teal-700 disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+                    aria-label={lang === "es" ? "Aumentar personas" : "Increase guests"}
+                  >
+                    <Plus className="h-4 w-4" aria-hidden />
+                  </button>
+                </div>
+              </div>
+            </section>
           </div>
           {!isStep1Valid && (
             <div className="mb-6 rounded-xl border border-amber-300 bg-amber-50 p-4 dark:border-amber-700 dark:bg-amber-900/20">
@@ -1269,13 +1579,13 @@ export default function ReservationDetails({
 
       {currentStep === 2 && (
         <>
-          <div className={`mb-6 rounded-xl ${!isStep2Valid ? "ring-2 ring-amber-300/70 p-3" : ""}`}>
+          <div ref={travelerSectionRef} className={`mb-6 rounded-xl ${!isStep2Valid ? "ring-2 ring-amber-300/70 p-3" : ""}`}>
             <h3 className="text-xl font-semibold mb-4">{tr.travelerTitle}</h3>
             {!isStep2Valid && <p className="mb-3 flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-400"><AlertCircle className="h-4 w-4" aria-hidden /> {tr.indicators.completeTravelerData}</p>}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <TravelerInputField id="name" label={tr.fullName} value={formState.name} onChange={(v) => handleChange("name", v)} onBlur={() => trackFieldBlur("name")} placeholder={tr.namePlaceholder} isValid={validation.isNameValid} validationMessage={tr.nameRequired} required />
-              <TravelerInputField id="email" label={tr.emailLabel} type="email" value={formState.email} onChange={(v) => handleChange("email", v)} onBlur={() => trackFieldBlur("email")} placeholder={tr.emailPlaceholder} isValid={validation.isEmailValid} validationMessage={tr.emailInvalid} required />
-              <TravelerPhoneInput phoneCode={formState.phoneCode} phoneNumber={formState.phoneNumber} setPhoneCode={(v) => handleChange("phoneCode", v)} setPhoneNumber={(v) => handleChange("phoneNumber", v)} onBlur={() => trackFieldBlur("phone")} isValid={validation.isPhoneNumberValid} label={tr.phoneLabel} placeholder={tr.phonePlaceholder} validationMessage={tr.phoneInvalid} />
+              <TravelerInputField id="name" label={tr.fullName} value={formState.name} onChange={(v) => handleChange("name", v)} onBlur={() => trackFieldBlur("name")} onKeyDown={handleNameEnter} inputRef={nameInputRef} placeholder={tr.namePlaceholder} isValid={validation.isNameValid} validationMessage={tr.nameRequired} required />
+              <TravelerInputField id="email" label={tr.emailLabel} type="email" value={formState.email} onChange={(v) => handleChange("email", v)} onBlur={() => trackFieldBlur("email")} onKeyDown={handleEmailEnter} inputRef={emailInputRef} placeholder={tr.emailPlaceholder} isValid={validation.isEmailValid} validationMessage={tr.emailInvalid} required />
+              <TravelerPhoneInput phoneCode={formState.phoneCode} phoneNumber={formState.phoneNumber} setPhoneCode={(v) => handleChange("phoneCode", v)} setPhoneNumber={(v) => handleChange("phoneNumber", v)} onBlur={() => trackFieldBlur("phone")} onKeyDown={handlePhoneEnter} inputRef={phoneInputRef} isValid={validation.isPhoneNumberValid} label={tr.phoneLabel} placeholder={tr.phonePlaceholder} validationMessage={tr.phoneInvalid} />
             </div>
           </div>
           <div className="mb-6">
@@ -1297,7 +1607,7 @@ export default function ReservationDetails({
 
       {currentStep === 3 && (
         <>
-          <div className="mb-6 bg-zinc-100 dark:bg-zinc-800 p-4 rounded-xl">
+          <div ref={reviewSectionRef} className="mb-6 bg-zinc-100 dark:bg-zinc-800 p-4 rounded-xl">
             <div className="flex justify-between mb-2"><span>{tr.tourLabel}</span><span className="font-medium">{selectedTourName}</span></div>
             <div className="flex justify-between mb-2"><span>{tr.packageLabel}</span><span className="font-medium">{effectiveSelectedPackage ? (lang === "es" ? effectiveSelectedPackage.nameEs || effectiveSelectedPackage.name : effectiveSelectedPackage.name) : "—"}</span></div>
             <div className="flex justify-between mb-2"><span>{tr.tourTimeTitle}</span><span>{tourTime ?? "—"}</span></div>
@@ -1314,6 +1624,7 @@ export default function ReservationDetails({
             </div>
             <label htmlFor="agreeTerms" className={`flex items-start gap-3 p-4 rounded-xl border transition-all cursor-pointer ${formState.agreeTerms ? "border-teal-500 bg-teal-50 dark:bg-teal-900/20" : "border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800"}`}>
               <input
+                ref={termsCheckboxRef}
                 id="agreeTerms"
                 type="checkbox"
                 checked={formState.agreeTerms}
@@ -1333,6 +1644,7 @@ export default function ReservationDetails({
                     },
                   });
                 }}
+                onKeyDown={handleTermsEnter}
                 className="h-5 w-5 text-teal-600 rounded border-zinc-400 focus:ring-teal-500 dark:bg-zinc-700 dark:border-zinc-600 mt-0.5"
               />
               <span className="text-zinc-700 dark:text-zinc-400 text-base">
@@ -1345,9 +1657,9 @@ export default function ReservationDetails({
         </>
       )}
 
-      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+      <div className="flex flex-col-reverse gap-3 border-t border-zinc-200 pt-5 dark:border-zinc-800 sm:flex-row sm:justify-end">
         {currentStep > 1 && (
-          <button type="button" onClick={goToPrevStep} className="px-6 py-3 rounded-full border border-zinc-300 dark:border-zinc-600 font-semibold">
+          <button type="button" onClick={goToPrevStep} className="min-h-12 rounded-full border border-zinc-300 px-6 py-3 font-semibold text-zinc-800 transition hover:border-zinc-400 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-100 dark:hover:bg-zinc-800 sm:min-w-32">
             {tr.backBtn}
           </button>
         )}
@@ -1356,10 +1668,10 @@ export default function ReservationDetails({
             type="button"
             onClick={goToNextStep}
             aria-disabled={(currentStep === 1 && !isStep1Valid) || (currentStep === 2 && !isStep2Valid)}
-            className={`px-8 py-3 bg-teal-600 text-white rounded-full font-bold shadow-lg transition-all ${
+            className={`min-h-12 rounded-full bg-teal-600 px-8 py-3 font-bold text-white shadow-lg shadow-teal-950/20 transition-all sm:min-w-44 ${
               (currentStep === 1 && !isStep1Valid) || (currentStep === 2 && !isStep2Valid)
                 ? "cursor-not-allowed opacity-50"
-                : "hover:bg-teal-700"
+                : "hover:-translate-y-0.5 hover:bg-teal-500 hover:shadow-xl hover:shadow-teal-950/25"
             }`}
           >
             {tr.nextBtn}
@@ -1370,8 +1682,8 @@ export default function ReservationDetails({
             type="button"
             onClick={handleReserve}
             aria-disabled={!isFormValid}
-            className={`px-8 py-3 bg-teal-600 text-white rounded-full font-bold shadow-lg transition-all ${
-              !isFormValid ? "cursor-not-allowed opacity-50" : "hover:bg-teal-700"
+            className={`min-h-12 rounded-full bg-teal-600 px-8 py-3 font-bold text-white shadow-lg shadow-teal-950/20 transition-all sm:min-w-44 ${
+              !isFormValid ? "cursor-not-allowed opacity-50" : "hover:-translate-y-0.5 hover:bg-teal-500 hover:shadow-xl hover:shadow-teal-950/25"
             }`}
           >
             {tr.proceedBtn}

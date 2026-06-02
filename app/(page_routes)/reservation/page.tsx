@@ -120,8 +120,8 @@ export default function ReservationPage() {
         </div>
       </header>
 
-      <div className="mx-auto mt-8 w-full max-w-3xl px-4">
-      <div className="rounded-2xl border border-zinc-700 bg-zinc-900/80 p-6 sm:p-8 shadow-2xl">
+      <div className="mx-auto mt-8 w-full max-w-6xl px-4">
+      <div className="rounded-2xl border border-zinc-700 bg-zinc-900/80 p-5 shadow-2xl sm:p-7 lg:p-8">
         <div className="mb-6 flex items-center justify-between gap-3">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
