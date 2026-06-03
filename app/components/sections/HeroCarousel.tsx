@@ -89,7 +89,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "5
             className={`object-cover transition-opacity duration-1000 ease-in-out ${
               index === currentIndex ? "opacity-100" : "opacity-0"
             }`}
-            priority={index < 3}
+            priority={index === 0}
             sizes="(max-width: 768px) 100vw, 1280px"
           />
         ))}

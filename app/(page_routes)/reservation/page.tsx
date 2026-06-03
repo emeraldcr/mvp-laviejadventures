@@ -100,7 +100,6 @@ export default function ReservationPage() {
               width={40}
               height={40}
               className="rounded-md object-cover shadow-md shadow-black/30"
-              priority
             />
             <span className="hidden text-sm font-black tracking-tight text-white sm:inline md:text-base">
               La Vieja Adventures

@@ -239,7 +239,6 @@ const Header = memo<{ isScrolled: boolean; onMenuToggle: () => void; isMenuOpen:
                   width={logoSize}
                   height={logoSize}
                   className="rounded-xl object-cover transition-all duration-500 group-hover/logo:scale-[1.03]"
-                  priority
                 />
               </span>
               <span className={`brand-glow-text font-black tracking-tight text-white transition-all duration-300 ${textSize}`}>
@@ -388,7 +387,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "1
             className={`object-cover transition-opacity duration-1000 ease-in-out ${
               index === currentIndex ? "opacity-100" : "opacity-0"
             }`}
-            priority={index < 3}
+            priority={index === 0}
             sizes="100vw"
           />
         ))}
