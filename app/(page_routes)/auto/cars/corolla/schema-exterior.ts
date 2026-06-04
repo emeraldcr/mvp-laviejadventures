@@ -1,1 +1,0 @@
-export { corollaSchemaExterior } from "./source";

@@ -58,9 +58,10 @@ export function TorusPart({
   args,
   material,
   position = [0, 0, 0],
-}: Pick<PartProps, "position" | "material"> & { args: [number, number, number, number] }) {
+  rotation = [0, 0, 0],
+}: Pick<PartProps, "position" | "rotation" | "material"> & { args: [number, number, number, number, number?] }) {
   return (
-    <mesh position={position}>
+    <mesh position={position} rotation={rotation}>
       <torusGeometry args={args} />
       <Material {...material} />
     </mesh>

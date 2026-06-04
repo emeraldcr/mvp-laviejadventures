@@ -43,14 +43,26 @@ const {
   defaultBumperEdgeDropMm,
   hoodCrownMm,
   hoodEdgeDropMm,
+  hoodFrontDropMm,
+  hoodRearDropMm,
+  hoodSideDropMm,
   trunkCrownMm,
   trunkEdgeDropMm,
+  trunkFrontDropMm,
+  trunkRearDropMm,
+  trunkSideDropMm,
+  roofCrownMm,
+  roofEdgeDropMm,
+  roofFrontDropMm,
+  roofRearDropMm,
+  roofSideDropMm,
   frontBumper: frontBumperBuildConfig,
 } = corollaGeometryBuilderConfig;
 const {
   mainBodyStations,
   hoodStations,
   trunkStations,
+  roofStations,
   frontBumperStations,
   rearBumperStations,
   wheelArchCentersX,
@@ -196,6 +208,54 @@ function createQuadPanel(schema: CarDesignSchema, stations: readonly PanelStatio
   return makeGeometry(vertices, indices);
 }
 
+function createWrappedPanelRows(rows: SourcePoint3[][], sideDropMm: number, frontDropMm: number, rearDropMm: number) {
+  const lastColumnIndex = rows[0].length - 1;
+  const firstRow = rows[0];
+  const lastRow = rows[rows.length - 1];
+
+  return {
+    top: rows,
+    leftSide: rows.map((row) => [
+      row[0],
+      { ...row[0], z: row[0].z - sideDropMm },
+    ]),
+    rightSide: rows.map((row) => [
+      row[lastColumnIndex],
+      { ...row[lastColumnIndex], z: row[lastColumnIndex].z - sideDropMm },
+    ]),
+    frontFace: [
+      firstRow,
+      firstRow.map((point) => ({ ...point, z: point.z - frontDropMm })),
+    ],
+    rearFace: [
+      lastRow,
+      lastRow.map((point) => ({ ...point, z: point.z - rearDropMm })),
+    ],
+  };
+}
+
+function createWrappedQuadPanel(
+  schema: CarDesignSchema,
+  stations: readonly PanelStation[],
+  crownMm: number,
+  edgeDropMm: number,
+  sideDropMm: number,
+  frontDropMm: number,
+  rearDropMm: number
+) {
+  const vertices: number[] = [];
+  const indices: number[] = [];
+  const rows = createWrappedPanelRows(createPanelRows(stations, crownMm, edgeDropMm), sideDropMm, frontDropMm, rearDropMm);
+
+  addGrid(vertices, indices, schema, rows.top);
+  addGrid(vertices, indices, schema, rows.leftSide);
+  addGrid(vertices, indices, schema, rows.rightSide);
+  addGrid(vertices, indices, schema, rows.frontFace);
+  addGrid(vertices, indices, schema, rows.rearFace);
+
+  return makeGeometry(vertices, indices);
+}
+
 function createSimpleBumper(schema: CarDesignSchema, stations: readonly PanelStation[]) {
   return createQuadPanel(schema, stations, defaultBumperCrownMm, defaultBumperEdgeDropMm);
 }
@@ -243,11 +303,39 @@ export function createSedanRearBumperGeometry(schema: CarDesignSchema): BufferGe
 }
 
 export function createSedanHoodPanelGeometry(schema: CarDesignSchema): BufferGeometry {
-  return createQuadPanel(schema, hoodStations, hoodCrownMm, hoodEdgeDropMm);
+  return createWrappedQuadPanel(
+    schema,
+    hoodStations,
+    hoodCrownMm,
+    hoodEdgeDropMm,
+    hoodSideDropMm,
+    hoodFrontDropMm,
+    hoodRearDropMm
+  );
 }
 
 export function createSedanTrunkDeckGeometry(schema: CarDesignSchema): BufferGeometry {
-  return createQuadPanel(schema, trunkStations, trunkCrownMm, trunkEdgeDropMm);
+  return createWrappedQuadPanel(
+    schema,
+    trunkStations,
+    trunkCrownMm,
+    trunkEdgeDropMm,
+    trunkSideDropMm,
+    trunkFrontDropMm,
+    trunkRearDropMm
+  );
+}
+
+export function createSedanRoofPanelGeometry(schema: CarDesignSchema): BufferGeometry {
+  return createWrappedQuadPanel(
+    schema,
+    roofStations,
+    roofCrownMm,
+    roofEdgeDropMm,
+    roofSideDropMm,
+    roofFrontDropMm,
+    roofRearDropMm
+  );
 }
 
 export function createSedanBodyGeometry(schema: CarDesignSchema): BufferGeometry {

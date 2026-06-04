@@ -1,8 +1,8 @@
 import type { CarParams, CarPreset } from "../../auto-types";
-import { corollaDesignSchema } from "./schema";
+import { corollaDesignSchema } from "./schema/schema";
 import { corollaVisualControls } from "./visual";
 
-export { carDesignSchema, corollaDesignSchema } from "./schema";
+export { carDesignSchema, corollaDesignSchema } from "./schema/schema";
 export { corollaVisualControls } from "./visual";
 
 export const corollaParams = {

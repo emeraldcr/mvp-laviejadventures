@@ -20,12 +20,13 @@ import {
   createSedanHoodPanelGeometry,
   createSedanMainBodyGeometry,
   createSedanRearBumperGeometry,
+  createSedanRoofPanelGeometry,
   createSedanTrunkDeckGeometry,
   sourceXToWorldX,
   sourceYToWorldZ,
   sourceZToWorldY,
 } from "./cars/corolla/createCorolla2016SedanGeometry";
-import { BoxPart, CylinderPart } from "./auto-parts";
+import { BoxPart, CylinderPart, TorusPart } from "./auto-parts";
 import { corollaDesignSchema, corollaVisualControls } from "./cars/corolla";
 import { corollaBlockoutConfig } from "./cars/corolla/source";
 import type {
@@ -116,6 +117,7 @@ function SedanBodyShell({ material }: { material: MaterialOptions }) {
     rearBumper: createSedanRearBumperGeometry(corollaDesignSchema),
     hoodPanel: createSedanHoodPanelGeometry(corollaDesignSchema),
     trunkDeck: createSedanTrunkDeckGeometry(corollaDesignSchema),
+    roofPanel: createSedanRoofPanelGeometry(corollaDesignSchema),
   }), []);
 
   return (
@@ -156,21 +158,26 @@ function Wheel({
     () => Array.from({ length: spokeCount }, (_, i) => (i * Math.PI * 2) / spokeCount),
     [spokeCount]
   );
+  const wheelFaceSides = [-1, 1] as const;
 
   return (
     <group position={[x, y, z]} rotation={[Math.PI / 2, 0, 0]}>
       <CylinderPart castShadow args={[radius, radius, width, 48]} material={tireMaterial} />
-      <CylinderPart position={[0, width * 0.54, 0]} args={[radius * 0.68, radius * 0.68, 0.032, 40]} material={rimMaterial} />
-      {spokeRotations.map((rot, index) => (
-        <BoxPart
-          key={index}
-          position={[0, width * 0.61, 0]}
-          rotation={[0, rot, 0]}
-          args={[0.032, 0.024, radius * 1.42]}
-          material={spokeMaterial}
-        />
+      {wheelFaceSides.map((side) => (
+        <group key={side}>
+          <CylinderPart position={[0, side * width * 0.54, 0]} args={[radius * 0.68, radius * 0.68, 0.032, 40]} material={rimMaterial} />
+          {spokeRotations.map((rot, index) => (
+            <BoxPart
+              key={`${side}-${index}`}
+              position={[0, side * width * 0.61, 0]}
+              rotation={[0, rot, 0]}
+              args={[0.032, 0.024, radius * 1.42]}
+              material={spokeMaterial}
+            />
+          ))}
+          <CylinderPart position={[0, side * width * 0.69, 0]} args={[0.07, 0.07, 0.022, 28]} material={centerMaterial} />
+        </group>
       ))}
-      <CylinderPart position={[0, width * 0.69, 0]} args={[0.07, 0.07, 0.022, 28]} material={centerMaterial} />
     </group>
   );
 }
@@ -211,6 +218,76 @@ function SchemaGlass({ material }: { material: MaterialOptions }) {
           points={points.map((point) => sourcePointToWorld(point, 1, 0.006))}
           material={material}
         />
+      ))}
+    </>
+  );
+}
+
+function SchemaRoofGlassSeals({ material }: { material: MaterialOptions }) {
+  const { windshieldHeader, rearHeader } = corollaBlockoutConfig.sceneMm.roofSeals;
+
+  return (
+    <>
+      <PolygonPart
+        points={windshieldHeader.map((point) => sourcePointToWorld(point))}
+        material={material}
+      />
+      <PolygonPart
+        points={rearHeader.map((point) => sourcePointToWorld(point))}
+        material={material}
+      />
+    </>
+  );
+}
+
+function WindowFrameSegment({
+  start,
+  end,
+  side,
+  material,
+}: {
+  start: SourcePoint3;
+  end: SourcePoint3;
+  side: 1 | -1;
+  material: MaterialOptions;
+}) {
+  const { windowFrameDepthMm, windowFrameHeightMm } = corollaBlockoutConfig.sceneMm.sideDetails.render;
+  const dx = (end.x - start.x) / 1000;
+  const dz = (end.z - start.z) / 1000;
+  const length = Math.hypot(dx, dz);
+  const position = sourcePointToWorld({
+    x: (start.x + end.x) / 2,
+    y: side * ((Math.abs(start.y) + Math.abs(end.y)) / 2),
+    z: (start.z + end.z) / 2,
+  }, side, side * 0.011);
+
+  return (
+    <BoxPart
+      position={position}
+      rotation={[0, 0, Math.atan2(dz, dx)]}
+      args={[length, windowFrameHeightMm / 1000, windowFrameDepthMm / 1000]}
+      material={material}
+    />
+  );
+}
+
+function SchemaWindowFrames({ material }: { material: MaterialOptions }) {
+  const { sideWindows } = corollaBlockoutConfig.sceneMm.glass;
+
+  return (
+    <>
+      {([-1, 1] as const).flatMap((side) => (
+        sideWindows.flatMap((points, windowIndex) => (
+          points.map((point, pointIndex) => (
+            <WindowFrameSegment
+              key={`window-frame-${side}-${windowIndex}-${pointIndex}`}
+              start={point}
+              end={points[(pointIndex + 1) % points.length]}
+              side={side}
+              material={material}
+            />
+          ))
+        ))
       ))}
     </>
   );
@@ -289,29 +366,166 @@ function SchemaFrontBadge({ material }: { material: MaterialOptions }) {
   );
 }
 
+function getBodyHalfWidthAtSourceX(sourceX: number) {
+  const stations = corollaBlockoutConfig.geometryMm.mainBodyStations;
+  const firstStation = stations[0];
+  const lastStation = stations[stations.length - 1];
+
+  if (sourceX <= firstStation.x) {
+    return firstStation.halfWidth;
+  }
+
+  if (sourceX >= lastStation.x) {
+    return lastStation.halfWidth;
+  }
+
+  for (let index = 0; index < stations.length - 1; index += 1) {
+    const current = stations[index];
+    const next = stations[index + 1];
+
+    if (sourceX >= current.x && sourceX <= next.x) {
+      const progress = (sourceX - current.x) / (next.x - current.x);
+      return current.halfWidth + (next.halfWidth - current.halfWidth) * progress;
+    }
+  }
+
+  return lastStation.halfWidth;
+}
+
+function getSideDetailY(sourceX: number, side: 1 | -1, outwardMm: number) {
+  return side * (getBodyHalfWidthAtSourceX(sourceX) + outwardMm);
+}
+
+function SideSurfaceSegment({
+  start,
+  end,
+  side,
+  outwardMm,
+  heightMm,
+  depthMm,
+  material,
+  keyPrefix,
+}: {
+  start: { x: number; z: number };
+  end: { x: number; z: number };
+  side: 1 | -1;
+  outwardMm: number;
+  heightMm: number;
+  depthMm: number;
+  material: MaterialOptions;
+  keyPrefix: string;
+}) {
+  const dx = (end.x - start.x) / 1000;
+  const dz = (end.z - start.z) / 1000;
+  const length = Math.hypot(dx, dz);
+  const centerX = (start.x + end.x) / 2;
+  const position = sourcePointToWorld({
+    x: centerX,
+    y: getSideDetailY(centerX, side, outwardMm),
+    z: (start.z + end.z) / 2,
+  });
+
+  return (
+    <BoxPart
+      key={keyPrefix}
+      position={[position[0], position[1], position[2] + side * 0.005]}
+      rotation={[0, 0, Math.atan2(dz, dx)]}
+      args={[length, heightMm / 1000, depthMm / 1000]}
+      material={material}
+    />
+  );
+}
+
 function SchemaSideDetails({
+  fenderMaterial,
   trimMaterial,
   handleMaterial,
   wheelWellMaterial,
 }: {
+  fenderMaterial: MaterialOptions;
   trimMaterial: MaterialOptions;
   handleMaterial: MaterialOptions;
   wheelWellMaterial: MaterialOptions;
 }) {
-  const { seams, handles, beltline, wheelWells } = corollaBlockoutConfig.sceneMm.sideDetails;
-  const sideSurfaceY = 884;
+  const { render, seams, handles, beltline, doorPanels, wheelWells } = corollaBlockoutConfig.sceneMm.sideDetails;
 
   return (
     <>
       {([-1, 1] as const).flatMap((side) => {
-        const sideOffset = side * 0.012;
+        const sideOffset = side * 0.004;
 
         return [
+          ...doorPanels.flatMap((door) => {
+            const topStart = { x: door.xStart, z: door.zTopStart };
+            const topEnd = { x: door.xEnd, z: door.zTopEnd };
+            const bottomStart = { x: door.xStart, z: door.zBottomStart };
+            const bottomEnd = { x: door.xEnd, z: door.zBottomEnd };
+            const midStart = { x: door.xStart + 58, z: door.zMidStart };
+            const midEnd = { x: door.xEnd - 58, z: door.zMidEnd };
+
+            return [
+              <SideSurfaceSegment
+                key={`door-top-${side}-${door.id}`}
+                keyPrefix={`door-top-${side}-${door.id}`}
+                start={topStart}
+                end={topEnd}
+                side={side}
+                outwardMm={render.doorFrameOutsetMm}
+                heightMm={render.doorFrameHeightMm}
+                depthMm={render.doorFrameDepthMm}
+                material={trimMaterial}
+              />,
+              <SideSurfaceSegment
+                key={`door-bottom-${side}-${door.id}`}
+                keyPrefix={`door-bottom-${side}-${door.id}`}
+                start={bottomStart}
+                end={bottomEnd}
+                side={side}
+                outwardMm={render.doorFrameOutsetMm}
+                heightMm={render.doorFrameHeightMm}
+                depthMm={render.doorFrameDepthMm}
+                material={trimMaterial}
+              />,
+              <SideSurfaceSegment
+                key={`door-front-${side}-${door.id}`}
+                keyPrefix={`door-front-${side}-${door.id}`}
+                start={bottomStart}
+                end={topStart}
+                side={side}
+                outwardMm={render.doorFrameOutsetMm}
+                heightMm={render.doorFrameHeightMm}
+                depthMm={render.doorFrameDepthMm}
+                material={trimMaterial}
+              />,
+              <SideSurfaceSegment
+                key={`door-rear-${side}-${door.id}`}
+                keyPrefix={`door-rear-${side}-${door.id}`}
+                start={bottomEnd}
+                end={topEnd}
+                side={side}
+                outwardMm={render.doorFrameOutsetMm}
+                heightMm={render.doorFrameHeightMm}
+                depthMm={render.doorFrameDepthMm}
+                material={trimMaterial}
+              />,
+              <SideSurfaceSegment
+                key={`door-mid-${side}-${door.id}`}
+                keyPrefix={`door-mid-${side}-${door.id}`}
+                start={midStart}
+                end={midEnd}
+                side={side}
+                outwardMm={render.doorMidlineOutsetMm}
+                heightMm={render.doorMidlineHeightMm}
+                depthMm={render.doorMidlineDepthMm}
+                material={trimMaterial}
+              />,
+            ];
+          }),
           ...seams.map((seam) => {
             const height = (seam.zTop - seam.zBottom) / 1000;
             const position = sourcePointToWorld({
               x: seam.x,
-              y: side * sideSurfaceY,
+              y: getSideDetailY(seam.x, side, render.seamOutsetMm),
               z: (seam.zTop + seam.zBottom) / 2,
             });
 
@@ -319,7 +533,7 @@ function SchemaSideDetails({
               <BoxPart
                 key={`seam-${side}-${seam.x}`}
                 position={[position[0], position[1], position[2] + sideOffset]}
-                args={[0.012, height, 0.012]}
+                args={[render.seamWidthMm / 1000, height, render.seamDepthMm / 1000]}
                 material={trimMaterial}
               />
             );
@@ -327,7 +541,7 @@ function SchemaSideDetails({
           ...handles.map((handle) => {
             const position = sourcePointToWorld({
               x: handle.x,
-              y: side * (sideSurfaceY + 8),
+              y: getSideDetailY(handle.x, side, render.handleOutsetMm),
               z: handle.z,
             });
 
@@ -335,7 +549,7 @@ function SchemaSideDetails({
               <BoxPart
                 key={`handle-${side}-${handle.x}`}
                 position={[position[0], position[1], position[2] + sideOffset]}
-                args={[0.16, 0.028, 0.026]}
+                args={[render.handleLengthMm / 1000, render.handleHeightMm / 1000, render.handleDepthMm / 1000]}
                 material={handleMaterial}
               />
             );
@@ -345,9 +559,10 @@ function SchemaSideDetails({
             const dx = (end.x - start.x) / 1000;
             const dz = (end.z - start.z) / 1000;
             const length = Math.hypot(dx, dz);
+            const centerX = (start.x + end.x) / 2;
             const position = sourcePointToWorld({
-              x: (start.x + end.x) / 2,
-              y: side * (sideSurfaceY + 6),
+              x: centerX,
+              y: getSideDetailY(centerX, side, render.beltlineOutsetMm),
               z: (start.z + end.z) / 2,
             });
 
@@ -356,7 +571,7 @@ function SchemaSideDetails({
                 key={`beltline-${side}-${start.x}`}
                 position={[position[0], position[1], position[2] + sideOffset]}
                 rotation={[0, 0, Math.atan2(dz, dx)]}
-                args={[length, 0.01, 0.012]}
+                args={[length, render.beltlineHeightMm / 1000, render.beltlineDepthMm / 1000]}
                 material={trimMaterial}
               />
             );
@@ -364,20 +579,31 @@ function SchemaSideDetails({
           ...wheelWells.map((well) => {
             const position = sourcePointToWorld({
               x: well.x,
-              y: side * 798,
+              y: getSideDetailY(well.x, side, render.wheelWellInsetMm),
               z: well.z,
             });
             const radius = well.radius / 1000;
+            const fenderPosition = sourcePointToWorld({
+              x: well.x,
+              y: getSideDetailY(well.x, side, render.fenderOutsetMm),
+              z: well.z,
+            });
 
-            return (
+            return [
+              <TorusPart
+                key={`fender-lip-${side}-${well.x}`}
+                position={[fenderPosition[0], fenderPosition[1], fenderPosition[2] + sideOffset]}
+                args={[radius, render.fenderLipTubeMm / 1000, 12, 48, render.fenderArcRadians]}
+                material={fenderMaterial}
+              />,
               <CylinderPart
                 key={`wheel-well-${side}-${well.x}`}
                 position={[position[0], position[1], position[2] - side * 0.006]}
                 rotation={[Math.PI / 2, 0, 0]}
                 args={[radius, radius, 0.018, 40]}
                 material={wheelWellMaterial}
-              />
-            );
+              />,
+            ];
           }),
         ];
       })}
@@ -406,9 +632,81 @@ function SchemaLights({
   );
 }
 
-function CorollaLikeSedan({ selected, paint }: { selected: Set<AccessoryId>; paint: PaintId }) {
+function vecFromSourceSize(size: { x: number; y: number; z: number }): [number, number, number] {
+  return [size.x / 1000, size.z / 1000, size.y / 1000];
+}
+
+function SchemaInterior({
+  seatMaterial,
+  dashMaterial,
+  accentMaterial,
+}: {
+  seatMaterial: MaterialOptions;
+  dashMaterial: MaterialOptions;
+  accentMaterial: MaterialOptions;
+}) {
+  const { frontSeats, dashboard, steeringWheel } = corollaBlockoutConfig.sceneMm.interior;
+
+  return (
+    <>
+      {frontSeats.map((seat, index) => (
+        <group key={`front-seat-${index}`}>
+          <BoxPart
+            castShadow
+            position={sourcePointToWorld(seat.center)}
+            args={vecFromSourceSize(seat.cushionSize)}
+            material={seatMaterial}
+          />
+          <BoxPart
+            castShadow
+            position={sourcePointToWorld(seat.backCenter)}
+            rotation={[0, 0, seat.backRotationZ]}
+            args={vecFromSourceSize(seat.backSize)}
+            material={seatMaterial}
+          />
+        </group>
+      ))}
+      <BoxPart
+        castShadow
+        position={sourcePointToWorld(dashboard.center)}
+        args={vecFromSourceSize(dashboard.size)}
+        material={dashMaterial}
+      />
+      <BoxPart
+        castShadow
+        position={sourcePointToWorld(dashboard.topCenter)}
+        args={vecFromSourceSize(dashboard.topSize)}
+        material={accentMaterial}
+      />
+      <BoxPart
+        castShadow
+        position={sourcePointToWorld(steeringWheel.columnCenter)}
+        rotation={[0, 0, steeringWheel.columnRotationZ]}
+        args={vecFromSourceSize(steeringWheel.columnSize)}
+        material={dashMaterial}
+      />
+      <TorusPart
+        position={sourcePointToWorld(steeringWheel.center)}
+        rotation={[0, steeringWheel.rotationY, steeringWheel.rotationZ]}
+        args={[steeringWheel.radius / 1000, steeringWheel.tube / 1000, 12, 36]}
+        material={accentMaterial}
+      />
+    </>
+  );
+}
+
+function CorollaLikeSedan({ params, selected, paint }: { params: CarParams; selected: Set<AccessoryId>; paint: PaintId }) {
   const visual = corollaVisualControls;
   void paint;
+  const modelScale = useMemo((): [number, number, number] => {
+    const base = corollaBlockoutConfig.dimensionsM;
+
+    return [
+      params.overallLength / base.overallLength,
+      params.bodyHeight / base.visualHeight,
+      params.width / base.overallWidth,
+    ];
+  }, [params]);
 
   const hasSportWheels = selected.has("wheels");
   const hasLeds = selected.has("leds");
@@ -434,14 +732,22 @@ function CorollaLikeSedan({ selected, paint }: { selected: Set<AccessoryId>; pai
   }, []);
 
   return (
-    <group rotation={visual.motion.rotation}>
+    <group rotation={visual.motion.rotation} scale={modelScale}>
       <SedanBodyShell material={{ ...bodyMaterial, ...visual.materials.body }} />
+      <SchemaRoofGlassSeals material={{ ...bodyMaterial, ...visual.materials.body }} />
+      <SchemaInterior
+        seatMaterial={corollaBlockoutConfig.materials.interiorFabricDark}
+        dashMaterial={corollaBlockoutConfig.materials.interiorPlasticDark}
+        accentMaterial={corollaBlockoutConfig.materials.interiorAccent}
+      />
       <SchemaGlass material={glass} />
+      <SchemaWindowFrames material={visual.materials.blackTrim} />
       <SchemaPillars material={visual.materials.blackTrim} />
       <SchemaUpperGrille material={visual.materials.glossBlack} />
       <SchemaLowerIntake material={visual.materials.matteBlack} />
       <SchemaFrontBadge material={corollaBlockoutConfig.materials.chrome} />
       <SchemaSideDetails
+        fenderMaterial={{ ...bodyMaterial, ...visual.materials.body }}
         trimMaterial={visual.materials.blackTrim}
         handleMaterial={corollaBlockoutConfig.materials.chrome}
         wheelWellMaterial={corollaBlockoutConfig.materials.wheelWell}
@@ -461,7 +767,7 @@ function CorollaLikeSedan({ selected, paint }: { selected: Set<AccessoryId>; pai
   );
 }
 
-export function GarageScene({ selected, paint }: { params: CarParams; selected: Set<AccessoryId>; paint: PaintId }) {
+export function GarageScene({ params, selected, paint }: { params: CarParams; selected: Set<AccessoryId>; paint: PaintId }) {
   return (
     <Canvas shadows={{ type: PCFShadowMap }} dpr={[1, 1.85]} className="h-full w-full">
       <PerspectiveCamera makeDefault position={[5.8, 3.2, 5.9]} fov={41} />
@@ -472,7 +778,7 @@ export function GarageScene({ selected, paint }: { params: CarParams; selected: 
       <pointLight color="#f59e0b" intensity={0.38} position={[4, 2.2, -3.5]} distance={9} />
 
       <group position={[0, -0.18, 0]}>
-        <CorollaLikeSedan selected={selected} paint={paint} />
+        <CorollaLikeSedan params={params} selected={selected} paint={paint} />
         <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.82, 0]}>
           <circleGeometry args={[5.8, 96]} />
           <meshStandardMaterial color="#1f2937" roughness={0.7} metalness={0.18} />

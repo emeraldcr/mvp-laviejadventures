@@ -1,4 +1,4 @@
-import type { CarDesignSchema } from "../../auto-types";
+import type { CarDesignSchema } from "../../../auto-types";
 import { corollaSchemaCore } from "./schema-core";
 import { corollaSchemaExterior } from "./schema-exterior";
 import { corollaSchemaInterior } from "./schema-interior";

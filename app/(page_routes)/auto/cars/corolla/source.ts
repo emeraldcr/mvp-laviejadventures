@@ -1,82 +1,30 @@
-export const mmToM = (mm: number) => mm / 1000;
+import {
+  corollaDimensionsM,
+  corollaGeometryBuilderConfig,
+  corollaGeometryMm,
+  corollaSceneMm,
+  mmToM,
+  sourceDerived,
+  sourceSpecsMm,
+  tire20555R16,
+  xAnchorsMm,
+  zAnchorsMm,
+} from "./source-metrics";
 
-export const sourceSpecsMm = {
-  length: 4638,
-  widthNoMirrors: 1775,
-  height: 1455,
-  wheelbase: 2700,
-  frontTrack: 1525,
-  rearTrack: 1525,
-  groundClearanceNominal: 145,
-  groundClearanceMin: 140,
-  groundClearanceMax: 152,
-};
-
-export const sourceDerived = {
-  frontOverhang: (sourceSpecsMm.length - sourceSpecsMm.wheelbase) * 0.455,
-  rearOverhang: (sourceSpecsMm.length - sourceSpecsMm.wheelbase) * 0.545,
-  lengthToWidthRatio: sourceSpecsMm.length / sourceSpecsMm.widthNoMirrors,
-  lengthToHeightRatio: sourceSpecsMm.length / sourceSpecsMm.height,
-  wheelbaseToLengthRatio: sourceSpecsMm.wheelbase / sourceSpecsMm.length,
-  halfWidth: sourceSpecsMm.widthNoMirrors / 2,
-  halfFrontTrack: sourceSpecsMm.frontTrack / 2,
-  halfRearTrack: sourceSpecsMm.rearTrack / 2,
-};
-
-export const xAnchorsMm = {
-  frontBumper: -sourceDerived.frontOverhang,
-  frontAxle: 0,
-  firewallApprox: 430,
-  aPillarBase: 500,
-  bPillar: 1450,
-  rearDoorCut: 2490,
-  rearAxle: sourceSpecsMm.wheelbase,
-  trunkStart: 2550,
-  rearBumper: sourceSpecsMm.wheelbase + sourceDerived.rearOverhang,
-};
-
-export const zAnchorsMm = {
-  ground: 0,
-  rockerBottom: 210,
-  rockerMid: 285,
-  wheelCenter: 315,
-  bumperLower: 330,
-  bumperMid: 520,
-  hoodFront: 740,
-  hoodRear: 900,
-  beltlineFront: 900,
-  beltlineRear: 1030,
-  windowSillFront: 890,
-  windowSillRear: 930,
-  trunkDeck: 1015,
-  roofApex: sourceSpecsMm.height,
-};
-
-export const tire20555R16 = {
-  label: "P205/55R16",
-  rimDiameterIn: 16,
-  tireWidthMm: 205,
-  aspectRatio: 0.55,
-  sidewallMm: 205 * 0.55,
-  rimDiameterMm: 16 * 25.4,
-  overallDiameterMm: 16 * 25.4 + 2 * (205 * 0.55),
-  radiusMm: (16 * 25.4 + 2 * (205 * 0.55)) / 2,
-};
+export {
+  corollaGeometryBuilderConfig,
+  corollaGeometryMm,
+  corollaSceneMm,
+  mmToM,
+  sourceDerived,
+  sourceSpecsMm,
+  tire20555R16,
+  xAnchorsMm,
+  zAnchorsMm,
+} from "./source-metrics";
 
 export const corollaBlockoutConfig = {
-  dimensionsM: {
-    overallLength: 4.638,
-    overallWidth: 1.775,
-    visualHeight: 1.42,
-    wheelbase: 2.7,
-    frontOverhang: 0.88,
-    rearOverhang: 1.06,
-    frontBumperX: -2.319,
-    rearBumperX: 2.319,
-    frontAxleX: -1.35,
-    rearAxleX: 1.35,
-    halfWidth: 0.8875,
-  },
+  dimensionsM: corollaDimensionsM,
   materials: {
     body: {
       color: "#8b949c",
@@ -122,191 +70,29 @@ export const corollaBlockoutConfig = {
       roughness: 0.72,
       metalness: 0.02,
     },
+    interiorFabricDark: {
+      color: "#1f2329",
+      roughness: 0.78,
+      metalness: 0.02,
+    },
+    interiorPlasticDark: {
+      color: "#171a20",
+      roughness: 0.64,
+      metalness: 0.04,
+    },
+    interiorAccent: {
+      color: "#303741",
+      roughness: 0.48,
+      metalness: 0.12,
+    },
     chrome: {
       color: "#d7dde3",
       metalness: 0.86,
       roughness: 0.18,
     },
   },
-  geometryMm: {
-    mainBodyStations: [
-      { x: -760, topZ: 600, bottomZ: 280, halfWidth: 710 },
-      { x: -560, topZ: 655, bottomZ: 280, halfWidth: 775 },
-      { x: -360, topZ: 735, bottomZ: 280, halfWidth: 830 },
-      { x: -180, topZ: 800, bottomZ: 280, halfWidth: 855 },
-      { x: 0, topZ: 822, bottomZ: 280, halfWidth: 868 },
-      { x: 180, topZ: 828, bottomZ: 280, halfWidth: 872 },
-      { x: 420, topZ: 832, bottomZ: 280, halfWidth: 875 },
-      { x: 900, topZ: 835, bottomZ: 280, halfWidth: 878 },
-      { x: 1700, topZ: 830, bottomZ: 280, halfWidth: 872 },
-      { x: 2260, topZ: 815, bottomZ: 280, halfWidth: 852 },
-      { x: 2500, topZ: 798, bottomZ: 280, halfWidth: 834 },
-      { x: 2700, topZ: 778, bottomZ: 280, halfWidth: 818 },
-      { x: 2890, topZ: 748, bottomZ: 280, halfWidth: 800 },
-      { x: 3100, topZ: 705, bottomZ: 284, halfWidth: 775 },
-      { x: 3380, topZ: 645, bottomZ: 292, halfWidth: 735 },
-      { x: 3535, topZ: 618, bottomZ: 305, halfWidth: 700 },
-    ],
-    hoodStations: [
-      { x: -650, z: 682, halfWidth: 650 },
-      { x: -250, z: 715, halfWidth: 690 },
-      { x: 270, z: 792, halfWidth: 738 },
-      { x: 720, z: 842, halfWidth: 765 },
-    ],
-    trunkStations: [
-      { x: 2630, z: 785, halfWidth: 735 },
-      { x: 3020, z: 750, halfWidth: 700 },
-      { x: 3450, z: 710, halfWidth: 640 },
-    ],
-    frontBumperStations: [
-      { x: -900, z: 625, halfWidth: 685 },
-      { x: -944, z: 555, halfWidth: 736 },
-      { x: -970, z: 488, halfWidth: 758 },
-      { x: -956, z: 410, halfWidth: 748 },
-      { x: -916, z: 338, halfWidth: 660 },
-    ],
-    rearBumperStations: [
-      { x: 3510, z: 640, halfWidth: 730 },
-      { x: 3669, z: 500, halfWidth: 720 },
-      { x: 3630, z: 360, halfWidth: 575 },
-    ],
-    wheelArchCentersX: [0, 2700],
-    wheelCenterZ: 315,
-    wheelArchRadius: 420,
-  },
-  sceneMm: {
-    wheels: {
-      radius: 316,
-      width: 205,
-      centers: [
-        { x: 0, y: 800, z: 315 },
-        { x: 2700, y: 800, z: 315 },
-        { x: 0, y: -800, z: 315 },
-        { x: 2700, y: -800, z: 315 },
-      ],
-    },
-    glass: {
-      windshield: {
-        lowerLeft: { x: 870, y: -610, z: 865 },
-        lowerRight: { x: 870, y: 610, z: 865 },
-        upperLeft: { x: 1270, y: -505, z: 1160 },
-        upperRight: { x: 1270, y: 505, z: 1160 },
-      },
-      rearGlass: {
-        lowerLeft: { x: 2635, y: -600, z: 930 },
-        lowerRight: { x: 2635, y: 600, z: 930 },
-        upperLeft: { x: 2160, y: -500, z: 1215 },
-        upperRight: { x: 2160, y: 500, z: 1215 },
-      },
-      sideWindows: [
-        [
-          { x: 900, y: -638, z: 920 },
-          { x: 1280, y: -592, z: 1146 },
-          { x: 1690, y: -590, z: 1202 },
-          { x: 1625, y: -638, z: 918 },
-        ],
-        [
-          { x: 1685, y: -638, z: 918 },
-          { x: 1800, y: -590, z: 1205 },
-          { x: 2160, y: -590, z: 1215 },
-          { x: 2595, y: -638, z: 930 },
-        ],
-      ],
-    },
-    pillars: {
-      aPillar: {
-        base: { x: 885, y: -642, z: 872 },
-        top: { x: 1270, y: -535, z: 1160 },
-        thickness: 18,
-      },
-      bPillar: {
-        base: { x: 1668, y: -642, z: 918 },
-        top: { x: 1668, y: -592, z: 1203 },
-        thickness: 16,
-      },
-      cPillar: {
-        base: { x: 2630, y: -642, z: 930 },
-        top: { x: 2160, y: -535, z: 1215 },
-        thickness: 30,
-      },
-    },
-    upperGrille: {
-      center: { x: -942, y: 0, z: 558 },
-      halfWidth: 500,
-      halfHeight: 16,
-    },
-    lowerIntake: {
-      center: { x: -940, y: 0, z: 410 },
-      halfTop: 475,
-      halfBottom: 420,
-      halfHeight: 48,
-    },
-    headlights: [
-      { x: -935, y: -245, z: 642 },
-      { x: -925, y: -552, z: 652 },
-      { x: -860, y: -712, z: 630 },
-      { x: -830, y: -724, z: 600 },
-      { x: -884, y: -552, z: 594 },
-      { x: -930, y: -260, z: 606 },
-    ],
-    taillights: [
-      { x: 3538, y: -260, z: 678 },
-      { x: 3548, y: -565, z: 695 },
-      { x: 3578, y: -620, z: 676 },
-      { x: 3574, y: -600, z: 650 },
-      { x: 3538, y: -265, z: 656 },
-    ],
-    badge: {
-      center: { x: -946, y: 0, z: 580 },
-      halfWidth: 42,
-      halfHeight: 22,
-    },
-    sideDetails: {
-      seams: [
-        { x: 760, zTop: 890, zBottom: 380 },
-        { x: 1668, zTop: 918, zBottom: 380 },
-        { x: 2500, zTop: 880, zBottom: 390 },
-      ],
-      handles: [
-        { x: 1120, z: 755 },
-        { x: 2120, z: 760 },
-      ],
-      beltline: [
-        { x: 620, z: 780 },
-        { x: 1400, z: 795 },
-        { x: 2300, z: 815 },
-        { x: 3200, z: 800 },
-      ],
-      wheelWells: [
-        { x: 0, z: 360, radius: 392 },
-        { x: 2700, z: 360, radius: 392 },
-      ],
-    },
-  },
-} as const;
-
-export const corollaGeometryBuilderConfig = {
-  panelFactors: [-1, -0.5, 0, 0.5, 1],
-  faceFactors: [-1, -0.5, 0, 0.5, 1],
-  bodySideInsetMm: 32,
-  bodyArchMidMinZ: 480,
-  bodyArchMidBaseZ: 420,
-  bodyArchTopGapMm: 18,
-  bodyArchMidLiftMm: 22,
-  defaultBumperCrownMm: 2,
-  defaultBumperEdgeDropMm: 3,
-  hoodCrownMm: 10,
-  hoodEdgeDropMm: 4,
-  trunkCrownMm: 3,
-  trunkEdgeDropMm: 5,
-  frontBumper: {
-    cornerRetreatMm: 86,
-    topShoulderSoftnessMm: 18,
-    bottomShoulderSoftnessMm: 28,
-    middleShoulderSoftnessMm: 8,
-    crownMm: 4,
-    edgeDropMm: 2,
-  },
+  geometryMm: corollaGeometryMm,
+  sceneMm: corollaSceneMm,
 } as const;
 
 export const corollaVisualSource = {
