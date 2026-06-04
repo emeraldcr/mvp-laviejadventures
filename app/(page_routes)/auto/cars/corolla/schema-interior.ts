@@ -1,0 +1,1 @@
+export { corollaSchemaInterior } from "./source";

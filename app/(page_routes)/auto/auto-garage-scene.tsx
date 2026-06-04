@@ -11,7 +11,9 @@ import {
   BufferGeometry,
   DoubleSide,
   Float32BufferAttribute,
+  getConsoleFunction,
   PCFShadowMap,
+  setConsoleFunction,
 } from "three";
 import {
   createSedanFrontBumperGeometry,
@@ -22,10 +24,10 @@ import {
   sourceXToWorldX,
   sourceYToWorldZ,
   sourceZToWorldY,
-} from "./geometry/createCorolla2016SedanGeometry";
-import { BoxPart, CylinderPart, RoundedPart } from "./auto-parts";
+} from "./cars/corolla/createCorolla2016SedanGeometry";
+import { BoxPart, CylinderPart } from "./auto-parts";
 import { corollaDesignSchema, corollaVisualControls } from "./cars/corolla";
-import { paints } from "./auto-types";
+import { corollaBlockoutConfig } from "./cars/corolla/source";
 import type {
   AccessoryId,
   CarParams,
@@ -39,84 +41,22 @@ type SourcePoint3 = {
   z: number;
 };
 
-type AxleGeometry = {
-  frontAxleX: number;
-  rearAxleX: number;
-  frontWheelCenterLeft?: SourcePoint3;
-  frontWheelCenterRight?: SourcePoint3;
-  rearWheelCenterLeft?: SourcePoint3;
-  rearWheelCenterRight?: SourcePoint3;
-};
+const threeClockDeprecationWarning =
+  "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.";
+const previousThreeConsoleFunction = getConsoleFunction();
 
-type SourceGlasshouse = {
-  windshield: {
-    lowerLeft: SourcePoint3;
-    lowerRight: SourcePoint3;
-    upperLeft: SourcePoint3;
-    upperRight: SourcePoint3;
-  };
-  rearGlass: {
-    lowerLeft: SourcePoint3;
-    lowerRight: SourcePoint3;
-    upperLeft: SourcePoint3;
-    upperRight: SourcePoint3;
-  };
-  sideWindowsLeft: {
-    frontDoorGlass: SourcePoint3[];
-    rearDoorGlass: SourcePoint3[];
-  };
-};
+setConsoleFunction((type, message, ...params) => {
+  if (type === "warn" && message === threeClockDeprecationWarning) {
+    return;
+  }
 
-type SourcePillars = {
-  aPillar: {
-    base: SourcePoint3;
-    top: SourcePoint3;
-  };
-  bPillar: {
-    base: SourcePoint3;
-    top: SourcePoint3;
-  };
-  cPillar: {
-    base: SourcePoint3;
-    top: SourcePoint3;
-  };
-};
+  if (previousThreeConsoleFunction) {
+    previousThreeConsoleFunction(type, message, ...params);
+    return;
+  }
 
-type SourceFrontEnd = {
-  upperGrille: {
-    center: SourcePoint3;
-    widthMm: number;
-    heightMm: number;
-  };
-  lowerIntake: {
-    center: SourcePoint3;
-    widthTopMm: number;
-    widthBottomMm: number;
-    heightMm: number;
-  };
-};
-
-type SourceLightOutline = {
-  outline: SourcePoint3[];
-};
-
-type SourceHeadlights = {
-  left: SourceLightOutline;
-};
-
-type SourceTaillights = {
-  left: SourceLightOutline;
-};
-
-type SourceMirrorParts = {
-  leftMirror: {
-    mountCenter: SourcePoint3;
-    housingCenter: SourcePoint3;
-    widthMm: number;
-    heightMm: number;
-    depthMm: number;
-  };
-};
+  console[type](message, ...params);
+});
 
 const accessoryRenderers: Record<AccessoryId, React.FC> = {
   leds: () => null,
@@ -201,20 +141,16 @@ function Wheel({
   sport: boolean;
 }) {
   const visual = corollaVisualControls;
-  const radius = Number(corollaDesignSchema.wheelGeometry.radius);
-  const width = Number(corollaDesignSchema.wheelGeometry.width);
+  const radius = corollaBlockoutConfig.sceneMm.wheels.radius / 1000;
+  const width = corollaBlockoutConfig.sceneMm.wheels.width / 1000;
   const spokeCount = sport ? 10 : 7;
   const rimMaterial: MaterialOptions = {
-    color: sport ? "#e5e7eb" : "#cbd5e1",
-    metalness: 0.82,
-    roughness: 0.16,
+    ...(sport ? corollaBlockoutConfig.materials.sportRim : corollaBlockoutConfig.materials.rim),
   };
-  const tireMaterial: MaterialOptions = { ...visual.materials.tire, color: "#111111" };
-  const centerMaterial: MaterialOptions = { color: "#f8fafc", metalness: 0.92, roughness: 0.14 };
+  const tireMaterial: MaterialOptions = { ...visual.materials.tire, ...corollaBlockoutConfig.materials.tire };
+  const centerMaterial: MaterialOptions = { ...corollaBlockoutConfig.materials.wheelCenter };
   const spokeMaterial: MaterialOptions = {
-    color: sport ? "#f8fafc" : "#94a3b8",
-    metalness: 0.72,
-    roughness: 0.2,
+    ...(sport ? corollaBlockoutConfig.materials.sportWheelSpoke : corollaBlockoutConfig.materials.wheelSpoke),
   };
   const spokeRotations = useMemo(
     () => Array.from({ length: spokeCount }, (_, i) => (i * Math.PI * 2) / spokeCount),
@@ -240,29 +176,25 @@ function Wheel({
 }
 
 function SchemaGlass({ material }: { material: MaterialOptions }) {
-  const glasshouse = corollaDesignSchema.windows.sourceGlasshouseMm as SourceGlasshouse;
-  const sideWindows = [
-    glasshouse.sideWindowsLeft.frontDoorGlass,
-    glasshouse.sideWindowsLeft.rearDoorGlass,
-  ];
+  const { windshield, rearGlass, sideWindows } = corollaBlockoutConfig.sceneMm.glass;
 
   return (
     <>
       <PolygonPart
         points={[
-          sourcePointToWorld(glasshouse.windshield.lowerLeft),
-          sourcePointToWorld(glasshouse.windshield.lowerRight),
-          sourcePointToWorld(glasshouse.windshield.upperRight),
-          sourcePointToWorld(glasshouse.windshield.upperLeft),
+          sourcePointToWorld(windshield.lowerLeft),
+          sourcePointToWorld(windshield.lowerRight),
+          sourcePointToWorld(windshield.upperRight),
+          sourcePointToWorld(windshield.upperLeft),
         ]}
         material={material}
       />
       <PolygonPart
         points={[
-          sourcePointToWorld(glasshouse.rearGlass.lowerLeft),
-          sourcePointToWorld(glasshouse.rearGlass.lowerRight),
-          sourcePointToWorld(glasshouse.rearGlass.upperRight),
-          sourcePointToWorld(glasshouse.rearGlass.upperLeft),
+          sourcePointToWorld(rearGlass.lowerLeft),
+          sourcePointToWorld(rearGlass.lowerRight),
+          sourcePointToWorld(rearGlass.upperRight),
+          sourcePointToWorld(rearGlass.upperLeft),
         ]}
         material={material}
       />
@@ -296,33 +228,29 @@ function makePillarPolygon(base: SourcePoint3, top: SourcePoint3, side: 1 | -1, 
 }
 
 function SchemaPillars({ material }: { material: MaterialOptions }) {
-  const pillars = corollaDesignSchema.pillars.sourcePillarsMm as SourcePillars;
+  const { aPillar, bPillar, cPillar } = corollaBlockoutConfig.sceneMm.pillars;
 
   return (
     <>
       {([-1, 1] as const).flatMap((side) => [
-        <PolygonPart key={`a-pillar-${side}`} points={makePillarPolygon(pillars.aPillar.base, pillars.aPillar.top, side, 24)} material={material} />,
-        <PolygonPart key={`b-pillar-${side}`} points={makePillarPolygon(pillars.bPillar.base, pillars.bPillar.top, side, 22)} material={material} />,
-        <PolygonPart key={`c-pillar-${side}`} points={makePillarPolygon(pillars.cPillar.base, pillars.cPillar.top, side, 34)} material={material} />,
+        <PolygonPart key={`a-pillar-${side}`} points={makePillarPolygon(aPillar.base, aPillar.top, side, aPillar.thickness)} material={material} />,
+        <PolygonPart key={`b-pillar-${side}`} points={makePillarPolygon(bPillar.base, bPillar.top, side, bPillar.thickness)} material={material} />,
+        <PolygonPart key={`c-pillar-${side}`} points={makePillarPolygon(cPillar.base, cPillar.top, side, cPillar.thickness)} material={material} />,
       ])}
     </>
   );
 }
 
 function SchemaUpperGrille({ material }: { material: MaterialOptions }) {
-  const frontEnd = corollaDesignSchema.frontDesign.sourceFrontEndMm as SourceFrontEnd;
-  const grille = frontEnd.upperGrille;
-  const halfWidth = (grille.widthMm * 0.78) / 2;
-  const halfHeight = (grille.heightMm * 0.36) / 2;
-  const x = grille.center.x + 16;
+  const { center, halfWidth, halfHeight } = corollaBlockoutConfig.sceneMm.upperGrille;
 
   return (
     <PolygonPart
       points={[
-        sourcePointToWorld({ x, y: -halfWidth, z: grille.center.z - halfHeight }),
-        sourcePointToWorld({ x, y: halfWidth, z: grille.center.z - halfHeight }),
-        sourcePointToWorld({ x, y: halfWidth, z: grille.center.z + halfHeight }),
-        sourcePointToWorld({ x, y: -halfWidth, z: grille.center.z + halfHeight }),
+        sourcePointToWorld({ ...center, y: -halfWidth, z: center.z - halfHeight }),
+        sourcePointToWorld({ ...center, y: halfWidth, z: center.z - halfHeight }),
+        sourcePointToWorld({ ...center, y: halfWidth, z: center.z + halfHeight }),
+        sourcePointToWorld({ ...center, y: -halfWidth, z: center.z + halfHeight }),
       ]}
       material={material}
     />
@@ -330,23 +258,130 @@ function SchemaUpperGrille({ material }: { material: MaterialOptions }) {
 }
 
 function SchemaLowerIntake({ material }: { material: MaterialOptions }) {
-  const frontEnd = corollaDesignSchema.frontDesign.sourceFrontEndMm as SourceFrontEnd;
-  const intake = frontEnd.lowerIntake;
-  const halfTop = (intake.widthTopMm * 0.74) / 2;
-  const halfBottom = (intake.widthBottomMm * 0.68) / 2;
-  const halfHeight = (intake.heightMm * 0.28) / 2;
-  const x = intake.center.x + 74;
+  const { center, halfTop, halfBottom, halfHeight } = corollaBlockoutConfig.sceneMm.lowerIntake;
 
   return (
     <PolygonPart
       points={[
-        sourcePointToWorld({ x, y: -halfBottom, z: intake.center.z - halfHeight }),
-        sourcePointToWorld({ x, y: halfBottom, z: intake.center.z - halfHeight }),
-        sourcePointToWorld({ x, y: halfTop, z: intake.center.z + halfHeight }),
-        sourcePointToWorld({ x, y: -halfTop, z: intake.center.z + halfHeight }),
+        sourcePointToWorld({ ...center, y: -halfBottom, z: center.z - halfHeight }),
+        sourcePointToWorld({ ...center, y: halfBottom, z: center.z - halfHeight }),
+        sourcePointToWorld({ ...center, y: halfTop, z: center.z + halfHeight }),
+        sourcePointToWorld({ ...center, y: -halfTop, z: center.z + halfHeight }),
       ]}
       material={material}
     />
+  );
+}
+
+function SchemaFrontBadge({ material }: { material: MaterialOptions }) {
+  const { center, halfWidth, halfHeight } = corollaBlockoutConfig.sceneMm.badge;
+
+  return (
+    <PolygonPart
+      points={[
+        sourcePointToWorld({ ...center, y: -halfWidth, z: center.z - halfHeight }),
+        sourcePointToWorld({ ...center, y: halfWidth, z: center.z - halfHeight }),
+        sourcePointToWorld({ ...center, y: halfWidth, z: center.z + halfHeight }),
+        sourcePointToWorld({ ...center, y: -halfWidth, z: center.z + halfHeight }),
+      ]}
+      material={material}
+    />
+  );
+}
+
+function SchemaSideDetails({
+  trimMaterial,
+  handleMaterial,
+  wheelWellMaterial,
+}: {
+  trimMaterial: MaterialOptions;
+  handleMaterial: MaterialOptions;
+  wheelWellMaterial: MaterialOptions;
+}) {
+  const { seams, handles, beltline, wheelWells } = corollaBlockoutConfig.sceneMm.sideDetails;
+  const sideSurfaceY = 884;
+
+  return (
+    <>
+      {([-1, 1] as const).flatMap((side) => {
+        const sideOffset = side * 0.012;
+
+        return [
+          ...seams.map((seam) => {
+            const height = (seam.zTop - seam.zBottom) / 1000;
+            const position = sourcePointToWorld({
+              x: seam.x,
+              y: side * sideSurfaceY,
+              z: (seam.zTop + seam.zBottom) / 2,
+            });
+
+            return (
+              <BoxPart
+                key={`seam-${side}-${seam.x}`}
+                position={[position[0], position[1], position[2] + sideOffset]}
+                args={[0.012, height, 0.012]}
+                material={trimMaterial}
+              />
+            );
+          }),
+          ...handles.map((handle) => {
+            const position = sourcePointToWorld({
+              x: handle.x,
+              y: side * (sideSurfaceY + 8),
+              z: handle.z,
+            });
+
+            return (
+              <BoxPart
+                key={`handle-${side}-${handle.x}`}
+                position={[position[0], position[1], position[2] + sideOffset]}
+                args={[0.16, 0.028, 0.026]}
+                material={handleMaterial}
+              />
+            );
+          }),
+          ...beltline.slice(0, -1).map((start, index) => {
+            const end = beltline[index + 1];
+            const dx = (end.x - start.x) / 1000;
+            const dz = (end.z - start.z) / 1000;
+            const length = Math.hypot(dx, dz);
+            const position = sourcePointToWorld({
+              x: (start.x + end.x) / 2,
+              y: side * (sideSurfaceY + 6),
+              z: (start.z + end.z) / 2,
+            });
+
+            return (
+              <BoxPart
+                key={`beltline-${side}-${start.x}`}
+                position={[position[0], position[1], position[2] + sideOffset]}
+                rotation={[0, 0, Math.atan2(dz, dx)]}
+                args={[length, 0.01, 0.012]}
+                material={trimMaterial}
+              />
+            );
+          }),
+          ...wheelWells.map((well) => {
+            const position = sourcePointToWorld({
+              x: well.x,
+              y: side * 798,
+              z: well.z,
+            });
+            const radius = well.radius / 1000;
+
+            return (
+              <CylinderPart
+                key={`wheel-well-${side}-${well.x}`}
+                position={[position[0], position[1], position[2] - side * 0.006]}
+                rotation={[Math.PI / 2, 0, 0]}
+                args={[radius, radius, 0.018, 40]}
+                material={wheelWellMaterial}
+              />
+            );
+          }),
+        ];
+      })}
+    </>
   );
 }
 
@@ -357,62 +392,32 @@ function SchemaLights({
   material: MaterialOptions;
   kind: "headlight" | "taillight";
 }) {
-  const outline =
+  const lightOutline =
     kind === "headlight"
-      ? (corollaDesignSchema.headlights.sourceHeadlightsMm as SourceHeadlights).left.outline
-      : (corollaDesignSchema.taillights.sourceTaillightsMm as SourceTaillights).left.outline;
-  const offset = kind === "headlight" ? 0.008 : 0.004;
+      ? corollaBlockoutConfig.sceneMm.headlights
+      : corollaBlockoutConfig.sceneMm.taillights;
+  const offset = 0.001;
 
   return (
     <>
-      <PolygonPart points={outline.map((point) => sourcePointToWorld(point, -1, -offset))} material={material} />
-      <PolygonPart points={outline.map((point) => sourcePointToWorld(point, 1, offset))} material={material} />
-    </>
-  );
-}
-
-function SideMirrors({ bodyMaterial }: { bodyMaterial: MaterialOptions }) {
-  const sourceMirror = (corollaDesignSchema.mirrors.sourceExteriorPartsMm as SourceMirrorParts).leftMirror;
-  const mirrorBase: MaterialOptions = { color: "#050505", roughness: 0.46 };
-
-  return (
-    <>
-      {([-1, 1] as const).map((side) => (
-        <group key={`mirror-${side}`}>
-          <BoxPart
-            position={sourcePointToWorld({ ...sourceMirror.mountCenter, y: sourceMirror.mountCenter.y * 0.9 }, side, side * 0.006)}
-            rotation={[0, side * 0.18, 0]}
-            args={[0.075, 0.045, 0.07]}
-            material={mirrorBase}
-            castShadow
-          />
-          <RoundedPart
-            position={sourcePointToWorld({ ...sourceMirror.housingCenter, y: sourceMirror.housingCenter.y * 0.86 }, side, side * 0.006)}
-            args={[sourceMirror.depthMm / 1000, sourceMirror.heightMm / 1000, sourceMirror.widthMm / 1000]}
-            radius={0.045}
-            smoothness={8}
-            material={{ ...bodyMaterial, roughness: 0.24 }}
-          />
-        </group>
-      ))}
+      <PolygonPart points={lightOutline.map((point) => sourcePointToWorld(point, -1, -offset))} material={material} />
+      <PolygonPart points={lightOutline.map((point) => sourcePointToWorld(point, 1, offset))} material={material} />
     </>
   );
 }
 
 function CorollaLikeSedan({ selected, paint }: { selected: Set<AccessoryId>; paint: PaintId }) {
   const visual = corollaVisualControls;
-  const paintStyle = paints[paint];
+  void paint;
+
   const hasSportWheels = selected.has("wheels");
   const hasLeds = selected.has("leds");
   const bodyMaterial: MaterialOptions = useMemo(() => ({
-    color: paintStyle.color,
-    roughness: visual.paintSurface.roughness,
-    metalness: visual.paintSurface.metalness,
-  }), [paintStyle, visual]);
+    ...corollaBlockoutConfig.materials.body,
+  }), []);
   const glass: MaterialOptions = {
     ...visual.materials.glass,
-    opacity: 0.65,
-    transparent: true,
+    ...corollaBlockoutConfig.materials.glass,
   };
   const headlightMat: MaterialOptions = useMemo(() => ({
     ...visual.materials.clearLens,
@@ -421,15 +426,7 @@ function CorollaLikeSedan({ selected, paint }: { selected: Set<AccessoryId>; pai
     emissiveIntensity: hasLeds ? 1.2 : 0,
   }), [hasLeds, visual]);
   const wheelPositions = useMemo((): Array<[number, number, number]> => {
-    const axleGeometry = corollaDesignSchema.wheelGeometry.axleGeometryMm as AxleGeometry;
-    const wheelCenters = [
-      axleGeometry.frontWheelCenterRight,
-      axleGeometry.rearWheelCenterRight,
-      axleGeometry.frontWheelCenterLeft,
-      axleGeometry.rearWheelCenterLeft,
-    ].filter(Boolean) as SourcePoint3[];
-
-    return wheelCenters.map((center) => [
+    return corollaBlockoutConfig.sceneMm.wheels.centers.map((center) => [
       sourceXToWorldX(center.x, corollaDesignSchema),
       sourceZToWorldY(center.z),
       sourceYToWorldZ(center.y),
@@ -443,9 +440,14 @@ function CorollaLikeSedan({ selected, paint }: { selected: Set<AccessoryId>; pai
       <SchemaPillars material={visual.materials.blackTrim} />
       <SchemaUpperGrille material={visual.materials.glossBlack} />
       <SchemaLowerIntake material={visual.materials.matteBlack} />
+      <SchemaFrontBadge material={corollaBlockoutConfig.materials.chrome} />
+      <SchemaSideDetails
+        trimMaterial={visual.materials.blackTrim}
+        handleMaterial={corollaBlockoutConfig.materials.chrome}
+        wheelWellMaterial={corollaBlockoutConfig.materials.wheelWell}
+      />
       <SchemaLights kind="headlight" material={headlightMat} />
       <SchemaLights kind="taillight" material={visual.materials.redLens} />
-      <SideMirrors bodyMaterial={bodyMaterial} />
 
       {Array.from(selected).map((id) => {
         const Renderer = accessoryRenderers[id];

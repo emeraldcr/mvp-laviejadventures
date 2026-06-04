@@ -5,27 +5,18 @@ import {
  ShieldCheck, Bike, CalendarClock, CheckCircle2, Clock3, LocateFixed, MapPin, Minus, PackageCheck,
   PhoneCall, Plus, Search, ShoppingCart, SlidersHorizontal, Star, Trash2, Truck, Wrench, X,
 } from "lucide-react";
+import {
+  motoPartCategoryLabels,
+  type MotoCartItem,
+  type MotoPartCatalogItem,
+  type MotoPartCategoryFilter,
+} from "@/lib/moto-parts";
 
-type Category = "all" | "frenos" | "aceites" | "llantas" | "cadena" | "electrico";
+type Category = MotoPartCategoryFilter;
+type Part = MotoPartCatalogItem;
+type CartItem = MotoCartItem;
 type ServiceMode = "express" | "encomienda" | "carretera";
 type WorkshopJob = "revision" | "reparacion" | "instalacion" | "mantenimiento";
-
-type Part = {
-  id: string;
-  _id?: string;
-  name: string;
-  category: Exclude<Category, "all">;
-  brand: string;
-  model: string;
-  price: number;
-  stock: string;
-  stockLevel: "high" | "medium" | "low";
-  description: string;
-  image: string;
-  isActive?: boolean;
-};
-
-type CartItem = { partId: string; quantity: number };
 
 const parts: Part[] = [
   {
@@ -78,10 +69,7 @@ const parts: Part[] = [
   },
 ];
 
-const categoryLabels: Record<Category, string> = {
-  all: "Todos", frenos: "Frenos", aceites: "Aceites y filtros",
-  llantas: "Llantas", cadena: "Cadena y transmisión", electrico: "Eléctrico",
-};
+const categoryLabels = motoPartCategoryLabels;
 
 const serviceLabels: Record<ServiceMode, string> = {
   express: "Express local", encomienda: "Encomienda", carretera: "Atención en carretera",

@@ -16,26 +16,16 @@ import {
   Upload,
   X,
 } from "lucide-react";
+import {
+  MOTO_PART_CATEGORIES,
+  motoPartCategoryLabels,
+  motoPartStockLevelLabels,
+  type MotoPartCategory,
+  type MotoPartStockLevel,
+  type SerializedMotoPart,
+} from "@/lib/moto-parts";
 
-type MotoPartCategory = "frenos" | "aceites" | "llantas" | "cadena" | "electrico";
-type MotoPartStockLevel = "high" | "medium" | "low";
-
-type MotoPart = {
-  _id: string;
-  id: string;
-  name: string;
-  category: MotoPartCategory;
-  brand: string;
-  model: string;
-  price: number;
-  stock: string;
-  stockLevel: MotoPartStockLevel;
-  description: string;
-  image: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-};
+type MotoPart = SerializedMotoPart;
 
 type MotoPartForm = {
   name: string;
@@ -63,19 +53,8 @@ const emptyForm: MotoPartForm = {
   isActive: true,
 };
 
-const categoryLabels: Record<MotoPartCategory, string> = {
-  frenos: "Frenos",
-  aceites: "Aceites y filtros",
-  llantas: "Llantas",
-  cadena: "Cadena y transmision",
-  electrico: "Electrico",
-};
-
-const stockLabels: Record<MotoPartStockLevel, string> = {
-  high: "Alto",
-  medium: "Medio",
-  low: "Bajo",
-};
+const categoryLabels = motoPartCategoryLabels;
+const stockLabels = motoPartStockLevelLabels;
 
 const currency = new Intl.NumberFormat("es-CR", {
   style: "currency",
@@ -421,9 +400,9 @@ export default function MotoAdminPage() {
                   onChange={(event) => setForm((current) => ({ ...current, category: event.target.value as MotoPartCategory }))}
                   className="mt-1 h-11 w-full rounded-lg border border-white/10 bg-zinc-950 px-3 text-sm outline-none focus:border-cyan-300"
                 >
-                  {Object.entries(categoryLabels).map(([value, label]) => (
-                    <option key={value} value={value}>
-                      {label}
+                  {MOTO_PART_CATEGORIES.map((category) => (
+                    <option key={category} value={category}>
+                      {categoryLabels[category]}
                     </option>
                   ))}
                 </select>

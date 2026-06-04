@@ -1,7 +1,35 @@
 import type { Document, WithId } from "mongodb";
 
-export type MotoPartCategory = "frenos" | "aceites" | "llantas" | "cadena" | "electrico";
+export const MOTO_PART_CATEGORIES = [
+  "frenos",
+  "aceites",
+  "llantas",
+  "cadena",
+  "electrico",
+  "motor",
+  "suspension",
+  "escape",
+  "carroceria",
+  "luces",
+  "bateria",
+  "embrague",
+  "direccion",
+  "asientos",
+  "espejos",
+  "plasticos",
+  "combustible",
+  "refrigeracion",
+  "herramientas",
+  "accesorios",
+] as const;
+
+export const MOTO_PART_STOCK_LEVELS = ["high", "medium", "low"] as const;
+
+export type MotoPartCategory = (typeof MOTO_PART_CATEGORIES)[number];
+export type MotoPartCategoryFilter = "all" | MotoPartCategory;
 export type MotoPartStockLevel = "high" | "medium" | "low";
+
+export type MotoCartItem = { partId: string; quantity: number };
 
 export type MotoPartInput = {
   name: string;
@@ -26,8 +54,46 @@ export type SerializedMotoPart = MotoPartDocument & {
   id: string;
 };
 
-const CATEGORIES = new Set<MotoPartCategory>(["frenos", "aceites", "llantas", "cadena", "electrico"]);
-const STOCK_LEVELS = new Set<MotoPartStockLevel>(["high", "medium", "low"]);
+export type MotoPartCatalogItem = Omit<MotoPartInput, "isActive"> & {
+  id: string;
+  _id?: string;
+  isActive?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export const motoPartCategoryLabels: Record<MotoPartCategoryFilter, string> = {
+  all: "Todos",
+  frenos: "Frenos",
+  aceites: "Aceites y filtros",
+  llantas: "Llantas",
+  cadena: "Cadena y transmision",
+  electrico: "Electrico",
+  motor: "Motor",
+  suspension: "Suspension",
+  escape: "Escape",
+  carroceria: "Carroceria",
+  luces: "Luces",
+  bateria: "Bateria",
+  embrague: "Embrague",
+  direccion: "Direccion",
+  asientos: "Asientos",
+  espejos: "Espejos",
+  plasticos: "Plasticos",
+  combustible: "Combustible",
+  refrigeracion: "Refrigeracion",
+  herramientas: "Herramientas",
+  accesorios: "Accesorios",
+};
+
+export const motoPartStockLevelLabels: Record<MotoPartStockLevel, string> = {
+  high: "Alto",
+  medium: "Medio",
+  low: "Bajo",
+};
+
+const CATEGORIES = new Set<MotoPartCategory>(MOTO_PART_CATEGORIES);
+const STOCK_LEVELS = new Set<MotoPartStockLevel>(MOTO_PART_STOCK_LEVELS);
 
 function normalizeCategory(value: unknown): MotoPartCategory {
   const category = String(value ?? "").trim() as MotoPartCategory;
