@@ -17,4 +17,5 @@ export const COLLECTIONS = {
   RESERVATIONS: "Reservations",
   ANALYTICS_EVENTS: "analytics_events",
   HERO_SLOGANS: "hero_slogans",
+  MOTO_PARTS: "moto_parts",
 } as const;

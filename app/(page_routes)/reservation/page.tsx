@@ -8,6 +8,7 @@ import { useLanguage } from "@/lib/LanguageContext";
 import PaymentCheckoutContent from "@/app/components/reservation/PaymentCheckoutContent";
 import type { OrderDetails } from "@/lib/types/index";
 import { translations } from "@/lib/translations";
+import { isDateOnOrAfterMinBookableInCostaRica } from "@/lib/costa-rica-time";
 
 const RESERVATION_RETURN_KEY = "reservationReturnPath";
 
@@ -31,7 +32,17 @@ const parseStoredOrderDetails = (stored: string | null): OrderDetails | null => 
   if (!stored) return null;
 
   try {
-    return JSON.parse(stored) as OrderDetails;
+    const orderDetails = JSON.parse(stored) as OrderDetails;
+    const dateForValidation = orderDetails.dateIso ?? (/^\d{4}-\d{2}-\d{2}$/.test(orderDetails.date) ? orderDetails.date : null);
+
+    if (dateForValidation && !isDateOnOrAfterMinBookableInCostaRica(dateForValidation)) {
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("reservationOrderDetails");
+      }
+      return null;
+    }
+
+    return orderDetails;
   } catch {
     if (typeof window !== "undefined") {
       sessionStorage.removeItem("reservationOrderDetails");

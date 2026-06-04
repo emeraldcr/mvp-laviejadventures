@@ -1,4 +1,4 @@
-import type { MaterialOptions, Vec3, RenderingConfig, PBRMaterialOptions } from "../auto-types";
+import type { MaterialOptions, Vec3, PBRMaterialOptions } from "../../auto-types";
 
 // =====================================================
 // COROLLA 2016 — VISUAL PARAMETERS (Improved)
@@ -120,13 +120,16 @@ export const corollaMaterials = {
   } satisfies PBRMaterialOptions,
 
   glass: {
-    color: "#1c2730",
-    roughness: 0.04,
-    metalness: 0.18,
+    color: "#9fb8d8",
+    roughness: 0.08,
+    metalness: 0.1,
     transparent: true,
-    opacity: 0.78,
-    transmission: 0.35,
+    opacity: 0.65,
+    transmission: 0.28,
     ior: 1.45,
+    envMapIntensity: 1.8,
+    clearcoat: 0.4,
+    clearcoatRoughness: 0.1,
   } satisfies PBRMaterialOptions,
 
   tire: {
@@ -166,68 +169,155 @@ export const corollaMaterials = {
 // =====================================================
 export const corollaBodyVolumes = {
   mainBody: {
-    position: [0, -0.03, 0] as Vec3,
-    args: [length * 0.985, height * 0.84, halfWidth * 2.02] as Vec3,
-    radius: 0.18,
+    // Lower sedan body, not full vehicle height
+    position: [0, 0.27, 0] as Vec3,
+    args: [length * 0.98, 0.72, halfWidth * 1.96] as Vec3,
+    radius: 0.16,
   } satisfies BoxVisual,
 
   frontMass: {
-    position: [frontAxleX * 0.72, 0.1, 0] as Vec3,
-    args: [length * 0.29, height * 0.5, halfWidth * 1.92] as Vec3,
-    radius: 0.13,
-  } satisfies BoxVisual,
-
-  rearMass: {
-    position: [rearAxleX * 0.76, 0.07, 0] as Vec3,
-    args: [length * 0.25, height * 0.46, halfWidth * 1.9] as Vec3,
+    // Lower, longer, flatter hood/front section
+    position: [frontAxleX - p.frontOverhang * 0.2, 0.42, 0] as Vec3,
+    args: [p.frontOverhang * 1.18, 0.26, halfWidth * 1.78] as Vec3,
     radius: 0.12,
   } satisfies BoxVisual,
 
+  rearMass: {
+    // Sedan trunk: flatter and lower than cabin
+    position: [rearAxleX + p.rearOverhang * 0.36, 0.46, 0] as Vec3,
+    args: [p.rearOverhang * 1.0, 0.28, halfWidth * 1.78] as Vec3,
+    radius: 0.11,
+  } satisfies BoxVisual,
+
   cabinShell: {
-    position: [cabinCenterX * 0.08, height * 0.58, 0] as Vec3,
-    args: [cabinLength * 1.04, height * 0.74, halfWidth * 1.68] as Vec3,
+    // Shorter, lower, narrower cabin
+    position: [cabinCenterX + 0.04, 0.91, 0] as Vec3,
+    args: [cabinLength * 0.9, 0.48, halfWidth * 1.42] as Vec3,
     radius: 0.14,
   } satisfies BoxVisual,
 
   hoodCrown: {
-    position: [frontBumperX + p.frontOverhang * 0.42, height * 0.44, 0] as Vec3,
-    args: [p.frontOverhang * 0.72, 0.035, halfWidth * 1.54] as Vec3,
-    radius: 0.04,
+    // Thin sloped hood surface
+    position: [frontAxleX - p.frontOverhang * 0.35, 0.58, 0] as Vec3,
+    args: [p.frontOverhang * 0.9, 0.026, halfWidth * 1.38] as Vec3,
+    radius: 0.035,
   } satisfies BoxVisual,
 
   trunkDeck: {
-    position: [rearBumperX - p.rearOverhang * 0.45, height * 0.44, 0] as Vec3,
-    args: [p.rearOverhang * 0.62, 0.038, halfWidth * 1.55] as Vec3,
-    radius: 0.04,
+    // Thin rear deck, lower than roof
+    position: [rearAxleX + p.rearOverhang * 0.42, 0.61, 0] as Vec3,
+    args: [p.rearOverhang * 0.66, 0.024, halfWidth * 1.36] as Vec3,
+    radius: 0.035,
   } satisfies BoxVisual,
 
-  lowerTrimY: -height * 0.72,
+  lowerTrimY: -0.08,
 } as const;
 
 // =====================================================
-// WINDOWS & PILLARS
+// PROCEDURAL BODY SHELL
+// =====================================================
+export const corollaBodyShell = {
+  sideSilhouette: [
+    { x: frontBumperX, rockerY: -0.56, beltY: 0.36, roofY: 0.48 },
+    { x: frontAxleX - 0.62, rockerY: -0.5, beltY: 0.46, roofY: 0.58 },
+    { x: frontAxleX - 0.08, rockerY: -0.47, beltY: 0.58, roofY: 0.68 },
+    { x: frontAxleX + 0.42, rockerY: -0.45, beltY: 0.68, roofY: 0.9 },
+    { x: cabinCenterX - 0.46, rockerY: -0.44, beltY: 0.72, roofY: 1.18 },
+    { x: cabinCenterX, rockerY: -0.43, beltY: 0.74, roofY: 1.28 },
+    { x: cabinCenterX + 0.48, rockerY: -0.43, beltY: 0.76, roofY: 1.2 },
+    { x: rearAxleX - 0.15, rockerY: -0.45, beltY: 0.73, roofY: 0.88 },
+    { x: rearAxleX + 0.44, rockerY: -0.48, beltY: 0.68, roofY: 0.66 },
+    { x: rearBumperX - 0.24, rockerY: -0.52, beltY: 0.5, roofY: 0.52 },
+    { x: rearBumperX, rockerY: -0.58, beltY: 0.36, roofY: 0.42 },
+  ],
+  widthProfile: [
+    { x: frontBumperX, halfWidth: halfWidth * 0.58 },
+    { x: frontAxleX - 0.55, halfWidth: halfWidth * 0.78 },
+    { x: frontAxleX + 0.2, halfWidth: halfWidth * 0.95 },
+    { x: cabinCenterX - 0.35, halfWidth: halfWidth * 1.0 },
+    { x: cabinCenterX + 0.45, halfWidth: halfWidth * 0.99 },
+    { x: rearAxleX + 0.2, halfWidth: halfWidth * 0.94 },
+    { x: rearBumperX - 0.25, halfWidth: halfWidth * 0.76 },
+    { x: rearBumperX, halfWidth: halfWidth * 0.6 },
+  ],
+  cabinGlasshouse: {
+    startX: cabinCenterX - 0.72,
+    peakX: cabinCenterX,
+    endX: cabinCenterX + 0.72,
+    insetWidthMultiplier: 0.78,
+  },
+} as const;
+
+// =====================================================
+// WINDOWS & PILLARS - VERSIÓN AJUSTADA (más realista)
 // =====================================================
 export const corollaWindowProfile = {
-  glassSideOffset: halfWidth * 1.105,
+  glassSideOffset: halfWidth * 1.05,
+
   windshield: {
-    position: [cabinCenterX - cabinLength * 0.44, height * 0.98, 0] as Vec3,
-    rotation: [0, 0, 0.14] as Vec3,
-    args: [cabinLength * 0.45, 0.034, halfWidth * 1.2] as Vec3,
+    position: [cabinCenterX - cabinLength * 0.42, 1.08, 0] as Vec3,
+    rotation: [0, 0, 0.26] as Vec3,
+    args: [cabinLength * 0.38, 0.028, halfWidth * 1.08] as Vec3, // un poco más ancho y grueso
   },
+
   rearGlass: {
-    position: [cabinCenterX + cabinLength * 0.36, height * 1.03, 0] as Vec3,
-    rotation: [0, 0, -0.08] as Vec3,
-    args: [cabinLength * 0.42, 0.034, halfWidth * 1.38] as Vec3,
+    position: [cabinCenterX + cabinLength * 0.38, 1.07, 0] as Vec3,
+    rotation: [0, 0, -0.24] as Vec3,
+    args: [cabinLength * 0.40, 0.028, halfWidth * 1.06] as Vec3,
   },
+
   sideWindows: [
-    { x: cabinCenterX - cabinLength * 0.35, y: height * 0.75, w: cabinLength * 0.46, h: 0.34 },
-    { x: cabinCenterX + cabinLength * 0.22, y: height * 0.77, w: cabinLength * 0.5, h: 0.37 },
-    { x: cabinCenterX - cabinLength * 0.72, y: height * 0.71, w: 0.5, h: 0.24, rotationZ: -0.16 },
+    {
+      // Ventana delantera (puerta 1)
+      x: cabinCenterX - cabinLength * 0.27,
+      y: 0.96,
+      w: cabinLength * 0.43,
+      h: 0.33,           // ← más alta (antes 0.24)
+      rotationZ: -0.02,
+    },
+    {
+      // Ventana trasera (puerta 2)
+      x: cabinCenterX + cabinLength * 0.20,
+      y: 0.96,
+      w: cabinLength * 0.45,
+      h: 0.33,           // ← más alta
+      rotationZ: 0.01,
+    },
+    {
+      // Ventanilla trasera pequeña (quarter window)
+      x: cabinCenterX + cabinLength * 0.58,
+      y: 0.98,
+      w: 0.24,
+      h: 0.22,
+      rotationZ: 0.12,
+    },
   ],
+
   pillars: [
-    { x: cabinCenterX - cabinLength * 0.5, y: height * 0.54, w: 0.055, h: height * 0.84, rotationZ: -0.24 },
-    { x: cabinCenterX - cabinLength * 0.02, y: height * 0.68, w: 0.04, h: height * 0.58, rotationZ: 0 },
-    { x: cabinCenterX + cabinLength * 0.48, y: height * 0.5, w: 0.062, h: height * 0.76, rotationZ: 0.2 },
+    {
+      // Pilar A (delantero)
+      x: cabinCenterX - cabinLength * 0.47,
+      y: 0.95,
+      w: 0.032,          // ← un poco más ancho
+      h: 0.42,
+      rotationZ: -0.26,
+    },
+    {
+      // Pilar B (medio)
+      x: cabinCenterX - cabinLength * 0.025,
+      y: 0.95,
+      w: 0.030,
+      h: 0.40,
+      rotationZ: 0,
+    },
+    {
+      // Pilar C (trasero)
+      x: cabinCenterX + cabinLength * 0.48,
+      y: 0.94,
+      w: 0.034,
+      h: 0.42,
+      rotationZ: 0.23,
+    },
   ],
 } as const;
 
@@ -333,6 +423,7 @@ export const corollaVisualControls = {
   paintSurface: corollaPaintSurface,
   materials: corollaMaterials,
   bodyVolumes: corollaBodyVolumes,
+  bodyShell: corollaBodyShell,
   windows: corollaWindowProfile,
   characterLines: corollaCharacterLines,
   lighting: corollaLightingProfile,
