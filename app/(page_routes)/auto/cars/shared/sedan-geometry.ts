@@ -3,92 +3,27 @@ import {
   Float32BufferAttribute,
 } from "three";
 import type { CarDesignSchema } from "../../auto-types";
-import {
-  corollaBlockoutConfig,
-  corollaGeometryBuilderConfig,
-} from "./source";
-
-type SourcePoint3 = {
-  x: number;
-  y: number;
-  z: number;
-};
+import type {
+  BlockoutGeometryMm as GeometryMm,
+  BodyStation,
+  GeometryBuilderConfig,
+  PanelStation,
+  SourcePoint3,
+} from "./blockout-types";
 
 type SchemaDimensions = {
   wheelbase: number;
 };
 
-type BodyStation = {
-  x: number;
-  topZ: number;
-  bottomZ: number;
-  halfWidth: number;
-};
-
-type PanelStation = {
-  x: number;
-  z: number;
-  halfWidth: number;
-};
-
-const {
-  geometryMm: defaultGeometryMm,
-} = corollaBlockoutConfig;
-
-type GeometryMm = {
-  mainBodyStations: readonly BodyStation[];
-  hoodStations: readonly PanelStation[];
-  trunkStations: readonly PanelStation[];
-  roofStations: readonly PanelStation[];
-  frontBumperStations: readonly PanelStation[];
-  rearBumperStations: readonly PanelStation[];
-  wheelArchCentersX: readonly number[];
-  wheelCenterZ: number;
-  wheelArchRadius: number;
-};
-type GeometryBuilderConfig = {
-  panelFactors: readonly number[];
-  faceFactors: readonly number[];
-  bodySideInsetMm: number;
-  bodyArchMidMinZ: number;
-  bodyArchMidBaseZ: number;
-  bodyArchTopGapMm: number;
-  bodyArchMidLiftMm: number;
-  defaultBumperCrownMm: number;
-  defaultBumperEdgeDropMm: number;
-  hoodCrownMm: number;
-  hoodEdgeDropMm: number;
-  hoodSideDropMm: number;
-  hoodFrontDropMm: number;
-  hoodRearDropMm: number;
-  trunkCrownMm: number;
-  trunkEdgeDropMm: number;
-  trunkSideDropMm: number;
-  trunkFrontDropMm: number;
-  trunkRearDropMm: number;
-  roofCrownMm: number;
-  roofEdgeDropMm: number;
-  roofSideDropMm: number;
-  roofFrontDropMm: number;
-  roofRearDropMm: number;
-  frontBumper: {
-    cornerRetreatMm: number;
-    topShoulderSoftnessMm: number;
-    bottomShoulderSoftnessMm: number;
-    middleShoulderSoftnessMm: number;
-    crownMm: number;
-    edgeDropMm: number;
-  };
-};
 type GeometryBuildOptions = {
-  geometryMm?: GeometryMm;
-  builderConfig?: GeometryBuilderConfig;
+  geometryMm: GeometryMm;
+  builderConfig: GeometryBuilderConfig;
 };
 
-function getGeometryBuildContext(options: GeometryBuildOptions = {}) {
+function getGeometryBuildContext(options: GeometryBuildOptions) {
   return {
-    geometryMm: options.geometryMm ?? defaultGeometryMm,
-    builderConfig: options.builderConfig ?? corollaGeometryBuilderConfig,
+    geometryMm: options.geometryMm,
+    builderConfig: options.builderConfig,
   };
 }
 
@@ -337,22 +272,22 @@ function createRoundedFrontBumper(schema: CarDesignSchema, stations: readonly Pa
   return makeGeometry(vertices, indices);
 }
 
-export function createSedanMainBodyGeometry(schema: CarDesignSchema, options: GeometryBuildOptions = {}): BufferGeometry {
+export function createSedanMainBodyGeometry(schema: CarDesignSchema, options: GeometryBuildOptions): BufferGeometry {
   const { geometryMm, builderConfig } = getGeometryBuildContext(options);
   return createBoxLikeBody(schema, geometryMm, builderConfig);
 }
 
-export function createSedanFrontBumperGeometry(schema: CarDesignSchema, options: GeometryBuildOptions = {}): BufferGeometry {
+export function createSedanFrontBumperGeometry(schema: CarDesignSchema, options: GeometryBuildOptions): BufferGeometry {
   const { geometryMm, builderConfig } = getGeometryBuildContext(options);
   return createRoundedFrontBumper(schema, geometryMm.frontBumperStations, builderConfig);
 }
 
-export function createSedanRearBumperGeometry(schema: CarDesignSchema, options: GeometryBuildOptions = {}): BufferGeometry {
+export function createSedanRearBumperGeometry(schema: CarDesignSchema, options: GeometryBuildOptions): BufferGeometry {
   const { geometryMm, builderConfig } = getGeometryBuildContext(options);
   return createSimpleBumper(schema, geometryMm.rearBumperStations, builderConfig);
 }
 
-export function createSedanHoodPanelGeometry(schema: CarDesignSchema, options: GeometryBuildOptions = {}): BufferGeometry {
+export function createSedanHoodPanelGeometry(schema: CarDesignSchema, options: GeometryBuildOptions): BufferGeometry {
   const { geometryMm, builderConfig } = getGeometryBuildContext(options);
   return createWrappedQuadPanel(
     schema,
@@ -366,7 +301,7 @@ export function createSedanHoodPanelGeometry(schema: CarDesignSchema, options: G
   );
 }
 
-export function createSedanTrunkDeckGeometry(schema: CarDesignSchema, options: GeometryBuildOptions = {}): BufferGeometry {
+export function createSedanTrunkDeckGeometry(schema: CarDesignSchema, options: GeometryBuildOptions): BufferGeometry {
   const { geometryMm, builderConfig } = getGeometryBuildContext(options);
   return createWrappedQuadPanel(
     schema,
@@ -380,7 +315,7 @@ export function createSedanTrunkDeckGeometry(schema: CarDesignSchema, options: G
   );
 }
 
-export function createSedanRoofPanelGeometry(schema: CarDesignSchema, options: GeometryBuildOptions = {}): BufferGeometry {
+export function createSedanRoofPanelGeometry(schema: CarDesignSchema, options: GeometryBuildOptions): BufferGeometry {
   const { geometryMm, builderConfig } = getGeometryBuildContext(options);
   return createWrappedQuadPanel(
     schema,
@@ -394,6 +329,6 @@ export function createSedanRoofPanelGeometry(schema: CarDesignSchema, options: G
   );
 }
 
-export function createSedanBodyGeometry(schema: CarDesignSchema, options: GeometryBuildOptions = {}): BufferGeometry {
+export function createSedanBodyGeometry(schema: CarDesignSchema, options: GeometryBuildOptions): BufferGeometry {
   return createSedanMainBodyGeometry(schema, options);
 }

@@ -1,3 +1,4 @@
+import type { CarDesignSchema } from "../../auto-types";
 import {
   corollaDimensionsM,
   corollaGeometryBuilderConfig,
@@ -9,7 +10,7 @@ import {
   tire20555R16,
   xAnchorsMm,
   zAnchorsMm,
-} from "./source-metrics";
+} from "../shared/corolla-source-metrics";
 
 export {
   corollaGeometryBuilderConfig,
@@ -21,7 +22,7 @@ export {
   tire20555R16,
   xAnchorsMm,
   zAnchorsMm,
-} from "./source-metrics";
+} from "../shared/corolla-source-metrics";
 
 export const corollaBlockoutConfig = {
   dimensionsM: corollaDimensionsM,
@@ -1170,3 +1171,11 @@ export const corollaSchemaInterior = {
   },
 } as const;
 
+export const carDesignSchema = {
+  ...corollaSchemaCore,
+  ...corollaSchemaShape,
+  ...corollaSchemaExterior,
+  ...corollaSchemaInterior,
+} satisfies CarDesignSchema;
+
+export const corollaDesignSchema = carDesignSchema;

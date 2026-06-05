@@ -20,7 +20,7 @@ export interface CarParams {
   rearLightHeight: number;
   hasFastback: boolean;
   scale: number;
-  bodyStyle?: "sedan" | "boxyCompact";
+  bodyStyle?: VehicleBodyStyle;
 
   // === NEW: High-quality rendering parameters (for realistic game look) ===
   clearcoat?: number;              // 0.8–1.0 for modern car paint
@@ -36,8 +36,12 @@ export type CarPreset = {
   params: CarParams;
   designSchema?: CarDesignSchema;
   visualControls?: unknown;
+  blockoutConfig?: unknown;
+  blockoutStyle?: VehicleBodyStyle;
   rendering?: RenderingConfig;     // NEW - controls visual fidelity
 };
+
+export type VehicleBodyStyle = "sedan" | "boxyCompact" | "suv" | "truck" | "teslaEv";
 
 export type CarDesignSchema = {
   metadata: Record<string, unknown>;

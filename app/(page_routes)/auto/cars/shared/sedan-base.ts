@@ -1,8 +1,8 @@
 import type { CarDesignSchema } from "../../auto-types";
-import { corollaDesignSchema } from "../corolla/schema/schema";
-import { corollaVisualControls } from "../corolla/visual";
+import { corollaDesignSchema } from "../corolla/source";
+import { baseBlockoutVisualControls } from "./blockout-visuals";
 
-type SedanSchemaOverrides = {
+type VehicleSchemaOverrides = {
   metadata?: Record<string, unknown>;
   dimensions?: Record<string, unknown>;
   silhouetteCurves?: Record<string, unknown>;
@@ -10,9 +10,9 @@ type SedanSchemaOverrides = {
 };
 
 export const baseSedanDesignSchema = corollaDesignSchema;
-export const baseSedanVisualControls = corollaVisualControls;
+export const baseSedanVisualControls = baseBlockoutVisualControls;
 
-export function createDerivedSedanSchema(overrides: SedanSchemaOverrides): CarDesignSchema {
+export function createDerivedVehicleSchema(overrides: VehicleSchemaOverrides): CarDesignSchema {
   return {
     ...baseSedanDesignSchema,
     metadata: {
@@ -32,4 +32,8 @@ export function createDerivedSedanSchema(overrides: SedanSchemaOverrides): CarDe
       ...overrides.wheelGeometry,
     },
   };
+}
+
+export function createDerivedSedanSchema(overrides: VehicleSchemaOverrides): CarDesignSchema {
+  return createDerivedVehicleSchema(overrides);
 }

@@ -29,7 +29,7 @@ export default function CarCustomizer() {
           <div className="absolute inset-0 z-0">
             <Suspense fallback={<GarageLoading />}>
               <GarageScene
-                params={configurator.params}
+                preset={configurator.preset}
                 selected={configurator.selectedSet}
                 paint={configurator.paint}
               />

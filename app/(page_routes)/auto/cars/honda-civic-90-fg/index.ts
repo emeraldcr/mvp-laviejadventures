@@ -1,9 +1,11 @@
-import type { CarDesignSchema, CarParams, CarPreset } from "../../auto-types";
+import type { CarDesignSchema, CarParams } from "../../auto-types";
+import type { RenderableCarPreset } from "../shared/blockout-types";
 import {
   baseSedanDesignSchema,
   baseSedanVisualControls,
   createDerivedSedanSchema,
 } from "../shared/sedan-base";
+import { civic90FgBlockoutConfig } from "./source";
 
 const civicDimensions = {
   overallLength: 3.75,
@@ -82,4 +84,6 @@ export const civic90FgPreset = {
   params: civic90FgParams,
   designSchema: civic90FgDesignSchema,
   visualControls: baseSedanVisualControls,
-} satisfies CarPreset;
+  blockoutConfig: civic90FgBlockoutConfig,
+  blockoutStyle: "boxyCompact",
+} satisfies RenderableCarPreset;

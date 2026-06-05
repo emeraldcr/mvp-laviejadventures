@@ -1,9 +1,9 @@
-import type { CarParams, CarPreset } from "../../auto-types";
-import { corollaDesignSchema } from "./schema/schema";
-import { corollaVisualControls } from "./visual";
+import type { CarParams } from "../../auto-types";
+import type { RenderableCarPreset } from "../shared/blockout-types";
+import { baseBlockoutVisualControls } from "../shared/blockout-visuals";
+import { corollaBlockoutConfig, corollaDesignSchema } from "./source";
 
-export { carDesignSchema, corollaDesignSchema } from "./schema/schema";
-export { corollaVisualControls } from "./visual";
+export { carDesignSchema, corollaDesignSchema } from "./source";
 
 export const corollaParams = {
   wheelbase: Number(corollaDesignSchema.dimensions.wheelbase),
@@ -29,5 +29,7 @@ export const corollaPreset = {
   name: `${corollaDesignSchema.metadata.make} ${corollaDesignSchema.metadata.model} ${corollaDesignSchema.metadata.year}`,
   params: corollaParams,
   designSchema: corollaDesignSchema,
-  visualControls: corollaVisualControls,
-} satisfies CarPreset;
+  visualControls: baseBlockoutVisualControls,
+  blockoutConfig: corollaBlockoutConfig,
+  blockoutStyle: "sedan",
+} satisfies RenderableCarPreset;
