@@ -93,6 +93,7 @@ export const corollaBlockoutConfig = {
   },
   geometryMm: corollaGeometryMm,
   sceneMm: corollaSceneMm,
+  geometryBuilderConfig: corollaGeometryBuilderConfig,
 } as const;
 
 export const corollaVisualSource = {

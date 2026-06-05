@@ -29,6 +29,8 @@ import {
 import { BoxPart, CylinderPart, TorusPart } from "./auto-parts";
 import { corollaDesignSchema, corollaVisualControls } from "./cars/corolla";
 import { corollaBlockoutConfig } from "./cars/corolla/source";
+import { civic90FgBlockoutConfig } from "./cars/honda-civic-90-fg/source-metrics";
+import { paints } from "./auto-types";
 import type {
   AccessoryId,
   CarParams,
@@ -40,6 +42,160 @@ type SourcePoint3 = {
   x: number;
   y: number;
   z: number;
+};
+type SourcePoint2 = {
+  x: number;
+  z: number;
+};
+type BodyStation = {
+  x: number;
+  topZ: number;
+  bottomZ: number;
+  halfWidth: number;
+};
+type PanelStation = SourcePoint2 & {
+  halfWidth: number;
+};
+type DoorPanel = {
+  id: string;
+  xStart: number;
+  xEnd: number;
+  zTopStart: number;
+  zTopEnd: number;
+  zBottomStart: number;
+  zBottomEnd: number;
+  zMidStart: number;
+  zMidEnd: number;
+};
+type WindowBaseFill = {
+  id: string;
+  lowerLeft: SourcePoint2;
+  lowerRight: SourcePoint2;
+  upperLeft: SourcePoint2;
+  upperRight: SourcePoint2;
+};
+type BlockoutRenderMetrics = {
+  seamOutsetMm: number;
+  handleOutsetMm: number;
+  beltlineOutsetMm: number;
+  seamWidthMm: number;
+  seamDepthMm: number;
+  doorFrameOutsetMm: number;
+  doorFrameHeightMm: number;
+  doorFrameDepthMm: number;
+  doorMidlineOutsetMm: number;
+  doorMidlineHeightMm: number;
+  doorMidlineDepthMm: number;
+  handleLengthMm: number;
+  handleHeightMm: number;
+  handleDepthMm: number;
+  beltlineHeightMm: number;
+  beltlineDepthMm: number;
+  windowBaseFillOutsetMm: number;
+  windowFrameHeightMm: number;
+  windowFrameDepthMm: number;
+  fenderOutsetMm: number;
+  fenderLipTubeMm: number;
+  fenderArcRadians: number;
+  mirrorHeadOutsetMm: number;
+  mirrorStalkOutsetMm: number;
+  wheelWellInsetMm: number;
+};
+type GeometryBuilderConfig = {
+  panelFactors: readonly number[];
+  faceFactors: readonly number[];
+  bodySideInsetMm: number;
+  bodyArchMidMinZ: number;
+  bodyArchMidBaseZ: number;
+  bodyArchTopGapMm: number;
+  bodyArchMidLiftMm: number;
+  defaultBumperCrownMm: number;
+  defaultBumperEdgeDropMm: number;
+  hoodCrownMm: number;
+  hoodEdgeDropMm: number;
+  hoodSideDropMm: number;
+  hoodFrontDropMm: number;
+  hoodRearDropMm: number;
+  trunkCrownMm: number;
+  trunkEdgeDropMm: number;
+  trunkSideDropMm: number;
+  trunkFrontDropMm: number;
+  trunkRearDropMm: number;
+  roofCrownMm: number;
+  roofEdgeDropMm: number;
+  roofSideDropMm: number;
+  roofFrontDropMm: number;
+  roofRearDropMm: number;
+  frontBumper: {
+    cornerRetreatMm: number;
+    topShoulderSoftnessMm: number;
+    bottomShoulderSoftnessMm: number;
+    middleShoulderSoftnessMm: number;
+    crownMm: number;
+    edgeDropMm: number;
+  };
+};
+type BlockoutConfig = {
+  dimensionsM: {
+    overallLength: number;
+    overallWidth: number;
+    visualHeight: number;
+  };
+  materials: typeof corollaBlockoutConfig.materials;
+  geometryMm: {
+    mainBodyStations: readonly BodyStation[];
+    hoodStations: readonly PanelStation[];
+    trunkStations: readonly PanelStation[];
+    roofStations: readonly PanelStation[];
+    frontBumperStations: readonly PanelStation[];
+    rearBumperStations: readonly PanelStation[];
+    wheelArchCentersX: readonly number[];
+    wheelCenterZ: number;
+    wheelArchRadius: number;
+  };
+  sceneMm: {
+    wheels: {
+      radius: number;
+      width: number;
+      centers: readonly SourcePoint3[];
+    };
+    glass: {
+      windshield: Record<"lowerLeft" | "lowerRight" | "upperLeft" | "upperRight", SourcePoint3>;
+      rearGlass: Record<"lowerLeft" | "lowerRight" | "upperLeft" | "upperRight", SourcePoint3>;
+      sideWindows: readonly (readonly SourcePoint3[])[];
+    };
+    pillars: Record<"aPillar" | "bPillar" | "cPillar", {
+      base: SourcePoint3;
+      top: SourcePoint3;
+      thickness: number;
+    }>;
+    roofSeals: {
+      windshieldHeader: readonly SourcePoint3[];
+      rearHeader: readonly SourcePoint3[];
+    };
+    upperGrille: { center: SourcePoint3; halfWidth: number; halfHeight: number };
+    lowerIntake: { center: SourcePoint3; halfTop: number; halfBottom: number; halfHeight: number };
+    headlights: readonly SourcePoint3[];
+    taillights: readonly SourcePoint3[];
+    badge: { center: SourcePoint3; halfWidth: number; halfHeight: number };
+    sideDetails: {
+      render: BlockoutRenderMetrics;
+      seams: readonly { x: number; zTop: number; zBottom: number }[];
+      handles: readonly SourcePoint2[];
+      beltline: readonly SourcePoint2[];
+      doorPanels: readonly DoorPanel[];
+      windowBaseFills: readonly WindowBaseFill[];
+      mirrors: readonly {
+        base: SourcePoint2;
+        headCenter: SourcePoint2;
+        headSize: { x: number; y: number; z: number };
+        stalkSize: { x: number; y: number; z: number };
+      }[];
+      wheelWells: readonly { x: number; z: number; radius: number }[];
+    };
+    interior: typeof corollaBlockoutConfig.sceneMm.interior;
+  };
+  geometryBuilderConfig: GeometryBuilderConfig;
 };
 
 const threeClockDeprecationWarning =
@@ -110,15 +266,33 @@ function PolygonPart({
   );
 }
 
-function SedanBodyShell({ material }: { material: MaterialOptions }) {
+function SedanBodyShell({ blockoutConfig, material }: { blockoutConfig: BlockoutConfig; material: MaterialOptions }) {
   const geometries = useMemo(() => ({
-    mainBody: createSedanMainBodyGeometry(corollaDesignSchema),
-    frontBumper: createSedanFrontBumperGeometry(corollaDesignSchema),
-    rearBumper: createSedanRearBumperGeometry(corollaDesignSchema),
-    hoodPanel: createSedanHoodPanelGeometry(corollaDesignSchema),
-    trunkDeck: createSedanTrunkDeckGeometry(corollaDesignSchema),
-    roofPanel: createSedanRoofPanelGeometry(corollaDesignSchema),
-  }), []);
+    mainBody: createSedanMainBodyGeometry(corollaDesignSchema, {
+      geometryMm: blockoutConfig.geometryMm,
+      builderConfig: blockoutConfig.geometryBuilderConfig,
+    }),
+    frontBumper: createSedanFrontBumperGeometry(corollaDesignSchema, {
+      geometryMm: blockoutConfig.geometryMm,
+      builderConfig: blockoutConfig.geometryBuilderConfig,
+    }),
+    rearBumper: createSedanRearBumperGeometry(corollaDesignSchema, {
+      geometryMm: blockoutConfig.geometryMm,
+      builderConfig: blockoutConfig.geometryBuilderConfig,
+    }),
+    hoodPanel: createSedanHoodPanelGeometry(corollaDesignSchema, {
+      geometryMm: blockoutConfig.geometryMm,
+      builderConfig: blockoutConfig.geometryBuilderConfig,
+    }),
+    trunkDeck: createSedanTrunkDeckGeometry(corollaDesignSchema, {
+      geometryMm: blockoutConfig.geometryMm,
+      builderConfig: blockoutConfig.geometryBuilderConfig,
+    }),
+    roofPanel: createSedanRoofPanelGeometry(corollaDesignSchema, {
+      geometryMm: blockoutConfig.geometryMm,
+      builderConfig: blockoutConfig.geometryBuilderConfig,
+    }),
+  }), [blockoutConfig]);
 
   return (
     <>
@@ -132,27 +306,29 @@ function SedanBodyShell({ material }: { material: MaterialOptions }) {
 }
 
 function Wheel({
+  blockoutConfig,
   x,
   y,
   z,
   sport,
 }: {
+  blockoutConfig: BlockoutConfig;
   x: number;
   y: number;
   z: number;
   sport: boolean;
 }) {
   const visual = corollaVisualControls;
-  const radius = corollaBlockoutConfig.sceneMm.wheels.radius / 1000;
-  const width = corollaBlockoutConfig.sceneMm.wheels.width / 1000;
+  const radius = blockoutConfig.sceneMm.wheels.radius / 1000;
+  const width = blockoutConfig.sceneMm.wheels.width / 1000;
   const spokeCount = sport ? 10 : 7;
   const rimMaterial: MaterialOptions = {
-    ...(sport ? corollaBlockoutConfig.materials.sportRim : corollaBlockoutConfig.materials.rim),
+    ...(sport ? blockoutConfig.materials.sportRim : blockoutConfig.materials.rim),
   };
-  const tireMaterial: MaterialOptions = { ...visual.materials.tire, ...corollaBlockoutConfig.materials.tire };
-  const centerMaterial: MaterialOptions = { ...corollaBlockoutConfig.materials.wheelCenter };
+  const tireMaterial: MaterialOptions = { ...visual.materials.tire, ...blockoutConfig.materials.tire };
+  const centerMaterial: MaterialOptions = { ...blockoutConfig.materials.wheelCenter };
   const spokeMaterial: MaterialOptions = {
-    ...(sport ? corollaBlockoutConfig.materials.sportWheelSpoke : corollaBlockoutConfig.materials.wheelSpoke),
+    ...(sport ? blockoutConfig.materials.sportWheelSpoke : blockoutConfig.materials.wheelSpoke),
   };
   const spokeRotations = useMemo(
     () => Array.from({ length: spokeCount }, (_, i) => (i * Math.PI * 2) / spokeCount),
@@ -182,8 +358,8 @@ function Wheel({
   );
 }
 
-function SchemaGlass({ material }: { material: MaterialOptions }) {
-  const { windshield, rearGlass, sideWindows } = corollaBlockoutConfig.sceneMm.glass;
+function SchemaGlass({ blockoutConfig, material }: { blockoutConfig: BlockoutConfig; material: MaterialOptions }) {
+  const { windshield, rearGlass, sideWindows } = blockoutConfig.sceneMm.glass;
 
   return (
     <>
@@ -223,8 +399,8 @@ function SchemaGlass({ material }: { material: MaterialOptions }) {
   );
 }
 
-function SchemaRoofGlassSeals({ material }: { material: MaterialOptions }) {
-  const { windshieldHeader, rearHeader } = corollaBlockoutConfig.sceneMm.roofSeals;
+function SchemaRoofGlassSeals({ blockoutConfig, material }: { blockoutConfig: BlockoutConfig; material: MaterialOptions }) {
+  const { windshieldHeader, rearHeader } = blockoutConfig.sceneMm.roofSeals;
 
   return (
     <>
@@ -241,38 +417,50 @@ function SchemaRoofGlassSeals({ material }: { material: MaterialOptions }) {
 }
 
 function WindowFrameSegment({
+  blockoutConfig,
   start,
   end,
   side,
   material,
 }: {
+  blockoutConfig: BlockoutConfig;
   start: SourcePoint3;
   end: SourcePoint3;
   side: 1 | -1;
   material: MaterialOptions;
 }) {
-  const { windowFrameDepthMm, windowFrameHeightMm } = corollaBlockoutConfig.sceneMm.sideDetails.render;
-  const dx = (end.x - start.x) / 1000;
-  const dz = (end.z - start.z) / 1000;
+  const { windowFrameHeightMm } = blockoutConfig.sceneMm.sideDetails.render;
+  const dx = end.x - start.x;
+  const dz = end.z - start.z;
   const length = Math.hypot(dx, dz);
-  const position = sourcePointToWorld({
-    x: (start.x + end.x) / 2,
-    y: side * ((Math.abs(start.y) + Math.abs(end.y)) / 2),
-    z: (start.z + end.z) / 2,
-  }, side, side * 0.011);
+
+  if (length === 0) {
+    return null;
+  }
+
+  const halfHeight = windowFrameHeightMm / 2;
+  const normalX = (-dz / length) * halfHeight;
+  const normalZ = (dx / length) * halfHeight;
+  const startA = { ...start, x: start.x + normalX, z: start.z + normalZ };
+  const startB = { ...start, x: start.x - normalX, z: start.z - normalZ };
+  const endA = { ...end, x: end.x + normalX, z: end.z + normalZ };
+  const endB = { ...end, x: end.x - normalX, z: end.z - normalZ };
 
   return (
-    <BoxPart
-      position={position}
-      rotation={[0, 0, Math.atan2(dz, dx)]}
-      args={[length, windowFrameHeightMm / 1000, windowFrameDepthMm / 1000]}
+    <PolygonPart
+      points={[
+        sourcePointToWorld(startA, side, side * 0.012),
+        sourcePointToWorld(endA, side, side * 0.012),
+        sourcePointToWorld(endB, side, side * 0.012),
+        sourcePointToWorld(startB, side, side * 0.012),
+      ]}
       material={material}
     />
   );
 }
 
-function SchemaWindowFrames({ material }: { material: MaterialOptions }) {
-  const { sideWindows } = corollaBlockoutConfig.sceneMm.glass;
+function SchemaWindowFrames({ blockoutConfig, material }: { blockoutConfig: BlockoutConfig; material: MaterialOptions }) {
+  const { sideWindows } = blockoutConfig.sceneMm.glass;
 
   return (
     <>
@@ -281,6 +469,7 @@ function SchemaWindowFrames({ material }: { material: MaterialOptions }) {
           points.map((point, pointIndex) => (
             <WindowFrameSegment
               key={`window-frame-${side}-${windowIndex}-${pointIndex}`}
+              blockoutConfig={blockoutConfig}
               start={point}
               end={points[(pointIndex + 1) % points.length]}
               side={side}
@@ -304,8 +493,8 @@ function makePillarPolygon(base: SourcePoint3, top: SourcePoint3, side: 1 | -1, 
   ];
 }
 
-function SchemaPillars({ material }: { material: MaterialOptions }) {
-  const { aPillar, bPillar, cPillar } = corollaBlockoutConfig.sceneMm.pillars;
+function SchemaPillars({ blockoutConfig, material }: { blockoutConfig: BlockoutConfig; material: MaterialOptions }) {
+  const { aPillar, bPillar, cPillar } = blockoutConfig.sceneMm.pillars;
 
   return (
     <>
@@ -318,8 +507,8 @@ function SchemaPillars({ material }: { material: MaterialOptions }) {
   );
 }
 
-function SchemaUpperGrille({ material }: { material: MaterialOptions }) {
-  const { center, halfWidth, halfHeight } = corollaBlockoutConfig.sceneMm.upperGrille;
+function SchemaUpperGrille({ blockoutConfig, material }: { blockoutConfig: BlockoutConfig; material: MaterialOptions }) {
+  const { center, halfWidth, halfHeight } = blockoutConfig.sceneMm.upperGrille;
 
   return (
     <PolygonPart
@@ -334,8 +523,8 @@ function SchemaUpperGrille({ material }: { material: MaterialOptions }) {
   );
 }
 
-function SchemaLowerIntake({ material }: { material: MaterialOptions }) {
-  const { center, halfTop, halfBottom, halfHeight } = corollaBlockoutConfig.sceneMm.lowerIntake;
+function SchemaLowerIntake({ blockoutConfig, material }: { blockoutConfig: BlockoutConfig; material: MaterialOptions }) {
+  const { center, halfTop, halfBottom, halfHeight } = blockoutConfig.sceneMm.lowerIntake;
 
   return (
     <PolygonPart
@@ -350,8 +539,8 @@ function SchemaLowerIntake({ material }: { material: MaterialOptions }) {
   );
 }
 
-function SchemaFrontBadge({ material }: { material: MaterialOptions }) {
-  const { center, halfWidth, halfHeight } = corollaBlockoutConfig.sceneMm.badge;
+function SchemaFrontBadge({ blockoutConfig, material }: { blockoutConfig: BlockoutConfig; material: MaterialOptions }) {
+  const { center, halfWidth, halfHeight } = blockoutConfig.sceneMm.badge;
 
   return (
     <PolygonPart
@@ -366,8 +555,8 @@ function SchemaFrontBadge({ material }: { material: MaterialOptions }) {
   );
 }
 
-function getBodyHalfWidthAtSourceX(sourceX: number) {
-  const stations = corollaBlockoutConfig.geometryMm.mainBodyStations;
+function getBodyHalfWidthAtSourceX(sourceX: number, blockoutConfig: BlockoutConfig) {
+  const stations = blockoutConfig.geometryMm.mainBodyStations;
   const firstStation = stations[0];
   const lastStation = stations[stations.length - 1];
 
@@ -392,11 +581,12 @@ function getBodyHalfWidthAtSourceX(sourceX: number) {
   return lastStation.halfWidth;
 }
 
-function getSideDetailY(sourceX: number, side: 1 | -1, outwardMm: number) {
-  return side * (getBodyHalfWidthAtSourceX(sourceX) + outwardMm);
+function getSideDetailY(sourceX: number, side: 1 | -1, outwardMm: number, blockoutConfig: BlockoutConfig) {
+  return side * (getBodyHalfWidthAtSourceX(sourceX, blockoutConfig) + outwardMm);
 }
 
 function SideSurfaceSegment({
+  blockoutConfig,
   start,
   end,
   side,
@@ -406,6 +596,7 @@ function SideSurfaceSegment({
   material,
   keyPrefix,
 }: {
+  blockoutConfig: BlockoutConfig;
   start: { x: number; z: number };
   end: { x: number; z: number };
   side: 1 | -1;
@@ -421,7 +612,7 @@ function SideSurfaceSegment({
   const centerX = (start.x + end.x) / 2;
   const position = sourcePointToWorld({
     x: centerX,
-    y: getSideDetailY(centerX, side, outwardMm),
+    y: getSideDetailY(centerX, side, outwardMm, blockoutConfig),
     z: (start.z + end.z) / 2,
   });
 
@@ -437,17 +628,20 @@ function SideSurfaceSegment({
 }
 
 function SchemaSideDetails({
+  blockoutConfig,
   fenderMaterial,
   trimMaterial,
   handleMaterial,
   wheelWellMaterial,
 }: {
+  blockoutConfig: BlockoutConfig;
   fenderMaterial: MaterialOptions;
   trimMaterial: MaterialOptions;
   handleMaterial: MaterialOptions;
   wheelWellMaterial: MaterialOptions;
 }) {
-  const { render, seams, handles, beltline, doorPanels, wheelWells } = corollaBlockoutConfig.sceneMm.sideDetails;
+  const { render, seams, handles, beltline, doorPanels, windowBaseFills, mirrors, wheelWells } =
+    blockoutConfig.sceneMm.sideDetails;
 
   return (
     <>
@@ -455,6 +649,31 @@ function SchemaSideDetails({
         const sideOffset = side * 0.004;
 
         return [
+          ...windowBaseFills.map((fill) => {
+            const fillPoint = (point: { x: number; z: number }) =>
+              sourcePointToWorld(
+                {
+                  x: point.x,
+                  y: getSideDetailY(point.x, side, render.windowBaseFillOutsetMm, blockoutConfig),
+                  z: point.z,
+                },
+                undefined,
+                side * 0.003,
+              );
+
+            return (
+              <PolygonPart
+                key={`window-base-fill-${side}-${fill.id}`}
+                points={[
+                  fillPoint(fill.lowerLeft),
+                  fillPoint(fill.lowerRight),
+                  fillPoint(fill.upperRight),
+                  fillPoint(fill.upperLeft),
+                ]}
+                material={fenderMaterial}
+              />
+            );
+          }),
           ...doorPanels.flatMap((door) => {
             const topStart = { x: door.xStart, z: door.zTopStart };
             const topEnd = { x: door.xEnd, z: door.zTopEnd };
@@ -467,6 +686,7 @@ function SchemaSideDetails({
               <SideSurfaceSegment
                 key={`door-top-${side}-${door.id}`}
                 keyPrefix={`door-top-${side}-${door.id}`}
+                blockoutConfig={blockoutConfig}
                 start={topStart}
                 end={topEnd}
                 side={side}
@@ -478,6 +698,7 @@ function SchemaSideDetails({
               <SideSurfaceSegment
                 key={`door-bottom-${side}-${door.id}`}
                 keyPrefix={`door-bottom-${side}-${door.id}`}
+                blockoutConfig={blockoutConfig}
                 start={bottomStart}
                 end={bottomEnd}
                 side={side}
@@ -489,6 +710,7 @@ function SchemaSideDetails({
               <SideSurfaceSegment
                 key={`door-front-${side}-${door.id}`}
                 keyPrefix={`door-front-${side}-${door.id}`}
+                blockoutConfig={blockoutConfig}
                 start={bottomStart}
                 end={topStart}
                 side={side}
@@ -500,6 +722,7 @@ function SchemaSideDetails({
               <SideSurfaceSegment
                 key={`door-rear-${side}-${door.id}`}
                 keyPrefix={`door-rear-${side}-${door.id}`}
+                blockoutConfig={blockoutConfig}
                 start={bottomEnd}
                 end={topEnd}
                 side={side}
@@ -511,6 +734,7 @@ function SchemaSideDetails({
               <SideSurfaceSegment
                 key={`door-mid-${side}-${door.id}`}
                 keyPrefix={`door-mid-${side}-${door.id}`}
+                blockoutConfig={blockoutConfig}
                 start={midStart}
                 end={midEnd}
                 side={side}
@@ -525,7 +749,7 @@ function SchemaSideDetails({
             const height = (seam.zTop - seam.zBottom) / 1000;
             const position = sourcePointToWorld({
               x: seam.x,
-              y: getSideDetailY(seam.x, side, render.seamOutsetMm),
+              y: getSideDetailY(seam.x, side, render.seamOutsetMm, blockoutConfig),
               z: (seam.zTop + seam.zBottom) / 2,
             });
 
@@ -541,7 +765,7 @@ function SchemaSideDetails({
           ...handles.map((handle) => {
             const position = sourcePointToWorld({
               x: handle.x,
-              y: getSideDetailY(handle.x, side, render.handleOutsetMm),
+              y: getSideDetailY(handle.x, side, render.handleOutsetMm, blockoutConfig),
               z: handle.z,
             });
 
@@ -554,6 +778,35 @@ function SchemaSideDetails({
               />
             );
           }),
+          ...mirrors.flatMap((mirror) => {
+            const stalkPosition = sourcePointToWorld({
+              x: (mirror.base.x + mirror.headCenter.x) / 2,
+              y: getSideDetailY(mirror.base.x, side, render.mirrorStalkOutsetMm, blockoutConfig),
+              z: (mirror.base.z + mirror.headCenter.z) / 2,
+            });
+            const headPosition = sourcePointToWorld({
+              x: mirror.headCenter.x,
+              y: getSideDetailY(mirror.headCenter.x, side, render.mirrorHeadOutsetMm, blockoutConfig),
+              z: mirror.headCenter.z,
+            });
+
+            return [
+              <BoxPart
+                key={`mirror-stalk-${side}-${mirror.base.x}`}
+                position={[stalkPosition[0], stalkPosition[1], stalkPosition[2] + sideOffset]}
+                rotation={[0, 0, -0.18]}
+                args={vecFromSourceSize(mirror.stalkSize)}
+                material={trimMaterial}
+              />,
+              <BoxPart
+                key={`mirror-head-${side}-${mirror.base.x}`}
+                position={[headPosition[0], headPosition[1], headPosition[2] + sideOffset]}
+                rotation={[0, 0, -0.08]}
+                args={vecFromSourceSize(mirror.headSize)}
+                material={fenderMaterial}
+              />,
+            ];
+          }),
           ...beltline.slice(0, -1).map((start, index) => {
             const end = beltline[index + 1];
             const dx = (end.x - start.x) / 1000;
@@ -562,7 +815,7 @@ function SchemaSideDetails({
             const centerX = (start.x + end.x) / 2;
             const position = sourcePointToWorld({
               x: centerX,
-              y: getSideDetailY(centerX, side, render.beltlineOutsetMm),
+              y: getSideDetailY(centerX, side, render.beltlineOutsetMm, blockoutConfig),
               z: (start.z + end.z) / 2,
             });
 
@@ -579,13 +832,13 @@ function SchemaSideDetails({
           ...wheelWells.map((well) => {
             const position = sourcePointToWorld({
               x: well.x,
-              y: getSideDetailY(well.x, side, render.wheelWellInsetMm),
+              y: getSideDetailY(well.x, side, render.wheelWellInsetMm, blockoutConfig),
               z: well.z,
             });
             const radius = well.radius / 1000;
             const fenderPosition = sourcePointToWorld({
               x: well.x,
-              y: getSideDetailY(well.x, side, render.fenderOutsetMm),
+              y: getSideDetailY(well.x, side, render.fenderOutsetMm, blockoutConfig),
               z: well.z,
             });
 
@@ -612,16 +865,18 @@ function SchemaSideDetails({
 }
 
 function SchemaLights({
+  blockoutConfig,
   material,
   kind,
 }: {
+  blockoutConfig: BlockoutConfig;
   material: MaterialOptions;
   kind: "headlight" | "taillight";
 }) {
   const lightOutline =
     kind === "headlight"
-      ? corollaBlockoutConfig.sceneMm.headlights
-      : corollaBlockoutConfig.sceneMm.taillights;
+      ? blockoutConfig.sceneMm.headlights
+      : blockoutConfig.sceneMm.taillights;
   const offset = 0.001;
 
   return (
@@ -637,15 +892,17 @@ function vecFromSourceSize(size: { x: number; y: number; z: number }): [number, 
 }
 
 function SchemaInterior({
+  blockoutConfig,
   seatMaterial,
   dashMaterial,
   accentMaterial,
 }: {
+  blockoutConfig: BlockoutConfig;
   seatMaterial: MaterialOptions;
   dashMaterial: MaterialOptions;
   accentMaterial: MaterialOptions;
 }) {
-  const { frontSeats, dashboard, steeringWheel } = corollaBlockoutConfig.sceneMm.interior;
+  const { frontSeats, dashboard, steeringWheel } = blockoutConfig.sceneMm.interior;
 
   return (
     <>
@@ -697,63 +954,68 @@ function SchemaInterior({
 
 function CorollaLikeSedan({ params, selected, paint }: { params: CarParams; selected: Set<AccessoryId>; paint: PaintId }) {
   const visual = corollaVisualControls;
-  void paint;
+  const blockoutConfig = params.bodyStyle === "boxyCompact" ? civic90FgBlockoutConfig : corollaBlockoutConfig;
+  const selectedPaint = paints[paint] ?? paints.white;
   const modelScale = useMemo((): [number, number, number] => {
-    const base = corollaBlockoutConfig.dimensionsM;
+    const base = blockoutConfig.dimensionsM;
 
     return [
       params.overallLength / base.overallLength,
       params.bodyHeight / base.visualHeight,
       params.width / base.overallWidth,
     ];
-  }, [params]);
+  }, [blockoutConfig, params]);
 
   const hasSportWheels = selected.has("wheels");
   const hasLeds = selected.has("leds");
+  const hasClosedPopupHeadlights = params.bodyStyle === "boxyCompact";
   const bodyMaterial: MaterialOptions = useMemo(() => ({
-    ...corollaBlockoutConfig.materials.body,
-  }), []);
+    ...blockoutConfig.materials.body,
+    color: selectedPaint.color,
+  }), [blockoutConfig, selectedPaint.color]);
   const glass: MaterialOptions = {
     ...visual.materials.glass,
-    ...corollaBlockoutConfig.materials.glass,
+    ...blockoutConfig.materials.glass,
   };
   const headlightMat: MaterialOptions = useMemo(() => ({
     ...visual.materials.clearLens,
-    color: hasLeds ? "#fefce8" : visual.materials.clearLens.color,
-    emissive: hasLeds ? "#facc15" : "#000000",
-    emissiveIntensity: hasLeds ? 1.2 : 0,
-  }), [hasLeds, visual]);
+    color: hasClosedPopupHeadlights ? "#29313a" : hasLeds ? "#fefce8" : visual.materials.clearLens.color,
+    emissive: hasClosedPopupHeadlights ? "#000000" : hasLeds ? "#facc15" : "#000000",
+    emissiveIntensity: hasClosedPopupHeadlights ? 0 : hasLeds ? 1.2 : 0,
+  }), [hasClosedPopupHeadlights, hasLeds, visual]);
   const wheelPositions = useMemo((): Array<[number, number, number]> => {
-    return corollaBlockoutConfig.sceneMm.wheels.centers.map((center) => [
+    return blockoutConfig.sceneMm.wheels.centers.map((center) => [
       sourceXToWorldX(center.x, corollaDesignSchema),
       sourceZToWorldY(center.z),
       sourceYToWorldZ(center.y),
     ]);
-  }, []);
+  }, [blockoutConfig]);
 
   return (
     <group rotation={visual.motion.rotation} scale={modelScale}>
-      <SedanBodyShell material={{ ...bodyMaterial, ...visual.materials.body }} />
-      <SchemaRoofGlassSeals material={{ ...bodyMaterial, ...visual.materials.body }} />
+      <SedanBodyShell blockoutConfig={blockoutConfig} material={{ ...bodyMaterial, ...visual.materials.body }} />
+      <SchemaRoofGlassSeals blockoutConfig={blockoutConfig} material={{ ...bodyMaterial, ...visual.materials.body }} />
       <SchemaInterior
-        seatMaterial={corollaBlockoutConfig.materials.interiorFabricDark}
-        dashMaterial={corollaBlockoutConfig.materials.interiorPlasticDark}
-        accentMaterial={corollaBlockoutConfig.materials.interiorAccent}
+        blockoutConfig={blockoutConfig}
+        seatMaterial={blockoutConfig.materials.interiorFabricDark}
+        dashMaterial={blockoutConfig.materials.interiorPlasticDark}
+        accentMaterial={blockoutConfig.materials.interiorAccent}
       />
-      <SchemaGlass material={glass} />
-      <SchemaWindowFrames material={visual.materials.blackTrim} />
-      <SchemaPillars material={visual.materials.blackTrim} />
-      <SchemaUpperGrille material={visual.materials.glossBlack} />
-      <SchemaLowerIntake material={visual.materials.matteBlack} />
-      <SchemaFrontBadge material={corollaBlockoutConfig.materials.chrome} />
+      <SchemaGlass blockoutConfig={blockoutConfig} material={glass} />
+      <SchemaWindowFrames blockoutConfig={blockoutConfig} material={visual.materials.blackTrim} />
+      <SchemaPillars blockoutConfig={blockoutConfig} material={visual.materials.blackTrim} />
+      <SchemaUpperGrille blockoutConfig={blockoutConfig} material={visual.materials.glossBlack} />
+      <SchemaLowerIntake blockoutConfig={blockoutConfig} material={visual.materials.matteBlack} />
+      <SchemaFrontBadge blockoutConfig={blockoutConfig} material={blockoutConfig.materials.chrome} />
       <SchemaSideDetails
+        blockoutConfig={blockoutConfig}
         fenderMaterial={{ ...bodyMaterial, ...visual.materials.body }}
         trimMaterial={visual.materials.blackTrim}
-        handleMaterial={corollaBlockoutConfig.materials.chrome}
-        wheelWellMaterial={corollaBlockoutConfig.materials.wheelWell}
+        handleMaterial={blockoutConfig.materials.chrome}
+        wheelWellMaterial={blockoutConfig.materials.wheelWell}
       />
-      <SchemaLights kind="headlight" material={headlightMat} />
-      <SchemaLights kind="taillight" material={visual.materials.redLens} />
+      <SchemaLights blockoutConfig={blockoutConfig} kind="headlight" material={headlightMat} />
+      <SchemaLights blockoutConfig={blockoutConfig} kind="taillight" material={visual.materials.redLens} />
 
       {Array.from(selected).map((id) => {
         const Renderer = accessoryRenderers[id];
@@ -761,7 +1023,7 @@ function CorollaLikeSedan({ params, selected, paint }: { params: CarParams; sele
       })}
 
       {wheelPositions.map(([x, y, z], index) => (
-        <Wheel key={index} x={x} y={y} z={z} sport={hasSportWheels} />
+        <Wheel key={index} blockoutConfig={blockoutConfig} x={x} y={y} z={z} sport={hasSportWheels} />
       ))}
     </group>
   );

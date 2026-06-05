@@ -6,13 +6,13 @@ import {
 } from "../shared/sedan-base";
 
 const civicDimensions = {
-  overallLength: 3.995,
+  overallLength: 3.75,
   width: 1.675,
-  visualHeight: 1.335,
-  wheelbase: 2.5,
-  frontOverhang: 0.78,
-  rearOverhang: 0.715,
-  groundClearance: 0.15,
+  visualHeight: 1.24,
+  wheelbase: 2.35,
+  frontOverhang: 0.62,
+  rearOverhang: 0.52,
+  groundClearance: 0.1,
   cabinLengthRatio: 0.58,
 } as const;
 
@@ -23,21 +23,21 @@ export const civic90FgDesignSchema = createDerivedSedanSchema({
     model: "Civic",
     year: 1990,
     generation: "EF-inspired FG project",
-    bodyStyle: "compact 4-door sedan",
-    sourceNote: "Shared sedan renderer reuse with approximate 1990 Civic proportions.",
+    bodyStyle: "compact 2-door boxy sedan/hatchback",
+    sourceNote: "Shared blockout renderer reuse with approximate 1990 EF Civic-inspired proportions.",
   },
   dimensions: {
     ...civicDimensions,
     sourceMm: {
-      length: 3995,
+      length: 3750,
       widthNoMirrors: 1675,
-      height: 1335,
-      wheelbase: 2500,
+      height: 1240,
+      wheelbase: 2350,
       frontTrack: 1450,
       rearTrack: 1455,
-      groundClearanceNominal: 150,
-      groundClearanceMin: 145,
-      groundClearanceMax: 155,
+      groundClearanceNominal: 100,
+      groundClearanceMin: 90,
+      groundClearanceMax: 115,
     },
     derivedRatios: {
       lengthToWidth: civicDimensions.overallLength / civicDimensions.width,
@@ -51,7 +51,7 @@ export const civic90FgDesignSchema = createDerivedSedanSchema({
     bodyTaper: 0.42,
   },
   wheelGeometry: {
-    radius: 0.292,
+    radius: 0.318,
     width: 0.185,
   },
 }) satisfies CarDesignSchema;
@@ -73,6 +73,7 @@ export const civic90FgParams = {
   frontLightHeight: Number(baseSedanDesignSchema.headlights.centerY),
   rearLightHeight: Number(baseSedanDesignSchema.taillights.centerY),
   hasFastback: false,
+  bodyStyle: "boxyCompact",
   scale: Number(civic90FgDesignSchema.coordinateSystem.scale),
 } satisfies CarParams;
 

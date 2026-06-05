@@ -77,43 +77,119 @@ export const corollaDimensionsM = {
   halfWidth: 0.8875,
 } as const;
 
+const mirrorSourcePointY = <T extends { x: number; y: number; z: number }>(point: T) => ({
+  ...point,
+  y: -point.y,
+});
+
+const hoodFrontDeckMm = { x: -720, z: 650, halfWidth: 640 } as const;
+const hoodMidDeckMm = { x: -280, z: 700, halfWidth: 690 } as const;
+const hoodRearDeckMm = { x: 700, z: 842, halfWidth: 770 } as const;
+const trunkFrontDeckMm = { x: 2860, z: 902, halfWidth: 748 } as const;
+const trunkMidDeckMm = { x: 3200, z: 896, halfWidth: 704 } as const;
+const trunkRearDeckMm = { x: 3500, z: 872, halfWidth: 650 } as const;
+
+const windshieldLowerLeftMm = { x: hoodRearDeckMm.x, y: -858, z: 845 } as const;
+const windshieldUpperLeftMm = { x: 1020, y: -820, z: 1192 } as const;
+const frontDoorWindowLowerMm = { x: 720, y: -868, z: 890 } as const;
+const bPillarLowerMm = { x: 1668, y: -862, z: 920 } as const;
+const bPillarUpperMm = { x: 1668, y: -812, z: 1260 } as const;
+const cPillarUpperMm = { x: 2440, y: -796, z: 1218 } as const;
+const cPillarLowerMm = { x: 2680, y: -826, z: 928 } as const;
+const rearGlassLowerLeftMm = { x: trunkFrontDeckMm.x, y: -825, z: trunkFrontDeckMm.z } as const;
+const roofFrontHeaderRearMm = { x: 1085, y: -812, z: 1218 } as const;
+const roofRearHeaderFrontMm = { x: 2378, y: -790, z: 1230 } as const;
+
+const frontDoorTopStartMm = { x: frontDoorWindowLowerMm.x, z: 790 } as const;
+const frontDoorTopEndMm = { x: bPillarLowerMm.x, z: 804 } as const;
+const rearDoorTopStartMm = frontDoorTopEndMm;
+const rearDoorTopEndMm = { x: cPillarLowerMm.x, z: 812 } as const;
+
+export const corollaConnectionMapMm = {
+  hood: {
+    frontDeck: hoodFrontDeckMm,
+    midDeck: hoodMidDeckMm,
+    rearDeck: hoodRearDeckMm,
+    windshieldCowlLeft: windshieldLowerLeftMm,
+    windshieldCowlRight: mirrorSourcePointY(windshieldLowerLeftMm),
+  },
+  cabin: {
+    windshieldLowerLeft: windshieldLowerLeftMm,
+    windshieldLowerRight: mirrorSourcePointY(windshieldLowerLeftMm),
+    windshieldUpperLeft: windshieldUpperLeftMm,
+    windshieldUpperRight: mirrorSourcePointY(windshieldUpperLeftMm),
+    frontDoorWindowLower: frontDoorWindowLowerMm,
+    aPillarBase: frontDoorWindowLowerMm,
+    aPillarTop: windshieldUpperLeftMm,
+    bPillarBase: bPillarLowerMm,
+    bPillarTop: bPillarUpperMm,
+    cPillarTop: cPillarUpperMm,
+    cPillarBase: cPillarLowerMm,
+    rearGlassUpperLeft: cPillarUpperMm,
+    rearGlassUpperRight: mirrorSourcePointY(cPillarUpperMm),
+    rearGlassLowerLeft: rearGlassLowerLeftMm,
+    rearGlassLowerRight: mirrorSourcePointY(rearGlassLowerLeftMm),
+  },
+  roof: {
+    frontLeft: windshieldUpperLeftMm,
+    frontRight: mirrorSourcePointY(windshieldUpperLeftMm),
+    frontHeaderRearLeft: roofFrontHeaderRearMm,
+    frontHeaderRearRight: mirrorSourcePointY(roofFrontHeaderRearMm),
+    rearLeft: cPillarUpperMm,
+    rearRight: mirrorSourcePointY(cPillarUpperMm),
+    rearHeaderFrontLeft: roofRearHeaderFrontMm,
+    rearHeaderFrontRight: mirrorSourcePointY(roofRearHeaderFrontMm),
+  },
+  doors: {
+    frontTopStart: frontDoorTopStartMm,
+    frontTopEnd: frontDoorTopEndMm,
+    rearTopStart: rearDoorTopStartMm,
+    rearTopEnd: rearDoorTopEndMm,
+  },
+  trunk: {
+    frontDeck: trunkFrontDeckMm,
+    midDeck: trunkMidDeckMm,
+    rearDeck: trunkRearDeckMm,
+    rearGlassLowerLeft: rearGlassLowerLeftMm,
+    rearGlassLowerRight: mirrorSourcePointY(rearGlassLowerLeftMm),
+  },
+} as const;
+
 export const corollaGeometryMm = {
   mainBodyStations: [
     { x: -760, topZ: 600, bottomZ: 280, halfWidth: 710 },
     { x: -560, topZ: 655, bottomZ: 280, halfWidth: 775 },
     { x: -360, topZ: 735, bottomZ: 280, halfWidth: 830 },
     { x: -180, topZ: 800, bottomZ: 280, halfWidth: 855 },
-    { x: 0, topZ: 822, bottomZ: 280, halfWidth: 868 },
-    { x: 180, topZ: 828, bottomZ: 280, halfWidth: 872 },
-    { x: 420, topZ: 832, bottomZ: 280, halfWidth: 875 },
-    { x: 900, topZ: 835, bottomZ: 280, halfWidth: 878 },
-    { x: 1700, topZ: 830, bottomZ: 280, halfWidth: 872 },
-    { x: 2260, topZ: 815, bottomZ: 280, halfWidth: 852 },
-    { x: 2500, topZ: 798, bottomZ: 280, halfWidth: 834 },
-    { x: 2600, topZ: 832, bottomZ: 280, halfWidth: 826 },
-    { x: 2700, topZ: 812, bottomZ: 280, halfWidth: 818 },
-    { x: 2840, topZ: 790, bottomZ: 280, halfWidth: 806 },
-    { x: 2960, topZ: 758, bottomZ: 282, halfWidth: 792 },
-    { x: 3100, topZ: 720, bottomZ: 284, halfWidth: 775 },
-    { x: 3380, topZ: 645, bottomZ: 292, halfWidth: 735 },
+    { x: 0, topZ: 814, bottomZ: 280, halfWidth: 868 },
+    { x: 180, topZ: 824, bottomZ: 280, halfWidth: 872 },
+    { x: 420, topZ: 842, bottomZ: 280, halfWidth: 875 },
+    { x: 720, topZ: 860, bottomZ: 280, halfWidth: 878 },
+    { x: 1160, topZ: 875, bottomZ: 280, halfWidth: 878 },
+    { x: 1700, topZ: 872, bottomZ: 280, halfWidth: 872 },
+    { x: 2260, topZ: 862, bottomZ: 280, halfWidth: 852 },
+    { x: 2680, topZ: 842, bottomZ: 280, halfWidth: 826 },
+    { x: 2860, topZ: 900, bottomZ: 280, halfWidth: 812 },
+    { x: 3120, topZ: 895, bottomZ: 284, halfWidth: 775 },
+    { x: 3380, topZ: 868, bottomZ: 292, halfWidth: 735 },
     { x: 3535, topZ: 618, bottomZ: 305, halfWidth: 700 },
   ],
   hoodStations: [
-    { x: -720, z: 668, halfWidth: 640 },
-    { x: -280, z: 712, halfWidth: 690 },
-    { x: 320, z: 810, halfWidth: 748 },
-    { x: 860, z: 858, halfWidth: 770 },
+    corollaConnectionMapMm.hood.frontDeck,
+    corollaConnectionMapMm.hood.midDeck,
+    { x: 260, z: 785, halfWidth: 746 },
+    corollaConnectionMapMm.hood.rearDeck,
   ],
   trunkStations: [
-    { x: 2600, z: 928, halfWidth: 760 },
-    { x: 3020, z: 842, halfWidth: 716 },
-    { x: 3460, z: 742, halfWidth: 650 },
+    corollaConnectionMapMm.trunk.frontDeck,
+    corollaConnectionMapMm.trunk.midDeck,
+    corollaConnectionMapMm.trunk.rearDeck,
   ],
   roofStations: [
-    { x: 1210, z: 1160, halfWidth: 820 },
-    { x: 1500, z: 1238, halfWidth: 812 },
-    { x: 1845, z: 1250, halfWidth: 804 },
-    { x: 2190, z: 1212, halfWidth: 802 },
+    { x: corollaConnectionMapMm.roof.frontLeft.x, z: corollaConnectionMapMm.roof.frontLeft.z, halfWidth: 820 },
+    { x: 1380, z: 1272, halfWidth: 812 },
+    { x: 1900, z: 1270, halfWidth: 804 },
+    { x: corollaConnectionMapMm.roof.rearLeft.x, z: corollaConnectionMapMm.roof.rearLeft.z, halfWidth: 796 },
   ],
   frontBumperStations: [
     { x: -900, z: 625, halfWidth: 685 },
@@ -145,61 +221,61 @@ export const corollaSceneMm = {
   },
   glass: {
     windshield: {
-      lowerLeft: { x: 870, y: -858, z: 865 },
-      lowerRight: { x: 870, y: 858, z: 865 },
-      upperLeft: { x: 1210, y: -820, z: 1156 },
-      upperRight: { x: 1210, y: 820, z: 1156 },
+      lowerLeft: corollaConnectionMapMm.cabin.windshieldLowerLeft,
+      lowerRight: corollaConnectionMapMm.cabin.windshieldLowerRight,
+      upperLeft: corollaConnectionMapMm.cabin.windshieldUpperLeft,
+      upperRight: corollaConnectionMapMm.cabin.windshieldUpperRight,
     },
     rearGlass: {
-      lowerLeft: { x: 2600, y: -825, z: 930 },
-      lowerRight: { x: 2600, y: 825, z: 930 },
-      upperLeft: { x: 2190, y: -802, z: 1210 },
-      upperRight: { x: 2190, y: 802, z: 1210 },
+      lowerLeft: corollaConnectionMapMm.cabin.rearGlassLowerLeft,
+      lowerRight: corollaConnectionMapMm.cabin.rearGlassLowerRight,
+      upperLeft: corollaConnectionMapMm.cabin.rearGlassUpperLeft,
+      upperRight: corollaConnectionMapMm.cabin.rearGlassUpperRight,
     },
     sideWindows: [
       [
-        { x: 820, y: -868, z: 900 },
-        { x: 1210, y: -820, z: 1156 },
-        { x: 1668, y: -812, z: 1236 },
-        { x: 1668, y: -862, z: 918 },
+        corollaConnectionMapMm.cabin.frontDoorWindowLower,
+        corollaConnectionMapMm.cabin.aPillarTop,
+        corollaConnectionMapMm.cabin.bPillarTop,
+        corollaConnectionMapMm.cabin.bPillarBase,
       ],
       [
-        { x: 1668, y: -862, z: 918 },
-        { x: 1668, y: -812, z: 1236 },
-        { x: 2190, y: -802, z: 1210 },
-        { x: 2600, y: -826, z: 930 },
+        corollaConnectionMapMm.cabin.bPillarBase,
+        corollaConnectionMapMm.cabin.bPillarTop,
+        corollaConnectionMapMm.cabin.cPillarTop,
+        corollaConnectionMapMm.cabin.cPillarBase,
       ],
     ],
   },
   pillars: {
     aPillar: {
-      base: { x: 820, y: -868, z: 900 },
-      top: { x: 1210, y: -820, z: 1156 },
+      base: corollaConnectionMapMm.cabin.aPillarBase,
+      top: corollaConnectionMapMm.cabin.aPillarTop,
       thickness: 18,
     },
     bPillar: {
-      base: { x: 1668, y: -862, z: 918 },
-      top: { x: 1668, y: -812, z: 1236 },
+      base: corollaConnectionMapMm.cabin.bPillarBase,
+      top: corollaConnectionMapMm.cabin.bPillarTop,
       thickness: 16,
     },
     cPillar: {
-      base: { x: 2600, y: -826, z: 930 },
-      top: { x: 2190, y: -802, z: 1210 },
-      thickness: 30,
+      base: corollaConnectionMapMm.cabin.cPillarBase,
+      top: corollaConnectionMapMm.cabin.cPillarTop,
+      thickness: 34,
     },
   },
   roofSeals: {
     windshieldHeader: [
-      { x: 1210, y: -820, z: 1156 },
-      { x: 1210, y: 820, z: 1156 },
-      { x: 1275, y: 805, z: 1186 },
-      { x: 1275, y: -805, z: 1186 },
+      corollaConnectionMapMm.roof.frontLeft,
+      corollaConnectionMapMm.roof.frontRight,
+      corollaConnectionMapMm.roof.frontHeaderRearRight,
+      corollaConnectionMapMm.roof.frontHeaderRearLeft,
     ],
     rearHeader: [
-      { x: 2190, y: -802, z: 1210 },
-      { x: 2190, y: 802, z: 1210 },
-      { x: 2134, y: 795, z: 1226 },
-      { x: 2134, y: -795, z: 1226 },
+      corollaConnectionMapMm.roof.rearLeft,
+      corollaConnectionMapMm.roof.rearRight,
+      corollaConnectionMapMm.roof.rearHeaderFrontRight,
+      corollaConnectionMapMm.roof.rearHeaderFrontLeft,
     ],
   },
   upperGrille: {
@@ -214,19 +290,19 @@ export const corollaSceneMm = {
     halfHeight: 48,
   },
   headlights: [
-    { x: -935, y: -245, z: 642 },
-    { x: -925, y: -552, z: 652 },
-    { x: -860, y: -712, z: 630 },
-    { x: -830, y: -724, z: 600 },
-    { x: -884, y: -552, z: 594 },
-    { x: -930, y: -260, z: 606 },
+    { x: -936, y: -230, z: 630 },
+    { x: -926, y: -560, z: 642 },
+    { x: -858, y: -724, z: 624 },
+    { x: -832, y: -732, z: 596 },
+    { x: -888, y: -560, z: 586 },
+    { x: -932, y: -245, z: 598 },
   ],
   taillights: [
-    { x: 3538, y: -260, z: 678 },
-    { x: 3548, y: -565, z: 695 },
-    { x: 3578, y: -620, z: 676 },
-    { x: 3574, y: -600, z: 650 },
-    { x: 3538, y: -265, z: 656 },
+    { x: 3538, y: -255, z: 682 },
+    { x: 3548, y: -575, z: 690 },
+    { x: 3578, y: -632, z: 672 },
+    { x: 3574, y: -612, z: 646 },
+    { x: 3538, y: -260, z: 652 },
   ],
   badge: {
     center: { x: -946, y: 0, z: 580 },
@@ -251,36 +327,39 @@ export const corollaSceneMm = {
       handleDepthMm: 18,
       beltlineHeightMm: 8,
       beltlineDepthMm: 7,
+      windowBaseFillOutsetMm: 2,
       windowFrameHeightMm: 18,
       windowFrameDepthMm: 10,
       fenderOutsetMm: 14,
       fenderLipTubeMm: 22,
       fenderArcRadians: Math.PI,
+      mirrorHeadOutsetMm: 98,
+      mirrorStalkOutsetMm: 38,
       wheelWellInsetMm: -8,
     },
     seams: [
-      { x: 820, zTop: 790, zBottom: 380 },
-      { x: 1668, zTop: 804, zBottom: 380 },
-      { x: 2600, zTop: 806, zBottom: 390 },
+      { x: corollaConnectionMapMm.doors.frontTopStart.x, zTop: corollaConnectionMapMm.doors.frontTopStart.z, zBottom: 380 },
+      { x: corollaConnectionMapMm.doors.frontTopEnd.x, zTop: corollaConnectionMapMm.doors.frontTopEnd.z, zBottom: 380 },
+      { x: corollaConnectionMapMm.doors.rearTopEnd.x, zTop: corollaConnectionMapMm.doors.rearTopEnd.z, zBottom: 390 },
     ],
     handles: [
-      { x: 1235, z: 755 },
-      { x: 2165, z: 760 },
+      { x: 1180, z: 750 },
+      { x: 2200, z: 758 },
     ],
     beltline: [
-      { x: 820, z: 790 },
-      { x: 1235, z: 798 },
-      { x: 1668, z: 804 },
-      { x: 2165, z: 812 },
-      { x: 2600, z: 806 },
+      corollaConnectionMapMm.doors.frontTopStart,
+      { x: 1180, z: 798 },
+      corollaConnectionMapMm.doors.frontTopEnd,
+      { x: 2200, z: 810 },
+      corollaConnectionMapMm.doors.rearTopEnd,
     ],
     doorPanels: [
       {
         id: "front",
-        xStart: 820,
-        xEnd: 1668,
-        zTopStart: 790,
-        zTopEnd: 804,
+        xStart: corollaConnectionMapMm.doors.frontTopStart.x,
+        xEnd: corollaConnectionMapMm.doors.frontTopEnd.x,
+        zTopStart: corollaConnectionMapMm.doors.frontTopStart.z,
+        zTopEnd: corollaConnectionMapMm.doors.frontTopEnd.z,
         zBottomStart: 405,
         zBottomEnd: 395,
         zMidStart: 615,
@@ -288,14 +367,50 @@ export const corollaSceneMm = {
       },
       {
         id: "rear",
-        xStart: 1668,
-        xEnd: 2600,
-        zTopStart: 804,
-        zTopEnd: 806,
+        xStart: corollaConnectionMapMm.doors.rearTopStart.x,
+        xEnd: corollaConnectionMapMm.doors.rearTopEnd.x,
+        zTopStart: corollaConnectionMapMm.doors.rearTopStart.z,
+        zTopEnd: corollaConnectionMapMm.doors.rearTopEnd.z,
         zBottomStart: 395,
         zBottomEnd: 410,
         zMidStart: 626,
         zMidEnd: 638,
+      },
+    ],
+    windowBaseFills: [
+      {
+        id: "front",
+        lowerLeft: corollaConnectionMapMm.doors.frontTopStart,
+        lowerRight: corollaConnectionMapMm.doors.frontTopEnd,
+        upperLeft: {
+          x: corollaConnectionMapMm.cabin.frontDoorWindowLower.x,
+          z: corollaConnectionMapMm.cabin.frontDoorWindowLower.z,
+        },
+        upperRight: {
+          x: corollaConnectionMapMm.cabin.bPillarBase.x,
+          z: corollaConnectionMapMm.cabin.bPillarBase.z,
+        },
+      },
+      {
+        id: "rear",
+        lowerLeft: corollaConnectionMapMm.doors.rearTopStart,
+        lowerRight: corollaConnectionMapMm.doors.rearTopEnd,
+        upperLeft: {
+          x: corollaConnectionMapMm.cabin.bPillarBase.x,
+          z: corollaConnectionMapMm.cabin.bPillarBase.z,
+        },
+        upperRight: {
+          x: corollaConnectionMapMm.cabin.cPillarBase.x,
+          z: corollaConnectionMapMm.cabin.cPillarBase.z,
+        },
+      },
+    ],
+    mirrors: [
+      {
+        base: { x: 805, z: 872 },
+        headCenter: { x: 760, z: 910 },
+        headSize: { x: 120, y: 62, z: 74 },
+        stalkSize: { x: 82, y: 20, z: 24 },
       },
     ],
     wheelWells: [

@@ -32,43 +32,65 @@ type PanelStation = {
 };
 
 const {
-  panelFactors,
-  faceFactors,
-  bodySideInsetMm,
-  bodyArchMidMinZ,
-  bodyArchMidBaseZ,
-  bodyArchTopGapMm,
-  bodyArchMidLiftMm,
-  defaultBumperCrownMm,
-  defaultBumperEdgeDropMm,
-  hoodCrownMm,
-  hoodEdgeDropMm,
-  hoodFrontDropMm,
-  hoodRearDropMm,
-  hoodSideDropMm,
-  trunkCrownMm,
-  trunkEdgeDropMm,
-  trunkFrontDropMm,
-  trunkRearDropMm,
-  trunkSideDropMm,
-  roofCrownMm,
-  roofEdgeDropMm,
-  roofFrontDropMm,
-  roofRearDropMm,
-  roofSideDropMm,
-  frontBumper: frontBumperBuildConfig,
-} = corollaGeometryBuilderConfig;
-const {
-  mainBodyStations,
-  hoodStations,
-  trunkStations,
-  roofStations,
-  frontBumperStations,
-  rearBumperStations,
-  wheelArchCentersX,
-  wheelCenterZ,
-  wheelArchRadius,
-} = corollaBlockoutConfig.geometryMm;
+  geometryMm: defaultGeometryMm,
+} = corollaBlockoutConfig;
+
+type GeometryMm = {
+  mainBodyStations: readonly BodyStation[];
+  hoodStations: readonly PanelStation[];
+  trunkStations: readonly PanelStation[];
+  roofStations: readonly PanelStation[];
+  frontBumperStations: readonly PanelStation[];
+  rearBumperStations: readonly PanelStation[];
+  wheelArchCentersX: readonly number[];
+  wheelCenterZ: number;
+  wheelArchRadius: number;
+};
+type GeometryBuilderConfig = {
+  panelFactors: readonly number[];
+  faceFactors: readonly number[];
+  bodySideInsetMm: number;
+  bodyArchMidMinZ: number;
+  bodyArchMidBaseZ: number;
+  bodyArchTopGapMm: number;
+  bodyArchMidLiftMm: number;
+  defaultBumperCrownMm: number;
+  defaultBumperEdgeDropMm: number;
+  hoodCrownMm: number;
+  hoodEdgeDropMm: number;
+  hoodSideDropMm: number;
+  hoodFrontDropMm: number;
+  hoodRearDropMm: number;
+  trunkCrownMm: number;
+  trunkEdgeDropMm: number;
+  trunkSideDropMm: number;
+  trunkFrontDropMm: number;
+  trunkRearDropMm: number;
+  roofCrownMm: number;
+  roofEdgeDropMm: number;
+  roofSideDropMm: number;
+  roofFrontDropMm: number;
+  roofRearDropMm: number;
+  frontBumper: {
+    cornerRetreatMm: number;
+    topShoulderSoftnessMm: number;
+    bottomShoulderSoftnessMm: number;
+    middleShoulderSoftnessMm: number;
+    crownMm: number;
+    edgeDropMm: number;
+  };
+};
+type GeometryBuildOptions = {
+  geometryMm?: GeometryMm;
+  builderConfig?: GeometryBuilderConfig;
+};
+
+function getGeometryBuildContext(options: GeometryBuildOptions = {}) {
+  return {
+    geometryMm: options.geometryMm ?? defaultGeometryMm,
+    builderConfig: options.builderConfig ?? corollaGeometryBuilderConfig,
+  };
+}
 
 export function sourceXToWorldX(sourceX: number, schema: CarDesignSchema) {
   const dimensions = schema.dimensions as unknown as SchemaDimensions;
@@ -119,24 +141,24 @@ function addGrid(vertices: number[], indices: number[], schema: CarDesignSchema,
   }
 }
 
-function getWheelArchBottomZ(sourceX: number, fallbackZ: number) {
-  const archZ = wheelArchCentersX.reduce((highestZ, centerX) => {
+function getWheelArchBottomZ(sourceX: number, fallbackZ: number, geometryMm: GeometryMm) {
+  const archZ = geometryMm.wheelArchCentersX.reduce((highestZ, centerX) => {
     const distanceX = Math.abs(sourceX - centerX);
 
-    if (distanceX >= wheelArchRadius) {
+    if (distanceX >= geometryMm.wheelArchRadius) {
       return highestZ;
     }
 
-    const archHeight = Math.sqrt(wheelArchRadius * wheelArchRadius - distanceX * distanceX);
-    return Math.max(highestZ, wheelCenterZ + archHeight);
+    const archHeight = Math.sqrt(geometryMm.wheelArchRadius * geometryMm.wheelArchRadius - distanceX * distanceX);
+    return Math.max(highestZ, geometryMm.wheelCenterZ + archHeight);
   }, fallbackZ);
 
   return Math.max(fallbackZ, archZ);
 }
 
-function createMainBodyTop(stations: readonly BodyStation[]) {
+function createMainBodyTop(stations: readonly BodyStation[], builderConfig: GeometryBuilderConfig) {
   return stations.map((station) => (
-    panelFactors.map((factor) => ({
+    builderConfig.panelFactors.map((factor) => ({
       x: station.x,
       y: factor * station.halfWidth,
       z: station.topZ,
@@ -144,27 +166,32 @@ function createMainBodyTop(stations: readonly BodyStation[]) {
   ));
 }
 
-function createMainBodySide(stations: readonly BodyStation[], side: 1 | -1) {
+function createMainBodySide(
+  stations: readonly BodyStation[],
+  side: 1 | -1,
+  geometryMm: GeometryMm,
+  builderConfig: GeometryBuilderConfig
+) {
   return stations.map((station) => {
-    const lowerZ = getWheelArchBottomZ(station.x, station.bottomZ);
-    const hasArchOpening = lowerZ > bodyArchMidBaseZ;
+    const lowerZ = getWheelArchBottomZ(station.x, station.bottomZ, geometryMm);
+    const hasArchOpening = lowerZ > builderConfig.bodyArchMidBaseZ;
     const midZ = hasArchOpening
-      ? Math.min(station.topZ - bodyArchTopGapMm, lowerZ + bodyArchMidLiftMm)
-      : bodyArchMidBaseZ;
+      ? Math.min(station.topZ - builderConfig.bodyArchTopGapMm, lowerZ + builderConfig.bodyArchMidLiftMm)
+      : builderConfig.bodyArchMidBaseZ;
 
     return [
-      { x: station.x, y: side * (station.halfWidth - bodySideInsetMm), z: lowerZ },
-      { x: station.x, y: side * station.halfWidth, z: Math.max(bodyArchMidMinZ, midZ) },
+      { x: station.x, y: side * (station.halfWidth - builderConfig.bodySideInsetMm), z: lowerZ },
+      { x: station.x, y: side * station.halfWidth, z: Math.max(builderConfig.bodyArchMidMinZ, midZ) },
       { x: station.x, y: side * station.halfWidth, z: station.topZ },
     ];
   });
 }
 
-function createMainBodyFace(station: BodyStation) {
+function createMainBodyFace(station: BodyStation, builderConfig: GeometryBuilderConfig) {
   const zRows = [station.bottomZ, 420, station.topZ];
 
   return zRows.map((z) => (
-    faceFactors.map((factor) => ({
+    builderConfig.faceFactors.map((factor) => ({
       x: station.x,
       y: factor * station.halfWidth,
       z,
@@ -172,9 +199,14 @@ function createMainBodyFace(station: BodyStation) {
   ));
 }
 
-function createPanelRows(stations: readonly PanelStation[], crownMm: number, edgeDropMm: number) {
+function createPanelRows(
+  stations: readonly PanelStation[],
+  crownMm: number,
+  edgeDropMm: number,
+  builderConfig: GeometryBuilderConfig
+) {
   return stations.map((station) => (
-    panelFactors.map((factor) => {
+    builderConfig.panelFactors.map((factor) => {
       const abs = Math.abs(factor);
 
       return {
@@ -186,24 +218,31 @@ function createPanelRows(stations: readonly PanelStation[], crownMm: number, edg
   ));
 }
 
-function createBoxLikeBody(schema: CarDesignSchema) {
+function createBoxLikeBody(schema: CarDesignSchema, geometryMm: GeometryMm, builderConfig: GeometryBuilderConfig) {
   const vertices: number[] = [];
   const indices: number[] = [];
+  const { mainBodyStations } = geometryMm;
 
-  addGrid(vertices, indices, schema, createMainBodyTop(mainBodyStations));
-  addGrid(vertices, indices, schema, createMainBodySide(mainBodyStations, -1));
-  addGrid(vertices, indices, schema, createMainBodySide(mainBodyStations, 1));
-  addGrid(vertices, indices, schema, createMainBodyFace(mainBodyStations[0]));
-  addGrid(vertices, indices, schema, createMainBodyFace(mainBodyStations[mainBodyStations.length - 1]));
+  addGrid(vertices, indices, schema, createMainBodyTop(mainBodyStations, builderConfig));
+  addGrid(vertices, indices, schema, createMainBodySide(mainBodyStations, -1, geometryMm, builderConfig));
+  addGrid(vertices, indices, schema, createMainBodySide(mainBodyStations, 1, geometryMm, builderConfig));
+  addGrid(vertices, indices, schema, createMainBodyFace(mainBodyStations[0], builderConfig));
+  addGrid(vertices, indices, schema, createMainBodyFace(mainBodyStations[mainBodyStations.length - 1], builderConfig));
 
   return makeGeometry(vertices, indices);
 }
 
-function createQuadPanel(schema: CarDesignSchema, stations: readonly PanelStation[], crownMm: number, edgeDropMm: number) {
+function createQuadPanel(
+  schema: CarDesignSchema,
+  stations: readonly PanelStation[],
+  crownMm: number,
+  edgeDropMm: number,
+  builderConfig: GeometryBuilderConfig
+) {
   const vertices: number[] = [];
   const indices: number[] = [];
 
-  addGrid(vertices, indices, schema, createPanelRows(stations, crownMm, edgeDropMm));
+  addGrid(vertices, indices, schema, createPanelRows(stations, crownMm, edgeDropMm, builderConfig));
 
   return makeGeometry(vertices, indices);
 }
@@ -241,11 +280,17 @@ function createWrappedQuadPanel(
   edgeDropMm: number,
   sideDropMm: number,
   frontDropMm: number,
-  rearDropMm: number
+  rearDropMm: number,
+  builderConfig: GeometryBuilderConfig
 ) {
   const vertices: number[] = [];
   const indices: number[] = [];
-  const rows = createWrappedPanelRows(createPanelRows(stations, crownMm, edgeDropMm), sideDropMm, frontDropMm, rearDropMm);
+  const rows = createWrappedPanelRows(
+    createPanelRows(stations, crownMm, edgeDropMm, builderConfig),
+    sideDropMm,
+    frontDropMm,
+    rearDropMm
+  );
 
   addGrid(vertices, indices, schema, rows.top);
   addGrid(vertices, indices, schema, rows.leftSide);
@@ -256,13 +301,15 @@ function createWrappedQuadPanel(
   return makeGeometry(vertices, indices);
 }
 
-function createSimpleBumper(schema: CarDesignSchema, stations: readonly PanelStation[]) {
-  return createQuadPanel(schema, stations, defaultBumperCrownMm, defaultBumperEdgeDropMm);
+function createSimpleBumper(schema: CarDesignSchema, stations: readonly PanelStation[], builderConfig: GeometryBuilderConfig) {
+  return createQuadPanel(schema, stations, builderConfig.defaultBumperCrownMm, builderConfig.defaultBumperEdgeDropMm, builderConfig);
 }
 
-function createFrontBumperRows(stations: readonly PanelStation[]) {
+function createFrontBumperRows(stations: readonly PanelStation[], builderConfig: GeometryBuilderConfig) {
+  const { frontBumper: frontBumperBuildConfig } = builderConfig;
+
   return stations.map((station, rowIndex) => (
-    panelFactors.map((factor) => {
+    builderConfig.panelFactors.map((factor) => {
       const abs = Math.abs(factor);
       const cornerRetreatMm = frontBumperBuildConfig.cornerRetreatMm * abs * abs;
       const shoulderSoftnessMm = rowIndex === 0
@@ -281,63 +328,72 @@ function createFrontBumperRows(stations: readonly PanelStation[]) {
   ));
 }
 
-function createRoundedFrontBumper(schema: CarDesignSchema, stations: readonly PanelStation[]) {
+function createRoundedFrontBumper(schema: CarDesignSchema, stations: readonly PanelStation[], builderConfig: GeometryBuilderConfig) {
   const vertices: number[] = [];
   const indices: number[] = [];
 
-  addGrid(vertices, indices, schema, createFrontBumperRows(stations));
+  addGrid(vertices, indices, schema, createFrontBumperRows(stations, builderConfig));
 
   return makeGeometry(vertices, indices);
 }
 
-export function createSedanMainBodyGeometry(schema: CarDesignSchema): BufferGeometry {
-  return createBoxLikeBody(schema);
+export function createSedanMainBodyGeometry(schema: CarDesignSchema, options: GeometryBuildOptions = {}): BufferGeometry {
+  const { geometryMm, builderConfig } = getGeometryBuildContext(options);
+  return createBoxLikeBody(schema, geometryMm, builderConfig);
 }
 
-export function createSedanFrontBumperGeometry(schema: CarDesignSchema): BufferGeometry {
-  return createRoundedFrontBumper(schema, frontBumperStations);
+export function createSedanFrontBumperGeometry(schema: CarDesignSchema, options: GeometryBuildOptions = {}): BufferGeometry {
+  const { geometryMm, builderConfig } = getGeometryBuildContext(options);
+  return createRoundedFrontBumper(schema, geometryMm.frontBumperStations, builderConfig);
 }
 
-export function createSedanRearBumperGeometry(schema: CarDesignSchema): BufferGeometry {
-  return createSimpleBumper(schema, rearBumperStations);
+export function createSedanRearBumperGeometry(schema: CarDesignSchema, options: GeometryBuildOptions = {}): BufferGeometry {
+  const { geometryMm, builderConfig } = getGeometryBuildContext(options);
+  return createSimpleBumper(schema, geometryMm.rearBumperStations, builderConfig);
 }
 
-export function createSedanHoodPanelGeometry(schema: CarDesignSchema): BufferGeometry {
+export function createSedanHoodPanelGeometry(schema: CarDesignSchema, options: GeometryBuildOptions = {}): BufferGeometry {
+  const { geometryMm, builderConfig } = getGeometryBuildContext(options);
   return createWrappedQuadPanel(
     schema,
-    hoodStations,
-    hoodCrownMm,
-    hoodEdgeDropMm,
-    hoodSideDropMm,
-    hoodFrontDropMm,
-    hoodRearDropMm
+    geometryMm.hoodStations,
+    builderConfig.hoodCrownMm,
+    builderConfig.hoodEdgeDropMm,
+    builderConfig.hoodSideDropMm,
+    builderConfig.hoodFrontDropMm,
+    builderConfig.hoodRearDropMm,
+    builderConfig
   );
 }
 
-export function createSedanTrunkDeckGeometry(schema: CarDesignSchema): BufferGeometry {
+export function createSedanTrunkDeckGeometry(schema: CarDesignSchema, options: GeometryBuildOptions = {}): BufferGeometry {
+  const { geometryMm, builderConfig } = getGeometryBuildContext(options);
   return createWrappedQuadPanel(
     schema,
-    trunkStations,
-    trunkCrownMm,
-    trunkEdgeDropMm,
-    trunkSideDropMm,
-    trunkFrontDropMm,
-    trunkRearDropMm
+    geometryMm.trunkStations,
+    builderConfig.trunkCrownMm,
+    builderConfig.trunkEdgeDropMm,
+    builderConfig.trunkSideDropMm,
+    builderConfig.trunkFrontDropMm,
+    builderConfig.trunkRearDropMm,
+    builderConfig
   );
 }
 
-export function createSedanRoofPanelGeometry(schema: CarDesignSchema): BufferGeometry {
+export function createSedanRoofPanelGeometry(schema: CarDesignSchema, options: GeometryBuildOptions = {}): BufferGeometry {
+  const { geometryMm, builderConfig } = getGeometryBuildContext(options);
   return createWrappedQuadPanel(
     schema,
-    roofStations,
-    roofCrownMm,
-    roofEdgeDropMm,
-    roofSideDropMm,
-    roofFrontDropMm,
-    roofRearDropMm
+    geometryMm.roofStations,
+    builderConfig.roofCrownMm,
+    builderConfig.roofEdgeDropMm,
+    builderConfig.roofSideDropMm,
+    builderConfig.roofFrontDropMm,
+    builderConfig.roofRearDropMm,
+    builderConfig
   );
 }
 
-export function createSedanBodyGeometry(schema: CarDesignSchema): BufferGeometry {
-  return createSedanMainBodyGeometry(schema);
+export function createSedanBodyGeometry(schema: CarDesignSchema, options: GeometryBuildOptions = {}): BufferGeometry {
+  return createSedanMainBodyGeometry(schema, options);
 }

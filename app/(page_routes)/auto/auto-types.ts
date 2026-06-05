@@ -20,6 +20,7 @@ export interface CarParams {
   rearLightHeight: number;
   hasFastback: boolean;
   scale: number;
+  bodyStyle?: "sedan" | "boxyCompact";
 
   // === NEW: High-quality rendering parameters (for realistic game look) ===
   clearcoat?: number;              // 0.8–1.0 for modern car paint
