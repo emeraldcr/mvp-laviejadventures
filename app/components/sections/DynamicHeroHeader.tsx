@@ -63,11 +63,11 @@ const NavLink = memo<NavLinkItem & { onClick?: () => void; className?: string }>
     const pathname = usePathname();
     const isAnchor = href.startsWith("/#");
     const isActive = !isAnchor && pathname === href;
-    const base = "relative overflow-hidden transition-all duration-300";
+    const base = "relative overflow-hidden transition-all duration-200";
     const style =
       variant === "primary"
-        ? "emerald-wave-button px-5 py-2 rounded-full font-semibold border border-emerald-200/[0.45] bg-emerald-300/[0.15] text-white backdrop-blur-xl shadow-[0_8px_26px_rgba(6,78,59,0.28),inset_0_1px_0_rgba(255,255,255,0.28)] hover:-translate-y-0.5 hover:border-emerald-100/80 hover:bg-emerald-200/25 hover:text-white hover:shadow-[0_12px_34px_rgba(16,185,129,0.28),inset_0_1px_0_rgba(255,255,255,0.42)]"
-        : `rounded-full px-3 py-1.5 hover:bg-emerald-300/10 hover:text-emerald-100 ${isActive ? "bg-emerald-300/10 text-emerald-100" : "text-white"}`;
+        ? "emerald-wave-button px-6 py-2 rounded-full font-semibold border border-emerald-300/40 bg-[linear-gradient(145deg,rgba(16,185,129,0.22),rgba(5,150,105,0.14))] text-white backdrop-blur-2xl shadow-[0_10px_32px_rgba(6,78,59,0.38),0_0_0_1px_rgba(52,211,153,0.18)_inset,inset_0_1px_0_rgba(255,255,255,0.32)] hover:-translate-y-0.5 hover:border-emerald-200/70 hover:bg-[linear-gradient(145deg,rgba(16,185,129,0.32),rgba(5,150,105,0.22))] hover:text-white hover:shadow-[0_16px_44px_rgba(16,185,129,0.42),0_0_0_1px_rgba(52,211,153,0.32)_inset,inset_0_1px_0_rgba(255,255,255,0.42)]"
+        : `rounded-full px-3.5 py-1.5 hover:bg-emerald-300/10 hover:text-emerald-100 transition-all ${isActive ? "bg-emerald-300/10 text-emerald-100" : "text-white"}`;
     const linkProps = external ? { target: "_blank", rel: "noopener noreferrer" } : {};
     return (
       <Link href={href} {...linkProps} className={`${base} ${style} ${className}`} onClick={onClick}>
@@ -113,7 +113,7 @@ const DesktopNavGroup = memo<{ item: NavGroup }>(({ item }) => {
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className="emerald-wave-button inline-flex items-center gap-1.5 rounded-full border border-emerald-100/20 bg-white/[0.08] px-3 py-1.5 text-sm font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-100/[0.45] hover:bg-emerald-300/[0.15] hover:text-emerald-50"
+        className="emerald-wave-button inline-flex items-center gap-1.5 rounded-full border border-emerald-200/25 bg-white/[0.065] px-3.5 py-1.5 text-sm font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.22)] backdrop-blur-2xl transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-300/50 hover:bg-emerald-300/[0.18] hover:text-white"
         aria-expanded={open}
       >
         {item.label}
@@ -122,12 +122,12 @@ const DesktopNavGroup = memo<{ item: NavGroup }>(({ item }) => {
 
       {open && (
         <div className="absolute left-0 top-full z-50 min-w-52 pt-2">
-          <div className="rounded-2xl border border-emerald-100/20 bg-teal-950/[0.88] p-2 shadow-[0_24px_70px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-2xl">
+          <div className="rounded-2xl border border-emerald-300/20 bg-[linear-gradient(165deg,rgba(6,78,59,0.94),rgba(4,47,46,0.92)_55%,rgba(5,150,105,0.38))] p-1.5 shadow-[0_28px_80px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-3xl">
             {item.links.map((link) => (
               <NavLink
                 key={link.href}
                 {...link}
-                className="block rounded-xl px-3 py-2 text-sm font-medium hover:bg-white/10"
+                className="block rounded-xl px-3.5 py-2 text-sm font-medium hover:bg-white/10 hover:text-emerald-100 transition-colors"
                 onClick={() => setOpen(false)}
               />
             ))}
@@ -147,7 +147,7 @@ const MobileNavGroup = memo<{
 }>(({ item, onNavigate, open, onToggle }) => {
 
   return (
-    <div className="rounded-2xl border border-emerald-100/[0.15] bg-white/[0.07] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
+    <div className="rounded-2xl border border-emerald-200/20 bg-white/[0.045] shadow-[inset_0_1px_0_rgba(255,255,255,0.18)]">
       <button
         type="button"
         className="flex w-full items-center justify-between px-4 py-3 text-left text-base font-semibold text-white"
@@ -163,7 +163,7 @@ const MobileNavGroup = memo<{
             <NavLink
               key={link.href}
               {...link}
-              className="block rounded-xl px-3 py-2 text-base font-medium hover:bg-white/10"
+              className="block rounded-xl px-3.5 py-2 text-base font-medium hover:bg-white/10 hover:text-emerald-100 transition-colors"
               onClick={onNavigate}
             />
           ))}
@@ -180,7 +180,7 @@ const LangToggle = memo<{ onClick: () => void; currentLang: string }>(({ onClick
     type="button"
     onClick={onClick}
     aria-label={currentLang === "es" ? "Switch to English" : "Cambiar a Español"}
-    className="emerald-wave-button min-w-[40px] rounded-full border border-emerald-100/35 bg-white/10 px-3 py-1.5 text-center text-sm font-bold text-white shadow-[0_8px_24px_rgba(6,78,59,0.22),inset_0_1px_0_rgba(255,255,255,0.2)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-100/70 hover:bg-emerald-100/20 hover:text-white"
+    className="emerald-wave-button min-w-[42px] rounded-full border border-emerald-200/30 bg-white/[0.07] px-3.5 py-1.5 text-center text-sm font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.25)] backdrop-blur-2xl transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-300/50 hover:bg-emerald-200/15 hover:text-white"
   >
     {currentLang === "es" ? "EN" : "ES"}
   </button>
@@ -198,7 +198,17 @@ const AuthNav = memo<{ onMobileClose?: () => void; isMobile?: boolean }>(({ onMo
     return <div className="w-8 h-8 rounded-full bg-white/20 animate-pulse" />;
   }
 
-  if (!session?.user) return null;
+  if (!session?.user) {
+    return (
+      <Link
+        href="/platform"
+        onClick={onMobileClose}
+        className="emerald-wave-button cursor-pointer rounded-full border border-emerald-200/30 bg-white/[0.07] px-6 py-2 text-sm font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.24)] backdrop-blur-2xl transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-300/50 hover:bg-emerald-200/15 hover:text-white active:translate-y-0 active:scale-[0.985]"
+      >
+        {lang === "es" ? "Iniciar sesión" : "Log In"}
+      </Link>
+    );
+  }
 
   const { name, image } = session.user;
 
@@ -232,7 +242,7 @@ const AuthNav = memo<{ onMobileClose?: () => void; isMobile?: boolean }>(({ onMo
     <div className="relative">
       <button
         onClick={() => setDropdownOpen((p) => !p)}
-        className="emerald-wave-button flex items-center gap-2 rounded-full border border-emerald-100/30 bg-white/10 px-3 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-100/55 hover:bg-emerald-200/15"
+        className="emerald-wave-button flex items-center gap-2 rounded-full border border-emerald-200/25 bg-white/[0.065] px-3 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.24)] backdrop-blur-2xl transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-300/50 hover:bg-emerald-200/15"
         aria-label={copy.userMenuAria}
       >
         {image ? (
@@ -249,7 +259,7 @@ const AuthNav = memo<{ onMobileClose?: () => void; isMobile?: boolean }>(({ onMo
       {dropdownOpen && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setDropdownOpen(false)} />
-          <div className="absolute right-0 top-full mt-2 z-50 w-52 overflow-hidden rounded-2xl border border-emerald-100/20 bg-teal-950/90 shadow-[0_24px_70px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-2xl">
+          <div className="absolute right-0 top-full mt-2 z-50 w-52 overflow-hidden rounded-2xl border border-emerald-300/20 bg-[linear-gradient(160deg,rgba(6,78,59,0.95),rgba(4,47,46,0.93)_50%,rgba(5,150,105,0.38))] shadow-[0_28px_80px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-3xl">
             <div className="px-4 py-3 border-b border-white/10">
               <p className="text-white text-sm font-semibold truncate">{name}</p>
               <p className="text-white/50 text-xs truncate">{session.user.email}</p>
@@ -291,7 +301,7 @@ const Header = memo<{ isScrolled: boolean; onMenuToggle: () => void; isMenuOpen:
      
       { href: "/galeria", label: tr.gallery },
      
-      { href: "/tiempo", label: copy.forecast },
+      { href: "/tiempo", label: lang === "es" ? "Pronóstico" : "Forecast" },
      
     ];
 
@@ -300,7 +310,7 @@ const Header = memo<{ isScrolled: boolean; onMenuToggle: () => void; isMenuOpen:
 
     const navGroups: NavGroup[] = [
       {
-        label: copy.exploreGroup,
+        label: lang === "es" ? "Explorar" : "Explore",
         links: navLinks,
       },
     ];
@@ -309,28 +319,47 @@ const Header = memo<{ isScrolled: boolean; onMenuToggle: () => void; isMenuOpen:
       <header
         className={[
           "fixed inset-x-0 top-0 z-50",
-          "border-b border-emerald-100/15 backdrop-blur-2xl",
-          "transition-all duration-300",
+          "border-b border-emerald-300/10 backdrop-blur-3xl",
+          "transition-all duration-500",
           isScrolled
-            ? "bg-[linear-gradient(120deg,rgba(6,78,59,0.86),rgba(4,47,46,0.78)_48%,rgba(5,150,105,0.34))] shadow-[0_14px_48px_rgba(0,0,0,0.48),inset_0_1px_0_rgba(255,255,255,0.12)]"
-            : "bg-[linear-gradient(120deg,rgba(6,78,59,0.48),rgba(4,47,46,0.34)_50%,rgba(16,185,129,0.18))] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]",
+            ? "bg-[linear-gradient(135deg,rgba(6,78,59,0.92),rgba(4,47,46,0.86)_42%,rgba(5,150,105,0.42))] shadow-[0_18px_56px_rgba(0,0,0,0.58),inset_0_1px_0_rgba(255,255,255,0.16),inset_0_-1px_0_rgba(0,0,0,0.2)]"
+            : "bg-[linear-gradient(135deg,rgba(6,78,59,0.62),rgba(4,47,46,0.48)_44%,rgba(16,185,129,0.22))] shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_10px_40px_rgba(0,0,0,0.35)]",
         ].join(" ")}
       >
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-emerald-200/45 to-transparent" />
+        {/* Ultra-thin premium glass rim highlight */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-200/60 to-transparent" />
+        {/* Subtle bottom glass edge */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-emerald-300/25 to-transparent" />
+        
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 md:px-8">
           <Link href="/" className="group/logo">
-            <div className="flex cursor-pointer items-center gap-3">
-              <span className="emerald-logo-shell relative grid place-items-center rounded-2xl border border-emerald-100/25 bg-white/10 p-1.5 shadow-[0_12px_34px_rgba(0,0,0,0.32),inset_0_1px_0_rgba(255,255,255,0.24)] backdrop-blur-xl transition-all duration-500 group-hover/logo:-translate-y-0.5 group-hover/logo:border-emerald-100/[0.55] group-hover/logo:bg-emerald-100/[0.16]">
-                <Image
-                  src="/logo2.jpg"
-                  alt="La Vieja Adventures Logo"
-                  width={logoSize}
-                  height={logoSize}
-                  className="rounded-xl object-cover transition-all duration-500 group-hover/logo:scale-[1.03]"
-                  priority
-                />
-              </span>
-              <span className={`brand-glow-text font-black tracking-tight text-white transition-all duration-300 ${textSize}`}>
+            <div className="flex cursor-pointer items-center gap-3.5">
+              {/* Premium multi-layer emerald crystal emblem for the JPG logo */}
+              <div className="luxury-emerald-emblem relative" style={{ width: logoSize + 10, height: logoSize + 10 }}>
+                {/* Soft outer emerald aura (behind the crystal frame) */}
+                <div className="crystal-outer absolute -inset-[3px] -z-10 rounded-[22px] transition-all duration-500" />
+
+                {/* Main crystal frame with bevel */}
+                <div className="crystal-frame relative rounded-[17px] p-[2px]">
+                  {/* Recessed photo well */}
+                  <div className="crystal-well relative overflow-hidden rounded-[15px]" style={{ width: logoSize, height: logoSize }}>
+                    <Image
+                      src="/logo2.jpg"
+                      alt="La Vieja Adventures Logo"
+                      width={logoSize}
+                      height={logoSize}
+                      className="rounded-[15px] object-cover"
+                      priority
+                    />
+                    {/* Emerald glass tint — makes opaque JPG feel like it's viewed through luxury crystal */}
+                    <div className="crystal-tint rounded-[15px]" />
+                    {/* Delicate top catchlight for premium glass realism */}
+                    <div className="crystal-highlight" />
+                  </div>
+                </div>
+              </div>
+
+              <span className={`brand-glow-text font-black tracking-[-0.015em] text-white transition-all duration-300 ${textSize}`}>
                 La Vieja Adventures
               </span>
             </div>
@@ -346,7 +375,7 @@ const Header = memo<{ isScrolled: boolean; onMenuToggle: () => void; isMenuOpen:
           </nav>
 
           <button
-            className="emerald-wave-button rounded-full border border-emerald-100/25 bg-white/10 p-2 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-xl transition-all duration-300 hover:bg-emerald-200/15 md:hidden"
+            className="emerald-wave-button rounded-full border border-emerald-200/25 bg-white/[0.065] p-2.5 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.24)] backdrop-blur-2xl transition-all duration-300 hover:bg-emerald-200/15 md:hidden"
             onClick={onMenuToggle}
             aria-label={copy.toggleMenuAria}
             aria-expanded={isMenuOpen}
@@ -358,9 +387,9 @@ const Header = memo<{ isScrolled: boolean; onMenuToggle: () => void; isMenuOpen:
         <div
           className={[
             "flex flex-col md:hidden text-white",
-            "border-t border-emerald-100/15 bg-[linear-gradient(145deg,rgba(6,78,59,0.94),rgba(4,47,46,0.9)_55%,rgba(5,150,105,0.34))] shadow-[0_18px_40px_rgba(0,0,0,0.62)] backdrop-blur-2xl",
+            "border-t border-emerald-300/10 bg-[linear-gradient(155deg,rgba(6,78,59,0.96),rgba(4,47,46,0.93)_48%,rgba(5,150,105,0.42))] shadow-[0_24px_68px_rgba(0,0,0,0.68)] backdrop-blur-3xl",
             "px-6 py-8 transition-all duration-300",
-            isMenuOpen ? "max-h-[40rem] opacity-100 space-y-4" : "max-h-0 opacity-0 overflow-hidden",
+            isMenuOpen ? "max-h-[42rem] opacity-100 space-y-4" : "max-h-0 opacity-0 overflow-hidden",
           ].join(" ")}
           aria-hidden={!isMenuOpen}
         >
@@ -398,7 +427,6 @@ interface HeroCarouselProps {
 export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "100%" }) => {
   const { data: carouselImages = [], error, isLoading } = useSWR<string[]>("/api/images", fetcher);
   const { lang } = useLanguage();
-  const copy = principalContent[lang].hero;
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -417,7 +445,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "1
   useEffect(() => {
     if (typeof window === "undefined") return;
     const IMG_SPEED = -0.15;
-    const OVERLAY_SPEED = 0;
+    const OVERLAY_SPEED = -0.3;
     let ticking = false;
     const update = () => {
       if (!ticking) {
@@ -449,7 +477,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "1
   if (error)
     return (
       <div className="flex items-center justify-center bg-zinc-950 text-red-400 text-sm" style={{ height }}>
-        {copy.errorLoadingImages}
+        Error loading images
       </div>
     );
 
@@ -507,97 +535,102 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "1
       <button
         onClick={goPrev}
         className="absolute left-3 md:left-6 top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-black/30 border border-white/15 backdrop-blur-sm flex items-center justify-center text-white hover:bg-teal-500/30 hover:border-teal-400/50 transition-all duration-200"
-        aria-label={copy.previousImageAria}
+        aria-label="Previous image"
       >
         <ChevronLeft size={18} />
       </button>
       <button
         onClick={goNext}
         className="absolute right-3 md:right-6 top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-black/30 border border-white/15 backdrop-blur-sm flex items-center justify-center text-white hover:bg-teal-500/30 hover:border-teal-400/50 transition-all duration-200"
-        aria-label={copy.nextImageAria}
+        aria-label="Next image"
       >
         <ChevronRight size={18} />
       </button>
 
       {/* ── Main text overlay ── */}
-      <div className="relative z-20 flex h-full w-full items-center justify-center px-4 pb-36 pt-28 text-center sm:pb-40 md:px-8 md:pb-44 md:pt-32">
-        <div ref={parallaxOverlayRef} className="mx-auto flex max-w-6xl flex-col items-center will-change-transform">
-          {overlay || (
-            <>
-              {/* Badge */}
-              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/20 px-4 py-1.5 backdrop-blur-md sm:mb-6">
-                <span className="h-1.5 w-1.5 rounded-full bg-teal-400 shadow-[0_0_16px_rgba(45,212,191,0.85)]" />
-                <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/85">
-                  {copy.locationBadge}
-                </span>
-              </div>
+      <div
+        ref={parallaxOverlayRef}
+        className="relative w-full h-full flex flex-col justify-center items-center text-center z-20 px-4 md:px-8 will-change-transform"
+      >
+        {overlay || (
+          <>
+            {/* Badge */}
+            <div className="inline-flex items-center gap-2 mb-6 px-4 py-1.5 rounded-full border border-white/20 bg-white/8 backdrop-blur-md">
+              <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" />
+              <span className="text-[11px] font-bold text-white/80 uppercase tracking-[0.2em]">
+                San Carlos · Costa Rica
+              </span>
+            </div>
 
-              {/* Title */}
-              <h1 className="max-w-6xl text-balance text-[clamp(2.75rem,7vw,5.5rem)] font-black leading-[0.98] text-white drop-shadow-2xl">
-                {copy.title}
-              </h1>
+            {/* Title */}
+            <h1 className="max-w-5xl text-balance text-4xl sm:text-6xl md:text-7xl lg:text-[5.8rem] font-black mb-4 text-white leading-[0.95] tracking-tight drop-shadow-2xl">
+              {lang === "es" ? "Aventuras en San Carlos, Costa Rica" : "Adventures in San Carlos, Costa Rica"}
+            </h1>
 
-              <h2 className="mt-4 max-w-4xl text-balance text-[clamp(1.25rem,2.8vw,2.45rem)] font-bold leading-tight text-white/95 drop-shadow-xl">
-                {copy.subtitle}
-              </h2>
+            <h2 className="max-w-4xl text-balance text-lg sm:text-2xl md:text-3xl font-semibold text-white/95 leading-tight mb-5 drop-shadow-xl">
+              {lang === "es"
+                ? "Cañones, cascadas y pozas secretas en el Parque Nacional Juan Castro Blanco"
+                : "Canyons, waterfalls, and hidden pools in Juan Castro Blanco National Water Park"}
+            </h2>
 
-              <p className="mt-6 max-w-4xl text-balance text-base font-medium leading-relaxed text-white/82 drop-shadow-lg sm:text-lg md:text-xl">
-                {copy.description}
-              </p>
+            <p className="mb-9 max-w-3xl text-sm sm:text-lg md:text-xl text-white/85 leading-relaxed">
+              {lang === "es"
+                ? "Descubre 6 experiencias únicas con guías locales. Desde el icónico Ciudad Esmeralda hasta pozas cristalinas, selva nublada y cañonismo extremo."
+                : "Discover 6 unique experiences with local guides, from iconic Ciudad Esmeralda to crystal-clear pools, cloud forest, and extreme canyoning."}
+            </p>
 
-              {/* CTA */}
-              <div className="mt-8 flex w-full max-w-2xl flex-col items-center justify-center gap-3 sm:mt-9 sm:flex-row sm:gap-4">
-                <a
-                  href="#tours"
-                  className="group inline-flex min-h-14 w-full items-center justify-center gap-3 rounded-full bg-teal-500 px-7 py-3 text-base font-bold text-white shadow-[0_18px_45px_rgba(20,184,166,0.34)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-teal-400 hover:shadow-[0_22px_60px_rgba(20,184,166,0.46)] sm:w-auto"
-                >
-                  <span>{copy.exploreCta}</span>
-                  <span className="inline-block group-hover:translate-x-1 transition-transform duration-200">→</span>
-                </a>
+            {/* CTA */}
+            <div className="flex w-full max-w-2xl flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
+              <a
+                href="#tours"
+                className="group inline-flex w-full sm:w-auto items-center justify-center gap-3 px-7 py-3.5 rounded-full bg-teal-500 hover:bg-teal-400 text-white font-bold text-base shadow-[0_0_40px_rgba(20,184,166,0.4)] hover:shadow-[0_0_55px_rgba(20,184,166,0.6)] transition-all duration-300"
+              >
+                <span>{lang === "es" ? "Explorar Todas las Aventuras" : "Explore All Adventures"}</span>
+                <span className="inline-block group-hover:translate-x-1 transition-transform duration-200">→</span>
+              </a>
 
-                <a
-                  href="#booking"
-                  className="inline-flex min-h-14 w-full items-center justify-center rounded-full border border-white/55 bg-black/20 px-7 py-3 text-base font-bold text-white shadow-[0_16px_40px_rgba(0,0,0,0.22)] backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-white/80 hover:bg-white/18 sm:w-auto"
-                >
-                  {copy.datesCta}
-                </a>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
+              <a
+                href="#booking"
+                className="inline-flex w-full sm:w-auto items-center justify-center px-7 py-3.5 rounded-full border border-white/70 bg-white/10 hover:bg-white/20 text-white font-semibold text-base backdrop-blur-sm transition-colors duration-300"
+              >
+                {lang === "es" ? "Ver Fechas Disponibles" : "View Available Dates"}
+              </a>
+            </div>
+          </>
+        )}
 
         {/* ── Bottom controls ── */}
-      <div className="absolute inset-x-0 bottom-6 z-30 flex flex-col items-center gap-3 px-4 sm:bottom-7 md:bottom-8">
+        <div className="absolute bottom-7 left-0 right-0 flex flex-col items-center gap-3 z-30">
           {/* Dot indicators */}
-        <div className="flex max-w-[min(82vw,44rem)] items-center gap-2 overflow-hidden rounded-full border border-white/10 bg-black/28 px-3 py-2 shadow-[0_12px_30px_rgba(0,0,0,0.28)] backdrop-blur-md">
+          <div className="flex items-center gap-2">
             {carouselImages.map((_, idx) => (
               <button
                 key={idx}
                 onClick={() => goTo(idx)}
-              className={`h-2 shrink-0 rounded-full transition-all duration-300 ${
+                className={`rounded-full transition-all duration-300 ${
                   idx === currentIndex
-                  ? "w-8 bg-teal-400 shadow-[0_0_16px_rgba(45,212,191,0.7)]"
-                  : "w-2 bg-white/36 hover:bg-white/65"
+                    ? "w-7 h-2 bg-teal-400"
+                    : "w-2 h-2 bg-white/30 hover:bg-white/55"
                 }`}
-                aria-label={copy.goToSlideAria.replace("{slide}", String(idx + 1))}
+                aria-label={`Go to slide ${idx + 1}`}
               />
             ))}
           </div>
 
           {/* Counter */}
-        <span className="rounded-full bg-black/18 px-2 py-0.5 text-[10px] font-semibold tabular-nums tracking-widest text-white/55 backdrop-blur-sm">
+          <span className="text-[10px] font-medium text-white/35 tabular-nums tracking-widest">
             {String(currentIndex + 1).padStart(2, "0")} / {String(carouselImages.length).padStart(2, "0")}
           </span>
 
           {/* Scroll indicator */}
           <a
             href="#tours"
-          className="mt-0 flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/10 text-white/75 shadow-[0_12px_32px_rgba(0,0,0,0.25)] backdrop-blur-md transition-colors hover:bg-white/18"
-            aria-label={copy.scrollToToursAria}
+            className="mt-1 p-2 rounded-full bg-white/8 hover:bg-white/18 transition-colors animate-bounce"
+            aria-label="Scroll to tours"
           >
-          <ChevronDown size={22} />
+            <ChevronDown size={22} className="text-white/60" />
           </a>
+        </div>
       </div>
       <style jsx>{`
         @keyframes lva-progress {
