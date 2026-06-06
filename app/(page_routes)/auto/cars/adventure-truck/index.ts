@@ -37,6 +37,28 @@ export const adventureTruckDesignSchema = createDerivedVehicleSchema({
     roofHeight: 0.16,
     roofCurve: 0.94,
     bodyTaper: 0.22,
+    sourceCurvesMm: {
+      roofline: [
+        { x: 760, z: 1438 },
+        { x: 1040, z: 1548 },
+        { x: 1660, z: 1552 },
+        { x: 2045, z: 1430 },
+      ],
+      beltline: [
+        { x: 720, z: 930 },
+        { x: 1480, z: 990 },
+        { x: 2180, z: 975 },
+        { x: 3300, z: 905 },
+        { x: 4300, z: 880 },
+      ],
+      rocker: [
+        { x: -680, z: 360 },
+        { x: 0, z: 360 },
+        { x: 1480, z: 365 },
+        { x: 3220, z: 385 },
+        { x: 4400, z: 400 },
+      ],
+    },
   },
   wheelGeometry: {
     radius: adventureTruckSourceSpecsM.wheelRadius,

@@ -223,6 +223,12 @@ export type CarBlockoutConfig = {
   geometryMm: BlockoutGeometryMm;
   sceneMm: BlockoutSceneMm;
   geometryBuilderConfig: GeometryBuilderConfig;
+  renderProfile?: {
+    roofOverlay?: {
+      material: MaterialOptions;
+      verticalLiftMm?: number;
+    };
+  };
 };
 
 export type BlockoutVisualControls = {

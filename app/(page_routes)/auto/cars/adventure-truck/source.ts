@@ -60,10 +60,10 @@ export const adventureTruckBlockoutConfig = {
   geometryMm: {
     ...scaledTruckConfig.geometryMm,
     roofStations: [
-      { x: 720, z: 1450, halfWidth: 835 },
-      { x: 1220, z: 1570, halfWidth: 845 },
-      { x: 1780, z: 1560, halfWidth: 840 },
-      { x: 2140, z: 1465, halfWidth: 790 },
+      { x: 760, z: 1438, halfWidth: 815 },
+      { x: 1040, z: 1548, halfWidth: 835 },
+      { x: 1660, z: 1552, halfWidth: 835 },
+      { x: 2045, z: 1430, halfWidth: 780 },
     ],
     trunkStations: [
       { x: 2320, z: 940, halfWidth: 875 },
@@ -134,14 +134,14 @@ export const adventureTruckBlockoutConfig = {
       windshieldHeader: [
         { x: 760, y: -815, z: 1438 },
         { x: 760, y: 815, z: 1438 },
-        { x: 910, y: 805, z: 1480 },
-        { x: 910, y: -805, z: 1480 },
+        { x: 1040, y: 835, z: 1548 },
+        { x: 1040, y: -835, z: 1548 },
       ],
       rearHeader: [
         { x: 2045, y: -780, z: 1430 },
         { x: 2045, y: 780, z: 1430 },
-        { x: 1970, y: 775, z: 1472 },
-        { x: 1970, y: -775, z: 1472 },
+        { x: 1660, y: 835, z: 1552 },
+        { x: 1660, y: -835, z: 1552 },
       ],
     },
     upperGrille: {

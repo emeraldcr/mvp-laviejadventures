@@ -157,6 +157,62 @@ function SedanBodyShell({
   );
 }
 
+function makeRoofOverlayGeometry(blockoutConfig: BlockoutConfig, verticalLiftMm = 8) {
+  const { roofStations } = blockoutConfig.geometryMm;
+  const { panelFactors, roofCrownMm, roofEdgeDropMm } = blockoutConfig.geometryBuilderConfig;
+  const geometry = new BufferGeometry();
+  const vertices: number[] = [];
+  const indices: number[] = [];
+  const columnCount = panelFactors.length;
+
+  roofStations.forEach((station) => {
+    panelFactors.forEach((factor) => {
+      const abs = Math.abs(factor);
+      const sourceZ = station.z + roofCrownMm * (1 - abs * abs) - roofEdgeDropMm * abs + verticalLiftMm;
+
+      vertices.push(
+        sourceXToBlockoutWorldX(station.x, blockoutConfig),
+        sourceZToWorldY(sourceZ),
+        sourceYToWorldZ(factor * station.halfWidth)
+      );
+    });
+  });
+
+  for (let rowIndex = 0; rowIndex < roofStations.length - 1; rowIndex += 1) {
+    for (let columnIndex = 0; columnIndex < columnCount - 1; columnIndex += 1) {
+      const current = rowIndex * columnCount + columnIndex;
+      indices.push(current, current + columnCount, current + columnCount + 1, current, current + columnCount + 1, current + 1);
+    }
+  }
+
+  geometry.setAttribute("position", new Float32BufferAttribute(vertices, 3));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+
+  return geometry;
+}
+
+function SchemaPanoramicRoof({
+  blockoutConfig,
+  material,
+  verticalLiftMm,
+}: {
+  blockoutConfig: BlockoutConfig;
+  material: MaterialOptions;
+  verticalLiftMm?: number;
+}) {
+  const geometry = useMemo(
+    () => makeRoofOverlayGeometry(blockoutConfig, verticalLiftMm),
+    [blockoutConfig, verticalLiftMm]
+  );
+
+  return (
+    <mesh castShadow receiveShadow geometry={geometry} renderOrder={1}>
+      <meshPhysicalMaterial {...material} side={DoubleSide} />
+    </mesh>
+  );
+}
+
 function Wheel({
   blockoutConfig,
   visual,
@@ -845,6 +901,10 @@ export function BlockoutVehicle({
     ...visual.materials.glass,
     ...blockoutConfig.materials.glass,
   };
+  const roofOverlay = blockoutConfig.renderProfile?.roofOverlay;
+  const roofGlassMaterial: MaterialOptions | undefined = roofOverlay
+    ? { ...glass, ...roofOverlay.material }
+    : undefined;
   const headlightMat: MaterialOptions = useMemo(() => ({
     ...visual.materials.clearLens,
     color: hasClosedPopupHeadlights ? "#29313a" : hasLeds ? "#fefce8" : visual.materials.clearLens.color,
@@ -866,6 +926,13 @@ export function BlockoutVehicle({
         designSchema={designSchema}
         material={{ ...bodyMaterial, ...visual.materials.body }}
       />
+      {roofOverlay && roofGlassMaterial ? (
+        <SchemaPanoramicRoof
+          blockoutConfig={blockoutConfig}
+          material={roofGlassMaterial}
+          verticalLiftMm={roofOverlay.verticalLiftMm}
+        />
+      ) : null}
       <SchemaRoofGlassSeals blockoutConfig={blockoutConfig} material={{ ...bodyMaterial, ...visual.materials.body }} />
       <SchemaInterior
         blockoutConfig={blockoutConfig}
