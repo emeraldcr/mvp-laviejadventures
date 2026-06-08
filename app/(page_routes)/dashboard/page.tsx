@@ -24,7 +24,7 @@ import LogoutButton from "@/app/components/auth/LogoutButton";
 import Profile from "@/app/components/auth/Profile";
 import type { UserPreferences } from "@/lib/types/index";
 import { DEFAULT_USER_PREFERENCES } from "@/lib/constants/user";
-import { isUpcoming } from "@/lib/utils";
+import { isUpcoming } from "@/lib/helpers/utils";
 
 type Booking = {
     id: string;

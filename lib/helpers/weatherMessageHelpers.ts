@@ -3,7 +3,7 @@
  * Versión chill: vacilón tico ligero, corto y sin ser despiadado.
  */
 
-import { WEATHER_MESSAGE_SYSTEM_PROMPT } from "@/lib/weatherMessageConstants";
+import { WEATHER_MESSAGE_SYSTEM_PROMPT } from "@/lib/constants/weatherMessageConstants";
 
 export type WeatherSnapshot = {
   risk: "green" | "yellow" | "red";

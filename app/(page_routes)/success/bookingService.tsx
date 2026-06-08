@@ -4,7 +4,7 @@ import { getDb } from "@/lib/helpers/mongodb";
 import { auth } from "@/lib/auth";
 import { sendConfirmationEmail } from "./emailService";
 import { COLLECTIONS } from "@/lib/constants/db";
-import type { BookingRecord } from "@/lib/types";
+import type { BookingRecord } from "@/lib/types/types";
 
 type PayPalOrderResponse = {
   status?: string;

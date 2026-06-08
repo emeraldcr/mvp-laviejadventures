@@ -1,7 +1,7 @@
 "use client";
 
 import { useLanguage } from "@/lib/LanguageContext";
-import { isUpcoming } from "@/lib/utils";
+import { isUpcoming } from "@/lib/helpers/utils";
 import DynamicHeroHeader from "@/app/components/sections/DynamicHeroHeader";
 import {
   ArrowRight,

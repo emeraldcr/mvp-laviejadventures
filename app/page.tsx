@@ -2,7 +2,7 @@
 
 import React, { JSX, useEffect, useState } from "react";
 import DynamicHeroHeader from "@/app/components/sections/DynamicHeroHeader";
-import ErrorBoundary from "@/lib/errorBoundary";
+import ErrorBoundary from "@/lib/contexts/ErrorBoundary";
 import { CalendarProvider } from "@/lib/CalendarContext";
 import { useLanguage } from "@/lib/LanguageContext";
 import { principalContent } from "@/lib/constants/principal";

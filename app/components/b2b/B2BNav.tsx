@@ -18,7 +18,7 @@ import {
   BellRing,
 } from "lucide-react";
 import { useState } from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/helpers/utils";
 
 interface NavItem {
   href: string;

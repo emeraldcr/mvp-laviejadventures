@@ -1,6 +1,6 @@
 // app/payment/success/emailService.ts
 import { Resend } from "resend";
-import type { SendEmailParams } from "@/lib/types";
+import type { SendEmailParams } from "@/lib/types/types";
 
 export async function sendConfirmationEmail(params: SendEmailParams) {
   const apiKey = process.env.RESEND_API_KEY;

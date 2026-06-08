@@ -5,7 +5,7 @@ import { trackAnalyticsEvent } from "@/lib/analytics/client";
 import { translations } from "@/lib/translations";
 import Link from "next/link";
 import { useEffect } from "react";
-import type { SuccessClientProps } from "@/lib/types";
+import type { SuccessClientProps } from "@/lib/types/types";
 
 const PURCHASE_CONVERSION_SEND_TO = "AW-18010006901/uUBECMPq76kcEPXK64tD";
 

@@ -1,6 +1,6 @@
 // lib/availability.ts
 
-import { AvailabilityMap } from "../types";
+import { AvailabilityMap } from "../types/types";
 import { DEFAULT_AVAILABILITY } from "@/lib/constants/business";
 
 

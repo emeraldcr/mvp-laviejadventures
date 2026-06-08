@@ -4,7 +4,7 @@ import React from "react";
 import { useCalendarContext } from "@/lib/CalendarContext";
 import { useLanguage } from "@/lib/LanguageContext";
 import { translations } from "@/lib/translations";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/helpers/utils";
 
 type Props = {
   day: number | null;

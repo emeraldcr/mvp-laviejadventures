@@ -5,7 +5,7 @@ import { useCalendarContext } from "@/lib/CalendarContext";
 import { useLanguage } from "@/lib/LanguageContext";
 import { translations } from "@/lib/translations";
 import CalendarDay from "./CalendarDay";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/helpers/utils";
 import { getDaysInMonth, startOfMonth, getDay } from "date-fns";
 
 function CalendarBase() {

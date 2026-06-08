@@ -1,4 +1,4 @@
-import { TourInfo } from "./types";
+import { TourInfo } from "./types/types";
 
 export const TOUR_INFO: TourInfo = {
   name: "Tour Ciudad Esmeralda · Cañón del Río La Vieja",

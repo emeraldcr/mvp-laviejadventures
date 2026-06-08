@@ -1,7 +1,7 @@
 // app/payment/success/page.tsx
 import { SuccessClient } from "./SuccessClient";
 import { processSuccessfulBooking } from "./bookingService";
-import type { SuccessPageProps } from "@/lib/types";
+import type { SuccessPageProps } from "@/lib/types/types";
 
 export const dynamic = "force-dynamic";
 
