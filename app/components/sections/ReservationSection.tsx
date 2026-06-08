@@ -5,7 +5,7 @@ import ReservationDetails from "@/app/components/reservation/ReservationDetails"
 import { useLanguage } from "@/lib/LanguageContext";
 import { translations } from "@/lib/translations";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useReservationData, DEFAULT_BOOKABLE_TOUR } from "@/app/hooks/useReservationData";
+import { useReservationData, DEFAULT_BOOKABLE_TOUR } from "@/lib/hooks/useReservationData";
 
 type OrderPayload = {
   name: string;

@@ -15,7 +15,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import useSWR from "swr";
 import { fetcher } from "@/lib/helpers/fetcher";
-import { useInterval } from "@/app/hooks/useInterval";
+import { useInterval } from "@/lib/hooks/useInterval";
 import { useLanguage } from "@/lib/LanguageContext";
 import { translations } from "@/lib/translations";
 import { principalContent } from "@/lib/constants/principal";

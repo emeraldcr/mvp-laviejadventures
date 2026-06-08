@@ -13,7 +13,7 @@ import {
   CloudRain, Gauge, Activity, ArrowLeft, Waves, ShieldCheck, AlertOctagon,
 } from "lucide-react";
 
-import { useTiempoData } from "@/app/hooks/useTiempoData";
+import { useTiempoData } from "@/lib/hooks/useTiempoData";
 import WeatherMessage from "./components/WeatherMessage";
 import { PulsingDot } from "./components/PulsingDot";
 import { StatPill } from "./components/StatPill";

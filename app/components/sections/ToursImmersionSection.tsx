@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
-import { useReservationData } from "@/app/hooks/useReservationData";
+import { useReservationData } from "@/lib/hooks/useReservationData";
 import TourSelectionCards from "@/app/components/tours/TourSelectionCards";
 import { principalContent } from "@/lib/constants/principal";
 
