@@ -42,6 +42,7 @@ export async function GET() {
     tourSlug: doc.tourSlug ?? null,
     tourName: doc.tourName ?? null,
     packagePrice: doc.packagePrice ?? null,
+    addOns: Array.isArray(doc.addOns) ? doc.addOns : [],
     createdAt: doc.createdAt ? doc.createdAt.toISOString() : null,
   }));
 

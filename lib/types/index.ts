@@ -402,6 +402,7 @@ export type BookingRecord = {
   tourSlug?: string | null;
   tourName?: string | null;
   packagePrice: number | null;
+  addOns?: ReservationAddOn[];
   userId?: string | null;
   userEmail?: string | null;
   createdAt?: Date;
@@ -472,6 +473,7 @@ export type SendEmailParams = {
   tourName?: string | null;
   tourPackage?: string | null;
   tourTime?: string | null;
+  addOns?: ReservationAddOn[];
 };
 
 export type SuccessClientProps = {
@@ -502,6 +504,18 @@ export type OrderDetails = {
   tourSlug: string;
   tourName: string;
   packagePrice: number;
+  addOns?: ReservationAddOn[];
+};
+
+export type ReservationAddOn = {
+  type: "transport" | "accommodation";
+  label: string;
+  status?: "requested";
+  transportLocation?: string | null;
+  accommodationPartnerId?: string | null;
+  accommodationPartnerName?: string | null;
+  accommodationPartnerType?: string | null;
+  note?: string | null;
 };
 
 export type PaymentModalProps = {

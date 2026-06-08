@@ -18,6 +18,7 @@ import {
 
 import { fallbackPackagesForTour, normalizeTourPackages } from "@/lib/tour-packages";
 import { getB2BSettings } from "@/lib/models/b2b-settings";
+import type { ReservationAddOn } from "@/lib/types/index";
 
 interface CreateOrderRequest {
   name?: string;
@@ -32,6 +33,7 @@ interface CreateOrderRequest {
   tourPackage?: string;
   tourSlug?: string;
   tourName?: string;
+  addOns?: ReservationAddOn[];
   language?: string;
   countryCode?: string;
 }
@@ -40,6 +42,33 @@ interface CreateOrderResponse {
   id?: string;
   links?: Array<{ rel?: string; href?: string }>;
 }
+
+type PayPalPackageOption = {
+  id?: string;
+  name?: string;
+  nameEs?: string;
+  price?: number | string;
+  _id?: { toString?: () => string } | string;
+};
+
+type SavedOrderContext = {
+  name?: string;
+  email?: string;
+  phone?: string;
+  tickets: number;
+  date: string;
+  tourTime?: string;
+  packageId?: string;
+  tourPackage: string;
+  packagePrice: number;
+  tourSlug?: string;
+  tourName?: string;
+  addOns: ReservationAddOn[];
+  clientTotal: number | null;
+  total: number;
+  ivaRate: number;
+  language: "es" | "en";
+};
 
 export async function POST(req: Request) {
   try {
@@ -58,6 +87,7 @@ export async function POST(req: Request) {
       tourPackage,
       tourSlug,
       tourName,
+      addOns,
       language = "es",
       countryCode,
     } = body;
@@ -176,6 +206,7 @@ export async function POST(req: Request) {
 
     // Package label for user
     const packageLabel = getPackageLabel(tourPackage, selectedPackage, language);
+    const normalizedAddOns = normalizeReservationAddOns(addOns);
 
     // Custom ID (PayPal limit = 127 chars)
     const custom_id = createCustomId({
@@ -187,6 +218,7 @@ export async function POST(req: Request) {
       tourSlug: tourSlug ?? null,
       tourName: tourName ?? null,
       date: normalizedDate,
+      addons: normalizedAddOns.map((addOn) => addOn.type),
       lang: language === "en" ? "en" : "es",
     });
 
@@ -239,6 +271,7 @@ export async function POST(req: Request) {
       packagePrice,
       tourSlug,
       tourName,
+      addOns: normalizedAddOns,
       clientTotal: total ? Number(total) : null,
       total: totalWithTax,
       ivaRate: Number(settings?.ivaRate ?? 13),
@@ -314,9 +347,9 @@ function resolveLegacyPackageId(value: unknown): string {
 }
 
 function findPackageByLegacyOrCurrentId(
-  packages: any[], 
+  packages: PayPalPackageOption[],
   input: string | undefined
-): any | null {
+): PayPalPackageOption | null {
   if (!input || !packages?.length) return null;
 
   const normalizedInput = normalizePackageLookup(input);
@@ -332,17 +365,66 @@ function findPackageByLegacyOrCurrentId(
 
     return candidates.includes(normalizedInput) || 
            candidates.includes(normalizePackageLookup(legacyMapped));
-  });
+  }) ?? null;
 }
 
-function getPackageLabel(tourPackage: string | undefined, selectedPackage: any, language: string): string {
+function getPackageLabel(tourPackage: string | undefined, selectedPackage: PayPalPackageOption, language: string): string {
   if (tourPackage === "basic") return "Paquete Básico";
   if (tourPackage === "full-day") return "Día Completo con Almuerzo";
   if (tourPackage === "private") return "Tour Privado";
 
   return language === "en"
-    ? selectedPackage.name
-    : selectedPackage.nameEs || selectedPackage.name;
+    ? selectedPackage.name || selectedPackage.nameEs || "Tour package"
+    : selectedPackage.nameEs || selectedPackage.name || "Paquete del tour";
+}
+
+function clampText(value: unknown, maxLength = 160): string | null {
+  const normalized = String(value ?? "").trim();
+  if (!normalized) return null;
+  return normalized.slice(0, maxLength);
+}
+
+function normalizeReservationAddOns(input: unknown): ReservationAddOn[] {
+  if (!Array.isArray(input)) return [];
+
+  return input
+    .map((rawAddOn): ReservationAddOn | null => {
+      if (!rawAddOn || typeof rawAddOn !== "object") return null;
+
+      const addOn = rawAddOn as Partial<ReservationAddOn>;
+
+      if (addOn.type === "transport") {
+        const transportLocation = clampText(addOn.transportLocation);
+        if (!transportLocation) return null;
+
+        return {
+          type: "transport",
+          label: clampText(addOn.label, 80) ?? "Transport",
+          status: "requested",
+          transportLocation,
+          note: clampText(addOn.note, 180),
+        } satisfies ReservationAddOn;
+      }
+
+      if (addOn.type === "accommodation") {
+        const accommodationPartnerName = clampText(addOn.accommodationPartnerName);
+        if (!accommodationPartnerName) return null;
+
+        return {
+          type: "accommodation",
+          label: clampText(addOn.label, 80) ?? "Accommodation",
+          status: "requested",
+          accommodationPartnerId: clampText(addOn.accommodationPartnerId, 80),
+          accommodationPartnerName,
+          accommodationPartnerType: clampText(addOn.accommodationPartnerType, 80),
+          note: clampText(addOn.note, 180),
+        } satisfies ReservationAddOn;
+      }
+
+      return null;
+    })
+    .filter((addOn): addOn is ReservationAddOn => addOn !== null)
+    .slice(0, 2);
 }
 
 async function getRemainingCapacityForTourDate({
@@ -386,8 +468,8 @@ async function getRemainingCapacityForTourDate({
   return Math.max(0, capacity - reserved);
 }
 
-function createCustomId(data: Record<string, any>): string {
-  let payload = JSON.stringify(data);
+function createCustomId(data: Record<string, unknown>): string {
+  const payload = JSON.stringify(data);
   if (payload.length <= PAYPAL_CUSTOM_ID_MAX_LENGTH) return payload;
 
   // Fallback - shorter version
@@ -449,7 +531,7 @@ function createPayPalPayer({
   };
 }
 
-async function saveOrderContext(orderId: string, bookingData: any) {
+async function saveOrderContext(orderId: string, bookingData: SavedOrderContext) {
   try {
     const db = await getDb();
     await db.collection(COLLECTIONS.PAYPAL_ORDER_CONTEXTS).updateOne(

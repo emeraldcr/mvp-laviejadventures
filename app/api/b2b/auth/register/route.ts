@@ -9,10 +9,11 @@ import {
   VERIFICATION_TOKEN_EXPIRY_MS,
 } from "@/lib/constants/auth";
 import { DEFAULT_COMMISSION_RATE } from "@/lib/constants/business";
+import { normalizeB2BPartnerType } from "@/lib/b2b-partners";
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, company, email, password } = await req.json();
+    const { name, company, email, password, partnerType } = await req.json();
 
     if (!name || !company || !email || !password) {
       return NextResponse.json({ error: "All fields are required." }, { status: 400 });
@@ -37,6 +38,7 @@ export async function POST(req: NextRequest) {
     const result = await createOperator({
       name,
       company,
+      partnerType: normalizeB2BPartnerType(partnerType),
       email: email.toLowerCase(),
       password: hashedPassword,
       status: "pending",

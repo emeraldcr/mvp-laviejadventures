@@ -48,6 +48,7 @@ function createMailBody(params: SendEmailParams): string {
         tour: "Tour",
         package: "Selected Package",
         tourTime: "Tour Time",
+        addOns: "Requested Add-ons",
         total: "Total Paid",
         orderId: "Order ID (PayPal)",
         paymentId: "Payment / Transaction ID",
@@ -70,6 +71,7 @@ function createMailBody(params: SendEmailParams): string {
         tour: "Tour",
         package: "Paquete elegido",
         tourTime: "Hora del tour",
+        addOns: "Servicios adicionales solicitados",
         total: "Total Pagado",
         orderId: "ID de la Orden (PayPal)",
         paymentId: "ID de Pago / Transacción",
@@ -93,6 +95,7 @@ function createMailBody(params: SendEmailParams): string {
   const displayTourName = params.tourName ?? naLabel;
   const displayTourPackage = params.tourPackage ?? naLabel;
   const displayTourTime = params.tourTime ?? naLabel;
+  const displayAddOns = formatAddOnsForEmail(params.addOns, isEnglish, naLabel);
 
   return `<!DOCTYPE html>
 <html>
@@ -118,6 +121,7 @@ function createMailBody(params: SendEmailParams): string {
     <li><b>${copy.tour}:</b> ${displayTourName}</li>
     <li><b>${copy.package}:</b> ${displayTourPackage}</li>
     <li><b>${copy.tourTime}:</b> ${displayTourTime}</li>
+    <li><b>${copy.addOns}:</b> ${displayAddOns}</li>
     <li><b>${copy.total}:</b> ${displayAmount}</li>
     <li><b>${copy.orderId}:</b> ${displayOrderId}</li>
     <li><b>${copy.paymentId}:</b> ${displayCaptureId}</li>
@@ -134,4 +138,23 @@ function createMailBody(params: SendEmailParams): string {
   <p>Ciudad Esmeralda Tour</p>
 </body>
 </html>`;
+}
+
+function formatAddOnsForEmail(addOns: SendEmailParams["addOns"], isEnglish: boolean, naLabel: string) {
+  if (!addOns || addOns.length === 0) return naLabel;
+
+  const transportLabel = isEnglish ? "Transport" : "Transporte";
+  const accommodationLabel = isEnglish ? "Accommodation" : "Alojamiento";
+
+  return addOns
+    .map((addOn) => {
+      if (addOn.type === "transport") {
+        return `${transportLabel}: ${addOn.transportLocation ?? naLabel}`;
+      }
+
+      return `${accommodationLabel}: ${addOn.accommodationPartnerName ?? naLabel}${
+        addOn.accommodationPartnerType ? ` (${addOn.accommodationPartnerType})` : ""
+      }`;
+    })
+    .join("<br />");
 }

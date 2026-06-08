@@ -1,11 +1,13 @@
 import { ObjectId } from "mongodb";
 import { getDb } from "@/lib/mongodb";
 import { COLLECTIONS } from "@/lib/constants/db";
+import type { B2BPartnerType } from "@/lib/b2b-partners";
 
 export interface OperatorAccount {
   _id?: ObjectId;
   name: string;
   company: string;
+  partnerType?: B2BPartnerType;
   email: string;
   password: string;
   status: "pending" | "approved" | "active";

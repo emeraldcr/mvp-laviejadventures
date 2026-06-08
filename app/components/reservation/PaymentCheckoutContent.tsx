@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CalendarDays, Clock3, CreditCard, Mail, Phone, ShieldCheck, Ticket, UserRound } from "lucide-react";
+import { BedDouble, BusFront, CalendarDays, Clock3, CreditCard, Mail, Phone, ShieldCheck, Ticket, UserRound } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
 import { trackAnalyticsEvent } from "@/lib/analytics/client";
 import { translations } from "@/lib/translations";
@@ -78,7 +78,8 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
   const { lang } = useLanguage();
   const tr = translations[lang].payment;
 
-  const { name, email, phone, tickets, total, date, dateIso, tourTime, packageId, tourPackage, tourSlug, tourName, packagePrice } = orderDetails;
+  const { name, email, phone, tickets, total, date, dateIso, tourTime, packageId, tourPackage, tourSlug, tourName, packagePrice, addOns = [] } = orderDetails;
+  const addOnsKey = useMemo(() => JSON.stringify(addOns), [addOns]);
 
   const checkoutKey = useMemo(
     () => [
@@ -94,9 +95,10 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
       tourSlug,
       tourName,
       packagePrice,
+      addOnsKey,
       lang,
     ].join("|"),
-    [date, dateIso, email, lang, name, packageId, packagePrice, phone, tickets, total, tourName, tourPackage, tourSlug, tourTime],
+    [addOnsKey, date, dateIso, email, lang, name, packageId, packagePrice, phone, tickets, total, tourName, tourPackage, tourSlug, tourTime],
   );
 
   const bookingAnalyticsMetadata = useMemo(
@@ -109,11 +111,12 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
       tourSlug,
       tourName,
       packagePrice,
+      addOns,
       amount: total,
       currency: "USD",
       language: lang,
     }),
-    [date, dateIso, lang, packageId, packagePrice, tickets, total, tourName, tourPackage, tourSlug, tourTime],
+    [addOns, date, dateIso, lang, packageId, packagePrice, tickets, total, tourName, tourPackage, tourSlug, tourTime],
   );
 
   const paypalLoadError = paypalLoadFailure?.checkoutKey === checkoutKey ? paypalLoadFailure.message : null;
@@ -135,6 +138,12 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
     guestsLabel: lang === "es" ? "Personas" : "Guests",
     tourLabel: lang === "es" ? "Experiencia" : "Experience",
     packagePriceLabel: lang === "es" ? "Tarifa" : "Rate",
+    addOnsTitle: lang === "es" ? "Servicios adicionales" : "Add-on services",
+    transportLabel: lang === "es" ? "Transporte" : "Transport",
+    accommodationLabel: lang === "es" ? "Alojamiento" : "Accommodation",
+    addOnsNote: lang === "es"
+      ? "Se coordinan por separado; este pago cubre solo el tour."
+      : "Coordinated separately; this payment covers only the tour.",
   };
 
   useEffect(() => {
@@ -207,6 +216,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
                 packagePrice,
                 tourSlug,
                 tourName,
+                addOns,
                 language: lang,
                 countryCode: buyerCountryCode,
               }),
@@ -434,6 +444,30 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
             />
           </div>
         </section>
+
+        {addOns.length > 0 && (
+          <section className="rounded-2xl border border-white/10 bg-zinc-950/45 p-4 shadow-inner shadow-black/20">
+            <div className="mb-3 flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-teal-300" aria-hidden />
+              <h2 className="text-sm font-black uppercase tracking-[0.16em] text-zinc-300">{paymentCopy.addOnsTitle}</h2>
+            </div>
+            <div className="space-y-3">
+              {addOns.map((addOn) => (
+                <SummaryRow
+                  key={`${addOn.type}-${addOn.transportLocation ?? addOn.accommodationPartnerId ?? addOn.label}`}
+                  icon={addOn.type === "transport" ? <BusFront className="h-4 w-4" aria-hidden /> : <BedDouble className="h-4 w-4" aria-hidden />}
+                  label={addOn.type === "transport" ? paymentCopy.transportLabel : paymentCopy.accommodationLabel}
+                  value={
+                    addOn.type === "transport"
+                      ? addOn.transportLocation ?? addOn.label
+                      : `${addOn.accommodationPartnerName ?? addOn.label}${addOn.accommodationPartnerType ? ` (${addOn.accommodationPartnerType})` : ""}`
+                  }
+                />
+              ))}
+            </div>
+            <p className="mt-3 text-xs font-medium text-zinc-400">{paymentCopy.addOnsNote}</p>
+          </section>
+        )}
       </aside>
 
       <section className="rounded-2xl border border-teal-300/20 bg-[radial-gradient(circle_at_top_right,rgba(20,184,166,0.18),transparent_34%),rgba(10,10,12,0.72)] p-4 shadow-2xl shadow-black/30 sm:p-5">

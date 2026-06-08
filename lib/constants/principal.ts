@@ -72,6 +72,10 @@ tours: {
       title: "Tu proximo tour empieza aqui",
       description:
         "Elige la fecha, completa tus detalles y si tienes dudas usa el boton de AI para resolver todo al instante.",
+      urgentOfferBadge: "Oferta limitada",
+      urgentOfferTitle: "Reserva hoy y bloquea tu plaza por 24 horas",
+      urgentOfferDescription:
+        "Tu selección queda reservada mientras completas tus datos. Aprovecha el tiempo limitado y asegura tu experiencia antes de que se agote.",
       steps: {
         date: "Paso 1 - Fecha",
         details: "Paso 2 - Detalles",
@@ -137,6 +141,10 @@ tours: {
       title: "Your next tour starts here",
       description:
         "Pick your date, complete your details, and use the AI button whenever you need instant help.",
+      urgentOfferBadge: "Limited-time offer",
+      urgentOfferTitle: "Reserve today and lock your spot for 24 hours",
+      urgentOfferDescription:
+        "Your chosen tour stays reserved while you finish your details. Secure your experience before availability shrinks.",
       steps: {
         date: "Step 1 - Date",
         details: "Step 2 - Details",

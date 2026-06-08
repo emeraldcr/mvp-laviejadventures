@@ -4,6 +4,7 @@ import B2BNav from "@/app/components/b2b/B2BNav";
 import { getOperatorFromCookies } from "@/lib/b2b-auth";
 import { findOperatorById } from "@/lib/models/operator";
 import NotificationsSettings from "./NotificationsSettings";
+import { getB2BPartnerTypeLabel } from "@/lib/b2b-partners";
 
 const DEFAULT_NOTIFICATION_PREFERENCES = {
   bookingCreated: true,
@@ -40,6 +41,10 @@ export default async function B2BProfilePage() {
             <div className="rounded-2xl bg-zinc-50 p-4 dark:bg-zinc-800/70">
               <p className="inline-flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400"><Building2 className="h-3.5 w-3.5" />Empresa</p>
               <p className="mt-1 text-sm font-semibold text-zinc-900 dark:text-zinc-100">{operator.company}</p>
+            </div>
+            <div className="rounded-2xl bg-zinc-50 p-4 dark:bg-zinc-800/70">
+              <p className="inline-flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400"><Building2 className="h-3.5 w-3.5" />Tipo de partner</p>
+              <p className="mt-1 text-sm font-semibold text-zinc-900 dark:text-zinc-100">{getB2BPartnerTypeLabel(operator.partnerType, "es")}</p>
             </div>
             <div className="rounded-2xl bg-zinc-50 p-4 dark:bg-zinc-800/70">
               <p className="inline-flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400"><Mail className="h-3.5 w-3.5" />Email</p>

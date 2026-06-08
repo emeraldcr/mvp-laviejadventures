@@ -1,13 +1,13 @@
 // components/ReservationDetails.tsx
 import Link from "next/link";
 import { TOUR_INFO } from "@/lib/tour-info";
-import { AvailabilityMap, MainTourInfo, TourPackageOption, TourSummary } from "@/lib/types/index";
+import { AvailabilityMap, MainTourInfo, ReservationAddOn, TourPackageOption, TourSummary } from "@/lib/types/index";
 import { useState, useMemo, useCallback, useEffect, useRef, type KeyboardEvent, type RefObject } from "react";
 import { format } from "date-fns";
 import { es, enUS } from "date-fns/locale";
 import { useLanguage } from "@/lib/LanguageContext";
 import { translations } from "@/lib/translations";
-import { AlertCircle, Camera, Check, ChevronDown, Clock3, Info, MapPin, Minus, Plus, Route, Search, ShieldCheck, Sparkles, TreePalm, Users, UtensilsCrossed } from "lucide-react";
+import { AlertCircle, BedDouble, BusFront, Camera, Check, ChevronDown, Clock3, Info, MapPin, Minus, Plus, Route, Search, ShieldCheck, Sparkles, TreePalm, Users, UtensilsCrossed } from "lucide-react";
 import { trackAnalyticsEvent } from "@/lib/analytics/client";
 import { PHONE_COUNTRIES as ALL_PHONE_COUNTRIES } from "@/app/components/reservation/phoneCountries";
 
@@ -19,6 +19,41 @@ const DEFAULT_DEPARTURE_TIMES = ["08:00", "09:00", "10:00"];
 
 export type TourTime = string;
 type BookingStepId = 1 | 2 | 3;
+
+type B2BPartnerSummary = {
+  id: string;
+  name: string;
+  company: string;
+  partnerType: string;
+  partnerTypeLabelEs: string;
+  partnerTypeLabelEn: string;
+  category: string;
+};
+
+type AddOnState = {
+  transportRequested: boolean;
+  transportLocation: string;
+  accommodationRequested: boolean;
+  accommodationPartnerId: string;
+};
+
+const COSTA_RICA_TRANSPORT_LOCATIONS = [
+  "SJO Airport - Juan Santamaria",
+  "LIR Airport - Liberia",
+  "San Jose",
+  "La Fortuna",
+  "Monteverde",
+  "Liberia",
+  "Tamarindo",
+  "Playas del Coco",
+  "Nosara",
+  "Samara",
+  "Jaco",
+  "Manuel Antonio",
+  "Puerto Viejo",
+  "Santa Teresa",
+  "Ciudad Quesada / San Carlos",
+];
 
 // ---------------------- PACKAGES ----------------------
 export type TourPackage = string;
@@ -95,6 +130,26 @@ const formatDepartureLabel = (value: string) => {
   return `${hour12}:${minute} ${period}`;
 };
 
+const OFFER_STORAGE_KEY = "la-vieja-reservation-offer-expires-at";
+const OFFER_DURATION_MS = 24 * 60 * 60 * 1000;
+
+const formatTimeLeft = (ms: number, lang: "es" | "en") => {
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (hours > 0) {
+    return lang === "es"
+      ? `${hours}h ${minutes}m`
+      : `${hours}h ${minutes}m`;
+  }
+
+  return lang === "es"
+    ? `${minutes}m ${seconds}s`
+    : `${minutes}m ${seconds}s`;
+};
+
 type PackageMeta = {
   icon: typeof TreePalm;
   accent: string;
@@ -127,6 +182,7 @@ interface ReservationOrderPayload {
   tourName: string;
   packagePrice: number;
   specialRequests: string;
+  addOns?: ReservationAddOn[];
 }
 
 // ---------------------- CUSTOM HOOK ----------------------
@@ -419,8 +475,11 @@ export default function ReservationDetails({
   const tr = translations[lang].reservation;
   const dateLocale = lang === "es" ? es : enUS;
   const [selectedTourInfo, setSelectedTourInfo] = useState<{ slug: string; tour: MainTourInfo } | null>(null);
+  const [offerTimeLeft, setOfferTimeLeft] = useState(0);
   const slots = availability[selectedDate] ?? 0;
   const isTicketsValid = tickets >= 1 && tickets <= slots;
+  const lowAvailability = slots > 0 && slots <= 3;
+  const offerActive = offerTimeLeft > 0;
 
   const reservationDate = new Date(currentYear, currentMonth, selectedDate);
   const formattedDate = format(
@@ -431,6 +490,14 @@ export default function ReservationDetails({
 
   const [tourTime, setTourTime] = useState<TourTime | null>(null);
   const [tourPackage, setTourPackage] = useState<TourPackage | null>(null);
+  const [addOnState, setAddOnState] = useState<AddOnState>({
+    transportRequested: false,
+    transportLocation: "",
+    accommodationRequested: false,
+    accommodationPartnerId: "",
+  });
+  const [b2bPartners, setB2BPartners] = useState<B2BPartnerSummary[]>([]);
+  const [isLoadingPartners, setIsLoadingPartners] = useState(true);
   const [currentStep, setCurrentStep] = useState<BookingStepId>(1);
   const currentStepRef = useRef<BookingStepId>(1);
   const stepEnteredAtRef = useRef(0);
@@ -444,12 +511,51 @@ export default function ReservationDetails({
   const nameInputRef = useRef<HTMLInputElement | null>(null);
   const emailInputRef = useRef<HTMLInputElement | null>(null);
   const phoneInputRef = useRef<HTMLInputElement | null>(null);
+  const addOnsSectionRef = useRef<HTMLDivElement | null>(null);
+  const transportLocationSelectRef = useRef<HTMLSelectElement | null>(null);
+  const accommodationPartnerSelectRef = useRef<HTMLSelectElement | null>(null);
   const reviewSectionRef = useRef<HTMLDivElement | null>(null);
   const termsCheckboxRef = useRef<HTMLInputElement | null>(null);
 
   const selectedTourSlug = resolveSelectedTourSlug(tours, null, initialSelectedTourSlug);
   const selectedTour = tours.find((tour) => tour.slug === selectedTourSlug) ?? tours[0] ?? null;
   const selectedTourName = selectedTour ? (lang === "es" ? selectedTour.titleEs : selectedTour.titleEn) : (lang === "es" ? "Tour" : "Tour");
+
+  useEffect(() => {
+    const now = Date.now();
+    const storedExpiry = Number(sessionStorage.getItem(OFFER_STORAGE_KEY) ?? NaN);
+    const expiresAt = Number.isFinite(storedExpiry) && storedExpiry > now ? storedExpiry : now + OFFER_DURATION_MS;
+    sessionStorage.setItem(OFFER_STORAGE_KEY, String(expiresAt));
+    setOfferTimeLeft(Math.max(0, expiresAt - now));
+
+    const intervalId = window.setInterval(() => {
+      const remaining = Math.max(0, expiresAt - Date.now());
+      setOfferTimeLeft(remaining);
+    }, 1000);
+
+    return () => window.clearInterval(intervalId);
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    fetch("/api/b2b/partners")
+      .then((response) => response.json())
+      .then((data) => {
+        if (!isMounted) return;
+        setB2BPartners(Array.isArray(data?.partners) ? data.partners : []);
+      })
+      .catch(() => {
+        if (isMounted) setB2BPartners([]);
+      })
+      .finally(() => {
+        if (isMounted) setIsLoadingPartners(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
   const selectedTourDescription = selectedTour
     ? (lang === "es" ? selectedTour.descriptionEs : selectedTour.descriptionEn) ?? selectedTour.descriptionEs ?? selectedTour.descriptionEn ?? ""
     : "";
@@ -665,6 +771,62 @@ export default function ReservationDetails({
   const taxes = Number.isFinite(taxesRaw) ? taxesRaw : 0;
   const totalWithTaxes = Number.isFinite(totalWithTaxesRaw) ? totalWithTaxesRaw : 0;
 
+  const accommodationPartners = useMemo(
+    () => b2bPartners.filter((partner) => partner.category === "accommodation"),
+    [b2bPartners]
+  );
+
+  const availableAccommodationPartners = accommodationPartners.length > 0
+    ? accommodationPartners
+    : b2bPartners;
+
+  const selectedAccommodationPartner = availableAccommodationPartners.find(
+    (partner) => partner.id === addOnState.accommodationPartnerId
+  ) ?? null;
+
+  const isTransportAddOnValid = !addOnState.transportRequested || addOnState.transportLocation.trim() !== "";
+  const isAccommodationAddOnValid = !addOnState.accommodationRequested || Boolean(selectedAccommodationPartner);
+  const areAddOnsValid = isTransportAddOnValid && isAccommodationAddOnValid;
+
+  const reservationAddOns = useMemo<ReservationAddOn[]>(() => {
+    const addOns: ReservationAddOn[] = [];
+
+    if (addOnState.transportRequested && addOnState.transportLocation.trim()) {
+      addOns.push({
+        type: "transport",
+        label: tr.addOns.transportTitle,
+        status: "requested",
+        transportLocation: addOnState.transportLocation.trim(),
+        note: tr.addOns.quoteNote,
+      });
+    }
+
+    if (addOnState.accommodationRequested && selectedAccommodationPartner) {
+      addOns.push({
+        type: "accommodation",
+        label: tr.addOns.accommodationTitle,
+        status: "requested",
+        accommodationPartnerId: selectedAccommodationPartner.id,
+        accommodationPartnerName: selectedAccommodationPartner.company,
+        accommodationPartnerType: lang === "es"
+          ? selectedAccommodationPartner.partnerTypeLabelEs
+          : selectedAccommodationPartner.partnerTypeLabelEn,
+        note: tr.addOns.quoteNote,
+      });
+    }
+
+    return addOns;
+  }, [
+    addOnState.accommodationRequested,
+    addOnState.transportLocation,
+    addOnState.transportRequested,
+    lang,
+    selectedAccommodationPartner,
+    tr.addOns.accommodationTitle,
+    tr.addOns.quoteNote,
+    tr.addOns.transportTitle,
+  ]);
+
   const { formState, setFormState, handleChange, validation } = useReservationForm({
     name: "",
     email: "",
@@ -679,7 +841,7 @@ export default function ReservationDetails({
     tourTime !== null &&
     effectiveTourPackage !== null &&
     Boolean(selectedTour);
-  const isStep2Valid = validation.isNameValid && validation.isEmailValid && validation.isPhoneNumberValid;
+  const isStep2Valid = validation.isNameValid && validation.isEmailValid && validation.isPhoneNumberValid && areAddOnsValid;
 
   const missingStep1Items = useMemo(() => {
     const missing: string[] = [];
@@ -698,9 +860,20 @@ export default function ReservationDetails({
     if (!validation.isNameValid) missing.push(tr.missing.name);
     if (!validation.isEmailValid) missing.push(tr.missing.email);
     if (!validation.isPhoneNumberValid) missing.push(tr.missing.phone);
+    if (!isTransportAddOnValid) missing.push(tr.addOns.missingTransport);
+    if (!isAccommodationAddOnValid) missing.push(tr.addOns.missingAccommodation);
 
     return missing;
-  }, [validation.isNameValid, validation.isEmailValid, validation.isPhoneNumberValid, tr.missing]);
+  }, [
+    validation.isNameValid,
+    validation.isEmailValid,
+    validation.isPhoneNumberValid,
+    isTransportAddOnValid,
+    isAccommodationAddOnValid,
+    tr.missing,
+    tr.addOns.missingTransport,
+    tr.addOns.missingAccommodation,
+  ]);
 
   const isFormValid = useMemo(
     () => isStep1Valid && isStep2Valid && validation.isAgreeTermsValid,
@@ -742,9 +915,17 @@ export default function ReservationDetails({
     if (!validation.isNameValid) missing.push("name");
     if (!validation.isEmailValid) missing.push("email");
     if (!validation.isPhoneNumberValid) missing.push("phone");
+    if (!isTransportAddOnValid) missing.push("transport_location");
+    if (!isAccommodationAddOnValid) missing.push("accommodation_partner");
 
     return missing;
-  }, [validation.isNameValid, validation.isEmailValid, validation.isPhoneNumberValid]);
+  }, [
+    validation.isNameValid,
+    validation.isEmailValid,
+    validation.isPhoneNumberValid,
+    isTransportAddOnValid,
+    isAccommodationAddOnValid,
+  ]);
 
   const getMissingKeysForStep = useCallback((step: BookingStepId) => {
     if (step === 1) return missingStep1Keys;
@@ -765,6 +946,8 @@ export default function ReservationDetails({
     selectedTime: tourTime,
     hasSelectedPackage: Boolean(effectiveTourPackage),
     selectedPackage: effectiveTourPackage,
+    addOns: reservationAddOns,
+    hasRequestedAddOns: reservationAddOns.length > 0,
     subtotal: subtotalRaw,
     taxes: taxesRaw,
     totalWithTaxes,
@@ -779,6 +962,7 @@ export default function ReservationDetails({
     slots,
     tourTime,
     effectiveTourPackage,
+    reservationAddOns,
     subtotalRaw,
     taxesRaw,
     totalWithTaxes,
@@ -942,8 +1126,16 @@ export default function ReservationDetails({
     if (!validation.isNameValid) return { element: nameInputRef.current, focus: true };
     if (!validation.isEmailValid) return { element: emailInputRef.current, focus: true };
     if (!validation.isPhoneNumberValid) return { element: phoneInputRef.current, focus: true };
+    if (!isTransportAddOnValid) return { element: transportLocationSelectRef.current, focus: true };
+    if (!isAccommodationAddOnValid) return { element: accommodationPartnerSelectRef.current, focus: true };
     return { element: travelerSectionRef.current, focus: false };
-  }, [validation.isEmailValid, validation.isNameValid, validation.isPhoneNumberValid]);
+  }, [
+    validation.isEmailValid,
+    validation.isNameValid,
+    validation.isPhoneNumberValid,
+    isTransportAddOnValid,
+    isAccommodationAddOnValid,
+  ]);
 
   const getStep3GuideTarget = useCallback(() => {
     if (!validation.isAgreeTermsValid) return { element: termsCheckboxRef.current, focus: true };
@@ -1019,6 +1211,7 @@ export default function ReservationDetails({
         tourTime,
         tourPackage: effectiveTourPackage,
         tourSlug: selectedTour.slug,
+        addOns: reservationAddOns,
         totalWithTaxes,
       },
     });
@@ -1038,6 +1231,7 @@ export default function ReservationDetails({
       tourSlug: selectedTour.slug,
       tourName: selectedTourName,
       packagePrice: effectiveSelectedPackage.price,
+      addOns: reservationAddOns,
     });
   }, [
     isFormValid,
@@ -1054,6 +1248,7 @@ export default function ReservationDetails({
     formState,
     selectedTour,
     selectedTourName,
+    reservationAddOns,
     lang,
     trackBlockedStep,
     trackStepCompleted,
@@ -1200,6 +1395,39 @@ export default function ReservationDetails({
     });
   }, [getAnalyticsBookingSnapshot, setTickets, slots, stepLabels]);
 
+  const handleAddOnToggle = useCallback((field: "transportRequested" | "accommodationRequested", checked: boolean) => {
+    setAddOnState((prev) => ({
+      ...prev,
+      [field]: checked,
+      ...(field === "transportRequested" && !checked ? { transportLocation: "" } : {}),
+      ...(field === "accommodationRequested" && !checked ? { accommodationPartnerId: "" } : {}),
+    }));
+
+    trackAnalyticsEvent("booking_selection_changed", {
+      metadata: {
+        step: 2,
+        stepLabel: stepLabels[2],
+        field,
+        value: checked,
+        booking: getAnalyticsBookingSnapshot(),
+      },
+    });
+  }, [getAnalyticsBookingSnapshot, stepLabels]);
+
+  const handleAddOnSelect = useCallback((field: "transportLocation" | "accommodationPartnerId", value: string) => {
+    setAddOnState((prev) => ({ ...prev, [field]: value }));
+
+    trackAnalyticsEvent("booking_selection_changed", {
+      metadata: {
+        step: 2,
+        stepLabel: stepLabels[2],
+        field,
+        value,
+        booking: getAnalyticsBookingSnapshot(),
+      },
+    });
+  }, [getAnalyticsBookingSnapshot, stepLabels]);
+
   const trackFieldBlur = useCallback((field: "name" | "email" | "phone" | "specialRequests" | "terms") => {
     const fieldState = {
       name: {
@@ -1248,6 +1476,31 @@ export default function ReservationDetails({
       <h2 className="mb-5 text-center text-2xl font-black leading-tight text-zinc-900 dark:text-zinc-50">
         {tr.titlePrefix} {formattedDate}
       </h2>
+
+      {offerActive && (
+        <div className="mx-auto mb-6 max-w-4xl rounded-[2rem] border border-emerald-400/20 bg-emerald-950/10 p-5 shadow-[0_18px_60px_rgba(16,185,129,0.12)] backdrop-blur-sm">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="mb-2 text-xs font-bold uppercase tracking-[0.28em] text-emerald-300">{tr.offerBadge}</p>
+              <h3 className="text-xl font-black text-white sm:text-2xl">{tr.offerTitle}</h3>
+              <p className="mt-2 max-w-3xl text-sm leading-relaxed text-zinc-300">{tr.offerDescription}</p>
+            </div>
+            <div className="inline-flex items-center gap-3 rounded-full border border-emerald-300/25 bg-black/20 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-900/10">
+              <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-emerald-400 text-zinc-950">24h</span>
+              <div className="text-left">
+                <p className="text-xs uppercase tracking-[0.2em] text-zinc-400">{tr.offerTimerLabel}</p>
+                <p className="text-lg font-black text-white">{formatTimeLeft(offerTimeLeft, lang)}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {lowAvailability && (
+        <div className="mx-auto mb-6 max-w-4xl rounded-3xl border border-amber-300/20 bg-amber-50 p-4 text-sm font-semibold text-amber-900 shadow-sm dark:border-amber-700/20 dark:bg-amber-900/10 dark:text-amber-200">
+          {tr.lowAvailabilityHint.replace("{slots}", String(slots))}
+        </div>
+      )}
 
       <div className="mb-8 border-y border-zinc-200 py-3 dark:border-zinc-800" aria-label={tr.flowTitle}>
         <div className="flex items-center gap-2">
@@ -1608,6 +1861,128 @@ export default function ReservationDetails({
               <TravelerPhoneInput phoneCode={formState.phoneCode} phoneNumber={formState.phoneNumber} setPhoneCode={(v) => handleChange("phoneCode", v)} setPhoneNumber={(v) => handleChange("phoneNumber", v)} onBlur={() => trackFieldBlur("phone")} onKeyDown={handlePhoneEnter} inputRef={phoneInputRef} isValid={validation.isPhoneNumberValid} label={tr.phoneLabel} placeholder={tr.phonePlaceholder} validationMessage={tr.phoneInvalid} />
             </div>
           </div>
+          <div ref={addOnsSectionRef} className={`mb-6 rounded-2xl border bg-white p-4 shadow-sm dark:bg-zinc-900/70 sm:p-5 ${
+            !areAddOnsValid
+              ? "border-amber-300 ring-2 ring-amber-300/35 dark:border-amber-600"
+              : "border-zinc-200 dark:border-zinc-700"
+          }`}>
+            <div className="mb-4">
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-teal-600 dark:text-teal-300">{tr.addOns.eyebrow}</p>
+              <h3 className="mt-1 text-xl font-black text-zinc-900 dark:text-zinc-50">{tr.addOns.title}</h3>
+              <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{tr.addOns.subtitle}</p>
+            </div>
+
+            <div className="grid gap-4 lg:grid-cols-2">
+              <section className={`rounded-2xl border p-4 transition ${
+                addOnState.transportRequested
+                  ? "border-sky-300 bg-sky-50 dark:border-sky-700 dark:bg-sky-950/20"
+                  : "border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-950/30"
+              }`}>
+                <label htmlFor="transportRequested" className="flex cursor-pointer items-start gap-3">
+                  <input
+                    id="transportRequested"
+                    type="checkbox"
+                    checked={addOnState.transportRequested}
+                    onChange={(event) => handleAddOnToggle("transportRequested", event.target.checked)}
+                    className="mt-1 h-5 w-5 rounded border-zinc-300 text-teal-600 focus:ring-teal-500 dark:border-zinc-600 dark:bg-zinc-800"
+                  />
+                  <span className="flex min-w-0 flex-1 gap-3">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-300">
+                      <BusFront className="h-5 w-5" aria-hidden />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-base font-black text-zinc-900 dark:text-zinc-50">{tr.addOns.transportTitle}</span>
+                      <span className="mt-1 block text-sm text-zinc-600 dark:text-zinc-400">{tr.addOns.transportDescription}</span>
+                    </span>
+                  </span>
+                </label>
+
+                {addOnState.transportRequested && (
+                  <div className="mt-4">
+                    <label htmlFor="transportLocation" className="mb-1.5 block text-sm font-bold text-zinc-700 dark:text-zinc-300">
+                      {tr.addOns.transportLocationLabel}
+                    </label>
+                    <select
+                      ref={transportLocationSelectRef}
+                      id="transportLocation"
+                      value={addOnState.transportLocation}
+                      onChange={(event) => handleAddOnSelect("transportLocation", event.target.value)}
+                      className={`h-12 w-full rounded-xl border bg-white px-3 text-sm font-semibold text-zinc-900 outline-none transition focus:border-teal-500 focus:ring-4 focus:ring-teal-500/15 dark:bg-zinc-900 dark:text-zinc-50 ${
+                        isTransportAddOnValid ? "border-zinc-300 dark:border-zinc-700" : "border-amber-400 dark:border-amber-600"
+                      }`}
+                    >
+                      <option value="">{tr.addOns.selectLocationPlaceholder}</option>
+                      {COSTA_RICA_TRANSPORT_LOCATIONS.map((location) => (
+                        <option key={location} value={location}>{location}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </section>
+
+              <section className={`rounded-2xl border p-4 transition ${
+                addOnState.accommodationRequested
+                  ? "border-emerald-300 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-950/20"
+                  : "border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-950/30"
+              }`}>
+                <label htmlFor="accommodationRequested" className="flex cursor-pointer items-start gap-3">
+                  <input
+                    id="accommodationRequested"
+                    type="checkbox"
+                    checked={addOnState.accommodationRequested}
+                    onChange={(event) => handleAddOnToggle("accommodationRequested", event.target.checked)}
+                    className="mt-1 h-5 w-5 rounded border-zinc-300 text-teal-600 focus:ring-teal-500 dark:border-zinc-600 dark:bg-zinc-800"
+                  />
+                  <span className="flex min-w-0 flex-1 gap-3">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-300">
+                      <BedDouble className="h-5 w-5" aria-hidden />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-base font-black text-zinc-900 dark:text-zinc-50">{tr.addOns.accommodationTitle}</span>
+                      <span className="mt-1 block text-sm text-zinc-600 dark:text-zinc-400">{tr.addOns.accommodationDescription}</span>
+                    </span>
+                  </span>
+                </label>
+
+                {addOnState.accommodationRequested && (
+                  <div className="mt-4">
+                    <label htmlFor="accommodationPartner" className="mb-1.5 block text-sm font-bold text-zinc-700 dark:text-zinc-300">
+                      {tr.addOns.accommodationPartnerLabel}
+                    </label>
+                    <select
+                      ref={accommodationPartnerSelectRef}
+                      id="accommodationPartner"
+                      value={addOnState.accommodationPartnerId}
+                      onChange={(event) => handleAddOnSelect("accommodationPartnerId", event.target.value)}
+                      disabled={isLoadingPartners || availableAccommodationPartners.length === 0}
+                      className={`h-12 w-full rounded-xl border bg-white px-3 text-sm font-semibold text-zinc-900 outline-none transition focus:border-teal-500 focus:ring-4 focus:ring-teal-500/15 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-zinc-900 dark:text-zinc-50 ${
+                        isAccommodationAddOnValid ? "border-zinc-300 dark:border-zinc-700" : "border-amber-400 dark:border-amber-600"
+                      }`}
+                    >
+                      <option value="">
+                        {isLoadingPartners ? tr.addOns.loadingPartners : tr.addOns.selectPartnerPlaceholder}
+                      </option>
+                      {availableAccommodationPartners.map((partner) => (
+                        <option key={partner.id} value={partner.id}>
+                          {partner.company} - {lang === "es" ? partner.partnerTypeLabelEs : partner.partnerTypeLabelEn}
+                        </option>
+                      ))}
+                    </select>
+                    {accommodationPartners.length === 0 && b2bPartners.length > 0 && (
+                      <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">{tr.addOns.partnerFallbackNote}</p>
+                    )}
+                    {!isLoadingPartners && availableAccommodationPartners.length === 0 && (
+                      <p className="mt-2 text-xs font-medium text-amber-700 dark:text-amber-300">{tr.addOns.noPartners}</p>
+                    )}
+                  </div>
+                )}
+              </section>
+            </div>
+
+            <p className="mt-4 rounded-xl border border-teal-200 bg-teal-50 px-3 py-2 text-xs font-medium text-teal-800 dark:border-teal-800 dark:bg-teal-950/30 dark:text-teal-200">
+              {tr.addOns.quoteNote}
+            </p>
+          </div>
           <div className="mb-6">
             <h3 className="text-xl font-semibold mb-4">{tr.specialTitle}</h3>
             <textarea id="specialRequests" value={formState.specialRequests} onChange={(e) => handleChange("specialRequests", e.target.value)} onBlur={() => trackFieldBlur("specialRequests")} className="w-full p-3 rounded-lg border bg-white dark:bg-zinc-800 h-24 border-zinc-300 dark:border-zinc-700 focus:ring-teal-500 focus:border-teal-500" placeholder={tr.specialPlaceholder} />
@@ -1631,6 +2006,20 @@ export default function ReservationDetails({
             <div className="flex justify-between mb-2"><span>{tr.tourLabel}</span><span className="font-medium">{selectedTourName}</span></div>
             <div className="flex justify-between mb-2"><span>{tr.packageLabel}</span><span className="font-medium">{effectiveSelectedPackage ? (lang === "es" ? effectiveSelectedPackage.nameEs || effectiveSelectedPackage.name : effectiveSelectedPackage.name) : "—"}</span></div>
             <div className="flex justify-between mb-2"><span>{tr.tourTimeTitle}</span><span>{tourTime ?? "—"}</span></div>
+            {reservationAddOns.length > 0 && (
+              <div className="mb-2 rounded-lg border border-zinc-200 bg-white/70 p-3 text-sm dark:border-zinc-700 dark:bg-zinc-900/60">
+                <p className="mb-2 font-semibold text-zinc-900 dark:text-zinc-100">{tr.addOns.reviewTitle}</p>
+                <ul className="space-y-1 text-zinc-700 dark:text-zinc-300">
+                  {reservationAddOns.map((addOn) => (
+                    <li key={`${addOn.type}-${addOn.transportLocation ?? addOn.accommodationPartnerId ?? addOn.label}`}>
+                      {addOn.type === "transport"
+                        ? `${tr.addOns.transportTitle}: ${addOn.transportLocation}`
+                        : `${tr.addOns.accommodationTitle}: ${addOn.accommodationPartnerName} (${addOn.accommodationPartnerType})`}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
             <div className="flex justify-between mb-2"><span>{tr.subtotalLabel}</span><span>${subtotal.toFixed(2)}</span></div>
             <div className="flex justify-between mb-2"><span>{tr.taxes} ({ivaRatePercent}%)</span><span>${taxes.toFixed(2)}</span></div>
             <div className="flex justify-between font-bold text-lg border-t pt-2 border-zinc-300 dark:border-zinc-700"><span>{tr.total}</span><span>${totalWithTaxes.toFixed(2)}</span></div>

@@ -48,6 +48,19 @@ export default function BookingSection({ selectedTourSlug }: Props) {
           <p className="mx-auto max-w-xl text-base leading-relaxed text-zinc-400 md:text-lg">
             {copy.description}
           </p>
+          <div className="mx-auto mt-8 max-w-3xl rounded-3xl border border-teal-500/25 bg-gradient-to-r from-teal-900/10 via-cyan-900/5 to-teal-900/10 p-5 shadow-[0_18px_50px_rgba(16,185,129,0.08)]">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="mb-1 text-xs font-bold uppercase tracking-[0.24em] text-teal-300">{copy.urgentOfferBadge}</p>
+                <h3 className="text-xl font-black text-white sm:text-2xl">{copy.urgentOfferTitle}</h3>
+                <p className="mt-2 max-w-2xl text-sm text-zinc-300">{copy.urgentOfferDescription}</p>
+              </div>
+              <div className="inline-flex items-center gap-3 rounded-full border border-teal-300/40 bg-black/10 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-teal-950/10">
+                <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-teal-500 text-zinc-950">24h</span>
+                <span>{lang === "es" ? "Retén tu lugar ahora" : "Hold your spot now"}</span>
+              </div>
+            </div>
+          </div>
         </motion.div>
 
         <motion.div

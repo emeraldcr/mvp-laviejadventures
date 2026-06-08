@@ -4,7 +4,7 @@ import { getDb } from "@/lib/mongodb";
 import { auth } from "@/lib/auth";
 import { sendConfirmationEmail } from "./emailService";
 import { COLLECTIONS } from "@/lib/constants/db";
-import type { BookingRecord } from "@/lib/types";
+import type { BookingRecord, ReservationAddOn } from "@/lib/types";
 
 type PayPalOrderResponse = {
   status?: string;
@@ -42,6 +42,7 @@ type PayPalOrderContext = {
     tourSlug?: string | null;
     tourName?: string | null;
     packagePrice?: number | string | null;
+    addOns?: ReservationAddOn[] | null;
     total?: number | string | null;
     language?: "es" | "en" | string | null;
   } | null;
@@ -63,6 +64,7 @@ type BookingMeta = {
   tourSlug?: string | null;
   tourName?: string | null;
   packagePrice?: number | string | null;
+  addOns?: ReservationAddOn[] | null;
 };
 
 type PayPalCustomMeta = CustomerMeta &
@@ -72,6 +74,8 @@ type PayPalCustomMeta = CustomerMeta &
     time?: string | null;
     pkg?: string | null;
     ppUSD?: number | string | null;
+    addons?: string[] | null;
+    addOns?: ReservationAddOn[] | null;
     total?: number | string | null;
     lang?: string | null;
   };
@@ -135,6 +139,7 @@ export async function processSuccessfulBooking(orderId: string): Promise<Success
     tourSlug: parsed.tourSlug,
     tourName: parsed.tourName,
     packagePrice: parsed.packagePrice,
+    addOns: parsed.addOns,
     userId,
     userEmail,
     paypalRaw: paypalOrder,
@@ -160,6 +165,7 @@ export async function processSuccessfulBooking(orderId: string): Promise<Success
       tourName: parsed.tourName,
       tourPackage: parsed.tourPackage,
       tourTime: parsed.tourTime,
+      addOns: parsed.addOns,
     }).catch(console.error);
   }
 
@@ -228,6 +234,7 @@ async function saveBookingToDb(record: BookingRecord): Promise<string | null> {
         "tourSlug",
         "tourName",
         "packagePrice",
+        "addOns",
         "userId",
         "userEmail",
       ];
@@ -334,6 +341,7 @@ function parsePayPalOrder(paypalOrder: PayPalOrderResponse, persistedContext: Pa
   const packagePrice = rawPackagePrice != null && rawPackagePrice !== "" ? Number(rawPackagePrice) : null;
   const tourSlug = meta?.tourSlug || persistedBooking?.tourSlug || null;
   const tourName = meta?.tourName || persistedBooking?.tourName || null;
+  const addOns = normalizeParsedAddOns(persistedBooking?.addOns ?? metaBooking?.addOns ?? meta?.addOns ?? null);
 
   const language: "es" | "en" = 
     (meta?.lang === "en" || meta?.lang === "es" ? meta.lang : 
@@ -364,6 +372,21 @@ function parsePayPalOrder(paypalOrder: PayPalOrderResponse, persistedContext: Pa
     tourSlug,
     tourName,
     packagePrice,
+    addOns,
     language,
   };
+}
+
+function normalizeParsedAddOns(input: unknown): ReservationAddOn[] {
+  if (!Array.isArray(input)) return [];
+
+  return input
+    .filter((addOn): addOn is ReservationAddOn => {
+      if (!addOn || typeof addOn !== "object") return false;
+      const candidate = addOn as Partial<ReservationAddOn>;
+      if (candidate.type === "transport") return Boolean(candidate.transportLocation);
+      if (candidate.type === "accommodation") return Boolean(candidate.accommodationPartnerName);
+      return false;
+    })
+    .slice(0, 2);
 }

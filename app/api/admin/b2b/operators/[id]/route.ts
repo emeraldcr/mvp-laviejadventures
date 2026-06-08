@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { updateOperator, findOperatorById } from "@/lib/models/operator";
 import { getAdminFromRequest } from "@/lib/admin-auth";
 import { sendApprovalEmail } from "@/lib/email/b2b-emails";
+import { normalizeB2BPartnerType } from "@/lib/b2b-partners";
 
 function isAuthorized(req: NextRequest): boolean {
   return Boolean(getAdminFromRequest(req));
@@ -26,7 +27,7 @@ export async function PATCH(
     }
 
     const body = await req.json();
-    const allowed = ["status", "commissionRate", "name", "company"];
+    const allowed = ["status", "commissionRate", "name", "company", "partnerType"];
     const update: Record<string, unknown> = {};
 
     for (const key of allowed) {
@@ -35,6 +36,10 @@ export async function PATCH(
 
     if ("status" in update && !ALLOWED_STATUS.has(String(update.status))) {
       return NextResponse.json({ error: "Invalid operator status." }, { status: 400 });
+    }
+
+    if ("partnerType" in update) {
+      update.partnerType = normalizeB2BPartnerType(update.partnerType);
     }
 
     await updateOperator(id, update);

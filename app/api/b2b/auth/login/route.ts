@@ -4,6 +4,7 @@ import { findOperatorByEmail } from "@/lib/models/operator";
 import { signToken, COOKIE_NAME } from "@/lib/b2b-auth";
 import { createLoginLog } from "@/lib/models/login-log";
 import { COOKIE_MAX_AGE_SECONDS } from "@/lib/constants/auth";
+import { normalizeB2BPartnerType } from "@/lib/b2b-partners";
 
 export async function POST(req: NextRequest) {
   try {
@@ -49,6 +50,7 @@ export async function POST(req: NextRequest) {
       email: operator.email,
       name: operator.name,
       company: operator.company,
+      partnerType: normalizeB2BPartnerType(operator.partnerType),
       commissionRate: operator.commissionRate,
       status: operator.status,
     });
@@ -59,6 +61,7 @@ export async function POST(req: NextRequest) {
         id: operator._id!.toString(),
         name: operator.name,
         company: operator.company,
+        partnerType: normalizeB2BPartnerType(operator.partnerType),
         email: operator.email,
         status: operator.status,
         commissionRate: operator.commissionRate,

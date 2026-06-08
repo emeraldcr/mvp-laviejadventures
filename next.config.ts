@@ -1,4 +1,5 @@
 // next.config.ts
+import path from "path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
@@ -43,6 +44,11 @@ const nextConfig: NextConfig = {
   // Drop console in prod
   compiler: {
     removeConsole: process.env.NODE_ENV === "production",
+  },
+
+  // Explicit Turbopack workspace root to avoid warnings when a parent folder also has a lockfile.
+  turbopack: {
+    root: path.resolve("./"),
   },
 
   // Optional extras for even more speed (if compatible with your app)

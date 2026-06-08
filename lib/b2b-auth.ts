@@ -11,6 +11,7 @@ export interface OperatorTokenPayload {
   email: string;
   name: string;
   company: string;
+  partnerType?: string;
   commissionRate: number;
   status: string;
 }

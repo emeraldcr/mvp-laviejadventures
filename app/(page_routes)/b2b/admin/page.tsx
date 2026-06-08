@@ -3,11 +3,13 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { AlertTriangle, BarChart3, CheckCircle2, CreditCard, DollarSign, Home, Loader2, LogIn, LogOut, MousePointerClick, ShieldAlert, ShieldCheck, TrendingUp, UserRound, XCircle } from "lucide-react";
+import { getB2BPartnerTypeLabel } from "@/lib/b2b-partners";
 
 type Operator = {
   _id: string;
   name: string;
   company: string;
+  partnerType?: string;
   email: string;
   status: "pending" | "approved" | "active";
   commissionRate: number;
@@ -625,7 +627,8 @@ export default function B2BAdminPage() {
         </div>
         <div className="admin-hero-stats" aria-label="Resumen administrativo">
           <div><span>{pendingOperators.length}</span><small>Pendientes</small></div>
-          <div><span>{approvedOperators.length}</span><small>Operadores</small></div>
+          <div><span>{approvedOperators.length}</span><small>Partners</small></div>
+          <div><span>{new Set(approvedOperators.map((operator) => getB2BPartnerTypeLabel(operator.partnerType, "es"))).size}</span><small>Tipos</small></div>
           <div><span>{reservations.length}</span><small>Reservas</small></div>
           <div><span>{bookingAnalytics.conversionRate}%</span><small>Conversión</small></div>
         </div>

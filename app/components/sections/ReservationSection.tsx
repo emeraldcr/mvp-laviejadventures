@@ -6,6 +6,7 @@ import { useLanguage } from "@/lib/LanguageContext";
 import { translations } from "@/lib/translations";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useReservationData, DEFAULT_BOOKABLE_TOUR } from "@/app/hooks/useReservationData";
+import type { ReservationAddOn } from "@/lib/types/index";
 
 type OrderPayload = {
   name: string;
@@ -21,6 +22,7 @@ type OrderPayload = {
   tourSlug: string;
   tourName: string;
   packagePrice: number;
+  addOns?: ReservationAddOn[];
 };
 
 type Props = {

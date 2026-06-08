@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { UserPlus, Eye, EyeOff, Compass, CheckCircle } from "lucide-react";
+import { B2B_PARTNER_TYPE_LABELS, B2B_PARTNER_TYPES, DEFAULT_B2B_PARTNER_TYPE } from "@/lib/b2b-partners";
 
 export default function B2BRegisterPage() {
   const router = useRouter();
@@ -11,6 +12,7 @@ export default function B2BRegisterPage() {
   const [form, setForm] = useState({
     name: "",
     company: "",
+    partnerType: DEFAULT_B2B_PARTNER_TYPE,
     email: "",
     password: "",
     confirmPassword: "",
@@ -20,7 +22,7 @@ export default function B2BRegisterPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   }
 
@@ -41,6 +43,7 @@ export default function B2BRegisterPage() {
         body: JSON.stringify({
           name: form.name,
           company: form.company,
+          partnerType: form.partnerType,
           email: form.email,
           password: form.password,
         }),
@@ -91,13 +94,13 @@ export default function B2BRegisterPage() {
           </div>
           <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">Portal B2B</h1>
           <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-            La Vieja Adventures – Registro de operadores
+            La Vieja Adventures - Registro de partners
           </p>
         </div>
 
         <div className="rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
           <h2 className="mb-6 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-            Crear cuenta de operador
+            Crear cuenta de partner B2B
           </h2>
 
           {error && (
@@ -143,6 +146,29 @@ export default function B2BRegisterPage() {
                 className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:ring-emerald-900"
                 placeholder="Tours CR S.A."
               />
+            </div>
+
+            <div>
+              <label
+                htmlFor="partnerType"
+                className="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+              >
+                Tipo de partner
+              </label>
+              <select
+                id="partnerType"
+                name="partnerType"
+                required
+                value={form.partnerType}
+                onChange={handleChange}
+                className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm text-zinc-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:ring-emerald-900"
+              >
+                {B2B_PARTNER_TYPES.map((partnerType) => (
+                  <option key={partnerType} value={partnerType}>
+                    {B2B_PARTNER_TYPE_LABELS[partnerType].es}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div>

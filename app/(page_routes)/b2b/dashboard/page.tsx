@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getOperatorFromCookies } from "@/lib/b2b-auth";
 import { findBookingsByOperator } from "@/lib/models/booking";
 import B2BNav from "@/app/components/b2b/B2BNav";
+import { getB2BPartnerTypeLabel } from "@/lib/b2b-partners";
 import {
   ArrowRight,
   BriefcaseBusiness,
@@ -123,8 +124,9 @@ export default async function B2BDashboardPage() {
                 Administra reservas, seguimiento comercial y crecimiento de aliados para nuestros tours en el Cañón del Río La Vieja desde un solo panel.
               </p>
               <div className="mt-5 flex flex-wrap gap-2 text-xs md:text-sm">
-                <span className="rounded-full bg-white/15 px-3 py-1 font-medium">Operador: {operator.name}</span>
+                <span className="rounded-full bg-white/15 px-3 py-1 font-medium">Partner: {operator.name}</span>
                 <span className="rounded-full bg-white/15 px-3 py-1 font-medium">Empresa: {operator.company}</span>
+                <span className="rounded-full bg-white/15 px-3 py-1 font-medium">Tipo: {getB2BPartnerTypeLabel(operator.partnerType, "es")}</span>
                 <span className="rounded-full bg-white/15 px-3 py-1 font-medium">Comisión: {operator.commissionRate}%</span>
               </div>
             </div>
@@ -262,7 +264,7 @@ export default async function B2BDashboardPage() {
           <div className="mt-4 grid gap-3 md:grid-cols-3">
             {[
               {
-                title: "Red de Touroperadores",
+                title: "Red de Partners",
                 icon: Handshake,
                 count: Math.max(3, confirmed),
                 desc: "Sincroniza disponibilidad y cupos por agencia.",
