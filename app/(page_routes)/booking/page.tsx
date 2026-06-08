@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { getDb } from "@/lib/mongodb";
+import { getDb } from "@/lib/helpers/mongodb";
 import { BookingClient } from "./BookingClient";
 
 export const dynamic = "force-dynamic";

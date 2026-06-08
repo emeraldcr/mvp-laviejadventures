@@ -1,5 +1,5 @@
 import { COLLECTIONS } from "@/lib/constants/db";
-import { getDb } from "@/lib/mongodb";
+import { getDb } from "@/lib/helpers/mongodb";
 
 export interface HeroSloganLog {
   es: string;

@@ -3,7 +3,7 @@ import { getAdminFromRequest } from "@/lib/admin-auth";
 import { listOperators } from "@/lib/models/operator";
 import { listUsers } from "@/lib/models/user";
 import { listLoginLogs } from "@/lib/models/login-log";
-import { getDb } from "@/lib/mongodb";
+import { getDb } from "@/lib/helpers/mongodb";
 import { COLLECTIONS } from "@/lib/constants/db";
 import { listHeroSloganLogs } from "@/lib/models/hero-slogan-log";
 

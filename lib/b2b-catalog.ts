@@ -1,4 +1,4 @@
-import { getDb } from "@/lib/mongodb";
+import { getDb } from "@/lib/helpers/mongodb";
 import { B2B_TOURS } from "@/lib/b2b-tours";
 import { getB2BSettings, PackageConfig } from "@/lib/models/b2b-settings";
 import { COLLECTIONS } from "@/lib/constants/db";

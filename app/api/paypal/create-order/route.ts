@@ -4,9 +4,9 @@ import { NextResponse } from "next/server";
 import {
   getPayPalApiBaseUrl,
   getPayPalAccessToken,
-} from "@/lib/paypal";
+} from "@/lib/helpers/paypal";
 
-import { getDb } from "@/lib/mongodb";
+import { getDb } from "@/lib/helpers/mongodb";
 import { PAYPAL_CURRENCY, PAYPAL_CUSTOM_ID_MAX_LENGTH } from "@/lib/constants/paypal";
 import { COLLECTIONS } from "@/lib/constants/db";
 import { DEFAULT_AVAILABILITY } from "@/lib/constants/business";
@@ -14,7 +14,7 @@ import { DEFAULT_AVAILABILITY } from "@/lib/constants/business";
 import {
   getMinBookableIsoDateInCostaRica,
   isDateOnOrAfterMinBookableInCostaRica,
-} from "@/lib/costa-rica-time";
+} from "@/lib/helpers/costa-rica-time";
 
 import { fallbackPackagesForTour, normalizeTourPackages } from "@/lib/tour-packages";
 import { getB2BSettings } from "@/lib/models/b2b-settings";

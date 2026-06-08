@@ -5,7 +5,7 @@ import { ChevronDown } from "lucide-react";
 import Image from "next/image";
 import { useInterval } from "@/app/hooks/useInterval";
 import useSWR from "swr";
-import { fetcher } from "@/lib/fetcher";
+import { fetcher } from "@/lib/helpers/fetcher";
 import { useLanguage } from "@/lib/LanguageContext";
 import { principalContent } from "@/lib/constants/principal";
 

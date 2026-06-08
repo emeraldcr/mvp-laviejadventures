@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDb } from "@/lib/mongodb";
+import { getDb } from "@/lib/helpers/mongodb";
 
 const COLLECTION_NAME = "weight_app_state";
 const DOCUMENT_ID = "default";

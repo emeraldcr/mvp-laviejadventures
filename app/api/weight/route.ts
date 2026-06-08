@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDb } from "@/lib/mongodb";
+import { getDb } from "@/lib/helpers/mongodb";
 import { ObjectId } from "mongodb";
 
 const COLLECTION_NAME = "weights";

@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import { ObjectId } from "mongodb";
-import { getDb } from "@/lib/mongodb";
+import { getDb } from "@/lib/helpers/mongodb";
 import { COLLECTIONS } from "@/lib/constants/db";
 import { BCRYPT_SALT_ROUNDS } from "@/lib/constants/auth";
 

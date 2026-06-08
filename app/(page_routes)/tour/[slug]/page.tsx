@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { ArrowLeft, CalendarDays, Check, ChevronRight, Clock, MapPin, ShieldCheck, Users } from "lucide-react";
 import DynamicHeroHeader from "@/app/components/sections/DynamicHeroHeader";
-import { getDb } from "@/lib/mongodb";
+import { getDb } from "@/lib/helpers/mongodb";
 import { COLLECTIONS } from "@/lib/constants/db";
 import { fallbackPackagesForTour, normalizeTourPackages } from "@/lib/tour-packages";
 import { getTourGallery, getTourImage } from "@/lib/tour-display";

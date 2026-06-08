@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Send, Tag, Users, CalendarDays } from "lucide-react";
 import type { B2BTourWithPackages } from "@/lib/b2b-catalog";
-import { getMinBookableIsoDateInCostaRica } from "@/lib/costa-rica-time";
+import { getMinBookableIsoDateInCostaRica } from "@/lib/helpers/costa-rica-time";
 
 interface BookingFormProps {
   tour: B2BTourWithPackages;

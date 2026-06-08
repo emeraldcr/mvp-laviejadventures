@@ -1,6 +1,6 @@
 // app/payment/success/bookingService.ts
-import { getPayPalApiBaseUrl, getPayPalAccessToken } from "@/lib/paypal";
-import { getDb } from "@/lib/mongodb";
+import { getPayPalApiBaseUrl, getPayPalAccessToken } from "@/lib/helpers/paypal";
+import { getDb } from "@/lib/helpers/mongodb";
 import { auth } from "@/lib/auth";
 import { sendConfirmationEmail } from "./emailService";
 import { COLLECTIONS } from "@/lib/constants/db";

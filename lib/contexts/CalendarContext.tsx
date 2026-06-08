@@ -10,9 +10,9 @@ import {
   ReactNode,
 } from "react";
 import { AvailabilityMap } from "@/lib/types/index";
-import { generateAvailability } from "@/lib/availability";
+import { generateAvailability } from "@/lib/helpers/availability";
 import { useLanguage } from "@/lib/LanguageContext";
-import { getCostaRicaDateParts, getMinBookableDateInCostaRica, toDateKey } from "@/lib/costa-rica-time";
+import { getCostaRicaDateParts, getMinBookableDateInCostaRica, toDateKey } from "@/lib/helpers/costa-rica-time";
 
 type CalendarContextValue = {
   currentYear: number;

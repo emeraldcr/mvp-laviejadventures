@@ -2,7 +2,7 @@
 // Returns public tours from MongoDB, seeding defaults if the collection is empty
 
 import { NextResponse } from "next/server";
-import { getDb } from "@/lib/mongodb";
+import { getDb } from "@/lib/helpers/mongodb";
 import { COLLECTIONS } from "@/lib/constants/db";
 import { fallbackPackagesForTour, normalizeTourPackages } from "@/lib/tour-packages";
 

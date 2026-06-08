@@ -1,5 +1,5 @@
 import { ObjectId } from "mongodb";
-import { getDb } from "@/lib/mongodb";
+import { getDb } from "@/lib/helpers/mongodb";
 import { COLLECTIONS } from "@/lib/constants/db";
 import type { UserPreferences } from "@/lib/types/index";
 import { DEFAULT_USER_PREFERENCES } from "@/lib/constants/user";

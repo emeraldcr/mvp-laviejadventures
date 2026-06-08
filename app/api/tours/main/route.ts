@@ -2,7 +2,7 @@
 // Returns booking tour info from MongoDB by slug (or main tour by default), seeding defaults if not found
 
 import { NextRequest, NextResponse } from "next/server";
-import { getDb } from "@/lib/mongodb";
+import { getDb } from "@/lib/helpers/mongodb";
 import { COLLECTIONS } from "@/lib/constants/db";
 import { fallbackPackagesForTour, normalizeTourPackages } from "@/lib/tour-packages";
 

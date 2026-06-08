@@ -4,7 +4,7 @@ import { getOperatorFromRequest } from "@/lib/b2b-auth";
 import { createBooking, createBookings, findBookingsByOperator } from "@/lib/models/booking";
 import { sendBookingConfirmationEmail } from "@/lib/email/b2b-emails";
 import { getB2BCatalog } from "@/lib/b2b-catalog";
-import { isDateOnOrAfterMinBookableInCostaRica } from "@/lib/costa-rica-time";
+import { isDateOnOrAfterMinBookableInCostaRica } from "@/lib/helpers/costa-rica-time";
 
 type BookingPayload = {
   tourId: string;

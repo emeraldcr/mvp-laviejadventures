@@ -1,7 +1,7 @@
 // app/api/paypal/capture-order/route.ts
 
 import { NextResponse } from "next/server";
-import { getPayPalApiBaseUrl, getPayPalAccessToken } from "@/lib/paypal";
+import { getPayPalApiBaseUrl, getPayPalAccessToken } from "@/lib/helpers/paypal";
 
 interface CaptureRequestBody {
   orderID: string;

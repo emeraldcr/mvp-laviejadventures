@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { parse, isValid } from "date-fns";
 import { es } from "date-fns/locale";
-import { getDb } from "@/lib/mongodb";
+import { getDb } from "@/lib/helpers/mongodb";
 import { COLLECTIONS } from "@/lib/constants/db";
 import { DEFAULT_AVAILABILITY } from "@/lib/constants/business";
 
