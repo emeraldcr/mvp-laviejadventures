@@ -38,6 +38,7 @@
     "twitter-api-v2": "^1.29.0"
   },
   "overrides": {
+    "encoding-sniffer": "1.0.2",
     "nodemailer": "^6.10.0",
     "next": {
       "postcss": "^8.5.15"

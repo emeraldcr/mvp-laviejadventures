@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 const MATCHES_COLLECTION = "mundial_matches";
 const PREDICTIONS_COLLECTION = "mundial_predictions";
-const FIXTURE_VERSION = "2026-06-13";
+const FIXTURE_VERSION = "2026-06-13-costa-rica-kickoffs";
 const LEGACY_MATCH_ID = "mexico-sudafrica-2026-06-11-13";
 const MAX_SCORE = 30;
 
@@ -17,6 +17,8 @@ type WinnerPick = "home" | "away" | null;
 type MundialMatchDoc = MundialMatch & {
   source: string;
   sourceVersion: string;
+  forceClosed?: boolean;
+  actualWinner?: "home" | "away" | null;
   createdAt?: Date;
   updatedAt?: Date;
 };
@@ -68,11 +70,7 @@ function normalizeKey(value: string) {
 
 function parseScore(value: unknown) {
   const score = typeof value === "number" ? value : Number(value);
-
-  if (!Number.isInteger(score) || score < 0 || score > MAX_SCORE) {
-    return null;
-  }
-
+  if (!Number.isInteger(score) || score < 0 || score > MAX_SCORE) return null;
   return score;
 }
 
@@ -87,7 +85,23 @@ function toIsoString(value: unknown) {
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
 
-function serializeMatch(doc: MundialMatchDoc | MundialMatch) {
+function kickoffTime(match: MundialMatchDoc | MundialMatch) {
+  const kickoff = new Date(match.kickoffAt).getTime();
+  return Number.isNaN(kickoff) ? Number.POSITIVE_INFINITY : kickoff;
+}
+
+function isMatchClosed(match: MundialMatchDoc | MundialMatch, now = new Date()) {
+  if ((match as MundialMatchDoc).forceClosed) return true;
+  return kickoffTime(match) <= now.getTime();
+}
+
+function nextOpenMatch(matches: Array<MundialMatchDoc | MundialMatch>, now = new Date()) {
+  return [...matches]
+    .sort((a, b) => kickoffTime(a) - kickoffTime(b) || a.number - b.number)
+    .find((match) => !isMatchClosed(match, now));
+}
+
+function serializeMatch(doc: MundialMatchDoc | MundialMatch, now = new Date()) {
   return {
     id: doc.id,
     number: doc.number,
@@ -95,42 +109,41 @@ function serializeMatch(doc: MundialMatchDoc | MundialMatch) {
     stageLabel: doc.stageLabel,
     group: doc.group ?? null,
     date: doc.date,
+    kickoffAt: doc.kickoffAt,
     venue: doc.venue,
     homeTeam: doc.homeTeam,
     awayTeam: doc.awayTeam,
     homeSeed: doc.homeSeed ?? null,
     awaySeed: doc.awaySeed ?? null,
+    homeFinalScore: typeof doc.homeFinalScore === "number" ? doc.homeFinalScore : null,
+    awayFinalScore: typeof doc.awayFinalScore === "number" ? doc.awayFinalScore : null,
+    closed: isMatchClosed(doc, now),
     sortOrder: doc.sortOrder,
   };
 }
 
 function predictionScores(doc: PredictionDoc) {
   if (typeof doc.homeScore === "number" && typeof doc.awayScore === "number") {
-    return {
-      homeScore: doc.homeScore,
-      awayScore: doc.awayScore,
-    };
+    return { homeScore: doc.homeScore, awayScore: doc.awayScore };
   }
-
   if (
     doc.matchId === LEGACY_MATCH_ID &&
     typeof doc.mexicoScore === "number" &&
     typeof doc.southAfricaScore === "number"
   ) {
-    return {
-      homeScore: doc.mexicoScore,
-      awayScore: doc.southAfricaScore,
-    };
+    return { homeScore: doc.mexicoScore, awayScore: doc.southAfricaScore };
   }
-
-  return {
-    homeScore: 0,
-    awayScore: 0,
-  };
+  return { homeScore: 0, awayScore: 0 };
 }
 
-function serializePrediction(doc: PredictionDoc) {
+function serializePrediction(
+  doc: PredictionDoc,
+  matchesById: Map<string, MundialMatchDoc | MundialMatch>,
+  now = new Date()
+) {
   const scores = predictionScores(doc);
+  const match = matchesById.get(doc.matchId);
+  const closedByTime = match ? isMatchClosed(match, now) : false;
 
   return {
     id: doc._id.toString(),
@@ -140,8 +153,8 @@ function serializePrediction(doc: PredictionDoc) {
     homeScore: scores.homeScore,
     awayScore: scores.awayScore,
     winnerPick: doc.winnerPick ?? null,
-    locked: Boolean(doc.locked),
-    lockedAt: toIsoString(doc.lockedAt),
+    locked: closedByTime,
+    lockedAt: toIsoString(closedByTime ? match?.kickoffAt : doc.lockedAt),
     createdAt: toIsoString(doc.createdAt),
     updatedAt: toIsoString(doc.updatedAt),
   };
@@ -175,9 +188,7 @@ async function ensureMundialData(db: Db) {
     predictions.createIndex({ normalizedName: 1, updatedAt: -1 }),
   ]);
 
-  if (seededCount === MUNDIAL_TOTAL_MATCHES) {
-    return;
-  }
+  if (seededCount === MUNDIAL_TOTAL_MATCHES) return;
 
   const now = new Date();
 
@@ -192,9 +203,7 @@ async function ensureMundialData(db: Db) {
             sourceVersion: FIXTURE_VERSION,
             updatedAt: now,
           },
-          $setOnInsert: {
-            createdAt: now,
-          },
+          $setOnInsert: { createdAt: now },
         },
         upsert: true,
       },
@@ -205,44 +214,62 @@ async function ensureMundialData(db: Db) {
 
 async function readMatches(db: Db) {
   await ensureMundialData(db);
-
-  return db
-    .collection<MundialMatchDoc>(MATCHES_COLLECTION)
-    .find({})
-    .sort({ sortOrder: 1 })
-    .toArray();
+  return db.collection<MundialMatchDoc>(MATCHES_COLLECTION).find({}).sort({ sortOrder: 1 }).toArray();
 }
 
-async function readPlayers(db: Db) {
-  return db
+async function readPlayers(
+  db: Db,
+  matchesById: Map<string, MundialMatchDoc | MundialMatch>,
+  now = new Date()
+) {
+  const grouped = new Map<
+    string,
+    { _id: string; playerName: string; totalPredictions: number; lockedPredictions: number; updatedAt?: Date }
+  >();
+  const predictionDocs = await db
     .collection<PredictionDoc>(PREDICTIONS_COLLECTION)
-    .aggregate<{
-      _id: string;
-      playerName: string;
-      totalPredictions: number;
-      lockedPredictions: number;
-      updatedAt?: Date;
-    }>([
-      {
-        $group: {
-          _id: "$normalizedName",
-          playerName: { $last: "$playerName" },
-          totalPredictions: { $sum: 1 },
-          lockedPredictions: {
-            $sum: {
-              $cond: ["$locked", 1, 0],
-            },
-          },
-          updatedAt: { $max: "$updatedAt" },
-        },
-      },
-      { $sort: { updatedAt: -1, playerName: 1 } },
-    ])
+    .find({})
+    .sort({ updatedAt: -1 })
     .toArray();
+
+  for (const prediction of predictionDocs) {
+    const key = prediction.normalizedName;
+    const existing = grouped.get(key);
+    const match = matchesById.get(prediction.matchId);
+    const lockedByTime = match ? isMatchClosed(match, now) : false;
+
+    if (!existing) {
+      grouped.set(key, {
+        _id: key,
+        playerName: prediction.playerName,
+        totalPredictions: 1,
+        lockedPredictions: lockedByTime ? 1 : 0,
+        updatedAt: prediction.updatedAt,
+      });
+      continue;
+    }
+
+    existing.totalPredictions += 1;
+    existing.lockedPredictions += lockedByTime ? 1 : 0;
+    if (prediction.updatedAt && (!existing.updatedAt || prediction.updatedAt > existing.updatedAt)) {
+      existing.updatedAt = prediction.updatedAt;
+      existing.playerName = prediction.playerName;
+    }
+  }
+
+  return [...grouped.values()].sort((a, b) => {
+    const diff = (b.updatedAt?.getTime() ?? 0) - (a.updatedAt?.getTime() ?? 0);
+    return diff || a.playerName.localeCompare(b.playerName);
+  });
 }
 
-async function savePrediction(db: Db, payload: PredictionPayload, fallbackPlayerName: string) {
-  const matchesById = new Map(MUNDIAL_MATCHES.map((match) => [match.id, match]));
+async function savePrediction(
+  db: Db,
+  dbMatches: MundialMatchDoc[],
+  payload: PredictionPayload,
+  fallbackPlayerName: string
+) {
+  const matchesById = new Map(dbMatches.map((m) => [m.id, m]));
   const matchId = String(payload.matchId ?? "").trim();
   const match = matchesById.get(matchId);
   const playerName = normalizeName(payload.playerName ?? fallbackPlayerName);
@@ -251,38 +278,29 @@ async function savePrediction(db: Db, payload: PredictionPayload, fallbackPlayer
   const awayScore = parseScore(payload.awayScore);
   const winnerPick = parseWinnerPick(payload.winnerPick);
   const locked = Boolean(payload.locked);
+  const now = new Date();
+  const activeMatch = nextOpenMatch(dbMatches, now);
 
-  if (!match) {
-    throw new ApiError("Partido invalido.");
-  }
-
-  if (!playerName || homeScore === null || awayScore === null) {
-    throw new ApiError("Faltan datos para guardar la prediccion.");
-  }
-
-  if (match.stage !== "group" && locked && homeScore === awayScore && !winnerPick) {
-    throw new ApiError("Elegis quien pasa antes de bloquear una llave empatada.");
-  }
+  if (!match) throw new ApiError("Partido invalido.");
+  if (isMatchClosed(match, now)) throw new ApiError("Ese partido ya cerro. Solo se puede guardar antes del inicio.", 423);
+  if (!activeMatch || activeMatch.id !== match.id) throw new ApiError("Solo esta abierto el proximo partido de la fila.", 409);
+  if (!playerName || homeScore === null || awayScore === null) throw new ApiError("Faltan datos para guardar la prediccion.");
+  if (match.stage !== "group" && homeScore === awayScore && !winnerPick) throw new ApiError("Elegis quien pasa antes de guardar una llave empatada.");
 
   const predictions = db.collection<PredictionDoc>(PREDICTIONS_COLLECTION);
   const existing = await predictions.findOne({ matchId, normalizedName });
   const currentScores = existing ? predictionScores(existing) : null;
   const changesLockedScore =
     Boolean(existing?.locked) &&
+    isMatchClosed(match, now) &&
     (currentScores?.homeScore !== homeScore ||
       currentScores?.awayScore !== awayScore ||
       (existing?.winnerPick ?? null) !== winnerPick);
 
-  if (changesLockedScore) {
-    throw new ApiError("Ese resultado esta bloqueado. Desbloquealo antes de editar.", 423);
-  }
+  if (changesLockedScore) throw new ApiError("Ese resultado esta bloqueado. Desbloquealo antes de editar.", 423);
 
-  const now = new Date();
   const saved = await predictions.findOneAndUpdate(
-    {
-      matchId,
-      normalizedName,
-    },
+    { matchId, normalizedName },
     {
       $set: {
         matchId,
@@ -298,24 +316,13 @@ async function savePrediction(db: Db, payload: PredictionPayload, fallbackPlayer
         lockedAt: locked ? now : null,
         updatedAt: now,
       },
-      $setOnInsert: {
-        createdAt: now,
-      },
-      $unset: {
-        mexicoScore: "",
-        southAfricaScore: "",
-      },
+      $setOnInsert: { createdAt: now },
+      $unset: { mexicoScore: "", southAfricaScore: "" },
     },
-    {
-      upsert: true,
-      returnDocument: "after",
-    }
+    { upsert: true, returnDocument: "after" }
   );
 
-  if (!saved) {
-    throw new ApiError("No se pudo guardar la prediccion.", 500);
-  }
-
+  if (!saved) throw new ApiError("No se pudo guardar la prediccion.", 500);
   return saved;
 }
 
@@ -324,17 +331,19 @@ export async function GET(req: NextRequest) {
     const playerName = normalizeName(req.nextUrl.searchParams.get("playerName"));
     const db = await getDb();
     const matches = await readMatches(db);
+    const now = new Date();
+    const matchesById = new Map(matches.map((m) => [m.id, m]));
     const predictions = db.collection<PredictionDoc>(PREDICTIONS_COLLECTION);
     const predictionFilter = playerName ? { normalizedName: normalizeKey(playerName) } : {};
     const [predictionDocs, players] = await Promise.all([
       predictions.find(predictionFilter).sort({ updatedAt: -1, playerName: 1 }).toArray(),
-      readPlayers(db),
+      readPlayers(db, matchesById, now),
     ]);
 
     return NextResponse.json({
       fixtureVersion: FIXTURE_VERSION,
-      matches: matches.map(serializeMatch),
-      predictions: predictionDocs.map(serializePrediction),
+      matches: matches.map((m) => serializeMatch(m, now)),
+      predictions: predictionDocs.map((p) => serializePrediction(p, matchesById, now)),
       players: players.map(serializePlayer),
     });
   } catch (error) {
@@ -347,39 +356,35 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const db = await getDb();
-    await ensureMundialData(db);
+    const matches = await readMatches(db);
 
     const fallbackPlayerName = normalizeName(body.playerName);
     const payloads: PredictionPayload[] = Array.isArray(body.predictions)
-      ? body.predictions.map((prediction: PredictionPayload) => ({
-          ...prediction,
-          playerName: prediction.playerName ?? fallbackPlayerName,
+      ? body.predictions.map((p: PredictionPayload) => ({
+          ...p,
+          playerName: p.playerName ?? fallbackPlayerName,
         }))
       : [body];
 
-    if (!payloads.length) {
-      throw new ApiError("No hay predicciones para guardar.");
-    }
+    if (!payloads.length) throw new ApiError("No hay predicciones para guardar.");
 
     const saved = [];
-
     for (const payload of payloads) {
-      saved.push(await savePrediction(db, payload, fallbackPlayerName));
+      saved.push(await savePrediction(db, matches, payload, fallbackPlayerName));
     }
 
+    const now = new Date();
+    const matchesById = new Map(matches.map((m) => [m.id, m]));
+
     return NextResponse.json(
-      {
-        predictions: saved.map(serializePrediction),
-      },
+      { predictions: saved.map((p) => serializePrediction(p, matchesById, now)) },
       { status: 201 }
     );
   } catch (error) {
     console.error("Failed to save mundial prediction", error);
-
     if (error instanceof ApiError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
-
     return NextResponse.json({ error: "No se pudo guardar la prediccion." }, { status: 500 });
   }
 }
