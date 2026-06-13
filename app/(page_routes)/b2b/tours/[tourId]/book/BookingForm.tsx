@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Send, Tag, Users, CalendarDays } from "lucide-react";
 import type { B2BTourWithPackages } from "@/lib/b2b-catalog";
 import { getMinBookableIsoDateInCostaRica } from "@/lib/helpers/costa-rica-time";
+import { getPackageSchedule, isPackageAvailableOnDate } from "@/lib/tour-packages";
 
 interface BookingFormProps {
   tour: B2BTourWithPackages;
@@ -41,6 +42,23 @@ export default function BookingForm({ tour, commissionRate, ivaRate }: BookingFo
     () => tour.packages.find((pkg) => pkg.id === form.packageId) ?? tour.packages[0],
     [form.packageId, tour.packages]
   );
+
+  const packageAvailabilityLabel = (pkg: B2BTourWithPackages["packages"][number]) => {
+    const schedule = getPackageSchedule(pkg);
+    if (schedule === "weekday") return "solo lunes-viernes";
+    if (schedule === "weekend") return "solo fines de semana";
+    return null;
+  };
+
+  useEffect(() => {
+    if (!form.date || !form.packageId) return;
+
+    const currentPackage = tour.packages.find((pkg) => pkg.id === form.packageId);
+    if (!currentPackage || isPackageAvailableOnDate(currentPackage, form.date)) return;
+
+    const nextPackage = tour.packages.find((pkg) => isPackageAvailableOnDate(pkg, form.date));
+    setForm((prev) => ({ ...prev, packageId: nextPackage?.id ?? "" }));
+  }, [form.date, form.packageId, tour.packages]);
 
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -109,9 +127,16 @@ export default function BookingForm({ tour, commissionRate, ivaRate }: BookingFo
                 onChange={handleChange}
                 className={fieldClassName}
               >
-                {tour.packages.map((pkg) => (
-                  <option key={pkg.id} value={pkg.id}>{pkg.name} - {formatCRC(pkg.priceCRC)}</option>
-                ))}
+                {tour.packages.map((pkg) => {
+                  const isAvailable = !form.date || isPackageAvailableOnDate(pkg, form.date);
+                  const label = packageAvailabilityLabel(pkg);
+
+                  return (
+                    <option key={pkg.id} value={pkg.id} disabled={!isAvailable}>
+                      {pkg.name} - {formatCRC(pkg.priceCRC)}{label ? ` (${label})` : ""}
+                    </option>
+                  );
+                })}
               </select>
             </div>
 

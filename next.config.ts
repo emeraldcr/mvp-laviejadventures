@@ -1,10 +1,17 @@
 // next.config.ts
 import type { NextConfig } from "next";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const appRoot = path.dirname(fileURLToPath(import.meta.url));
 
 const nextConfig: NextConfig = {
   trailingSlash: false,
   poweredByHeader: false,
   reactStrictMode: true,
+  turbopack: {
+    root: appRoot,
+  },
 
   images: {
     // Disable Next.js on-the-fly optimization to avoid Vercel image transformation/cache spikes.
@@ -29,7 +36,6 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: [
       "framer-motion",
-      "lucide-react",
       "recharts",
       "date-fns",
       // Add more if relevant: "lodash-es", "@radix-ui/*", etc.

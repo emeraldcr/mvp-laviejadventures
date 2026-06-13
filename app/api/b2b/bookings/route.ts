@@ -5,6 +5,7 @@ import { createBooking, createBookings, findBookingsByOperator } from "@/lib/mod
 import { sendBookingConfirmationEmail } from "@/lib/email/b2b-emails";
 import { getB2BCatalog } from "@/lib/b2b-catalog";
 import { isDateOnOrAfterMinBookableInCostaRica } from "@/lib/helpers/costa-rica-time";
+import { getPackageSchedule, isPackageAvailableOnDate } from "@/lib/tour-packages";
 
 type BookingPayload = {
   tourId: string;
@@ -86,6 +87,10 @@ export async function POST(req: NextRequest) {
       const selectedPackage = tour.packages.find((pkg) => pkg.id === payload.packageId);
       if (!selectedPackage) {
         throw new Error(`PACKAGE_NOT_FOUND:${payload.packageId}`);
+      }
+
+      if (!isPackageAvailableOnDate(selectedPackage, String(payload.date))) {
+        throw new Error(`PACKAGE_DATE_UNAVAILABLE:${getPackageSchedule(selectedPackage)}`);
       }
 
       if (payload.pax < tour.minPax || payload.pax > tour.maxPax) {
@@ -181,6 +186,15 @@ export async function POST(req: NextRequest) {
         { error: `Pax must be between ${minPax} and ${maxPax}.` },
         { status: 400 }
       );
+    }
+
+    if (message.startsWith("PACKAGE_DATE_UNAVAILABLE:")) {
+      const [, schedule] = message.split(":");
+      const error = schedule === "weekday"
+        ? "This package is only available on weekdays."
+        : "This package is only available on weekends.";
+
+      return NextResponse.json({ error }, { status: 400 });
     }
 
     console.error("B2B booking create error:", err);

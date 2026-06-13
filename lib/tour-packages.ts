@@ -1,5 +1,7 @@
 import type { TourPackageOption } from "@/lib/types/index";
 
+type PackageSchedule = "weekday" | "weekend" | "any";
+
 export const CIUDAD_ESMERALDA_PACKAGES: TourPackageOption[] = [
   {
     id: "essential-package",
@@ -93,4 +95,74 @@ export function normalizeTourPackages(value: unknown): TourPackageOption[] {
       };
     })
     .filter((pkg) => pkg.name && Number.isFinite(pkg.price));
+}
+
+export function getPackageSchedule(pkg: Pick<TourPackageOption, "id" | "name" | "nameEs" | "groupTour"> | null | undefined): PackageSchedule {
+  if (!pkg) return "any";
+
+  const normalized = [pkg.id, pkg.name, pkg.nameEs]
+    .filter(Boolean)
+    .map(normalizePackageScheduleText)
+    .join(" ");
+
+  if (/\b(private|privado)\b/.test(normalized) || pkg.groupTour === false) {
+    return "weekday";
+  }
+
+  if (
+    /\b(essential|esencial|lunch|almuerzo|basic|basico|standard|estandar|daily)\b/.test(normalized) ||
+    normalized.includes("full day") ||
+    normalized.includes("full-day") ||
+    normalized.includes("dia completo") ||
+    pkg.groupTour === true
+  ) {
+    return "weekend";
+  }
+
+  return "any";
+}
+
+export function isWeekendIsoDate(dateIso: string): boolean | null {
+  const match = dateIso.trim().match(/^(\d{4})-(\d{2})-(\d{2})(?:$|T)/);
+  if (!match) return null;
+
+  const [, yearRaw, monthRaw, dayRaw] = match;
+  const year = Number(yearRaw);
+  const month = Number(monthRaw);
+  const dayOfMonth = Number(dayRaw);
+  const localDate = new Date(year, month - 1, dayOfMonth);
+
+  if (
+    localDate.getFullYear() !== year ||
+    localDate.getMonth() !== month - 1 ||
+    localDate.getDate() !== dayOfMonth
+  ) {
+    return null;
+  }
+
+  const day = localDate.getDay();
+
+  return day === 0 || day === 6;
+}
+
+export function isPackageAvailableOnDate(
+  pkg: Pick<TourPackageOption, "id" | "name" | "nameEs" | "groupTour"> | null | undefined,
+  dateIso: string
+): boolean {
+  const schedule = getPackageSchedule(pkg);
+  const isWeekend = isWeekendIsoDate(dateIso);
+
+  if (schedule === "any" || isWeekend === null) return true;
+  if (schedule === "weekend") return isWeekend;
+
+  return !isWeekend;
+}
+
+function normalizePackageScheduleText(value: unknown): string {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[_\s]+/g, " ");
 }

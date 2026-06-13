@@ -16,7 +16,7 @@ import {
   isDateOnOrAfterMinBookableInCostaRica,
 } from "@/lib/helpers/costa-rica-time";
 
-import { fallbackPackagesForTour, normalizeTourPackages } from "@/lib/tour-packages";
+import { fallbackPackagesForTour, getPackageSchedule, isPackageAvailableOnDate, normalizeTourPackages } from "@/lib/tour-packages";
 import { getB2BSettings } from "@/lib/models/b2b-settings";
 
 interface CreateOrderRequest {
@@ -140,6 +140,24 @@ export async function POST(req: Request) {
             availableCount: availablePackages.length,
             tourSlug,
           }
+        },
+        { status: 400 }
+      );
+    }
+
+    if (!isPackageAvailableOnDate(selectedPackage, normalizedDate)) {
+      const schedule = getPackageSchedule(selectedPackage);
+      const message = schedule === "weekday"
+        ? "Selected package is only available on weekdays. Please choose a weekday date."
+        : "Selected package is only available on weekends. Please choose a weekend date or select the private tour for weekdays.";
+
+      return NextResponse.json(
+        {
+          success: false,
+          message,
+          selectedDate: normalizedDate,
+          packageId: selectedPackage.id ?? null,
+          packageSchedule: schedule,
         },
         { status: 400 }
       );

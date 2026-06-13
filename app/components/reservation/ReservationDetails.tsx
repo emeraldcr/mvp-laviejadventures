@@ -7,6 +7,7 @@ import { format } from "date-fns";
 import { es, enUS } from "date-fns/locale";
 import { useLanguage } from "@/lib/LanguageContext";
 import { translations } from "@/lib/translations";
+import { getPackageSchedule, isPackageAvailableOnDate } from "@/lib/tour-packages";
 import { AlertCircle, Camera, Check, ChevronDown, Clock3, Info, MapPin, Minus, Plus, Route, Search, ShieldCheck, Sparkles, TreePalm, Users, UtensilsCrossed } from "lucide-react";
 import { trackAnalyticsEvent } from "@/lib/analytics/client";
 import { PHONE_COUNTRIES as ALL_PHONE_COUNTRIES } from "@/app/components/reservation/phoneCountries";
@@ -423,6 +424,7 @@ export default function ReservationDetails({
   const isTicketsValid = tickets >= 1 && tickets <= slots;
 
   const reservationDate = new Date(currentYear, currentMonth, selectedDate);
+  const reservationDateIso = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(selectedDate).padStart(2, "0")}`;
   const formattedDate = format(
     reservationDate,
     lang === "es" ? "EEEE, dd 'de' MMMM 'de' yyyy" : "EEEE, MMMM dd, yyyy",
@@ -610,19 +612,25 @@ export default function ReservationDetails({
       : ""
   );
 
-  const selectedPackage = useMemo(
+  const selectedPackageCandidate = useMemo(
     () => PACKAGES.find((p) => p.id === tourPackage) ?? null,
     [tourPackage, PACKAGES]
+  );
+  const selectedPackage = useMemo(
+    () => selectedPackageCandidate && isPackageAvailableOnDate(selectedPackageCandidate, reservationDateIso)
+      ? selectedPackageCandidate
+      : null,
+    [reservationDateIso, selectedPackageCandidate]
   );
 
   useEffect(() => {
     if (!initialSelectedPackageId) return;
 
     const matchingPackage = PACKAGES.find((pkg) => pkg.id === initialSelectedPackageId);
-    if (!matchingPackage) return;
+    if (!matchingPackage || !isPackageAvailableOnDate(matchingPackage, reservationDateIso)) return;
 
     setTourPackage(matchingPackage.id);
-  }, [PACKAGES, initialSelectedPackageId]);
+  }, [PACKAGES, initialSelectedPackageId, reservationDateIso]);
 
   const availableTimeSlots = useMemo(() => {
     const sourceTimes = selectedPackage
@@ -632,15 +640,23 @@ export default function ReservationDetails({
     return uniqueTimes.length > 0 ? uniqueTimes : DEFAULT_DEPARTURE_TIMES;
   }, [PACKAGES, selectedPackage]);
 
-  const effectiveTourPackage = tourPackage;
+  const effectiveTourPackage = selectedPackage?.id ?? null;
   const effectiveSelectedPackage = selectedPackage;
-  const selectedPackageUnavailable = false;
+  const selectedPackageUnavailable = Boolean(selectedPackageCandidate && !selectedPackage);
 
   useEffect(() => {
     if (tourPackage && !PACKAGES.some((pkg) => pkg.id === tourPackage)) {
       setTourPackage(null);
     }
   }, [PACKAGES, tourPackage]);
+
+  useEffect(() => {
+    if (!tourPackage || !selectedPackageCandidate) return;
+    if (isPackageAvailableOnDate(selectedPackageCandidate, reservationDateIso)) return;
+
+    setTourPackage(null);
+    setTourTime(null);
+  }, [reservationDateIso, selectedPackageCandidate, tourPackage]);
 
   useEffect(() => {
     if (tourTime && !availableTimeSlots.includes(tourTime)) {
@@ -1026,7 +1042,7 @@ export default function ReservationDetails({
     onReserve({
       tickets,
       date: formattedDate,
-      dateIso: `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(selectedDate).padStart(2, "0")}`,
+      dateIso: reservationDateIso,
       total: totalWithTaxes,
       name: formState.name,
       email: formState.email,
@@ -1050,6 +1066,7 @@ export default function ReservationDetails({
     currentMonth,
     currentYear,
     selectedDate,
+    reservationDateIso,
     totalWithTaxes,
     formState,
     selectedTour,
@@ -1151,6 +1168,23 @@ export default function ReservationDetails({
   }, [getAnalyticsBookingSnapshot, stepLabels]);
 
   const handlePackageSelect = useCallback((pkg: PackageOption) => {
+    if (!isPackageAvailableOnDate(pkg, reservationDateIso)) {
+      trackAnalyticsEvent("booking_step_blocked", {
+        metadata: {
+          step: 1,
+          stepLabel: stepLabels[1],
+          targetStep: "package_date_availability",
+          targetStepLabel: "package_date_availability",
+          source: "package_card",
+          missingKeys: ["tour_package"],
+          selectedDate: reservationDateIso,
+          blockedPackage: pkg.id,
+          booking: getAnalyticsBookingSnapshot(),
+        },
+      });
+      return;
+    }
+
     setTourPackage(pkg.id);
     setTourTime(null);
     step1FieldFocusRef.current = "schedule";
@@ -1172,7 +1206,7 @@ export default function ReservationDetails({
         },
       },
     });
-  }, [getAnalyticsBookingSnapshot, stepLabels]);
+  }, [getAnalyticsBookingSnapshot, reservationDateIso, stepLabels]);
 
   const handleTicketsChange = useCallback((rawValue: string) => {
     const parsedValue = Number(rawValue);
@@ -1362,6 +1396,13 @@ export default function ReservationDetails({
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
               {PACKAGES.map((pkg, index) => {
                 const isSelected = effectiveTourPackage === pkg.id;
+                const packageSchedule = getPackageSchedule(pkg);
+                const isPackageAvailable = isPackageAvailableOnDate(pkg, reservationDateIso);
+                const availabilityLabel = packageSchedule === "weekday"
+                  ? tr.weekdaysOnly
+                  : packageSchedule === "weekend"
+                  ? tr.weekendsOnly
+                  : null;
                 const pkgName = lang === "es" ? (pkg.nameEs || pkg.name) : pkg.name;
                 const pkgDescription = lang === "es"
                   ? (pkg.descriptionEs || pkg.descriptionEn || "")
@@ -1377,11 +1418,15 @@ export default function ReservationDetails({
                     key={pkg.id}
                     type="button"
                     onClick={() => handlePackageSelect(pkg)}
+                    disabled={!isPackageAvailable}
                     aria-pressed={isSelected}
+                    aria-disabled={!isPackageAvailable}
                     className={`group relative flex h-full min-h-[430px] overflow-hidden text-left p-5 rounded-2xl border-2 outline-none transition-all focus-visible:ring-4 focus-visible:ring-emerald-300/60 ${
                       isSelected
                         ? "scale-[1.015] border-emerald-500 bg-emerald-50/95 shadow-2xl shadow-emerald-500/25 ring-4 ring-emerald-300/45 dark:bg-emerald-950/35 dark:shadow-emerald-900/35 dark:ring-emerald-400/25"
-                        : "border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 hover:-translate-y-0.5 hover:border-emerald-400 hover:shadow-lg hover:shadow-emerald-500/10 cursor-pointer"
+                        : isPackageAvailable
+                        ? "border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 hover:-translate-y-0.5 hover:border-emerald-400 hover:shadow-lg hover:shadow-emerald-500/10 cursor-pointer"
+                        : "cursor-not-allowed border-zinc-200 bg-zinc-100 opacity-60 dark:border-zinc-800 dark:bg-zinc-950"
                     }`}
                   >
                     {isSelected && (
@@ -1402,6 +1447,15 @@ export default function ReservationDetails({
                             <span className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-black uppercase tracking-wide text-white shadow-lg shadow-emerald-700/20 dark:bg-emerald-400 dark:text-zinc-950">
                               <Check className="h-3.5 w-3.5" aria-hidden />
                               {lang === "es" ? "Seleccionado" : "Selected"}
+                            </span>
+                          )}
+                          {availabilityLabel && (
+                            <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-semibold leading-none ${
+                              packageSchedule === "weekday"
+                                ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400"
+                                : "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300"
+                            }`}>
+                              {availabilityLabel}
                             </span>
                           )}
                           {pkg.groupTour === false && (
