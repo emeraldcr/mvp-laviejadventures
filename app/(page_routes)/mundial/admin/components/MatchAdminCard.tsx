@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Check, ChevronDown, ChevronUp, Loader2, Lock, LockOpen, Save, Users } from "lucide-react";
 import type { AdminMatch } from "../adminTypes";
 import { cn, formatKickoff, getCountryFlag } from "../../utils";
+import { Flag } from "../../components/Flag";
 
 type MatchAdminCardProps = {
   match: AdminMatch;
@@ -42,6 +43,8 @@ function StatBar({
 
 export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
   const hasResult = match.homeFinalScore !== null && match.awayFinalScore !== null;
+  const homeFlag = getCountryFlag(match.homeTeam);
+  const awayFlag = getCountryFlag(match.awayTeam);
 
   const [homeScore, setHomeScore] = useState<string>(
     match.homeFinalScore !== null ? String(match.homeFinalScore) : ""
@@ -63,9 +66,6 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
   const parsedAway = awayScore === "" ? null : Number(awayScore);
   const isTied = parsedHome !== null && parsedAway !== null && parsedHome === parsedAway;
   const needsWinner = isKnockout && isTied;
-
-  const homeFlag = getCountryFlag(match.homeTeam);
-  const awayFlag = getCountryFlag(match.awayTeam);
 
   async function handleSaveScore() {
     setError("");
@@ -163,7 +163,7 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
           {/* Score display */}
           <div className="flex items-center justify-between gap-3 px-4 py-4">
             <div className="flex min-w-0 flex-1 flex-col items-center gap-1.5">
-              <span className="text-3xl leading-none" aria-hidden="true">{homeFlag}</span>
+              <Flag team={match.homeTeam} size="lg" />
               <p className="text-center text-[11px] font-black leading-tight text-white/60">
                 {match.homeTeam}
               </p>
@@ -179,7 +179,7 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
               )}
             </div>
             <div className="flex min-w-0 flex-1 flex-col items-center gap-1.5">
-              <span className="text-3xl leading-none" aria-hidden="true">{awayFlag}</span>
+              <Flag team={match.awayTeam} size="lg" />
               <p className="text-center text-[11px] font-black leading-tight text-white/60">
                 {match.awayTeam}
               </p>

@@ -1,5 +1,7 @@
+import { Clock3 } from "lucide-react";
 import type { MundialMatch } from "../types";
-import { cn, finalScoreText, formatKickoff, getCountryFlag, isMatchClosed } from "../utils";
+import { cn, finalScoreText, formatKickoff, isMatchClosed } from "../utils";
+import { Flag } from "./Flag";
 
 type SlideCardProps = {
   match: MundialMatch;
@@ -10,54 +12,51 @@ type SlideCardProps = {
 export function SlideCard({ match, nowMs, activeMatchId }: SlideCardProps) {
   const closed = isMatchClosed(match, nowMs);
   const active = match.id === activeMatchId && !closed;
-  const label = closed ? "Cerrado" : active ? "⚡ LIVE" : "Siguiente";
-
-  const homeFlag = getCountryFlag(match.homeTeam);
-  const awayFlag = getCountryFlag(match.awayTeam);
+  const label = closed ? "Cerrado" : active ? "Activo" : "Siguiente";
 
   return (
     <article
       className={cn(
-        "w-[76vw] max-w-[230px] shrink-0 snap-start rounded-xl border p-3.5 transition-all duration-200 sm:w-[210px]",
+        "w-[78vw] max-w-[270px] shrink-0 snap-start rounded-lg border p-4 transition-all duration-200 sm:w-[250px]",
         active
-          ? "border-green-500 bg-[#0c1c0c]"
+          ? "border-emerald-500/70 bg-emerald-950/20 shadow-[0_0_18px_rgba(16,185,129,0.14)]"
           : closed
-            ? "border-[#1a2a1a] bg-[#080d08]"
-            : "border-[#1a2a1a] bg-[#0c150c]"
+            ? "border-[#253425] bg-[#0d120d]"
+            : "border-[#263b27] bg-[#101711]"
       )}
-      style={active ? { boxShadow: "0 0 18px rgba(34,197,94,0.18), inset 0 0 30px rgba(34,197,94,0.04)" } : undefined}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="rounded-md border border-[#1e3a1e] bg-[#050905] px-1.5 py-0.5 text-[11px] font-black tabular-nums text-[#5a8a5a]">
+        <span className="rounded-md border border-[#2b3d2b] bg-[#070907] px-2 py-1 text-xs font-black tabular-nums text-[#a9c7ad]">
           #{match.number}
         </span>
         <span
           className={cn(
-            "text-[11px] font-black tracking-wider",
-            active ? "text-green-400" : closed ? "text-[#2a4020]" : "text-[#3a5a3a]"
+            "rounded-md border px-2 py-1 text-xs font-black",
+            active
+              ? "border-emerald-600/60 bg-emerald-950/35 text-emerald-200"
+              : closed
+                ? "border-red-800/50 bg-red-950/25 text-red-200"
+                : "border-cyan-800/50 bg-cyan-950/20 text-cyan-200"
           )}
         >
           {label}
         </span>
       </div>
 
-      <div className="mt-3 flex items-center gap-2">
-        <span className="text-2xl leading-none" aria-hidden="true">{homeFlag}</span>
-        <span className="text-[10px] font-black text-[#2a4020]">VS</span>
-        <span className="text-2xl leading-none" aria-hidden="true">{awayFlag}</span>
+      <div className="mt-4 flex items-center gap-3">
+        <Flag team={match.homeTeam} size="lg" />
+        <span className="text-xs font-black text-[#8ca58f]">VS</span>
+        <Flag team={match.awayTeam} size="lg" />
       </div>
 
-      <h3 className={cn(
-        "mt-2 break-words text-sm font-black leading-tight",
-        active ? "text-white" : "text-[#c0d8c0]"
-      )}>
+      <h3 className="mt-3 break-words text-base font-black leading-tight text-white">
         {match.homeTeam} vs {match.awayTeam}
       </h3>
-      <p className="mt-1.5 text-[11px] font-bold text-[#3a5a3a]">{formatKickoff(match.kickoffAt)}</p>
-      <p className={cn(
-        "mt-2 text-[11px] font-black",
-        closed ? "text-[#6aab6a]" : "text-[#3a5a3a]"
-      )}>
+      <p className="mt-2 flex items-start gap-1.5 text-sm font-bold leading-snug text-[#9db59f]">
+        <Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-[#8ca58f]" />
+        <span>{formatKickoff(match.kickoffAt)}</span>
+      </p>
+      <p className={cn("mt-3 text-sm font-black", closed ? "text-[#b7d5ba]" : "text-[#8ca58f]")}>
         {closed ? finalScoreText(match) : match.group ? `Grupo ${match.group}` : match.stageLabel}
       </p>
     </article>

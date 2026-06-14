@@ -1,13 +1,60 @@
 "use client";
 
-import { Check, ChevronDown, CircleAlert, Loader2, RefreshCw, Save, UserRound } from "lucide-react";
+import {
+  Check,
+  ChevronDown,
+  CircleAlert,
+  Clock3,
+  Loader2,
+  ListChecks,
+  RefreshCw,
+  Save,
+  Target,
+  Trophy,
+  UserRound,
+  Users,
+} from "lucide-react";
 import { VIEW_OPTIONS } from "./constants";
+import type { ViewMode } from "./types";
 import { useMundial } from "./useMundial";
-import { cn, formatKickoff, getCountryFlag } from "./utils";
+import { cn, formatKickoff } from "./utils";
+import { Flag } from "./components/Flag";
 import { MineView } from "./components/MineView";
 import { NextView } from "./components/NextView";
 import { PlayersView } from "./components/PlayersView";
 import { PlayerPickerModal } from "./components/PlayerPickerModal";
+
+function ViewIcon({ id, active }: { id: ViewMode; active: boolean }) {
+  const className = cn("h-4 w-4 shrink-0", active ? "text-emerald-300" : "text-[#58745d]");
+
+  if (id === "next") return <Target className={className} />;
+  if (id === "mine") return <ListChecks className={className} />;
+  return <Users className={className} />;
+}
+
+type MetricTileProps = {
+  label: string;
+  value: string;
+  detail: string;
+  tone: "green" | "amber" | "cyan";
+};
+
+function MetricTile({ label, value, detail, tone }: MetricTileProps) {
+  const toneClass =
+    tone === "green"
+      ? "border-emerald-700/50 bg-emerald-950/20 text-emerald-300"
+      : tone === "amber"
+        ? "border-amber-700/50 bg-amber-950/20 text-amber-300"
+        : "border-cyan-800/50 bg-cyan-950/20 text-cyan-200";
+
+  return (
+    <div className={cn("min-w-0 rounded-lg border px-4 py-3", toneClass)}>
+      <p className="text-[11px] font-black uppercase tracking-[0.18em] opacity-80">{label}</p>
+      <p className="mt-1 text-2xl font-black tabular-nums leading-none sm:text-3xl">{value}</p>
+      <p className="mt-1.5 truncate text-xs font-bold text-[#9db59f]">{detail}</p>
+    </div>
+  );
+}
 
 export default function MundialClient() {
   const {
@@ -28,6 +75,8 @@ export default function MundialClient() {
     success,
     activeMatch,
     activeMatchId,
+    todayEditableMatches,
+    todayEditableMatchIds,
     slideMatches,
     recentClosedMatches,
     drafts,
@@ -53,237 +102,193 @@ export default function MundialClient() {
   const openMatchCount = Math.max(matches.length - closedMatchCount, 0);
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#050905] text-white">
-      {/* Hero header */}
-      <header
-        style={{
-          background: "linear-gradient(180deg, #060e06 0%, #080f08 40%, #050905 100%)",
-          borderBottom: "1px solid #1a2e1a",
-        }}
-      >
-        {/* Top strip */}
-        <div className="mx-auto flex w-full max-w-[1600px] flex-wrap items-center justify-between gap-2 px-3 pb-3 pt-3 sm:flex-nowrap sm:px-6 sm:pt-4">
-          <div className="flex min-w-0 items-center gap-2.5">
-            <span className="text-base leading-none">⚽</span>
-            <span className="text-[11px] font-black uppercase tracking-[0.22em] text-[#2a4a2a]">
-              Mundial 2026
+    <main className="min-h-screen overflow-x-hidden bg-[#070907] text-white">
+      <header className="border-b border-[#263425] bg-[linear-gradient(180deg,#0b150d_0%,#080b08_62%,#070907_100%)]">
+        <div className="mx-auto flex w-full max-w-[1600px] flex-wrap items-center justify-between gap-3 px-4 py-4 sm:flex-nowrap sm:px-6">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg border border-amber-700/50 bg-amber-950/30">
+              <Trophy className="h-5 w-5 text-amber-300" />
             </span>
+            <div className="min-w-0">
+              <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-300">Mundial 2026</p>
+              <h1 className="truncate text-2xl font-black leading-tight text-white sm:text-4xl">Quiniela</h1>
+            </div>
           </div>
 
-          {/* Player selector */}
           <button
             type="button"
             onClick={() => setShowPlayerPicker(true)}
-            className="flex min-h-9 max-w-full min-w-0 items-center gap-1.5 rounded-lg border border-[#1a2e1a] bg-[#0a140a] px-2.5 py-1.5 transition hover:border-green-700/50 hover:bg-green-950/20 sm:px-3"
+            className="flex min-h-11 max-w-full min-w-0 items-center gap-2 rounded-lg border border-[#2b3d2b] bg-[#101711] px-3 py-2 transition hover:border-emerald-500/60 hover:bg-emerald-950/20 sm:px-4"
           >
-            <UserRound className="h-3.5 w-3.5 shrink-0 text-[#3a5a3a]" />
-            <span className={cn(
-              "max-w-[58vw] truncate text-sm font-black sm:max-w-none",
-              playerName ? "text-green-400" : "text-[#3a5a3a]"
-            )}>
-              {playerName || "Elegí quién sos"}
+            <UserRound className="h-4 w-4 shrink-0 text-emerald-300" />
+            <span
+              className={cn(
+                "max-w-[58vw] truncate text-base font-black sm:max-w-none",
+                playerName ? "text-white" : "text-[#8aa08d]"
+              )}
+            >
+              {playerName || "Elegir jugador"}
             </span>
-            <ChevronDown className="h-3 w-3 shrink-0 text-[#2a4020]" />
+            <ChevronDown className="h-4 w-4 shrink-0 text-[#7f957f]" />
           </button>
         </div>
 
-        {/* Active match showcase */}
-        <div className="mx-auto w-full max-w-[1200px] px-3 sm:px-6">
+        <div className="mx-auto w-full max-w-[1400px] px-4 pb-5 sm:px-6 sm:pb-7">
           {activeMatch ? (
-            <>
-              <div className="mb-3 flex items-center gap-2">
-                <span
-                  className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-green-400"
-                  style={{ boxShadow: "0 0 6px rgba(74,222,128,0.8)" }}
-                />
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-green-400">
-                  Partido #{activeMatch.number}
-                  {activeMatch.group ? ` · Grupo ${activeMatch.group}` : ` · ${activeMatch.stageLabel}`}
-                </span>
-              </div>
-
-              <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1.5 sm:gap-4">
-                {/* Home */}
-                <div className="flex min-w-0 flex-col items-center gap-1.5 sm:gap-2">
-                  <span className="text-[44px] leading-none drop-shadow-lg sm:text-[64px]" aria-hidden="true">
-                    {getCountryFlag(activeMatch.homeTeam)}
-                  </span>
-                  <span className="max-w-full break-words text-center text-[10px] font-black uppercase leading-tight tracking-wide text-[#c0d8c0] sm:text-sm">
-                    {activeMatch.homeTeam}
-                  </span>
+            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-stretch">
+              <section className="min-w-0 overflow-hidden rounded-lg border border-emerald-700/50 bg-[#0b130d]">
+                <div className="border-b border-[#223323] bg-[#101911] px-4 py-3 sm:px-5">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <span className="h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-emerald-300 shadow-[0_0_12px_rgba(110,231,183,0.8)]" />
+                      <span className="truncate text-xs font-black uppercase tracking-[0.2em] text-emerald-300">
+                        Proximo pick
+                      </span>
+                    </div>
+                    <span className="rounded-md border border-[#2c422c] bg-[#071007] px-2.5 py-1 text-xs font-black text-[#a9c7ad]">
+                      Partido #{activeMatch.number}
+                      {activeMatch.group ? ` - Grupo ${activeMatch.group}` : ` - ${activeMatch.stageLabel}`}
+                    </span>
+                  </div>
                 </div>
 
-                {/* Countdown center */}
-                <div
-                  className="flex max-w-[34vw] shrink-0 flex-col items-center gap-0.5 rounded-xl border border-amber-700/30 bg-amber-950/20 px-2 py-2 sm:max-w-none sm:px-4 sm:py-3"
-                  style={{ boxShadow: "0 0 20px rgba(245,158,11,0.10)" }}
-                >
-                  <span className="text-[8px] font-black uppercase tracking-widest text-amber-700 sm:text-[9px]">
-                    Cierra en
-                  </span>
-                  <span
-                    className="text-xl font-black leading-none tabular-nums text-amber-400 sm:text-4xl"
-                    style={{ textShadow: "0 0 20px rgba(251,191,36,0.4)" }}
-                  >
+                <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 px-3 py-5 sm:gap-6 sm:px-8 sm:py-8">
+                  <div className="flex min-w-0 flex-col items-center gap-2 sm:gap-3">
+                    <Flag team={activeMatch.homeTeam} size="4xl" />
+                    <span className="max-w-full break-words text-center text-base font-black uppercase leading-tight text-white sm:text-2xl">
+                      {activeMatch.homeTeam}
+                    </span>
+                    <span className="rounded-full border border-[#2b3d2b] px-2.5 py-1 text-[11px] font-black uppercase tracking-widest text-[#8ca58f]">
+                      Local
+                    </span>
+                  </div>
+
+                  <div className="flex shrink-0 flex-col items-center gap-2">
+                    <span className="rounded-full border border-[#2b3d2b] bg-[#070907] px-3 py-1.5 text-sm font-black text-[#b5cbb7] sm:text-base">
+                      VS
+                    </span>
+                    <span className="h-16 w-px bg-[#263425] sm:h-20" />
+                  </div>
+
+                  <div className="flex min-w-0 flex-col items-center gap-2 sm:gap-3">
+                    <Flag team={activeMatch.awayTeam} size="4xl" />
+                    <span className="max-w-full break-words text-center text-base font-black uppercase leading-tight text-white sm:text-2xl">
+                      {activeMatch.awayTeam}
+                    </span>
+                    <span className="rounded-full border border-[#2b3d2b] px-2.5 py-1 text-[11px] font-black uppercase tracking-widest text-[#8ca58f]">
+                      Visita
+                    </span>
+                  </div>
+                </div>
+              </section>
+
+              <aside className="grid gap-3 rounded-lg border border-amber-700/50 bg-[#15110a] p-4">
+                <div className="rounded-lg border border-amber-600/50 bg-amber-950/30 p-4 text-center">
+                  <div className="mb-2 flex items-center justify-center gap-2">
+                    <Clock3 className="h-4 w-4 text-amber-300" />
+                    <p className="text-xs font-black uppercase tracking-[0.2em] text-amber-300">Cierra en</p>
+                  </div>
+                  <p className="text-4xl font-black tabular-nums leading-none text-amber-200 sm:text-5xl">
                     {activeCountdown}
-                  </span>
-                  <span className="mt-1 max-w-[7rem] text-center text-[9px] font-bold leading-tight text-[#2a4020] sm:max-w-none sm:text-[10px]">
+                  </p>
+                  <p className="mt-3 text-sm font-bold leading-snug text-[#d6c49c]">
                     {formatKickoff(activeMatch.kickoffAt)}
-                  </span>
+                  </p>
                 </div>
-
-                {/* Away */}
-                <div className="flex min-w-0 flex-col items-center gap-1.5 sm:gap-2">
-                  <span className="text-[44px] leading-none drop-shadow-lg sm:text-[64px]" aria-hidden="true">
-                    {getCountryFlag(activeMatch.awayTeam)}
-                  </span>
-                  <span className="max-w-full break-words text-center text-[10px] font-black uppercase leading-tight tracking-wide text-[#c0d8c0] sm:text-sm">
-                    {activeMatch.awayTeam}
-                  </span>
+                <div className="grid grid-cols-2 gap-3">
+                  <MetricTile label="Guardado" value={`${completionPct}%`} detail={`${savedCount} picks`} tone="green" />
+                  <MetricTile label="Cerrado" value={`${lockedPct}%`} detail={`${lockedCount} picks`} tone="amber" />
                 </div>
-              </div>
-            </>
+              </aside>
+            </div>
           ) : (
-            <div className="flex flex-col items-center gap-2 py-6 sm:py-8">
-              <span className="text-5xl leading-none">🏆</span>
-              <p className="text-lg font-black text-white">
-                {closedMatchCount > 0 && closedMatchCount === matches.length
-                  ? "¡Quiniela cerrada!"
-                  : "Sin partido activo"}
-              </p>
-              <p className="text-xs font-bold text-[#3a5a3a]">Esperando el próximo pitazo.</p>
-            </div>
+            <section className="grid min-h-64 place-items-center rounded-lg border border-dashed border-[#2b3d2b] bg-[#0b130d] p-8 text-center">
+              <div>
+                <Trophy className="mx-auto h-12 w-12 text-amber-300" />
+                <p className="mt-4 text-2xl font-black text-white">
+                  {closedMatchCount > 0 && closedMatchCount === matches.length ? "Quiniela cerrada" : "Sin partido activo"}
+                </p>
+                <p className="mt-2 text-base font-bold text-[#8ca58f]">Esperando el proximo pitazo.</p>
+              </div>
+            </section>
           )}
-        </div>
 
-        {/* Player HUD stats */}
-        <div className="mx-auto grid w-full max-w-[1200px] grid-cols-1 gap-2 px-3 pb-4 pt-4 min-[420px]:grid-cols-2 sm:px-6 sm:pb-5 sm:pt-5">
-          <div className="rounded-xl border border-[#1a2e1a] bg-[#0a140a] p-3">
-            <div className="mb-2 flex items-center justify-between">
-              <span className="text-[10px] font-black uppercase tracking-widest text-[#2a4020]">
-                Guardado
-              </span>
-              <span className="text-xs font-black tabular-nums text-green-400">{completionPct}%</span>
-            </div>
-            <div className="h-1.5 overflow-hidden rounded-full bg-[#080f08] border border-[#1a2e1a]">
-              <div
-                className="h-full rounded-full bg-green-500 transition-all"
-                style={{
-                  width: `${completionPct}%`,
-                  boxShadow: completionPct > 0 ? "0 0 6px rgba(34,197,94,0.5)" : undefined,
-                }}
-              />
-            </div>
-          </div>
-          <div className="rounded-xl border border-[#1a2e1a] bg-[#0a140a] p-3">
-            <div className="mb-2 flex items-center justify-between">
-              <span className="text-[10px] font-black uppercase tracking-widest text-[#2a4020]">
-                Cerrado
-              </span>
-              <span className="text-xs font-black tabular-nums text-amber-400">{lockedPct}%</span>
-            </div>
-            <div className="h-1.5 overflow-hidden rounded-full bg-[#080f08] border border-[#1a2e1a]">
-              <div
-                className="h-full rounded-full bg-amber-500 transition-all"
-                style={{
-                  width: `${lockedPct}%`,
-                  boxShadow: lockedPct > 0 ? "0 0 6px rgba(245,158,11,0.4)" : undefined,
-                }}
-              />
-            </div>
+          <div className="mt-4 grid gap-3 min-[520px]:grid-cols-3">
+            <MetricTile label="Picks guardados" value={`${savedCount}`} detail={`${completionPct}% del total`} tone="green" />
+            <MetricTile label="Partidos abiertos" value={`${openMatchCount}`} detail="Listos para predecir" tone="cyan" />
+            <MetricTile label="Cambios pendientes" value={`${dirtyDrafts.length}`} detail="Guarda antes del cierre" tone="amber" />
           </div>
         </div>
       </header>
 
-      {/* Sticky nav bar */}
-      <nav
-        className="sticky top-0 z-20 border-b border-[#1a2e1a] backdrop-blur-md"
-        style={{ background: "rgba(5,9,5,0.95)" }}
-      >
-        <div className="mx-auto grid max-w-[1600px] grid-cols-1 sm:flex sm:items-center">
-          <div className="grid grid-cols-3 sm:flex sm:min-w-0">
-            {VIEW_OPTIONS.map((option) => (
-              <button
-                key={option.id}
-                type="button"
-                onClick={() => setViewMode(option.id)}
-                className={cn(
-                  "relative min-h-11 px-2 py-3 text-center text-[10px] font-black uppercase tracking-wide transition sm:flex-none sm:px-8 sm:text-[11px] sm:tracking-widest",
-                  viewMode === option.id
-                    ? "text-green-400"
-                    : "text-[#2a4020] hover:text-[#4a6e4a]"
-                )}
-              >
-                <span className="block truncate">{option.label}</span>
-                {viewMode === option.id && (
-                  <span
-                    className="absolute bottom-0 left-0 right-0 h-0.5 rounded-t-full bg-green-500"
-                    style={{ boxShadow: "0 0 8px rgba(34,197,94,0.6)" }}
-                  />
-                )}
-              </button>
-            ))}
+      <nav className="sticky top-0 z-20 border-y border-[#263425] bg-[#080b08]/95 backdrop-blur-md">
+        <div className="mx-auto flex max-w-[1600px] flex-col gap-2 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <div className="grid grid-cols-3 gap-2 sm:flex sm:min-w-0">
+            {VIEW_OPTIONS.map((option) => {
+              const active = viewMode === option.id;
+
+              return (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => setViewMode(option.id)}
+                  className={cn(
+                    "inline-flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-lg border px-2.5 text-center text-sm font-black transition sm:px-5",
+                    active
+                      ? "border-emerald-500/70 bg-emerald-950/35 text-white shadow-[0_0_18px_rgba(16,185,129,0.12)]"
+                      : "border-[#243424] bg-[#0d120d] text-[#90a893] hover:border-[#3a553a] hover:text-white"
+                  )}
+                >
+                  <ViewIcon id={option.id} active={active} />
+                  <span className="truncate">{option.label}</span>
+                </button>
+              );
+            })}
           </div>
 
-          <div className="flex items-center gap-2 border-t border-[#1a2e1a] px-3 py-2 sm:ml-auto sm:border-t-0 sm:px-4 sm:py-0">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 sm:flex sm:items-center">
             <button
               type="button"
               onClick={() => void saveDirtyDrafts()}
               disabled={isSavingBulk || !dirtyDrafts.length}
-              className="relative inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-lg border border-green-700 bg-green-800 px-3 text-xs font-black text-white transition hover:border-green-500 hover:bg-green-600 disabled:cursor-not-allowed disabled:border-[#1a2e1a] disabled:bg-transparent disabled:opacity-30 sm:h-8 sm:flex-none"
+              className="relative inline-flex h-12 min-w-0 items-center justify-center gap-2 rounded-lg border border-emerald-600 bg-emerald-700 px-4 text-sm font-black text-white transition hover:border-emerald-300 hover:bg-emerald-500 disabled:cursor-not-allowed disabled:border-[#273527] disabled:bg-[#101510] disabled:text-[#647765]"
             >
-              {isSavingBulk ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
-              ) : (
-                <Save className="h-3 w-3" />
-              )}
-              {dirtyDrafts.length > 0 && !isSavingBulk && (
-                <span className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full border border-green-600 bg-green-500 text-[10px] font-black leading-none text-white sm:hidden">
-                  {dirtyDrafts.length}
-                </span>
-              )}
-              <span className="truncate">
-                Guardar{dirtyDrafts.length > 0 ? ` (${dirtyDrafts.length})` : ""}
-              </span>
+              {isSavingBulk ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              <span className="truncate">Guardar cambios{dirtyDrafts.length > 0 ? ` (${dirtyDrafts.length})` : ""}</span>
             </button>
             <button
               type="button"
               onClick={() => void loadQuiniela()}
               disabled={isLoading}
               aria-label="Sincronizar quiniela"
-              className="inline-flex h-9 w-10 items-center justify-center gap-1.5 rounded-lg border border-[#1a2e1a] bg-[#0a140a] px-0 text-xs font-black text-[#4a6e4a] transition hover:border-[#2a4a2a] hover:text-[#6aab6a] disabled:opacity-40 sm:h-8 sm:w-auto sm:px-3"
+              className="inline-flex h-12 w-12 items-center justify-center rounded-lg border border-[#2b3d2b] bg-[#101711] text-[#a9c7ad] transition hover:border-[#4d6a4d] hover:text-white disabled:opacity-40 sm:w-auto sm:px-4"
             >
-              {isLoading ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
-              ) : (
-                <RefreshCw className="h-3 w-3" />
-              )}
-              <span className="hidden sm:inline">Sync</span>
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+              <span className="ml-2 hidden text-sm font-black sm:inline">Sync</span>
             </button>
           </div>
         </div>
       </nav>
 
-      {/* Content */}
-      <section className="mx-auto w-full max-w-[1600px] px-3 py-3 sm:px-6 sm:py-4">
+      <section className="mx-auto w-full max-w-[1600px] px-4 py-4 sm:px-6 sm:py-6">
         {error && (
-          <div className="mb-4 flex items-start gap-2 rounded-xl border border-red-900/50 bg-red-950/30 p-3 text-sm font-bold text-red-400">
-            <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+          <div className="mb-4 flex items-start gap-3 rounded-lg border border-red-800/60 bg-red-950/35 p-4 text-sm font-bold text-red-200">
+            <CircleAlert className="mt-0.5 h-5 w-5 shrink-0" />
             <span className="min-w-0 break-words">{error}</span>
           </div>
         )}
         {success && (
-          <div className="mb-4 flex items-start gap-2 rounded-xl border border-green-800/50 bg-green-950/30 p-3 text-sm font-bold text-green-400">
-            <Check className="mt-0.5 h-4 w-4 shrink-0" />
+          <div className="mb-4 flex items-start gap-3 rounded-lg border border-emerald-700/60 bg-emerald-950/30 p-4 text-sm font-bold text-emerald-200">
+            <Check className="mt-0.5 h-5 w-5 shrink-0" />
             <span className="min-w-0 break-words">{success}</span>
           </div>
         )}
 
         {isLoading ? (
-          <div className="grid min-h-64 place-items-center rounded-xl border border-dashed border-[#1a2e1a] bg-[#080f08] p-8 text-center">
+          <div className="grid min-h-72 place-items-center rounded-lg border border-dashed border-[#2b3d2b] bg-[#0b130d] p-8 text-center">
             <div>
-              <Loader2 className="mx-auto h-8 w-8 animate-spin text-green-600" />
-              <p className="mt-3 text-sm font-black text-[#4a6e4a]">Cargando quiniela...</p>
+              <Loader2 className="mx-auto h-10 w-10 animate-spin text-emerald-400" />
+              <p className="mt-4 text-base font-black text-[#a9c7ad]">Cargando quiniela...</p>
             </div>
           </div>
         ) : (
@@ -295,6 +300,8 @@ export default function MundialClient() {
                 savingId={savingId}
                 isSavingBulk={isSavingBulk}
                 activeMatchId={activeMatchId}
+                todayEditableMatches={todayEditableMatches}
+                todayEditableMatchIds={todayEditableMatchIds}
                 nowMs={nowMs}
                 activeCountdown={activeCountdown}
                 slideMatches={slideMatches}
@@ -315,7 +322,7 @@ export default function MundialClient() {
                 drafts={drafts}
                 savingId={savingId}
                 isSavingBulk={isSavingBulk}
-                activeMatchId={activeMatchId}
+                todayEditableMatchIds={todayEditableMatchIds}
                 nowMs={nowMs}
                 onUpdateDraft={updateDraft}
                 onSave={saveMatch}
