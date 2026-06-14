@@ -34,7 +34,7 @@ export function FeaturedMatch({
 
   return (
     <section
-      className="overflow-hidden rounded-xl border border-green-700/50 bg-[#080f08]"
+      className="min-w-0 overflow-hidden rounded-xl border border-green-700/50 bg-[#080f08]"
       style={{ boxShadow: "0 0 30px rgba(34,197,94,0.10), 0 0 0 1px rgba(34,197,94,0.06)" }}
     >
       {/* Banner header — hidden on mobile (hero already shows teams + countdown) */}
@@ -92,31 +92,31 @@ export function FeaturedMatch({
       </div>
 
       {/* Mobile-only compact sub-header */}
-      <div className="flex items-center justify-between gap-2 border-b border-[#1a2e1a] px-4 py-2.5 sm:hidden">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between gap-2 border-b border-[#1a2e1a] px-3 py-2.5 sm:hidden">
+        <div className="flex min-w-0 flex-1 items-center gap-2">
           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-400" style={{ boxShadow: "0 0 4px rgba(74,222,128,0.8)" }} />
-          <span className="text-[10px] font-black uppercase tracking-wider text-green-400">
+          <span className="min-w-0 truncate text-[10px] font-black uppercase tracking-wider text-green-400">
             Partido #{match.number}{match.group ? ` · Grupo ${match.group}` : ` · ${match.stageLabel}`}
           </span>
         </div>
-        <span className="text-[11px] font-black tabular-nums text-amber-400">{activeCountdown}</span>
+        <span className="shrink-0 text-[11px] font-black tabular-nums text-amber-400">{activeCountdown}</span>
       </div>
 
       {/* Score inputs panel */}
-      <div className="p-3.5 sm:p-5">
+      <div className="p-3 sm:p-5">
         <p className="mb-3 text-center text-[10px] font-black uppercase tracking-widest text-[#3a5a3a]">
           Tu predicción de marcador
         </p>
 
         {/* 3-column: home box | separator | away box */}
-        <div className="grid grid-cols-[1fr_28px_1fr] items-center gap-2 sm:gap-4">
+        <div className="grid grid-cols-[minmax(0,1fr)_1rem_minmax(0,1fr)] items-center gap-1.5 sm:grid-cols-[minmax(0,1fr)_28px_minmax(0,1fr)] sm:gap-4">
           {/* Home */}
           <div
-            className="flex flex-col items-center gap-2 rounded-xl border border-[#1e3a1e] bg-[#0a1408] px-2.5 py-3 transition-all focus-within:border-green-600/60 sm:gap-3 sm:p-4"
+            className="flex min-w-0 flex-col items-center gap-2 rounded-xl border border-[#1e3a1e] bg-[#0a1408] px-2 py-3 transition-all focus-within:border-green-600/60 sm:gap-3 sm:p-4"
             style={{ boxShadow: "inset 0 0 20px rgba(0,0,0,0.3)" }}
           >
-            <span className="text-2xl leading-none sm:text-4xl" aria-hidden="true">{homeFlag}</span>
-            <p className="text-center text-[10px] font-black uppercase leading-tight text-[#4a6e4a] sm:text-[11px]">
+            <span className="text-[1.65rem] leading-none sm:text-4xl" aria-hidden="true">{homeFlag}</span>
+            <p className="max-w-full break-words text-center text-[10px] font-black uppercase leading-tight text-[#4a6e4a] sm:text-[11px]">
               {match.homeTeam}
             </p>
             <ScoreInput
@@ -135,11 +135,11 @@ export function FeaturedMatch({
 
           {/* Away */}
           <div
-            className="flex flex-col items-center gap-2 rounded-xl border border-[#1e3a1e] bg-[#0a1408] px-2.5 py-3 transition-all focus-within:border-green-600/60 sm:gap-3 sm:p-4"
+            className="flex min-w-0 flex-col items-center gap-2 rounded-xl border border-[#1e3a1e] bg-[#0a1408] px-2 py-3 transition-all focus-within:border-green-600/60 sm:gap-3 sm:p-4"
             style={{ boxShadow: "inset 0 0 20px rgba(0,0,0,0.3)" }}
           >
-            <span className="text-2xl leading-none sm:text-4xl" aria-hidden="true">{awayFlag}</span>
-            <p className="text-center text-[10px] font-black uppercase leading-tight text-[#4a6e4a] sm:text-[11px]">
+            <span className="text-[1.65rem] leading-none sm:text-4xl" aria-hidden="true">{awayFlag}</span>
+            <p className="max-w-full break-words text-center text-[10px] font-black uppercase leading-tight text-[#4a6e4a] sm:text-[11px]">
               {match.awayTeam}
             </p>
             <ScoreInput
@@ -177,7 +177,7 @@ export function FeaturedMatch({
         )}
 
         {/* Save bar */}
-        <div className="mt-3 flex flex-col gap-2.5 rounded-xl border border-[#1e3a1e] bg-[#0a1408] p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:p-3.5">
+        <div className="mt-3 flex flex-col gap-2.5 overflow-hidden rounded-xl border border-[#1e3a1e] bg-[#0a1408] p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:p-3.5">
           <div className="min-w-0">
             <p className="text-[10px] font-black uppercase tracking-wider text-[#3a5a3a]">Tu predicción</p>
             <p className="mt-0.5 truncate text-base font-black text-[#d4f0d4] sm:text-lg">

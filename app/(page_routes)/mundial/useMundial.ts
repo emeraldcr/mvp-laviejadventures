@@ -306,6 +306,7 @@ export function useMundial() {
     showPlayerPicker,
     setShowPlayerPicker,
     matches,
+    predictions,
     players,
     viewMode,
     setViewMode,

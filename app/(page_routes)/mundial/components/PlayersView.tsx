@@ -63,16 +63,16 @@ export function PlayersView({ players }: PlayersViewProps) {
     <section>
       {/* Leaderboard header */}
       <div
-        className="mb-5 overflow-hidden rounded-xl border border-[#1e3a1e] p-6"
+        className="mb-4 overflow-hidden rounded-xl border border-[#1e3a1e] p-4 sm:mb-5 sm:p-6"
         style={{
           background: "linear-gradient(135deg, #060d06 0%, #0a1808 60%, #0c2210 100%)",
           boxShadow: "inset 0 0 60px rgba(0,0,0,0.5)",
         }}
       >
-        <div className="flex items-center justify-between gap-4">
-          <div>
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
             <p className="text-[10px] font-black uppercase tracking-widest text-[#3a5a3a]">Tabla de posiciones</p>
-            <h2 className="mt-1 text-3xl font-black text-white">
+            <h2 className="mt-1 text-2xl font-black text-white sm:text-3xl">
               {players.length}{" "}
               <span className="font-bold text-[#3a5a3a]">jugadores</span>
             </h2>
@@ -85,7 +85,7 @@ export function PlayersView({ players }: PlayersViewProps) {
       </div>
 
       {sorted.length ? (
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {sorted.map((player, index) => {
             const pct = Math.round((player.totalPredictions / TOTAL_MATCHES) * 100);
             const medal = MEDALS[index] ?? null;
@@ -94,10 +94,10 @@ export function PlayersView({ players }: PlayersViewProps) {
             return (
               <article
                 key={player.key}
-                className={cn("rounded-xl border p-4 transition-all", style.card)}
+                className={cn("min-w-0 rounded-xl border p-3.5 transition-all sm:p-4", style.card)}
                 style={style.cardGlow}
               >
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex min-w-0 items-start justify-between gap-3">
                   <div className="flex min-w-0 items-start gap-3">
                     <div
                       className={cn(
@@ -150,7 +150,7 @@ export function PlayersView({ players }: PlayersViewProps) {
           })}
         </div>
       ) : (
-        <div className="grid min-h-48 place-items-center rounded-xl border border-dashed border-[#1a2e1a] bg-[#080f08] p-8 text-center">
+        <div className="grid min-h-48 place-items-center rounded-xl border border-dashed border-[#1a2e1a] bg-[#080f08] p-5 text-center sm:p-8">
           <div>
             <p className="text-5xl">🏆</p>
             <p className="mt-4 text-base font-black text-[#6aab6a]">Todavía no hay jugadores</p>

@@ -18,7 +18,7 @@ export function SlideCard({ match, nowMs, activeMatchId }: SlideCardProps) {
   return (
     <article
       className={cn(
-        "w-[210px] shrink-0 snap-start rounded-xl border p-3.5 transition-all duration-200",
+        "w-[76vw] max-w-[230px] shrink-0 snap-start rounded-xl border p-3.5 transition-all duration-200 sm:w-[210px]",
         active
           ? "border-green-500 bg-[#0c1c0c]"
           : closed
@@ -48,7 +48,7 @@ export function SlideCard({ match, nowMs, activeMatchId }: SlideCardProps) {
       </div>
 
       <h3 className={cn(
-        "mt-2 text-sm font-black leading-tight",
+        "mt-2 break-words text-sm font-black leading-tight",
         active ? "text-white" : "text-[#c0d8c0]"
       )}>
         {match.homeTeam} vs {match.awayTeam}

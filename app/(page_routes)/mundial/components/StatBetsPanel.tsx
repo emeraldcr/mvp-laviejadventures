@@ -73,14 +73,14 @@ export function StatBetsPanel({ matchId, playerName }: StatBetsPanelProps) {
 
   return (
     <section
-      className="rounded-xl border border-violet-900/50 bg-[#0c0c18] p-4"
+      className="min-w-0 rounded-xl border border-violet-900/50 bg-[#0c0c18] p-3 sm:p-4"
       style={{ boxShadow: "0 0 24px rgba(139,92,246,0.08)" }}
     >
       <div className="mb-4 flex items-center gap-2">
         <Zap className="h-4 w-4 text-violet-400" />
         <p className="text-sm font-black uppercase tracking-widest text-violet-400">Apuestas del partido</p>
       </div>
-      <div className="grid gap-5">
+      <div className="grid min-w-0 gap-5">
         {questions.map((question) => {
           const myBet = myBets[question.id];
           const isSaving = saving === question.id;
@@ -89,9 +89,9 @@ export function StatBetsPanel({ matchId, playerName }: StatBetsPanelProps) {
             question.resolved && myBet && myBet === question.correctOptionId ? question.pointValue : null;
 
           return (
-            <div key={question.id}>
-              <div className="mb-3 flex items-start justify-between gap-2">
-                <p className="font-black text-[#d4f0d4] leading-snug">{question.text}</p>
+            <div key={question.id} className="min-w-0">
+              <div className="mb-3 flex flex-col items-start gap-2 min-[520px]:flex-row min-[520px]:justify-between">
+                <p className="min-w-0 break-words font-black leading-snug text-[#d4f0d4]">{question.text}</p>
                 {myPoints !== null && (
                   <span className="shrink-0 rounded-md border border-green-600/50 bg-green-950/60 px-2 py-0.5 text-xs font-black text-green-400">
                     +{myPoints} pt{myPoints !== 1 ? "s" : ""}
@@ -104,7 +104,7 @@ export function StatBetsPanel({ matchId, playerName }: StatBetsPanelProps) {
                 )}
               </div>
 
-              <div className="flex flex-wrap gap-2">
+              <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 lg:flex lg:flex-wrap">
                 {question.options.map((option) => {
                   const selected = myBet === option.id;
                   const isCorrectAnswer = question.resolved && question.correctOptionId === option.id;
@@ -117,7 +117,7 @@ export function StatBetsPanel({ matchId, playerName }: StatBetsPanelProps) {
                       disabled={isClosed || isSaving || !playerName}
                       onClick={() => void placeBet(question.id, option.id)}
                       className={cn(
-                        "inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-black transition-all",
+                        "inline-flex min-h-10 min-w-0 items-center justify-center gap-1.5 rounded-lg border px-3 py-1.5 text-center text-sm font-black transition-all lg:flex-none",
                         isCorrectAnswer
                           ? "border-green-500 bg-green-700/60 text-green-300"
                           : isWrongAnswer

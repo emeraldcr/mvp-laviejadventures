@@ -38,7 +38,7 @@ export function MatchCard({ match, draft, savingId, isSavingBulk, activeMatchId,
   return (
     <article
       className={cn(
-        "rounded-xl border bg-[#0c160c] p-3.5 transition-all duration-200",
+        "min-w-0 rounded-xl border bg-[#0c160c] p-3 transition-all duration-200 sm:p-3.5",
         canEdit
           ? "border-green-600/70"
           : "border-[#1a2e1a]"
@@ -46,8 +46,8 @@ export function MatchCard({ match, draft, savingId, isSavingBulk, activeMatchId,
       style={canEdit ? { boxShadow: "0 0 14px rgba(34,197,94,0.12)" } : undefined}
     >
       {/* Header */}
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <div className="flex min-w-0 items-center gap-1.5">
+      <div className="mb-2 flex items-start justify-between gap-2">
+        <div className="flex min-w-0 flex-1 items-center gap-1.5">
           <span className="shrink-0 rounded-md border border-[#1e3a1e] bg-[#050a05] px-1.5 py-0.5 text-[11px] font-black tabular-nums text-[#5a8a5a]">
             #{match.number}
           </span>
@@ -66,7 +66,7 @@ export function MatchCard({ match, draft, savingId, isSavingBulk, activeMatchId,
 
       {/* Score rows */}
       <div className="grid gap-2">
-        <div className="grid grid-cols-[1.5rem_minmax(0,1fr)_58px] items-center gap-2 rounded-lg border border-[#1a2e1a] bg-[#080d08] p-2">
+        <div className="grid grid-cols-[1.5rem_minmax(0,1fr)_52px] items-center gap-2 rounded-lg border border-[#1a2e1a] bg-[#080d08] p-2 min-[380px]:grid-cols-[1.5rem_minmax(0,1fr)_58px]">
           <span className="text-xl leading-none" aria-hidden="true">{homeFlag}</span>
           <span className="min-w-0 truncate text-sm font-black text-[#d4f0d4]">{match.homeTeam}</span>
           <ScoreInput
@@ -76,7 +76,7 @@ export function MatchCard({ match, draft, savingId, isSavingBulk, activeMatchId,
             onChange={(value) => onUpdateDraft(match.id, { homeScore: value })}
           />
         </div>
-        <div className="grid grid-cols-[1.5rem_minmax(0,1fr)_58px] items-center gap-2 rounded-lg border border-[#1a2e1a] bg-[#080d08] p-2">
+        <div className="grid grid-cols-[1.5rem_minmax(0,1fr)_52px] items-center gap-2 rounded-lg border border-[#1a2e1a] bg-[#080d08] p-2 min-[380px]:grid-cols-[1.5rem_minmax(0,1fr)_58px]">
           <span className="text-xl leading-none" aria-hidden="true">{awayFlag}</span>
           <span className="min-w-0 truncate text-sm font-black text-[#d4f0d4]">{match.awayTeam}</span>
           <ScoreInput

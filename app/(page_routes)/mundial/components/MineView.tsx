@@ -34,30 +34,30 @@ export function MineView({
     <section>
       {/* Header */}
       <div
-        className="mb-5 overflow-hidden rounded-xl border border-[#1e3a1e] p-5"
+        className="mb-4 overflow-hidden rounded-xl border border-[#1e3a1e] p-4 sm:mb-5 sm:p-5"
         style={{
           background: "linear-gradient(135deg, #080f08 0%, #0a1a0a 60%, #0c2010 100%)",
           boxShadow: "inset 0 0 40px rgba(0,0,0,0.4)",
         }}
       >
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
+        <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
             <p className="text-[10px] font-black uppercase tracking-widest text-[#3a5a3a]">Mi quiniela</p>
-            <h2 className="mt-1 text-2xl font-black text-white sm:text-3xl">
+            <h2 className="mt-1 text-xl font-black text-white sm:text-3xl">
               {savedCount}
               <span className="text-[#2a4020]">/{TOTAL_MATCHES}</span>
               <span className="ml-2 text-base font-bold text-[#4a6e4a] sm:ml-3 sm:text-xl">guardados</span>
             </h2>
           </div>
-          <div className="flex gap-2 sm:gap-3">
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-3">
             <div
-              className="rounded-xl border border-green-800/40 bg-green-950/30 px-3 py-2 text-center sm:px-4 sm:py-3"
+              className="min-w-0 rounded-xl border border-green-800/40 bg-green-950/30 px-3 py-2 text-center sm:px-4 sm:py-3"
               style={{ boxShadow: "0 0 12px rgba(34,197,94,0.06)" }}
             >
               <p className="text-[10px] font-black uppercase tracking-wider text-green-600">Cerrados</p>
               <p className="mt-0.5 text-xl font-black tabular-nums text-green-400 sm:mt-1 sm:text-2xl">{lockedCount}</p>
             </div>
-            <div className="rounded-xl border border-[#1e3a1e] bg-[#0c160c] px-3 py-2 text-center sm:px-4 sm:py-3">
+            <div className="min-w-0 rounded-xl border border-[#1e3a1e] bg-[#0c160c] px-3 py-2 text-center sm:px-4 sm:py-3">
               <p className="text-[10px] font-black uppercase tracking-wider text-[#3a5a3a]">Progreso</p>
               <p className="mt-0.5 text-xl font-black tabular-nums text-amber-400 sm:mt-1 sm:text-2xl">{pct}%</p>
             </div>
@@ -77,7 +77,7 @@ export function MineView({
       </div>
 
       {mineMatches.length ? (
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {mineMatches.map((match) => (
             <MatchCard
               key={match.id}
@@ -93,7 +93,7 @@ export function MineView({
           ))}
         </div>
       ) : (
-        <div className="grid min-h-48 place-items-center rounded-xl border border-dashed border-[#1a2e1a] bg-[#080f08] p-8 text-center">
+        <div className="grid min-h-48 place-items-center rounded-xl border border-dashed border-[#1a2e1a] bg-[#080f08] p-5 text-center sm:p-8">
           <div>
             <p className="text-4xl">📋</p>
             <p className="mt-3 text-base font-black text-[#6aab6a]">Todavía no hay picks guardados</p>

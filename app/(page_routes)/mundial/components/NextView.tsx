@@ -1,6 +1,7 @@
-import type { Draft, MundialMatch } from "../types";
+import type { Draft, MundialMatch, Prediction } from "../types";
 import { emptyDraft } from "../utils";
 import { FeaturedMatch } from "./FeaturedMatch";
+import { OtherPicksPanel } from "./OtherPicksPanel";
 import { QueuePanel } from "./QueuePanel";
 import { StatBetsPanel } from "./StatBetsPanel";
 
@@ -17,6 +18,7 @@ type NextViewProps = {
   closedMatchCount: number;
   openMatchCount: number;
   playerName: string;
+  predictions: Prediction[];
   onUpdateDraft: (matchId: string, patch: Partial<Draft>) => void;
   onSave: (match: MundialMatch) => Promise<void>;
 };
@@ -34,25 +36,34 @@ export function NextView({
   closedMatchCount,
   openMatchCount,
   playerName,
+  predictions,
   onUpdateDraft,
   onSave,
 }: NextViewProps) {
   return (
-    <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_420px]">
-      <div className="grid content-start gap-4">
+    <div className="grid min-w-0 gap-3 sm:gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(340px,420px)] xl:items-start">
+      <div className="grid min-w-0 content-start gap-3 sm:gap-4">
         {activeMatch ? (
-          <FeaturedMatch
-            match={activeMatch}
-            draft={drafts[activeMatch.id] ?? emptyDraft()}
-            savingId={savingId}
-            isSavingBulk={isSavingBulk}
-            nowMs={nowMs}
-            activeCountdown={activeCountdown}
-            onUpdateDraft={onUpdateDraft}
-            onSave={onSave}
-          />
+          <>
+            <FeaturedMatch
+              match={activeMatch}
+              draft={drafts[activeMatch.id] ?? emptyDraft()}
+              savingId={savingId}
+              isSavingBulk={isSavingBulk}
+              nowMs={nowMs}
+              activeCountdown={activeCountdown}
+              onUpdateDraft={onUpdateDraft}
+              onSave={onSave}
+            />
+            <OtherPicksPanel
+              match={activeMatch}
+              predictions={predictions}
+              playerName={playerName}
+            />
+            <StatBetsPanel matchId={activeMatch.id} playerName={playerName} />
+          </>
         ) : (
-          <section className="grid min-h-96 place-items-center rounded-xl border border-dashed border-[#1a2e1a] bg-[#080f08] p-8 text-center">
+          <section className="grid min-h-80 place-items-center rounded-xl border border-dashed border-[#1a2e1a] bg-[#080f08] p-5 text-center sm:min-h-96 sm:p-8">
             <div>
               <p className="text-6xl">🏆</p>
               <h2 className="mt-4 text-2xl font-black text-white">¡Quiniela completa!</h2>
@@ -64,9 +75,6 @@ export function NextView({
               </p>
             </div>
           </section>
-        )}
-        {activeMatch && (
-          <StatBetsPanel matchId={activeMatch.id} playerName={playerName} />
         )}
       </div>
       <QueuePanel

@@ -16,6 +16,7 @@ export default function MundialClient() {
     showPlayerPicker,
     setShowPlayerPicker,
     matches,
+    predictions,
     players,
     viewMode,
     setViewMode,
@@ -52,7 +53,7 @@ export default function MundialClient() {
   const openMatchCount = Math.max(matches.length - closedMatchCount, 0);
 
   return (
-    <main className="min-h-screen bg-[#050905] text-white">
+    <main className="min-h-screen overflow-x-hidden bg-[#050905] text-white">
       {/* Hero header */}
       <header
         style={{
@@ -61,8 +62,8 @@ export default function MundialClient() {
         }}
       >
         {/* Top strip */}
-        <div className="flex items-center justify-between gap-3 px-4 pb-3 pt-4 sm:px-6">
-          <div className="flex items-center gap-2.5">
+        <div className="mx-auto flex w-full max-w-[1600px] flex-wrap items-center justify-between gap-2 px-3 pb-3 pt-3 sm:flex-nowrap sm:px-6 sm:pt-4">
+          <div className="flex min-w-0 items-center gap-2.5">
             <span className="text-base leading-none">⚽</span>
             <span className="text-[11px] font-black uppercase tracking-[0.22em] text-[#2a4a2a]">
               Mundial 2026
@@ -73,11 +74,11 @@ export default function MundialClient() {
           <button
             type="button"
             onClick={() => setShowPlayerPicker(true)}
-            className="flex min-w-0 items-center gap-1.5 rounded-lg border border-[#1a2e1a] bg-[#0a140a] px-3 py-1.5 transition hover:border-green-700/50 hover:bg-green-950/20"
+            className="flex min-h-9 max-w-full min-w-0 items-center gap-1.5 rounded-lg border border-[#1a2e1a] bg-[#0a140a] px-2.5 py-1.5 transition hover:border-green-700/50 hover:bg-green-950/20 sm:px-3"
           >
             <UserRound className="h-3.5 w-3.5 shrink-0 text-[#3a5a3a]" />
             <span className={cn(
-              "max-w-[36vw] truncate text-sm font-black sm:max-w-none",
+              "max-w-[58vw] truncate text-sm font-black sm:max-w-none",
               playerName ? "text-green-400" : "text-[#3a5a3a]"
             )}>
               {playerName || "Elegí quién sos"}
@@ -87,7 +88,7 @@ export default function MundialClient() {
         </div>
 
         {/* Active match showcase */}
-        <div className="px-4 sm:px-6">
+        <div className="mx-auto w-full max-w-[1200px] px-3 sm:px-6">
           {activeMatch ? (
             <>
               <div className="mb-3 flex items-center gap-2">
@@ -101,42 +102,42 @@ export default function MundialClient() {
                 </span>
               </div>
 
-              <div className="flex items-center justify-between gap-2">
+              <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1.5 sm:gap-4">
                 {/* Home */}
-                <div className="flex flex-1 flex-col items-center gap-2">
-                  <span className="text-[52px] leading-none drop-shadow-lg sm:text-[64px]" aria-hidden="true">
+                <div className="flex min-w-0 flex-col items-center gap-1.5 sm:gap-2">
+                  <span className="text-[44px] leading-none drop-shadow-lg sm:text-[64px]" aria-hidden="true">
                     {getCountryFlag(activeMatch.homeTeam)}
                   </span>
-                  <span className="text-center text-[11px] font-black uppercase tracking-wide text-[#c0d8c0] sm:text-sm">
+                  <span className="max-w-full break-words text-center text-[10px] font-black uppercase leading-tight tracking-wide text-[#c0d8c0] sm:text-sm">
                     {activeMatch.homeTeam}
                   </span>
                 </div>
 
                 {/* Countdown center */}
                 <div
-                  className="flex shrink-0 flex-col items-center gap-0.5 rounded-xl border border-amber-700/30 bg-amber-950/20 px-3 py-2.5 sm:px-4 sm:py-3"
+                  className="flex max-w-[34vw] shrink-0 flex-col items-center gap-0.5 rounded-xl border border-amber-700/30 bg-amber-950/20 px-2 py-2 sm:max-w-none sm:px-4 sm:py-3"
                   style={{ boxShadow: "0 0 20px rgba(245,158,11,0.10)" }}
                 >
-                  <span className="text-[9px] font-black uppercase tracking-widest text-amber-700">
+                  <span className="text-[8px] font-black uppercase tracking-widest text-amber-700 sm:text-[9px]">
                     Cierra en
                   </span>
                   <span
-                    className="text-2xl font-black tabular-nums text-amber-400 leading-none sm:text-4xl"
+                    className="text-xl font-black leading-none tabular-nums text-amber-400 sm:text-4xl"
                     style={{ textShadow: "0 0 20px rgba(251,191,36,0.4)" }}
                   >
                     {activeCountdown}
                   </span>
-                  <span className="mt-1 text-center text-[10px] font-bold text-[#2a4020]">
+                  <span className="mt-1 max-w-[7rem] text-center text-[9px] font-bold leading-tight text-[#2a4020] sm:max-w-none sm:text-[10px]">
                     {formatKickoff(activeMatch.kickoffAt)}
                   </span>
                 </div>
 
                 {/* Away */}
-                <div className="flex flex-1 flex-col items-center gap-2">
-                  <span className="text-[52px] leading-none drop-shadow-lg sm:text-[64px]" aria-hidden="true">
+                <div className="flex min-w-0 flex-col items-center gap-1.5 sm:gap-2">
+                  <span className="text-[44px] leading-none drop-shadow-lg sm:text-[64px]" aria-hidden="true">
                     {getCountryFlag(activeMatch.awayTeam)}
                   </span>
-                  <span className="text-center text-[11px] font-black uppercase tracking-wide text-[#c0d8c0] sm:text-sm">
+                  <span className="max-w-full break-words text-center text-[10px] font-black uppercase leading-tight tracking-wide text-[#c0d8c0] sm:text-sm">
                     {activeMatch.awayTeam}
                   </span>
                 </div>
@@ -156,7 +157,7 @@ export default function MundialClient() {
         </div>
 
         {/* Player HUD stats */}
-        <div className="grid grid-cols-2 gap-2 px-4 pb-4 pt-4 sm:px-6 sm:pb-5 sm:pt-5">
+        <div className="mx-auto grid w-full max-w-[1200px] grid-cols-1 gap-2 px-3 pb-4 pt-4 min-[420px]:grid-cols-2 sm:px-6 sm:pb-5 sm:pt-5">
           <div className="rounded-xl border border-[#1a2e1a] bg-[#0a140a] p-3">
             <div className="mb-2 flex items-center justify-between">
               <span className="text-[10px] font-black uppercase tracking-widest text-[#2a4020]">
@@ -199,35 +200,37 @@ export default function MundialClient() {
         className="sticky top-0 z-20 border-b border-[#1a2e1a] backdrop-blur-md"
         style={{ background: "rgba(5,9,5,0.95)" }}
       >
-        <div className="mx-auto flex max-w-[1600px]">
-          {VIEW_OPTIONS.map((option) => (
-            <button
-              key={option.id}
-              type="button"
-              onClick={() => setViewMode(option.id)}
-              className={cn(
-                "relative flex-1 py-3.5 text-[11px] font-black uppercase tracking-wide transition sm:flex-none sm:px-8 sm:tracking-widest",
-                viewMode === option.id
-                  ? "text-green-400"
-                  : "text-[#2a4020] hover:text-[#4a6e4a]"
-              )}
-            >
-              {option.label}
-              {viewMode === option.id && (
-                <span
-                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-green-500 rounded-t-full"
-                  style={{ boxShadow: "0 0 8px rgba(34,197,94,0.6)" }}
-                />
-              )}
-            </button>
-          ))}
+        <div className="mx-auto grid max-w-[1600px] grid-cols-1 sm:flex sm:items-center">
+          <div className="grid grid-cols-3 sm:flex sm:min-w-0">
+            {VIEW_OPTIONS.map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                onClick={() => setViewMode(option.id)}
+                className={cn(
+                  "relative min-h-11 px-2 py-3 text-center text-[10px] font-black uppercase tracking-wide transition sm:flex-none sm:px-8 sm:text-[11px] sm:tracking-widest",
+                  viewMode === option.id
+                    ? "text-green-400"
+                    : "text-[#2a4020] hover:text-[#4a6e4a]"
+                )}
+              >
+                <span className="block truncate">{option.label}</span>
+                {viewMode === option.id && (
+                  <span
+                    className="absolute bottom-0 left-0 right-0 h-0.5 rounded-t-full bg-green-500"
+                    style={{ boxShadow: "0 0 8px rgba(34,197,94,0.6)" }}
+                  />
+                )}
+              </button>
+            ))}
+          </div>
 
-          <div className="ml-auto flex items-center gap-1.5 px-3 sm:px-4">
+          <div className="flex items-center gap-2 border-t border-[#1a2e1a] px-3 py-2 sm:ml-auto sm:border-t-0 sm:px-4 sm:py-0">
             <button
               type="button"
               onClick={() => void saveDirtyDrafts()}
               disabled={isSavingBulk || !dirtyDrafts.length}
-              className="relative inline-flex h-8 items-center gap-1.5 rounded-lg border border-green-700 bg-green-800 px-3 text-xs font-black text-white transition hover:bg-green-600 hover:border-green-500 disabled:cursor-not-allowed disabled:opacity-30 disabled:border-[#1a2e1a] disabled:bg-transparent"
+              className="relative inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-lg border border-green-700 bg-green-800 px-3 text-xs font-black text-white transition hover:border-green-500 hover:bg-green-600 disabled:cursor-not-allowed disabled:border-[#1a2e1a] disabled:bg-transparent disabled:opacity-30 sm:h-8 sm:flex-none"
             >
               {isSavingBulk ? (
                 <Loader2 className="h-3 w-3 animate-spin" />
@@ -239,7 +242,7 @@ export default function MundialClient() {
                   {dirtyDrafts.length}
                 </span>
               )}
-              <span className="hidden sm:inline">
+              <span className="truncate">
                 Guardar{dirtyDrafts.length > 0 ? ` (${dirtyDrafts.length})` : ""}
               </span>
             </button>
@@ -247,7 +250,8 @@ export default function MundialClient() {
               type="button"
               onClick={() => void loadQuiniela()}
               disabled={isLoading}
-              className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[#1a2e1a] bg-[#0a140a] px-3 text-xs font-black text-[#4a6e4a] transition hover:border-[#2a4a2a] hover:text-[#6aab6a] disabled:opacity-40"
+              aria-label="Sincronizar quiniela"
+              className="inline-flex h-9 w-10 items-center justify-center gap-1.5 rounded-lg border border-[#1a2e1a] bg-[#0a140a] px-0 text-xs font-black text-[#4a6e4a] transition hover:border-[#2a4a2a] hover:text-[#6aab6a] disabled:opacity-40 sm:h-8 sm:w-auto sm:px-3"
             >
               {isLoading ? (
                 <Loader2 className="h-3 w-3 animate-spin" />
@@ -261,17 +265,17 @@ export default function MundialClient() {
       </nav>
 
       {/* Content */}
-      <section className="mx-auto w-full max-w-[1600px] px-4 py-4 sm:px-6">
+      <section className="mx-auto w-full max-w-[1600px] px-3 py-3 sm:px-6 sm:py-4">
         {error && (
-          <div className="mb-4 flex gap-2 rounded-xl border border-red-900/50 bg-red-950/30 p-3 text-sm font-bold text-red-400">
+          <div className="mb-4 flex items-start gap-2 rounded-xl border border-red-900/50 bg-red-950/30 p-3 text-sm font-bold text-red-400">
             <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" />
-            {error}
+            <span className="min-w-0 break-words">{error}</span>
           </div>
         )}
         {success && (
-          <div className="mb-4 flex gap-2 rounded-xl border border-green-800/50 bg-green-950/30 p-3 text-sm font-bold text-green-400">
+          <div className="mb-4 flex items-start gap-2 rounded-xl border border-green-800/50 bg-green-950/30 p-3 text-sm font-bold text-green-400">
             <Check className="mt-0.5 h-4 w-4 shrink-0" />
-            {success}
+            <span className="min-w-0 break-words">{success}</span>
           </div>
         )}
 
@@ -298,6 +302,7 @@ export default function MundialClient() {
                 closedMatchCount={closedMatchCount}
                 openMatchCount={openMatchCount}
                 playerName={playerName}
+                predictions={predictions}
                 onUpdateDraft={updateDraft}
                 onSave={saveMatch}
               />
