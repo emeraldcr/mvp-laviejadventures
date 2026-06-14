@@ -3,18 +3,19 @@ import { flagCdnUrl, resolveTeamFlag } from "../flags";
 
 type FlagProps = {
   team: string;
-  size?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl";
+  size?: "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl";
   className?: string;
 };
 
 const sizeMap = {
-  sm: "h-6 w-6",
-  md: "h-8 w-8",
-  lg: "h-12 w-12",
-  xl: "h-16 w-16",
-  "2xl": "h-32 w-32",
-  "3xl": "h-56 w-56",
-  "4xl": "h-96 w-96",
+  xs: "h-4 w-5",
+  sm: "h-5 w-6",
+  md: "h-7 w-8",
+  lg: "h-9 w-11",
+  xl: "h-12 w-14",
+  "2xl": "h-16 w-20 sm:h-20 sm:w-24",
+  "3xl": "h-24 w-28 sm:h-32 sm:w-36 lg:h-36 lg:w-44",
+  "4xl": "h-28 w-32 sm:h-36 sm:w-44 lg:h-44 lg:w-56",
 };
 
 export function Flag({ team, size = "md", className }: FlagProps) {

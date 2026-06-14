@@ -76,7 +76,7 @@ export function FeaturedMatch({
         <div className="grid grid-cols-[minmax(0,1fr)_2.25rem_minmax(0,1fr)] items-stretch gap-2 sm:grid-cols-[minmax(0,1fr)_4rem_minmax(0,1fr)] sm:gap-4">
           <div className="flex min-w-0 flex-col items-center justify-between gap-3 rounded-lg border border-[#2b442c] bg-[#0f190f] px-3 py-4 transition-all focus-within:border-emerald-500 sm:px-5 sm:py-5">
             <div className="flex min-w-0 flex-col items-center gap-2">
-              <Flag team={match.homeTeam} size="3xl" />
+              <Flag team={match.homeTeam} size="2xl" />
               <p className="max-w-full break-words text-center text-base font-black uppercase leading-tight text-white sm:text-xl">
                 {match.homeTeam}
               </p>
@@ -99,7 +99,7 @@ export function FeaturedMatch({
 
           <div className="flex min-w-0 flex-col items-center justify-between gap-3 rounded-lg border border-[#2b442c] bg-[#0f190f] px-3 py-4 transition-all focus-within:border-emerald-500 sm:px-5 sm:py-5">
             <div className="flex min-w-0 flex-col items-center gap-2">
-              <Flag team={match.awayTeam} size="3xl" />
+              <Flag team={match.awayTeam} size="2xl" />
               <p className="max-w-full break-words text-center text-base font-black uppercase leading-tight text-white sm:text-xl">
                 {match.awayTeam}
               </p>

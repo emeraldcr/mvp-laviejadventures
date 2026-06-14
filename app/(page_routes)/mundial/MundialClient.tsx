@@ -152,7 +152,7 @@ export default function MundialClient() {
 
                 <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 px-3 py-5 sm:gap-6 sm:px-8 sm:py-8">
                   <div className="flex min-w-0 flex-col items-center gap-2 sm:gap-3">
-                    <Flag team={activeMatch.homeTeam} size="4xl" />
+                    <Flag team={activeMatch.homeTeam} size="3xl" />
                     <span className="max-w-full break-words text-center text-base font-black uppercase leading-tight text-white sm:text-2xl">
                       {activeMatch.homeTeam}
                     </span>
@@ -169,7 +169,7 @@ export default function MundialClient() {
                   </div>
 
                   <div className="flex min-w-0 flex-col items-center gap-2 sm:gap-3">
-                    <Flag team={activeMatch.awayTeam} size="4xl" />
+                    <Flag team={activeMatch.awayTeam} size="3xl" />
                     <span className="max-w-full break-words text-center text-base font-black uppercase leading-tight text-white sm:text-2xl">
                       {activeMatch.awayTeam}
                     </span>
