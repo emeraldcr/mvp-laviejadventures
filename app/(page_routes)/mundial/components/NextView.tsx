@@ -1,7 +1,7 @@
 import { Trophy } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import type { Draft, MundialMatch, Prediction } from "../types";
-import { emptyDraft, isMatchClosed } from "../utils";
+import { emptyDraft } from "../utils";
 import { FeaturedMatch } from "./FeaturedMatch";
 import { OtherPicksPanel } from "./OtherPicksPanel";
 import { QueuePanel } from "./QueuePanel";
@@ -52,12 +52,10 @@ export function NextView({
 
   function handleSelectMatch(match: MundialMatch) {
     setSelectedInfoMatchId(match.id);
-    if (!isMatchClosed(match, nowMs)) {
-      setFeaturedMatchId(match.id);
-      setTimeout(() => {
-        featuredRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 0);
-    }
+    setFeaturedMatchId(match.id);
+    setTimeout(() => {
+      featuredRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 0);
   }
 
   return (
