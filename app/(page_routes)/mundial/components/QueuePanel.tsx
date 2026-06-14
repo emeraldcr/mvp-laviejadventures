@@ -1,7 +1,7 @@
 import { CalendarDays, CheckCircle2, ChevronRight, Clock3, ListChecks, Lock, Timer } from "lucide-react";
 import type { ReactNode } from "react";
 import type { MundialMatch } from "../types";
-import { cn, finalScoreText, formatKickoff, isMatchClosed, isSameDayInCR, kickoffMs } from "../utils";
+import { cn, finalScoreText, formatKickoff, isMatchClosed, isSameDayInCR, kickoffMs, teamCode } from "../utils";
 import { Flag } from "./Flag";
 
 type QueuePanelProps = {
@@ -33,16 +33,16 @@ export function QueuePanel({
   );
 
   return (
-    <aside className="min-w-0 overflow-hidden rounded-lg border border-[#263b27] bg-[#0b130d]">
-      <div className="border-b border-[#263b27] bg-[#101911] px-4 py-4">
+    <aside className="min-w-0 overflow-hidden rounded-lg border border-[#9dff34]/55 bg-[#06140f] shadow-[0_24px_70px_rgba(0,0,0,0.24)]">
+      <div className="bg-[#3151ff] px-4 py-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="mb-2 flex items-center gap-2">
-              <ListChecks className="h-5 w-5 text-cyan-200" />
-              <p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-200">Agenda</p>
+              <ListChecks className="h-5 w-5 text-[#d5ff3f]" />
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-[#d5ff3f]">Match center</p>
             </div>
-            <h2 className="text-2xl font-black leading-tight text-white">Partidos</h2>
-            <p className="mt-1 text-sm font-bold text-[#8ca58f]">Toca uno para predecir o ver marcadores.</p>
+            <h2 className="text-2xl font-black uppercase leading-tight text-white">Partidos</h2>
+            <p className="mt-1 text-sm font-bold text-white/70">Toca uno para predecir o ver marcadores.</p>
           </div>
           <div className="grid shrink-0 grid-cols-2 gap-2">
             <Counter label="Hoy" value={todayMatches.length + closedTodayMatches.length} />
@@ -92,8 +92,8 @@ export function QueuePanel({
 
 function Counter({ label, value }: { label: string; value: number }) {
   return (
-    <div className="min-w-0 rounded-lg border border-[#2b3d2b] bg-[#071007] px-3 py-2 text-center">
-      <p className="text-[10px] font-black uppercase tracking-wider text-[#8ca58f]">{label}</p>
+    <div className="min-w-0 rounded-lg border border-white/20 bg-black/30 px-3 py-2 text-center">
+      <p className="text-[10px] font-black uppercase tracking-wider text-[#d5ff3f]">{label}</p>
       <p className="mt-1 text-xl font-black tabular-nums text-white">{value}</p>
     </div>
   );
@@ -126,13 +126,13 @@ function AgendaSection({
         <div
           className={cn(
             "flex min-w-0 items-center gap-2 text-xs font-black uppercase tracking-[0.18em]",
-            tone === "closed" ? "text-amber-300" : tone === "today" ? "text-emerald-300" : "text-cyan-200"
+            tone === "closed" ? "text-[#ffb15f]" : tone === "today" ? "text-[#62ffe6]" : "text-[#d5ff3f]"
           )}
         >
           {icon}
           <span className="truncate">{title}</span>
         </div>
-        <span className="rounded-md border border-[#2b3d2b] bg-[#071007] px-2 py-1 text-xs font-black tabular-nums text-[#a9c7ad]">
+        <span className="rounded-md border border-white/15 bg-black/35 px-2 py-1 text-xs font-black tabular-nums text-white/75">
           {matches.length}
         </span>
       </div>
@@ -152,7 +152,7 @@ function AgendaSection({
           ))}
         </div>
       ) : (
-        <div className="rounded-lg border border-dashed border-[#263b27] bg-[#101711] px-3 py-4 text-sm font-bold text-[#8ca58f]">
+        <div className="rounded-lg border border-dashed border-white/15 bg-black/25 px-3 py-4 text-sm font-bold text-white/55">
           {emptyText}
         </div>
       )}
@@ -185,19 +185,19 @@ function AgendaMatchButton({
       className={cn(
         "group w-full rounded-lg border p-3 text-left transition-all",
         selected
-          ? "border-emerald-400 bg-emerald-950/30 shadow-[0_0_18px_rgba(16,185,129,0.12)]"
+          ? "border-[#d5ff3f] bg-[#17206b] shadow-[0_0_22px_rgba(213,255,63,0.18)]"
           : active
-            ? "border-emerald-600/70 bg-[#071b12]"
-            : "border-[#263b27] bg-[#101711] hover:border-[#3d5b3d] hover:bg-[#121c12]"
+            ? "border-[#62ffe6]/70 bg-[#071d2a]"
+            : "border-white/10 bg-black/35 hover:border-[#62ffe6]/60 hover:bg-black/50"
       )}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-md border border-[#2b3d2b] bg-[#071007] px-2 py-1 text-xs font-black tabular-nums text-[#b7d5ba]">
+            <span className="rounded-md border border-white/15 bg-black/35 px-2 py-1 text-xs font-black tabular-nums text-white">
               #{match.number}
             </span>
-            <span className="rounded-md border border-[#2b3d2b] bg-[#071007] px-2 py-1 text-xs font-black text-[#8ca58f]">
+            <span className="rounded-md border border-white/15 bg-black/35 px-2 py-1 text-xs font-black text-white/65">
               {match.group ? `Grupo ${match.group}` : match.stageLabel}
             </span>
           </div>
@@ -212,22 +212,22 @@ function AgendaMatchButton({
             className={cn(
               "inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-black",
               closed
-                ? "border-amber-700/50 bg-amber-950/25 text-amber-200"
+                ? "border-[#ffb15f]/50 bg-[#2a120b] text-[#ffb15f]"
                 : active
-                  ? "border-emerald-500/70 bg-emerald-950/35 text-emerald-200"
-                  : "border-cyan-800/50 bg-cyan-950/20 text-cyan-200"
+                  ? "border-[#62ffe6]/60 bg-[#071d2a] text-[#62ffe6]"
+                  : "border-[#d5ff3f]/45 bg-[#1a2206] text-[#d5ff3f]"
             )}
           >
             {closed ? <Lock className="h-3.5 w-3.5" /> : <Clock3 className="h-3.5 w-3.5" />}
             {statusLabel}
           </span>
-          <ChevronRight className={cn("h-4 w-4 transition", selected ? "text-emerald-200" : "text-[#607160] group-hover:text-white")} />
+          <ChevronRight className={cn("h-4 w-4 transition", selected ? "text-[#d5ff3f]" : "text-white/35 group-hover:text-white")} />
         </div>
       </div>
 
-      <div className="mt-3 flex items-center justify-between gap-3 border-t border-[#263b27] pt-3">
-        <p className="min-w-0 truncate text-sm font-bold text-[#9db59f]">{formatKickoff(match.kickoffAt)}</p>
-        {closed && <p className="shrink-0 text-sm font-black text-emerald-200">{finalScoreText(match)}</p>}
+      <div className="mt-3 flex items-center justify-between gap-3 border-t border-white/10 pt-3">
+        <p className="min-w-0 truncate text-sm font-bold text-white/60">{formatKickoff(match.kickoffAt)}</p>
+        {closed && <p className="shrink-0 text-sm font-black text-[#62ffe6]">{finalScoreText(match)}</p>}
       </div>
     </button>
   );
@@ -236,8 +236,9 @@ function AgendaMatchButton({
 function TeamLine({ team }: { team: string }) {
   return (
     <div className="flex min-w-0 items-center gap-2">
-      <Flag team={team} size="sm" />
-      <span className="min-w-0 truncate text-base font-black text-white">{team}</span>
+      <Flag team={team} size="xs" />
+      <span className="shrink-0 rounded bg-[#3151ff] px-1.5 py-0.5 text-xs font-black text-white">{teamCode(team)}</span>
+      <span className="min-w-0 truncate text-sm font-black text-white">{team}</span>
     </div>
   );
 }

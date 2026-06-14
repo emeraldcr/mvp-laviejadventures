@@ -1,4 +1,5 @@
 import { ListChecks, Lock, Target } from "lucide-react";
+import type { ReactNode } from "react";
 import { TOTAL_MATCHES } from "../constants";
 import type { Draft, MundialMatch } from "../types";
 import { emptyDraft } from "../utils";
@@ -33,51 +34,36 @@ export function MineView({
 
   return (
     <section>
-      <div className="mb-5 overflow-hidden rounded-lg border border-[#263b27] bg-[#0b130d]">
-        <div className="border-b border-[#263b27] bg-[#101911] px-4 py-4 sm:px-6">
+      <div className="mb-5 overflow-hidden rounded-lg border border-[#9dff34]/55 bg-[#06140f] shadow-[0_24px_70px_rgba(0,0,0,0.24)]">
+        <div className="bg-[#3151ff] px-4 py-4 sm:px-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="min-w-0">
               <div className="mb-2 flex items-center gap-2">
-                <ListChecks className="h-5 w-5 text-emerald-300" />
-                <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-300">Mi quiniela</p>
+                <ListChecks className="h-5 w-5 text-[#d5ff3f]" />
+                <p className="text-xs font-black uppercase tracking-[0.2em] text-[#d5ff3f]">Mi quiniela</p>
               </div>
-              <h2 className="text-3xl font-black leading-tight text-white sm:text-5xl">
+              <h2 className="text-3xl font-black uppercase leading-tight text-white sm:text-5xl">
                 {savedCount}
-                <span className="text-[#607160]">/{TOTAL_MATCHES}</span>
-                <span className="ml-3 text-xl font-black text-[#a9c7ad] sm:text-2xl">guardados</span>
+                <span className="text-white/35">/{TOTAL_MATCHES}</span>
+                <span className="ml-3 text-xl font-black text-white/75 sm:text-2xl">guardados</span>
               </h2>
-              <p className="mt-2 text-sm font-bold text-[#8ca58f]">
+              <p className="mt-2 text-sm font-bold text-white/70">
                 Prioriza los partidos abiertos y guarda cualquier cambio antes del cierre.
               </p>
             </div>
 
             <div className="grid gap-3 min-[520px]:grid-cols-3 lg:min-w-[440px]">
-              <div className="rounded-lg border border-emerald-700/50 bg-emerald-950/20 px-4 py-3">
-                <div className="flex items-center gap-2">
-                  <Target className="h-4 w-4 text-emerald-300" />
-                  <p className="text-[11px] font-black uppercase tracking-wider text-emerald-300">Guardados</p>
-                </div>
-                <p className="mt-2 text-3xl font-black tabular-nums text-white">{savedCount}</p>
-              </div>
-              <div className="rounded-lg border border-amber-700/50 bg-amber-950/20 px-4 py-3">
-                <div className="flex items-center gap-2">
-                  <Lock className="h-4 w-4 text-amber-300" />
-                  <p className="text-[11px] font-black uppercase tracking-wider text-amber-300">Cerrados</p>
-                </div>
-                <p className="mt-2 text-3xl font-black tabular-nums text-white">{lockedCount}</p>
-              </div>
-              <div className="rounded-lg border border-cyan-800/50 bg-cyan-950/20 px-4 py-3">
-                <p className="text-[11px] font-black uppercase tracking-wider text-cyan-200">Progreso</p>
-                <p className="mt-2 text-3xl font-black tabular-nums text-white">{pct}%</p>
-              </div>
+              <StatPlate label="Guardados" value={savedCount} tone="lime" icon={<Target className="h-4 w-4" />} />
+              <StatPlate label="Cerrados" value={lockedCount} tone="orange" icon={<Lock className="h-4 w-4" />} />
+              <StatPlate label="Progreso" value={`${pct}%`} tone="cyan" />
             </div>
           </div>
         </div>
 
         <div className="px-4 py-4 sm:px-6">
-          <div className="h-3 overflow-hidden rounded-full border border-[#263b27] bg-[#070907]">
+          <div className="h-3 overflow-hidden rounded-full border border-white/15 bg-black/45">
             <div
-              className="h-full rounded-full bg-emerald-500 transition-all shadow-[0_0_12px_rgba(16,185,129,0.55)]"
+              className="h-full rounded-full bg-[#d5ff3f] transition-all shadow-[0_0_16px_rgba(213,255,63,0.55)]"
               style={{ width: `${pct}%` }}
             />
           </div>
@@ -101,14 +87,43 @@ export function MineView({
           ))}
         </div>
       ) : (
-        <div className="grid min-h-56 place-items-center rounded-lg border border-dashed border-[#2b3d2b] bg-[#0b130d] p-6 text-center sm:p-8">
+        <div className="grid min-h-56 place-items-center rounded-lg border border-dashed border-white/20 bg-black/35 p-6 text-center sm:p-8">
           <div>
-            <ListChecks className="mx-auto h-12 w-12 text-[#8ca58f]" />
+            <ListChecks className="mx-auto h-12 w-12 text-[#62ffe6]" />
             <p className="mt-4 text-xl font-black text-white">Todavia no hay picks guardados</p>
-            <p className="mt-2 text-base font-bold text-[#8ca58f]">Ve a Ahora para empezar a predecir.</p>
+            <p className="mt-2 text-base font-bold text-white/60">Ve a Ahora para empezar a predecir.</p>
           </div>
         </div>
       )}
     </section>
+  );
+}
+
+function StatPlate({
+  label,
+  value,
+  tone,
+  icon,
+}: {
+  label: string;
+  value: number | string;
+  tone: "lime" | "orange" | "cyan";
+  icon?: ReactNode;
+}) {
+  const color =
+    tone === "lime"
+      ? "border-[#9dff34]/55 bg-[#10240b] text-[#d5ff3f]"
+      : tone === "orange"
+        ? "border-[#ff6a3d]/55 bg-[#2a120b] text-[#ffb15f]"
+        : "border-[#62ffe6]/55 bg-[#071d2a] text-[#62ffe6]";
+
+  return (
+    <div className={`rounded-lg border px-4 py-3 ${color}`}>
+      <div className="flex items-center gap-2">
+        {icon}
+        <p className="text-[11px] font-black uppercase tracking-wider text-white/70">{label}</p>
+      </div>
+      <p className="mt-2 text-3xl font-black tabular-nums text-current">{value}</p>
+    </div>
   );
 }

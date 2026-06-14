@@ -9,18 +9,18 @@ type ScoreInputProps = {
 };
 
 const inputBase = cn(
-  "min-w-0 rounded-lg border bg-[#070907] text-center font-black tabular-nums outline-none transition-all",
+  "min-w-0 rounded-lg border text-center font-black tabular-nums outline-none transition-all",
   "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
-  "border-[#365136] text-amber-200 shadow-[inset_0_0_18px_rgba(0,0,0,0.35)]",
-  "focus:border-emerald-400 focus:text-amber-100 focus:ring-2 focus:ring-emerald-500/20",
-  "disabled:cursor-not-allowed disabled:border-[#1e2b1e] disabled:bg-[#0e140e] disabled:text-[#607160]"
+  "border-[#62ffe6] bg-[#62ffe6] text-[#06121c] shadow-[inset_0_-6px_0_rgba(0,0,0,0.14),0_10px_24px_rgba(98,255,230,0.14)]",
+  "focus:border-white focus:ring-2 focus:ring-[#62ffe6]/30",
+  "disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/10 disabled:text-white/35"
 );
 
 const btnBase = cn(
   "flex select-none items-center justify-center rounded-lg border font-black transition-all active:scale-95",
-  "border-[#365136] bg-[#070907] text-[#607160] shadow-[inset_0_0_18px_rgba(0,0,0,0.35)]",
-  "hover:border-emerald-600 hover:bg-[#0f1f0f] hover:text-emerald-400",
-  "disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-[#365136] disabled:hover:bg-[#070907] disabled:hover:text-[#607160]"
+  "border-white/15 bg-black/65 text-[#d5ff3f] shadow-[inset_0_-4px_0_rgba(255,255,255,0.06)]",
+  "hover:border-[#d5ff3f] hover:bg-[#17206b] hover:text-white",
+  "disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-white/15 disabled:hover:bg-black/65 disabled:hover:text-[#d5ff3f]"
 );
 
 export function ScoreInput({ label, value, disabled, featured = false, onChange }: ScoreInputProps) {
@@ -45,18 +45,15 @@ export function ScoreInput({ label, value, disabled, featured = false, onChange 
           disabled={disabled}
           onChange={(event) => onChange(clampScore(Number(event.target.value)))}
           aria-label={`Goles de ${label}`}
-          className={cn(
-            inputBase,
-            "w-full h-16 text-4xl min-[380px]:h-20 min-[380px]:text-5xl sm:h-24 sm:text-6xl"
-          )}
+          className={cn(inputBase, "h-16 w-full text-4xl min-[380px]:h-20 min-[380px]:text-5xl sm:h-24 sm:text-6xl")}
         />
         <button
           type="button"
           onClick={() => onChange(clampScore(value - 1))}
           disabled={disabled || value <= 0}
           aria-label={`Restar gol de ${label}`}
-        className={cn(btnBase, "h-7 w-full text-base sm:h-9 sm:text-lg")}
-      >
+          className={cn(btnBase, "h-7 w-full text-base sm:h-9 sm:text-lg")}
+        >
           -
         </button>
       </div>

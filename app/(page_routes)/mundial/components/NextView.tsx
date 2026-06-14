@@ -89,14 +89,14 @@ export function NextView({
           </>
         ) : (
           <>
-            <section className="grid min-h-96 place-items-center rounded-lg border border-dashed border-[#2b3d2b] bg-[#0b130d] p-8 text-center">
+            <section className="grid min-h-96 place-items-center rounded-lg border border-dashed border-white/20 bg-black/35 p-8 text-center">
               <div>
-                <Trophy className="mx-auto h-14 w-14 text-amber-300" />
+                <Trophy className="mx-auto h-14 w-14 text-[#d5ff3f]" />
                 <h2 className="mt-5 text-3xl font-black text-white">Quiniela completa</h2>
-                <p className="mt-3 text-lg font-bold text-[#a9c7ad]">
+                <p className="mt-3 text-lg font-bold text-white/70">
                   Has predicho todos los partidos del Mundial.
                 </p>
-                <p className="mt-2 text-base font-bold text-[#8ca58f]">
+                <p className="mt-2 text-base font-bold text-white/60">
                   Ahora solo queda esperar los resultados.
                 </p>
               </div>
