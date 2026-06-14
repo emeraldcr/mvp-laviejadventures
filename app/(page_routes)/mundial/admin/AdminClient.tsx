@@ -2,11 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { BarChart3, CheckCircle2, Loader2, RefreshCw, Shield, Tv2, Trophy, Users } from "lucide-react";
-import type { AdminData, AdminView } from "./adminTypes";
+import type { AdminData, AdminView, LeaderboardEntry } from "./adminTypes";
 import { cn } from "../utils";
 import { AdminLeaderboard } from "./components/AdminLeaderboard";
 import { MatchAdminCard } from "./components/MatchAdminCard";
 import { StatQuestionsManager } from "./components/StatQuestionsManager";
+import { PlayerDetailModal } from "./components/PlayerDetailModal";
 
 const ADMIN_API = "/api/mundial/admin";
 const MATCH_API = "/api/mundial/admin/match";
@@ -32,6 +33,7 @@ export default function AdminClient() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [matchFilter, setMatchFilter] = useState<MatchFilter>("all");
+  const [selectedPlayer, setSelectedPlayer] = useState<LeaderboardEntry | null>(null);
 
   const load = useCallback(async () => {
     setIsLoading(true);
@@ -214,7 +216,10 @@ export default function AdminClient() {
         ) : data ? (
           <>
             {view === "leaderboard" && (
-              <AdminLeaderboard leaderboard={data.leaderboard} />
+              <AdminLeaderboard
+                leaderboard={data.leaderboard}
+                onPlayerClick={setSelectedPlayer}
+              />
             )}
 
             {view === "matches" && (
@@ -273,6 +278,13 @@ export default function AdminClient() {
           </>
         ) : null}
       </div>
+
+      {selectedPlayer && (
+        <PlayerDetailModal
+          entry={selectedPlayer}
+          onClose={() => setSelectedPlayer(null)}
+        />
+      )}
     </main>
   );
 }

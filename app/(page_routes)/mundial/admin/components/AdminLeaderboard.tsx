@@ -4,6 +4,7 @@ import { cn } from "../../utils";
 
 type AdminLeaderboardProps = {
   leaderboard: LeaderboardEntry[];
+  onPlayerClick?: (entry: LeaderboardEntry) => void;
 };
 
 const PODIUM_COLORS = [
@@ -12,7 +13,7 @@ const PODIUM_COLORS = [
   { card: "border-orange-100 bg-gradient-to-br from-orange-50 to-white", medal: "🥉", pts: "text-orange-700", bar: "bg-orange-400" },
 ];
 
-export function AdminLeaderboard({ leaderboard }: AdminLeaderboardProps) {
+export function AdminLeaderboard({ leaderboard, onPlayerClick }: AdminLeaderboardProps) {
   if (!leaderboard.length) {
     return (
       <div className="grid min-h-40 place-items-center rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center shadow-sm">
@@ -38,10 +39,12 @@ export function AdminLeaderboard({ leaderboard }: AdminLeaderboardProps) {
           return (
             <div
               key={entry.normalizedName}
+              onClick={() => onPlayerClick?.(entry)}
               className={cn(
                 "rounded-xl border p-4 shadow-sm",
                 color.card,
-                i === 0 && "ring-2 ring-amber-200"
+                i === 0 && "ring-2 ring-amber-200",
+                onPlayerClick && "cursor-pointer transition-shadow hover:shadow-md hover:ring-2 hover:ring-slate-300"
               )}
             >
               <div className="mb-3 flex items-start justify-between gap-2">
@@ -123,9 +126,11 @@ export function AdminLeaderboard({ leaderboard }: AdminLeaderboardProps) {
                 return (
                   <tr
                     key={entry.normalizedName}
+                    onClick={() => onPlayerClick?.(entry)}
                     className={cn(
                       "transition-colors",
-                      isFirst ? "bg-amber-50" : "hover:bg-slate-50/70"
+                      isFirst ? "bg-amber-50" : "hover:bg-slate-50/70",
+                      onPlayerClick && "cursor-pointer hover:bg-slate-100/80"
                     )}
                   >
                     {/* Rank */}
