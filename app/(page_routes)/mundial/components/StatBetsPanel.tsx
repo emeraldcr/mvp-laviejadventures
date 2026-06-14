@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, Loader2 } from "lucide-react";
+import { Check, Loader2, Zap } from "lucide-react";
 import { cn } from "../utils";
 
 type StatQuestion = {
@@ -72,8 +72,14 @@ export function StatBetsPanel({ matchId, playerName }: StatBetsPanelProps) {
   if (!questions.length) return null;
 
   return (
-    <section className="rounded-lg border border-purple-200 bg-white p-4 shadow-sm">
-      <p className="mb-4 text-sm font-black uppercase text-purple-700">Apuestas del partido</p>
+    <section
+      className="rounded-xl border border-violet-900/50 bg-[#0c0c18] p-4"
+      style={{ boxShadow: "0 0 24px rgba(139,92,246,0.08)" }}
+    >
+      <div className="mb-4 flex items-center gap-2">
+        <Zap className="h-4 w-4 text-violet-400" />
+        <p className="text-sm font-black uppercase tracking-widest text-violet-400">Apuestas del partido</p>
+      </div>
       <div className="grid gap-5">
         {questions.map((question) => {
           const myBet = myBets[question.id];
@@ -84,15 +90,15 @@ export function StatBetsPanel({ matchId, playerName }: StatBetsPanelProps) {
 
           return (
             <div key={question.id}>
-              <div className="mb-2 flex items-start justify-between gap-2">
-                <p className="font-black text-slate-900">{question.text}</p>
+              <div className="mb-3 flex items-start justify-between gap-2">
+                <p className="font-black text-[#d4f0d4] leading-snug">{question.text}</p>
                 {myPoints !== null && (
-                  <span className="shrink-0 rounded-lg border border-emerald-300 bg-emerald-100 px-2 py-0.5 text-xs font-black text-emerald-800">
+                  <span className="shrink-0 rounded-md border border-green-600/50 bg-green-950/60 px-2 py-0.5 text-xs font-black text-green-400">
                     +{myPoints} pt{myPoints !== 1 ? "s" : ""}
                   </span>
                 )}
                 {question.resolved && myBet && myBet !== question.correctOptionId && (
-                  <span className="shrink-0 rounded-lg border border-red-200 bg-red-50 px-2 py-0.5 text-xs font-black text-red-700">
+                  <span className="shrink-0 rounded-md border border-red-800/50 bg-red-950/60 px-2 py-0.5 text-xs font-black text-red-400">
                     Sin puntos
                   </span>
                 )}
@@ -111,16 +117,16 @@ export function StatBetsPanel({ matchId, playerName }: StatBetsPanelProps) {
                       disabled={isClosed || isSaving || !playerName}
                       onClick={() => void placeBet(question.id, option.id)}
                       className={cn(
-                        "inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-black transition",
+                        "inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-black transition-all",
                         isCorrectAnswer
-                          ? "border-emerald-500 bg-emerald-600 text-white"
+                          ? "border-green-500 bg-green-700/60 text-green-300"
                           : isWrongAnswer
-                            ? "border-red-200 bg-red-50 text-red-600 line-through"
+                            ? "border-red-800/50 bg-red-950/40 text-red-500 line-through opacity-60"
                             : selected
-                              ? "border-purple-500 bg-purple-600 text-white"
+                              ? "border-violet-500 bg-violet-800/50 text-violet-200"
                               : isClosed
-                                ? "border-slate-200 bg-slate-50 text-slate-400"
-                                : "border-slate-200 bg-slate-50 text-slate-700 hover:border-purple-300 hover:bg-purple-50"
+                                ? "border-[#1a2a1a] bg-[#080d08] text-[#2a4020] cursor-not-allowed"
+                                : "border-[#2a2a4a] bg-[#0c0c18] text-[#a8a8d8] hover:border-violet-500 hover:bg-violet-900/30 hover:text-violet-200"
                       )}
                     >
                       {isSaving && selected ? (
@@ -135,11 +141,11 @@ export function StatBetsPanel({ matchId, playerName }: StatBetsPanelProps) {
               </div>
 
               {errors[question.id] && (
-                <p className="mt-1.5 text-xs font-bold text-red-600">{errors[question.id]}</p>
+                <p className="mt-1.5 text-xs font-bold text-red-400">{errors[question.id]}</p>
               )}
 
               {!playerName && (
-                <p className="mt-1.5 text-xs font-bold text-slate-400">Pone tu nombre para apostar.</p>
+                <p className="mt-1.5 text-xs font-bold text-[#3a5a3a]">Pone tu nombre para apostar.</p>
               )}
             </div>
           );

@@ -10,7 +10,7 @@ type SlideCardProps = {
 export function SlideCard({ match, nowMs, activeMatchId }: SlideCardProps) {
   const closed = isMatchClosed(match, nowMs);
   const active = match.id === activeMatchId && !closed;
-  const label = closed ? "Cerrado" : active ? "⚡ Ahora" : "Siguiente";
+  const label = closed ? "Cerrado" : active ? "⚡ LIVE" : "Siguiente";
 
   const homeFlag = getCountryFlag(match.homeTeam);
   const awayFlag = getCountryFlag(match.awayTeam);
@@ -18,27 +18,23 @@ export function SlideCard({ match, nowMs, activeMatchId }: SlideCardProps) {
   return (
     <article
       className={cn(
-        "w-[240px] shrink-0 snap-start rounded-xl border p-3.5 shadow-sm transition",
+        "w-[210px] shrink-0 snap-start rounded-xl border p-3.5 transition-all duration-200",
         active
-          ? "border-emerald-300 bg-gradient-to-br from-emerald-50 to-white ring-1 ring-emerald-100"
+          ? "border-green-500 bg-[#0c1c0c]"
           : closed
-            ? "border-slate-200 bg-slate-50"
-            : "border-slate-200 bg-white"
+            ? "border-[#1a2a1a] bg-[#080d08]"
+            : "border-[#1a2a1a] bg-[#0c150c]"
       )}
+      style={active ? { boxShadow: "0 0 18px rgba(34,197,94,0.18), inset 0 0 30px rgba(34,197,94,0.04)" } : undefined}
     >
       <div className="flex items-center justify-between gap-2">
-        <span
-          className={cn(
-            "rounded-lg px-2 py-1 text-xs font-black tabular-nums",
-            active ? "bg-emerald-600 text-white" : "bg-slate-900 text-white"
-          )}
-        >
+        <span className="rounded-md border border-[#1e3a1e] bg-[#050905] px-1.5 py-0.5 text-[11px] font-black tabular-nums text-[#5a8a5a]">
           #{match.number}
         </span>
         <span
           className={cn(
-            "text-xs font-black",
-            active ? "text-emerald-700" : closed ? "text-slate-400" : "text-slate-500"
+            "text-[11px] font-black tracking-wider",
+            active ? "text-green-400" : closed ? "text-[#2a4020]" : "text-[#3a5a3a]"
           )}
         >
           {label}
@@ -47,15 +43,21 @@ export function SlideCard({ match, nowMs, activeMatchId }: SlideCardProps) {
 
       <div className="mt-3 flex items-center gap-2">
         <span className="text-2xl leading-none" aria-hidden="true">{homeFlag}</span>
-        <span className="text-xs font-black text-slate-400">vs</span>
+        <span className="text-[10px] font-black text-[#2a4020]">VS</span>
         <span className="text-2xl leading-none" aria-hidden="true">{awayFlag}</span>
       </div>
 
-      <h3 className="mt-2 text-sm font-black leading-tight text-slate-900">
+      <h3 className={cn(
+        "mt-2 text-sm font-black leading-tight",
+        active ? "text-white" : "text-[#c0d8c0]"
+      )}>
         {match.homeTeam} vs {match.awayTeam}
       </h3>
-      <p className="mt-1.5 text-xs font-bold text-slate-400">{formatKickoff(match.kickoffAt)}</p>
-      <p className="mt-2 text-xs font-black text-slate-600">
+      <p className="mt-1.5 text-[11px] font-bold text-[#3a5a3a]">{formatKickoff(match.kickoffAt)}</p>
+      <p className={cn(
+        "mt-2 text-[11px] font-black",
+        closed ? "text-[#6aab6a]" : "text-[#3a5a3a]"
+      )}>
         {closed ? finalScoreText(match) : match.group ? `Grupo ${match.group}` : match.stageLabel}
       </p>
     </article>

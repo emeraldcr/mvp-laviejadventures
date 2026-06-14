@@ -52,30 +52,37 @@ export default function MundialClient() {
   const openMatchCount = Math.max(matches.length - closedMatchCount, 0);
 
   return (
-    <main className="min-h-screen bg-slate-100 text-slate-950">
-      {/* Game Hero */}
-      <header className="bg-gradient-to-b from-[#04080f] via-[#081220] to-[#0c1a2e]">
-        {/* Top strip: branding + player input */}
+    <main className="min-h-screen bg-[#050905] text-white">
+      {/* Hero header */}
+      <header
+        style={{
+          background: "linear-gradient(180deg, #060e06 0%, #080f08 40%, #050905 100%)",
+          borderBottom: "1px solid #1a2e1a",
+        }}
+      >
+        {/* Top strip */}
         <div className="flex items-center justify-between gap-3 px-4 pb-3 pt-4 sm:px-6">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <span className="text-base leading-none">⚽</span>
-            <span className="text-[11px] font-black uppercase tracking-[0.18em] text-white/40">
+            <span className="text-[11px] font-black uppercase tracking-[0.22em] text-[#2a4a2a]">
               Mundial 2026
             </span>
           </div>
+
+          {/* Player selector */}
           <button
             type="button"
             onClick={() => setShowPlayerPicker(true)}
-            className="flex items-center gap-1.5 rounded-lg px-2 py-1 hover:bg-white/[0.06] transition"
+            className="flex items-center gap-1.5 rounded-lg border border-[#1a2e1a] bg-[#0a140a] px-3 py-1.5 transition hover:border-green-700/50 hover:bg-green-950/20"
           >
-            <UserRound className="h-3.5 w-3.5 shrink-0 text-slate-500" />
+            <UserRound className="h-3.5 w-3.5 shrink-0 text-[#3a5a3a]" />
             <span className={cn(
               "text-sm font-black",
-              playerName ? "text-white" : "text-slate-600"
+              playerName ? "text-green-400" : "text-[#3a5a3a]"
             )}>
               {playerName || "Elegí quién sos"}
             </span>
-            <ChevronDown className="h-3 w-3 text-slate-600" />
+            <ChevronDown className="h-3 w-3 text-[#2a4020]" />
           </button>
         </div>
 
@@ -83,9 +90,12 @@ export default function MundialClient() {
         <div className="px-4 sm:px-6">
           {activeMatch ? (
             <>
-              <div className="mb-4 flex items-center gap-1.5">
-                <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-emerald-400" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
+              <div className="mb-4 flex items-center gap-2">
+                <span
+                  className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-green-400"
+                  style={{ boxShadow: "0 0 6px rgba(74,222,128,0.8)" }}
+                />
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-green-400">
                   Partido #{activeMatch.number}
                   {activeMatch.group ? ` · Grupo ${activeMatch.group}` : ` · ${activeMatch.stageLabel}`}
                 </span>
@@ -94,78 +104,90 @@ export default function MundialClient() {
               <div className="flex items-center justify-between gap-2">
                 {/* Home */}
                 <div className="flex flex-1 flex-col items-center gap-2">
-                  <span className="text-[52px] leading-none sm:text-[64px]" aria-hidden="true">
+                  <span className="text-[52px] leading-none drop-shadow-lg sm:text-[64px]" aria-hidden="true">
                     {getCountryFlag(activeMatch.homeTeam)}
                   </span>
-                  <span className="text-center text-[11px] font-black leading-tight text-white/70 sm:text-sm">
+                  <span className="text-center text-[11px] font-black uppercase tracking-wide text-[#c0d8c0] sm:text-sm">
                     {activeMatch.homeTeam}
                   </span>
                 </div>
 
                 {/* Countdown center */}
-                <div className="flex shrink-0 flex-col items-center gap-1 px-2">
-                  <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">
+                <div
+                  className="flex shrink-0 flex-col items-center gap-1 rounded-xl border border-amber-700/30 bg-amber-950/20 px-4 py-3"
+                  style={{ boxShadow: "0 0 20px rgba(245,158,11,0.10)" }}
+                >
+                  <span className="text-[9px] font-black uppercase tracking-widest text-amber-700">
                     Cierra en
                   </span>
-                  <span className="text-[22px] font-black tabular-nums text-amber-400 leading-none sm:text-3xl">
+                  <span
+                    className="text-[26px] font-black tabular-nums text-amber-400 leading-none sm:text-4xl"
+                    style={{ textShadow: "0 0 20px rgba(251,191,36,0.4)" }}
+                  >
                     {activeCountdown}
                   </span>
-                  <span className="mt-1 text-center text-[10px] font-bold text-white/20">
+                  <span className="mt-1 text-center text-[10px] font-bold text-[#2a4020]">
                     {formatKickoff(activeMatch.kickoffAt)}
                   </span>
                 </div>
 
                 {/* Away */}
                 <div className="flex flex-1 flex-col items-center gap-2">
-                  <span className="text-[52px] leading-none sm:text-[64px]" aria-hidden="true">
+                  <span className="text-[52px] leading-none drop-shadow-lg sm:text-[64px]" aria-hidden="true">
                     {getCountryFlag(activeMatch.awayTeam)}
                   </span>
-                  <span className="text-center text-[11px] font-black leading-tight text-white/70 sm:text-sm">
+                  <span className="text-center text-[11px] font-black uppercase tracking-wide text-[#c0d8c0] sm:text-sm">
                     {activeMatch.awayTeam}
                   </span>
                 </div>
               </div>
             </>
           ) : (
-            <div className="flex flex-col items-center gap-2 py-6">
+            <div className="flex flex-col items-center gap-2 py-8">
               <span className="text-5xl leading-none">🏆</span>
-              <p className="text-base font-black text-white">
+              <p className="text-lg font-black text-white">
                 {closedMatchCount > 0 && closedMatchCount === matches.length
                   ? "¡Quiniela cerrada!"
                   : "Sin partido activo"}
               </p>
-              <p className="text-xs font-bold text-slate-500">Esperando el próximo pitazo.</p>
+              <p className="text-xs font-bold text-[#3a5a3a]">Esperando el próximo pitazo.</p>
             </div>
           )}
         </div>
 
-        {/* Player HUD */}
-        <div className="grid grid-cols-2 gap-2 px-4 pb-4 pt-5 sm:px-6">
-          <div className="rounded-xl border border-white/[0.06] bg-white/[0.04] p-2.5">
-            <div className="mb-1.5 flex items-center justify-between">
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+        {/* Player HUD stats */}
+        <div className="grid grid-cols-2 gap-2 px-4 pb-5 pt-5 sm:px-6">
+          <div className="rounded-xl border border-[#1a2e1a] bg-[#0a140a] p-3">
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-[10px] font-black uppercase tracking-widest text-[#2a4020]">
                 Guardado
               </span>
-              <span className="text-xs font-black tabular-nums text-white">{completionPct}%</span>
+              <span className="text-xs font-black tabular-nums text-green-400">{completionPct}%</span>
             </div>
-            <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+            <div className="h-1.5 overflow-hidden rounded-full bg-[#080f08] border border-[#1a2e1a]">
               <div
-                className="h-full rounded-full bg-emerald-500 transition-all"
-                style={{ width: `${completionPct}%` }}
+                className="h-full rounded-full bg-green-500 transition-all"
+                style={{
+                  width: `${completionPct}%`,
+                  boxShadow: completionPct > 0 ? "0 0 6px rgba(34,197,94,0.5)" : undefined,
+                }}
               />
             </div>
           </div>
-          <div className="rounded-xl border border-white/[0.06] bg-white/[0.04] p-2.5">
-            <div className="mb-1.5 flex items-center justify-between">
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+          <div className="rounded-xl border border-[#1a2e1a] bg-[#0a140a] p-3">
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-[10px] font-black uppercase tracking-widest text-[#2a4020]">
                 Cerrado
               </span>
               <span className="text-xs font-black tabular-nums text-amber-400">{lockedPct}%</span>
             </div>
-            <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+            <div className="h-1.5 overflow-hidden rounded-full bg-[#080f08] border border-[#1a2e1a]">
               <div
-                className="h-full rounded-full bg-amber-400 transition-all"
-                style={{ width: `${lockedPct}%` }}
+                className="h-full rounded-full bg-amber-500 transition-all"
+                style={{
+                  width: `${lockedPct}%`,
+                  boxShadow: lockedPct > 0 ? "0 0 6px rgba(245,158,11,0.4)" : undefined,
+                }}
               />
             </div>
           </div>
@@ -173,7 +195,10 @@ export default function MundialClient() {
       </header>
 
       {/* Sticky nav bar */}
-      <nav className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur-md">
+      <nav
+        className="sticky top-0 z-20 border-b border-[#1a2e1a] backdrop-blur-md"
+        style={{ background: "rgba(5,9,5,0.95)" }}
+      >
         <div className="mx-auto flex max-w-[1600px]">
           {VIEW_OPTIONS.map((option) => (
             <button
@@ -181,21 +206,28 @@ export default function MundialClient() {
               type="button"
               onClick={() => setViewMode(option.id)}
               className={cn(
-                "flex-1 py-3 text-xs font-black uppercase tracking-wide transition sm:flex-none sm:px-6",
+                "relative flex-1 py-3.5 text-xs font-black uppercase tracking-widest transition sm:flex-none sm:px-8",
                 viewMode === option.id
-                  ? "bg-slate-950 text-white"
-                  : "text-slate-400 hover:bg-slate-50 hover:text-slate-700"
+                  ? "text-green-400"
+                  : "text-[#2a4020] hover:text-[#4a6e4a]"
               )}
             >
               {option.label}
+              {viewMode === option.id && (
+                <span
+                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-green-500 rounded-t-full"
+                  style={{ boxShadow: "0 0 8px rgba(34,197,94,0.6)" }}
+                />
+              )}
             </button>
           ))}
+
           <div className="ml-auto flex items-center gap-1.5 px-3 sm:px-4">
             <button
               type="button"
               onClick={() => void saveDirtyDrafts()}
               disabled={isSavingBulk || !dirtyDrafts.length}
-              className="relative inline-flex h-8 items-center gap-1.5 rounded-lg bg-emerald-600 px-3 text-xs font-black text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
+              className="relative inline-flex h-8 items-center gap-1.5 rounded-lg border border-green-700 bg-green-800 px-3 text-xs font-black text-white transition hover:bg-green-600 hover:border-green-500 disabled:cursor-not-allowed disabled:opacity-30 disabled:border-[#1a2e1a] disabled:bg-transparent"
             >
               {isSavingBulk ? (
                 <Loader2 className="h-3 w-3 animate-spin" />
@@ -203,7 +235,7 @@ export default function MundialClient() {
                 <Save className="h-3 w-3" />
               )}
               {dirtyDrafts.length > 0 && !isSavingBulk && (
-                <span className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-white text-[10px] font-black leading-none text-emerald-700 sm:hidden">
+                <span className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full border border-green-600 bg-green-500 text-[10px] font-black leading-none text-white sm:hidden">
                   {dirtyDrafts.length}
                 </span>
               )}
@@ -215,7 +247,7 @@ export default function MundialClient() {
               type="button"
               onClick={() => void loadQuiniela()}
               disabled={isLoading}
-              className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-black text-slate-600 transition hover:bg-slate-50 disabled:opacity-40"
+              className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[#1a2e1a] bg-[#0a140a] px-3 text-xs font-black text-[#4a6e4a] transition hover:border-[#2a4a2a] hover:text-[#6aab6a] disabled:opacity-40"
             >
               {isLoading ? (
                 <Loader2 className="h-3 w-3 animate-spin" />
@@ -231,23 +263,23 @@ export default function MundialClient() {
       {/* Content */}
       <section className="mx-auto w-full max-w-[1600px] px-4 py-4 sm:px-6">
         {error && (
-          <div className="mb-4 flex gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-bold text-red-800">
+          <div className="mb-4 flex gap-2 rounded-xl border border-red-900/50 bg-red-950/30 p-3 text-sm font-bold text-red-400">
             <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" />
             {error}
           </div>
         )}
         {success && (
-          <div className="mb-4 flex gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-bold text-emerald-900">
+          <div className="mb-4 flex gap-2 rounded-xl border border-green-800/50 bg-green-950/30 p-3 text-sm font-bold text-green-400">
             <Check className="mt-0.5 h-4 w-4 shrink-0" />
             {success}
           </div>
         )}
 
         {isLoading ? (
-          <div className="grid min-h-64 place-items-center rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center">
+          <div className="grid min-h-64 place-items-center rounded-xl border border-dashed border-[#1a2e1a] bg-[#080f08] p-8 text-center">
             <div>
-              <Loader2 className="mx-auto h-8 w-8 animate-spin text-emerald-600" />
-              <p className="mt-3 text-sm font-black text-slate-600">Cargando quiniela...</p>
+              <Loader2 className="mx-auto h-8 w-8 animate-spin text-green-600" />
+              <p className="mt-3 text-sm font-black text-[#4a6e4a]">Cargando quiniela...</p>
             </div>
           </div>
         ) : (

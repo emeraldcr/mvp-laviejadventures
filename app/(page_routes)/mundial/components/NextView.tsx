@@ -52,14 +52,14 @@ export function NextView({
             onSave={onSave}
           />
         ) : (
-          <section className="grid min-h-96 place-items-center rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center shadow-sm">
+          <section className="grid min-h-96 place-items-center rounded-xl border border-dashed border-[#1a2e1a] bg-[#080f08] p-8 text-center">
             <div>
               <p className="text-6xl">🏆</p>
-              <h2 className="mt-4 text-2xl font-black text-slate-950">¡Quiniela completa!</h2>
-              <p className="mt-2 text-base font-bold text-slate-500">
+              <h2 className="mt-4 text-2xl font-black text-white">¡Quiniela completa!</h2>
+              <p className="mt-2 text-base font-bold text-[#4a6e4a]">
                 Has predicho todos los partidos del Mundial.
               </p>
-              <p className="mt-1 text-sm font-bold text-slate-400">
+              <p className="mt-1 text-sm font-bold text-[#3a5a3a]">
                 Ahora solo queda esperar los resultados.
               </p>
             </div>
