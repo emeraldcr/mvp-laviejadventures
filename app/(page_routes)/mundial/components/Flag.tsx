@@ -1,133 +1,5 @@
-import { useMemo } from "react";
-import { normalizeTeamName } from "../utils";
-
-const COUNTRY_CODES: Record<string, string> = {
-  argentina: "ar",
-  brasil: "br",
-  brazil: "br",
-  mexico: "mx",
-  "estados unidos": "us",
-  usa: "us",
-  "united states": "us",
-  canada: "ca",
-  uruguay: "uy",
-  colombia: "co",
-  chile: "cl",
-  ecuador: "ec",
-  peru: "pe",
-  paraguay: "py",
-  venezuela: "ve",
-  bolivia: "bo",
-  "costa rica": "cr",
-  panama: "pa",
-  honduras: "hn",
-  jamaica: "jm",
-  "el salvador": "sv",
-  guatemala: "gt",
-  haiti: "ht",
-  "trinidad y tobago": "tt",
-  "trinidad and tobago": "tt",
-  curazao: "cw",
-  curacao: "cw",
-  "cabo verde": "cv",
-  "cape verde": "cv",
-  alemania: "de",
-  germany: "de",
-  francia: "fr",
-  france: "fr",
-  espana: "es",
-  spain: "es",
-  portugal: "pt",
-  "paises bajos": "nl",
-  netherlands: "nl",
-  holanda: "nl",
-  belgica: "be",
-  belgium: "be",
-  italia: "it",
-  italy: "it",
-  croacia: "hr",
-  croatia: "hr",
-  serbia: "rs",
-  polonia: "pl",
-  poland: "pl",
-  suiza: "ch",
-  switzerland: "ch",
-  dinamarca: "dk",
-  denmark: "dk",
-  suecia: "se",
-  sweden: "se",
-  ucrania: "ua",
-  ukraine: "ua",
-  turquia: "tr",
-  turkey: "tr",
-  turkiye: "tr",
-  austria: "at",
-  noruega: "no",
-  norway: "no",
-  "bosnia y herzegovina": "ba",
-  "bosnia and herzegovina": "ba",
-  hungria: "hu",
-  hungary: "hu",
-  albania: "al",
-  eslovenia: "si",
-  slovenia: "si",
-  rumania: "ro",
-  romania: "ro",
-  eslovaquia: "sk",
-  slovakia: "sk",
-  "republica checa": "cz",
-  "czech republic": "cz",
-  czechia: "cz",
-  grecia: "gr",
-  greece: "gr",
-  japon: "jp",
-  japan: "jp",
-  "corea del sur": "kr",
-  "south korea": "kr",
-  "korea republic": "kr",
-  "arabia saudita": "sa",
-  "saudi arabia": "sa",
-  iran: "ir",
-  "ir iran": "ir",
-  australia: "au",
-  china: "cn",
-  indonesia: "id",
-  uzbekistan: "uz",
-  qatar: "qa",
-  irak: "iq",
-  iraq: "iq",
-  jordania: "jo",
-  jordan: "jo",
-  marruecos: "ma",
-  morocco: "ma",
-  senegal: "sn",
-  nigeria: "ng",
-  ghana: "gh",
-  camerun: "cm",
-  cameroon: "cm",
-  tunez: "tn",
-  tunisia: "tn",
-  egipto: "eg",
-  egypt: "eg",
-  argelia: "dz",
-  algeria: "dz",
-  "costa de marfil": "ci",
-  "ivory coast": "ci",
-  "cote d'ivoire": "ci",
-  mali: "ml",
-  "rd congo": "cd",
-  "congo dr": "cd",
-  sudafrica: "za",
-  "south africa": "za",
-  "nueva zelanda": "nz",
-  "new zealand": "nz",
-  england: "gb-eng",
-  inglaterra: "gb-eng",
-  scotland: "gb-sct",
-  escocia: "gb-sct",
-  wales: "gb-wls",
-  gales: "gb-wls",
-};
+import { useEffect, useMemo, useState } from "react";
+import { flagCdnUrl, resolveTeamFlag } from "../flags";
 
 type FlagProps = {
   team: string;
@@ -146,31 +18,36 @@ const sizeMap = {
 };
 
 export function Flag({ team, size = "md", className }: FlagProps) {
-  const countryCode = useMemo(() => {
-    const normalized = normalizeTeamName(team);
-    return COUNTRY_CODES[normalized] || null;
-  }, [team]);
+  const flag = useMemo(() => resolveTeamFlag(team), [team]);
+  const flagUrl = useMemo(() => (flag.code ? flagCdnUrl(flag.code) : null), [flag.code]);
+  const [imageFailed, setImageFailed] = useState(false);
 
-  const flagUrl = useMemo(() => {
-    if (!countryCode) return null;
-    return `https://cdn.jsdelivr.net/npm/country-flag-emoji-json@2.0.0/dist/images/${countryCode}.svg`;
-  }, [countryCode]);
+  useEffect(() => {
+    setImageFailed(false);
+  }, [flagUrl]);
 
   const sizeClass = sizeMap[size];
+  const classes = `${sizeClass} ${className || ""}`;
 
-  if (!flagUrl) {
-    return <span className={`${sizeClass} ${className || ""}`}>🏳️</span>;
+  if (!flagUrl || imageFailed) {
+    return (
+      <span
+        className={`${classes} inline-grid place-items-center leading-none`}
+        aria-label={`Bandera de ${team}`}
+        role="img"
+      >
+        {flag.emoji}
+      </span>
+    );
   }
 
   return (
     <img
       src={flagUrl}
       alt={`Bandera de ${team}`}
-      className={`${sizeClass} object-cover ${className || ""}`}
+      className={`${classes} object-contain`}
       loading="lazy"
-      onError={(e) => {
-        e.currentTarget.style.display = "none";
-      }}
+      onError={() => setImageFailed(true)}
     />
   );
 }
