@@ -49,6 +49,16 @@ export type PredictionsResponse = {
   players: PlayerProgress[];
 };
 
+export type LeaderboardEntry = {
+  playerName: string;
+  normalizedName: string;
+  totalPoints: number;
+  totalPredictions: number;
+  scoredPredictions: number;
+  exactScores: number;
+  correctOutcomes: number;
+};
+
 export type Draft = {
   homeScore: number;
   awayScore: number;

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { API_URL, EMPTY_DRAFTS, STORAGE_KEY, TOTAL_MATCHES } from "./constants";
-import type { Draft, MundialMatch, PlayerProgress, Prediction, PredictionsResponse, ViewMode } from "./types";
+import type { Draft, LeaderboardEntry, MundialMatch, PlayerProgress, Prediction, PredictionsResponse, ViewMode } from "./types";
 import {
   emptyDraft,
   fetchWithTimeout,
@@ -139,6 +139,46 @@ export function useMundial() {
     if (touched.length) return touched;
     return activeMatch ? [activeMatch] : [];
   }, [activeMatch, drafts, nowMs, orderedMatches]);
+
+  const leaderboard = useMemo<LeaderboardEntry[]>(() => {
+    const playerMap = new Map<string, LeaderboardEntry>();
+
+    for (const pred of predictions) {
+      const key = normalizeKey(pred.playerName);
+      if (!playerMap.has(key)) {
+        playerMap.set(key, {
+          playerName: pred.playerName,
+          normalizedName: key,
+          totalPoints: 0,
+          totalPredictions: 0,
+          scoredPredictions: 0,
+          exactScores: 0,
+          correctOutcomes: 0,
+        });
+      }
+      const entry = playerMap.get(key)!;
+      entry.totalPredictions++;
+
+      const match = matchById.get(pred.matchId);
+      if (match && match.homeFinalScore !== null && match.awayFinalScore !== null) {
+        const isExact = pred.homeScore === match.homeFinalScore && pred.awayScore === match.awayFinalScore;
+        const actualOutcome =
+          match.homeFinalScore > match.awayFinalScore ? "home" : match.awayFinalScore > match.homeFinalScore ? "away" : "draw";
+        const predictedOutcome =
+          pred.homeScore > pred.awayScore ? "home" : pred.awayScore > pred.homeScore ? "away" : "draw";
+        const correctOutcome = actualOutcome === predictedOutcome;
+        const pts = isExact ? 3 : correctOutcome ? 1 : 0;
+        entry.scoredPredictions++;
+        entry.totalPoints += pts;
+        if (pts >= 3) entry.exactScores++;
+        if (pts >= 1) entry.correctOutcomes++;
+      }
+    }
+
+    return [...playerMap.values()].sort(
+      (a, b) => b.totalPoints - a.totalPoints || a.playerName.localeCompare(b.playerName)
+    );
+  }, [predictions, matchById]);
 
   async function readQuiniela() {
     const response = await fetchWithTimeout(API_URL, { cache: "no-store" });
@@ -323,6 +363,7 @@ export function useMundial() {
     matches,
     predictions,
     players,
+    leaderboard,
     viewMode,
     setViewMode,
     nowMs,

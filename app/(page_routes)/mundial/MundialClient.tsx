@@ -65,6 +65,7 @@ export default function MundialClient() {
     matches,
     predictions,
     players,
+    leaderboard,
     viewMode,
     setViewMode,
     nowMs,
@@ -320,7 +321,7 @@ export default function MundialClient() {
                 onSave={saveMatch}
               />
             )}
-            {viewMode === "players" && <PlayersView players={players} />}
+            {viewMode === "players" && <PlayersView leaderboard={leaderboard} />}
           </>
         )}
       </section>
