@@ -6,6 +6,7 @@ import {
   fetchWithTimeout,
   formatCountdown,
   isMatchClosed,
+  isSameDayInCR,
   kickoffMs,
   normalizeKey,
   normalizeName,
@@ -42,6 +43,19 @@ export function useMundial() {
     [nowMs, orderedMatches]
   );
   const activeMatchId = activeMatch?.id ?? null;
+  const todayEditableMatches = useMemo(
+    () =>
+      orderedMatches.filter(
+        (m) =>
+          !isMatchClosed(m, nowMs) &&
+          (m.id === activeMatchId || (nowMs > 0 && isSameDayInCR(kickoffMs(m), nowMs)))
+      ),
+    [orderedMatches, nowMs, activeMatchId]
+  );
+  const todayEditableMatchIds = useMemo(
+    () => new Set(todayEditableMatches.map((m) => m.id)),
+    [todayEditableMatches]
+  );
   const nextMatches = useMemo(() => {
     const activeIndex = activeMatch ? orderedMatches.findIndex((m) => m.id === activeMatch.id) : -1;
     const startIndex = activeIndex >= 0 ? activeIndex + 1 : 0;
@@ -102,10 +116,11 @@ export function useMundial() {
     }
     return merged;
   }, [baseDrafts, matchById, nowMs, playerDraftOverrides]);
-  const dirtyDrafts = useMemo(
-    () => Object.entries(drafts).filter(([matchId, draft]) => draft.dirty && !draft.locked && matchId === activeMatchId),
-    [activeMatchId, drafts]
-  );
+  const dirtyDrafts = useMemo(() => {
+    return Object.entries(drafts).filter(
+      ([matchId, draft]) => draft.dirty && !draft.locked && todayEditableMatchIds.has(matchId)
+    );
+  }, [todayEditableMatchIds, drafts]);
   const savedCount = playerPredictions.length;
   const lockedCount = playerPredictions.filter((p) => {
     const match = matchById.get(p.matchId);
@@ -169,7 +184,7 @@ export function useMundial() {
   }
 
   function canEditMatch(match: MundialMatch) {
-    return match.id === activeMatchId && !isMatchClosed(match, nowMs);
+    return !isMatchClosed(match, nowMs) && todayEditableMatches.some((m) => m.id === match.id);
   }
 
   function updateDraft(matchId: string, patch: Partial<Draft>) {
@@ -319,6 +334,8 @@ export function useMundial() {
     registeredNames,
     activeMatch,
     activeMatchId,
+    todayEditableMatches,
+    todayEditableMatchIds,
     slideMatches,
     recentClosedMatches,
     drafts,
