@@ -1,7 +1,7 @@
 import { Trophy } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { Draft, MundialMatch, Prediction } from "../types";
-import { emptyDraft } from "../utils";
+import { emptyDraft, isMatchClosed } from "../utils";
 import { FeaturedMatch } from "./FeaturedMatch";
 import { OtherPicksPanel } from "./OtherPicksPanel";
 import { QueuePanel } from "./QueuePanel";
@@ -37,26 +37,46 @@ export function NextView({
   onSave,
 }: NextViewProps) {
   const [selectedInfoMatchId, setSelectedInfoMatchId] = useState<string | null>(null);
+  const [featuredMatchId, setFeaturedMatchId] = useState<string | null>(null);
+  const featuredRef = useRef<HTMLDivElement>(null);
+
   const selectedInfoMatch = useMemo(
     () => matches.find((match) => match.id === selectedInfoMatchId) ?? activeMatch ?? matches[0] ?? null,
     [activeMatch, matches, selectedInfoMatchId]
   );
 
+  const featuredMatch = useMemo(() => {
+    if (featuredMatchId) return matches.find((m) => m.id === featuredMatchId) ?? activeMatch;
+    return activeMatch;
+  }, [activeMatch, matches, featuredMatchId]);
+
+  function handleSelectMatch(match: MundialMatch) {
+    setSelectedInfoMatchId(match.id);
+    if (!isMatchClosed(match, nowMs)) {
+      setFeaturedMatchId(match.id);
+      setTimeout(() => {
+        featuredRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 0);
+    }
+  }
+
   return (
     <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(380px,460px)] xl:items-start">
       <div className="grid min-w-0 content-start gap-5">
-        {activeMatch ? (
+        {featuredMatch ? (
           <>
-            <FeaturedMatch
-              match={activeMatch}
-              draft={drafts[activeMatch.id] ?? emptyDraft()}
-              savingId={savingId}
-              isSavingBulk={isSavingBulk}
-              nowMs={nowMs}
-              activeCountdown={activeCountdown}
-              onUpdateDraft={onUpdateDraft}
-              onSave={onSave}
-            />
+            <div ref={featuredRef} className="scroll-mt-20">
+              <FeaturedMatch
+                match={featuredMatch}
+                draft={drafts[featuredMatch.id] ?? emptyDraft()}
+                savingId={savingId}
+                isSavingBulk={isSavingBulk}
+                nowMs={nowMs}
+                activeCountdown={featuredMatch.id === activeMatch?.id ? activeCountdown : undefined}
+                onUpdateDraft={onUpdateDraft}
+                onSave={onSave}
+              />
+            </div>
 
             {selectedInfoMatch && (
               <OtherPicksPanel
@@ -67,7 +87,7 @@ export function NextView({
               />
             )}
 
-            <StatBetsPanel matchId={activeMatch.id} playerName={playerName} />
+            {activeMatch && <StatBetsPanel matchId={activeMatch.id} playerName={playerName} />}
           </>
         ) : (
           <>
@@ -100,7 +120,7 @@ export function NextView({
         nowMs={nowMs}
         activeMatchId={activeMatchId}
         selectedMatchId={selectedInfoMatch?.id ?? null}
-        onSelectMatch={(match) => setSelectedInfoMatchId(match.id)}
+        onSelectMatch={handleSelectMatch}
       />
     </div>
   );

@@ -10,7 +10,7 @@ type FeaturedMatchProps = {
   savingId: string | null;
   isSavingBulk: boolean;
   nowMs: number;
-  activeCountdown: string;
+  activeCountdown?: string;
   onUpdateDraft: (matchId: string, patch: Partial<Draft>) => void;
   onSave: (match: MundialMatch) => Promise<void>;
 };
@@ -53,15 +53,17 @@ export function FeaturedMatch({
             </p>
           </div>
 
-          <div className="rounded-lg border border-amber-600/50 bg-amber-950/30 px-4 py-3 text-left sm:min-w-[190px] sm:text-center">
-            <div className="mb-1 flex items-center gap-2 sm:justify-center">
-              <Timer className="h-4 w-4 text-amber-300" />
-              <p className="text-xs font-black uppercase tracking-widest text-amber-300">Cierra en</p>
+          {activeCountdown && (
+            <div className="rounded-lg border border-amber-600/50 bg-amber-950/30 px-4 py-3 text-left sm:min-w-[190px] sm:text-center">
+              <div className="mb-1 flex items-center gap-2 sm:justify-center">
+                <Timer className="h-4 w-4 text-amber-300" />
+                <p className="text-xs font-black uppercase tracking-widest text-amber-300">Cierra en</p>
+              </div>
+              <p className="text-3xl font-black tabular-nums leading-none text-amber-200 sm:text-4xl">
+                {activeCountdown}
+              </p>
             </div>
-            <p className="text-3xl font-black tabular-nums leading-none text-amber-200 sm:text-4xl">
-              {activeCountdown}
-            </p>
-          </div>
+          )}
         </div>
       </div>
 

@@ -42,7 +42,7 @@ export function QueuePanel({
               <p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-200">Agenda</p>
             </div>
             <h2 className="text-2xl font-black leading-tight text-white">Partidos</h2>
-            <p className="mt-1 text-sm font-bold text-[#8ca58f]">Toca uno para ver los marcadores.</p>
+            <p className="mt-1 text-sm font-bold text-[#8ca58f]">Toca uno para predecir o ver marcadores.</p>
           </div>
           <div className="grid shrink-0 grid-cols-2 gap-2">
             <Counter label="Hoy" value={todayMatches.length + closedTodayMatches.length} />
