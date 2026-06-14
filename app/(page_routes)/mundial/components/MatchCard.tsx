@@ -1,4 +1,4 @@
-import { CheckCircle2, Clock3, Loader2, Lock, PencilLine, Save } from "lucide-react";
+import { CheckCircle2, Clock3, Loader2, Lock, PencilLine, Save, Users } from "lucide-react";
 import type { Draft, MundialMatch } from "../types";
 import { cn, finalScoreText, formatKickoff, formatUpdatedAt, getWinnerPickOptions, isMatchClosed, predictionResult } from "../utils";
 import { Flag } from "./Flag";
@@ -64,9 +64,11 @@ type MatchCardProps = {
   nowMs: number;
   onUpdateDraft: (matchId: string, patch: Partial<Draft>) => void;
   onSave: (match: MundialMatch) => Promise<void>;
+  onViewPicks?: () => void;
+  isViewingPicks?: boolean;
 };
 
-export function MatchCard({ match, draft, savingId, isSavingBulk, todayEditableMatchIds, nowMs, onUpdateDraft, onSave }: MatchCardProps) {
+export function MatchCard({ match, draft, savingId, isSavingBulk, todayEditableMatchIds, nowMs, onUpdateDraft, onSave, onViewPicks, isViewingPicks }: MatchCardProps) {
   const closed = isMatchClosed(match, nowMs);
   const canEdit = todayEditableMatchIds.has(match.id) && !closed;
   const isSaving = savingId === match.id;
@@ -102,7 +104,7 @@ export function MatchCard({ match, draft, savingId, isSavingBulk, todayEditableM
       <div className="grid gap-2.5">
         <div className="grid grid-cols-[2rem_minmax(0,1fr)_auto] items-center gap-2 rounded-lg border border-[#263b27] bg-[#101711] p-2.5">
           <Flag team={match.homeTeam} size="md" />
-          <span className="min-w-0 truncate text-base font-black text-white">{match.homeTeam}</span>
+          <span className="min-w-0 text-sm font-black leading-tight text-white">{match.homeTeam}</span>
           <ScoreInput
             label={match.homeTeam}
             value={draft.homeScore}
@@ -112,7 +114,7 @@ export function MatchCard({ match, draft, savingId, isSavingBulk, todayEditableM
         </div>
         <div className="grid grid-cols-[2rem_minmax(0,1fr)_auto] items-center gap-2 rounded-lg border border-[#263b27] bg-[#101711] p-2.5">
           <Flag team={match.awayTeam} size="md" />
-          <span className="min-w-0 truncate text-base font-black text-white">{match.awayTeam}</span>
+          <span className="min-w-0 text-sm font-black leading-tight text-white">{match.awayTeam}</span>
           <ScoreInput
             label={match.awayTeam}
             value={draft.awayScore}
@@ -155,16 +157,34 @@ export function MatchCard({ match, draft, savingId, isSavingBulk, todayEditableM
             {closed ? finalScoreText(match) : predictionResult(match, draft)}
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => void onSave(match)}
-          disabled={disabled || !draft.dirty}
-          title="Guardar"
-          aria-label={`Guardar partido ${match.number}`}
-          className="grid h-12 w-12 shrink-0 place-items-center rounded-lg border border-emerald-500 bg-emerald-700 text-white transition hover:border-emerald-200 hover:bg-emerald-500 disabled:cursor-not-allowed disabled:border-[#273527] disabled:bg-[#111811] disabled:text-[#687a68]"
-        >
-          {isSaving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
-        </button>
+        <div className="flex shrink-0 items-center gap-2">
+          {onViewPicks && (
+            <button
+              type="button"
+              onClick={onViewPicks}
+              title="Ver picks de otros jugadores"
+              aria-label={`Ver picks del partido ${match.number}`}
+              className={cn(
+                "grid h-12 w-12 shrink-0 place-items-center rounded-lg border transition",
+                isViewingPicks
+                  ? "border-emerald-500/70 bg-emerald-950/40 text-emerald-300"
+                  : "border-[#365136] bg-[#070907] text-[#607160] hover:border-emerald-600 hover:text-emerald-400"
+              )}
+            >
+              <Users className="h-5 w-5" />
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => void onSave(match)}
+            disabled={disabled || !draft.dirty}
+            title="Guardar"
+            aria-label={`Guardar partido ${match.number}`}
+            className="grid h-12 w-12 shrink-0 place-items-center rounded-lg border border-emerald-500 bg-emerald-700 text-white transition hover:border-emerald-200 hover:bg-emerald-500 disabled:cursor-not-allowed disabled:border-[#273527] disabled:bg-[#111811] disabled:text-[#687a68]"
+          >
+            {isSaving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
+          </button>
+        </div>
       </div>
       {draft.updatedAt && (
         <p className="mt-2 text-xs font-bold text-[#7f957f]">{formatUpdatedAt(draft.updatedAt)}</p>

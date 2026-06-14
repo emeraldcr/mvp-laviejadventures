@@ -75,10 +75,7 @@ export default function MundialClient() {
     success,
     activeMatch,
     activeMatchId,
-    todayEditableMatches,
     todayEditableMatchIds,
-    slideMatches,
-    recentClosedMatches,
     drafts,
     dirtyDrafts,
     savedCount,
@@ -296,18 +293,13 @@ export default function MundialClient() {
             {viewMode === "next" && (
               <NextView
                 activeMatch={activeMatch}
+                matches={matches}
                 drafts={drafts}
                 savingId={savingId}
                 isSavingBulk={isSavingBulk}
                 activeMatchId={activeMatchId}
-                todayEditableMatches={todayEditableMatches}
-                todayEditableMatchIds={todayEditableMatchIds}
                 nowMs={nowMs}
                 activeCountdown={activeCountdown}
-                slideMatches={slideMatches}
-                recentClosedMatches={recentClosedMatches}
-                closedMatchCount={closedMatchCount}
-                openMatchCount={openMatchCount}
                 playerName={playerName}
                 predictions={predictions}
                 onUpdateDraft={updateDraft}

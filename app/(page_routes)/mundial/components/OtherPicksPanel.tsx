@@ -1,7 +1,7 @@
-import { TrendingUp, Users } from "lucide-react";
+import { CalendarDays, TrendingUp, Users } from "lucide-react";
 import { useMemo } from "react";
 import type { MundialMatch, Prediction } from "../types";
-import { cn, normalizeKey } from "../utils";
+import { cn, formatKickoff, normalizeKey } from "../utils";
 import { Flag } from "./Flag";
 
 type Outcome = "home" | "draw" | "away";
@@ -16,9 +16,10 @@ type OtherPicksPanelProps = {
   match: MundialMatch;
   predictions: Prediction[];
   playerName: string;
+  showEmpty?: boolean;
 };
 
-export function OtherPicksPanel({ match, predictions, playerName }: OtherPicksPanelProps) {
+export function OtherPicksPanel({ match, predictions, playerName, showEmpty = false }: OtherPicksPanelProps) {
   const matchPicks = useMemo(
     () => predictions.filter((p) => p.matchId === match.id),
     [predictions, match.id]
@@ -40,11 +41,11 @@ export function OtherPicksPanel({ match, predictions, playerName }: OtherPicksPa
   }, [matchPicks]);
 
   const total = matchPicks.length;
-  if (total === 0) return null;
+  if (total === 0 && !showEmpty) return null;
 
-  const pctHome = Math.round((homeWins / total) * 100);
-  const pctDraw = Math.round((draws / total) * 100);
-  const pctAway = awayWins > 0 ? 100 - pctHome - pctDraw : 0;
+  const pctHome = total > 0 ? Math.round((homeWins / total) * 100) : 0;
+  const pctDraw = total > 0 ? Math.round((draws / total) * 100) : 0;
+  const pctAway = total > 0 && awayWins > 0 ? 100 - pctHome - pctDraw : 0;
 
   const myKey = normalizeKey(playerName);
 
@@ -73,11 +74,20 @@ export function OtherPicksPanel({ match, predictions, playerName }: OtherPicksPa
               <Users className="h-5 w-5 text-emerald-300" />
             </span>
             <div className="min-w-0">
-              <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-300">Picks del partido</p>
-              <h2 className="mt-1 text-xl font-black text-white">{total} {total === 1 ? "pick" : "picks"} guardados</h2>
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-300">Panel de informacion</p>
+              <h2 className="mt-1 text-xl font-black text-white">
+                {match.homeTeam} vs {match.awayTeam}
+              </h2>
+              <p className="mt-1 flex items-center gap-1.5 text-sm font-bold text-[#8ca58f]">
+                <CalendarDays className="h-4 w-4" />
+                <span>{formatKickoff(match.kickoffAt)}</span>
+              </p>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2 min-[620px]:justify-end">
+            <span className="rounded-md border border-[#2b3d2b] bg-[#071007] px-3 py-1.5 text-sm font-black text-[#b7d5ba]">
+              {total} {total === 1 ? "pick" : "picks"}
+            </span>
             {popularCount > 1 && (
               <span className="inline-flex items-center gap-1.5 rounded-md border border-amber-700/50 bg-amber-950/25 px-3 py-1.5 text-sm font-black text-amber-200">
                 <TrendingUp className="h-4 w-4" />
@@ -89,59 +99,71 @@ export function OtherPicksPanel({ match, predictions, playerName }: OtherPicksPa
       </div>
 
       <div className="p-4 sm:p-5">
-        <div className="mb-5 grid gap-3">
-          <DistBar team={match.homeTeam} label={match.homeTeam} pct={pctHome} count={homeWins} color="green" />
-          <DistBar label="Empate" pct={pctDraw} count={draws} color="amber" />
-          <DistBar team={match.awayTeam} label={match.awayTeam} pct={pctAway} count={awayWins} color="red" />
-        </div>
+        {total > 0 ? (
+          <>
+            <div className="mb-5 grid gap-3">
+              <DistBar team={match.homeTeam} label={match.homeTeam} pct={pctHome} count={homeWins} color="green" />
+              <DistBar label="Empate" pct={pctDraw} count={draws} color="amber" />
+              <DistBar team={match.awayTeam} label={match.awayTeam} pct={pctAway} count={awayWins} color="red" />
+            </div>
 
-        <div className="mb-4 h-px bg-[#263b27]" />
+            <div className="mb-4 h-px bg-[#263b27]" />
 
-        <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
-          {sorted.map((p) => {
-            const isMe = normalizeKey(p.playerName) === myKey;
-            const outcome = getOutcome(p.homeScore, p.awayScore);
+            <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
+              {sorted.map((p) => {
+                const isMe = normalizeKey(p.playerName) === myKey;
+                const outcome = getOutcome(p.homeScore, p.awayScore);
 
-            return (
-              <div
-                key={p.id}
-                className={cn(
-                  "flex flex-col items-stretch gap-2 rounded-lg border px-3 py-3 min-[520px]:flex-row min-[520px]:items-center min-[520px]:justify-between min-[520px]:gap-3",
-                  isMe ? "border-emerald-600/50 bg-emerald-950/25" : "border-[#263b27] bg-[#101711]"
-                )}
-              >
-                <div className="flex min-w-0 items-center gap-2">
-                  {isMe && <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-300 shadow-[0_0_8px_rgba(110,231,183,0.9)]" />}
-                  <span className={cn("min-w-0 truncate text-base font-black", isMe ? "text-emerald-200" : "text-white")}>
-                    {isMe ? "Vos" : p.playerName}
-                  </span>
-                </div>
-
-                <div className="flex min-w-0 flex-wrap items-center gap-2 min-[520px]:shrink-0 min-[520px]:justify-end">
-                  <Flag team={match.homeTeam} size="sm" />
-                  <span
+                return (
+                  <div
+                    key={p.id}
                     className={cn(
-                      "rounded-md border px-2.5 py-1 text-base font-black tabular-nums",
-                      outcome === "home"
-                        ? "border-emerald-700/50 bg-emerald-950/30 text-emerald-200"
-                        : outcome === "draw"
-                          ? "border-amber-700/50 bg-amber-950/30 text-amber-200"
-                          : "border-red-800/50 bg-red-950/30 text-red-200"
+                      "flex flex-col items-stretch gap-2 rounded-lg border px-3 py-3 min-[520px]:flex-row min-[520px]:items-center min-[520px]:justify-between min-[520px]:gap-3",
+                      isMe ? "border-emerald-600/50 bg-emerald-950/25" : "border-[#263b27] bg-[#101711]"
                     )}
                   >
-                    {p.homeScore}-{p.awayScore}
-                  </span>
-                  <Flag team={match.awayTeam} size="sm" />
-                  {p.winnerPick && (
-                    <span className="ml-1 min-w-0 break-words text-xs font-black text-[#8ca58f]">
-                      ({p.winnerPick === "home" ? match.homeTeam : match.awayTeam} pen.)
-                    </span>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+                    <div className="flex min-w-0 items-center gap-2">
+                      {isMe && <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-300 shadow-[0_0_8px_rgba(110,231,183,0.9)]" />}
+                      <span className={cn("min-w-0 truncate text-base font-black", isMe ? "text-emerald-200" : "text-white")}>
+                        {isMe ? "Vos" : p.playerName}
+                      </span>
+                    </div>
+
+                    <div className="flex min-w-0 flex-wrap items-center gap-2 min-[520px]:shrink-0 min-[520px]:justify-end">
+                      <Flag team={match.homeTeam} size="sm" />
+                      <span
+                        className={cn(
+                          "rounded-md border px-2.5 py-1 text-base font-black tabular-nums",
+                          outcome === "home"
+                            ? "border-emerald-700/50 bg-emerald-950/30 text-emerald-200"
+                            : outcome === "draw"
+                              ? "border-amber-700/50 bg-amber-950/30 text-amber-200"
+                              : "border-red-800/50 bg-red-950/30 text-red-200"
+                        )}
+                      >
+                        {p.homeScore}-{p.awayScore}
+                      </span>
+                      <Flag team={match.awayTeam} size="sm" />
+                      {p.winnerPick && (
+                        <span className="ml-1 min-w-0 break-words text-xs font-black text-[#8ca58f]">
+                          ({p.winnerPick === "home" ? match.homeTeam : match.awayTeam} pen.)
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        ) : (
+          <div className="rounded-lg border border-dashed border-[#263b27] bg-[#101711] p-6 text-center">
+            <Users className="mx-auto h-10 w-10 text-[#8ca58f]" />
+            <p className="mt-3 text-lg font-black text-white">Sin marcadores guardados</p>
+            <p className="mt-2 text-sm font-bold text-[#8ca58f]">
+              Cuando otros jugadores guarden este partido, van a aparecer aqui.
+            </p>
+          </div>
+        )}
       </div>
     </section>
   );
