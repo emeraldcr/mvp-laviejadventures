@@ -57,8 +57,7 @@ export function finalScoreText(match: MundialMatch) {
 export function formatKickoff(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "Hora por confirmar";
-  return new Intl.DateTimeFormat("es-CR", {
-    timeZone: "America/Costa_Rica",
+  return new Intl.DateTimeFormat("es", {
     weekday: "short",
     day: "2-digit",
     month: "short",

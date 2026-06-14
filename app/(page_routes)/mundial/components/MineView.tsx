@@ -37,19 +37,19 @@ export function MineView({
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="text-xs font-black uppercase tracking-wider text-slate-400">Mi quiniela</p>
-            <h2 className="mt-1 text-3xl font-black text-white">
+            <h2 className="mt-1 text-2xl font-black text-white sm:text-3xl">
               {savedCount}<span className="text-slate-500">/{TOTAL_MATCHES}</span>
-              <span className="ml-3 text-xl font-bold text-slate-400">guardados</span>
+              <span className="ml-2 text-base font-bold text-slate-400 sm:ml-3 sm:text-xl">guardados</span>
             </h2>
           </div>
-          <div className="flex gap-3">
-            <div className="rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-center">
-              <p className="text-xs font-black uppercase tracking-wider text-emerald-300">Cerrados</p>
-              <p className="mt-1 text-2xl font-black tabular-nums text-emerald-300">{lockedCount}</p>
+          <div className="flex gap-2 sm:gap-3">
+            <div className="rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-3 py-2 text-center sm:px-4 sm:py-3">
+              <p className="text-[10px] font-black uppercase tracking-wider text-emerald-300">Cerrados</p>
+              <p className="mt-0.5 text-xl font-black tabular-nums text-emerald-300 sm:mt-1 sm:text-2xl">{lockedCount}</p>
             </div>
-            <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-center">
-              <p className="text-xs font-black uppercase tracking-wider text-slate-400">Progreso</p>
-              <p className="mt-1 text-2xl font-black tabular-nums text-white">{pct}%</p>
+            <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-center sm:px-4 sm:py-3">
+              <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Progreso</p>
+              <p className="mt-0.5 text-xl font-black tabular-nums text-white sm:mt-1 sm:text-2xl">{pct}%</p>
             </div>
           </div>
         </div>

@@ -46,7 +46,7 @@ export function QueuePanel({
       <div className="p-4">
         {slideMatches.length ? (
           <div className="overflow-x-auto pb-2">
-            <div className="flex snap-x gap-3">
+            <div className="flex snap-x snap-mandatory gap-3">
               {slideMatches.map((match) => (
                 <SlideCard key={match.id} match={match} nowMs={nowMs} activeMatchId={activeMatchId} />
               ))}
