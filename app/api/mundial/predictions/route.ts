@@ -193,21 +193,30 @@ async function ensureMundialData(db: Db) {
   const now = new Date();
 
   await matches.bulkWrite(
-    MUNDIAL_MATCHES.map((match) => ({
-      updateOne: {
-        filter: { id: match.id },
-        update: {
-          $set: {
-            ...match,
-            source: "fifa-world-cup-2026",
-            sourceVersion: FIXTURE_VERSION,
-            updatedAt: now,
+    MUNDIAL_MATCHES.map((match) => {
+      // Scores are admin-managed — never overwrite them from fixture data.
+      // Only seed them on first insert via $setOnInsert so version-bumps don't wipe admin entries.
+      const { homeFinalScore, awayFinalScore, ...fixtureData } = match;
+      return {
+        updateOne: {
+          filter: { id: match.id },
+          update: {
+            $set: {
+              ...fixtureData,
+              source: "fifa-world-cup-2026",
+              sourceVersion: FIXTURE_VERSION,
+              updatedAt: now,
+            },
+            $setOnInsert: {
+              createdAt: now,
+              ...(homeFinalScore !== undefined && { homeFinalScore }),
+              ...(awayFinalScore !== undefined && { awayFinalScore }),
+            },
           },
-          $setOnInsert: { createdAt: now },
+          upsert: true,
         },
-        upsert: true,
-      },
-    })),
+      };
+    }),
     { ordered: false }
   );
 }

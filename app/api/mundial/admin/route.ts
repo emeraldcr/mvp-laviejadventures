@@ -111,7 +111,16 @@ export async function GET() {
 
     const matchesById = new Map(matches.map((m) => [m.id, m]));
 
-    // Compute leaderboard
+    type MatchStat = {
+      total: number;
+      exactCount: number;
+      correctOutcomeCount: number;
+      homeWinPicks: number;
+      drawPicks: number;
+      awayWinPicks: number;
+    };
+
+    // Compute leaderboard + per-match prediction stats in one pass
     const playerMap = new Map<
       string,
       {
@@ -126,6 +135,8 @@ export async function GET() {
         correctOutcomes: number;
       }
     >();
+
+    const matchStatMap = new Map<string, MatchStat>();
 
     for (const prediction of predictions) {
       const match = matchesById.get(prediction.matchId);
@@ -148,12 +159,30 @@ export async function GET() {
       const entry = playerMap.get(key)!;
       entry.totalPredictions++;
 
+      // Per-match stats
+      if (!matchStatMap.has(prediction.matchId)) {
+        matchStatMap.set(prediction.matchId, {
+          total: 0,
+          exactCount: 0,
+          correctOutcomeCount: 0,
+          homeWinPicks: 0,
+          drawPicks: 0,
+          awayWinPicks: 0,
+        });
+      }
+      const ms = matchStatMap.get(prediction.matchId)!;
+      ms.total++;
+
+      const scores = predictionScores(prediction);
+      if (scores.homeScore > scores.awayScore) ms.homeWinPicks++;
+      else if (scores.homeScore < scores.awayScore) ms.awayWinPicks++;
+      else ms.drawPicks++;
+
       if (
         match &&
         typeof match.homeFinalScore === "number" &&
         typeof match.awayFinalScore === "number"
       ) {
-        const scores = predictionScores(prediction);
         const pts = computePoints(
           {
             stage: match.stage,
@@ -165,8 +194,8 @@ export async function GET() {
         );
         entry.scoredPredictions++;
         entry.predictionPoints += pts;
-        if (pts >= 3) entry.exactScores++;
-        if (pts >= 1) entry.correctOutcomes++;
+        if (pts >= 3) { entry.exactScores++; ms.exactCount++; }
+        if (pts >= 1) { entry.correctOutcomes++; ms.correctOutcomeCount++; }
       }
     }
 
@@ -187,23 +216,35 @@ export async function GET() {
     );
 
     // Format matches for admin view
-    const adminMatches = matches.map((match) => ({
-      id: match.id,
-      number: match.number,
-      stage: match.stage,
-      stageLabel: match.stageLabel,
-      homeTeam: match.homeTeam,
-      awayTeam: match.awayTeam,
-      kickoffAt: match.kickoffAt,
-      venue: match.venue,
-      group: match.group ?? null,
-      homeFinalScore: typeof match.homeFinalScore === "number" ? match.homeFinalScore : null,
-      awayFinalScore: typeof match.awayFinalScore === "number" ? match.awayFinalScore : null,
-      forceClosed: match.forceClosed ?? false,
-      actualWinner: match.actualWinner ?? null,
-      closed: isMatchClosed(match, now),
-      predictorCount: predictions.filter((p) => p.matchId === match.id).length,
-    }));
+    const emptyMatchStat: MatchStat = {
+      total: 0, exactCount: 0, correctOutcomeCount: 0,
+      homeWinPicks: 0, drawPicks: 0, awayWinPicks: 0,
+    };
+    const adminMatches = matches.map((match) => {
+      const ms = matchStatMap.get(match.id) ?? emptyMatchStat;
+      return {
+        id: match.id,
+        number: match.number,
+        stage: match.stage,
+        stageLabel: match.stageLabel,
+        homeTeam: match.homeTeam,
+        awayTeam: match.awayTeam,
+        kickoffAt: match.kickoffAt,
+        venue: match.venue,
+        group: match.group ?? null,
+        homeFinalScore: typeof match.homeFinalScore === "number" ? match.homeFinalScore : null,
+        awayFinalScore: typeof match.awayFinalScore === "number" ? match.awayFinalScore : null,
+        forceClosed: match.forceClosed ?? false,
+        actualWinner: match.actualWinner ?? null,
+        closed: isMatchClosed(match, now),
+        predictorCount: ms.total,
+        exactCount: ms.exactCount,
+        correctOutcomeCount: ms.correctOutcomeCount,
+        homeWinPicks: ms.homeWinPicks,
+        drawPicks: ms.drawPicks,
+        awayWinPicks: ms.awayWinPicks,
+      };
+    });
 
     // Format stat questions
     const adminStatQuestions = statQuestions.map((q) => ({

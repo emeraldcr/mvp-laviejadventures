@@ -16,6 +16,11 @@ export type AdminMatch = {
   actualWinner: "home" | "away" | null;
   closed: boolean;
   predictorCount: number;
+  exactCount: number;
+  correctOutcomeCount: number;
+  homeWinPicks: number;
+  drawPicks: number;
+  awayWinPicks: number;
 };
 
 export type LeaderboardEntry = {

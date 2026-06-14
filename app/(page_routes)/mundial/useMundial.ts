@@ -15,6 +15,9 @@ export function useMundial() {
   const [playerName, setPlayerName] = useState(() =>
     typeof window === "undefined" ? "" : window.localStorage.getItem(STORAGE_KEY) ?? ""
   );
+  const [showPlayerPicker, setShowPlayerPicker] = useState(() =>
+    typeof window === "undefined" ? false : !window.localStorage.getItem(STORAGE_KEY)
+  );
   const [matches, setMatches] = useState<MundialMatch[]>([]);
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [players, setPlayers] = useState<PlayerProgress[]>([]);
@@ -300,6 +303,8 @@ export function useMundial() {
   return {
     playerName,
     setPlayerName,
+    showPlayerPicker,
+    setShowPlayerPicker,
     matches,
     players,
     viewMode,

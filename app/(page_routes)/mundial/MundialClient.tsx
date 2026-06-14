@@ -1,17 +1,20 @@
 "use client";
 
-import { Check, CircleAlert, Loader2, RefreshCw, Save, UserRound } from "lucide-react";
+import { Check, ChevronDown, CircleAlert, Loader2, RefreshCw, Save, UserRound } from "lucide-react";
 import { VIEW_OPTIONS } from "./constants";
 import { useMundial } from "./useMundial";
 import { cn, formatKickoff, getCountryFlag } from "./utils";
 import { MineView } from "./components/MineView";
 import { NextView } from "./components/NextView";
 import { PlayersView } from "./components/PlayersView";
+import { PlayerPickerModal } from "./components/PlayerPickerModal";
 
 export default function MundialClient() {
   const {
     playerName,
     setPlayerName,
+    showPlayerPicker,
+    setShowPlayerPicker,
     matches,
     players,
     viewMode,
@@ -22,7 +25,6 @@ export default function MundialClient() {
     isSavingBulk,
     error,
     success,
-    registeredNames,
     activeMatch,
     activeMatchId,
     slideMatches,
@@ -42,6 +44,11 @@ export default function MundialClient() {
     saveDirtyDrafts,
   } = useMundial();
 
+  function handlePickPlayer(name: string) {
+    setPlayerName(name);
+    setShowPlayerPicker(false);
+  }
+
   const openMatchCount = Math.max(matches.length - closedMatchCount, 0);
 
   return (
@@ -56,22 +63,20 @@ export default function MundialClient() {
               Mundial 2026
             </span>
           </div>
-          <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => setShowPlayerPicker(true)}
+            className="flex items-center gap-1.5 rounded-lg px-2 py-1 hover:bg-white/[0.06] transition"
+          >
             <UserRound className="h-3.5 w-3.5 shrink-0 text-slate-500" />
-            <input
-              id="mundial-player-name"
-              list="mundial-player-list"
-              value={playerName}
-              onChange={(e) => setPlayerName(e.target.value)}
-              placeholder="Tu nombre"
-              className="w-32 bg-transparent pb-0.5 text-sm font-black text-white outline-none placeholder:text-slate-600 border-b border-white/10 transition-colors focus:border-emerald-400 sm:w-44"
-            />
-            <datalist id="mundial-player-list">
-              {registeredNames.map((n) => (
-                <option key={n} value={n} />
-              ))}
-            </datalist>
-          </div>
+            <span className={cn(
+              "text-sm font-black",
+              playerName ? "text-white" : "text-slate-600"
+            )}>
+              {playerName || "Elegí quién sos"}
+            </span>
+            <ChevronDown className="h-3 w-3 text-slate-600" />
+          </button>
         </div>
 
         {/* Active match showcase */}
@@ -283,6 +288,15 @@ export default function MundialClient() {
           </>
         )}
       </section>
+
+      {showPlayerPicker && (
+        <PlayerPickerModal
+          players={players}
+          onSelect={handlePickPlayer}
+          onClose={() => setShowPlayerPicker(false)}
+          allowClose={Boolean(playerName)}
+        />
+      )}
     </main>
   );
 }
