@@ -46,21 +46,21 @@ export function MatchCard({ match, draft, savingId, isSavingBulk, activeMatchId,
       style={canEdit ? { boxShadow: "0 0 14px rgba(34,197,94,0.12)" } : undefined}
     >
       {/* Header */}
-      <div className="mb-2.5 flex items-start justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="rounded-md border border-[#1e3a1e] bg-[#050a05] px-2 py-1 text-xs font-black tabular-nums text-[#5a8a5a]">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-1.5">
+          <span className="shrink-0 rounded-md border border-[#1e3a1e] bg-[#050a05] px-1.5 py-0.5 text-[11px] font-black tabular-nums text-[#5a8a5a]">
             #{match.number}
           </span>
-          <span className="rounded-md border border-[#1a2e1a] bg-[#080d08] px-2 py-1 text-xs font-black text-[#3a5a3a]">
+          <span className="min-w-0 truncate rounded-md border border-[#1a2e1a] bg-[#080d08] px-1.5 py-0.5 text-[11px] font-black text-[#3a5a3a]">
             {match.group ? `Grupo ${match.group}` : match.stageLabel}
           </span>
         </div>
-        <span className={cn("shrink-0 rounded-md border px-2 py-1 text-xs font-black", status.className)}>
+        <span className={cn("shrink-0 rounded-md border px-1.5 py-0.5 text-[11px] font-black", status.className)}>
           {status.label}
         </span>
       </div>
 
-      <p className="mb-3 text-xs font-bold text-[#3a5a3a]">
+      <p className="mb-2.5 text-[11px] font-bold text-[#3a5a3a]">
         {formatKickoff(match.kickoffAt)}
       </p>
 

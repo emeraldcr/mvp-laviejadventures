@@ -73,16 +73,16 @@ export default function MundialClient() {
           <button
             type="button"
             onClick={() => setShowPlayerPicker(true)}
-            className="flex items-center gap-1.5 rounded-lg border border-[#1a2e1a] bg-[#0a140a] px-3 py-1.5 transition hover:border-green-700/50 hover:bg-green-950/20"
+            className="flex min-w-0 items-center gap-1.5 rounded-lg border border-[#1a2e1a] bg-[#0a140a] px-3 py-1.5 transition hover:border-green-700/50 hover:bg-green-950/20"
           >
             <UserRound className="h-3.5 w-3.5 shrink-0 text-[#3a5a3a]" />
             <span className={cn(
-              "text-sm font-black",
+              "max-w-[36vw] truncate text-sm font-black sm:max-w-none",
               playerName ? "text-green-400" : "text-[#3a5a3a]"
             )}>
               {playerName || "Elegí quién sos"}
             </span>
-            <ChevronDown className="h-3 w-3 text-[#2a4020]" />
+            <ChevronDown className="h-3 w-3 shrink-0 text-[#2a4020]" />
           </button>
         </div>
 
@@ -90,7 +90,7 @@ export default function MundialClient() {
         <div className="px-4 sm:px-6">
           {activeMatch ? (
             <>
-              <div className="mb-4 flex items-center gap-2">
+              <div className="mb-3 flex items-center gap-2">
                 <span
                   className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-green-400"
                   style={{ boxShadow: "0 0 6px rgba(74,222,128,0.8)" }}
@@ -114,14 +114,14 @@ export default function MundialClient() {
 
                 {/* Countdown center */}
                 <div
-                  className="flex shrink-0 flex-col items-center gap-1 rounded-xl border border-amber-700/30 bg-amber-950/20 px-4 py-3"
+                  className="flex shrink-0 flex-col items-center gap-0.5 rounded-xl border border-amber-700/30 bg-amber-950/20 px-3 py-2.5 sm:px-4 sm:py-3"
                   style={{ boxShadow: "0 0 20px rgba(245,158,11,0.10)" }}
                 >
                   <span className="text-[9px] font-black uppercase tracking-widest text-amber-700">
                     Cierra en
                   </span>
                   <span
-                    className="text-[26px] font-black tabular-nums text-amber-400 leading-none sm:text-4xl"
+                    className="text-2xl font-black tabular-nums text-amber-400 leading-none sm:text-4xl"
                     style={{ textShadow: "0 0 20px rgba(251,191,36,0.4)" }}
                   >
                     {activeCountdown}
@@ -143,7 +143,7 @@ export default function MundialClient() {
               </div>
             </>
           ) : (
-            <div className="flex flex-col items-center gap-2 py-8">
+            <div className="flex flex-col items-center gap-2 py-6 sm:py-8">
               <span className="text-5xl leading-none">🏆</span>
               <p className="text-lg font-black text-white">
                 {closedMatchCount > 0 && closedMatchCount === matches.length
@@ -156,7 +156,7 @@ export default function MundialClient() {
         </div>
 
         {/* Player HUD stats */}
-        <div className="grid grid-cols-2 gap-2 px-4 pb-5 pt-5 sm:px-6">
+        <div className="grid grid-cols-2 gap-2 px-4 pb-4 pt-4 sm:px-6 sm:pb-5 sm:pt-5">
           <div className="rounded-xl border border-[#1a2e1a] bg-[#0a140a] p-3">
             <div className="mb-2 flex items-center justify-between">
               <span className="text-[10px] font-black uppercase tracking-widest text-[#2a4020]">
@@ -206,7 +206,7 @@ export default function MundialClient() {
               type="button"
               onClick={() => setViewMode(option.id)}
               className={cn(
-                "relative flex-1 py-3.5 text-xs font-black uppercase tracking-widest transition sm:flex-none sm:px-8",
+                "relative flex-1 py-3.5 text-[11px] font-black uppercase tracking-wide transition sm:flex-none sm:px-8 sm:tracking-widest",
                 viewMode === option.id
                   ? "text-green-400"
                   : "text-[#2a4020] hover:text-[#4a6e4a]"

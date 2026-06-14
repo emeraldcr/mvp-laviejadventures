@@ -24,7 +24,7 @@ export function ScoreInput({ label, value, disabled, featured = false, onChange 
         "focus:border-green-500 focus:text-amber-300",
         "disabled:text-[#2a4020] disabled:border-[#121e12] disabled:cursor-not-allowed",
         featured
-          ? "h-16 w-20 text-4xl sm:h-20 sm:w-24 sm:text-5xl"
+          ? "h-14 w-[4.5rem] text-3xl sm:h-16 sm:w-20 sm:text-4xl"
           : "h-10 w-14 text-xl"
       )}
     />
