@@ -109,6 +109,7 @@ export default function MundialClient() {
     showPinModal,
     pinMode,
     onPinSuccess,
+    registeredNames,
   } = useMundial();
 
   const [selectedInfoMatchId, setSelectedInfoMatchId] = useState<string | null>(null);
@@ -343,6 +344,7 @@ export default function MundialClient() {
 
       {showPlayerPicker && (
         <PlayerPickerModal
+          players={registeredNames}
           onSelect={handlePickPlayer}
           onClose={closePlayerPicker}
           allowClose={Boolean(playerName) && canClosePlayerPicker}
