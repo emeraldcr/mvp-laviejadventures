@@ -54,13 +54,8 @@ export function useMundial() {
   );
   const activeMatchId = activeMatch?.id ?? null;
   const todayEditableMatches = useMemo(
-    () =>
-      orderedMatches.filter(
-        (m) =>
-          !isMatchClosed(m, nowMs) &&
-          (m.id === activeMatchId || (nowMs > 0 && isSameDayInCR(kickoffMs(m), nowMs)))
-      ),
-    [orderedMatches, nowMs, activeMatchId]
+    () => orderedMatches.filter((m) => !isMatchClosed(m, nowMs)),
+    [orderedMatches, nowMs]
   );
   const todayEditableMatchIds = useMemo(
     () => new Set(todayEditableMatches.map((m) => m.id)),
@@ -142,13 +137,11 @@ export function useMundial() {
   const activeCountdown =
     activeMatch && nowMs > 0 ? formatCountdown(kickoffMs(activeMatch) - nowMs) : "Calculando";
   const mineMatches = useMemo(() => {
-    const touched = orderedMatches.filter((m) => {
+    return orderedMatches.filter((m) => {
       const draft = drafts[m.id];
-      return draft?.saved || draft?.dirty || isMatchClosed(m, nowMs);
+      return !isMatchClosed(m, nowMs) || draft?.saved || draft?.dirty;
     });
-    if (touched.length) return touched;
-    return activeMatch ? [activeMatch] : [];
-  }, [activeMatch, drafts, nowMs, orderedMatches]);
+  }, [drafts, nowMs, orderedMatches]);
 
   const leaderboard = useMemo<LeaderboardEntry[]>(() => {
     const playerMap = new Map<string, LeaderboardEntry>();

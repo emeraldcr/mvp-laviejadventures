@@ -332,7 +332,6 @@ async function savePrediction(
 
   if (!match) throw new ApiError("Partido invalido.");
   if (isMatchClosed(match, now)) throw new ApiError("Ese partido ya cerro. Solo se puede guardar antes del inicio.", 423);
-  if (!activeMatch || activeMatch.id !== match.id) throw new ApiError("Solo esta abierto el proximo partido de la fila.", 409);
   if (!playerName || homeScore === null || awayScore === null) throw new ApiError("Faltan datos para guardar la prediccion.");
   if (match.stage !== "group" && homeScore === awayScore && !winnerPick) throw new ApiError("Elegis quien pasa antes de guardar una llave empatada.");
 
