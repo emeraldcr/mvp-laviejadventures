@@ -1,4 +1,4 @@
-import { CalendarDays, TrendingUp, Users } from "lucide-react";
+import { CalendarDays, CheckCircle2, TrendingUp, Users, XCircle } from "lucide-react";
 import { useMemo } from "react";
 import type { MundialMatch, Prediction } from "../types";
 import { cn, formatKickoff, normalizeKey, teamCode } from "../utils";
@@ -106,6 +106,14 @@ export function OtherPicksPanel({ match, predictions, playerName, showEmpty = fa
                   const isMe = normalizeKey(p.playerName) === myKey;
                   const outcome = getOutcome(p.homeScore, p.awayScore);
 
+                  const isClosed =
+                    match.closed &&
+                    match.homeFinalScore !== null &&
+                    match.awayFinalScore !== null;
+                  const isCorrect =
+                    isClosed &&
+                    outcome === getOutcome(match.homeFinalScore!, match.awayFinalScore!);
+
                   return (
                     <div
                       key={p.id}
@@ -140,6 +148,11 @@ export function OtherPicksPanel({ match, predictions, playerName, showEmpty = fa
                           <span className="hidden max-w-28 truncate text-xs font-black text-white/55 min-[560px]:inline">
                             pen. {p.winnerPick === "home" ? match.homeTeam : match.awayTeam}
                           </span>
+                        )}
+                        {isClosed && (
+                          isCorrect
+                            ? <CheckCircle2 className="h-4 w-4 shrink-0 text-[#9dff34]" />
+                            : <XCircle className="h-4 w-4 shrink-0 text-[#ff6a3d]" />
                         )}
                       </div>
                     </div>

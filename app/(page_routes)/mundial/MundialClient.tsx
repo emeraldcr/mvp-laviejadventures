@@ -4,7 +4,6 @@ import {
   Check,
   ChevronDown,
   CircleAlert,
-  Clock3,
   Loader2,
   ListChecks,
   RefreshCw,
@@ -17,8 +16,7 @@ import {
 import { VIEW_OPTIONS } from "./constants";
 import type { ViewMode } from "./types";
 import { useMundial } from "./useMundial";
-import { cn, formatKickoff } from "./utils";
-import { BroadcastScorebug } from "./components/BroadcastScorebug";
+import { cn } from "./utils";
 import { MineView } from "./components/MineView";
 import { NextView } from "./components/NextView";
 import { PlayersView } from "./components/PlayersView";
@@ -30,36 +28,6 @@ function ViewIcon({ id, active }: { id: ViewMode; active: boolean }) {
   if (id === "next") return <Target className={className} />;
   if (id === "mine") return <ListChecks className={className} />;
   return <Users className={className} />;
-}
-
-type MetricTileProps = {
-  label: string;
-  value: string;
-  detail: string;
-  tone: "green" | "amber" | "cyan";
-};
-
-function MetricTile({ label, value, detail, tone }: MetricTileProps) {
-  const toneClass =
-    tone === "green"
-      ? "border-[#9dff34]/55 bg-[#10240b]/85 text-[#d5ff3f]"
-      : tone === "amber"
-        ? "border-[#ff6a3d]/55 bg-[#2a120b]/85 text-[#ffb15f]"
-        : "border-[#62ffe6]/55 bg-[#071d2a]/85 text-[#62ffe6]";
-
-  return (
-    <div
-      className={cn(
-        "relative min-w-0 overflow-hidden rounded-lg border px-4 py-3 shadow-[0_14px_34px_rgba(0,0,0,0.22)]",
-        toneClass
-      )}
-    >
-      <span className="absolute inset-x-0 top-0 h-1 bg-current opacity-90" />
-      <p className="text-[11px] font-black uppercase tracking-[0.2em] text-white/70">{label}</p>
-      <p className="mt-1 text-2xl font-black tabular-nums leading-none text-current sm:text-3xl">{value}</p>
-      <p className="mt-1.5 truncate text-xs font-bold text-white/65">{detail}</p>
-    </div>
-  );
 }
 
 export default function MundialClient() {
@@ -87,9 +55,6 @@ export default function MundialClient() {
     dirtyDrafts,
     savedCount,
     lockedCount,
-    closedMatchCount,
-    completionPct,
-    lockedPct,
     activeCountdown,
     mineMatches,
     loadQuiniela,
@@ -102,11 +67,6 @@ export default function MundialClient() {
     setPlayerName(name);
     setShowPlayerPicker(false);
   }
-
-  const openMatchCount = Math.max(matches.length - closedMatchCount, 0);
-  const activeDraft = activeMatch ? drafts[activeMatch.id] : null;
-  const activeHomeScore = activeDraft?.homeScore ?? activeMatch?.homeFinalScore ?? 0;
-  const activeAwayScore = activeDraft?.awayScore ?? activeMatch?.awayFinalScore ?? 0;
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#102b10] text-white [background-image:radial-gradient(circle_at_50%_-10%,rgba(157,255,52,0.26),transparent_34%),linear-gradient(135deg,#1b2f86_0%,#2c256d_30%,#0b3320_68%,#193e0f_100%)]">
@@ -140,77 +100,6 @@ export default function MundialClient() {
             </span>
             <ChevronDown className="h-4 w-4 shrink-0 text-[#d5ff3f]" />
           </button>
-        </div>
-
-        <div className="relative mx-auto w-full max-w-[1400px] px-4 pb-5 sm:px-6 sm:pb-7">
-          {activeMatch ? (
-            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-stretch">
-              <section className="relative min-w-0 overflow-hidden rounded-lg border border-white/20 bg-[#17206b]/90 p-4 shadow-[0_24px_70px_rgba(0,0,0,0.35)] sm:p-6">
-                <div className="pointer-events-none absolute inset-0 opacity-55 [background-image:radial-gradient(circle_at_50%_20%,rgba(98,255,230,0.20),transparent_34%),linear-gradient(90deg,rgba(255,255,255,0.10)_1px,transparent_1px),linear-gradient(0deg,rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:100%_100%,78px_78px,78px_78px]" />
-                <div className="relative">
-                  <BroadcastScorebug
-                    match={activeMatch}
-                    homeScore={activeHomeScore}
-                    awayScore={activeAwayScore}
-                    timeLabel={activeCountdown}
-                    detailLabel={`Partido #${activeMatch.number}${activeMatch.group ? ` / Grupo ${activeMatch.group}` : ` / ${activeMatch.stageLabel}`}`}
-                  />
-
-                  <div className="mt-6 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-center">
-                    <TeamHeadline label="Local" name={activeMatch.homeTeam} />
-                    <div className="hidden h-20 w-px bg-white/20 sm:block" />
-                    <TeamHeadline label="Visita" name={activeMatch.awayTeam} alignRight />
-                  </div>
-
-                  <div className="mt-5 rounded-lg border border-white/15 bg-black/35 px-4 py-3 text-center">
-                    <p className="text-xs font-black uppercase tracking-[0.22em] text-[#62ffe6]">Proximo pick</p>
-                    <p className="mt-1 text-sm font-bold text-white/75">{formatKickoff(activeMatch.kickoffAt)}</p>
-                  </div>
-                </div>
-              </section>
-
-              <aside className="overflow-hidden rounded-lg border border-[#9dff34]/65 bg-[#06140f] shadow-[0_24px_70px_rgba(0,0,0,0.28)]">
-                <div className="bg-[#3151ff] px-4 py-3">
-                  <p className="text-xl font-black uppercase tracking-wide text-white">Match stats</p>
-                </div>
-                <div className="grid gap-3 p-4">
-                  <div className="rounded-lg border border-white/15 bg-black/45 p-4 text-center">
-                    <div className="mb-2 flex items-center justify-center gap-2">
-                      <Clock3 className="h-4 w-4 text-[#d5ff3f]" />
-                      <p className="text-xs font-black uppercase tracking-[0.2em] text-[#d5ff3f]">Cierra en</p>
-                    </div>
-                    <p className="text-4xl font-black tabular-nums leading-none text-[#62ffe6] sm:text-5xl">
-                      {activeCountdown}
-                    </p>
-                    <p className="mt-3 text-sm font-bold leading-snug text-white/70">
-                      {formatKickoff(activeMatch.kickoffAt)}
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <MetricTile label="Guardado" value={`${completionPct}%`} detail={`${savedCount} picks`} tone="green" />
-                    <MetricTile label="Cerrado" value={`${lockedPct}%`} detail={`${lockedCount} picks`} tone="amber" />
-                  </div>
-                </div>
-              </aside>
-            </div>
-          ) : (
-            <section className="relative grid min-h-64 place-items-center overflow-hidden rounded-lg border border-dashed border-white/25 bg-black/35 p-8 text-center">
-              <div className="pointer-events-none absolute inset-0 opacity-45 [background-image:linear-gradient(90deg,rgba(255,255,255,0.10)_1px,transparent_1px),linear-gradient(0deg,rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:80px_80px]" />
-              <div className="relative">
-                <Trophy className="mx-auto h-12 w-12 text-[#d5ff3f]" />
-                <p className="mt-4 text-2xl font-black text-white">
-                  {closedMatchCount > 0 && closedMatchCount === matches.length ? "Quiniela cerrada" : "Sin partido activo"}
-                </p>
-                <p className="mt-2 text-base font-bold text-white/65">Esperando el proximo pitazo.</p>
-              </div>
-            </section>
-          )}
-
-          <div className="mt-4 grid gap-3 min-[520px]:grid-cols-3">
-            <MetricTile label="Picks guardados" value={`${savedCount}`} detail={`${completionPct}% del total`} tone="green" />
-            <MetricTile label="Partidos abiertos" value={`${openMatchCount}`} detail="Listos para predecir" tone="cyan" />
-            <MetricTile label="Cambios pendientes" value={`${dirtyDrafts.length}`} detail="Guarda antes del cierre" tone="amber" />
-          </div>
         </div>
       </header>
 
@@ -330,14 +219,5 @@ export default function MundialClient() {
         />
       )}
     </main>
-  );
-}
-
-function TeamHeadline({ label, name, alignRight = false }: { label: string; name: string; alignRight?: boolean }) {
-  return (
-    <div className={cn("min-w-0 rounded-lg border border-white/15 bg-black/30 px-4 py-3", alignRight && "sm:text-right")}>
-      <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#d5ff3f]">{label}</p>
-      <p className="mt-1 break-words text-2xl font-black uppercase leading-tight text-white sm:text-4xl">{name}</p>
-    </div>
   );
 }
