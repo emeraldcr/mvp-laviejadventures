@@ -307,6 +307,8 @@ export function useMundial() {
   }
 
   function openPlayerPicker() {
+    const key = normalizeKey(normalizeName(playerName));
+    if (key) pinCheckedRef.current.delete(key);
     setShowPinModal(false);
     setShowPlayerPicker(true);
   }

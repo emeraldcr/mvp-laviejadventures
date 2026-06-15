@@ -16,5 +16,6 @@ export const COLLECTIONS = {
   PAYPAL_ORDER_CONTEXTS: "paypal_order_contexts",
   RESERVATIONS: "Reservations",
   ANALYTICS_EVENTS: "analytics_events",
+  MUNDIAL_ANALYTICS: "mundial_analytics",
   HERO_SLOGANS: "hero_slogans",
 } as const;

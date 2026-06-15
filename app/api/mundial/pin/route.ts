@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "crypto";
 import { getDb } from "@/lib/helpers/mongodb";
+import { recordMundialAnalyticsEvent } from "@/lib/mundial/analytics";
 
 export const dynamic = "force-dynamic";
 
@@ -59,12 +60,28 @@ export async function POST(req: NextRequest) {
         },
         { upsert: true }
       );
+      await recordMundialAnalyticsEvent(db, req, {
+        event: "login",
+        playerName,
+        normalizedName,
+        happenedAt: now,
+        metadata: { loginMethod: "pin_created" },
+      });
       return NextResponse.json({ ok: true });
     }
 
     const doc = await col.findOne({ normalizedName });
     if (!doc?.pinHash) return NextResponse.json({ valid: false, hasPinSet: false });
-    return NextResponse.json({ valid: doc.pinHash === hashPin(pin, normalizedName), hasPinSet: true });
+    const valid = doc.pinHash === hashPin(pin, normalizedName);
+    if (valid) {
+      await recordMundialAnalyticsEvent(db, req, {
+        event: "login",
+        playerName,
+        normalizedName,
+        metadata: { loginMethod: "pin_verified" },
+      });
+    }
+    return NextResponse.json({ valid, hasPinSet: true });
   } catch (err) {
     console.error("PIN POST", err);
     return NextResponse.json({ error: "Error al procesar PIN." }, { status: 500 });

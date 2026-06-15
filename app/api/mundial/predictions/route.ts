@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Db, ObjectId } from "mongodb";
 
 import { getDb } from "@/lib/helpers/mongodb";
+import { recordMundialAnalyticsEvent } from "@/lib/mundial/analytics";
 import { MUNDIAL_MATCHES, MUNDIAL_TOTAL_MATCHES, type MundialMatch } from "@/lib/mundial/fixtures";
 
 export const dynamic = "force-dynamic";
@@ -371,7 +372,7 @@ async function savePrediction(
   );
 
   if (!saved) throw new ApiError("No se pudo guardar la prediccion.", 500);
-  return saved;
+  return { doc: saved, action: existing ? "updated" : "created" };
 }
 
 export async function GET(req: NextRequest) {
@@ -424,8 +425,34 @@ export async function POST(req: NextRequest) {
     const now = new Date();
     const matchesById = new Map(matches.map((m) => [m.id, m]));
 
+    await Promise.all(
+      saved.map(({ doc, action }) => {
+        const match = matchesById.get(doc.matchId);
+        const scores = predictionScores(doc);
+        return recordMundialAnalyticsEvent(db, req, {
+          event: "pick_saved",
+          playerName: doc.playerName,
+          normalizedName: doc.normalizedName,
+          happenedAt: doc.updatedAt ?? now,
+          metadata: {
+            action,
+            matchId: doc.matchId,
+            matchNumber: doc.matchNumber ?? match?.number ?? null,
+            matchLabel: doc.matchLabel ?? (match ? `${match.homeTeam} vs ${match.awayTeam}` : null),
+            stage: doc.stage ?? match?.stage ?? null,
+            homeTeam: match?.homeTeam ?? null,
+            awayTeam: match?.awayTeam ?? null,
+            homeScore: scores.homeScore,
+            awayScore: scores.awayScore,
+            winnerPick: doc.winnerPick ?? null,
+            savedAt: toIsoString(doc.updatedAt ?? now),
+          },
+        });
+      })
+    );
+
     return NextResponse.json(
-      { predictions: saved.map((p) => serializePrediction(p, matchesById, now)) },
+      { predictions: saved.map(({ doc }) => serializePrediction(doc, matchesById, now)) },
       { status: 201 }
     );
   } catch (error) {

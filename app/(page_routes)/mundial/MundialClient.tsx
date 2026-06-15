@@ -119,9 +119,9 @@ export default function MundialClient() {
     [activeMatch, liveMatch, matches, recentClosedMatches]
   );
 
-  const selectedInfoMatch = useMemo(
-    () => matches.find((match) => match.id === selectedInfoMatchId) ?? mostRecentMatch,
-    [matches, mostRecentMatch, selectedInfoMatchId]
+  const explicitSelectedMatch = useMemo(
+    () => matches.find((match) => match.id === selectedInfoMatchId) ?? null,
+    [matches, selectedInfoMatchId]
   );
 
   const featuredMatch = useMemo(() => {
@@ -129,7 +129,8 @@ export default function MundialClient() {
     return liveMatch ?? activeMatch;
   }, [activeMatch, featuredMatchId, liveMatch, matches]);
 
-  const modalMatch = selectedInfoMatch ?? featuredMatch;
+  const selectedInfoMatch = explicitSelectedMatch ?? featuredMatch ?? mostRecentMatch;
+  const modalMatch = explicitSelectedMatch ?? featuredMatch ?? mostRecentMatch;
   const modalPickCount = useMemo(
     () => (modalMatch ? predictions.filter((prediction) => prediction.matchId === modalMatch.id).length : 0),
     [modalMatch, predictions]

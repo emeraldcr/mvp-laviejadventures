@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/helpers/mongodb";
+import { recordMundialAnalyticsEvent } from "@/lib/mundial/analytics";
 import { MUNDIAL_MATCHES } from "@/lib/mundial/fixtures";
 
 export const dynamic = "force-dynamic";
 
 const STAT_QUESTIONS_COLLECTION = "mundial_stat_questions";
 const STAT_BETS_COLLECTION = "mundial_stat_bets";
+
+type StatBetOption = {
+  id: string;
+  text?: string;
+  label?: string;
+};
 
 function normalizeName(value: unknown) {
   return String(value ?? "").trim().replace(/\s+/g, " ");
@@ -98,7 +105,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Esta pregunta ya fue resuelta." }, { status: 423 });
     }
 
-    const validOption = question.options?.find((o: { id: string }) => o.id === optionId);
+    const validOption = (question.options as StatBetOption[] | undefined)?.find((o) => o.id === optionId);
     if (!validOption) {
       return NextResponse.json({ error: "Opcion invalida." }, { status: 400 });
     }
@@ -112,6 +119,25 @@ export async function POST(req: NextRequest) {
       },
       { upsert: true }
     );
+
+    await recordMundialAnalyticsEvent(db, req, {
+      event: "stat_bet_saved",
+      playerName,
+      normalizedName,
+      happenedAt: now,
+      metadata: {
+        matchId,
+        matchNumber: match.number,
+        matchLabel: `${match.homeTeam} vs ${match.awayTeam}`,
+        homeTeam: match.homeTeam,
+        awayTeam: match.awayTeam,
+        questionId,
+        questionText: question.text ?? null,
+        optionId,
+        optionText: validOption.text ?? validOption.label ?? null,
+        savedAt: now.toISOString(),
+      },
+    });
 
     return NextResponse.json({ ok: true }, { status: 201 });
   } catch (error) {
