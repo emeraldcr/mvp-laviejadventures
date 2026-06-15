@@ -11,7 +11,6 @@ import {
   isMatchLive,
   kickoffMs,
   liveStatusLabel,
-  teamCode,
 } from "../utils";
 import { Flag } from "./Flag";
 
@@ -261,7 +260,7 @@ function CompactMatchCard({
       onClick={onClick}
       className={cn(
         "group rounded-lg border p-2.5 text-left transition-all",
-        fill ? "w-full" : "w-[160px] shrink-0",
+        fill ? "w-full" : "w-[200px] shrink-0",
         selected
           ? "border-[#d5ff3f] bg-[#17206b] shadow-[0_0_18px_rgba(213,255,63,0.22)]"
           : live
