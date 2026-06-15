@@ -235,10 +235,14 @@ export function useMundial() {
           if (typeof parsed.expiresAt === "number" && parsed.expiresAt > Date.now()) {
             const sessionName = normalizeName(parsed.playerName ?? "");
             if (sessionName) {
+              const sessionKey = normalizeKey(sessionName);
               setPlayerName(sessionName);
-              setTrustedPlayerKey(normalizeKey(sessionName));
+              setTrustedPlayerKey(sessionKey);
               setPlayerPickerRequired(false);
               setShowPlayerPicker(false);
+              // Mark as PIN-verified so the PIN modal doesn't fire on reload
+              setPinVerifiedPlayers(new Set([sessionKey]));
+              pinCheckedRef.current.add(sessionKey);
               return;
             }
           }
@@ -434,6 +438,7 @@ export function useMundial() {
     const key = normalizeKey(normalizeName(playerName));
     setPinVerifiedPlayers((prev) => { const next = new Set(prev); next.add(key); return next; });
     setShowPinModal(false);
+    storeSession(playerName);
   }
 
   async function saveMatch(match: MundialMatch) {
