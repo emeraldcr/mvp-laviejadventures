@@ -1,9 +1,18 @@
-import { Target, TrendingUp, Trophy, Users } from "lucide-react";
-import type { LeaderboardEntry } from "../types";
-import { cn } from "../utils";
+import { CalendarDays, CheckCircle2, ChevronRight, MinusCircle, Target, TrendingUp, Trophy, Users, X } from "lucide-react";
+import { useMemo, useState } from "react";
+import type { LeaderboardEntry, MundialMatch, Prediction } from "../types";
+import { cn, finalScoreText, formatKickoff, normalizeKey, teamCode } from "../utils";
+import { Flag } from "./Flag";
 
 type PlayersViewProps = {
   leaderboard: LeaderboardEntry[];
+  matches: MundialMatch[];
+  predictions: Prediction[];
+};
+
+type PredictionScore = {
+  points: number | null;
+  kind: "exact" | "outcome" | "miss" | "pending";
 };
 
 const PODIUM_STYLES = [
@@ -12,7 +21,11 @@ const PODIUM_STYLES = [
   { card: "border-[#ff6a3d]/60 bg-[#2a120b]", rank: "bg-[#ff6a3d] text-white", pts: "text-[#ffb15f]", bar: "bg-[#ff6a3d]" },
 ];
 
-export function PlayersView({ leaderboard }: PlayersViewProps) {
+export function PlayersView({ leaderboard, matches, predictions }: PlayersViewProps) {
+  const [selectedPlayerKey, setSelectedPlayerKey] = useState<string | null>(null);
+  const matchById = useMemo(() => new Map(matches.map((match) => [match.id, match])), [matches]);
+  const selectedEntry = leaderboard.find((entry) => entry.normalizedName === selectedPlayerKey) ?? null;
+
   if (!leaderboard.length) {
     return (
       <section className="grid min-h-56 place-items-center rounded-lg border border-dashed border-white/20 bg-black/35 p-6 text-center sm:p-8">
@@ -26,18 +39,34 @@ export function PlayersView({ leaderboard }: PlayersViewProps) {
   }
 
   const maxPts = leaderboard[0].totalPoints;
+  const totalExact = leaderboard.reduce((sum, entry) => sum + entry.exactScores, 0);
+  const totalOutcome = leaderboard.reduce((sum, entry) => sum + entry.correctOutcomes, 0);
+  const totalScored = leaderboard.reduce((sum, entry) => sum + entry.scoredPredictions, 0);
+  const leader = leaderboard[0];
+  const leaderAccuracy = accuracyPct(leader);
 
   return (
     <section className="grid gap-4">
       <div className="overflow-hidden rounded-lg border border-[#9dff34]/55 bg-[#06140f] shadow-[0_24px_70px_rgba(0,0,0,0.24)]">
         <div className="bg-[#3151ff] px-4 py-4 sm:px-6">
-          <div className="flex items-center gap-2">
-            <Trophy className="h-5 w-5 text-[#d5ff3f]" />
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-[#d5ff3f]">Tabla de posiciones</p>
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <Trophy className="h-5 w-5 text-[#d5ff3f]" />
+                <p className="text-xs font-black uppercase tracking-[0.2em] text-[#d5ff3f]">Tabla de posiciones</p>
+              </div>
+              <h2 className="mt-1 text-2xl font-black uppercase text-white sm:text-3xl">
+                {leaderboard.length} <span className="text-white/65">jugadores</span>
+              </h2>
+            </div>
+
+            <div className="grid gap-2 min-[520px]:grid-cols-4 lg:min-w-[560px]">
+              <HeaderStat label="Lider" value={leader.playerName} tone="lime" />
+              <HeaderStat label="Precision" value={`${leaderAccuracy}%`} tone="cyan" />
+              <HeaderStat label="Exactos" value={totalExact} tone="lime" />
+              <HeaderStat label="Resueltos" value={totalScored} tone="white" />
+            </div>
           </div>
-          <h2 className="mt-1 text-2xl font-black uppercase text-white sm:text-3xl">
-            {leaderboard.length} <span className="text-white/65">jugadores</span>
-          </h2>
         </div>
       </div>
 
@@ -45,15 +74,19 @@ export function PlayersView({ leaderboard }: PlayersViewProps) {
         {leaderboard.slice(0, 3).map((entry, i) => {
           const style = PODIUM_STYLES[i];
           const barWidth = maxPts > 0 ? Math.round((entry.totalPoints / maxPts) * 100) : 0;
-          const accuracy =
-            entry.scoredPredictions > 0
-              ? Math.round((entry.exactScores / entry.scoredPredictions) * 100)
-              : 0;
+          const accuracy = accuracyPct(entry);
+          const misses = Math.max(entry.scoredPredictions - entry.correctOutcomes, 0);
 
           return (
-            <div
+            <button
+              type="button"
               key={entry.normalizedName}
-              className={cn("rounded-lg border p-4 shadow-[0_18px_52px_rgba(0,0,0,0.22)]", style.card, i === 0 && "ring-1 ring-[#d5ff3f]/45")}
+              onClick={() => setSelectedPlayerKey(entry.normalizedName)}
+              className={cn(
+                "rounded-lg border p-4 text-left shadow-[0_18px_52px_rgba(0,0,0,0.22)] transition hover:-translate-y-0.5 hover:ring-2 hover:ring-white/25",
+                style.card,
+                i === 0 && "ring-1 ring-[#d5ff3f]/45"
+              )}
             >
               <div className="mb-3 flex items-start justify-between gap-2">
                 <span className={cn("grid h-10 w-10 place-items-center rounded-lg text-xl font-black", style.rank)}>
@@ -71,12 +104,13 @@ export function PlayersView({ leaderboard }: PlayersViewProps) {
                 <div className={cn("h-full rounded-full", style.bar)} style={{ width: `${barWidth}%` }} />
               </div>
 
-              <div className="grid grid-cols-3 gap-1.5">
+              <div className="grid grid-cols-4 gap-1.5">
                 <MiniStat label="Exactos" value={entry.exactScores} tone="lime" />
                 <MiniStat label="Resul." value={entry.correctOutcomes} tone="cyan" />
+                <MiniStat label="Fallos" value={misses} tone="orange" />
                 <MiniStat label="Prec." value={`${accuracy}%`} tone="white" />
               </div>
-            </div>
+            </button>
           );
         })}
       </div>
@@ -88,22 +122,13 @@ export function PlayersView({ leaderboard }: PlayersViewProps) {
               <tr className="border-b border-white/15 bg-[#3151ff] text-xs">
                 <th className="px-3 py-3 text-left font-black uppercase tracking-wide text-[#d5ff3f]">#</th>
                 <th className="px-3 py-3 text-left font-black uppercase tracking-wide text-white">Jugador</th>
-                <th className="px-3 py-3 text-right font-black uppercase tracking-wide text-white">Total</th>
-                <th className="px-3 py-3 text-right font-black uppercase tracking-wide text-[#d5ff3f]">
-                  <span className="flex items-center justify-end gap-1">
-                    <Target className="h-3 w-3" />
-                    <span className="hidden sm:inline">Exactos</span>
-                  </span>
-                </th>
-                <th className="px-3 py-3 text-right font-black uppercase tracking-wide text-[#62ffe6]">
-                  <span className="flex items-center justify-end gap-1">
-                    <TrendingUp className="h-3 w-3" />
-                    <span className="hidden sm:inline">Result.</span>
-                  </span>
-                </th>
-                <th className="hidden px-3 py-3 text-right font-black uppercase tracking-wide text-white/70 sm:table-cell">
-                  Jugados
-                </th>
+                <th className="px-3 py-3 text-right font-black uppercase tracking-wide text-white">Pts</th>
+                <th className="px-3 py-3 text-right font-black uppercase tracking-wide text-[#d5ff3f]">Exactos</th>
+                <th className="px-3 py-3 text-right font-black uppercase tracking-wide text-[#62ffe6]">Result.</th>
+                <th className="hidden px-3 py-3 text-right font-black uppercase tracking-wide text-[#ffb15f] sm:table-cell">Fallos</th>
+                <th className="hidden px-3 py-3 text-right font-black uppercase tracking-wide text-white/70 md:table-cell">Prec.</th>
+                <th className="hidden px-3 py-3 text-right font-black uppercase tracking-wide text-white/70 lg:table-cell">Picks</th>
+                <th className="px-3 py-3 text-right font-black uppercase tracking-wide text-white/70">Ver</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/10">
@@ -111,13 +136,16 @@ export function PlayersView({ leaderboard }: PlayersViewProps) {
                 const isFirst = i === 0;
                 const isTied = i > 0 && entry.totalPoints === leaderboard[i - 1].totalPoints;
                 const barWidth = maxPts > 0 ? Math.round((entry.totalPoints / maxPts) * 100) : 0;
+                const misses = Math.max(entry.scoredPredictions - entry.correctOutcomes, 0);
+                const pending = Math.max(entry.totalPredictions - entry.scoredPredictions, 0);
 
                 return (
                   <tr
                     key={entry.normalizedName}
+                    onClick={() => setSelectedPlayerKey(entry.normalizedName)}
                     className={cn(
-                      "transition-colors",
-                      isFirst ? "bg-[#10240b]/65" : "hover:bg-white/5"
+                      "cursor-pointer transition-colors",
+                      isFirst ? "bg-[#10240b]/65 hover:bg-[#10240b]/90" : "hover:bg-white/5"
                     )}
                   >
                     <td className="px-3 py-3">
@@ -131,11 +159,14 @@ export function PlayersView({ leaderboard }: PlayersViewProps) {
                         <p className={cn("font-black", isFirst ? "text-[#d5ff3f]" : "text-white")}>
                           {entry.playerName}
                         </p>
-                        <div className="mt-1 h-1 w-20 overflow-hidden rounded-full bg-black/55">
-                          <div
-                            className={cn("h-full rounded-full", isFirst ? "bg-[#d5ff3f]" : "bg-[#62ffe6]")}
-                            style={{ width: `${barWidth}%` }}
-                          />
+                        <div className="mt-1 flex items-center gap-2">
+                          <div className="h-1 w-20 overflow-hidden rounded-full bg-black/55">
+                            <div
+                              className={cn("h-full rounded-full", isFirst ? "bg-[#d5ff3f]" : "bg-[#62ffe6]")}
+                              style={{ width: `${barWidth}%` }}
+                            />
+                          </div>
+                          {pending > 0 && <span className="text-[10px] font-black text-white/45">{pending} pend.</span>}
                         </div>
                       </div>
                     </td>
@@ -159,9 +190,23 @@ export function PlayersView({ leaderboard }: PlayersViewProps) {
                     </td>
 
                     <td className="hidden px-3 py-3 text-right sm:table-cell">
+                      <span className={cn("font-black tabular-nums", misses > 0 ? "text-[#ffb15f]" : "text-white/25")}>
+                        {misses}
+                      </span>
+                    </td>
+
+                    <td className="hidden px-3 py-3 text-right md:table-cell">
+                      <span className="text-xs font-black tabular-nums text-white/70">{accuracyPct(entry)}%</span>
+                    </td>
+
+                    <td className="hidden px-3 py-3 text-right lg:table-cell">
                       <span className="text-xs font-bold tabular-nums text-white/55">
                         {entry.scoredPredictions}/{entry.totalPredictions}
                       </span>
+                    </td>
+
+                    <td className="px-3 py-3 text-right">
+                      <ChevronRight className="ml-auto h-4 w-4 text-white/45" />
                     </td>
                   </tr>
                 );
@@ -174,15 +219,190 @@ export function PlayersView({ leaderboard }: PlayersViewProps) {
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs font-bold text-white/60">
             <span className="flex items-center gap-1"><Target className="h-3 w-3 text-[#d5ff3f]" /> Exacto = 3 pts</span>
             <span className="flex items-center gap-1"><TrendingUp className="h-3 w-3 text-[#62ffe6]" /> Resultado = 1 pt</span>
+            <span>{totalOutcome} resultados acertados entre todos</span>
           </div>
         </div>
       </div>
+
+      {selectedEntry && (
+        <PlayerPredictionsModal
+          entry={selectedEntry}
+          predictions={predictions.filter((prediction) => normalizeKey(prediction.playerName) === selectedEntry.normalizedName)}
+          matchById={matchById}
+          onClose={() => setSelectedPlayerKey(null)}
+        />
+      )}
     </section>
   );
 }
 
-function MiniStat({ label, value, tone }: { label: string; value: number | string; tone: "lime" | "cyan" | "white" }) {
-  const textClass = tone === "lime" ? "text-[#d5ff3f]" : tone === "cyan" ? "text-[#62ffe6]" : "text-white";
+function PlayerPredictionsModal({
+  entry,
+  predictions,
+  matchById,
+  onClose,
+}: {
+  entry: LeaderboardEntry;
+  predictions: Prediction[];
+  matchById: Map<string, MundialMatch>;
+  onClose: () => void;
+}) {
+  const sortedPredictions = [...predictions].sort((a, b) => {
+    const aMatch = matchById.get(a.matchId);
+    const bMatch = matchById.get(b.matchId);
+    return (aMatch?.sortOrder ?? 9999) - (bMatch?.sortOrder ?? 9999) || (a.matchNumber ?? 0) - (b.matchNumber ?? 0);
+  });
+  const scored = sortedPredictions
+    .map((prediction) => computePredictionScore(matchById.get(prediction.matchId), prediction))
+    .filter((score) => score.points !== null);
+  const modalPoints = scored.reduce((sum, score) => sum + (score.points ?? 0), 0);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 p-2 backdrop-blur-sm sm:items-center sm:p-4">
+      <div className="flex max-h-[calc(100dvh-1rem)] w-full max-w-5xl flex-col overflow-hidden rounded-lg border border-[#62ffe6]/45 bg-[#071018] shadow-[0_24px_90px_rgba(0,0,0,0.85)]">
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-white/15 bg-[#3151ff] px-4 py-3">
+          <div className="min-w-0">
+            <p className="truncate text-lg font-black uppercase text-white">{entry.playerName}</p>
+            <p className="mt-1 text-xs font-black uppercase tracking-[0.16em] text-[#d5ff3f]">
+              {modalPoints} pts / {entry.totalPredictions} picks / {accuracyPct(entry)}% precision
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Cerrar detalle de jugador"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-md border border-white/20 bg-black/20 text-white/75 transition hover:border-[#d5ff3f] hover:text-white"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="grid shrink-0 grid-cols-2 gap-2 border-b border-white/10 bg-black/25 p-3 sm:grid-cols-5">
+          <MiniStat label="Total" value={entry.totalPoints} tone="lime" />
+          <MiniStat label="Exactos" value={entry.exactScores} tone="lime" />
+          <MiniStat label="Result." value={entry.correctOutcomes} tone="cyan" />
+          <MiniStat label="Fallos" value={Math.max(entry.scoredPredictions - entry.correctOutcomes, 0)} tone="orange" />
+          <MiniStat label="Jugados" value={`${entry.scoredPredictions}/${entry.totalPredictions}`} tone="white" />
+        </div>
+
+        <div className="min-h-0 flex-1 overflow-y-auto p-3 sm:p-4">
+          {sortedPredictions.length ? (
+            <div className="grid gap-2">
+              {sortedPredictions.map((prediction) => {
+                const match = matchById.get(prediction.matchId);
+                const score = computePredictionScore(match, prediction);
+
+                return (
+                  <PredictionRow
+                    key={prediction.id}
+                    prediction={prediction}
+                    match={match}
+                    score={score}
+                  />
+                );
+              })}
+            </div>
+          ) : (
+            <div className="rounded-lg border border-dashed border-white/20 bg-black/35 p-6 text-center">
+              <Users className="mx-auto h-10 w-10 text-[#62ffe6]" />
+              <p className="mt-3 text-lg font-black text-white">Sin predicciones guardadas</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PredictionRow({
+  prediction,
+  match,
+  score,
+}: {
+  prediction: Prediction;
+  match?: MundialMatch;
+  score: PredictionScore;
+}) {
+  const status = score.kind;
+  const statusClass =
+    status === "exact"
+      ? "border-[#d5ff3f]/60 bg-[#1a2206] text-[#d5ff3f]"
+      : status === "outcome"
+        ? "border-[#62ffe6]/60 bg-[#071d2a] text-[#62ffe6]"
+        : status === "miss"
+          ? "border-[#ff6a3d]/60 bg-[#2a120b] text-[#ffb15f]"
+          : "border-white/15 bg-white/5 text-white/55";
+  const statusLabel =
+    status === "exact" ? "Exacto" : status === "outcome" ? "Resultado" : status === "miss" ? "Fallo" : "Pendiente";
+
+  return (
+    <article className="grid gap-3 rounded-lg border border-white/10 bg-black/35 p-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="rounded-md border border-white/15 bg-black/35 px-2 py-1 text-xs font-black text-white">
+            #{match?.number ?? prediction.matchNumber ?? "?"}
+          </span>
+          {match && (
+            <span className="rounded-md border border-white/15 bg-black/35 px-2 py-1 text-xs font-black text-white/60">
+              {match.group ? `Grupo ${match.group}` : match.stageLabel}
+            </span>
+          )}
+          {match && (
+            <span className="inline-flex min-w-0 items-center gap-1 text-xs font-bold text-white/55">
+              <CalendarDays className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">{formatKickoff(match.kickoffAt)}</span>
+            </span>
+          )}
+        </div>
+
+        <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2">
+          {match ? (
+            <>
+              <TeamChip team={match.homeTeam} />
+              <span className="text-xs font-black text-white/45">VS</span>
+              <TeamChip team={match.awayTeam} />
+            </>
+          ) : (
+            <p className="font-black text-white">Partido no encontrado</p>
+          )}
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+        <span className="rounded-md border border-[#62ffe6]/45 bg-[#071d2a] px-3 py-2 text-sm font-black tabular-nums text-[#62ffe6]">
+          Pick {prediction.homeScore}-{prediction.awayScore}
+        </span>
+        {prediction.winnerPick && match && (
+          <span className="rounded-md border border-[#d5ff3f]/45 bg-[#1a2206] px-2 py-1 text-xs font-black text-[#d5ff3f]">
+            pen. {prediction.winnerPick === "home" ? teamCode(match.homeTeam) : teamCode(match.awayTeam)}
+          </span>
+        )}
+        <span className="rounded-md border border-white/15 bg-black/35 px-3 py-2 text-sm font-black text-white">
+          {match ? finalScoreText(match) : "Resultado pendiente"}
+        </span>
+        <span className={cn("inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-black", statusClass)}>
+          {status === "exact" ? <Target className="h-3.5 w-3.5" /> : status === "outcome" ? <CheckCircle2 className="h-3.5 w-3.5" /> : status === "miss" ? <MinusCircle className="h-3.5 w-3.5" /> : null}
+          {statusLabel}
+          {score.points !== null && <span className="tabular-nums">+{score.points}</span>}
+        </span>
+      </div>
+    </article>
+  );
+}
+
+function HeaderStat({ label, value, tone }: { label: string; value: number | string; tone: "lime" | "cyan" | "white" }) {
+  const color = tone === "lime" ? "text-[#d5ff3f]" : tone === "cyan" ? "text-[#62ffe6]" : "text-white";
+  return (
+    <div className="rounded-lg border border-white/15 bg-black/25 px-3 py-2">
+      <p className="text-[10px] font-black uppercase tracking-wider text-white/55">{label}</p>
+      <p className={cn("mt-0.5 truncate text-sm font-black", color)}>{value}</p>
+    </div>
+  );
+}
+
+function MiniStat({ label, value, tone }: { label: string; value: number | string; tone: "lime" | "cyan" | "orange" | "white" }) {
+  const textClass =
+    tone === "lime" ? "text-[#d5ff3f]" : tone === "cyan" ? "text-[#62ffe6]" : tone === "orange" ? "text-[#ffb15f]" : "text-white";
 
   return (
     <div className="rounded-md border border-white/10 bg-black/45 px-2 py-1.5 text-center">
@@ -190,4 +410,39 @@ function MiniStat({ label, value, tone }: { label: string; value: number | strin
       <p className={cn("text-sm font-black", textClass)}>{value}</p>
     </div>
   );
+}
+
+function TeamChip({ team }: { team: string }) {
+  return (
+    <span className="inline-flex min-w-0 items-center gap-1.5 rounded-md bg-[#3151ff] px-2 py-1">
+      <Flag team={team} size="xs" />
+      <span className="text-xs font-black text-white">{teamCode(team)}</span>
+      <span className="hidden max-w-28 truncate text-xs font-bold text-white/70 sm:inline">{team}</span>
+    </span>
+  );
+}
+
+function accuracyPct(entry: LeaderboardEntry) {
+  return entry.scoredPredictions > 0 ? Math.round((entry.correctOutcomes / entry.scoredPredictions) * 100) : 0;
+}
+
+function computePredictionScore(match: MundialMatch | undefined, prediction: Prediction): PredictionScore {
+  if (!match || match.homeFinalScore === null || match.awayFinalScore === null) {
+    return { points: null, kind: "pending" };
+  }
+
+  const isExact = prediction.homeScore === match.homeFinalScore && prediction.awayScore === match.awayFinalScore;
+  const actualOutcome = getOutcome(match.homeFinalScore, match.awayFinalScore);
+  const predictedOutcome = getOutcome(prediction.homeScore, prediction.awayScore);
+  const correctOutcome = actualOutcome === predictedOutcome;
+
+  if (isExact) return { points: 3, kind: "exact" };
+  if (correctOutcome) return { points: 1, kind: "outcome" };
+  return { points: 0, kind: "miss" };
+}
+
+function getOutcome(home: number, away: number) {
+  if (home > away) return "home";
+  if (away > home) return "away";
+  return "draw";
 }

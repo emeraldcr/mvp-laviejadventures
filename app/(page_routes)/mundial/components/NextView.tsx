@@ -1,5 +1,6 @@
-import { Trophy } from "lucide-react";
+import { Trophy, Users, X, Zap } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import type { Draft, MundialMatch, Prediction } from "../types";
 import { emptyDraft } from "../utils";
 import { FeaturedMatch } from "./FeaturedMatch";
@@ -38,6 +39,8 @@ export function NextView({
 }: NextViewProps) {
   const [selectedInfoMatchId, setSelectedInfoMatchId] = useState<string | null>(null);
   const [featuredMatchId, setFeaturedMatchId] = useState<string | null>(null);
+  const [showPicksModal, setShowPicksModal] = useState(false);
+  const [showBetsModal, setShowBetsModal] = useState(false);
   const featuredRef = useRef<HTMLDivElement>(null);
 
   const selectedInfoMatch = useMemo(
@@ -53,10 +56,15 @@ export function NextView({
   function handleSelectMatch(match: MundialMatch) {
     setSelectedInfoMatchId(match.id);
     setFeaturedMatchId(match.id);
+    setShowPicksModal(false);
+    setShowBetsModal(false);
     setTimeout(() => {
       featuredRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 0);
   }
+
+  const modalMatch = featuredMatch ?? selectedInfoMatch;
+  const modalPickCount = modalMatch ? predictions.filter((p) => p.matchId === modalMatch.id).length : 0;
 
   return (
     <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(380px,460px)] xl:items-start">
@@ -76,16 +84,11 @@ export function NextView({
               />
             </div>
 
-            <StatBetsPanel matchId={featuredMatch.id} playerName={playerName} />
-
-            {selectedInfoMatch && (
-              <OtherPicksPanel
-                match={selectedInfoMatch}
-                predictions={predictions}
-                playerName={playerName}
-                showEmpty
-              />
-            )}
+            <MatchActionBar
+              pickCount={modalPickCount}
+              onOpenPicks={() => setShowPicksModal(true)}
+              onOpenBets={() => setShowBetsModal(true)}
+            />
           </>
         ) : (
           <>
@@ -103,15 +106,11 @@ export function NextView({
             </section>
 
             {selectedInfoMatch && (
-              <>
-                <StatBetsPanel matchId={selectedInfoMatch.id} playerName={playerName} />
-                <OtherPicksPanel
-                  match={selectedInfoMatch}
-                  predictions={predictions}
-                  playerName={playerName}
-                  showEmpty
-                />
-              </>
+              <MatchActionBar
+                pickCount={modalPickCount}
+                onOpenPicks={() => setShowPicksModal(true)}
+                onOpenBets={() => setShowBetsModal(true)}
+              />
             )}
           </>
         )}
@@ -123,6 +122,84 @@ export function NextView({
         selectedMatchId={selectedInfoMatch?.id ?? null}
         onSelectMatch={handleSelectMatch}
       />
+
+      {showPicksModal && modalMatch && (
+        <MundialModal title="Picks de amigos" onClose={() => setShowPicksModal(false)}>
+          <OtherPicksPanel
+            match={modalMatch}
+            predictions={predictions}
+            playerName={playerName}
+            showEmpty
+          />
+        </MundialModal>
+      )}
+
+      {showBetsModal && modalMatch && (
+        <MundialModal title="Apuestas del partido" onClose={() => setShowBetsModal(false)}>
+          <StatBetsPanel matchId={modalMatch.id} playerName={playerName} />
+        </MundialModal>
+      )}
+    </div>
+  );
+}
+
+function MatchActionBar({
+  pickCount,
+  onOpenPicks,
+  onOpenBets,
+}: {
+  pickCount: number;
+  onOpenPicks: () => void;
+  onOpenBets: () => void;
+}) {
+  return (
+    <div className="flex flex-col gap-2 rounded-lg border border-white/15 bg-black/35 p-2 sm:flex-row sm:items-center sm:justify-end">
+      <button
+        type="button"
+        onClick={onOpenPicks}
+        className="inline-flex h-10 min-w-0 items-center justify-center gap-2 rounded-md border border-[#62ffe6]/55 bg-[#071d2a] px-3 text-sm font-black text-[#62ffe6] transition hover:border-white hover:text-white"
+      >
+        <Users className="h-4 w-4 shrink-0" />
+        <span className="truncate">Picks amigos</span>
+        <span className="rounded bg-black/40 px-1.5 py-0.5 text-xs tabular-nums text-white">{pickCount}</span>
+      </button>
+      <button
+        type="button"
+        onClick={onOpenBets}
+        className="inline-flex h-10 min-w-0 items-center justify-center gap-2 rounded-md border border-[#d5ff3f]/55 bg-[#1a2206] px-3 text-sm font-black text-[#d5ff3f] transition hover:border-white hover:text-white"
+      >
+        <Zap className="h-4 w-4 shrink-0" />
+        <span className="truncate">Apuestas</span>
+      </button>
+    </div>
+  );
+}
+
+function MundialModal({
+  title,
+  children,
+  onClose,
+}: {
+  title: string;
+  children: ReactNode;
+  onClose: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 p-2 backdrop-blur-sm sm:items-center sm:p-4">
+      <div className="flex max-h-[calc(100dvh-1rem)] w-full max-w-4xl flex-col overflow-hidden rounded-lg border border-[#62ffe6]/45 bg-[#071018] shadow-[0_24px_90px_rgba(0,0,0,0.85)]">
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-white/15 bg-[#3151ff] px-4 py-3">
+          <p className="min-w-0 truncate text-sm font-black uppercase tracking-[0.18em] text-white">{title}</p>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Cerrar modal"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-md border border-white/20 bg-black/20 text-white/75 transition hover:border-[#d5ff3f] hover:text-white"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto p-3 sm:p-4">{children}</div>
+      </div>
     </div>
   );
 }

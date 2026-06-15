@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { API_URL, EMPTY_DRAFTS, STORAGE_KEY, TOTAL_MATCHES } from "./constants";
 import type { Draft, LeaderboardEntry, MundialMatch, PlayerProgress, Prediction, PredictionsResponse, ViewMode } from "./types";
 import {
@@ -30,9 +30,15 @@ export function useMundial() {
   const [isSavingBulk, setIsSavingBulk] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [pinVerifiedPlayers, setPinVerifiedPlayers] = useState<Set<string>>(new Set());
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [pinMode, setPinMode] = useState<"set" | "verify">("verify");
+  const pinCheckedRef = useRef<Set<string>>(new Set());
 
   const playerKey = useMemo(() => normalizeKey(playerName), [playerName]);
   const registeredNames = useMemo(() => players.map((p) => p.playerName).sort(), [players]);
+  const registeredKeys = useMemo(() => new Set(players.map((p) => p.key)), [players]);
+  const isAuthenticated = !playerKey || pinVerifiedPlayers.has(playerKey) || !registeredKeys.has(playerKey);
   const orderedMatches = useMemo(
     () => [...matches].sort((a, b) => kickoffMs(a) - kickoffMs(b) || a.number - b.number),
     [matches]
@@ -219,6 +225,31 @@ export function useMundial() {
     if (trimmed) window.localStorage.setItem(STORAGE_KEY, trimmed);
   }, [playerName]);
 
+  useEffect(() => {
+    if (isLoading || !playerName || registeredKeys.size === 0) return;
+    const key = normalizeKey(normalizeName(playerName));
+    if (pinVerifiedPlayers.has(key)) return;
+    if (pinCheckedRef.current.has(key)) return;
+
+    if (!registeredKeys.has(key)) {
+      setPinVerifiedPlayers((prev) => { const next = new Set(prev); next.add(key); return next; });
+      return;
+    }
+
+    pinCheckedRef.current.add(key);
+    void (async () => {
+      try {
+        const r = await fetch(`/api/mundial/pin?playerName=${encodeURIComponent(playerName)}`);
+        const data = (await r.json()) as { hasPinSet: boolean };
+        setPinMode(data.hasPinSet ? "verify" : "set");
+        setShowPinModal(true);
+      } catch {
+        setPinVerifiedPlayers((prev) => { const next = new Set(prev); next.add(key); return next; });
+      }
+    })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading, playerName, registeredKeys]);
+
   function getDraft(matchId: string) {
     return drafts[matchId] ?? emptyDraft();
   }
@@ -300,9 +331,16 @@ export function useMundial() {
     return "";
   }
 
+  function onPinSuccess() {
+    const key = normalizeKey(normalizeName(playerName));
+    setPinVerifiedPlayers((prev) => { const next = new Set(prev); next.add(key); return next; });
+    setShowPinModal(false);
+  }
+
   async function saveMatch(match: MundialMatch) {
     const trimmed = normalizeName(playerName);
     if (!trimmed) { setError("Pone tu nombre antes de guardar."); return; }
+    if (!isAuthenticated) { setError("Verificá tu PIN antes de guardar."); return; }
     const validationError = validatePrediction(match);
     if (validationError) { setError(validationError); return; }
 
@@ -326,6 +364,7 @@ export function useMundial() {
   async function saveDirtyDrafts() {
     const trimmed = normalizeName(playerName);
     if (!trimmed) { setError("Pone tu nombre antes de guardar."); return; }
+    if (!isAuthenticated) { setError("Verificá tu PIN antes de guardar."); return; }
 
     const dirtyMatches = dirtyDrafts
       .map(([matchId]) => matchById.get(matchId))
@@ -360,6 +399,10 @@ export function useMundial() {
     setPlayerName,
     showPlayerPicker,
     setShowPlayerPicker,
+    showPinModal,
+    pinMode,
+    isAuthenticated,
+    onPinSuccess,
     matches,
     predictions,
     players,
