@@ -429,124 +429,136 @@ export function StatBetsPanel({
   const progressPct = questions.length > 0 ? Math.round((answeredCount / questions.length) * 100) : 0;
   const activeQuestion = questions[activeIndex] ?? questions[0];
 
+  // For mini variant: only show unanswered, open questions in the slider
+  const pendingQuestions = questions.filter((q) => !myBets[q.id] && !q.closed && !q.resolved);
+  const clampedMiniIndex = Math.min(activeIndex, Math.max(pendingQuestions.length - 1, 0));
+  const activePendingQuestion = pendingQuestions[clampedMiniIndex] ?? null;
+
   // ── MINI VARIANT ────────────────────────────────────────────────────────
 
   if (variant === "mini") {
+    const allDone = pendingQuestions.length === 0 && questions.length > 0;
+
     return (
-      <section className="overflow-hidden rounded-2xl border border-white/10 bg-[#0b0d14] shadow-[0_24px_60px_rgba(0,0,0,0.5)]">
+      <section className="overflow-hidden rounded-2xl border border-[#f0b429]/20 bg-[#0b0d14] shadow-[0_24px_60px_rgba(0,0,0,0.5)]">
         {/* header */}
         <div className="relative overflow-hidden border-b border-white/8 bg-gradient-to-r from-[#1a1030] to-[#0e1520] px-4 py-3">
           <div className="pointer-events-none absolute inset-0 opacity-30 [background-image:radial-gradient(ellipse_at_top_left,rgba(240,180,41,0.2),transparent_60%)]" />
-          <div className="relative flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5">
+          <div className="relative flex items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-2.5">
               <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-[#f0b429] to-[#e8a30a] shadow-[0_0_16px_rgba(240,180,41,0.4)]">
                 <Zap className="h-4 w-4 text-[#0b0d14]" />
               </span>
-              <div>
+              <div className="min-w-0">
                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#f0b429]/80">Apuestas extra</p>
-                <p className="text-sm font-black text-white">
+                <p className="truncate text-sm font-black text-white">
                   {matchLabel ?? "Preguntas del partido"}
                 </p>
               </div>
             </div>
 
-            {/* pts chip */}
-            <div className="flex items-center gap-2">
-              <span className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-black tabular-nums text-white/60">
-                {answeredCount}/{questions.length}
-              </span>
-              <span className="rounded-lg border border-[#f0b429]/30 bg-[#f0b429]/10 px-2.5 py-1 text-xs font-black text-[#f0b429]">
-                {totalPts} pts en juego
+            <div className="flex shrink-0 items-center gap-1.5">
+              {answeredCount > 0 && (
+                <span className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2 py-1 text-[11px] font-black tabular-nums text-emerald-400">
+                  {answeredCount} ✓
+                </span>
+              )}
+              <span className="rounded-lg border border-[#f0b429]/30 bg-[#f0b429]/10 px-2 py-1 text-[11px] font-black text-[#f0b429]">
+                {totalPts}pts
               </span>
             </div>
           </div>
 
           {/* progress bar */}
-          <div className="relative mt-3 h-1.5 overflow-hidden rounded-full bg-white/8">
+          <div className="relative mt-2.5 h-1 overflow-hidden rounded-full bg-white/8">
             <div
               className="h-full rounded-full bg-gradient-to-r from-[#f0b429] to-[#fbbf24] transition-all duration-500"
               style={{ width: `${progressPct}%` }}
             />
           </div>
-          <div className="mt-1 flex justify-between text-[10px] font-black text-white/30">
-            <span>{answeredCount} apostadas</span>
-            <span>{progressPct}%</span>
-          </div>
         </div>
 
-        {/* question */}
-        <div className="p-3 sm:p-4">
-          <QuestionCard
-            question={activeQuestion}
-            index={activeIndex}
-            total={questions.length}
-            myBet={myBets[activeQuestion.id]}
-            saving={saving === activeQuestion.id}
-            error={errors[activeQuestion.id] ?? ""}
-            compact
-            onBet={(optId) => void placeBet(activeQuestion.id, optId, true)}
-          />
-
-          {!playerName && (
-            <button
-              type="button"
-              onClick={onOpenPlayerPicker}
-              className="mt-3 w-full rounded-xl border border-[#f0b429]/40 bg-[#f0b429]/10 py-2.5 text-sm font-black text-[#f0b429] transition hover:bg-[#f0b429]/15"
-            >
-              Elegí tu nombre para apostar
-            </button>
-          )}
-
-          {/* navigation */}
-          <div className="mt-3 flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setActiveIndex((c) => Math.max(c - 1, 0))}
-              disabled={activeIndex === 0}
-              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/50 transition hover:border-white/25 hover:text-white disabled:opacity-25"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-
-            {/* dot rail */}
-            <div className="flex flex-1 items-center justify-center gap-1 overflow-x-auto py-1">
-              {questions.map((q, i) => (
-                <button
-                  key={q.id}
-                  type="button"
-                  onClick={() => setActiveIndex(i)}
-                  aria-label={`Pregunta ${i + 1}`}
-                  className={cn(
-                    "h-2 shrink-0 rounded-full transition-all duration-200",
-                    i === activeIndex
-                      ? "w-6 bg-[#f0b429]"
-                      : myBets[q.id]
-                        ? "w-2 bg-emerald-500/70"
-                        : "w-2 bg-white/20"
-                  )}
-                />
-              ))}
+        {/* body */}
+        <div className="p-3">
+          {allDone ? (
+            /* all done state */
+            <div className="flex items-center gap-2.5 rounded-xl border border-emerald-500/25 bg-emerald-500/8 px-3 py-3">
+              <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-400" />
+              <div>
+                <p className="text-sm font-black text-emerald-400">¡Todas apostadas!</p>
+                <p className="text-[11px] font-bold text-emerald-500/60">
+                  {answeredCount}/{questions.length} preguntas respondidas
+                </p>
+              </div>
             </div>
-
-            <button
-              type="button"
-              onClick={() => setActiveIndex((c) => Math.min(c + 1, questions.length - 1))}
-              disabled={activeIndex >= questions.length - 1}
-              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[#f0b429]/30 bg-[#f0b429]/8 text-[#f0b429] transition hover:bg-[#f0b429]/15 disabled:opacity-25"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
-
-          {/* all done */}
-          {answeredCount === questions.length && (
-            <div className="mt-3 flex items-center gap-2.5 rounded-xl border border-emerald-500/25 bg-emerald-500/8 px-3 py-2.5">
-              <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
-              <p className="text-sm font-black text-emerald-400">
-                ¡Todas las apuestas guardadas!
+          ) : activePendingQuestion ? (
+            <>
+              {/* pending count pill */}
+              <p className="mb-2 text-[10px] font-black uppercase tracking-wider text-white/35">
+                {pendingQuestions.length} pendiente{pendingQuestions.length !== 1 ? "s" : ""}
               </p>
-            </div>
-          )}
+
+              <QuestionCard
+                question={activePendingQuestion}
+                index={questions.indexOf(activePendingQuestion)}
+                total={questions.length}
+                myBet={myBets[activePendingQuestion.id]}
+                saving={saving === activePendingQuestion.id}
+                error={errors[activePendingQuestion.id] ?? ""}
+                compact
+                onBet={(optId) => void placeBet(activePendingQuestion.id, optId)}
+              />
+
+              {!playerName && (
+                <button
+                  type="button"
+                  onClick={onOpenPlayerPicker}
+                  className="mt-3 w-full rounded-xl border border-[#f0b429]/40 bg-[#f0b429]/10 py-2.5 text-sm font-black text-[#f0b429] transition hover:bg-[#f0b429]/15"
+                >
+                  Elegí tu nombre para apostar
+                </button>
+              )}
+
+              {/* navigation — only render if more than 1 pending */}
+              {pendingQuestions.length > 1 && (
+                <div className="mt-3 flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setActiveIndex((c) => Math.max(c - 1, 0))}
+                    disabled={clampedMiniIndex === 0}
+                    className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/50 transition hover:border-white/25 hover:text-white disabled:opacity-25"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+
+                  {/* dot rail — one dot per pending question */}
+                  <div className="flex flex-1 items-center justify-center gap-1.5 py-1">
+                    {pendingQuestions.map((q, i) => (
+                      <button
+                        key={q.id}
+                        type="button"
+                        onClick={() => setActiveIndex(i)}
+                        aria-label={`Pregunta pendiente ${i + 1}`}
+                        className={cn(
+                          "h-2 shrink-0 rounded-full transition-all duration-200",
+                          i === clampedMiniIndex ? "w-5 bg-[#f0b429]" : "w-2 bg-white/20"
+                        )}
+                      />
+                    ))}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveIndex((c) => Math.min(c + 1, pendingQuestions.length - 1))}
+                    disabled={clampedMiniIndex >= pendingQuestions.length - 1}
+                    className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#f0b429]/30 bg-[#f0b429]/8 text-[#f0b429] transition hover:bg-[#f0b429]/15 disabled:opacity-25"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
+            </>
+          ) : null}
         </div>
       </section>
     );

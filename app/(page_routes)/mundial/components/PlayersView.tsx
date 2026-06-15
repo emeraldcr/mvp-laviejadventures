@@ -1,5 +1,7 @@
-import { CalendarDays, CheckCircle2, ChevronRight, MinusCircle, Target, TrendingUp, Trophy, Users, X } from "lucide-react";
-import { useMemo, useState } from "react";
+"use client";
+
+import { CalendarDays, CheckCircle2, ChevronRight, MinusCircle, Target, TrendingUp, Trophy, Users, X, Zap } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import type { LeaderboardEntry, MundialMatch, Prediction } from "../types";
 import { cn, finalScoreText, formatKickoff, normalizeKey, teamCode } from "../utils";
 import { Flag } from "./Flag";
@@ -224,6 +226,8 @@ export function PlayersView({ leaderboard, matches, predictions }: PlayersViewPr
         </div>
       </div>
 
+      <StatBetsLeaderboard />
+
       {selectedEntry && (
         <PlayerPredictionsModal
           entry={selectedEntry}
@@ -233,6 +237,95 @@ export function PlayersView({ leaderboard, matches, predictions }: PlayersViewPr
         />
       )}
     </section>
+  );
+}
+
+type GlobalStatBetEntry = { playerName: string; earned: number; total: number };
+
+function StatBetsLeaderboard() {
+  const [entries, setEntries] = useState<GlobalStatBetEntry[]>([]);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/mundial/stat-bets?global=true")
+      .then((r) => (r.ok ? r.json() : { leaderboard: [] }))
+      .then((data) => {
+        setEntries(data.leaderboard ?? []);
+        setLoaded(true);
+      })
+      .catch(() => setLoaded(true));
+  }, []);
+
+  if (!loaded || !entries.length) return null;
+
+  const max = Math.max(...entries.map((e) => e.earned), 1);
+  const medals = ["🥇", "🥈", "🥉"];
+
+  return (
+    <div className="overflow-hidden rounded-lg border border-[#f0b429]/25 bg-[#071018] shadow-[0_24px_70px_rgba(0,0,0,0.22)]">
+      <div className="border-b border-white/8 bg-gradient-to-r from-[#1a1030] to-[#0e1520] px-4 py-3">
+        <div className="flex items-center gap-2">
+          <Zap className="h-4 w-4 text-[#f0b429]" />
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#f0b429]">Mini-Apuestas</p>
+        </div>
+        <p className="mt-0.5 text-sm font-black text-white">
+          Tabla comparativa · {entries.length} jugadores
+        </p>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-white/10 bg-black/35 text-xs">
+              <th className="px-3 py-2.5 text-left font-black uppercase tracking-wide text-white/40">#</th>
+              <th className="px-3 py-2.5 text-left font-black uppercase tracking-wide text-white">Jugador</th>
+              <th className="px-3 py-2.5 text-right font-black uppercase tracking-wide text-[#f0b429]">Pts ganados</th>
+              <th className="px-3 py-2.5 text-right font-black uppercase tracking-wide text-white/50">Apostadas</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-white/8">
+            {entries.map((entry, i) => {
+              const barWidth = max > 0 ? Math.round((entry.earned / max) * 100) : 0;
+              const isFirst = i === 0;
+              return (
+                <tr key={entry.playerName} className={cn(isFirst ? "bg-[#f0b429]/5" : "hover:bg-white/3", "transition-colors")}>
+                  <td className="px-3 py-2.5">
+                    {medals[i] ? (
+                      <span className="text-base leading-none">{medals[i]}</span>
+                    ) : (
+                      <span className="text-xs font-black text-white/30">{i + 1}</span>
+                    )}
+                  </td>
+                  <td className="px-3 py-2.5">
+                    <p className={cn("font-black", isFirst ? "text-[#f0b429]" : "text-white")}>
+                      {entry.playerName}
+                    </p>
+                    <div className="mt-1 h-1 w-24 overflow-hidden rounded-full bg-black/55">
+                      <div
+                        className={cn("h-full rounded-full", isFirst ? "bg-[#f0b429]" : "bg-emerald-500/50")}
+                        style={{ width: `${barWidth}%` }}
+                      />
+                    </div>
+                  </td>
+                  <td className="px-3 py-2.5 text-right">
+                    <span className={cn(
+                      "font-black tabular-nums",
+                      entry.earned > 0 ? (isFirst ? "text-[#f0b429]" : "text-emerald-400") : "text-white/25"
+                    )}>
+                      {entry.earned}
+                    </span>
+                    <span className="ml-0.5 text-[10px] text-white/30">pts</span>
+                  </td>
+                  <td className="px-3 py-2.5 text-right">
+                    <span className="text-xs font-bold tabular-nums text-white/40">{entry.total}</span>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 }
 

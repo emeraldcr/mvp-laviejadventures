@@ -88,6 +88,7 @@ export function NextView({
             matchId={featuredMatch.id}
             playerName={playerName}
             matchLabel={`${featuredMatch.homeTeam} vs ${featuredMatch.awayTeam}`}
+            variant="mini"
             onOpenPlayerPicker={onOpenPlayerPicker}
           />
         </div>

@@ -30,6 +30,37 @@ export async function GET(req: NextRequest) {
   try {
     const matchId = req.nextUrl.searchParams.get("matchId") ?? "";
     const playerName = normalizeName(req.nextUrl.searchParams.get("playerName"));
+    const global = req.nextUrl.searchParams.get("global") === "true";
+
+    // Global leaderboard: aggregate stat-bet points across all matches
+    if (global) {
+      const db = await getDb();
+      const [questions, allBets] = await Promise.all([
+        db.collection(STAT_QUESTIONS_COLLECTION).find({}).toArray(),
+        db.collection(STAT_BETS_COLLECTION).find({}).toArray(),
+      ]);
+
+      const playerMap = new Map<string, { playerName: string; earned: number; total: number }>();
+      for (const bet of allBets) {
+        const key = String(bet.normalizedName ?? "");
+        if (!key) continue;
+        if (!playerMap.has(key)) {
+          playerMap.set(key, { playerName: String(bet.playerName ?? key), earned: 0, total: 0 });
+        }
+        const entry = playerMap.get(key)!;
+        entry.total++;
+        const q = questions.find((q) => q.id === bet.questionId);
+        if (q?.correctOptionId && bet.optionId === q.correctOptionId) {
+          entry.earned += Number(q.pointValue ?? 1);
+        }
+      }
+
+      const leaderboard = [...playerMap.values()].sort(
+        (a, b) => b.earned - a.earned || b.total - a.total || a.playerName.localeCompare(b.playerName)
+      );
+
+      return NextResponse.json({ leaderboard });
+    }
 
     if (!matchId) {
       return NextResponse.json({ error: "matchId requerido." }, { status: 400 });
