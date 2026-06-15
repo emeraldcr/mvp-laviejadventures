@@ -19,9 +19,10 @@ const VIEW_OPTIONS: Array<{ id: AdminView; label: string; icon: React.ReactNode 
   { id: "stats", label: "Stats & Apuestas", icon: <BarChart3 className="h-4 w-4" /> },
 ];
 
-type MatchFilter = "all" | "open" | "closed" | "scored";
+type MatchFilter = "all" | "open" | "closed" | "scored" | "live";
 const FILTER_OPTIONS: Array<{ id: MatchFilter; label: string }> = [
   { id: "all", label: "Todos" },
+  { id: "live", label: "🔴 Live" },
   { id: "open", label: "Abiertos" },
   { id: "closed", label: "Cerrados" },
   { id: "scored", label: "Con resultado" },
@@ -91,6 +92,7 @@ export default function AdminClient() {
   }
 
   const filteredMatches = data?.matches.filter((m) => {
+    if (matchFilter === "live") return m.liveStatus === "live" || m.liveStatus === "halftime";
     if (matchFilter === "open") return !m.closed;
     if (matchFilter === "closed") return m.closed;
     if (matchFilter === "scored") return m.homeFinalScore !== null && m.awayFinalScore !== null;
@@ -100,6 +102,7 @@ export default function AdminClient() {
   // Summary stats (computed client-side from data)
   const scoredCount = data?.matches.filter((m) => m.homeFinalScore !== null).length ?? 0;
   const openCount = data?.matches.filter((m) => !m.closed).length ?? 0;
+  const liveCount = data?.matches.filter((m) => m.liveStatus === "live" || m.liveStatus === "halftime").length ?? 0;
   const playerCount = data?.leaderboard.length ?? 0;
   const leader = data?.leaderboard[0] ?? null;
 
@@ -132,7 +135,7 @@ export default function AdminClient() {
       <div className="mx-auto w-full max-w-[1600px] px-4 py-5 sm:px-6">
         {/* Summary stats */}
         {data && (
-          <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-5">
             <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
               <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-slate-100">
                 <Users className="h-4 w-4 text-slate-600" />
@@ -165,6 +168,35 @@ export default function AdminClient() {
                 <p className="text-xl font-black tabular-nums text-amber-700">{openCount}</p>
               </div>
             </div>
+
+            <button
+              type="button"
+              onClick={() => { setView("matches"); setMatchFilter("live"); }}
+              className={cn(
+                "flex items-center gap-3 rounded-xl border px-4 py-3 shadow-sm transition text-left",
+                liveCount > 0
+                  ? "border-red-300 bg-red-50 ring-1 ring-red-200 hover:bg-red-100"
+                  : "border-slate-200 bg-white hover:bg-slate-50"
+              )}
+            >
+              <div className={cn(
+                "relative grid h-9 w-9 shrink-0 place-items-center rounded-lg",
+                liveCount > 0 ? "bg-red-100" : "bg-slate-100"
+              )}>
+                <Tv2 className={cn("h-4 w-4", liveCount > 0 ? "text-red-600" : "text-slate-400")} />
+                {liveCount > 0 && (
+                  <span className="absolute -top-1 -right-1 h-2.5 w-2.5 animate-pulse rounded-full bg-red-500" />
+                )}
+              </div>
+              <div className="min-w-0">
+                <p className={cn("text-[10px] font-black uppercase tracking-wide", liveCount > 0 ? "text-red-500" : "text-slate-400")}>
+                  En vivo
+                </p>
+                <p className={cn("text-xl font-black tabular-nums", liveCount > 0 ? "text-red-700" : "text-slate-400")}>
+                  {liveCount}
+                </p>
+              </div>
+            </button>
 
             <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
               <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-amber-50">

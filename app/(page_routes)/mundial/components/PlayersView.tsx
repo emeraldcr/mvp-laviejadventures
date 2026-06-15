@@ -250,7 +250,7 @@ function PlayerPredictionsModal({
   const sortedPredictions = [...predictions].sort((a, b) => {
     const aMatch = matchById.get(a.matchId);
     const bMatch = matchById.get(b.matchId);
-    return (aMatch?.sortOrder ?? 9999) - (bMatch?.sortOrder ?? 9999) || (a.matchNumber ?? 0) - (b.matchNumber ?? 0);
+    return (bMatch?.sortOrder ?? -1) - (aMatch?.sortOrder ?? -1) || (b.matchNumber ?? -1) - (a.matchNumber ?? -1);
   });
   const scored = sortedPredictions
     .map((prediction) => computePredictionScore(matchById.get(prediction.matchId), prediction))

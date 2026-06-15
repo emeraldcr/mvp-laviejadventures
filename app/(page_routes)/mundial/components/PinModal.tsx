@@ -8,11 +8,12 @@ type Props = {
   playerName: string;
   mode: "set" | "verify";
   onSuccess: () => void;
+  onChangePlayer?: () => void;
 };
 
 const NUMPAD_TOP = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 
-export function PinModal({ playerName, mode: initialMode, onSuccess }: Props) {
+export function PinModal({ playerName, mode: initialMode, onSuccess, onChangePlayer }: Props) {
   const [mode, setMode] = useState(initialMode);
   const [step, setStep] = useState<"enter" | "confirm">("enter");
   const [firstPin, setFirstPin] = useState("");
@@ -124,6 +125,15 @@ export function PinModal({ playerName, mode: initialMode, onSuccess }: Props) {
           <p className="text-[11px] font-black uppercase tracking-[0.3em] text-[#d5ff3f]">{playerName}</p>
           <h2 className="text-[1.35rem] font-black uppercase leading-tight text-white">{title}</h2>
           <p className="text-sm font-bold text-white/50">{subtitle}</p>
+          {onChangePlayer && (
+            <button
+              type="button"
+              onClick={onChangePlayer}
+              className="mt-1 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-xs font-black uppercase tracking-wide text-[#62ffe6] transition hover:border-[#62ffe6] hover:bg-[#071d2a] hover:text-white"
+            >
+              Cambiar jugador
+            </button>
+          )}
         </div>
 
         <div className="flex gap-5">

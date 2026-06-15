@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { UFC_API_URL, EMPTY_DRAFTS, STORAGE_KEY } from "./constants";
+import { useInterval } from "@/lib/hooks/useInterval";
 import type {
   UfcDraft,
   UfcFight,
@@ -136,6 +137,19 @@ export function useUfc() {
       setIsLoading(false);
     }
   }, []);
+
+  const pollPredictions = useCallback(async () => {
+    try {
+      const data = await readQuiniela();
+      setFights(data.fights ?? []);
+      setPredictions(data.predictions ?? []);
+      setPlayers(data.players ?? []);
+    } catch {
+      // silently ignore poll failures
+    }
+  }, []);
+
+  useInterval(pollPredictions, 30_000);
 
   useEffect(() => {
     const storedPlayerName = window.localStorage.getItem(STORAGE_KEY) ?? "";

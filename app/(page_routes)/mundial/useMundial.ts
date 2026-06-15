@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { API_URL, EMPTY_DRAFTS, STORAGE_KEY, TOTAL_MATCHES } from "./constants";
+import { API_URL, EMPTY_DRAFTS, STORAGE_KEY, TOTAL_MATCHES, TRUSTED_PLAYER_KEY } from "./constants";
 import type { Draft, LeaderboardEntry, MundialMatch, PlayerProgress, Prediction, PredictionsResponse, ViewMode } from "./types";
+import { useInterval } from "@/lib/hooks/useInterval";
 import {
   emptyDraft,
   fetchWithTimeout,
@@ -16,6 +17,8 @@ import {
 export function useMundial() {
   const [playerName, setPlayerName] = useState("");
   const [showPlayerPicker, setShowPlayerPicker] = useState(false);
+  const [playerPickerRequired, setPlayerPickerRequired] = useState(false);
+  const [trustedPlayerKey, setTrustedPlayerKey] = useState("");
   const [matches, setMatches] = useState<MundialMatch[]>([]);
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [players, setPlayers] = useState<PlayerProgress[]>([]);
@@ -209,10 +212,33 @@ export function useMundial() {
     }
   }, []);
 
+  const pollPredictions = useCallback(async () => {
+    try {
+      const data = await readQuiniela();
+      setMatches(data.matches ?? []);
+      setPredictions(data.predictions ?? []);
+      setPlayers(data.players ?? []);
+    } catch {
+      // silently ignore poll failures
+    }
+  }, []);
+
+  useInterval(pollPredictions, 30_000);
+
   useEffect(() => {
-    const storedPlayerName = window.localStorage.getItem(STORAGE_KEY) ?? "";
-    setPlayerName(storedPlayerName);
-    setShowPlayerPicker(!storedPlayerName);
+    const timeout = window.setTimeout(() => {
+      const storedPlayerName = normalizeName(window.localStorage.getItem(STORAGE_KEY) ?? "");
+      const storedTrustedKey = window.localStorage.getItem(TRUSTED_PLAYER_KEY) ?? "";
+      const storedPlayerKey = normalizeKey(storedPlayerName);
+      const canTrustStoredPlayer = Boolean(storedPlayerName && storedTrustedKey === storedPlayerKey);
+
+      setPlayerName(storedPlayerName);
+      setTrustedPlayerKey(storedTrustedKey);
+      setPlayerPickerRequired(!canTrustStoredPlayer);
+      setShowPlayerPicker(!canTrustStoredPlayer);
+    }, 0);
+
+    return () => window.clearTimeout(timeout);
   }, []);
 
   useEffect(() => {
@@ -233,13 +259,15 @@ export function useMundial() {
   }, [playerName]);
 
   useEffect(() => {
-    if (isLoading || !playerName || registeredKeys.size === 0) return;
+    if (isLoading || showPlayerPicker || !playerName || registeredKeys.size === 0) return;
     const key = normalizeKey(normalizeName(playerName));
     if (pinVerifiedPlayers.has(key)) return;
     if (pinCheckedRef.current.has(key)) return;
 
     if (!registeredKeys.has(key)) {
-      setPinVerifiedPlayers((prev) => { const next = new Set(prev); next.add(key); return next; });
+      window.setTimeout(() => {
+        setPinVerifiedPlayers((prev) => { const next = new Set(prev); next.add(key); return next; });
+      }, 0);
       return;
     }
 
@@ -255,7 +283,38 @@ export function useMundial() {
       }
     })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoading, playerName, registeredKeys]);
+  }, [isLoading, playerName, registeredKeys, showPlayerPicker]);
+
+  function rememberTrustedPlayer(name: string) {
+    const key = normalizeKey(name);
+    if (!key) return;
+    window.localStorage.setItem(TRUSTED_PLAYER_KEY, key);
+    setTrustedPlayerKey(key);
+  }
+
+  function selectPlayer(name: string) {
+    const trimmed = normalizeName(name);
+    if (!trimmed) return;
+    const key = normalizeKey(trimmed);
+
+    setError("");
+    setSuccess("");
+    setPlayerName(trimmed);
+    setPlayerPickerRequired(false);
+    setShowPlayerPicker(false);
+    setShowPinModal(false);
+    pinCheckedRef.current.delete(key);
+  }
+
+  function openPlayerPicker() {
+    setShowPinModal(false);
+    setShowPlayerPicker(true);
+  }
+
+  function closePlayerPicker() {
+    if (playerPickerRequired) return;
+    setShowPlayerPicker(false);
+  }
 
   function getDraft(matchId: string) {
     return drafts[matchId] ?? emptyDraft();
@@ -358,6 +417,7 @@ export function useMundial() {
       const data = await postPredictions(buildPayload(match));
       mergeSaved(data.predictions);
       setPlayerName(trimmed);
+      rememberTrustedPlayer(trimmed);
       setSuccess(`Guardado: ${match.homeTeam} vs ${match.awayTeam}.`);
       void loadQuiniela();
     } catch (err) {
@@ -391,6 +451,7 @@ export function useMundial() {
       });
       mergeSaved(data.predictions);
       setPlayerName(trimmed);
+      rememberTrustedPlayer(trimmed);
       setSuccess(`${data.predictions.length} resultado guardado.`);
       void loadQuiniela();
     } catch (err) {
@@ -406,6 +467,11 @@ export function useMundial() {
     setPlayerName,
     showPlayerPicker,
     setShowPlayerPicker,
+    canClosePlayerPicker: !playerPickerRequired,
+    hasTrustedPlayer: trustedPlayerKey === playerKey,
+    selectPlayer,
+    openPlayerPicker,
+    closePlayerPicker,
     showPinModal,
     pinMode,
     isAuthenticated,
