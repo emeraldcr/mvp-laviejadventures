@@ -343,7 +343,6 @@ export default function MundialClient() {
 
       {showPlayerPicker && (
         <PlayerPickerModal
-          players={players}
           onSelect={handlePickPlayer}
           onClose={closePlayerPicker}
           allowClose={Boolean(playerName) && canClosePlayerPicker}

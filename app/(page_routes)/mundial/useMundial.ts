@@ -240,9 +240,7 @@ export function useMundial() {
               setTrustedPlayerKey(sessionKey);
               setPlayerPickerRequired(false);
               setShowPlayerPicker(false);
-              // Mark as PIN-verified so the PIN modal doesn't fire on reload
-              setPinVerifiedPlayers(new Set([sessionKey]));
-              pinCheckedRef.current.add(sessionKey);
+              // PIN check effect will read localStorage directly and skip the modal
               return;
             }
           }
@@ -282,18 +280,29 @@ export function useMundial() {
   }, [playerName]);
 
   useEffect(() => {
-    if (isLoading || showPlayerPicker || !playerName || registeredKeys.size === 0) return;
+    if (isLoading || showPlayerPicker || !playerName) return;
     const key = normalizeKey(normalizeName(playerName));
     if (pinVerifiedPlayers.has(key)) return;
     if (pinCheckedRef.current.has(key)) return;
 
-    if (!registeredKeys.has(key)) {
-      window.setTimeout(() => {
-        setPinVerifiedPlayers((prev) => { const next = new Set(prev); next.add(key); return next; });
-      }, 0);
-      return;
-    }
+    // Read localStorage directly — avoids React state timing issues
+    try {
+      const raw = window.localStorage.getItem(SESSION_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as { playerName?: string; expiresAt?: number };
+        if (
+          typeof parsed.expiresAt === "number" &&
+          parsed.expiresAt > Date.now() &&
+          normalizeKey(normalizeName(parsed.playerName ?? "")) === key
+        ) {
+          pinCheckedRef.current.add(key);
+          setPinVerifiedPlayers((prev) => { const next = new Set(prev); next.add(key); return next; });
+          return;
+        }
+      }
+    } catch {}
 
+    // No valid session — ask for PIN (set if new, verify if returning)
     pinCheckedRef.current.add(key);
     void (async () => {
       try {
@@ -302,11 +311,12 @@ export function useMundial() {
         setPinMode(data.hasPinSet ? "verify" : "set");
         setShowPinModal(true);
       } catch {
+        // Network failure — let them through rather than blocking
         setPinVerifiedPlayers((prev) => { const next = new Set(prev); next.add(key); return next; });
       }
     })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoading, playerName, registeredKeys, showPlayerPicker]);
+  }, [isLoading, playerName, showPlayerPicker]);
 
   function rememberTrustedPlayer(name: string) {
     const key = normalizeKey(name);
@@ -337,8 +347,9 @@ export function useMundial() {
     setPlayerPickerRequired(false);
     setShowPlayerPicker(false);
     setShowPinModal(false);
+    // Clear the pin check so the effect re-runs for this player
     pinCheckedRef.current.delete(key);
-    storeSession(trimmed);
+    // Don't store session here — session is only written after PIN passes
   }
 
   function openPlayerPicker() {
