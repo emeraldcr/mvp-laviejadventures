@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { API_URL, EMPTY_DRAFTS, STORAGE_KEY, TOTAL_MATCHES, TRUSTED_PLAYER_KEY } from "./constants";
+import { API_URL, EMPTY_DRAFTS, SESSION_KEY, SESSION_TTL_MS, STORAGE_KEY, TOTAL_MATCHES, TRUSTED_PLAYER_KEY } from "./constants";
 import type { Draft, LeaderboardEntry, MundialMatch, PlayerProgress, Prediction, PredictionsResponse, ViewMode } from "./types";
 import { useInterval } from "@/lib/hooks/useInterval";
 import {
@@ -227,6 +227,25 @@ export function useMundial() {
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
+      // Check time-limited session first (30 min TTL)
+      try {
+        const raw = window.localStorage.getItem(SESSION_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw) as { playerName?: string; expiresAt?: number };
+          if (typeof parsed.expiresAt === "number" && parsed.expiresAt > Date.now()) {
+            const sessionName = normalizeName(parsed.playerName ?? "");
+            if (sessionName) {
+              setPlayerName(sessionName);
+              setTrustedPlayerKey(normalizeKey(sessionName));
+              setPlayerPickerRequired(false);
+              setShowPlayerPicker(false);
+              return;
+            }
+          }
+        }
+      } catch {}
+
+      // Fallback: existing trusted player logic
       const storedPlayerName = normalizeName(window.localStorage.getItem(STORAGE_KEY) ?? "");
       const storedTrustedKey = window.localStorage.getItem(TRUSTED_PLAYER_KEY) ?? "";
       const storedPlayerKey = normalizeKey(storedPlayerName);
@@ -292,6 +311,16 @@ export function useMundial() {
     setTrustedPlayerKey(key);
   }
 
+  function storeSession(name: string) {
+    const trimmed = normalizeName(name);
+    if (!trimmed) return;
+    window.localStorage.setItem(STORAGE_KEY, trimmed);
+    window.localStorage.setItem(SESSION_KEY, JSON.stringify({
+      playerName: trimmed,
+      expiresAt: Date.now() + SESSION_TTL_MS,
+    }));
+  }
+
   function selectPlayer(name: string) {
     const trimmed = normalizeName(name);
     if (!trimmed) return;
@@ -300,10 +329,12 @@ export function useMundial() {
     setError("");
     setSuccess("");
     setPlayerName(trimmed);
+    setTrustedPlayerKey(key);
     setPlayerPickerRequired(false);
     setShowPlayerPicker(false);
     setShowPinModal(false);
     pinCheckedRef.current.delete(key);
+    storeSession(trimmed);
   }
 
   function openPlayerPicker() {
@@ -420,6 +451,7 @@ export function useMundial() {
       mergeSaved(data.predictions);
       setPlayerName(trimmed);
       rememberTrustedPlayer(trimmed);
+      storeSession(trimmed);
       setSuccess(`Guardado: ${match.homeTeam} vs ${match.awayTeam}.`);
       void loadQuiniela();
     } catch (err) {
@@ -454,6 +486,7 @@ export function useMundial() {
       mergeSaved(data.predictions);
       setPlayerName(trimmed);
       rememberTrustedPlayer(trimmed);
+      storeSession(trimmed);
       setSuccess(`${data.predictions.length} resultado guardado.`);
       void loadQuiniela();
     } catch (err) {
