@@ -65,48 +65,33 @@ export function FeaturedMatch({
     >
       <div className="pointer-events-none absolute inset-0 opacity-45 [background-image:radial-gradient(circle_at_50%_0%,rgba(49,81,255,0.28),transparent_38%),linear-gradient(90deg,rgba(255,255,255,0.07)_1px,transparent_1px),linear-gradient(0deg,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:100%_100%,72px_72px,72px_72px]" />
 
-      <div className="relative border-b border-white/15 bg-[#3151ff] px-3 py-2 sm:px-5">
-        <div className="flex flex-col gap-2 min-[760px]:flex-row min-[760px]:items-center min-[760px]:justify-between">
-          <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1.5">
+      <div className="relative border-b border-white/12 bg-black/40 px-3 py-2 sm:px-4">
+        <div className="flex min-w-0 items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-2">
             {isLive ? (
-              <span className="h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-[#9dff34] shadow-[0_0_14px_rgba(157,255,52,0.9)]" />
+              <span className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-[#9dff34] shadow-[0_0_10px_rgba(157,255,52,0.9)]" />
             ) : isClosed ? (
-              <Lock className="h-3.5 w-3.5 shrink-0 text-[#ffb15f]" />
-            ) : isActive ? (
-              <span className="h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-[#9dff34] shadow-[0_0_14px_rgba(157,255,52,0.9)]" />
+              <Lock className="h-3 w-3 shrink-0 text-[#ffb15f]" />
             ) : (
-              <Clock3 className="h-3.5 w-3.5 shrink-0 text-[#62ffe6]" />
+              <Clock3 className="h-3 w-3 shrink-0 text-[#62ffe6]" />
             )}
-            <span className="shrink-0 text-[11px] font-black uppercase tracking-[0.22em] text-white">
-              {isLive ? "En vivo" : isClosed ? "Partido cerrado" : isActive ? "Proximo pick" : "Partido pendiente"}
+            <span className="shrink-0 text-[11px] font-black uppercase tracking-[0.18em] text-white/80">
+              {isLive ? "En vivo" : isClosed ? "Cerrado" : "Pendiente"}
             </span>
-            <span className="rounded-md border border-white/20 bg-black/25 px-2 py-0.5 text-[11px] font-black text-white/80">
-              #{match.number}
-            </span>
-            <span className="rounded-md border border-white/20 bg-black/25 px-2 py-0.5 text-[11px] font-black text-white/80">
+            <span className="text-white/30">·</span>
+            <span className="shrink-0 text-[11px] font-bold text-white/50">
               {match.group ? `Grupo ${match.group}` : match.stageLabel}
             </span>
-            <h2 className="min-w-0 truncate text-lg font-black uppercase leading-none text-white sm:text-xl">
-              {isLive ? "Live del partido" : isClosed ? "Tu prediccion" : "Pone tu marcador"}
-            </h2>
-            <span className="hidden h-4 w-px bg-white/25 min-[520px]:inline-block" />
-            <p className="min-w-0 truncate text-xs font-bold text-white/75 sm:text-sm">
-              {match.venue ? `${match.venue} / ` : ""}
-              {formatKickoff(match.kickoffAt)}
-            </p>
           </div>
-
           {isActive && !isLive && (
-            <div className="rounded-lg border border-white/20 bg-black/30 px-4 py-3 text-left sm:min-w-[190px] sm:text-center">
-              <div className="mb-1 flex items-center gap-2 sm:justify-center">
-                <Timer className="h-4 w-4 text-[#d5ff3f]" />
-                <p className="text-xs font-black uppercase tracking-widest text-[#d5ff3f]">Cierra en</p>
-              </div>
-              <p className="text-3xl font-black tabular-nums leading-none text-[#62ffe6] sm:text-4xl">
-                {activeCountdown}
-              </p>
+            <div className="flex shrink-0 items-center gap-1.5">
+              <Timer className="h-3.5 w-3.5 text-[#d5ff3f]" />
+              <span className="text-sm font-black tabular-nums text-[#62ffe6]">{activeCountdown}</span>
             </div>
           )}
+          <p className="min-w-0 truncate text-[11px] font-bold text-white/40 sm:shrink-0">
+            {formatKickoff(match.kickoffAt)}
+          </p>
         </div>
       </div>
 
@@ -313,14 +298,13 @@ function TeamPickCard({
   onChange: (value: number) => void;
 }) {
   return (
-    <div className="flex min-w-0 flex-col items-center justify-between gap-3 rounded-lg border border-white/15 bg-[#05070d]/80 px-3 py-4 transition-all focus-within:border-[#62ffe6] sm:px-5 sm:py-5">
-      <div className="flex min-w-0 flex-col items-center gap-2">
-        <Flag team={team} size="xl" className="rounded-sm" />
-        <p className="text-xs font-black uppercase tracking-[0.22em] text-[#d5ff3f]">{label}</p>
-        <p className="max-w-full break-words text-center text-base font-black uppercase leading-tight text-white sm:text-xl">
+    <div className="flex min-w-0 flex-col items-center justify-between gap-3 rounded-lg border border-white/15 bg-[#05070d]/80 px-3 py-3 transition-all focus-within:border-[#62ffe6] sm:px-4 sm:py-4">
+      <div className="flex min-w-0 flex-col items-center gap-1.5">
+        <Flag team={team} size="lg" className="rounded-sm" />
+        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#d5ff3f]">{label}</p>
+        <p className="max-w-full break-words text-center text-sm font-black uppercase leading-tight text-white sm:text-base">
           {team}
         </p>
-        <p className="rounded-md bg-[#3151ff] px-2 py-1 text-xs font-black text-white">{teamCode(team)}</p>
       </div>
       <ScoreInput label={team} value={value} disabled={disabled} featured onChange={onChange} />
     </div>

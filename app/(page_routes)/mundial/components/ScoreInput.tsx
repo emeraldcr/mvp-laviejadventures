@@ -26,13 +26,13 @@ const btnBase = cn(
 export function ScoreInput({ label, value, disabled, featured = false, onChange }: ScoreInputProps) {
   if (featured) {
     return (
-      <div className="flex w-20 flex-col items-stretch gap-1 min-[380px]:w-24 sm:w-28 sm:gap-1.5">
+      <div className="flex w-16 flex-col items-stretch gap-1 min-[380px]:w-20 sm:w-24">
         <button
           type="button"
           onClick={() => onChange(clampScore(value + 1))}
           disabled={disabled}
           aria-label={`Sumar gol de ${label}`}
-          className={cn(btnBase, "h-7 w-full text-base sm:h-9 sm:text-lg")}
+          className={cn(btnBase, "h-6 w-full text-sm sm:h-8 sm:text-base")}
         >
           +
         </button>
@@ -45,14 +45,14 @@ export function ScoreInput({ label, value, disabled, featured = false, onChange 
           disabled={disabled}
           onChange={(event) => onChange(clampScore(Number(event.target.value)))}
           aria-label={`Goles de ${label}`}
-          className={cn(inputBase, "h-16 w-full text-4xl min-[380px]:h-20 min-[380px]:text-5xl sm:h-24 sm:text-6xl")}
+          className={cn(inputBase, "h-12 w-full text-3xl min-[380px]:h-14 min-[380px]:text-4xl sm:h-16 sm:text-5xl")}
         />
         <button
           type="button"
           onClick={() => onChange(clampScore(value - 1))}
           disabled={disabled || value <= 0}
           aria-label={`Restar gol de ${label}`}
-          className={cn(btnBase, "h-7 w-full text-base sm:h-9 sm:text-lg")}
+          className={cn(btnBase, "h-6 w-full text-sm sm:h-8 sm:text-base")}
         >
           -
         </button>

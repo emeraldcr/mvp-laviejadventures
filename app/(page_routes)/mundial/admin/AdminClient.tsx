@@ -97,13 +97,18 @@ export default function AdminClient() {
     await load();
   }
 
-  const filteredMatches = data?.matches.filter((m) => {
+  const filteredMatches = (data?.matches.filter((m) => {
     if (matchFilter === "live") return m.liveStatus === "live" || m.liveStatus === "halftime";
     if (matchFilter === "open") return !m.closed;
     if (matchFilter === "closed") return m.closed;
     if (matchFilter === "scored") return m.homeFinalScore !== null && m.awayFinalScore !== null;
     return true;
-  }) ?? [];
+  }) ?? []).sort((a, b) => {
+    const aLive = a.liveStatus === "live" || a.liveStatus === "halftime" ? 0 : 1;
+    const bLive = b.liveStatus === "live" || b.liveStatus === "halftime" ? 0 : 1;
+    if (aLive !== bLive) return aLive - bLive;
+    return new Date(b.kickoffAt).getTime() - new Date(a.kickoffAt).getTime();
+  });
 
   // Summary stats (computed client-side from data)
   const scoredCount = data?.matches.filter((m) => m.homeFinalScore !== null).length ?? 0;
