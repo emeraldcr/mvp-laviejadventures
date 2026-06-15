@@ -10,6 +10,7 @@ import { StatBetsPanel } from "./StatBetsPanel";
 
 type NextViewProps = {
   activeMatch: MundialMatch | null;
+  liveMatch: MundialMatch | null;
   matches: MundialMatch[];
   drafts: Record<string, Draft>;
   savingId: string | null;
@@ -25,6 +26,7 @@ type NextViewProps = {
 
 export function NextView({
   activeMatch,
+  liveMatch,
   matches,
   drafts,
   savingId,
@@ -44,14 +46,14 @@ export function NextView({
   const featuredRef = useRef<HTMLDivElement>(null);
 
   const selectedInfoMatch = useMemo(
-    () => matches.find((match) => match.id === selectedInfoMatchId) ?? activeMatch ?? matches[0] ?? null,
-    [activeMatch, matches, selectedInfoMatchId]
+    () => matches.find((match) => match.id === selectedInfoMatchId) ?? liveMatch ?? activeMatch ?? matches[0] ?? null,
+    [activeMatch, liveMatch, matches, selectedInfoMatchId]
   );
 
   const featuredMatch = useMemo(() => {
     if (featuredMatchId) return matches.find((m) => m.id === featuredMatchId) ?? activeMatch;
-    return activeMatch;
-  }, [activeMatch, matches, featuredMatchId]);
+    return liveMatch ?? activeMatch;
+  }, [activeMatch, liveMatch, matches, featuredMatchId]);
 
   function handleSelectMatch(match: MundialMatch) {
     setSelectedInfoMatchId(match.id);

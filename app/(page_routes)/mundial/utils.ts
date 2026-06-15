@@ -64,6 +64,24 @@ export function hasFinalScore(match: MundialMatch) {
   return typeof match.homeFinalScore === "number" && typeof match.awayFinalScore === "number";
 }
 
+export function isMatchLive(match: MundialMatch) {
+  return match.liveStatus === "live" || match.liveStatus === "halftime";
+}
+
+export function liveStatusLabel(match: MundialMatch) {
+  if (match.liveStatus === "live") {
+    return match.liveMinute !== null ? `${match.liveMinute}'` : "En vivo";
+  }
+  if (match.liveStatus === "halftime") return "Descanso";
+  if (match.liveStatus === "fulltime") return "Finalizado";
+  return "Programado";
+}
+
+export function liveScoreText(match: MundialMatch) {
+  if (match.homeLiveScore === null || match.awayLiveScore === null) return "Marcador live pendiente";
+  return `${match.homeTeam} ${match.homeLiveScore} - ${match.awayLiveScore} ${match.awayTeam}`;
+}
+
 export function finalScoreText(match: MundialMatch) {
   if (!hasFinalScore(match)) return "Resultado pendiente";
   return `${match.homeTeam} ${match.homeFinalScore} - ${match.awayFinalScore} ${match.awayTeam}`;

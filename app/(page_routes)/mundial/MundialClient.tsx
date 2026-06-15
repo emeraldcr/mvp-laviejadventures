@@ -50,6 +50,7 @@ export default function MundialClient() {
     error,
     success,
     activeMatch,
+    liveMatch,
     activeMatchId,
     todayEditableMatchIds,
     drafts,
@@ -187,6 +188,7 @@ export default function MundialClient() {
             {viewMode === "next" && (
               <NextView
                 activeMatch={activeMatch}
+                liveMatch={liveMatch}
                 matches={matches}
                 drafts={drafts}
                 savingId={savingId}

@@ -6,6 +6,7 @@ import {
   fetchWithTimeout,
   formatCountdown,
   isMatchClosed,
+  isMatchLive,
   isSameDayInCR,
   kickoffMs,
   normalizeKey,
@@ -13,12 +14,8 @@ import {
 } from "./utils";
 
 export function useMundial() {
-  const [playerName, setPlayerName] = useState(() =>
-    typeof window === "undefined" ? "" : window.localStorage.getItem(STORAGE_KEY) ?? ""
-  );
-  const [showPlayerPicker, setShowPlayerPicker] = useState(() =>
-    typeof window === "undefined" ? false : !window.localStorage.getItem(STORAGE_KEY)
-  );
+  const [playerName, setPlayerName] = useState("");
+  const [showPlayerPicker, setShowPlayerPicker] = useState(false);
   const [matches, setMatches] = useState<MundialMatch[]>([]);
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [players, setPlayers] = useState<PlayerProgress[]>([]);
@@ -47,6 +44,10 @@ export function useMundial() {
   const activeMatch = useMemo(
     () => orderedMatches.find((m) => !isMatchClosed(m, nowMs)) ?? null,
     [nowMs, orderedMatches]
+  );
+  const liveMatch = useMemo(
+    () => orderedMatches.find((m) => isMatchLive(m)) ?? null,
+    [orderedMatches]
   );
   const activeMatchId = activeMatch?.id ?? null;
   const todayEditableMatches = useMemo(
@@ -206,6 +207,12 @@ export function useMundial() {
     } finally {
       setIsLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    const storedPlayerName = window.localStorage.getItem(STORAGE_KEY) ?? "";
+    setPlayerName(storedPlayerName);
+    setShowPlayerPicker(!storedPlayerName);
   }, []);
 
   useEffect(() => {
@@ -417,6 +424,7 @@ export function useMundial() {
     success,
     registeredNames,
     activeMatch,
+    liveMatch,
     activeMatchId,
     todayEditableMatches,
     todayEditableMatchIds,

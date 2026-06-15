@@ -19,8 +19,25 @@ type MundialMatchDoc = MundialMatch & {
   sourceVersion: string;
   forceClosed?: boolean;
   actualWinner?: "home" | "away" | null;
+  liveStatus?: "scheduled" | "live" | "halftime" | "fulltime";
+  liveMinute?: number | null;
+  homeLiveScore?: number | null;
+  awayLiveScore?: number | null;
+  liveNote?: string;
+  liveEvents?: LiveMatchEventDoc[];
+  liveUpdatedAt?: Date | string | null;
   createdAt?: Date;
   updatedAt?: Date;
+};
+
+type LiveMatchEventDoc = {
+  id?: string;
+  type?: "goal" | "penalty" | "yellow" | "red" | "var" | "substitution" | "note";
+  team?: "home" | "away" | null;
+  minute?: number | null;
+  player?: string;
+  note?: string;
+  createdAt?: Date | string | null;
 };
 
 type PredictionDoc = {
@@ -95,13 +112,25 @@ function isMatchClosed(match: MundialMatchDoc | MundialMatch, now = new Date()) 
   return kickoffTime(match) <= now.getTime();
 }
 
+function serializeLiveEvent(event: LiveMatchEventDoc, index: number) {
+  return {
+    id: event.id ?? `event-${index}`,
+    type: event.type ?? "note",
+    team: event.team === "home" || event.team === "away" ? event.team : null,
+    minute: typeof event.minute === "number" ? event.minute : null,
+    player: event.player ?? "",
+    note: event.note ?? "",
+    createdAt: toIsoString(event.createdAt),
+  };
+}
+
 function nextOpenMatch(matches: Array<MundialMatchDoc | MundialMatch>, now = new Date()) {
   return [...matches]
     .sort((a, b) => kickoffTime(a) - kickoffTime(b) || a.number - b.number)
     .find((match) => !isMatchClosed(match, now));
 }
 
-function serializeMatch(doc: MundialMatchDoc | MundialMatch, now = new Date()) {
+function serializeMatch(doc: MundialMatchDoc, now = new Date()) {
   return {
     id: doc.id,
     number: doc.number,
@@ -117,6 +146,16 @@ function serializeMatch(doc: MundialMatchDoc | MundialMatch, now = new Date()) {
     awaySeed: doc.awaySeed ?? null,
     homeFinalScore: typeof doc.homeFinalScore === "number" ? doc.homeFinalScore : null,
     awayFinalScore: typeof doc.awayFinalScore === "number" ? doc.awayFinalScore : null,
+    liveStatus:
+      doc.liveStatus === "live" || doc.liveStatus === "halftime" || doc.liveStatus === "fulltime"
+        ? doc.liveStatus
+        : "scheduled",
+    liveMinute: typeof doc.liveMinute === "number" ? doc.liveMinute : null,
+    homeLiveScore: typeof doc.homeLiveScore === "number" ? doc.homeLiveScore : null,
+    awayLiveScore: typeof doc.awayLiveScore === "number" ? doc.awayLiveScore : null,
+    liveNote: doc.liveNote ?? "",
+    liveEvents: Array.isArray(doc.liveEvents) ? doc.liveEvents.map(serializeLiveEvent) : [],
+    liveUpdatedAt: toIsoString(doc.liveUpdatedAt),
     closed: isMatchClosed(doc, now),
     sortOrder: doc.sortOrder,
   };

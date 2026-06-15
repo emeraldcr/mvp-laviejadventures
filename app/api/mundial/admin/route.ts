@@ -18,6 +18,23 @@ type MundialMatchDoc = MundialMatch & {
   actualWinner?: WinnerPick;
   homeFinalScore?: number;
   awayFinalScore?: number;
+  liveStatus?: "scheduled" | "live" | "halftime" | "fulltime";
+  liveMinute?: number | null;
+  homeLiveScore?: number | null;
+  awayLiveScore?: number | null;
+  liveNote?: string;
+  liveEvents?: LiveMatchEventDoc[];
+  liveUpdatedAt?: Date | string | null;
+};
+
+type LiveMatchEventDoc = {
+  id?: string;
+  type?: "goal" | "penalty" | "yellow" | "red" | "var" | "substitution" | "note";
+  team?: "home" | "away" | null;
+  minute?: number | null;
+  player?: string;
+  note?: string;
+  createdAt?: Date | string | null;
 };
 
 type PredictionDoc = {
@@ -62,6 +79,24 @@ function kickoffTime(match: MundialMatchDoc | MundialMatch) {
 function isMatchClosed(match: MundialMatchDoc | MundialMatch, now: Date) {
   if ((match as MundialMatchDoc).forceClosed) return true;
   return kickoffTime(match) <= now.getTime();
+}
+
+function toIsoString(value: unknown) {
+  if (!value) return null;
+  const date = value instanceof Date ? value : new Date(String(value));
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
+function serializeLiveEvent(event: LiveMatchEventDoc, index: number) {
+  return {
+    id: event.id ?? `event-${index}`,
+    type: event.type ?? "note",
+    team: event.team === "home" || event.team === "away" ? event.team : null,
+    minute: typeof event.minute === "number" ? event.minute : null,
+    player: event.player ?? "",
+    note: event.note ?? "",
+    createdAt: toIsoString(event.createdAt),
+  };
 }
 
 function predictionScores(doc: PredictionDoc) {
@@ -236,6 +271,16 @@ export async function GET() {
         awayFinalScore: typeof match.awayFinalScore === "number" ? match.awayFinalScore : null,
         forceClosed: match.forceClosed ?? false,
         actualWinner: match.actualWinner ?? null,
+        liveStatus:
+          match.liveStatus === "live" || match.liveStatus === "halftime" || match.liveStatus === "fulltime"
+            ? match.liveStatus
+            : "scheduled",
+        liveMinute: typeof match.liveMinute === "number" ? match.liveMinute : null,
+        homeLiveScore: typeof match.homeLiveScore === "number" ? match.homeLiveScore : null,
+        awayLiveScore: typeof match.awayLiveScore === "number" ? match.awayLiveScore : null,
+        liveNote: match.liveNote ?? "",
+        liveEvents: Array.isArray(match.liveEvents) ? match.liveEvents.map(serializeLiveEvent) : [],
+        liveUpdatedAt: toIsoString(match.liveUpdatedAt),
         closed: isMatchClosed(match, now),
         predictorCount: ms.total,
         exactCount: ms.exactCount,

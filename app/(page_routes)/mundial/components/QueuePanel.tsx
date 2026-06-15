@@ -1,7 +1,18 @@
 import { CalendarDays, CheckCircle2, ChevronRight, Clock3, ListChecks, Lock, Timer } from "lucide-react";
 import type { ReactNode } from "react";
 import type { MundialMatch } from "../types";
-import { cn, finalScoreText, formatKickoff, isMatchClosed, isSameDayInCR, kickoffMs, teamCode } from "../utils";
+import {
+  cn,
+  finalScoreText,
+  formatKickoff,
+  isMatchClosed,
+  isMatchLive,
+  isSameDayInCR,
+  kickoffMs,
+  liveScoreText,
+  liveStatusLabel,
+  teamCode,
+} from "../utils";
 import { Flag } from "./Flag";
 
 type QueuePanelProps = {
@@ -12,7 +23,7 @@ type QueuePanelProps = {
   onSelectMatch: (match: MundialMatch) => void;
 };
 
-type AgendaTone = "closed" | "today" | "pending";
+type AgendaTone = "live" | "closed" | "today" | "pending";
 
 export function QueuePanel({
   matches,
@@ -22,14 +33,15 @@ export function QueuePanel({
   onSelectMatch,
 }: QueuePanelProps) {
   const sortedMatches = [...matches].sort((a, b) => kickoffMs(a) - kickoffMs(b) || a.number - b.number);
-  const closedTodayMatches = sortedMatches.filter(
-    (match) => isMatchClosed(match, nowMs) && nowMs > 0 && isSameDayInCR(kickoffMs(match), nowMs)
-  );
+  const liveMatches = sortedMatches.filter((match) => isMatchLive(match));
+  const closedTodayMatches = sortedMatches
+    .filter((match) => !isMatchLive(match) && isMatchClosed(match, nowMs) && nowMs > 0 && isSameDayInCR(kickoffMs(match), nowMs))
+    .reverse();
   const todayMatches = sortedMatches.filter(
-    (match) => !isMatchClosed(match, nowMs) && nowMs > 0 && isSameDayInCR(kickoffMs(match), nowMs)
+    (match) => !isMatchLive(match) && !isMatchClosed(match, nowMs) && nowMs > 0 && isSameDayInCR(kickoffMs(match), nowMs)
   );
   const pendingMatches = sortedMatches.filter(
-    (match) => !isMatchClosed(match, nowMs) && !(nowMs > 0 && isSameDayInCR(kickoffMs(match), nowMs))
+    (match) => !isMatchLive(match) && !isMatchClosed(match, nowMs) && !(nowMs > 0 && isSameDayInCR(kickoffMs(match), nowMs))
   );
 
   return (
@@ -45,13 +57,24 @@ export function QueuePanel({
             <p className="mt-1 text-sm font-bold text-white/70">Toca uno para predecir o ver marcadores.</p>
           </div>
           <div className="grid shrink-0 grid-cols-2 gap-2">
-            <Counter label="Hoy" value={todayMatches.length + closedTodayMatches.length} />
+            <Counter label="Live" value={liveMatches.length} />
             <Counter label="Faltan" value={pendingMatches.length} />
           </div>
         </div>
       </div>
 
       <div className="max-h-[72vh] space-y-4 overflow-y-auto p-4">
+        <AgendaSection
+          title="En vivo"
+          icon={<Timer className="h-4 w-4" />}
+          tone="live"
+          matches={liveMatches}
+          emptyText="No hay partido live."
+          nowMs={nowMs}
+          activeMatchId={activeMatchId}
+          selectedMatchId={selectedMatchId}
+          onSelectMatch={onSelectMatch}
+        />
         <AgendaSection
           title="Cerrados hoy"
           icon={<CheckCircle2 className="h-4 w-4" />}
@@ -126,7 +149,13 @@ function AgendaSection({
         <div
           className={cn(
             "flex min-w-0 items-center gap-2 text-xs font-black uppercase tracking-[0.18em]",
-            tone === "closed" ? "text-[#ffb15f]" : tone === "today" ? "text-[#62ffe6]" : "text-[#d5ff3f]"
+            tone === "live"
+              ? "text-[#d5ff3f]"
+              : tone === "closed"
+                ? "text-[#ffb15f]"
+                : tone === "today"
+                  ? "text-[#62ffe6]"
+                  : "text-[#d5ff3f]"
           )}
         >
           {icon}
@@ -176,7 +205,16 @@ function AgendaMatchButton({
   onClick: () => void;
 }) {
   const closed = isMatchClosed(match, nowMs);
-  const statusLabel = closed ? "Cerrado" : active ? "Activo" : tone === "today" ? "Hoy" : "Pendiente";
+  const live = isMatchLive(match);
+  const statusLabel = live
+    ? liveStatusLabel(match)
+    : closed
+      ? "Cerrado"
+      : active
+        ? "Activo"
+        : tone === "today"
+          ? "Hoy"
+          : "Pendiente";
 
   return (
     <button
@@ -186,9 +224,11 @@ function AgendaMatchButton({
         "group w-full rounded-lg border p-3 text-left transition-all",
         selected
           ? "border-[#d5ff3f] bg-[#17206b] shadow-[0_0_22px_rgba(213,255,63,0.18)]"
-          : active
-            ? "border-[#62ffe6]/70 bg-[#071d2a]"
-            : "border-white/10 bg-black/35 hover:border-[#62ffe6]/60 hover:bg-black/50"
+          : live
+            ? "border-[#9dff34]/70 bg-[#10240b]"
+            : active
+              ? "border-[#62ffe6]/70 bg-[#071d2a]"
+              : "border-white/10 bg-black/35 hover:border-[#62ffe6]/60 hover:bg-black/50"
       )}
     >
       <div className="flex items-start justify-between gap-3">
@@ -211,14 +251,16 @@ function AgendaMatchButton({
           <span
             className={cn(
               "inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-black",
-              closed
-                ? "border-[#ffb15f]/50 bg-[#2a120b] text-[#ffb15f]"
-                : active
-                  ? "border-[#62ffe6]/60 bg-[#071d2a] text-[#62ffe6]"
-                  : "border-[#d5ff3f]/45 bg-[#1a2206] text-[#d5ff3f]"
+              live
+                ? "border-[#9dff34]/60 bg-[#10240b] text-[#d5ff3f]"
+                : closed
+                  ? "border-[#ffb15f]/50 bg-[#2a120b] text-[#ffb15f]"
+                  : active
+                    ? "border-[#62ffe6]/60 bg-[#071d2a] text-[#62ffe6]"
+                    : "border-[#d5ff3f]/45 bg-[#1a2206] text-[#d5ff3f]"
             )}
           >
-            {closed ? <Lock className="h-3.5 w-3.5" /> : <Clock3 className="h-3.5 w-3.5" />}
+            {closed && !live ? <Lock className="h-3.5 w-3.5" /> : <Clock3 className="h-3.5 w-3.5" />}
             {statusLabel}
           </span>
           <ChevronRight className={cn("h-4 w-4 transition", selected ? "text-[#d5ff3f]" : "text-white/35 group-hover:text-white")} />
@@ -227,7 +269,11 @@ function AgendaMatchButton({
 
       <div className="mt-3 flex items-center justify-between gap-3 border-t border-white/10 pt-3">
         <p className="min-w-0 truncate text-sm font-bold text-white/60">{formatKickoff(match.kickoffAt)}</p>
-        {closed && <p className="shrink-0 text-sm font-black text-[#62ffe6]">{finalScoreText(match)}</p>}
+        {live ? (
+          <p className="shrink-0 text-sm font-black text-[#d5ff3f]">{liveScoreText(match)}</p>
+        ) : closed ? (
+          <p className="shrink-0 text-sm font-black text-[#62ffe6]">{finalScoreText(match)}</p>
+        ) : null}
       </div>
     </button>
   );

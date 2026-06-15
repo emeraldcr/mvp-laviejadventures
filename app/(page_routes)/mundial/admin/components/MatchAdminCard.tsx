@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { Check, ChevronDown, ChevronUp, Loader2, Lock, LockOpen, Save, Users } from "lucide-react";
-import type { AdminMatch } from "../adminTypes";
+import { useEffect, useState } from "react";
+import { Check, ChevronDown, ChevronUp, Loader2, Lock, LockOpen, Plus, Save, Trash2, Users, Zap } from "lucide-react";
+import type { AdminLiveMatchEvent, AdminMatch, LiveEventTeam, LiveEventType, LiveMatchStatus } from "../adminTypes";
 import { cn, formatKickoff, getCountryFlag } from "../../utils";
 import { Flag } from "../../components/Flag";
 
@@ -10,6 +10,36 @@ type MatchAdminCardProps = {
   match: AdminMatch;
   onPatch: (matchId: string, patch: Record<string, unknown>) => Promise<void>;
 };
+
+const LIVE_STATUS_OPTIONS: Array<{ value: LiveMatchStatus; label: string }> = [
+  { value: "scheduled", label: "Programado" },
+  { value: "live", label: "En vivo" },
+  { value: "halftime", label: "Descanso" },
+  { value: "fulltime", label: "Finalizado" },
+];
+
+const LIVE_EVENT_OPTIONS: Array<{ value: LiveEventType; label: string }> = [
+  { value: "goal", label: "Gol" },
+  { value: "penalty", label: "Penal" },
+  { value: "yellow", label: "Amarilla" },
+  { value: "red", label: "Roja" },
+  { value: "var", label: "VAR" },
+  { value: "substitution", label: "Cambio" },
+  { value: "note", label: "Nota" },
+];
+
+function liveStatusText(status: LiveMatchStatus) {
+  return LIVE_STATUS_OPTIONS.find((option) => option.value === status)?.label ?? "Programado";
+}
+
+function nextScoreValue(value: string) {
+  const parsed = Number(value);
+  return String(Number.isFinite(parsed) ? Math.max(0, Math.trunc(parsed) + 1) : 1);
+}
+
+function liveEventLabel(type: LiveEventType) {
+  return LIVE_EVENT_OPTIONS.find((option) => option.value === type)?.label ?? "Nota";
+}
 
 function StatBar({
   label,
@@ -55,11 +85,36 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
   const [actualWinner, setActualWinner] = useState<"home" | "away" | "">(
     match.actualWinner ?? ""
   );
+  const [liveStatus, setLiveStatus] = useState<LiveMatchStatus>(match.liveStatus);
+  const [liveMinute, setLiveMinute] = useState<string>(match.liveMinute !== null ? String(match.liveMinute) : "");
+  const [homeLiveScore, setHomeLiveScore] = useState<string>(
+    match.homeLiveScore !== null ? String(match.homeLiveScore) : ""
+  );
+  const [awayLiveScore, setAwayLiveScore] = useState<string>(
+    match.awayLiveScore !== null ? String(match.awayLiveScore) : ""
+  );
+  const [liveNote, setLiveNote] = useState(match.liveNote);
+  const [liveEvents, setLiveEvents] = useState<AdminLiveMatchEvent[]>(match.liveEvents);
   const [isSaving, setIsSaving] = useState(false);
   const [isTogglingClose, setIsTogglingClose] = useState(false);
+  const [isSavingLive, setIsSavingLive] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [liveSaved, setLiveSaved] = useState(false);
   const [error, setError] = useState("");
+  const [liveError, setLiveError] = useState("");
   const [showEdit, setShowEdit] = useState(!hasResult);
+
+  useEffect(() => {
+    setHomeScore(match.homeFinalScore !== null ? String(match.homeFinalScore) : "");
+    setAwayScore(match.awayFinalScore !== null ? String(match.awayFinalScore) : "");
+    setActualWinner(match.actualWinner ?? "");
+    setLiveStatus(match.liveStatus);
+    setLiveMinute(match.liveMinute !== null ? String(match.liveMinute) : "");
+    setHomeLiveScore(match.homeLiveScore !== null ? String(match.homeLiveScore) : "");
+    setAwayLiveScore(match.awayLiveScore !== null ? String(match.awayLiveScore) : "");
+    setLiveNote(match.liveNote);
+    setLiveEvents(match.liveEvents);
+  }, [match]);
 
   const isKnockout = match.stage !== "group";
   const parsedHome = homeScore === "" ? null : Number(homeScore);
@@ -99,6 +154,55 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
     } finally {
       setIsTogglingClose(false);
     }
+  }
+
+  async function handleSaveLive() {
+    setLiveError("");
+    setLiveSaved(false);
+    setIsSavingLive(true);
+    try {
+      await onPatch(match.id, {
+        liveStatus,
+        liveMinute: liveMinute === "" ? null : Number(liveMinute),
+        homeLiveScore: homeLiveScore === "" ? null : Number(homeLiveScore),
+        awayLiveScore: awayLiveScore === "" ? null : Number(awayLiveScore),
+        liveNote,
+        liveEvents,
+      });
+      setLiveSaved(true);
+      setTimeout(() => setLiveSaved(false), 2500);
+    } catch (err) {
+      setLiveError(err instanceof Error ? err.message : "Error guardando live.");
+    } finally {
+      setIsSavingLive(false);
+    }
+  }
+
+  function addLiveEvent(type: LiveEventType, team: LiveEventTeam = null) {
+    if (type === "goal" && team === "home") setHomeLiveScore((value) => nextScoreValue(value));
+    if (type === "goal" && team === "away") setAwayLiveScore((value) => nextScoreValue(value));
+    if (liveStatus === "scheduled") setLiveStatus("live");
+
+    setLiveEvents((current) => [
+      {
+        id: `${Date.now()}-${current.length}`,
+        type,
+        team,
+        minute: liveMinute === "" ? null : Number(liveMinute),
+        player: "",
+        note: "",
+        createdAt: new Date().toISOString(),
+      },
+      ...current,
+    ]);
+  }
+
+  function updateLiveEvent(id: string, patch: Partial<AdminLiveMatchEvent>) {
+    setLiveEvents((current) => current.map((event) => event.id === id ? { ...event, ...patch } : event));
+  }
+
+  function removeLiveEvent(id: string) {
+    setLiveEvents((current) => current.filter((event) => event.id !== id));
   }
 
   const statusLabel = hasResult

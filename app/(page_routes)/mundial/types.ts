@@ -1,6 +1,19 @@
 export type MundialStage = "group" | "round32" | "round16" | "quarterfinal" | "semifinal" | "thirdPlace" | "final";
 export type WinnerPick = "home" | "away" | null;
 export type ViewMode = "next" | "mine" | "players";
+export type LiveMatchStatus = "scheduled" | "live" | "halftime" | "fulltime";
+export type LiveEventType = "goal" | "penalty" | "yellow" | "red" | "var" | "substitution" | "note";
+export type LiveEventTeam = "home" | "away" | null;
+
+export type LiveMatchEvent = {
+  id: string;
+  type: LiveEventType;
+  team: LiveEventTeam;
+  minute: number | null;
+  player: string;
+  note: string;
+  createdAt: string | null;
+};
 
 export type MundialMatch = {
   id: string;
@@ -17,6 +30,13 @@ export type MundialMatch = {
   awaySeed: string | null;
   homeFinalScore: number | null;
   awayFinalScore: number | null;
+  liveStatus: LiveMatchStatus;
+  liveMinute: number | null;
+  homeLiveScore: number | null;
+  awayLiveScore: number | null;
+  liveNote: string;
+  liveEvents: LiveMatchEvent[];
+  liveUpdatedAt: string | null;
   closed: boolean;
   sortOrder: number;
 };

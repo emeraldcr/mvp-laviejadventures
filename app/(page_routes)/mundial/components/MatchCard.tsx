@@ -1,6 +1,18 @@
 import { CheckCircle2, Clock3, Loader2, Lock, PencilLine, Save, Users } from "lucide-react";
 import type { Draft, MundialMatch } from "../types";
-import { cn, finalScoreText, formatKickoff, formatUpdatedAt, getWinnerPickOptions, isMatchClosed, predictionResult, teamCode } from "../utils";
+import {
+  cn,
+  finalScoreText,
+  formatKickoff,
+  formatUpdatedAt,
+  getWinnerPickOptions,
+  isMatchClosed,
+  isMatchLive,
+  liveScoreText,
+  liveStatusLabel,
+  predictionResult,
+  teamCode,
+} from "../utils";
 import { Flag } from "./Flag";
 import { ScoreInput } from "./ScoreInput";
 
@@ -10,7 +22,14 @@ type MatchStatus = {
   icon: "lock" | "edit" | "saved" | "open" | "queue";
 };
 
-function getMatchStatus(draft: Draft, canEdit: boolean, closed: boolean): MatchStatus {
+function getMatchStatus(draft: Draft, canEdit: boolean, closed: boolean, live: boolean): MatchStatus {
+  if (live) {
+    return {
+      label: "En vivo",
+      className: "border-[#9dff34]/60 bg-[#10240b] text-[#d5ff3f]",
+      icon: "open",
+    };
+  }
   if (closed) {
     return {
       label: "Cerrado",
@@ -70,11 +89,12 @@ type MatchCardProps = {
 
 export function MatchCard({ match, draft, savingId, isSavingBulk, todayEditableMatchIds, nowMs, onUpdateDraft, onSave, onViewPicks, isViewingPicks }: MatchCardProps) {
   const closed = isMatchClosed(match, nowMs);
+  const live = isMatchLive(match);
   const canEdit = todayEditableMatchIds.has(match.id) && !closed;
   const isSaving = savingId === match.id;
   const disabled = !canEdit || isSaving || isSavingBulk;
   const isKnockoutTie = match.stage !== "group" && draft.homeScore === draft.awayScore;
-  const status = getMatchStatus(draft, canEdit, closed);
+  const status = getMatchStatus(draft, canEdit, closed, live);
 
   return (
     <article
@@ -139,7 +159,7 @@ export function MatchCard({ match, draft, savingId, isSavingBulk, todayEditableM
       <div className="mt-4 flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-black/35 p-3">
         <div className="min-w-0">
           <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#62ffe6]">
-            {closed ? "Resultado final" : "Tu pick"}
+            {live ? "Live" : closed ? "Resultado final" : "Tu pick"}
           </p>
           <p
             className={cn(
@@ -147,7 +167,7 @@ export function MatchCard({ match, draft, savingId, isSavingBulk, todayEditableM
               closed ? "text-[#d5ff3f]" : draft.saved ? "text-[#62ffe6]" : "text-white"
             )}
           >
-            {closed ? finalScoreText(match) : predictionResult(match, draft)}
+            {live ? `${liveStatusLabel(match)} / ${liveScoreText(match)}` : closed ? finalScoreText(match) : predictionResult(match, draft)}
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
