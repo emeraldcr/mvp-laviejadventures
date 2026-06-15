@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Check, ChevronDown, ChevronUp, Loader2, Lock, LockOpen, Minus, Plus, Save, Trash2, Tv2, Users } from "lucide-react";
-import type { AdminLiveMatchEvent, AdminMatch, LiveEventTeam, LiveEventType, LiveMatchStatus } from "../adminTypes";
+import type { AdminLiveMatchEvent, AdminMatch, AdminRosterPlayer, LiveEventTeam, LiveEventType, LiveMatchStatus } from "../adminTypes";
 import { cn, formatKickoff, getCountryFlag } from "../../utils";
 import { Flag } from "../../components/Flag";
 
@@ -28,8 +28,26 @@ const LIVE_EVENT_OPTIONS: Array<{ value: LiveEventType; label: string }> = [
   { value: "note", label: "Nota" },
 ];
 
-function liveEventLabel(type: LiveEventType) {
-  return LIVE_EVENT_OPTIONS.find((o) => o.value === type)?.label ?? "Nota";
+function rosterForTeam(match: AdminMatch, team: LiveEventTeam) {
+  if (team === "home") return match.homeRoster;
+  if (team === "away") return match.awayRoster;
+  return [];
+}
+
+function teamLabel(match: AdminMatch, team: LiveEventTeam) {
+  if (team === "home") return match.homeTeam;
+  if (team === "away") return match.awayTeam;
+  return "General";
+}
+
+function playerOptionLabel(player: AdminRosterPlayer) {
+  return [
+    player.squadNumber !== null ? `#${player.squadNumber}` : null,
+    player.pos || null,
+    player.club || null,
+    player.caps !== null ? `${player.caps} caps` : null,
+    player.goals !== null ? `${player.goals} goles` : null,
+  ].filter(Boolean).join(" - ");
 }
 
 function safeInc(value: string) {
@@ -40,6 +58,12 @@ function safeInc(value: string) {
 function safeDec(value: string) {
   const n = Number(value);
   return String(Number.isFinite(n) ? Math.max(0, Math.trunc(n) - 1) : 0);
+}
+
+function parseMinuteInput(value: string) {
+  if (value === "") return null;
+  const minute = Number(value);
+  return Number.isFinite(minute) ? Math.max(0, Math.trunc(minute)) : null;
 }
 
 function StatBar({ label, count, total, barColor, textColor }: {
@@ -110,6 +134,11 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
   const [awayLiveScore, setAwayLiveScore] = useState(match.awayLiveScore !== null ? String(match.awayLiveScore) : "");
   const [liveNote, setLiveNote] = useState(match.liveNote);
   const [liveEvents, setLiveEvents] = useState<AdminLiveMatchEvent[]>(match.liveEvents);
+  const [draftType, setDraftType] = useState<LiveEventType>("goal");
+  const [draftTeam, setDraftTeam] = useState<LiveEventTeam>("home");
+  const [draftMinute, setDraftMinute] = useState(match.liveMinute !== null ? String(match.liveMinute) : "");
+  const [draftPlayer, setDraftPlayer] = useState("");
+  const [draftNote, setDraftNote] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isTogglingClose, setIsTogglingClose] = useState(false);
   const [isSavingLive, setIsSavingLive] = useState(false);
@@ -130,6 +159,9 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
     setAwayLiveScore(match.awayLiveScore !== null ? String(match.awayLiveScore) : "");
     setLiveNote(match.liveNote);
     setLiveEvents(match.liveEvents);
+    setDraftMinute(match.liveMinute !== null ? String(match.liveMinute) : "");
+    setDraftPlayer("");
+    setDraftNote("");
     if (match.liveStatus !== "scheduled") setShowLive(true);
   }, [match]);
 
@@ -140,6 +172,11 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
   const needsWinner = isKnockout && isTied;
   const isLiveNow = liveStatus === "live";
   const isHalftime = liveStatus === "halftime";
+  const homePlayersListId = `players-${match.id}-home`;
+  const awayPlayersListId = `players-${match.id}-away`;
+  const draftPlayersListId =
+    draftTeam === "home" ? homePlayersListId : draftTeam === "away" ? awayPlayersListId : undefined;
+  const draftRoster = rosterForTeam(match, draftTeam);
 
   async function handleSaveScore() {
     setError("");
@@ -192,7 +229,13 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
     }
   }
 
-  function addLiveEvent(type: LiveEventType, team: LiveEventTeam = null) {
+  function addLiveEvent(
+    type: LiveEventType,
+    team: LiveEventTeam = null,
+    player = "",
+    note = "",
+    minuteValue = liveMinute
+  ) {
     if (type === "goal" && team === "home") setHomeLiveScore((v) => safeInc(v));
     if (type === "goal" && team === "away") setAwayLiveScore((v) => safeInc(v));
     if (liveStatus === "scheduled") setLiveStatus("live");
@@ -201,13 +244,27 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
         id: `${Date.now()}-${curr.length}`,
         type,
         team,
-        minute: liveMinute === "" ? null : Number(liveMinute),
-        player: "",
-        note: "",
+        minute: parseMinuteInput(minuteValue),
+        player: player.trim(),
+        note: note.trim(),
         createdAt: new Date().toISOString(),
       },
       ...curr,
     ]);
+  }
+
+  function selectEventPreset(type: LiveEventType, team: LiveEventTeam = null) {
+    setDraftType(type);
+    setDraftTeam(team);
+    setDraftMinute(liveMinute);
+    setDraftPlayer("");
+    setDraftNote("");
+  }
+
+  function addDraftEvent() {
+    addLiveEvent(draftType, draftTeam, draftPlayer, draftNote, draftMinute);
+    setDraftPlayer("");
+    setDraftNote("");
   }
 
   function updateLiveEvent(id: string, patch: Partial<AdminLiveMatchEvent>) {
@@ -446,6 +503,16 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
 
         {showLive && (
           <div className="px-4 pb-4 pt-2 space-y-4">
+            <datalist id={homePlayersListId}>
+              {match.homeRoster.map((player) => (
+                <option key={`${match.id}-home-${player.name}`} value={player.name} label={playerOptionLabel(player)} />
+              ))}
+            </datalist>
+            <datalist id={awayPlayersListId}>
+              {match.awayRoster.map((player) => (
+                <option key={`${match.id}-away-${player.name}`} value={player.name} label={playerOptionLabel(player)} />
+              ))}
+            </datalist>
 
             {/* Status selector */}
             <div className="grid grid-cols-4 gap-1">
@@ -543,68 +610,143 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
               </div>
             </div>
 
-            {/* Quick event buttons — by category */}
-            <div className="space-y-2">
-              {/* Goals */}
-              <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">Goles</p>
-              <div className="grid grid-cols-2 gap-1.5">
-                <button type="button" onClick={() => addLiveEvent("goal", "home")}
-                  className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg bg-emerald-600 text-xs font-black text-white hover:bg-emerald-700">
-                  ⚽ Local
-                </button>
-                <button type="button" onClick={() => addLiveEvent("goal", "away")}
-                  className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg bg-emerald-600 text-xs font-black text-white hover:bg-emerald-700">
-                  ⚽ Visita
-                </button>
+            {/* Event composer */}
+            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+              <div className="border-b border-slate-100 bg-slate-50 px-3 py-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">Nuevo evento</p>
+                    <p className="text-xs font-bold text-slate-500">
+                      {teamLabel(match, draftTeam)}{draftRoster.length ? ` - ${draftRoster.length} jugadores` : ""}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    <button
+                      type="button"
+                      onClick={() => selectEventPreset("goal", "home")}
+                      className={cn("h-7 rounded-md px-2 text-[11px] font-black transition", draftType === "goal" && draftTeam === "home" ? "bg-emerald-600 text-white" : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100")}
+                    >
+                      Gol L
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => selectEventPreset("goal", "away")}
+                      className={cn("h-7 rounded-md px-2 text-[11px] font-black transition", draftType === "goal" && draftTeam === "away" ? "bg-emerald-600 text-white" : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100")}
+                    >
+                      Gol V
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => selectEventPreset("yellow", "home")}
+                      className={cn("h-7 rounded-md px-2 text-[11px] font-black transition", draftType === "yellow" && draftTeam === "home" ? "bg-amber-400 text-white" : "bg-amber-50 text-amber-700 hover:bg-amber-100")}
+                    >
+                      Amar. L
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => selectEventPreset("yellow", "away")}
+                      className={cn("h-7 rounded-md px-2 text-[11px] font-black transition", draftType === "yellow" && draftTeam === "away" ? "bg-amber-400 text-white" : "bg-amber-50 text-amber-700 hover:bg-amber-100")}
+                    >
+                      Amar. V
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => selectEventPreset("substitution", "home")}
+                      className={cn("h-7 rounded-md px-2 text-[11px] font-black transition", draftType === "substitution" && draftTeam === "home" ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200")}
+                    >
+                      Cambio L
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => selectEventPreset("substitution", "away")}
+                      className={cn("h-7 rounded-md px-2 text-[11px] font-black transition", draftType === "substitution" && draftTeam === "away" ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200")}
+                    >
+                      Cambio V
+                    </button>
+                  </div>
+                </div>
               </div>
 
-              {/* Cards */}
-              <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">Tarjetas</p>
-              <div className="grid grid-cols-2 gap-1.5">
-                <button type="button" onClick={() => addLiveEvent("yellow", "home")}
-                  className="h-8 rounded-lg bg-amber-400 text-xs font-black text-white hover:bg-amber-500">
-                  🟨 Local
-                </button>
-                <button type="button" onClick={() => addLiveEvent("yellow", "away")}
-                  className="h-8 rounded-lg bg-amber-400 text-xs font-black text-white hover:bg-amber-500">
-                  🟨 Visita
-                </button>
-                <button type="button" onClick={() => addLiveEvent("red", "home")}
-                  className="h-8 rounded-lg bg-red-600 text-xs font-black text-white hover:bg-red-700">
-                  🟥 Local
-                </button>
-                <button type="button" onClick={() => addLiveEvent("red", "away")}
-                  className="h-8 rounded-lg bg-red-600 text-xs font-black text-white hover:bg-red-700">
-                  🟥 Visita
-                </button>
-              </div>
+              <div className="grid gap-2 p-3">
+                <div className="grid grid-cols-[4.75rem_minmax(0,1fr)] gap-2 sm:grid-cols-[4.75rem_8rem_minmax(0,1fr)]">
+                  <label className="grid gap-1">
+                    <span className="text-[10px] font-black uppercase text-slate-400">Min</span>
+                    <input
+                      type="number"
+                      min={0}
+                      max={130}
+                      value={draftMinute}
+                      onChange={(e) => setDraftMinute(e.target.value)}
+                      placeholder="'"
+                      className="h-10 rounded-lg border border-slate-200 bg-slate-50 px-2 text-center text-sm font-black tabular-nums text-slate-700 outline-none focus:border-red-300 focus:bg-white focus:ring-2 focus:ring-red-100"
+                    />
+                  </label>
 
-              {/* Other */}
-              <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">Otros</p>
-              <div className="flex flex-wrap gap-1.5">
-                <button type="button" onClick={() => addLiveEvent("penalty", "home")}
-                  className="h-8 rounded-lg border border-purple-200 bg-purple-50 px-2.5 text-xs font-black text-purple-700 hover:bg-purple-100">
-                  Penal Local
-                </button>
-                <button type="button" onClick={() => addLiveEvent("penalty", "away")}
-                  className="h-8 rounded-lg border border-purple-200 bg-purple-50 px-2.5 text-xs font-black text-purple-700 hover:bg-purple-100">
-                  Penal Visita
-                </button>
-                <button type="button" onClick={() => addLiveEvent("var", null)}
-                  className="h-8 rounded-lg border border-blue-200 bg-blue-50 px-2.5 text-xs font-black text-blue-700 hover:bg-blue-100">
-                  VAR
-                </button>
-                <button type="button" onClick={() => addLiveEvent("substitution", "home")}
-                  className="h-8 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-black text-slate-600 hover:bg-slate-50">
-                  Cambio Local
-                </button>
-                <button type="button" onClick={() => addLiveEvent("substitution", "away")}
-                  className="h-8 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-black text-slate-600 hover:bg-slate-50">
-                  Cambio Visita
-                </button>
-                <button type="button" onClick={() => addLiveEvent("note", null)}
-                  className="h-8 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-black text-slate-600 hover:bg-slate-50">
-                  + Nota
+                  <label className="grid gap-1">
+                    <span className="text-[10px] font-black uppercase text-slate-400">Tipo</span>
+                    <select
+                      value={draftType}
+                      onChange={(e) => setDraftType(e.target.value as LiveEventType)}
+                      className="h-10 rounded-lg border border-slate-200 bg-slate-50 px-2 text-sm font-black text-slate-700 outline-none focus:border-red-300 focus:bg-white focus:ring-2 focus:ring-red-100"
+                    >
+                      {LIVE_EVENT_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label className="grid gap-1 sm:col-span-1">
+                    <span className="text-[10px] font-black uppercase text-slate-400">Jugador</span>
+                    <input
+                      type="text"
+                      list={draftPlayersListId}
+                      value={draftPlayer}
+                      onChange={(e) => setDraftPlayer(e.target.value)}
+                      placeholder={draftRoster.length ? "Elegir jugador..." : "Jugador opcional"}
+                      className="h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-bold text-slate-700 outline-none placeholder:text-slate-300 focus:border-red-300 focus:bg-white focus:ring-2 focus:ring-red-100"
+                    />
+                  </label>
+                </div>
+
+                <div className="grid gap-2 sm:grid-cols-[12rem_minmax(0,1fr)]">
+                  <div className="grid grid-cols-3 gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1">
+                    {(["home", "away", null] as LiveEventTeam[]).map((team) => (
+                      <button
+                        key={team ?? "general"}
+                        type="button"
+                        onClick={() => { setDraftTeam(team); setDraftPlayer(""); }}
+                        className={cn(
+                          "h-8 rounded-md text-[11px] font-black transition",
+                          draftTeam === team
+                            ? team === "home"
+                              ? "bg-blue-600 text-white"
+                              : team === "away"
+                                ? "bg-red-600 text-white"
+                                : "bg-slate-700 text-white"
+                            : "text-slate-500 hover:bg-white"
+                        )}
+                      >
+                        {team === "home" ? "Local" : team === "away" ? "Visita" : "General"}
+                      </button>
+                    ))}
+                  </div>
+
+                  <input
+                    type="text"
+                    value={draftNote}
+                    onChange={(e) => setDraftNote(e.target.value)}
+                    placeholder="Nota corta para el timeline"
+                    className="h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-bold text-slate-700 outline-none placeholder:text-slate-300 focus:border-red-300 focus:bg-white focus:ring-2 focus:ring-red-100"
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={addDraftEvent}
+                  className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-red-600 px-3 text-sm font-black text-white transition hover:bg-red-700"
+                >
+                  <Plus className="h-4 w-4" />
+                  Agregar evento
                 </button>
               </div>
             </div>
@@ -627,22 +769,30 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
                           placeholder="′"
                           className="w-10 rounded border border-slate-200 bg-slate-50 text-center text-xs font-black tabular-nums text-slate-600 outline-none"
                         />
-                        <span className="shrink-0 rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-black text-slate-700">{liveEventLabel(event.type)}</span>
+                        <select
+                          value={event.type}
+                          onChange={(e) => updateLiveEvent(event.id, { type: e.target.value as LiveEventType })}
+                          className="h-7 shrink-0 rounded border border-slate-200 bg-slate-50 px-1.5 text-[11px] font-black text-slate-700 outline-none focus:border-slate-400"
+                        >
+                          {LIVE_EVENT_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>{option.label}</option>
+                          ))}
+                        </select>
                         {/* Team selector */}
                         <div className="flex gap-0.5">
                           <button
                             type="button"
-                            onClick={() => updateLiveEvent(event.id, { team: "home" })}
+                            onClick={() => updateLiveEvent(event.id, { team: "home", player: "" })}
                             className={cn("h-5 rounded px-1.5 text-[10px] font-black transition", event.team === "home" ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-500 hover:bg-slate-200")}
                           >L</button>
                           <button
                             type="button"
-                            onClick={() => updateLiveEvent(event.id, { team: "away" })}
+                            onClick={() => updateLiveEvent(event.id, { team: "away", player: "" })}
                             className={cn("h-5 rounded px-1.5 text-[10px] font-black transition", event.team === "away" ? "bg-red-600 text-white" : "bg-slate-100 text-slate-500 hover:bg-slate-200")}
                           >V</button>
                           <button
                             type="button"
-                            onClick={() => updateLiveEvent(event.id, { team: null })}
+                            onClick={() => updateLiveEvent(event.id, { team: null, player: "" })}
                             className={cn("h-5 rounded px-1.5 text-[10px] font-black transition", event.team === null ? "bg-slate-600 text-white" : "bg-slate-100 text-slate-500 hover:bg-slate-200")}
                           >–</button>
                         </div>
@@ -658,9 +808,10 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
                       <div className="grid grid-cols-2 gap-1.5">
                         <input
                           type="text"
+                          list={event.team === "home" ? homePlayersListId : event.team === "away" ? awayPlayersListId : undefined}
                           value={event.player}
                           onChange={(e) => updateLiveEvent(event.id, { player: e.target.value })}
-                          placeholder="Jugador"
+                          placeholder={rosterForTeam(match, event.team).length ? "Elegir jugador" : "Jugador"}
                           className="rounded border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-bold text-slate-700 outline-none placeholder:text-slate-300 focus:border-slate-400"
                         />
                         <input

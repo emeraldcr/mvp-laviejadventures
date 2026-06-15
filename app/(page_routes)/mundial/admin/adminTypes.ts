@@ -14,6 +14,17 @@ export type AdminLiveMatchEvent = {
   createdAt: string | null;
 };
 
+export type AdminRosterPlayer = {
+  name: string;
+  team: string;
+  squadNumber: number | null;
+  pos: string;
+  position: string;
+  club: string | null;
+  caps: number | null;
+  goals: number | null;
+};
+
 export type AdminMatch = {
   id: string;
   number: number;
@@ -21,6 +32,8 @@ export type AdminMatch = {
   stageLabel: string;
   homeTeam: string;
   awayTeam: string;
+  homeRoster: AdminRosterPlayer[];
+  awayRoster: AdminRosterPlayer[];
   kickoffAt: string;
   venue: string;
   group: string | null;

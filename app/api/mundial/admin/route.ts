@@ -11,6 +11,7 @@ const MATCHES_COLLECTION = "mundial_matches";
 const PREDICTIONS_COLLECTION = "mundial_predictions";
 const STAT_QUESTIONS_COLLECTION = "mundial_stat_questions";
 const STAT_BETS_COLLECTION = "mundial_stat_bets";
+const ROSTERS_COLLECTION = "mundial_rosters";
 const ANALYTICS_LIMIT = 250;
 
 type WinnerPick = "home" | "away" | null;
@@ -72,6 +73,18 @@ type StatBetDoc = {
   playerName?: string;
   normalizedName: string;
   optionId: string;
+};
+
+type RosterPlayerDoc = {
+  name?: string;
+  team?: string;
+  squadNumber?: number;
+  pos?: string;
+  position?: string;
+  club?: string | null;
+  caps?: number;
+  goals?: number;
+  active?: boolean;
 };
 
 type MundialAnalyticsEventName = "login" | "pick_saved" | "stat_bet_saved";
@@ -140,6 +153,19 @@ function serializeAnalyticsEvent(doc: MundialAnalyticsDoc) {
   };
 }
 
+function serializeRosterPlayer(doc: RosterPlayerDoc) {
+  return {
+    name: doc.name ?? "",
+    team: doc.team ?? "",
+    squadNumber: typeof doc.squadNumber === "number" ? doc.squadNumber : null,
+    pos: doc.pos ?? "",
+    position: doc.position ?? "",
+    club: doc.club ?? null,
+    caps: typeof doc.caps === "number" ? doc.caps : null,
+    goals: typeof doc.goals === "number" ? doc.goals : null,
+  };
+}
+
 function predictionScores(doc: PredictionDoc) {
   if (typeof doc.homeScore === "number" && typeof doc.awayScore === "number") {
     return { homeScore: doc.homeScore, awayScore: doc.awayScore };
@@ -179,11 +205,21 @@ export async function GET() {
     const now = new Date();
 
     const analyticsCollection = db.collection<MundialAnalyticsDoc>(COLLECTIONS.MUNDIAL_ANALYTICS);
-    const [matches, predictions, statQuestions, statBets, analyticsEvents, analyticsCounts, analyticsPlayerKeys] = await Promise.all([
+    const [
+      matches,
+      predictions,
+      statQuestions,
+      statBets,
+      rosterPlayers,
+      analyticsEvents,
+      analyticsCounts,
+      analyticsPlayerKeys,
+    ] = await Promise.all([
       db.collection<MundialMatchDoc>(MATCHES_COLLECTION).find({}).sort({ sortOrder: 1 }).toArray(),
       db.collection<PredictionDoc>(PREDICTIONS_COLLECTION).find({}).toArray(),
       db.collection<StatQuestionDoc>(STAT_QUESTIONS_COLLECTION).find({}).sort({ createdAt: 1 }).toArray(),
       db.collection<StatBetDoc>(STAT_BETS_COLLECTION).find({}).toArray(),
+      db.collection<RosterPlayerDoc>(ROSTERS_COLLECTION).find({ active: true }).sort({ team: 1, squadNumber: 1 }).toArray(),
       analyticsCollection.find({}).sort({ happenedAt: -1, createdAt: -1 }).limit(ANALYTICS_LIMIT).toArray(),
       analyticsCollection.aggregate<{ _id: MundialAnalyticsEventName; count: number }>([
         { $group: { _id: "$event", count: { $sum: 1 } } },
@@ -192,6 +228,15 @@ export async function GET() {
     ]);
 
     const matchesById = new Map(matches.map((m) => [m.id, m]));
+    const rostersByTeam = new Map<string, ReturnType<typeof serializeRosterPlayer>[]>();
+
+    for (const player of rosterPlayers) {
+      const team = player.team;
+      if (!team || !player.name) continue;
+      const list = rostersByTeam.get(team) ?? [];
+      list.push(serializeRosterPlayer(player));
+      rostersByTeam.set(team, list);
+    }
 
     type MatchStat = {
       total: number;
@@ -311,6 +356,8 @@ export async function GET() {
         stageLabel: match.stageLabel,
         homeTeam: match.homeTeam,
         awayTeam: match.awayTeam,
+        homeRoster: rostersByTeam.get(match.homeTeam) ?? [],
+        awayRoster: rostersByTeam.get(match.awayTeam) ?? [],
         kickoffAt: match.kickoffAt,
         venue: match.venue,
         group: match.group ?? null,
