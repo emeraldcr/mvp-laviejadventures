@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import {
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   CheckCircle2,
@@ -24,6 +25,12 @@ type StatQuestion = {
 };
 
 type StatBet = { questionId: string; optionId: string };
+
+type BetLeaderboardEntry = {
+  playerName: string;
+  earned: number;
+  total: number;
+};
 
 type StatBetsPanelProps = {
   matchId: string;
@@ -242,6 +249,93 @@ function QuestionCard({
   );
 }
 
+// ── Bet leaderboard ────────────────────────────────────────────────────────
+
+function BetLeaderboard({
+  entries,
+  myName,
+}: {
+  entries: BetLeaderboardEntry[];
+  myName: string;
+}) {
+  if (!entries.length) return null;
+  const maxEarned = Math.max(...entries.map((e) => e.earned), 1);
+  const medals = ["🥇", "🥈", "🥉"];
+  const myKey = myName.trim().toUpperCase();
+
+  return (
+    <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#111827]">
+      <div className="border-b border-white/8 px-4 py-3">
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#f0b429]/70">Mini-apuestas</p>
+        <p className="mt-0.5 text-sm font-black text-white">{entries.length} jugadores</p>
+      </div>
+      <div className="divide-y divide-white/8">
+        {entries.map((entry, i) => {
+          const isMe = entry.playerName.trim().toUpperCase() === myKey;
+          const barWidth = maxEarned > 0 ? Math.round((entry.earned / maxEarned) * 100) : 0;
+          return (
+            <div
+              key={entry.playerName}
+              className={cn(
+                "flex items-center gap-3 px-4 py-3",
+                isMe && "bg-[#f0b429]/5 ring-1 ring-inset ring-[#f0b429]/15"
+              )}
+            >
+              <div className="w-6 shrink-0 text-center">
+                {medals[i] ? (
+                  <span className="text-lg leading-none">{medals[i]}</span>
+                ) : (
+                  <span className="text-xs font-black text-white/30">{i + 1}</span>
+                )}
+              </div>
+
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <p className={cn(
+                    "truncate text-sm font-black",
+                    i === 0 ? "text-[#f0b429]" : isMe ? "text-white" : "text-white/65"
+                  )}>
+                    {entry.playerName}
+                  </p>
+                  {isMe && (
+                    <span className="shrink-0 rounded bg-[#f0b429]/20 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-[#f0b429]">
+                      Tú
+                    </span>
+                  )}
+                </div>
+                <div className="mt-1 h-1 overflow-hidden rounded-full bg-white/8">
+                  <div
+                    className={cn(
+                      "h-full rounded-full transition-all duration-500",
+                      i === 0 ? "bg-[#f0b429]" : entry.earned > 0 ? "bg-emerald-500/60" : "bg-white/15"
+                    )}
+                    style={{ width: `${Math.max(barWidth, entry.total > 0 ? 4 : 0)}%` }}
+                  />
+                </div>
+              </div>
+
+              <div className="shrink-0 text-right">
+                <span className={cn(
+                  "text-sm font-black tabular-nums",
+                  entry.earned > 0
+                    ? i === 0 ? "text-[#f0b429]" : "text-emerald-400"
+                    : "text-white/25"
+                )}>
+                  {entry.earned}
+                </span>
+                <span className="ml-0.5 text-[10px] font-bold text-white/30">pts</span>
+                {entry.total > 0 && (
+                  <p className="text-[10px] font-bold text-white/25">{entry.total} apuesta{entry.total !== 1 ? "s" : ""}</p>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ── main component ─────────────────────────────────────────────────────────
 
 export function StatBetsPanel({
@@ -253,6 +347,8 @@ export function StatBetsPanel({
 }: StatBetsPanelProps) {
   const [questions, setQuestions] = useState<StatQuestion[]>([]);
   const [myBets, setMyBets] = useState<Record<string, string>>({});
+  const [leaderboard, setLeaderboard] = useState<BetLeaderboardEntry[]>([]);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [saving, setSaving] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [activeIndex, setActiveIndex] = useState(0);
@@ -264,6 +360,7 @@ export function StatBetsPanel({
     if (!res.ok) return;
     const data = await res.json();
     setQuestions(data.questions ?? []);
+    setLeaderboard(data.leaderboard ?? []);
     const betsMap: Record<string, string> = {};
     for (const bet of (data.myBets ?? []) as StatBet[]) {
       betsMap[bet.questionId] = bet.optionId;
@@ -552,6 +649,27 @@ export function StatBetsPanel({
                 Te avisamos cuando se resuelvan.
               </p>
             </div>
+          </div>
+        )}
+
+        {/* leaderboard toggle */}
+        {leaderboard.length > 0 && (
+          <div className="grid gap-2">
+            <button
+              type="button"
+              onClick={() => setShowLeaderboard((v) => !v)}
+              className="flex items-center justify-between gap-2 rounded-xl border border-[#f0b429]/20 bg-[#f0b429]/5 px-4 py-3 text-left transition hover:bg-[#f0b429]/8"
+            >
+              <div className="flex items-center gap-2.5">
+                <Trophy className="h-4 w-4 text-[#f0b429]" />
+                <span className="text-sm font-black text-white">Tabla de posiciones</span>
+                <span className="rounded-md bg-white/8 px-2 py-0.5 text-[10px] font-black tabular-nums text-white/40">
+                  {leaderboard.length}
+                </span>
+              </div>
+              <ChevronDown className={cn("h-4 w-4 text-white/40 transition-transform duration-200", showLeaderboard && "rotate-180")} />
+            </button>
+            {showLeaderboard && <BetLeaderboard entries={leaderboard} myName={playerName} />}
           </div>
         )}
       </div>

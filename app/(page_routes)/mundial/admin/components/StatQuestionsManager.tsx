@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Check, ChevronDown, Loader2, Plus, Users, X } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Check, ChevronDown, Loader2, Plus, Trophy, Users, X } from "lucide-react";
 import type { AdminMatch, AdminStatQuestion, BetOptionAnalytics } from "../adminTypes";
 import { cn } from "../../utils";
 
@@ -241,6 +241,24 @@ export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion,
   const totalBetsForMatch = matchQuestions.reduce((sum, q) => sum + q.totalBets, 0);
   const resolvedCount = matchQuestions.filter((q) => q.resolved).length;
 
+  // Per-match stat bet leaderboard computed from betsByOption (no extra API call)
+  const statBetLeaderboard = useMemo(() => {
+    const playerMap = new Map<string, { playerName: string; earned: number; total: number }>();
+    for (const q of matchQuestions) {
+      for (const opt of q.betsByOption) {
+        for (const name of opt.players) {
+          if (!playerMap.has(name)) playerMap.set(name, { playerName: name, earned: 0, total: 0 });
+          const entry = playerMap.get(name)!;
+          entry.total++;
+          if (q.correctOptionId === opt.optionId) entry.earned += q.pointValue;
+        }
+      }
+    }
+    return [...playerMap.values()].sort(
+      (a, b) => b.earned - a.earned || b.total - a.total || a.playerName.localeCompare(b.playerName)
+    );
+  }, [matchQuestions]);
+
   async function handleCreate() {
     const text = newText.trim();
     const opts = newOptions.map((o) => o.trim()).filter(Boolean);
@@ -432,6 +450,59 @@ export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion,
                 onResolve={(id, optId) => void handleResolve(id, optId)}
               />
             ))}
+          </div>
+        )}
+
+        {/* per-match leaderboard */}
+        {statBetLeaderboard.length > 0 && (
+          <div className="overflow-hidden rounded-xl border border-purple-200 bg-white shadow-sm">
+            <div className="flex items-center gap-2 border-b border-slate-100 bg-purple-50 px-4 py-3">
+              <Trophy className="h-4 w-4 text-purple-600" />
+              <p className="text-sm font-black text-purple-900">Tabla · Mini-apuestas</p>
+              <span className="ml-auto text-xs font-bold text-slate-400">{statBetLeaderboard.length} jugadores</span>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-100 bg-slate-50 text-xs">
+                    <th className="px-3 py-2.5 text-left font-black uppercase tracking-wide text-slate-400">#</th>
+                    <th className="px-3 py-2.5 text-left font-black uppercase tracking-wide text-slate-400">Jugador</th>
+                    <th className="px-3 py-2.5 text-right font-black uppercase tracking-wide text-emerald-600">Pts</th>
+                    <th className="px-3 py-2.5 text-right font-black uppercase tracking-wide text-slate-400">Apuestas</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {statBetLeaderboard.map((entry, i) => {
+                    const medals = ["🥇", "🥈", "🥉"];
+                    const isFirst = i === 0;
+                    return (
+                      <tr key={entry.playerName} className={isFirst ? "bg-amber-50" : "hover:bg-slate-50/70"}>
+                        <td className="px-3 py-2.5">
+                          {medals[i] ? (
+                            <span className="text-base leading-none">{medals[i]}</span>
+                          ) : (
+                            <span className="text-sm font-black text-slate-400">{i + 1}</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-2.5">
+                          <p className={`font-black ${isFirst ? "text-amber-900" : "text-slate-950"}`}>
+                            {entry.playerName}
+                          </p>
+                        </td>
+                        <td className="px-3 py-2.5 text-right">
+                          <span className={`font-black tabular-nums ${entry.earned > 0 ? "text-emerald-700" : "text-slate-300"}`}>
+                            {entry.earned}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2.5 text-right">
+                          <span className="text-xs font-bold tabular-nums text-slate-400">{entry.total}</span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>

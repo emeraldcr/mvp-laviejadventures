@@ -38,18 +38,35 @@ export async function GET(req: NextRequest) {
     const db = await getDb();
     const now = new Date();
 
-    const questions = await db
-      .collection(STAT_QUESTIONS_COLLECTION)
-      .find({ matchId })
-      .sort({ createdAt: 1 })
-      .toArray();
+    const [questions, myBets, allMatchBets] = await Promise.all([
+      db.collection(STAT_QUESTIONS_COLLECTION).find({ matchId }).sort({ createdAt: 1 }).toArray(),
+      playerName
+        ? db.collection(STAT_BETS_COLLECTION).find({ matchId, normalizedName: normalizeKey(playerName) }).toArray()
+        : Promise.resolve([]),
+      db.collection(STAT_BETS_COLLECTION).find({ matchId }).toArray(),
+    ]);
 
-    const myBets = playerName
-      ? await db
-          .collection(STAT_BETS_COLLECTION)
-          .find({ matchId, normalizedName: normalizeKey(playerName) })
-          .toArray()
-      : [];
+    // Build per-player leaderboard for this match
+    const playerMap = new Map<string, { playerName: string; earned: number; total: number }>();
+    for (const bet of allMatchBets) {
+      const key = String(bet.normalizedName ?? "");
+      if (!key) continue;
+      if (!playerMap.has(key)) {
+        playerMap.set(key, { playerName: String(bet.playerName ?? key), earned: 0, total: 0 });
+      }
+      const entry = playerMap.get(key)!;
+      entry.total++;
+      const q = questions.find((q) => q.id === bet.questionId);
+      if (q?.correctOptionId && bet.optionId === q.correctOptionId) {
+        entry.earned += Number(q.pointValue ?? 1);
+      }
+    }
+    const leaderboard = [...playerMap.values()].sort(
+      (a, b) => b.earned - a.earned || b.total - a.total || a.playerName.localeCompare(b.playerName)
+    );
+
+    const matchKickoff = kickoffTime(MUNDIAL_MATCHES.find((m) => m.id === matchId)?.kickoffAt ?? "");
+    const isClosed = matchKickoff <= now.getTime();
 
     return NextResponse.json({
       questions: questions.map((q) => ({
@@ -59,14 +76,13 @@ export async function GET(req: NextRequest) {
         correctOptionId: q.correctOptionId ?? null,
         resolved: Boolean(q.correctOptionId),
         pointValue: q.pointValue ?? 1,
-        closed: kickoffTime(
-          MUNDIAL_MATCHES.find((m) => m.id === matchId)?.kickoffAt ?? ""
-        ) <= now.getTime(),
+        closed: isClosed,
       })),
       myBets: myBets.map((b) => ({
         questionId: b.questionId,
         optionId: b.optionId,
       })),
+      leaderboard,
     });
   } catch (error) {
     console.error("Failed to load stat bets", error);
