@@ -76,6 +76,8 @@ export function NextView({
               />
             </div>
 
+            <StatBetsPanel matchId={featuredMatch.id} playerName={playerName} />
+
             {selectedInfoMatch && (
               <OtherPicksPanel
                 match={selectedInfoMatch}
@@ -84,8 +86,6 @@ export function NextView({
                 showEmpty
               />
             )}
-
-            {activeMatch && <StatBetsPanel matchId={activeMatch.id} playerName={playerName} />}
           </>
         ) : (
           <>
@@ -103,12 +103,15 @@ export function NextView({
             </section>
 
             {selectedInfoMatch && (
-              <OtherPicksPanel
-                match={selectedInfoMatch}
-                predictions={predictions}
-                playerName={playerName}
-                showEmpty
-              />
+              <>
+                <StatBetsPanel matchId={selectedInfoMatch.id} playerName={playerName} />
+                <OtherPicksPanel
+                  match={selectedInfoMatch}
+                  predictions={predictions}
+                  playerName={playerName}
+                  showEmpty
+                />
+              </>
             )}
           </>
         )}

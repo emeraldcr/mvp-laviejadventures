@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node --env-file=.env scripts/seed-mundial-sweden-tunisia.mjs)"
+    ]
+  }
+}

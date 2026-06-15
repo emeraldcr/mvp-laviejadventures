@@ -50,31 +50,30 @@ export function FeaturedMatch({
     >
       <div className="pointer-events-none absolute inset-0 opacity-45 [background-image:radial-gradient(circle_at_50%_0%,rgba(49,81,255,0.28),transparent_38%),linear-gradient(90deg,rgba(255,255,255,0.07)_1px,transparent_1px),linear-gradient(0deg,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:100%_100%,72px_72px,72px_72px]" />
 
-      <div className="relative border-b border-white/15 bg-[#3151ff] px-4 py-4 sm:px-6">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="min-w-0">
-            <div className="mb-2 flex flex-wrap items-center gap-2">
-              {isClosed ? (
-                <Lock className="h-4 w-4 shrink-0 text-[#ffb15f]" />
-              ) : isActive ? (
-                <span className="h-3 w-3 shrink-0 animate-pulse rounded-full bg-[#9dff34] shadow-[0_0_14px_rgba(157,255,52,0.9)]" />
-              ) : (
-                <Clock3 className="h-4 w-4 shrink-0 text-[#62ffe6]" />
-              )}
-              <span className="text-xs font-black uppercase tracking-[0.22em] text-white">
-                {isClosed ? "Partido cerrado" : isActive ? "Proximo pick" : "Partido pendiente"}
-              </span>
-              <span className="rounded-md border border-white/20 bg-black/25 px-2 py-0.5 text-xs font-black text-white/80">
-                #{match.number}
-              </span>
-              <span className="rounded-md border border-white/20 bg-black/25 px-2 py-0.5 text-xs font-black text-white/80">
-                {match.group ? `Grupo ${match.group}` : match.stageLabel}
-              </span>
-            </div>
-            <h2 className="text-2xl font-black uppercase leading-tight text-white sm:text-4xl">
+      <div className="relative border-b border-white/15 bg-[#3151ff] px-3 py-2 sm:px-5">
+        <div className="flex flex-col gap-2 min-[760px]:flex-row min-[760px]:items-center min-[760px]:justify-between">
+          <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1.5">
+            {isClosed ? (
+              <Lock className="h-3.5 w-3.5 shrink-0 text-[#ffb15f]" />
+            ) : isActive ? (
+              <span className="h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-[#9dff34] shadow-[0_0_14px_rgba(157,255,52,0.9)]" />
+            ) : (
+              <Clock3 className="h-3.5 w-3.5 shrink-0 text-[#62ffe6]" />
+            )}
+            <span className="shrink-0 text-[11px] font-black uppercase tracking-[0.22em] text-white">
+              {isClosed ? "Partido cerrado" : isActive ? "Proximo pick" : "Partido pendiente"}
+            </span>
+            <span className="rounded-md border border-white/20 bg-black/25 px-2 py-0.5 text-[11px] font-black text-white/80">
+              #{match.number}
+            </span>
+            <span className="rounded-md border border-white/20 bg-black/25 px-2 py-0.5 text-[11px] font-black text-white/80">
+              {match.group ? `Grupo ${match.group}` : match.stageLabel}
+            </span>
+            <h2 className="min-w-0 truncate text-lg font-black uppercase leading-none text-white sm:text-xl">
               {isClosed ? "Tu prediccion" : "Pone tu marcador"}
             </h2>
-            <p className="mt-1 text-sm font-bold text-white/75">
+            <span className="hidden h-4 w-px bg-white/25 min-[520px]:inline-block" />
+            <p className="min-w-0 truncate text-xs font-bold text-white/75 sm:text-sm">
               {match.venue ? `${match.venue} / ` : ""}
               {formatKickoff(match.kickoffAt)}
             </p>
