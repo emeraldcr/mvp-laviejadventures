@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 
 import { getDb } from "@/lib/helpers/mongodb";
+import { COLLECTIONS } from "@/lib/constants/db";
 import type { MundialMatch, MundialStage } from "@/lib/mundial/fixtures";
 
 export const dynamic = "force-dynamic";
@@ -10,6 +11,7 @@ const MATCHES_COLLECTION = "mundial_matches";
 const PREDICTIONS_COLLECTION = "mundial_predictions";
 const STAT_QUESTIONS_COLLECTION = "mundial_stat_questions";
 const STAT_BETS_COLLECTION = "mundial_stat_bets";
+const ANALYTICS_LIMIT = 250;
 
 type WinnerPick = "home" | "away" | null;
 
@@ -71,6 +73,25 @@ type StatBetDoc = {
   optionId: string;
 };
 
+type MundialAnalyticsEventName = "login" | "pick_saved" | "stat_bet_saved";
+
+type MundialAnalyticsDoc = {
+  _id: ObjectId;
+  event?: MundialAnalyticsEventName;
+  playerName?: string;
+  normalizedName?: string;
+  happenedAt?: Date | string | null;
+  createdAt?: Date | string | null;
+  metadata?: Record<string, unknown>;
+  request?: {
+    ipAnonymized?: string | null;
+    country?: string | null;
+    region?: string | null;
+    city?: string | null;
+    userAgent?: string;
+  };
+};
+
 function kickoffTime(match: MundialMatchDoc | MundialMatch) {
   const t = new Date(match.kickoffAt).getTime();
   return Number.isNaN(t) ? Number.POSITIVE_INFINITY : t;
@@ -96,6 +117,25 @@ function serializeLiveEvent(event: LiveMatchEventDoc, index: number) {
     player: event.player ?? "",
     note: event.note ?? "",
     createdAt: toIsoString(event.createdAt),
+  };
+}
+
+function serializeAnalyticsEvent(doc: MundialAnalyticsDoc) {
+  return {
+    id: doc._id.toString(),
+    event: doc.event ?? "login",
+    playerName: doc.playerName ?? doc.normalizedName ?? "",
+    normalizedName: doc.normalizedName ?? "",
+    happenedAt: toIsoString(doc.happenedAt),
+    createdAt: toIsoString(doc.createdAt),
+    metadata: doc.metadata ?? {},
+    request: {
+      ipAnonymized: doc.request?.ipAnonymized ?? null,
+      country: doc.request?.country ?? null,
+      region: doc.request?.region ?? null,
+      city: doc.request?.city ?? null,
+      userAgent: doc.request?.userAgent ?? "",
+    },
   };
 }
 
@@ -137,11 +177,17 @@ export async function GET() {
     const db = await getDb();
     const now = new Date();
 
-    const [matches, predictions, statQuestions, statBets] = await Promise.all([
+    const analyticsCollection = db.collection<MundialAnalyticsDoc>(COLLECTIONS.MUNDIAL_ANALYTICS);
+    const [matches, predictions, statQuestions, statBets, analyticsEvents, analyticsCounts, analyticsPlayerKeys] = await Promise.all([
       db.collection<MundialMatchDoc>(MATCHES_COLLECTION).find({}).sort({ sortOrder: 1 }).toArray(),
       db.collection<PredictionDoc>(PREDICTIONS_COLLECTION).find({}).toArray(),
       db.collection<StatQuestionDoc>(STAT_QUESTIONS_COLLECTION).find({}).sort({ createdAt: 1 }).toArray(),
       db.collection<StatBetDoc>(STAT_BETS_COLLECTION).find({}).toArray(),
+      analyticsCollection.find({}).sort({ happenedAt: -1, createdAt: -1 }).limit(ANALYTICS_LIMIT).toArray(),
+      analyticsCollection.aggregate<{ _id: MundialAnalyticsEventName; count: number }>([
+        { $group: { _id: "$event", count: { $sum: 1 } } },
+      ]).toArray(),
+      analyticsCollection.distinct("normalizedName"),
     ]);
 
     const matchesById = new Map(matches.map((m) => [m.id, m]));
@@ -305,7 +351,19 @@ export async function GET() {
       totalBets: statBets.filter((b) => b.questionId === q.id).length,
     }));
 
-    return NextResponse.json({ matches: adminMatches, leaderboard, statQuestions: adminStatQuestions });
+    const analyticsCountMap = new Map(analyticsCounts.map((item) => [item._id, item.count]));
+    const analytics = {
+      summary: {
+        totalEvents: analyticsCounts.reduce((sum, item) => sum + item.count, 0),
+        logins: analyticsCountMap.get("login") ?? 0,
+        picksSaved: analyticsCountMap.get("pick_saved") ?? 0,
+        statBetsSaved: analyticsCountMap.get("stat_bet_saved") ?? 0,
+        uniquePlayers: analyticsPlayerKeys.filter((key) => typeof key === "string" && key.length > 0).length,
+      },
+      events: analyticsEvents.map(serializeAnalyticsEvent),
+    };
+
+    return NextResponse.json({ matches: adminMatches, leaderboard, statQuestions: adminStatQuestions, analytics });
   } catch (error) {
     console.error("Failed to load admin data", error);
     return NextResponse.json({ error: "No se pudo cargar el panel de admin." }, { status: 500 });

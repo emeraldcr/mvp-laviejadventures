@@ -71,10 +71,41 @@ export type AdminStatQuestion = {
   totalBets: number;
 };
 
+export type AdminAnalyticsEventName = "login" | "pick_saved" | "stat_bet_saved";
+
+export type AdminAnalyticsEvent = {
+  id: string;
+  event: AdminAnalyticsEventName;
+  playerName: string;
+  normalizedName: string;
+  happenedAt: string | null;
+  createdAt: string | null;
+  metadata: Record<string, unknown>;
+  request: {
+    ipAnonymized: string | null;
+    country: string | null;
+    region: string | null;
+    city: string | null;
+    userAgent: string;
+  };
+};
+
+export type AdminAnalyticsSummary = {
+  totalEvents: number;
+  logins: number;
+  picksSaved: number;
+  statBetsSaved: number;
+  uniquePlayers: number;
+};
+
 export type AdminData = {
   matches: AdminMatch[];
   leaderboard: LeaderboardEntry[];
   statQuestions: AdminStatQuestion[];
+  analytics: {
+    summary: AdminAnalyticsSummary;
+    events: AdminAnalyticsEvent[];
+  };
 };
 
-export type AdminView = "leaderboard" | "matches" | "stats";
+export type AdminView = "leaderboard" | "matches" | "stats" | "analytics";

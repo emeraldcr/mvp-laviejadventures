@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { BarChart3, CheckCircle2, Loader2, RefreshCw, Shield, Tv2, Trophy, Users } from "lucide-react";
+import { Activity, BarChart3, CheckCircle2, Loader2, RefreshCw, Shield, Tv2, Trophy, Users } from "lucide-react";
 import type { AdminData, AdminView, LeaderboardEntry } from "./adminTypes";
 import { cn } from "../utils";
+import { AdminAnalyticsPanel } from "./components/AdminAnalyticsPanel";
 import { AdminLeaderboard } from "./components/AdminLeaderboard";
 import { MatchAdminCard } from "./components/MatchAdminCard";
 import { StatQuestionsManager } from "./components/StatQuestionsManager";
@@ -17,6 +18,7 @@ const VIEW_OPTIONS: Array<{ id: AdminView; label: string; icon: React.ReactNode 
   { id: "leaderboard", label: "Leaderboard", icon: <Trophy className="h-4 w-4" /> },
   { id: "matches", label: "Partidos", icon: <Tv2 className="h-4 w-4" /> },
   { id: "stats", label: "Stats & Apuestas", icon: <BarChart3 className="h-4 w-4" /> },
+  { id: "analytics", label: "Analytics", icon: <Activity className="h-4 w-4" /> },
 ];
 
 type MatchFilter = "all" | "open" | "closed" | "scored" | "live";
@@ -50,7 +52,10 @@ export default function AdminClient() {
     }
   }, []);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    const timeout = window.setTimeout(() => { void load(); }, 0);
+    return () => window.clearTimeout(timeout);
+  }, [load]);
 
   async function patchMatch(matchId: string, patch: Record<string, unknown>) {
     const res = await fetch(MATCH_API, {
@@ -305,6 +310,13 @@ export default function AdminClient() {
                 statQuestions={data.statQuestions}
                 onCreateQuestion={createStatQuestion}
                 onResolveQuestion={resolveStatQuestion}
+              />
+            )}
+
+            {view === "analytics" && (
+              <AdminAnalyticsPanel
+                summary={data.analytics.summary}
+                events={data.analytics.events}
               />
             )}
           </>
