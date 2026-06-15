@@ -58,6 +58,14 @@ export type LeaderboardEntry = {
 
 export type StatOption = { id: string; label: string };
 
+export type BetOptionAnalytics = {
+  optionId: string;
+  label: string;
+  count: number;
+  pct: number;
+  players: string[];
+};
+
 export type AdminStatQuestion = {
   id: string;
   matchId: string;
@@ -69,6 +77,7 @@ export type AdminStatQuestion = {
   resolved: boolean;
   pointValue: number;
   totalBets: number;
+  betsByOption: BetOptionAnalytics[];
 };
 
 export type AdminAnalyticsEventName = "login" | "pick_saved" | "stat_bet_saved";

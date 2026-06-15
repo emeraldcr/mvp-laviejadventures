@@ -69,6 +69,7 @@ type StatQuestionDoc = {
 
 type StatBetDoc = {
   questionId: string;
+  playerName?: string;
   normalizedName: string;
   optionId: string;
 };
@@ -337,19 +338,34 @@ export async function GET() {
       };
     });
 
-    // Format stat questions
-    const adminStatQuestions = statQuestions.map((q) => ({
-      id: q.id,
-      matchId: q.matchId,
-      matchNumber: q.matchNumber,
-      matchLabel: q.matchLabel,
-      text: q.text,
-      options: q.options,
-      correctOptionId: q.correctOptionId ?? null,
-      resolved: Boolean(q.correctOptionId),
-      pointValue: q.pointValue ?? 1,
-      totalBets: statBets.filter((b) => b.questionId === q.id).length,
-    }));
+    // Format stat questions with per-option bet breakdown
+    const adminStatQuestions = statQuestions.map((q) => {
+      const questionBets = statBets.filter((b) => b.questionId === q.id);
+      const totalBets = questionBets.length;
+      const betsByOption = q.options.map((opt) => {
+        const picks = questionBets.filter((b) => b.optionId === opt.id);
+        return {
+          optionId: opt.id,
+          label: opt.label,
+          count: picks.length,
+          pct: totalBets > 0 ? Math.round((picks.length / totalBets) * 100) : 0,
+          players: picks.map((b) => b.playerName ?? b.normalizedName),
+        };
+      });
+      return {
+        id: q.id,
+        matchId: q.matchId,
+        matchNumber: q.matchNumber,
+        matchLabel: q.matchLabel,
+        text: q.text,
+        options: q.options,
+        correctOptionId: q.correctOptionId ?? null,
+        resolved: Boolean(q.correctOptionId),
+        pointValue: q.pointValue ?? 1,
+        totalBets,
+        betsByOption,
+      };
+    });
 
     const analyticsCountMap = new Map(analyticsCounts.map((item) => [item._id, item.count]));
     const analytics = {

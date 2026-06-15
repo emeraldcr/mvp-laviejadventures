@@ -1,7 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Check, Loader2, Lock, Zap } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  CheckCircle2,
+  Lock,
+  Sparkles,
+  TrendingUp,
+  Trophy,
+  Zap,
+} from "lucide-react";
 import { cn } from "../utils";
 
 type StatQuestion = {
@@ -19,13 +28,234 @@ type StatBet = { questionId: string; optionId: string };
 type StatBetsPanelProps = {
   matchId: string;
   playerName: string;
+  matchLabel?: string;
+  variant?: "full" | "mini";
+  onOpenPlayerPicker?: () => void;
 };
 
-export function StatBetsPanel({ matchId, playerName }: StatBetsPanelProps) {
+// ── helpers ────────────────────────────────────────────────────────────────
+
+function isBinary(q: StatQuestion) {
+  return q.options.length === 2;
+}
+
+function pointsBadge(pts: number) {
+  return pts >= 3 ? "🔥" : pts === 2 ? "⭐" : null;
+}
+
+// ── sub-components ─────────────────────────────────────────────────────────
+
+function OptionButton({
+  label,
+  selected,
+  isCorrect,
+  isWrong,
+  disabled,
+  saving,
+  binary,
+  onClick,
+}: {
+  label: string;
+  selected: boolean;
+  isCorrect: boolean;
+  isWrong: boolean;
+  disabled: boolean;
+  saving: boolean;
+  binary: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      className={cn(
+        "group relative overflow-hidden rounded-xl border font-black transition-all duration-150 active:scale-[0.97]",
+        binary ? "min-h-[3.5rem] px-4 py-3 text-base" : "min-h-[3rem] px-4 py-3 text-sm",
+        isCorrect
+          ? "border-emerald-400 bg-emerald-500 text-white shadow-[0_0_24px_rgba(16,185,129,0.45)]"
+          : isWrong
+            ? "border-white/10 bg-white/5 text-white/30 line-through opacity-60"
+            : selected
+              ? "border-[#f0b429] bg-[#f0b429]/15 text-[#f0b429] shadow-[0_0_20px_rgba(240,180,41,0.25)] ring-1 ring-[#f0b429]/50"
+              : disabled
+                ? "cursor-not-allowed border-white/8 bg-white/4 text-white/25"
+                : "border-white/12 bg-white/5 text-white/80 hover:border-[#f0b429]/60 hover:bg-[#f0b429]/8 hover:text-white"
+      )}
+    >
+      {/* shimmer on hover */}
+      {!disabled && !selected && !isCorrect && (
+        <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/5 to-transparent transition-transform duration-500 group-hover:translate-x-full" />
+      )}
+
+      <div className="flex items-center justify-between gap-3">
+        <span className="min-w-0 break-words text-left leading-snug">{label}</span>
+        <span className={cn(
+          "grid h-5 w-5 shrink-0 place-items-center rounded-full border text-xs",
+          isCorrect
+            ? "border-white/40 bg-white/20 text-white"
+            : selected
+              ? "border-[#f0b429]/60 bg-[#f0b429]/20 text-[#f0b429]"
+              : "border-white/15 bg-transparent text-transparent"
+        )}>
+          {saving ? (
+            <span className="h-2.5 w-2.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+          ) : isCorrect ? (
+            "✓"
+          ) : selected ? (
+            "✓"
+          ) : null}
+        </span>
+      </div>
+    </button>
+  );
+}
+
+function QuestionCard({
+  question,
+  index,
+  total,
+  myBet,
+  saving,
+  error,
+  compact,
+  onBet,
+}: {
+  question: StatQuestion;
+  index: number;
+  total: number;
+  myBet: string | undefined;
+  saving: boolean;
+  error: string;
+  compact: boolean;
+  onBet: (optionId: string) => void;
+}) {
+  const isClosed = question.closed || question.resolved;
+  const binary = isBinary(question);
+  const myPoints =
+    question.resolved && myBet && myBet === question.correctOptionId
+      ? question.pointValue
+      : null;
+  const lost = question.resolved && myBet && myBet !== question.correctOptionId;
+  const badge = pointsBadge(question.pointValue);
+
+  return (
+    <div className={cn(
+      "relative overflow-hidden rounded-2xl border transition-all",
+      myBet && !isClosed
+        ? "border-[#f0b429]/30 bg-[#f0b429]/5"
+        : isClosed
+          ? "border-white/8 bg-[#0f1218]"
+          : "border-white/10 bg-[#111827]",
+    )}>
+      {/* top accent strip */}
+      <div className={cn(
+        "h-0.5 w-full",
+        myPoints !== null
+          ? "bg-gradient-to-r from-emerald-500 to-emerald-400"
+          : lost
+            ? "bg-white/10"
+            : myBet
+              ? "bg-gradient-to-r from-[#f0b429] to-[#fbbf24]"
+              : isClosed
+                ? "bg-white/8"
+                : "bg-gradient-to-r from-[#3151ff]/60 to-[#6366f1]/40"
+      )} />
+
+      <div className={compact ? "p-3" : "p-4"}>
+        {/* meta row */}
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          <span className="rounded-md bg-white/8 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-white/40">
+            #{index + 1}/{total}
+          </span>
+
+          <span className={cn(
+            "inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-black uppercase tracking-wide",
+            question.pointValue >= 3
+              ? "bg-amber-500/15 text-amber-400"
+              : question.pointValue === 2
+                ? "bg-purple-500/15 text-purple-400"
+                : "bg-white/8 text-white/40"
+          )}>
+            {badge && <span>{badge}</span>}
+            {question.pointValue} pt{question.pointValue !== 1 ? "s" : ""}
+          </span>
+
+          {isClosed && (
+            <span className="inline-flex items-center gap-1 rounded-md bg-white/6 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-white/35">
+              <Lock className="h-2.5 w-2.5" />
+              {question.resolved ? "Resuelta" : "Cerrada"}
+            </span>
+          )}
+
+          {myPoints !== null && (
+            <span className="ml-auto inline-flex items-center gap-1 rounded-md bg-emerald-500/15 px-2.5 py-0.5 text-xs font-black text-emerald-400">
+              <Trophy className="h-3 w-3" />
+              +{myPoints} pt{myPoints !== 1 ? "s" : ""}
+            </span>
+          )}
+          {lost && (
+            <span className="ml-auto rounded-md bg-white/6 px-2.5 py-0.5 text-[10px] font-black text-white/30">
+              Sin puntos
+            </span>
+          )}
+        </div>
+
+        {/* question text */}
+        <p className={cn(
+          "mb-4 font-black leading-snug text-white",
+          compact ? "text-base" : "text-lg"
+        )}>
+          {question.text}
+        </p>
+
+        {/* options */}
+        <div className={cn(
+          "grid gap-2",
+          binary ? "grid-cols-2" : "grid-cols-1 sm:grid-cols-2"
+        )}>
+          {question.options.map((opt) => {
+            const selected = myBet === opt.id;
+            const isCorrect = question.resolved && question.correctOptionId === opt.id;
+            const isWrong = question.resolved && selected && !isCorrect;
+            return (
+              <OptionButton
+                key={opt.id}
+                label={opt.label}
+                selected={selected}
+                isCorrect={isCorrect}
+                isWrong={isWrong}
+                disabled={isClosed || !myBet && false || saving}
+                saving={saving && selected}
+                binary={binary}
+                onClick={() => onBet(opt.id)}
+              />
+            );
+          })}
+        </div>
+
+        {error && (
+          <p className="mt-2 text-xs font-bold text-amber-400">{error}</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── main component ─────────────────────────────────────────────────────────
+
+export function StatBetsPanel({
+  matchId,
+  playerName,
+  matchLabel,
+  variant = "full",
+  onOpenPlayerPicker,
+}: StatBetsPanelProps) {
   const [questions, setQuestions] = useState<StatQuestion[]>([]);
   const [myBets, setMyBets] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [activeIndex, setActiveIndex] = useState(0);
 
   const load = useCallback(async () => {
     const params = new URLSearchParams({ matchId });
@@ -43,16 +273,34 @@ export function StatBetsPanel({ matchId, playerName }: StatBetsPanelProps) {
 
   useEffect(() => {
     if (!matchId) return;
-    const timeout = window.setTimeout(() => {
-      void load();
-    }, 0);
-    return () => window.clearTimeout(timeout);
+    const t = window.setTimeout(() => void load(), 0);
+    return () => window.clearTimeout(t);
   }, [load, matchId]);
 
-  async function placeBet(questionId: string, optionId: string) {
-    if (!playerName) return;
+  useEffect(() => {
+    const t = window.setTimeout(() => setActiveIndex(0), 0);
+    return () => window.clearTimeout(t);
+  }, [matchId]);
+
+  useEffect(() => {
+    const t = window.setTimeout(() => {
+      setActiveIndex((c) => Math.min(c, Math.max(questions.length - 1, 0)));
+    }, 0);
+    return () => window.clearTimeout(t);
+  }, [questions.length]);
+
+  function goNext(fromId: string) {
+    const next = questions.findIndex((q, i) => {
+      if (i <= activeIndex || q.id === fromId || q.closed || q.resolved) return false;
+      return !myBets[q.id];
+    });
+    setActiveIndex(next >= 0 ? next : Math.min(activeIndex + 1, questions.length - 1));
+  }
+
+  async function placeBet(questionId: string, optionId: string, advance = false) {
+    if (!playerName) { onOpenPlayerPicker?.(); return; }
     setSaving(questionId);
-    setErrors((prev) => ({ ...prev, [questionId]: "" }));
+    setErrors((p) => ({ ...p, [questionId]: "" }));
     try {
       const res = await fetch("/api/mundial/stat-bets", {
         method: "POST",
@@ -60,13 +308,14 @@ export function StatBetsPanel({ matchId, playerName }: StatBetsPanelProps) {
         body: JSON.stringify({ questionId, matchId, playerName, optionId }),
       });
       if (res.ok) {
-        setMyBets((prev) => ({ ...prev, [questionId]: optionId }));
+        setMyBets((p) => ({ ...p, [questionId]: optionId }));
+        if (advance) goNext(questionId);
       } else {
         const body = await res.json().catch(() => ({}));
-        setErrors((prev) => ({ ...prev, [questionId]: body.error ?? "Error guardando." }));
+        setErrors((p) => ({ ...p, [questionId]: body.error ?? "Error guardando." }));
       }
     } catch {
-      setErrors((prev) => ({ ...prev, [questionId]: "Error de red." }));
+      setErrors((p) => ({ ...p, [questionId]: "Error de red." }));
     } finally {
       setSaving(null);
     }
@@ -74,108 +323,237 @@ export function StatBetsPanel({ matchId, playerName }: StatBetsPanelProps) {
 
   if (!questions.length) return null;
 
+  const answeredCount = questions.filter((q) => myBets[q.id]).length;
+  const totalPts = questions.reduce((acc, q) => acc + q.pointValue, 0);
+  const earnedPts = questions.reduce((acc, q) => {
+    if (q.resolved && myBets[q.id] === q.correctOptionId) return acc + q.pointValue;
+    return acc;
+  }, 0);
+  const progressPct = questions.length > 0 ? Math.round((answeredCount / questions.length) * 100) : 0;
+  const activeQuestion = questions[activeIndex] ?? questions[0];
+
+  // ── MINI VARIANT ────────────────────────────────────────────────────────
+
+  if (variant === "mini") {
+    return (
+      <section className="overflow-hidden rounded-2xl border border-white/10 bg-[#0b0d14] shadow-[0_24px_60px_rgba(0,0,0,0.5)]">
+        {/* header */}
+        <div className="relative overflow-hidden border-b border-white/8 bg-gradient-to-r from-[#1a1030] to-[#0e1520] px-4 py-3">
+          <div className="pointer-events-none absolute inset-0 opacity-30 [background-image:radial-gradient(ellipse_at_top_left,rgba(240,180,41,0.2),transparent_60%)]" />
+          <div className="relative flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-[#f0b429] to-[#e8a30a] shadow-[0_0_16px_rgba(240,180,41,0.4)]">
+                <Zap className="h-4 w-4 text-[#0b0d14]" />
+              </span>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#f0b429]/80">Apuestas extra</p>
+                <p className="text-sm font-black text-white">
+                  {matchLabel ?? "Preguntas del partido"}
+                </p>
+              </div>
+            </div>
+
+            {/* pts chip */}
+            <div className="flex items-center gap-2">
+              <span className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-black tabular-nums text-white/60">
+                {answeredCount}/{questions.length}
+              </span>
+              <span className="rounded-lg border border-[#f0b429]/30 bg-[#f0b429]/10 px-2.5 py-1 text-xs font-black text-[#f0b429]">
+                {totalPts} pts en juego
+              </span>
+            </div>
+          </div>
+
+          {/* progress bar */}
+          <div className="relative mt-3 h-1.5 overflow-hidden rounded-full bg-white/8">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-[#f0b429] to-[#fbbf24] transition-all duration-500"
+              style={{ width: `${progressPct}%` }}
+            />
+          </div>
+          <div className="mt-1 flex justify-between text-[10px] font-black text-white/30">
+            <span>{answeredCount} apostadas</span>
+            <span>{progressPct}%</span>
+          </div>
+        </div>
+
+        {/* question */}
+        <div className="p-3 sm:p-4">
+          <QuestionCard
+            question={activeQuestion}
+            index={activeIndex}
+            total={questions.length}
+            myBet={myBets[activeQuestion.id]}
+            saving={saving === activeQuestion.id}
+            error={errors[activeQuestion.id] ?? ""}
+            compact
+            onBet={(optId) => void placeBet(activeQuestion.id, optId, true)}
+          />
+
+          {!playerName && (
+            <button
+              type="button"
+              onClick={onOpenPlayerPicker}
+              className="mt-3 w-full rounded-xl border border-[#f0b429]/40 bg-[#f0b429]/10 py-2.5 text-sm font-black text-[#f0b429] transition hover:bg-[#f0b429]/15"
+            >
+              Elegí tu nombre para apostar
+            </button>
+          )}
+
+          {/* navigation */}
+          <div className="mt-3 flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setActiveIndex((c) => Math.max(c - 1, 0))}
+              disabled={activeIndex === 0}
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/50 transition hover:border-white/25 hover:text-white disabled:opacity-25"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+
+            {/* dot rail */}
+            <div className="flex flex-1 items-center justify-center gap-1 overflow-x-auto py-1">
+              {questions.map((q, i) => (
+                <button
+                  key={q.id}
+                  type="button"
+                  onClick={() => setActiveIndex(i)}
+                  aria-label={`Pregunta ${i + 1}`}
+                  className={cn(
+                    "h-2 shrink-0 rounded-full transition-all duration-200",
+                    i === activeIndex
+                      ? "w-6 bg-[#f0b429]"
+                      : myBets[q.id]
+                        ? "w-2 bg-emerald-500/70"
+                        : "w-2 bg-white/20"
+                  )}
+                />
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setActiveIndex((c) => Math.min(c + 1, questions.length - 1))}
+              disabled={activeIndex >= questions.length - 1}
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[#f0b429]/30 bg-[#f0b429]/8 text-[#f0b429] transition hover:bg-[#f0b429]/15 disabled:opacity-25"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+
+          {/* all done */}
+          {answeredCount === questions.length && (
+            <div className="mt-3 flex items-center gap-2.5 rounded-xl border border-emerald-500/25 bg-emerald-500/8 px-3 py-2.5">
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
+              <p className="text-sm font-black text-emerald-400">
+                ¡Todas las apuestas guardadas!
+              </p>
+            </div>
+          )}
+        </div>
+      </section>
+    );
+  }
+
+  // ── FULL VARIANT ────────────────────────────────────────────────────────
+
   return (
-    <section className="min-w-0 overflow-hidden rounded-lg border border-[#62ffe6]/45 bg-[#071018] shadow-[0_24px_70px_rgba(0,0,0,0.24)]">
-      <div className="bg-[#3151ff] px-4 py-4 sm:px-5">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex min-w-0 items-center gap-3">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-white/25 bg-white text-[#17206b]">
-              <Zap className="h-5 w-5" />
+    <section className="overflow-hidden rounded-2xl border border-white/10 bg-[#0b0d14] shadow-[0_32px_80px_rgba(0,0,0,0.6)]">
+      {/* header */}
+      <div className="relative overflow-hidden border-b border-white/8 bg-gradient-to-r from-[#1a1030] via-[#111827] to-[#0e1520] px-5 py-4">
+        <div className="pointer-events-none absolute inset-0 [background-image:radial-gradient(ellipse_at_top_left,rgba(240,180,41,0.15),transparent_55%),radial-gradient(ellipse_at_bottom_right,rgba(99,102,241,0.1),transparent_55%)]" />
+
+        <div className="relative flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#f0b429] to-[#e8a30a] shadow-[0_0_20px_rgba(240,180,41,0.45)]">
+              <Zap className="h-5 w-5 text-[#0b0d14]" />
             </span>
-            <div className="min-w-0">
-              <p className="text-xs font-black uppercase tracking-[0.2em] text-[#d5ff3f]">Apuestas del partido</p>
-              <h2 className="mt-1 text-xl font-black uppercase text-white">
-                {questions.length} {questions.length === 1 ? "pregunta extra" : "preguntas extra"}
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#f0b429]/70">Apuestas del partido</p>
+              <h2 className="text-xl font-black text-white">
+                {questions.length} preguntas extra
               </h2>
             </div>
           </div>
-          {!playerName && (
-            <span className="rounded-md border border-[#ffb15f]/50 bg-[#2a120b] px-3 py-1.5 text-sm font-black text-[#ffb15f]">
-              Elegi jugador para apostar
+
+          <div className="flex flex-wrap items-center gap-2">
+            {earnedPts > 0 && (
+              <span className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-sm font-black text-emerald-400">
+                <Trophy className="h-3.5 w-3.5" />
+                +{earnedPts} pts ganados
+              </span>
+            )}
+            <span className="inline-flex items-center gap-1.5 rounded-xl border border-[#f0b429]/25 bg-[#f0b429]/8 px-3 py-1.5 text-sm font-black text-[#f0b429]">
+              <TrendingUp className="h-3.5 w-3.5" />
+              {totalPts} pts en juego
             </span>
-          )}
+            <span className="rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-sm font-black tabular-nums text-white/50">
+              {answeredCount}/{questions.length}
+            </span>
+          </div>
+        </div>
+
+        {/* progress */}
+        <div className="relative mt-4 h-1.5 overflow-hidden rounded-full bg-white/8">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-[#f0b429] to-[#fbbf24] shadow-[0_0_12px_rgba(240,180,41,0.5)] transition-all duration-500"
+            style={{ width: `${progressPct}%` }}
+          />
+        </div>
+        <div className="mt-1.5 flex justify-between text-[10px] font-black text-white/30">
+          <span>{answeredCount} de {questions.length} apostadas</span>
+          <span>{progressPct}%</span>
         </div>
       </div>
 
-      <div className="grid min-w-0 gap-4 p-4 sm:p-5">
-        {questions.map((question) => {
-          const myBet = myBets[question.id];
-          const isSaving = saving === question.id;
-          const isClosed = question.closed || question.resolved;
-          const myPoints =
-            question.resolved && myBet && myBet === question.correctOptionId ? question.pointValue : null;
+      {/* no player warning */}
+      {!playerName && (
+        <div className="border-b border-white/8 bg-[#f0b429]/8 px-5 py-3">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm font-black text-[#f0b429]">
+              Elegí tu nombre para poder apostar
+            </p>
+            <button
+              type="button"
+              onClick={onOpenPlayerPicker}
+              className="shrink-0 rounded-lg border border-[#f0b429]/50 bg-[#f0b429]/15 px-3 py-1.5 text-xs font-black text-[#f0b429] transition hover:bg-[#f0b429]/25"
+            >
+              Elegir jugador
+            </button>
+          </div>
+        </div>
+      )}
 
-          return (
-            <div key={question.id} className="min-w-0 rounded-lg border border-white/15 bg-black/35 p-4">
-              <div className="mb-4 flex flex-col items-start gap-3 min-[620px]:flex-row min-[620px]:items-start min-[620px]:justify-between">
-                <div className="min-w-0">
-                  <p className="min-w-0 break-words text-lg font-black leading-snug text-white">{question.text}</p>
-                  <p className="mt-1 text-sm font-bold text-white/60">
-                    Vale {question.pointValue} pt{question.pointValue !== 1 ? "s" : ""}
-                  </p>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  {isClosed && (
-                    <span className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-white/15 bg-black/45 px-2.5 py-1 text-xs font-black text-white/65">
-                      <Lock className="h-3.5 w-3.5" />
-                      {question.resolved ? "Resuelta" : "Cerrada"}
-                    </span>
-                  )}
-                  {myPoints !== null && (
-                    <span className="shrink-0 rounded-md border border-[#9dff34]/55 bg-[#10240b] px-2.5 py-1 text-xs font-black text-[#d5ff3f]">
-                      +{myPoints} pt{myPoints !== 1 ? "s" : ""}
-                    </span>
-                  )}
-                  {question.resolved && myBet && myBet !== question.correctOptionId && (
-                    <span className="shrink-0 rounded-md border border-[#ff6a3d]/55 bg-[#2a120b] px-2.5 py-1 text-xs font-black text-[#ffb15f]">
-                      Sin puntos
-                    </span>
-                  )}
-                </div>
-              </div>
+      {/* questions list */}
+      <div className="grid gap-3 p-4 sm:p-5">
+        {questions.map((q, i) => (
+          <QuestionCard
+            key={q.id}
+            question={q}
+            index={i}
+            total={questions.length}
+            myBet={myBets[q.id]}
+            saving={saving === q.id}
+            error={errors[q.id] ?? ""}
+            compact={false}
+            onBet={(optId) => void placeBet(q.id, optId)}
+          />
+        ))}
 
-              <div className="grid grid-cols-1 gap-2 min-[520px]:grid-cols-2 lg:flex lg:flex-wrap">
-                {question.options.map((option) => {
-                  const selected = myBet === option.id;
-                  const isCorrectAnswer = question.resolved && question.correctOptionId === option.id;
-                  const isWrongAnswer = question.resolved && selected && !isCorrectAnswer;
-
-                  return (
-                    <button
-                      key={option.id}
-                      type="button"
-                      disabled={isClosed || isSaving || !playerName}
-                      onClick={() => void placeBet(question.id, option.id)}
-                      className={cn(
-                        "inline-flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-lg border px-4 py-2 text-center text-sm font-black transition-all lg:flex-none",
-                        isCorrectAnswer
-                          ? "border-[#9dff34] bg-[#9dff34] text-[#06121c]"
-                          : isWrongAnswer
-                            ? "border-[#ff6a3d]/55 bg-[#2a120b] text-[#ffb15f] line-through opacity-70"
-                            : selected
-                              ? "border-[#62ffe6] bg-[#071d2a] text-[#62ffe6]"
-                              : isClosed
-                                ? "cursor-not-allowed border-white/10 bg-white/5 text-white/35"
-                                : "border-white/15 bg-black/45 text-white/75 hover:border-[#62ffe6] hover:bg-[#071d2a] hover:text-white"
-                      )}
-                    >
-                      {isSaving && selected ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : isCorrectAnswer || (selected && !question.resolved) ? (
-                        <Check className="h-4 w-4" />
-                      ) : null}
-                      <span className="min-w-0 break-words">{option.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {errors[question.id] && (
-                <p className="mt-2 text-sm font-bold text-[#ffb15f]">{errors[question.id]}</p>
-              )}
+        {/* all done banner */}
+        {answeredCount === questions.length && (
+          <div className="flex items-center gap-3 rounded-2xl border border-emerald-500/25 bg-emerald-500/8 px-4 py-3">
+            <Sparkles className="h-5 w-5 shrink-0 text-emerald-400" />
+            <div>
+              <p className="text-sm font-black text-emerald-400">
+                ¡Todas las apuestas guardadas!
+              </p>
+              <p className="text-xs font-bold text-emerald-500/60">
+                Te avisamos cuando se resuelvan.
+              </p>
             </div>
-          );
-        })}
+          </div>
+        )}
       </div>
     </section>
   );

@@ -4,6 +4,7 @@ import type { Draft, MundialMatch } from "../types";
 import { emptyDraft } from "../utils";
 import { FeaturedMatch } from "./FeaturedMatch";
 import { QueuePanel } from "./QueuePanel";
+import { StatBetsPanel } from "./StatBetsPanel";
 
 type NextViewProps = {
   activeMatch: MundialMatch | null;
@@ -16,9 +17,11 @@ type NextViewProps = {
   activeMatchId: string | null;
   nowMs: number;
   activeCountdown: string;
+  playerName: string;
   onUpdateDraft: (matchId: string, patch: Partial<Draft>) => void;
   onSave: (match: MundialMatch) => Promise<void>;
   onSelectMatch: (match: MundialMatch) => void;
+  onOpenPlayerPicker: () => void;
 };
 
 export function NextView({
@@ -32,9 +35,11 @@ export function NextView({
   activeMatchId,
   nowMs,
   activeCountdown,
+  playerName,
   onUpdateDraft,
   onSave,
   onSelectMatch,
+  onOpenPlayerPicker,
 }: NextViewProps) {
   const featuredRef = useRef<HTMLDivElement>(null);
 
@@ -49,18 +54,28 @@ export function NextView({
     <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(380px,460px)] xl:items-start">
       <div className="grid min-w-0 content-start gap-5">
         {featuredMatch ? (
-          <div ref={featuredRef} className="scroll-mt-20">
-            <FeaturedMatch
-              match={featuredMatch}
-              draft={drafts[featuredMatch.id] ?? emptyDraft()}
-              savingId={savingId}
-              isSavingBulk={isSavingBulk}
-              nowMs={nowMs}
-              activeCountdown={featuredMatch.id === activeMatch?.id ? activeCountdown : undefined}
-              onUpdateDraft={onUpdateDraft}
-              onSave={onSave}
+          <>
+            <div ref={featuredRef} className="scroll-mt-20">
+              <FeaturedMatch
+                match={featuredMatch}
+                draft={drafts[featuredMatch.id] ?? emptyDraft()}
+                savingId={savingId}
+                isSavingBulk={isSavingBulk}
+                nowMs={nowMs}
+                activeCountdown={featuredMatch.id === activeMatch?.id ? activeCountdown : undefined}
+                onUpdateDraft={onUpdateDraft}
+                onSave={onSave}
+              />
+            </div>
+
+            <StatBetsPanel
+              matchId={featuredMatch.id}
+              playerName={playerName}
+              matchLabel={`${featuredMatch.homeTeam} vs ${featuredMatch.awayTeam}`}
+              variant="mini"
+              onOpenPlayerPicker={onOpenPlayerPicker}
             />
-          </div>
+          </>
         ) : (
           <section className="grid min-h-96 place-items-center rounded-lg border border-dashed border-white/20 bg-black/35 p-8 text-center">
             <div>

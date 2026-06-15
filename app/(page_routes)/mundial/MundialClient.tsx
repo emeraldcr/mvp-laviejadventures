@@ -10,6 +10,7 @@ import {
   ListChecks,
   RefreshCw,
   Save,
+  Shield,
   Target,
   Trophy,
   UserRound,
@@ -17,10 +18,11 @@ import {
   X,
   Zap,
 } from "lucide-react";
+import Link from "next/link";
 import { VIEW_OPTIONS } from "./constants";
 import type { MundialMatch, ViewMode } from "./types";
 import { useMundial } from "./useMundial";
-import { cn } from "./utils";
+import { cn, normalizeKey } from "./utils";
 import { MineView } from "./components/MineView";
 import { NextView } from "./components/NextView";
 import { OtherPicksPanel } from "./components/OtherPicksPanel";
@@ -247,6 +249,15 @@ export default function MundialClient() {
                 {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
                 <span className="ml-1.5 hidden text-xs font-black sm:inline">Sync</span>
               </button>
+              {normalizeKey(playerName) === "ALLAN" && (
+                <Link
+                  href="/mundial/admin"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-red-500/50 bg-red-900/30 text-red-400 transition hover:border-red-400 hover:bg-red-900/50 hover:text-red-300 sm:w-auto sm:px-3 sm:gap-1.5"
+                >
+                  <Shield className="h-4 w-4" />
+                  <span className="hidden text-xs font-black sm:inline">Admin</span>
+                </Link>
+              )}
             </div>
           </div>
         </div>
@@ -287,9 +298,11 @@ export default function MundialClient() {
                 activeMatchId={activeMatchId}
                 nowMs={nowMs}
                 activeCountdown={activeCountdown}
+                playerName={playerName}
                 onUpdateDraft={updateDraft}
                 onSave={saveMatch}
                 onSelectMatch={handleSelectMatch}
+                onOpenPlayerPicker={openPlayerPicker}
               />
             )}
             {viewMode === "mine" && (

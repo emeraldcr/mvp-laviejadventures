@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Activity, BarChart3, CheckCircle2, Loader2, RefreshCw, Shield, Tv2, Trophy, Users } from "lucide-react";
+import { Activity, ArrowLeft, BarChart3, CheckCircle2, Loader2, RefreshCw, Shield, Tv2, Trophy, Users } from "lucide-react";
+import Link from "next/link";
 import type { AdminData, AdminView, LeaderboardEntry } from "./adminTypes";
 import { cn } from "../utils";
 import { AdminAnalyticsPanel } from "./components/AdminAnalyticsPanel";
@@ -125,15 +126,24 @@ export default function AdminClient() {
               <h1 className="text-lg font-black leading-tight text-slate-950">Mundial 2026</h1>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => void load()}
-            disabled={isLoading}
-            className="inline-flex h-9 items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-sm font-black text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
-          >
-            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-            <span className="hidden sm:inline">Actualizar</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/mundial"
+              className="inline-flex h-9 items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-sm font-black text-slate-700 transition hover:bg-slate-50"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span className="hidden sm:inline">Quiniela</span>
+            </Link>
+            <button
+              type="button"
+              onClick={() => void load()}
+              disabled={isLoading}
+              className="inline-flex h-9 items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-sm font-black text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+            >
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+              <span className="hidden sm:inline">Actualizar</span>
+            </button>
+          </div>
         </div>
       </header>
 
