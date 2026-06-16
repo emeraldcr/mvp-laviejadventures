@@ -8,7 +8,6 @@ import {
   getWinnerPickOptions,
   isMatchClosed,
   isMatchLive,
-  liveScoreText,
   liveStatusLabel,
   predictionResult,
   teamCode,
@@ -162,16 +161,22 @@ export function MatchCard({ match, draft, savingId, isSavingBulk, todayEditableM
       <div className="mt-4 flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-black/35 p-3">
         <div className="min-w-0">
           <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#62ffe6]">
-            {live ? "Live" : closed ? "Resultado final" : "Tu pick"}
+            {live ? `Live · ${liveStatusLabel(match)}` : closed ? "Resultado final" : "Tu pick"}
           </p>
-          <p
-            className={cn(
-              "mt-1 min-w-0 break-words text-base font-black",
-              closed ? "text-[#d5ff3f]" : draft.saved ? "text-[#62ffe6]" : "text-white"
-            )}
-          >
-            {live ? `${liveStatusLabel(match)} / ${liveScoreText(match)}` : closed ? finalScoreText(match) : predictionResult(match, draft)}
-          </p>
+          {live ? (
+            <p className="mt-0.5 text-2xl font-black tabular-nums text-[#9dff34]">
+              {match.homeLiveScore ?? 0} – {match.awayLiveScore ?? 0}
+            </p>
+          ) : (
+            <p
+              className={cn(
+                "mt-1 min-w-0 break-words text-base font-black",
+                closed ? "text-[#d5ff3f]" : draft.saved ? "text-[#62ffe6]" : "text-white"
+              )}
+            >
+              {closed ? finalScoreText(match) : predictionResult(match, draft)}
+            </p>
+          )}
         </div>
         <div className="flex shrink-0 items-center gap-2">
           {onViewPicks && (

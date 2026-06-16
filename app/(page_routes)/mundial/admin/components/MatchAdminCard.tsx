@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BadgePercent, BarChart3, Check, ChevronDown, ChevronUp, Loader2, Lock, LockOpen, Minus, Plus, Save, Trash2, Tv2, Users } from "lucide-react";
+import { BadgePercent, BarChart3, Braces, Check, ChevronDown, ChevronUp, ClipboardPaste, Loader2, Lock, LockOpen, Minus, Plus, Save, Trash2, Tv2, Users } from "lucide-react";
 import { bettingFavoriteLabel, type BettingMarket } from "@/lib/mundial/betting";
 import type { AdminLiveMatchEvent, AdminLiveMatchStats, AdminLiveTeamStats, AdminMatch, AdminRosterPlayer, LiveEventTeam, LiveEventType, LiveMatchStatus } from "../adminTypes";
 import { cn, formatKickoff, getCountryFlag } from "../../utils";
@@ -29,16 +29,36 @@ const LIVE_EVENT_OPTIONS: Array<{ value: LiveEventType; label: string }> = [
   { value: "note", label: "Nota" },
 ];
 
-const LIVE_STATS_FIELDS: Array<{ key: keyof AdminLiveTeamStats; label: string; max?: number; suffix?: string }> = [
-  { key: "possessionPct", label: "Posesion", max: 100, suffix: "%" },
-  { key: "shots", label: "Tiros" },
+const LIVE_STATS_FIELDS: Array<{ key: keyof AdminLiveTeamStats; label: string; max?: number; suffix?: string; decimal?: boolean }> = [
+  { key: "possessionPct", label: "Posesión", max: 100, suffix: "%" },
+  { key: "shots", label: "Tiros (attempts)" },
   { key: "shotsOnTarget", label: "Tiros a marco" },
+  { key: "assists", label: "Asistencias" },
+  { key: "passesCompleted", label: "Pases completados" },
+  { key: "distanceCovered", label: "Distancia km", suffix: "km", decimal: true },
+  { key: "topSpeed", label: "Vel. máxima", suffix: "km/h", decimal: true },
+  { key: "foulsFor", label: "Faltas recibidas" },
   { key: "yellowCards", label: "Amarillas" },
   { key: "redCards", label: "Rojas" },
-  { key: "corners", label: "Corners" },
-  { key: "fouls", label: "Faltas" },
+  { key: "corners", label: "Córners" },
+  { key: "fouls", label: "Faltas cometidas" },
   { key: "saves", label: "Atajadas" },
 ];
+
+const DECIMAL_STAT_KEYS: ReadonlyArray<keyof AdminLiveTeamStats> = ["distanceCovered", "topSpeed"];
+
+const STAT_JSON_TEMPLATE = {
+  home: {
+    shots: 0, shotsOnTarget: 0, assists: 0, passesCompleted: 0,
+    distanceCovered: 0.0, topSpeed: 0.0, foulsFor: 0, possessionPct: 50,
+    yellowCards: 0, redCards: 0, corners: 0, fouls: 0, saves: 0,
+  },
+  away: {
+    shots: 0, shotsOnTarget: 0, assists: 0, passesCompleted: 0,
+    distanceCovered: 0.0, topSpeed: 0.0, foulsFor: 0, possessionPct: 50,
+    yellowCards: 0, redCards: 0, corners: 0, fouls: 0, saves: 0,
+  },
+};
 
 function rosterForTeam(match: AdminMatch, team: LiveEventTeam) {
   if (team === "home") return match.homeRoster;
@@ -220,6 +240,9 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
   const [showEdit, setShowEdit] = useState(!hasResult);
   const [showLive, setShowLive] = useState(match.liveStatus !== "scheduled");
   const [showMarket, setShowMarket] = useState(Boolean(match.bettingFavorite));
+  const [showStatsJson, setShowStatsJson] = useState(false);
+  const [statsJsonText, setStatsJsonText] = useState("");
+  const [statsJsonError, setStatsJsonError] = useState("");
 
   useEffect(() => {
     setHomeScore(match.homeFinalScore !== null ? String(match.homeFinalScore) : "");
@@ -413,10 +436,64 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
   }
 
   function updateLiveStat(team: Exclude<LiveEventTeam, null>, key: keyof AdminLiveTeamStats, value: string) {
-    const parsed = numberOrNull(value);
+    const parsed = value.trim() === "" ? null : Number(value);
+    if (parsed === null || !Number.isFinite(parsed)) {
+      setLiveStats((stats) => updateTeamStat(stats, team, key, null));
+      return;
+    }
+    const isDecimal = (DECIMAL_STAT_KEYS as ReadonlyArray<string>).includes(key);
     const max = key === "possessionPct" ? 100 : undefined;
-    const normalized = parsed === null ? null : Math.max(0, Math.trunc(max ? Math.min(max, parsed) : parsed));
+    const normalized = isDecimal
+      ? Math.max(0, Math.round(parsed * 10) / 10)
+      : Math.max(0, Math.trunc(max ? Math.min(max, parsed) : parsed));
     setLiveStats((stats) => updateTeamStat(stats, team, key, normalized));
+  }
+
+  function applyStatsJson() {
+    setStatsJsonError("");
+    try {
+      const parsed = JSON.parse(statsJsonText) as Record<string, unknown>;
+      const homeRaw = parsed.home ?? parsed.local ?? parsed.Home;
+      const awayRaw = parsed.away ?? parsed.visita ?? parsed.Away;
+      if (!homeRaw && !awayRaw) {
+        setStatsJsonError('Formato inválido. Usa: { "home": {...}, "away": {...} }');
+        return;
+      }
+      function parseVal(key: keyof AdminLiveTeamStats, val: unknown): number | null {
+        if (val === null || val === undefined || val === "") return null;
+        const n = Number(val);
+        if (!Number.isFinite(n) || n < 0) return null;
+        return (DECIMAL_STAT_KEYS as ReadonlyArray<string>).includes(key)
+          ? Math.round(n * 10) / 10
+          : Math.trunc(n);
+      }
+      function extractTeam(raw: unknown): AdminLiveTeamStats {
+        const r = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
+        return {
+          possessionPct: parseVal("possessionPct", r.possessionPct ?? r.possession),
+          shots: parseVal("shots", r.shots ?? r.attemptsAtGoal ?? r.attempts),
+          shotsOnTarget: parseVal("shotsOnTarget", r.shotsOnTarget ?? r.attemptsOnTarget),
+          yellowCards: parseVal("yellowCards", r.yellowCards ?? r.yellow),
+          redCards: parseVal("redCards", r.redCards ?? r.red),
+          corners: parseVal("corners", r.corners),
+          fouls: parseVal("fouls", r.fouls ?? r.foulsCommitted),
+          saves: parseVal("saves", r.saves),
+          assists: parseVal("assists", r.assists),
+          passesCompleted: parseVal("passesCompleted", r.passesCompleted ?? r.passes),
+          distanceCovered: parseVal("distanceCovered", r.distanceCovered ?? r.distance),
+          topSpeed: parseVal("topSpeed", r.topSpeed ?? r.speed),
+          foulsFor: parseVal("foulsFor", r.foulsFor ?? r.foulsDrawn),
+        };
+      }
+      setLiveStats({
+        home: homeRaw ? extractTeam(homeRaw) : liveStats.home,
+        away: awayRaw ? extractTeam(awayRaw) : liveStats.away,
+      });
+      setShowStatsJson(false);
+      setStatsJsonText("");
+    } catch {
+      setStatsJsonError("JSON inválido. Revisa la sintaxis.");
+    }
   }
 
   const statusLabel = hasResult
@@ -880,18 +957,65 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
             <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
               <div className="border-b border-slate-100 bg-slate-50 px-3 py-2">
                 <div className="flex items-center justify-between gap-2">
-                  <div>
-                    <p className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wide text-slate-400">
-                      <BarChart3 className="h-3.5 w-3.5" />
-                      Stats del partido
-                    </p>
-                    <p className="text-xs font-bold text-slate-500">Posesion, tiros, tarjetas y control del partido.</p>
-                  </div>
-                  <span className="rounded bg-slate-100 px-2 py-1 text-[10px] font-black text-slate-500">
-                    Live data
-                  </span>
+                  <p className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wide text-slate-400">
+                    <BarChart3 className="h-3.5 w-3.5" />
+                    Stats del partido
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => { setShowStatsJson((v) => !v); setStatsJsonError(""); }}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-[10px] font-black transition",
+                      showStatsJson
+                        ? "border-sky-400 bg-sky-600 text-white"
+                        : "border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100"
+                    )}
+                  >
+                    <Braces className="h-3 w-3" />
+                    JSON
+                  </button>
                 </div>
               </div>
+
+              {/* JSON import panel */}
+              {showStatsJson && (
+                <div className="border-b border-slate-100 bg-sky-50 p-3 space-y-2">
+                  <p className="text-[10px] font-black uppercase tracking-wide text-sky-700">
+                    Pegar JSON de stats (del broadcast / AI)
+                  </p>
+                  <textarea
+                    value={statsJsonText}
+                    onChange={(e) => setStatsJsonText(e.target.value)}
+                    placeholder={'{ "home": { "shots": 2, "shotsOnTarget": 1, ... }, "away": { ... } }'}
+                    rows={6}
+                    spellCheck={false}
+                    className="w-full resize-none rounded-lg border border-sky-200 bg-white px-3 py-2 font-mono text-xs text-slate-800 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                  />
+                  {statsJsonError && (
+                    <p className="rounded-md border border-red-200 bg-red-50 px-2 py-1.5 text-xs font-bold text-red-700">
+                      {statsJsonError}
+                    </p>
+                  )}
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={applyStatsJson}
+                      disabled={!statsJsonText.trim()}
+                      className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-sky-600 px-3 py-2 text-xs font-black text-white transition hover:bg-sky-700 disabled:opacity-40"
+                    >
+                      <ClipboardPaste className="h-3.5 w-3.5" />
+                      Aplicar al formulario
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setStatsJsonText(JSON.stringify(STAT_JSON_TEMPLATE, null, 2))}
+                      className="rounded-lg border border-sky-200 bg-white px-3 py-2 text-xs font-black text-sky-700 transition hover:bg-sky-50"
+                    >
+                      Template
+                    </button>
+                  </div>
+                </div>
+              )}
 
               <div className="grid gap-2 p-3">
                 <div className="grid grid-cols-[minmax(0,1fr)_7rem_7rem] gap-2 px-1 text-[10px] font-black uppercase tracking-wide text-slate-400">
@@ -906,12 +1030,14 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
                       value={liveStats.home[field.key]}
                       max={field.max}
                       suffix={field.suffix}
+                      decimal={field.decimal}
                       onChange={(value) => updateLiveStat("home", field.key, value)}
                     />
                     <LiveStatInput
                       value={liveStats.away[field.key]}
                       max={field.max}
                       suffix={field.suffix}
+                      decimal={field.decimal}
                       onChange={(value) => updateLiveStat("away", field.key, value)}
                     />
                   </div>
@@ -1210,11 +1336,13 @@ function LiveStatInput({
   onChange,
   max,
   suffix,
+  decimal = false,
 }: {
   value: number | null;
   onChange: (value: string) => void;
   max?: number;
   suffix?: string;
+  decimal?: boolean;
 }) {
   return (
     <div className="grid grid-cols-[minmax(0,1fr)_auto] overflow-hidden rounded-lg border border-slate-200 bg-slate-50 focus-within:border-red-300 focus-within:bg-white focus-within:ring-2 focus-within:ring-red-100">
@@ -1222,6 +1350,7 @@ function LiveStatInput({
         type="number"
         min={0}
         max={max}
+        step={decimal ? "0.1" : "1"}
         value={value ?? ""}
         onChange={(e) => onChange(e.target.value)}
         className="h-9 min-w-0 bg-transparent px-2 text-center text-sm font-black tabular-nums text-slate-800 outline-none"

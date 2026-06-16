@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BarChart3, ChevronDown, ChevronRight, ChevronUp, CircleDot, Clock3, Lock, Loader2, Save, Shield, Timer, Trophy, X, Zap } from "lucide-react";
+import { BarChart3, ChevronDown, ChevronRight, ChevronUp, CircleDot, Clock3, Lock, Loader2, Save, Timer, Trophy, X, Zap } from "lucide-react";
 import { hasAnyLiveStats, type LiveTeamStats } from "@/lib/mundial/live-stats";
 import type { Draft, MundialMatch } from "../types";
 import {
@@ -324,10 +324,14 @@ function LiveMatchScoreboard({
   const awayGoals = goalSummary(match, "away", awayLiveScore);
   const tone = isLive ? "border-[#9dff34]/35 bg-[#071b0b]/88" : "border-[#ffb15f]/35 bg-[#1b0d05]/88";
   const clockTone = isLive ? "border-[#9dff34]/45 text-[#d5ff3f]" : "border-[#ffb15f]/45 text-[#ffb15f]";
+  const scoreTone = isLive
+    ? "border-[#9dff34]/45 bg-[#0c2409] text-[#9dff34]"
+    : "border-[#ffb15f]/45 bg-[#261006] text-[#ffb15f]";
 
   return (
     <div className={cn("mt-4 overflow-hidden rounded-2xl border shadow-[0_18px_45px_rgba(0,0,0,0.25)]", tone)}>
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 bg-black/35 px-3 py-2">
+      {/* Header */}
+      <div className="flex items-center justify-between gap-2 border-b border-white/10 bg-black/35 px-3 py-2">
         <span className={cn("inline-flex items-center gap-2 rounded-full border bg-black/35 px-3 py-1 text-xs font-black uppercase tracking-wide", clockTone)}>
           <span className={cn("h-2 w-2 rounded-full", isLive ? "animate-pulse bg-[#9dff34]" : "bg-[#ffb15f]")} />
           {isLive ? "Ahora" : "Marcador"}
@@ -337,70 +341,58 @@ function LiveMatchScoreboard({
         </span>
       </div>
 
-      <div className="grid grid-cols-[minmax(0,1fr)_4.5rem_minmax(0,1fr)] items-stretch gap-2 px-3 py-4">
-        <ScoreboardTeam
-          team={match.homeTeam}
-          score={homeLiveScore}
-          goals={homeGoals}
-          align="left"
-          isLive={isLive}
-        />
+      <div className="px-3 py-4">
+        {/* [Home team] [SCORE – SCORE] [Away team] */}
+        <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:gap-3">
+          <div className="flex min-w-0 items-center gap-1.5">
+            <Flag team={match.homeTeam} size="sm" className="rounded-sm" />
+            <div className="min-w-0">
+              <p className="text-[10px] font-black uppercase tracking-[0.14em] text-white/45">{teamCode(match.homeTeam)}</p>
+              <p className="truncate text-xs font-black text-white">{match.homeTeam}</p>
+            </div>
+          </div>
 
-        <div className="flex flex-col items-center justify-center gap-2">
-          <span className="text-[10px] font-black uppercase tracking-[0.18em] text-white/35">
-            {isLive ? liveStatusLabel(match) : "FT"}
-          </span>
-          <span className="h-px w-10 bg-white/20" />
-          <Shield className="h-5 w-5 text-white/30" />
+          <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+            <span className={cn(
+              "grid h-14 w-14 place-items-center rounded-xl border text-5xl font-black tabular-nums leading-none sm:h-20 sm:w-20 sm:text-6xl",
+              scoreTone
+            )}>
+              {homeLiveScore}
+            </span>
+            <span className="text-sm font-black text-white/25">–</span>
+            <span className={cn(
+              "grid h-14 w-14 place-items-center rounded-xl border text-5xl font-black tabular-nums leading-none sm:h-20 sm:w-20 sm:text-6xl",
+              scoreTone
+            )}>
+              {awayLiveScore}
+            </span>
+          </div>
+
+          <div className="flex min-w-0 items-center justify-end gap-1.5">
+            <div className="min-w-0 text-right">
+              <p className="text-[10px] font-black uppercase tracking-[0.14em] text-white/45">{teamCode(match.awayTeam)}</p>
+              <p className="truncate text-xs font-black text-white">{match.awayTeam}</p>
+            </div>
+            <Flag team={match.awayTeam} size="sm" className="rounded-sm" />
+          </div>
         </div>
 
-        <ScoreboardTeam
-          team={match.awayTeam}
-          score={awayLiveScore}
-          goals={awayGoals}
-          align="right"
-          isLive={isLive}
-        />
-      </div>
-    </div>
-  );
-}
-
-function ScoreboardTeam({
-  team,
-  score,
-  goals,
-  align,
-  isLive,
-}: {
-  team: string;
-  score: number;
-  goals: string;
-  align: "left" | "right";
-  isLive: boolean;
-}) {
-  return (
-    <div className={cn("flex min-w-0 flex-col gap-2", align === "right" ? "items-end text-right" : "items-start")}>
-      <div className={cn("flex min-w-0 items-center gap-2", align === "right" && "flex-row-reverse")}>
-        <Flag team={team} size="md" className="rounded-sm" />
-        <div className="min-w-0">
-          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/45">{teamCode(team)}</p>
-          <p className="truncate text-sm font-black text-white">{team}</p>
-        </div>
-      </div>
-      <div className={cn("flex items-end gap-2", align === "right" && "flex-row-reverse")}>
-        <span className={cn(
-          "grid h-20 w-20 place-items-center rounded-xl border text-6xl font-black tabular-nums leading-none",
-          isLive ? "border-[#9dff34]/45 bg-[#0c2409] text-[#9dff34]" : "border-[#ffb15f]/45 bg-[#261006] text-[#ffb15f]"
-        )}>
-          {score}
-        </span>
-        <div className="min-w-0 pb-1">
-          <p className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wide text-white/35">
-            <CircleDot className="h-3 w-3" />
-            Goles
-          </p>
-          <p className="mt-0.5 max-w-[8.5rem] break-words text-xs font-bold leading-snug text-white/65">{goals}</p>
+        {/* Goals row */}
+        <div className="mt-3 grid grid-cols-2 gap-2 border-t border-white/8 pt-3">
+          <div className="min-w-0">
+            <p className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wide text-white/35">
+              <CircleDot className="h-3 w-3" />
+              Goles
+            </p>
+            <p className="mt-0.5 break-words text-xs font-bold leading-snug text-white/65">{homeGoals}</p>
+          </div>
+          <div className="min-w-0 text-right">
+            <p className="inline-flex w-full items-center justify-end gap-1 text-[10px] font-black uppercase tracking-wide text-white/35">
+              Goles
+              <CircleDot className="h-3 w-3" />
+            </p>
+            <p className="mt-0.5 break-words text-xs font-bold leading-snug text-white/65">{awayGoals}</p>
+          </div>
         </div>
       </div>
     </div>
@@ -476,10 +468,15 @@ const LIVE_STAT_ROWS: Array<{ key: keyof LiveTeamStats; label: string; suffix?: 
   { key: "possessionPct", label: "Posesión", suffix: "%" },
   { key: "shots", label: "Tiros" },
   { key: "shotsOnTarget", label: "Tiros a marco" },
+  { key: "assists", label: "Asistencias" },
+  { key: "passesCompleted", label: "Pases completados" },
+  { key: "distanceCovered", label: "Distancia", suffix: "km" },
+  { key: "topSpeed", label: "Vel. máxima", suffix: "km/h" },
+  { key: "foulsFor", label: "Faltas recibidas" },
   { key: "yellowCards", label: "Amarillas" },
   { key: "redCards", label: "Rojas" },
   { key: "corners", label: "Córners" },
-  { key: "fouls", label: "Faltas" },
+  { key: "fouls", label: "Faltas cometidas" },
   { key: "saves", label: "Atajadas" },
 ];
 

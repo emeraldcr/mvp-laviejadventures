@@ -1,15 +1,31 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Activity, ArrowLeft, BadgePercent, BarChart3, CheckCircle2, Loader2, RefreshCw, Shield, Tv2, Trophy, Users } from "lucide-react";
 import Link from "next/link";
-import type { AdminData, AdminView, LeaderboardEntry } from "./adminTypes";
+import type { AdminData, AdminMatch, AdminView, LeaderboardEntry } from "./adminTypes";
 import { cn } from "../utils";
 import { AdminAnalyticsPanel } from "./components/AdminAnalyticsPanel";
 import { AdminLeaderboard } from "./components/AdminLeaderboard";
 import { MatchAdminCard } from "./components/MatchAdminCard";
 import { StatQuestionsManager } from "./components/StatQuestionsManager";
 import { PlayerDetailModal } from "./components/PlayerDetailModal";
+
+function sortByProximity(matches: AdminMatch[]): AdminMatch[] {
+  const now = Date.now();
+  return [...matches].sort((a, b) => {
+    const aLive = a.liveStatus === "live" || a.liveStatus === "halftime" ? 0 : 1;
+    const bLive = b.liveStatus === "live" || b.liveStatus === "halftime" ? 0 : 1;
+    if (aLive !== bLive) return aLive - bLive;
+    const aTime = new Date(a.kickoffAt).getTime();
+    const bTime = new Date(b.kickoffAt).getTime();
+    const aUpcoming = aTime > now;
+    const bUpcoming = bTime > now;
+    if (aUpcoming !== bUpcoming) return aUpcoming ? -1 : 1;
+    if (aUpcoming) return aTime - bTime;
+    return bTime - aTime;
+  });
+}
 
 const ADMIN_API = "/api/mundial/admin";
 const MATCH_API = "/api/mundial/admin/match";
@@ -74,15 +90,28 @@ export default function AdminClient() {
     await load();
   }
 
-  async function createStatQuestion(matchId: string, text: string, options: string[]) {
+  async function createStatQuestion(matchId: string, text: string, options: string[], pointValue: number = 1) {
     const res = await fetch(STAT_Q_API, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ matchId, text, options }),
+      body: JSON.stringify({ matchId, text, options, pointValue }),
     });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
       throw new Error(body.error ?? "Error creando pregunta.");
+    }
+    await load();
+  }
+
+  async function deleteStatQuestion(id: string) {
+    const res = await fetch(STAT_Q_API, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.error ?? "Error eliminando pregunta.");
     }
     await load();
   }
@@ -117,17 +146,14 @@ export default function AdminClient() {
     }
   }
 
-  const filteredMatches = (data?.matches.filter((m) => {
+  const allMatchesSorted = useMemo(() => sortByProximity(data?.matches ?? []), [data?.matches]);
+
+  const filteredMatches = allMatchesSorted.filter((m) => {
     if (matchFilter === "live") return m.liveStatus === "live" || m.liveStatus === "halftime";
     if (matchFilter === "open") return !m.closed;
     if (matchFilter === "closed") return m.closed;
     if (matchFilter === "scored") return m.homeFinalScore !== null && m.awayFinalScore !== null;
     return true;
-  }) ?? []).sort((a, b) => {
-    const aLive = a.liveStatus === "live" || a.liveStatus === "halftime" ? 0 : 1;
-    const bLive = b.liveStatus === "live" || b.liveStatus === "halftime" ? 0 : 1;
-    if (aLive !== bLive) return aLive - bLive;
-    return new Date(b.kickoffAt).getTime() - new Date(a.kickoffAt).getTime();
   });
 
   // Summary stats (computed client-side from data)
@@ -355,10 +381,11 @@ export default function AdminClient() {
 
             {view === "stats" && (
               <StatQuestionsManager
-                matches={data.matches}
+                matches={allMatchesSorted}
                 statQuestions={data.statQuestions}
                 onCreateQuestion={createStatQuestion}
                 onResolveQuestion={resolveStatQuestion}
+                onDeleteQuestion={deleteStatQuestion}
               />
             )}
 

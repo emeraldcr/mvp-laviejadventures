@@ -147,3 +147,27 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "No se pudo resolver la pregunta." }, { status: 500 });
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const { id } = await req.json();
+
+    if (!id || typeof id !== "string") {
+      return NextResponse.json({ error: "id requerido." }, { status: 400 });
+    }
+
+    const db = await getDb();
+    const result = await db.collection(STAT_QUESTIONS_COLLECTION).deleteOne({ id });
+
+    if (result.deletedCount === 0) {
+      return NextResponse.json({ error: "Pregunta no encontrada." }, { status: 404 });
+    }
+
+    await db.collection(STAT_BETS_COLLECTION).deleteMany({ questionId: id });
+
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("Failed to delete stat question", error);
+    return NextResponse.json({ error: "No se pudo eliminar la pregunta." }, { status: 500 });
+  }
+}

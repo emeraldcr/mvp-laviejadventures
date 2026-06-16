@@ -1,15 +1,16 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Check, ChevronDown, Loader2, Plus, Trophy, Users, X } from "lucide-react";
+import { Check, ChevronDown, Loader2, Plus, Trash2, Trophy, Users, X } from "lucide-react";
 import type { AdminMatch, AdminStatQuestion, BetOptionAnalytics } from "../adminTypes";
 import { cn } from "../../utils";
 
 type Props = {
   matches: AdminMatch[];
   statQuestions: AdminStatQuestion[];
-  onCreateQuestion: (matchId: string, text: string, options: string[]) => Promise<void>;
+  onCreateQuestion: (matchId: string, text: string, options: string[], pointValue: number) => Promise<void>;
   onResolveQuestion: (id: string, correctOptionId: string | null) => Promise<void>;
+  onDeleteQuestion: (id: string) => Promise<void>;
 };
 
 // ── Option analytics bar ────────────────────────────────────────────────────
@@ -119,13 +120,19 @@ function OptionBar({
 function QuestionCard({
   question,
   resolvingId,
+  deletingId,
   onResolve,
+  onDelete,
 }: {
   question: AdminStatQuestion;
   resolvingId: string | null;
+  deletingId: string | null;
   onResolve: (id: string, optionId: string | null) => void;
+  onDelete: (id: string) => void;
 }) {
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const isResolving = resolvingId === question.id;
+  const isDeleting = deletingId === question.id;
   const correctLabel = question.options.find((o) => o.id === question.correctOptionId)?.label;
 
   return (
@@ -171,6 +178,41 @@ function QuestionCard({
               </>
             )}
           </div>
+        </div>
+
+        {/* delete control */}
+        <div className="shrink-0">
+          {confirmDelete ? (
+            <div className="flex items-center gap-1.5">
+              <span className="text-[11px] font-black text-red-700">¿Eliminar?</span>
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={() => { setConfirmDelete(false); onDelete(question.id); }}
+                className="inline-flex items-center gap-1 rounded-md bg-red-600 px-2 py-1 text-[11px] font-black text-white transition hover:bg-red-700 disabled:opacity-40"
+              >
+                {isDeleting ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
+                Sí
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmDelete(false)}
+                className="rounded-md border border-slate-300 bg-white px-2 py-1 text-[11px] font-black text-slate-600 transition hover:bg-slate-50"
+              >
+                No
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              disabled={isDeleting || isResolving}
+              onClick={() => setConfirmDelete(true)}
+              className="grid h-7 w-7 place-items-center rounded-lg border border-slate-200 bg-white text-slate-400 transition hover:border-red-300 hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
+              title="Eliminar pregunta"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -220,19 +262,31 @@ function QuestionCard({
 
 // ── Main component ───────────────────────────────────────────────────────────
 
-export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion, onResolveQuestion }: Props) {
+export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion, onResolveQuestion, onDeleteQuestion }: Props) {
+  const now = Date.now();
+
+  const upcomingMatches = matches.filter((m) => {
+    const isLive = m.liveStatus === "live" || m.liveStatus === "halftime";
+    return isLive || new Date(m.kickoffAt).getTime() > now;
+  });
+  const pastMatches = matches.filter((m) => {
+    const isLive = m.liveStatus === "live" || m.liveStatus === "halftime";
+    return !isLive && new Date(m.kickoffAt).getTime() <= now;
+  });
+
   const [selectedMatchId, setSelectedMatchId] = useState<string>(
     () => {
-      // Default to first match that has questions, else first closed match, else first match
       const withQuestions = matches.find((m) => statQuestions.some((q) => q.matchId === m.id));
       return withQuestions?.id ?? matches.find((m) => m.closed)?.id ?? matches[0]?.id ?? "";
     }
   );
   const [newText, setNewText] = useState("");
   const [newOptions, setNewOptions] = useState(["", ""]);
+  const [newPointValue, setNewPointValue] = useState(1);
   const [isCreating, setIsCreating] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [resolvingId, setResolvingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [formError, setFormError] = useState("");
 
   const selectedMatch = matches.find((m) => m.id === selectedMatchId);
@@ -241,7 +295,6 @@ export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion,
   const totalBetsForMatch = matchQuestions.reduce((sum, q) => sum + q.totalBets, 0);
   const resolvedCount = matchQuestions.filter((q) => q.resolved).length;
 
-  // Per-match stat bet leaderboard computed from betsByOption (no extra API call)
   const statBetLeaderboard = useMemo(() => {
     const playerMap = new Map<string, { playerName: string; earned: number; total: number }>();
     for (const q of matchQuestions) {
@@ -267,9 +320,10 @@ export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion,
     setFormError("");
     setIsCreating(true);
     try {
-      await onCreateQuestion(selectedMatchId, text, opts);
+      await onCreateQuestion(selectedMatchId, text, opts, newPointValue);
       setNewText("");
       setNewOptions(["", ""]);
+      setNewPointValue(1);
       setShowForm(false);
     } catch (err) {
       setFormError(err instanceof Error ? err.message : "Error creando pregunta.");
@@ -284,57 +338,84 @@ export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion,
     finally { setResolvingId(null); }
   }
 
+  async function handleDelete(questionId: string) {
+    setDeletingId(questionId);
+    try { await onDeleteQuestion(questionId); }
+    finally { setDeletingId(null); }
+  }
+
+  function MatchButton({ match }: { match: AdminMatch }) {
+    const count = statQuestions.filter((q) => q.matchId === match.id).length;
+    const bets = statQuestions
+      .filter((q) => q.matchId === match.id)
+      .reduce((s, q) => s + q.totalBets, 0);
+    const isSelected = selectedMatchId === match.id;
+    const isLive = match.liveStatus === "live" || match.liveStatus === "halftime";
+    const kickoff = new Date(match.kickoffAt);
+    const dateStr = kickoff.toLocaleDateString("es-CR", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+
+    return (
+      <button
+        key={match.id}
+        type="button"
+        onClick={() => setSelectedMatchId(match.id)}
+        className={cn(
+          "flex w-full items-center justify-between gap-3 border-b border-slate-100 px-4 py-3 text-left transition last:border-0",
+          isSelected ? "bg-slate-950 text-white" : "text-slate-700 hover:bg-slate-50"
+        )}
+      >
+        <div className="min-w-0">
+          <p className={cn("text-[10px] font-black uppercase tracking-wide", isSelected ? "text-slate-400" : "text-slate-400")}>
+            {isLive ? "🔴 LIVE" : dateStr} · {match.group ? `Grupo ${match.group}` : match.stageLabel}
+          </p>
+          <p className="truncate text-sm font-black">
+            {match.homeTeam} vs {match.awayTeam}
+          </p>
+        </div>
+        <div className="flex shrink-0 flex-col items-end gap-0.5">
+          {count > 0 && (
+            <span className={cn(
+              "rounded-md px-1.5 py-0.5 text-[10px] font-black tabular-nums",
+              isSelected ? "bg-white/15 text-white" : "bg-slate-100 text-slate-600"
+            )}>
+              {count}q
+            </span>
+          )}
+          {bets > 0 && (
+            <span className={cn(
+              "rounded-md px-1.5 py-0.5 text-[10px] font-black tabular-nums",
+              isSelected ? "bg-white/10 text-white/60" : "bg-slate-50 text-slate-400"
+            )}>
+              {bets}b
+            </span>
+          )}
+        </div>
+      </button>
+    );
+  }
+
   return (
     <div className="grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
       {/* ── Match selector ── */}
       <aside className="grid content-start gap-2">
         <p className="text-xs font-black uppercase tracking-wider text-slate-500">Partido</p>
         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-          {matches.map((match) => {
-            const count = statQuestions.filter((q) => q.matchId === match.id).length;
-            const bets = statQuestions
-              .filter((q) => q.matchId === match.id)
-              .reduce((s, q) => s + q.totalBets, 0);
-            const isSelected = selectedMatchId === match.id;
-            return (
-              <button
-                key={match.id}
-                type="button"
-                onClick={() => setSelectedMatchId(match.id)}
-                className={cn(
-                  "flex w-full items-center justify-between gap-3 border-b border-slate-100 px-4 py-3 text-left transition last:border-0",
-                  isSelected ? "bg-slate-950 text-white" : "text-slate-700 hover:bg-slate-50"
-                )}
-              >
-                <div className="min-w-0">
-                  <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">
-                    #{match.number} · {match.group ? `Grupo ${match.group}` : match.stageLabel}
-                  </p>
-                  <p className="truncate text-sm font-black">
-                    {match.homeTeam} vs {match.awayTeam}
-                  </p>
-                </div>
-                <div className="flex shrink-0 flex-col items-end gap-0.5">
-                  {count > 0 && (
-                    <span className={cn(
-                      "rounded-md px-1.5 py-0.5 text-[10px] font-black tabular-nums",
-                      isSelected ? "bg-white/15 text-white" : "bg-slate-100 text-slate-600"
-                    )}>
-                      {count}q
-                    </span>
-                  )}
-                  {bets > 0 && (
-                    <span className={cn(
-                      "rounded-md px-1.5 py-0.5 text-[10px] font-black tabular-nums",
-                      isSelected ? "bg-white/10 text-white/60" : "bg-slate-50 text-slate-400"
-                    )}>
-                      {bets}b
-                    </span>
-                  )}
-                </div>
-              </button>
-            );
-          })}
+          {upcomingMatches.length > 0 && (
+            <>
+              <div className="border-b border-slate-100 bg-slate-50 px-4 py-2">
+                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Próximos</p>
+              </div>
+              {upcomingMatches.map((match) => <MatchButton key={match.id} match={match} />)}
+            </>
+          )}
+          {pastMatches.length > 0 && (
+            <>
+              <div className="border-b border-slate-100 bg-slate-50 px-4 py-2">
+                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Pasados</p>
+              </div>
+              {pastMatches.map((match) => <MatchButton key={match.id} match={match} />)}
+            </>
+          )}
         </div>
       </aside>
 
@@ -419,6 +500,29 @@ export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion,
                 </button>
               )}
             </div>
+
+            {/* point value */}
+            <div className="mb-3">
+              <p className="mb-2 text-[11px] font-black uppercase tracking-wide text-purple-700">Puntos</p>
+              <div className="flex gap-2">
+                {[1, 2, 3].map((pts) => (
+                  <button
+                    key={pts}
+                    type="button"
+                    onClick={() => setNewPointValue(pts)}
+                    className={cn(
+                      "h-9 w-14 rounded-lg border text-sm font-black transition",
+                      newPointValue === pts
+                        ? "border-purple-700 bg-purple-700 text-white"
+                        : "border-slate-300 bg-white text-slate-600 hover:border-purple-400 hover:bg-purple-50"
+                    )}
+                  >
+                    {pts}pt{pts !== 1 ? "s" : ""}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {formError && <p className="mb-3 text-xs font-bold text-red-700">{formError}</p>}
             <button
               type="button"
@@ -447,7 +551,9 @@ export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion,
                 key={question.id}
                 question={question}
                 resolvingId={resolvingId}
+                deletingId={deletingId}
                 onResolve={(id, optId) => void handleResolve(id, optId)}
+                onDelete={(id) => void handleDelete(id)}
               />
             ))}
           </div>
