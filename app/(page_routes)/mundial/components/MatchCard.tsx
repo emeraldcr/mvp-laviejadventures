@@ -104,7 +104,7 @@ export function MatchCard({ match, draft, savingId, isSavingBulk, todayEditableM
         canEdit ? "border-[#62ffe6]/65" : "border-white/15"
       )}
     >
-      <span className="absolute inset-x-0 top-0 h-1 bg-[#3151ff]" />
+      <span className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#f0b429] via-[#d5ff3f] to-[#174826]" />
       <div className="mb-3 flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
@@ -183,7 +183,7 @@ export function MatchCard({ match, draft, savingId, isSavingBulk, todayEditableM
               className={cn(
                 "grid h-12 w-12 shrink-0 place-items-center rounded-lg border transition",
                 isViewingPicks
-                  ? "border-[#d5ff3f] bg-[#17206b] text-[#d5ff3f]"
+                  ? "border-[#d5ff3f] bg-[#1a2206] text-[#d5ff3f]"
                   : "border-white/15 bg-black/45 text-white/55 hover:border-[#62ffe6] hover:text-white"
               )}
             >
@@ -227,7 +227,7 @@ function TeamScoreRow({
       </span>
       <div className="min-w-0">
         <span className="block truncate text-sm font-black leading-tight text-white">{team}</span>
-        <span className="mt-0.5 inline-block rounded bg-[#3151ff] px-1.5 py-0.5 text-[10px] font-black text-white">
+        <span className="mt-0.5 inline-block rounded border border-[#f0b429]/25 bg-[#12351f] px-1.5 py-0.5 text-[10px] font-black text-[#d5ff3f]">
           {teamCode(team)}
         </span>
       </div>

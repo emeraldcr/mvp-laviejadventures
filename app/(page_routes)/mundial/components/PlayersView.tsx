@@ -18,9 +18,9 @@ type PredictionScore = {
 };
 
 const PODIUM_STYLES = [
-  { card: "border-[#d5ff3f]/70 bg-[#10240b]", rank: "bg-[#d5ff3f] text-[#06121c]", pts: "text-[#d5ff3f]", bar: "bg-[#d5ff3f]" },
-  { card: "border-[#62ffe6]/60 bg-[#071d2a]", rank: "bg-[#62ffe6] text-[#06121c]", pts: "text-[#62ffe6]", bar: "bg-[#62ffe6]" },
-  { card: "border-[#ff6a3d]/60 bg-[#2a120b]", rank: "bg-[#ff6a3d] text-white", pts: "text-[#ffb15f]", bar: "bg-[#ff6a3d]" },
+  { card: "border-[#f0b429]/60 bg-[#10240b]", rank: "border-[#f0b429]/50 bg-[#f0b429] text-[#06121c]", pts: "text-[#d5ff3f]", bar: "bg-[#d5ff3f]" },
+  { card: "border-[#62ffe6]/45 bg-[#071d2a]", rank: "border-[#62ffe6]/45 bg-[#62ffe6] text-[#06121c]", pts: "text-[#62ffe6]", bar: "bg-[#62ffe6]" },
+  { card: "border-[#ffb15f]/45 bg-[#2a120b]", rank: "border-[#ffb15f]/45 bg-[#ffb15f] text-[#06121c]", pts: "text-[#ffb15f]", bar: "bg-[#ffb15f]" },
 ];
 
 export function PlayersView({ leaderboard, matches, predictions }: PlayersViewProps) {
@@ -30,9 +30,9 @@ export function PlayersView({ leaderboard, matches, predictions }: PlayersViewPr
 
   if (!leaderboard.length) {
     return (
-      <section className="grid min-h-56 place-items-center rounded-lg border border-dashed border-white/20 bg-black/35 p-6 text-center sm:p-8">
+      <section className="grid min-h-56 place-items-center rounded-xl border border-dashed border-[#f0b429]/30 bg-black/35 p-6 text-center sm:p-8">
         <div>
-          <Users className="mx-auto h-12 w-12 text-[#62ffe6]" />
+          <Users className="mx-auto h-12 w-12 text-[#f0b429]" />
           <p className="mt-4 text-xl font-black text-white">Todavia no hay jugadores</p>
           <p className="mt-2 text-base font-bold text-white/60">Se el primero en guardar tu quiniela.</p>
         </div>
@@ -49,17 +49,23 @@ export function PlayersView({ leaderboard, matches, predictions }: PlayersViewPr
 
   return (
     <section className="grid gap-4">
-      <div className="overflow-hidden rounded-lg border border-[#9dff34]/55 bg-[#06140f] shadow-[0_24px_70px_rgba(0,0,0,0.24)]">
-        <div className="bg-[#3151ff] px-4 py-4 sm:px-6">
+      <div className="relative overflow-hidden rounded-xl border border-[#f0b429]/30 bg-[#06140f] shadow-[0_24px_70px_rgba(0,0,0,0.28)]">
+        <div className="pointer-events-none absolute inset-0 opacity-45 [background-image:linear-gradient(90deg,rgba(240,180,41,0.06)_1px,transparent_1px),linear-gradient(0deg,rgba(255,255,255,0.05)_1px,transparent_1px)] [background-size:72px_72px]" />
+        <div className="relative border-b border-white/12 bg-black/35 px-4 py-4 sm:px-6">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <Trophy className="h-5 w-5 text-[#d5ff3f]" />
+            <div className="flex min-w-0 items-start gap-3">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-[#f0b429]/40 bg-[#f0b429] text-[#07110b] shadow-[0_0_18px_rgba(240,180,41,0.22)]">
+                <Trophy className="h-5 w-5" />
+              </span>
+              <div className="min-w-0">
                 <p className="text-xs font-black uppercase tracking-[0.2em] text-[#d5ff3f]">Tabla de posiciones</p>
+                <h2 className="mt-1 text-2xl font-black uppercase text-white sm:text-3xl">
+                  {leaderboard.length} <span className="text-white/65">jugadores</span>
+                </h2>
+                <p className="mt-2 max-w-2xl text-sm font-bold text-white/62">
+                  Ranking general con exactos, resultados y picks resueltos.
+                </p>
               </div>
-              <h2 className="mt-1 text-2xl font-black uppercase text-white sm:text-3xl">
-                {leaderboard.length} <span className="text-white/65">jugadores</span>
-              </h2>
             </div>
 
             <div className="grid grid-cols-2 gap-2 min-[520px]:grid-cols-4 lg:min-w-[560px]">
@@ -86,13 +92,13 @@ export function PlayersView({ leaderboard, matches, predictions }: PlayersViewPr
               key={entry.normalizedName}
               onClick={() => setSelectedPlayerKey(entry.normalizedName)}
               className={cn(
-                "w-[72vw] shrink-0 rounded-lg border p-3.5 text-left shadow-[0_18px_52px_rgba(0,0,0,0.22)] transition hover:-translate-y-0.5 hover:ring-2 hover:ring-white/25 sm:w-auto sm:p-4",
+                "w-[72vw] shrink-0 rounded-xl border p-3.5 text-left shadow-[0_18px_52px_rgba(0,0,0,0.22)] transition hover:-translate-y-0.5 hover:ring-2 hover:ring-[#f0b429]/25 sm:w-auto sm:p-4",
                 style.card,
                 i === 0 && "ring-1 ring-[#d5ff3f]/45"
               )}
             >
               <div className="mb-3 flex items-start justify-between gap-2">
-                <span className={cn("grid h-9 w-9 place-items-center rounded-lg text-lg font-black sm:h-10 sm:w-10 sm:text-xl", style.rank)}>
+                <span className={cn("grid h-9 w-9 place-items-center rounded-lg border text-lg font-black sm:h-10 sm:w-10 sm:text-xl", style.rank)}>
                   {i + 1}
                 </span>
                 <div className="text-right">
@@ -118,11 +124,11 @@ export function PlayersView({ leaderboard, matches, predictions }: PlayersViewPr
         })}
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-white/15 bg-[#071018] shadow-[0_24px_70px_rgba(0,0,0,0.22)]">
+      <div className="overflow-hidden rounded-xl border border-[#f0b429]/25 bg-[#06140f] shadow-[0_24px_70px_rgba(0,0,0,0.24)]">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-white/15 bg-[#3151ff] text-xs">
+              <tr className="border-b border-white/12 bg-black/45 text-xs">
                 <th className="px-2 py-2.5 text-left font-black uppercase tracking-wide text-[#d5ff3f] sm:px-3 sm:py-3">#</th>
                 <th className="px-2 py-2.5 text-left font-black uppercase tracking-wide text-white sm:px-3 sm:py-3">Jugador</th>
                 <th className="px-2 py-2.5 text-right font-black uppercase tracking-wide text-white sm:px-3 sm:py-3">Pts</th>
@@ -218,7 +224,7 @@ export function PlayersView({ leaderboard, matches, predictions }: PlayersViewPr
           </table>
         </div>
 
-        <div className="border-t border-white/15 bg-black/35 px-4 py-3">
+        <div className="border-t border-white/12 bg-black/30 px-4 py-3">
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs font-bold text-white/60">
             <span className="flex items-center gap-1"><Target className="h-3 w-3 text-[#d5ff3f]" /> Exacto = 3 pts</span>
             <span className="flex items-center gap-1"><TrendingUp className="h-3 w-3 text-[#62ffe6]" /> Resultado = 1 pt</span>
@@ -260,18 +266,21 @@ function StatBetsLeaderboard() {
   if (!loaded || !entries.length) return null;
 
   const max = Math.max(...entries.map((e) => e.earned), 1);
-  const medals = ["🥇", "🥈", "🥉"];
 
   return (
-    <div className="overflow-hidden rounded-lg border border-[#f0b429]/25 bg-[#071018] shadow-[0_24px_70px_rgba(0,0,0,0.22)]">
-      <div className="border-b border-white/8 bg-gradient-to-r from-[#1a1030] to-[#0e1520] px-4 py-3">
+    <div className="overflow-hidden rounded-xl border border-[#f0b429]/25 bg-[#06140f] shadow-[0_24px_70px_rgba(0,0,0,0.24)]">
+      <div className="border-b border-white/10 bg-[#12351f] px-4 py-3 [background-image:linear-gradient(135deg,rgba(240,180,41,0.18),transparent_58%)]">
         <div className="flex items-center gap-2">
-          <Zap className="h-4 w-4 text-[#f0b429]" />
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#f0b429]">Mini-Apuestas</p>
+          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-[#f0b429]/40 bg-[#f0b429] text-[#07110b]">
+            <Zap className="h-4 w-4" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#d5ff3f]">Mini-Apuestas</p>
+            <p className="mt-0.5 text-sm font-black text-white">
+              Tabla comparativa / {entries.length} jugadores
+            </p>
+          </div>
         </div>
-        <p className="mt-0.5 text-sm font-black text-white">
-          Tabla comparativa · {entries.length} jugadores
-        </p>
       </div>
 
       <div className="overflow-x-auto">
@@ -291,11 +300,16 @@ function StatBetsLeaderboard() {
               return (
                 <tr key={entry.playerName} className={cn(isFirst ? "bg-[#f0b429]/5" : "hover:bg-white/3", "transition-colors")}>
                   <td className="px-3 py-2.5">
-                    {medals[i] ? (
-                      <span className="text-base leading-none">{medals[i]}</span>
-                    ) : (
-                      <span className="text-xs font-black text-white/30">{i + 1}</span>
-                    )}
+                    <span
+                      className={cn(
+                        "grid h-7 w-7 place-items-center rounded-md border text-xs font-black tabular-nums",
+                        isFirst
+                          ? "border-[#f0b429]/60 bg-[#f0b429] text-[#07110b]"
+                          : "border-white/12 bg-black/35 text-white/55"
+                      )}
+                    >
+                      {i + 1}
+                    </span>
                   </td>
                   <td className="px-3 py-2.5">
                     <p className={cn("font-black", isFirst ? "text-[#f0b429]" : "text-white")}>
@@ -354,8 +368,8 @@ function PlayerPredictionsModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 p-2 backdrop-blur-sm sm:items-center sm:p-4">
-      <div className="flex max-h-[calc(100dvh-1rem)] w-full max-w-5xl flex-col overflow-hidden rounded-lg border border-[#62ffe6]/45 bg-[#071018] shadow-[0_24px_90px_rgba(0,0,0,0.85)]">
-        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-white/15 bg-[#3151ff] px-4 py-3">
+      <div className="flex max-h-[calc(100dvh-1rem)] w-full max-w-5xl flex-col overflow-hidden rounded-xl border border-[#f0b429]/35 bg-[#06140f] shadow-[0_24px_90px_rgba(0,0,0,0.85)]">
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-white/12 bg-[#12351f] px-4 py-3 [background-image:linear-gradient(135deg,rgba(240,180,41,0.18),transparent_58%)]">
           <div className="min-w-0">
             <p className="truncate text-lg font-black uppercase text-white">{entry.playerName}</p>
             <p className="mt-1 text-xs font-black uppercase tracking-[0.16em] text-[#d5ff3f]">
@@ -530,7 +544,7 @@ function MiniStat({ label, value, tone }: { label: string; value: number | strin
 
 function TeamChip({ team }: { team: string }) {
   return (
-    <span className="inline-flex min-w-0 items-center gap-1.5 rounded-md bg-[#3151ff] px-2 py-1">
+    <span className="inline-flex min-w-0 items-center gap-1.5 rounded-md border border-[#f0b429]/25 bg-[#12351f] px-2 py-1">
       <Flag team={team} size="xs" />
       <span className="text-xs font-black text-white">{teamCode(team)}</span>
       <span className="hidden max-w-28 truncate text-xs font-bold text-white/70 sm:inline">{team}</span>
