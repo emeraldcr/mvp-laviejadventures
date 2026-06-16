@@ -266,7 +266,7 @@ function BetLeaderboard({
   return (
     <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#111827]">
       <div className="border-b border-white/8 px-4 py-3">
-        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#f0b429]/70">Mini-apuestas</p>
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#f0b429]/70">Puntaje Preguntas</p>
         <p className="mt-0.5 text-sm font-black text-white">{entries.length} jugadores</p>
       </div>
       <div className="divide-y divide-white/8">
@@ -710,7 +710,7 @@ export function StatBetsPanel({
             >
               <div className="flex items-center gap-2.5">
                 <Trophy className="h-4 w-4 text-[#f0b429]" />
-                <span className="text-sm font-black text-white">Tabla de posiciones</span>
+                <span className="text-sm font-black text-white">Puntaje Preguntas</span>
                 <span className="rounded-md bg-white/8 px-2 py-0.5 text-[10px] font-black tabular-nums text-white/40">
                   {leaderboard.length}
                 </span>

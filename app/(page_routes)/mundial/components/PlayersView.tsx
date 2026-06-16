@@ -58,13 +58,11 @@ export function PlayersView({ leaderboard, matches, predictions }: PlayersViewPr
                 <Trophy className="h-5 w-5" />
               </span>
               <div className="min-w-0">
-                <p className="text-xs font-black uppercase tracking-[0.2em] text-[#d5ff3f]">Tabla de posiciones</p>
+                <p className="text-xs font-black uppercase tracking-[0.2em] text-[#d5ff3f]">Picks · Partidos</p>
                 <h2 className="mt-1 text-2xl font-black uppercase text-white sm:text-3xl">
-                  {leaderboard.length} <span className="text-white/65">jugadores</span>
+                  Tabla de Posiciones
                 </h2>
-                <p className="mt-2 max-w-2xl text-sm font-bold text-white/62">
-                  Ranking general con exactos, resultados y picks resueltos.
-                </p>
+                <p className="mt-1 text-xs font-bold text-white/40">{leaderboard.length} jugadores</p>
               </div>
             </div>
 
@@ -275,9 +273,9 @@ function StatBetsLeaderboard() {
             <Zap className="h-4 w-4" />
           </span>
           <div className="min-w-0">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#d5ff3f]">Mini-Apuestas</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#f0b429]">Preguntas de partido</p>
             <p className="mt-0.5 text-sm font-black text-white">
-              Tabla comparativa / {entries.length} jugadores
+              Puntaje Mini-Preguntas
             </p>
           </div>
         </div>

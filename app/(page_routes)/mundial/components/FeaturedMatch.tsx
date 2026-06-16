@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BarChart3, ChevronDown, ChevronUp, CircleDot, Clock3, Lock, Loader2, Save, Shield, Timer, Trophy, Zap } from "lucide-react";
+import { BarChart3, ChevronDown, ChevronRight, ChevronUp, CircleDot, Clock3, Lock, Loader2, Save, Shield, Timer, Trophy, X, Zap } from "lucide-react";
 import { hasAnyLiveStats, type LiveTeamStats } from "@/lib/mundial/live-stats";
 import type { Draft, MundialMatch } from "../types";
 import {
@@ -40,7 +40,7 @@ export function FeaturedMatch({
   onUpdateDraft,
   onSave,
 }: FeaturedMatchProps) {
-  const [showMoreStats, setShowMoreStats] = useState(false);
+  const [showLiveModal, setShowLiveModal] = useState(false);
   const isClosed = isMatchClosed(match, nowMs);
   const isLive = isMatchLive(match);
   const isActive = !!activeCountdown;
@@ -63,6 +63,7 @@ export function FeaturedMatch({
       : null;
 
   return (
+    <>
     <section
       className={cn(
         "relative min-w-0 overflow-hidden rounded-xl border bg-[#07110d] shadow-[0_24px_70px_rgba(0,0,0,0.32)]",
@@ -145,19 +146,18 @@ export function FeaturedMatch({
             </div>
           )}
 
-          {homeLiveScore !== null && (
-            <LiveStatsDisclosure
-              match={match}
-              open={showMoreStats}
-              onToggle={() => setShowMoreStats((value) => !value)}
-            />
-          )}
-
-          {/* Live event timeline */}
           {hasLiveDetail && (
-            <div className="mt-4">
-              <LiveTimeline match={match} />
-            </div>
+            <button
+              type="button"
+              onClick={() => setShowLiveModal(true)}
+              className="mt-3 flex w-full items-center justify-between gap-2 rounded-lg border border-[#9dff34]/25 bg-black/25 px-3 py-2.5 text-left transition hover:bg-white/5"
+            >
+              <span className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] text-[#d5ff3f]">
+                <Zap className="h-4 w-4 shrink-0" />
+                Ver detalles live
+              </span>
+              <ChevronRight className="h-4 w-4 shrink-0 text-white/45" />
+            </button>
           )}
         </div>
 
@@ -253,6 +253,10 @@ export function FeaturedMatch({
         </div>
       </div>
     </section>
+    {showLiveModal && (
+      <LiveDetailsModal match={match} onClose={() => setShowLiveModal(false)} />
+    )}
+    </>
   );
 }
 
@@ -686,4 +690,34 @@ function cardValue(stats: LiveTeamStats) {
 
 function cardsPairText(home: LiveTeamStats, away: LiveTeamStats) {
   return `${cardValue(home)}-${cardValue(away)}`;
+}
+
+function LiveDetailsModal({ match, onClose }: { match: MundialMatch; onClose: () => void }) {
+  const [showStats, setShowStats] = useState(false);
+  const hasDetail = match.liveEvents.length > 0 || Boolean(match.liveNote);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 p-2 backdrop-blur-sm sm:items-center sm:p-4">
+      <div className="flex max-h-[calc(100dvh-1rem)] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-[#9dff34]/35 bg-[#06140f] shadow-[0_24px_90px_rgba(0,0,0,0.85)]">
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-white/12 bg-black/40 px-4 py-3">
+          <div className="flex items-center gap-2">
+            <span className="h-2 w-2 animate-pulse rounded-full bg-[#9dff34]" />
+            <p className="font-black text-white">Detalles live</p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Cerrar"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-md border border-white/20 bg-black/20 text-white/75 transition hover:border-[#d5ff3f] hover:text-white"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto p-4 grid gap-4">
+          <LiveStatsDisclosure match={match} open={showStats} onToggle={() => setShowStats((v) => !v)} />
+          {hasDetail && <LiveTimeline match={match} />}
+        </div>
+      </div>
+    </div>
+  );
 }
