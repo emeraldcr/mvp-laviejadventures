@@ -72,6 +72,16 @@ type PredictionPayload = {
   locked?: unknown;
 };
 
+type LeaderboardEntry = {
+  playerName: string;
+  normalizedName: string;
+  totalPoints: number;
+  totalPredictions: number;
+  scoredPredictions: number;
+  exactScores: number;
+  correctOutcomes: number;
+};
+
 class ApiError extends Error {
   constructor(message: string, readonly status = 400) {
     super(message);
@@ -206,6 +216,79 @@ function serializePrediction(
   };
 }
 
+function predictionOutcome(homeScore: number, awayScore: number) {
+  if (homeScore > awayScore) return "home";
+  if (awayScore > homeScore) return "away";
+  return "draw";
+}
+
+function buildLeaderboard(
+  predictionDocs: PredictionDoc[],
+  matchesById: Map<string, MundialMatchDoc | MundialMatch>
+) {
+  const playerMap = new Map<string, LeaderboardEntry>();
+
+  for (const prediction of predictionDocs) {
+    const key = prediction.normalizedName;
+    if (!playerMap.has(key)) {
+      playerMap.set(key, {
+        playerName: prediction.playerName,
+        normalizedName: key,
+        totalPoints: 0,
+        totalPredictions: 0,
+        scoredPredictions: 0,
+        exactScores: 0,
+        correctOutcomes: 0,
+      });
+    }
+
+    const entry = playerMap.get(key)!;
+    entry.totalPredictions++;
+
+    const match = matchesById.get(prediction.matchId);
+    if (
+      match &&
+      typeof match.homeFinalScore === "number" &&
+      typeof match.awayFinalScore === "number"
+    ) {
+      const scores = predictionScores(prediction);
+      const isExact =
+        scores.homeScore === match.homeFinalScore &&
+        scores.awayScore === match.awayFinalScore;
+      const correctOutcome =
+        predictionOutcome(scores.homeScore, scores.awayScore) ===
+        predictionOutcome(match.homeFinalScore, match.awayFinalScore);
+      const points = isExact ? 3 : correctOutcome ? 1 : 0;
+
+      entry.scoredPredictions++;
+      entry.totalPoints += points;
+      if (isExact) entry.exactScores++;
+      if (correctOutcome) entry.correctOutcomes++;
+    }
+  }
+
+  return [...playerMap.values()].sort(
+    (a, b) => b.totalPoints - a.totalPoints || a.playerName.localeCompare(b.playerName)
+  );
+}
+
+function visiblePredictionDocs(predictionDocs: PredictionDoc[], playerName: string) {
+  const normalizedName = normalizeKey(playerName);
+  if (!normalizedName) return [];
+
+  const unlockedMatchIds = new Set(
+    predictionDocs
+      .filter((prediction) => prediction.normalizedName === normalizedName)
+      .map((prediction) => prediction.matchId)
+  );
+
+  return predictionDocs.filter(
+    (prediction) =>
+      prediction.normalizedName === normalizedName ||
+      unlockedMatchIds.has(prediction.matchId)
+  );
+}
+
 function serializePlayer(player: {
   _id: string;
   playerName?: string;
@@ -275,17 +358,20 @@ async function readMatches(db: Db) {
 async function readPlayers(
   db: Db,
   matchesById: Map<string, MundialMatchDoc | MundialMatch>,
-  now = new Date()
+  now = new Date(),
+  docs?: PredictionDoc[]
 ) {
   const grouped = new Map<
     string,
     { _id: string; playerName: string; totalPredictions: number; lockedPredictions: number; updatedAt?: Date }
   >();
-  const predictionDocs = await db
-    .collection<PredictionDoc>(PREDICTIONS_COLLECTION)
-    .find({})
-    .sort({ updatedAt: -1 })
-    .toArray();
+  const predictionDocs =
+    docs ??
+    (await db
+      .collection<PredictionDoc>(PREDICTIONS_COLLECTION)
+      .find({})
+      .sort({ updatedAt: -1 })
+      .toArray());
 
   for (const prediction of predictionDocs) {
     const key = prediction.normalizedName;
@@ -388,17 +474,16 @@ export async function GET(req: NextRequest) {
     const now = new Date();
     const matchesById = new Map(matches.map((m) => [m.id, m]));
     const predictions = db.collection<PredictionDoc>(PREDICTIONS_COLLECTION);
-    const predictionFilter = playerName ? { normalizedName: normalizeKey(playerName) } : {};
-    const [predictionDocs, players] = await Promise.all([
-      predictions.find(predictionFilter).sort({ updatedAt: -1, playerName: 1 }).toArray(),
-      readPlayers(db, matchesById, now),
-    ]);
+    const predictionDocs = await predictions.find({}).sort({ updatedAt: -1, playerName: 1 }).toArray();
+    const players = await readPlayers(db, matchesById, now, predictionDocs);
+    const visiblePredictions = visiblePredictionDocs(predictionDocs, playerName);
 
     return NextResponse.json({
       fixtureVersion: FIXTURE_VERSION,
       matches: matches.map((m) => serializeMatch(m, now)),
-      predictions: predictionDocs.map((p) => serializePrediction(p, matchesById, now)),
+      predictions: visiblePredictions.map((p) => serializePrediction(p, matchesById, now)),
       players: players.map(serializePlayer),
+      leaderboard: buildLeaderboard(predictionDocs, matchesById),
     });
   } catch (error) {
     console.error("Failed to load mundial predictions", error);

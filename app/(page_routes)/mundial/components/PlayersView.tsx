@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays, CheckCircle2, ChevronRight, MinusCircle, Target, TrendingUp, Trophy, Users, X, Zap } from "lucide-react";
+import { CalendarDays, CheckCircle2, ChevronRight, Lock, MinusCircle, Target, TrendingUp, Trophy, Users, X, Zap } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type { LeaderboardEntry, MundialMatch, Prediction } from "../types";
 import { cn, finalScoreText, formatKickoff, normalizeKey, teamCode } from "../utils";
@@ -62,7 +62,7 @@ export function PlayersView({ leaderboard, matches, predictions }: PlayersViewPr
               </h2>
             </div>
 
-            <div className="grid gap-2 min-[520px]:grid-cols-4 lg:min-w-[560px]">
+            <div className="grid grid-cols-2 gap-2 min-[520px]:grid-cols-4 lg:min-w-[560px]">
               <HeaderStat label="Lider" value={leader.playerName} tone="lime" />
               <HeaderStat label="Precision" value={`${leaderAccuracy}%`} tone="cyan" />
               <HeaderStat label="Exactos" value={totalExact} tone="lime" />
@@ -72,7 +72,8 @@ export function PlayersView({ leaderboard, matches, predictions }: PlayersViewPr
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      {/* Podium — horizontal scroll on mobile, 3-col grid on sm+ */}
+      <div className="flex gap-3 overflow-x-auto pb-1 sm:grid sm:grid-cols-3 sm:overflow-visible sm:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {leaderboard.slice(0, 3).map((entry, i) => {
           const style = PODIUM_STYLES[i];
           const barWidth = maxPts > 0 ? Math.round((entry.totalPoints / maxPts) * 100) : 0;
@@ -85,31 +86,31 @@ export function PlayersView({ leaderboard, matches, predictions }: PlayersViewPr
               key={entry.normalizedName}
               onClick={() => setSelectedPlayerKey(entry.normalizedName)}
               className={cn(
-                "rounded-lg border p-4 text-left shadow-[0_18px_52px_rgba(0,0,0,0.22)] transition hover:-translate-y-0.5 hover:ring-2 hover:ring-white/25",
+                "w-[72vw] shrink-0 rounded-lg border p-3.5 text-left shadow-[0_18px_52px_rgba(0,0,0,0.22)] transition hover:-translate-y-0.5 hover:ring-2 hover:ring-white/25 sm:w-auto sm:p-4",
                 style.card,
                 i === 0 && "ring-1 ring-[#d5ff3f]/45"
               )}
             >
               <div className="mb-3 flex items-start justify-between gap-2">
-                <span className={cn("grid h-10 w-10 place-items-center rounded-lg text-xl font-black", style.rank)}>
+                <span className={cn("grid h-9 w-9 place-items-center rounded-lg text-lg font-black sm:h-10 sm:w-10 sm:text-xl", style.rank)}>
                   {i + 1}
                 </span>
                 <div className="text-right">
-                  <span className={cn("text-2xl font-black tabular-nums", style.pts)}>{entry.totalPoints}</span>
+                  <span className={cn("text-xl font-black tabular-nums sm:text-2xl", style.pts)}>{entry.totalPoints}</span>
                   <span className="ml-1 text-xs font-bold text-white/55">pts</span>
                 </div>
               </div>
 
-              <p className="mb-1 truncate text-base font-black text-white">{entry.playerName}</p>
+              <p className="mb-1 truncate text-sm font-black text-white sm:text-base">{entry.playerName}</p>
 
               <div className="mb-3 h-1.5 overflow-hidden rounded-full bg-black/45">
                 <div className={cn("h-full rounded-full", style.bar)} style={{ width: `${barWidth}%` }} />
               </div>
 
-              <div className="grid grid-cols-4 gap-1.5">
-                <MiniStat label="Exactos" value={entry.exactScores} tone="lime" />
-                <MiniStat label="Resul." value={entry.correctOutcomes} tone="cyan" />
-                <MiniStat label="Fallos" value={misses} tone="orange" />
+              <div className="grid grid-cols-4 gap-1">
+                <MiniStat label="Exact." value={entry.exactScores} tone="lime" />
+                <MiniStat label="Res." value={entry.correctOutcomes} tone="cyan" />
+                <MiniStat label="Fallo" value={misses} tone="orange" />
                 <MiniStat label="Prec." value={`${accuracy}%`} tone="white" />
               </div>
             </button>
@@ -122,15 +123,15 @@ export function PlayersView({ leaderboard, matches, predictions }: PlayersViewPr
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-white/15 bg-[#3151ff] text-xs">
-                <th className="px-3 py-3 text-left font-black uppercase tracking-wide text-[#d5ff3f]">#</th>
-                <th className="px-3 py-3 text-left font-black uppercase tracking-wide text-white">Jugador</th>
-                <th className="px-3 py-3 text-right font-black uppercase tracking-wide text-white">Pts</th>
-                <th className="px-3 py-3 text-right font-black uppercase tracking-wide text-[#d5ff3f]">Exactos</th>
-                <th className="px-3 py-3 text-right font-black uppercase tracking-wide text-[#62ffe6]">Result.</th>
-                <th className="hidden px-3 py-3 text-right font-black uppercase tracking-wide text-[#ffb15f] sm:table-cell">Fallos</th>
-                <th className="hidden px-3 py-3 text-right font-black uppercase tracking-wide text-white/70 md:table-cell">Prec.</th>
-                <th className="hidden px-3 py-3 text-right font-black uppercase tracking-wide text-white/70 lg:table-cell">Picks</th>
-                <th className="px-3 py-3 text-right font-black uppercase tracking-wide text-white/70">Ver</th>
+                <th className="px-2 py-2.5 text-left font-black uppercase tracking-wide text-[#d5ff3f] sm:px-3 sm:py-3">#</th>
+                <th className="px-2 py-2.5 text-left font-black uppercase tracking-wide text-white sm:px-3 sm:py-3">Jugador</th>
+                <th className="px-2 py-2.5 text-right font-black uppercase tracking-wide text-white sm:px-3 sm:py-3">Pts</th>
+                <th className="px-2 py-2.5 text-right font-black uppercase tracking-wide text-[#d5ff3f] sm:px-3 sm:py-3">Exact.</th>
+                <th className="px-2 py-2.5 text-right font-black uppercase tracking-wide text-[#62ffe6] sm:px-3 sm:py-3">Res.</th>
+                <th className="hidden px-3 py-2.5 text-right font-black uppercase tracking-wide text-[#ffb15f] sm:table-cell sm:py-3">Fallos</th>
+                <th className="hidden px-3 py-2.5 text-right font-black uppercase tracking-wide text-white/70 md:table-cell sm:py-3">Prec.</th>
+                <th className="hidden px-3 py-2.5 text-right font-black uppercase tracking-wide text-white/70 lg:table-cell sm:py-3">Picks</th>
+                <th className="px-2 py-2.5 text-right font-black uppercase tracking-wide text-white/70 sm:px-3 sm:py-3">Ver</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/10">
@@ -150,64 +151,64 @@ export function PlayersView({ leaderboard, matches, predictions }: PlayersViewPr
                       isFirst ? "bg-[#10240b]/65 hover:bg-[#10240b]/90" : "hover:bg-white/5"
                     )}
                   >
-                    <td className="px-3 py-3">
+                    <td className="px-2 py-2.5 sm:px-3 sm:py-3">
                       <span className={cn("text-sm font-black tabular-nums", isTied ? "text-white/50" : "text-white")}>
                         {isTied ? "=" : i + 1}
                       </span>
                     </td>
 
-                    <td className="px-3 py-3">
+                    <td className="px-2 py-2.5 sm:px-3 sm:py-3">
                       <div className="min-w-0">
-                        <p className={cn("font-black", isFirst ? "text-[#d5ff3f]" : "text-white")}>
+                        <p className={cn("text-sm font-black sm:text-base", isFirst ? "text-[#d5ff3f]" : "text-white")}>
                           {entry.playerName}
                         </p>
-                        <div className="mt-1 flex items-center gap-2">
-                          <div className="h-1 w-20 overflow-hidden rounded-full bg-black/55">
+                        <div className="mt-0.5 flex items-center gap-1.5 sm:mt-1 sm:gap-2">
+                          <div className="h-1 w-14 overflow-hidden rounded-full bg-black/55 sm:w-20">
                             <div
                               className={cn("h-full rounded-full", isFirst ? "bg-[#d5ff3f]" : "bg-[#62ffe6]")}
                               style={{ width: `${barWidth}%` }}
                             />
                           </div>
-                          {pending > 0 && <span className="text-[10px] font-black text-white/45">{pending} pend.</span>}
+                          {pending > 0 && <span className="text-[9px] font-black text-white/45 sm:text-[10px]">{pending} pend.</span>}
                         </div>
                       </div>
                     </td>
 
-                    <td className="px-3 py-3 text-right">
+                    <td className="px-2 py-2.5 text-right sm:px-3 sm:py-3">
                       <span className={cn("text-base font-black tabular-nums", isFirst ? "text-[#d5ff3f]" : "text-white")}>
                         {entry.totalPoints}
                       </span>
                     </td>
 
-                    <td className="px-3 py-3 text-right">
+                    <td className="px-2 py-2.5 text-right sm:px-3 sm:py-3">
                       <span className={cn("font-black tabular-nums", entry.exactScores > 0 ? "text-[#d5ff3f]" : "text-white/25")}>
                         {entry.exactScores}
                       </span>
                     </td>
 
-                    <td className="px-3 py-3 text-right">
+                    <td className="px-2 py-2.5 text-right sm:px-3 sm:py-3">
                       <span className={cn("font-black tabular-nums", entry.correctOutcomes > 0 ? "text-[#62ffe6]" : "text-white/25")}>
                         {entry.correctOutcomes}
                       </span>
                     </td>
 
-                    <td className="hidden px-3 py-3 text-right sm:table-cell">
+                    <td className="hidden px-3 py-2.5 text-right sm:table-cell sm:py-3">
                       <span className={cn("font-black tabular-nums", misses > 0 ? "text-[#ffb15f]" : "text-white/25")}>
                         {misses}
                       </span>
                     </td>
 
-                    <td className="hidden px-3 py-3 text-right md:table-cell">
+                    <td className="hidden px-3 py-2.5 text-right md:table-cell sm:py-3">
                       <span className="text-xs font-black tabular-nums text-white/70">{accuracyPct(entry)}%</span>
                     </td>
 
-                    <td className="hidden px-3 py-3 text-right lg:table-cell">
+                    <td className="hidden px-3 py-2.5 text-right lg:table-cell sm:py-3">
                       <span className="text-xs font-bold tabular-nums text-white/55">
                         {entry.scoredPredictions}/{entry.totalPredictions}
                       </span>
                     </td>
 
-                    <td className="px-3 py-3 text-right">
+                    <td className="px-2 py-2.5 text-right sm:px-3 sm:py-3">
                       <ChevronRight className="ml-auto h-4 w-4 text-white/45" />
                     </td>
                   </tr>
@@ -349,6 +350,7 @@ function PlayerPredictionsModal({
     .map((prediction) => computePredictionScore(matchById.get(prediction.matchId), prediction))
     .filter((score) => score.points !== null);
   const modalPoints = scored.reduce((sum, score) => sum + (score.points ?? 0), 0);
+  const hiddenCount = Math.max(entry.totalPredictions - sortedPredictions.length, 0);
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 p-2 backdrop-blur-sm sm:items-center sm:p-4">
@@ -357,7 +359,7 @@ function PlayerPredictionsModal({
           <div className="min-w-0">
             <p className="truncate text-lg font-black uppercase text-white">{entry.playerName}</p>
             <p className="mt-1 text-xs font-black uppercase tracking-[0.16em] text-[#d5ff3f]">
-              {modalPoints} pts / {entry.totalPredictions} picks / {accuracyPct(entry)}% precision
+              {modalPoints} pts visibles / {entry.totalPredictions} picks / {accuracyPct(entry)}% precision
             </p>
           </div>
           <button
@@ -370,7 +372,7 @@ function PlayerPredictionsModal({
           </button>
         </div>
 
-        <div className="grid shrink-0 grid-cols-2 gap-2 border-b border-white/10 bg-black/25 p-3 sm:grid-cols-5">
+        <div className="grid shrink-0 grid-cols-3 gap-1.5 border-b border-white/10 bg-black/25 p-3 sm:grid-cols-5 sm:gap-2">
           <MiniStat label="Total" value={entry.totalPoints} tone="lime" />
           <MiniStat label="Exactos" value={entry.exactScores} tone="lime" />
           <MiniStat label="Result." value={entry.correctOutcomes} tone="cyan" />
@@ -379,6 +381,15 @@ function PlayerPredictionsModal({
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto p-3 sm:p-4">
+          {hiddenCount > 0 && (
+            <div className="mb-3 flex items-start gap-2 rounded-lg border border-[#f0b429]/30 bg-[#1a2206]/55 px-3 py-2.5 text-sm font-bold text-[#fff1b8]">
+              <Lock className="mt-0.5 h-4 w-4 shrink-0 text-[#f0b429]" />
+              <p>
+                {hiddenCount} {hiddenCount === 1 ? "pick esta oculto" : "picks estan ocultos"} hasta que guardes tu prediccion en esos partidos.
+              </p>
+            </div>
+          )}
+
           {sortedPredictions.length ? (
             <div className="grid gap-2">
               {sortedPredictions.map((prediction) => {
@@ -397,8 +408,20 @@ function PlayerPredictionsModal({
             </div>
           ) : (
             <div className="rounded-lg border border-dashed border-white/20 bg-black/35 p-6 text-center">
-              <Users className="mx-auto h-10 w-10 text-[#62ffe6]" />
-              <p className="mt-3 text-lg font-black text-white">Sin predicciones guardadas</p>
+              {hiddenCount > 0 ? (
+                <>
+                  <Lock className="mx-auto h-10 w-10 text-[#f0b429]" />
+                  <p className="mt-3 text-lg font-black text-white">Picks ocultos</p>
+                  <p className="mt-2 text-sm font-bold text-white/55">
+                    Guardá tu predicción en un partido para ver qué puso este jugador ahí.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <Users className="mx-auto h-10 w-10 text-[#62ffe6]" />
+                  <p className="mt-3 text-lg font-black text-white">Sin predicciones guardadas</p>
+                </>
+              )}
             </div>
           )}
         </div>

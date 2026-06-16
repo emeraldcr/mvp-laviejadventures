@@ -66,11 +66,11 @@ export function OtherPicksPanel({ match, predictions, playerName, showEmpty = fa
   const [popularScore, popularCount] = popularEntry ?? ["?", 0];
 
   return (
-    <section className="min-w-0 overflow-hidden rounded-lg border border-[#9dff34]/60 bg-[#06140f] shadow-[0_24px_70px_rgba(0,0,0,0.26)]">
-      <div className="bg-[#3151ff] px-4 py-3 sm:px-5">
+    <section className="min-w-0 overflow-hidden rounded-lg border border-[#f0b429]/45 bg-[#06140f] shadow-[0_24px_70px_rgba(0,0,0,0.26)]">
+      <div className="bg-[#12351f] px-4 py-3 sm:px-5 [background-image:linear-gradient(135deg,rgba(240,180,41,0.22),transparent_58%)]">
         <div className="flex flex-col items-stretch gap-3 min-[620px]:flex-row min-[620px]:items-center min-[620px]:justify-between">
           <div className="flex min-w-0 items-center gap-3">
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-white/25 bg-white text-[#17206b]">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-[#f0b429]/40 bg-[#f0b429] text-[#07110b]">
               <Users className="h-4 w-4" />
             </span>
             <div className="min-w-0">
@@ -135,7 +135,7 @@ export function OtherPicksPanel({ match, predictions, playerName, showEmpty = fa
                           className={cn(
                             "rounded-md border px-2 py-1 text-sm font-black tabular-nums sm:text-base",
                             outcome === "home"
-                              ? "border-[#62ffe6]/60 bg-[#071d2a] text-[#62ffe6]"
+                              ? "border-[#34d399]/60 bg-[#052e1a] text-[#34d399]"
                               : outcome === "draw"
                                 ? "border-[#d5ff3f]/60 bg-[#1a2206] text-[#d5ff3f]"
                                 : "border-[#ff6a3d]/60 bg-[#2a120b] text-[#ffb15f]"
@@ -164,7 +164,7 @@ export function OtherPicksPanel({ match, predictions, playerName, showEmpty = fa
             <aside className="min-w-0 rounded-lg border border-white/15 bg-black/35 p-2.5">
               <div className="mb-2 flex items-center justify-between gap-2">
                 <p className="inline-flex min-w-0 items-center gap-1.5 text-xs font-black uppercase tracking-[0.16em] text-[#d5ff3f]">
-                  <TrendingUp className="h-3.5 w-3.5 shrink-0 text-[#62ffe6]" />
+                  <TrendingUp className="h-3.5 w-3.5 shrink-0 text-[#f0b429]" />
                   <span className="truncate">Stats</span>
                 </p>
                 {popularCount > 1 && (
@@ -174,7 +174,7 @@ export function OtherPicksPanel({ match, predictions, playerName, showEmpty = fa
                 )}
               </div>
               <div className="grid gap-2">
-                <DistBar team={match.homeTeam} label={teamCode(match.homeTeam)} pct={pctHome} count={homeWins} color="cyan" />
+                <DistBar team={match.homeTeam} label={teamCode(match.homeTeam)} pct={pctHome} count={homeWins} color="emerald" />
                 <DistBar label="EMP" pct={pctDraw} count={draws} color="lime" />
                 <DistBar team={match.awayTeam} label={teamCode(match.awayTeam)} pct={pctAway} count={awayWins} color="orange" />
               </div>
@@ -182,7 +182,7 @@ export function OtherPicksPanel({ match, predictions, playerName, showEmpty = fa
           </div>
         ) : (
           <div className="rounded-lg border border-dashed border-white/20 bg-black/35 p-6 text-center">
-            <Users className="mx-auto h-10 w-10 text-[#62ffe6]" />
+            <Users className="mx-auto h-10 w-10 text-[#f0b429]" />
             <p className="mt-3 text-lg font-black text-white">Sin marcadores guardados</p>
             <p className="mt-2 text-sm font-bold text-white/60">
               Cuando otros jugadores guarden este partido, van a aparecer aqui.
@@ -205,17 +205,17 @@ function DistBar({
   label: string;
   pct: number;
   count: number;
-  color: "cyan" | "lime" | "orange";
+  color: "emerald" | "lime" | "orange";
 }) {
   const barClass =
-    color === "cyan"
-      ? "bg-[#62ffe6]"
+    color === "emerald"
+      ? "bg-[#34d399]"
       : color === "lime"
         ? "bg-[#d5ff3f]"
         : "bg-[#ff6a3d]";
   const textClass =
-    color === "cyan"
-      ? "text-[#62ffe6]"
+    color === "emerald"
+      ? "text-[#34d399]"
       : color === "lime"
         ? "text-[#d5ff3f]"
         : "text-[#ffb15f]";

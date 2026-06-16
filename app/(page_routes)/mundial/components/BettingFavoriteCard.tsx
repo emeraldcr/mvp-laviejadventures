@@ -38,7 +38,7 @@ export function BettingFavoriteCard({ match, variant = "featured" }: BettingFavo
     <div className="mb-4 overflow-hidden rounded-lg border border-[#d5ff3f]/30 bg-[#1a2206]/55">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 bg-black/20 px-3 py-2">
         <p className="inline-flex min-w-0 items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-[#d5ff3f]">
-          <TrendingUp className="h-3.5 w-3.5 shrink-0 text-[#62ffe6]" />
+          <TrendingUp className="h-3.5 w-3.5 shrink-0 text-[#f0b429]" />
           <span className="truncate">Favorito mercado</span>
         </p>
         {favorite.sourceUrl ? (
@@ -46,7 +46,7 @@ export function BettingFavoriteCard({ match, variant = "featured" }: BettingFavo
             href={favorite.sourceUrl}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1 rounded-md border border-white/15 bg-black/35 px-2 py-1 text-[10px] font-black text-white/60 transition hover:border-[#62ffe6] hover:text-white"
+            className="inline-flex items-center gap-1 rounded-md border border-white/15 bg-black/35 px-2 py-1 text-[10px] font-black text-white/60 transition hover:border-[#d5ff3f] hover:text-white"
           >
             Fuente
             <ExternalLink className="h-3 w-3" />

@@ -52,9 +52,9 @@ export function MineView({
               </p>
             </div>
 
-            <div className="grid gap-3 min-[520px]:grid-cols-3 lg:min-w-[440px]">
-              <StatPlate label="Guardados" value={savedCount} tone="lime" icon={<Target className="h-4 w-4" />} />
-              <StatPlate label="Cerrados" value={lockedCount} tone="orange" icon={<Lock className="h-4 w-4" />} />
+            <div className="grid grid-cols-3 gap-2 lg:min-w-[440px] lg:gap-3">
+              <StatPlate label="Guardados" value={savedCount} tone="lime" icon={<Target className="h-3.5 w-3.5 sm:h-4 sm:w-4" />} />
+              <StatPlate label="Cerrados" value={lockedCount} tone="orange" icon={<Lock className="h-3.5 w-3.5 sm:h-4 sm:w-4" />} />
               <StatPlate label="Progreso" value={`${pct}%`} tone="cyan" />
             </div>
           </div>
@@ -118,12 +118,12 @@ function StatPlate({
         : "border-[#62ffe6]/55 bg-[#071d2a] text-[#62ffe6]";
 
   return (
-    <div className={`rounded-lg border px-4 py-3 ${color}`}>
-      <div className="flex items-center gap-2">
+    <div className={`rounded-lg border px-3 py-2.5 sm:px-4 sm:py-3 ${color}`}>
+      <div className="flex items-center gap-1.5">
         {icon}
-        <p className="text-[11px] font-black uppercase tracking-wider text-white/70">{label}</p>
+        <p className="text-[10px] font-black uppercase tracking-wider text-white/70 sm:text-[11px]">{label}</p>
       </div>
-      <p className="mt-2 text-3xl font-black tabular-nums text-current">{value}</p>
+      <p className="mt-1.5 text-2xl font-black tabular-nums text-current sm:mt-2 sm:text-3xl">{value}</p>
     </div>
   );
 }

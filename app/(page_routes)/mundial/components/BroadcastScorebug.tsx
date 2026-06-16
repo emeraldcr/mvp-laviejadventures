@@ -38,7 +38,7 @@ export function BroadcastScorebug({
         <ScorePlate value={homeScore} compact={compact} />
 
         <span className="grid min-h-11 min-w-12 place-items-center rounded-md border border-white/30 bg-white px-2 text-black shadow-[0_0_0_2px_rgba(153,255,30,0.28)]">
-          <Trophy className={cn("text-[#1d256b]", compact ? "h-4 w-4" : "h-5 w-5")} />
+          <Trophy className={cn("text-[#12351f]", compact ? "h-4 w-4" : "h-5 w-5")} />
           <span className="mt-0.5 text-[9px] font-black leading-none tracking-tight">WC26</span>
         </span>
 
@@ -76,7 +76,7 @@ function ScorePlate({ value, compact }: { value: number; compact: boolean }) {
   return (
     <span
       className={cn(
-        "grid min-h-11 place-items-center rounded-md bg-[#62ffe6] px-3 font-black tabular-nums text-[#06121c] shadow-[inset_0_-4px_0_rgba(0,0,0,0.14)]",
+        "grid min-h-11 place-items-center rounded-md bg-[#d5ff3f] px-3 font-black tabular-nums text-[#06121c] shadow-[inset_0_-4px_0_rgba(0,0,0,0.14)]",
         compact ? "min-w-10 text-2xl" : "min-w-12 text-3xl sm:text-4xl"
       )}
     >

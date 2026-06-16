@@ -61,17 +61,17 @@ export function FeaturedMatch({
   return (
     <section
       className={cn(
-        "relative min-w-0 overflow-hidden rounded-xl border bg-[#071018] shadow-[0_24px_70px_rgba(0,0,0,0.32)]",
+        "relative min-w-0 overflow-hidden rounded-xl border bg-[#07110d] shadow-[0_24px_70px_rgba(0,0,0,0.32)]",
         isLive
           ? "border-[#9dff34]/70"
           : isClosed
             ? "border-[#ffb15f]/55"
             : isActive
-              ? "border-[#62ffe6]/55"
+              ? "border-[#f0b429]/65"
               : "border-white/20"
       )}
     >
-      <div className="pointer-events-none absolute inset-0 opacity-45 [background-image:radial-gradient(circle_at_50%_0%,rgba(49,81,255,0.28),transparent_38%),linear-gradient(90deg,rgba(255,255,255,0.07)_1px,transparent_1px),linear-gradient(0deg,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:100%_100%,72px_72px,72px_72px]" />
+      <div className="pointer-events-none absolute inset-0 opacity-45 [background-image:linear-gradient(90deg,rgba(240,180,41,0.06)_1px,transparent_1px),linear-gradient(0deg,rgba(255,255,255,0.05)_1px,transparent_1px)] [background-size:72px_72px]" />
 
       {/* Header bar */}
       <div className="relative border-b border-white/12 bg-black/40 px-4 py-2.5">
@@ -82,7 +82,7 @@ export function FeaturedMatch({
             ) : isClosed ? (
               <Lock className="h-3 w-3 shrink-0 text-[#ffb15f]" />
             ) : (
-              <Clock3 className="h-3 w-3 shrink-0 text-[#62ffe6]" />
+              <Clock3 className="h-3 w-3 shrink-0 text-[#f0b429]" />
             )}
             <span className="text-[11px] font-black uppercase tracking-[0.18em] text-white/80">
               {isLive ? "En vivo" : isClosed ? "Cerrado" : "Pendiente"}
@@ -96,7 +96,7 @@ export function FeaturedMatch({
             {isActive && !isLive && (
               <div className="flex items-center gap-1.5">
                 <Timer className="h-3.5 w-3.5 text-[#d5ff3f]" />
-                <span className="text-sm font-black tabular-nums text-[#62ffe6]">{activeCountdown}</span>
+                <span className="text-sm font-black tabular-nums text-[#f0b429]">{activeCountdown}</span>
               </div>
             )}
             <p className="text-[11px] font-bold text-white/40">{formatKickoff(match.kickoffAt)}</p>
@@ -139,8 +139,8 @@ export function FeaturedMatch({
               </div>
             )
           ) : (
-            <div className="flex items-center gap-2 rounded-lg border border-[#62ffe6]/35 bg-[#071d2a]/75 px-3 py-2.5 text-[#c7fffa]">
-              <Clock3 className="h-4 w-4 shrink-0 text-[#62ffe6]" />
+            <div className="flex items-center gap-2 rounded-lg border border-[#f0b429]/35 bg-[#1a2206]/75 px-3 py-2.5 text-[#fff1b8]">
+              <Clock3 className="h-4 w-4 shrink-0 text-[#f0b429]" />
               <p className="text-sm font-bold">
                 El pick se bloquea cuando inicia el partido. Revisa y guarda antes del cierre.
               </p>
@@ -163,7 +163,7 @@ export function FeaturedMatch({
                 <p className="text-sm font-black uppercase text-white">{teamCode(match.homeTeam)}</p>
               </div>
               <div className="flex flex-col items-center gap-1">
-                <Trophy className="h-4 w-4 text-[#1d256b]" />
+                <Trophy className="h-4 w-4 text-[#f0b429]" />
                 <span className="text-[9px] font-black tracking-wide text-white/25">WC26</span>
                 <span className="mt-0.5 text-base font-black text-white/20">vs</span>
               </div>
@@ -252,7 +252,7 @@ export function FeaturedMatch({
           {/* Prediction summary + save */}
           <div className="mt-4 flex flex-col gap-3 rounded-lg border border-white/15 bg-black/35 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
-              <p className="text-xs font-black uppercase tracking-[0.18em] text-[#62ffe6]">
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-[#f0b429]">
                 {isClosed ? "Tu pick" : "Resultado elegido"}
               </p>
               <p className="mt-1 break-words text-2xl font-black text-white sm:text-3xl">
@@ -335,7 +335,7 @@ function PickTeamCard({
   onChange: (v: number) => void;
 }) {
   return (
-    <div className="flex min-w-0 flex-col items-center gap-3 rounded-lg border border-white/15 bg-[#05070d]/80 px-3 py-4 transition-all focus-within:border-[#62ffe6]">
+    <div className="flex min-w-0 flex-col items-center gap-3 rounded-lg border border-white/15 bg-[#06100b]/85 px-3 py-4 transition-all focus-within:border-[#f0b429]">
       <Flag team={team} size="lg" className="rounded-sm" />
       <div className="flex flex-col items-center gap-0.5">
         <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#d5ff3f]">{label}</p>
@@ -345,7 +345,7 @@ function PickTeamCard({
       </div>
       <div className="flex flex-col items-center gap-1">
         <ScoreInput label={team} value={pickScore} disabled={disabled} featured onChange={onChange} />
-        <span className="text-[9px] font-black uppercase tracking-[0.22em] text-[#62ffe6]/55">
+        <span className="text-[9px] font-black uppercase tracking-[0.22em] text-[#f0b429]/60">
           {isClosed ? "Tu pick" : "Tu predicción"}
         </span>
       </div>
@@ -369,7 +369,7 @@ function LiveTimeline({ match }: { match: MundialMatch }) {
       </div>
 
       {match.liveNote && (
-        <p className="mb-3 rounded-md border border-white/10 bg-[#071d2a]/75 px-3 py-2 text-sm font-bold text-[#c7fffa]">
+        <p className="mb-3 rounded-md border border-white/10 bg-[#10240b]/75 px-3 py-2 text-sm font-bold text-[#e7ffc0]">
           {match.liveNote}
         </p>
       )}
@@ -385,7 +385,7 @@ function LiveTimeline({ match }: { match: MundialMatch }) {
                 key={event.id}
                 className="grid grid-cols-[3.25rem_minmax(0,1fr)] gap-2 rounded-md border border-white/10 bg-[#05070d]/80 px-3 py-2"
               >
-                <span className="rounded bg-[#3151ff] px-2 py-1 text-center text-xs font-black tabular-nums text-white">
+                <span className="rounded bg-[#174826] px-2 py-1 text-center text-xs font-black tabular-nums text-white">
                   {event.minute !== null ? `${event.minute}'` : "--"}
                 </span>
                 <div className="min-w-0">

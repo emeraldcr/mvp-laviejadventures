@@ -28,7 +28,7 @@ import { PlayerPickerModal } from "./components/PlayerPickerModal";
 import { PinModal } from "./components/PinModal";
 
 function ViewIcon({ id, active }: { id: ViewMode; active: boolean }) {
-  const className = cn("h-4 w-4 shrink-0", active ? "text-[#62ffe6]" : "text-white/55");
+  const className = cn("h-4 w-4 shrink-0", active ? "text-[#07110b]" : "text-white/55");
 
   if (id === "next") return <Target className={className} />;
   if (id === "mine") return <ListChecks className={className} />;
@@ -107,11 +107,11 @@ export default function MundialClient() {
   }
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#102b10] text-white [background-image:radial-gradient(circle_at_50%_-10%,rgba(157,255,52,0.26),transparent_34%),linear-gradient(135deg,#1b2f86_0%,#2c256d_30%,#0b3320_68%,#193e0f_100%)]">
-      <header className="sticky top-0 z-20 border-b border-white/15 bg-[#090915]/95 backdrop-blur-md">
+    <main className="min-h-screen overflow-x-hidden bg-[#07110b] text-white [background-image:linear-gradient(90deg,rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(0deg,rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(135deg,#06100b_0%,#0b2216_45%,#14351d_74%,#07110b_100%)] [background-size:96px_96px,96px_96px,100%_100%]">
+      <header className="sticky top-0 z-20 border-b border-[#f0b429]/20 bg-[#060a08]/95 backdrop-blur-md">
         <div className="mx-auto flex w-full max-w-[1600px] items-center gap-2 px-3 py-1.5 sm:px-5">
           {/* Logo */}
-          <span className="grid h-7 w-7 shrink-0 place-items-center rounded border border-white/20 bg-white text-[#17206b]">
+          <span className="grid h-7 w-7 shrink-0 place-items-center rounded border border-[#f0b429]/40 bg-[#f0b429] text-[#07110b]">
             <Trophy className="h-3.5 w-3.5" />
           </span>
 
@@ -119,20 +119,22 @@ export default function MundialClient() {
           <div className="flex min-w-0 flex-1 gap-1">
             {VIEW_OPTIONS.map((option) => {
               const active = viewMode === option.id;
+              const shortLabels: Record<string, string> = { next: "Ahora", mine: "Picks", players: "Tabla" };
               return (
                 <button
                   key={option.id}
                   type="button"
                   onClick={() => setViewMode(option.id)}
                   className={cn(
-                    "inline-flex h-8 min-w-0 items-center justify-center gap-1.5 rounded border px-2 text-xs font-black uppercase tracking-wide transition sm:px-3",
+                    "inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-1 rounded border px-1.5 font-black uppercase tracking-wide transition sm:flex-none sm:gap-1.5 sm:px-3",
                     active
-                      ? "border-[#62ffe6] bg-[#3151ff] text-white"
+                      ? "border-[#f0b429] bg-[#f0b429] text-[#07110b] shadow-[0_0_18px_rgba(240,180,41,0.28)]"
                       : "border-white/12 bg-white/4 text-white/55 hover:border-white/25 hover:text-white/80"
                   )}
                 >
                   <ViewIcon id={option.id} active={active} />
-                  <span className="truncate">{option.label}</span>
+                  <span className="text-[10px] sm:hidden">{shortLabels[option.id]}</span>
+                  <span className="hidden text-xs sm:inline">{option.label}</span>
                 </button>
               );
             })}
@@ -164,7 +166,7 @@ export default function MundialClient() {
               )}
               aria-label="Menú"
             >
-              <UserRound className="h-3.5 w-3.5 text-[#62ffe6]" />
+              <UserRound className="h-3.5 w-3.5 text-[#f0b429]" />
               <span className="hidden max-w-28 truncate sm:inline">{playerName || "Jugador"}</span>
               <MoreHorizontal className="h-3.5 w-3.5" />
             </button>
@@ -172,14 +174,14 @@ export default function MundialClient() {
             {showHeaderMenu && (
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setShowHeaderMenu(false)} />
-                <div className="absolute right-0 top-full z-20 mt-1.5 w-56 overflow-hidden rounded-lg border border-white/15 bg-[#0d1020] shadow-[0_16px_48px_rgba(0,0,0,0.7)]">
+                <div className="absolute right-0 top-full z-20 mt-1.5 w-56 overflow-hidden rounded-lg border border-[#f0b429]/20 bg-[#08130d] shadow-[0_16px_48px_rgba(0,0,0,0.7)]">
                   {/* Player */}
                   <button
                     type="button"
                     onClick={() => { openPlayerPicker(); setShowHeaderMenu(false); }}
                     className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left transition hover:bg-white/8"
                   >
-                    <UserRound className="h-4 w-4 shrink-0 text-[#62ffe6]" />
+                    <UserRound className="h-4 w-4 shrink-0 text-[#f0b429]" />
                     <div className="min-w-0">
                       <p className="text-[10px] font-black uppercase tracking-wider text-white/35">Jugador</p>
                       <p className="truncate text-sm font-black text-white">{playerName || "—"}</p>
@@ -251,7 +253,7 @@ export default function MundialClient() {
         {isLoading ? (
           <div className="grid min-h-72 place-items-center rounded-lg border border-dashed border-white/20 bg-black/35 p-8 text-center">
             <div>
-              <Loader2 className="mx-auto h-10 w-10 animate-spin text-[#62ffe6]" />
+              <Loader2 className="mx-auto h-10 w-10 animate-spin text-[#f0b429]" />
               <p className="mt-4 text-base font-black text-white/75">Cargando quiniela...</p>
             </div>
           </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Delete, Loader2, Lock, ShieldCheck } from "lucide-react";
 import { cn } from "../utils";
 
@@ -21,7 +21,7 @@ export function PinModal({ playerName, mode: initialMode, onSuccess, onChangePla
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  async function handleComplete(pin: string) {
+  const handleComplete = useCallback(async function handleComplete(pin: string) {
     if (mode === "set") {
       if (step === "enter") {
         setFirstPin(pin);
@@ -86,20 +86,41 @@ export function PinModal({ playerName, mode: initialMode, onSuccess, onChangePla
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [firstPin, mode, onSuccess, playerName, step]);
 
-  function pressDigit(d: string) {
+  const pressDigit = useCallback(function pressDigit(d: string) {
     if (isLoading || digits.length >= 4) return;
     const next = digits + d;
     setDigits(next);
     setError("");
     if (next.length === 4) void handleComplete(next);
-  }
+  }, [digits, handleComplete, isLoading]);
 
-  function pressDelete() {
+  const pressDelete = useCallback(function pressDelete() {
+    if (isLoading) return;
     setDigits((d) => d.slice(0, -1));
     setError("");
-  }
+  }, [isLoading]);
+
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+
+      if (/^\d$/.test(event.key)) {
+        event.preventDefault();
+        pressDigit(event.key);
+        return;
+      }
+
+      if (event.key === "Backspace" || event.key === "Delete") {
+        event.preventDefault();
+        pressDelete();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [pressDelete, pressDigit]);
 
   const title =
     mode === "set"

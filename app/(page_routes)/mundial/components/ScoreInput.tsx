@@ -11,15 +11,15 @@ type ScoreInputProps = {
 const inputBase = cn(
   "min-w-0 rounded-lg border text-center font-black tabular-nums outline-none transition-all",
   "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
-  "border-[#62ffe6] bg-[#62ffe6] text-[#06121c] shadow-[inset_0_-6px_0_rgba(0,0,0,0.14),0_10px_24px_rgba(98,255,230,0.14)]",
-  "focus:border-white focus:ring-2 focus:ring-[#62ffe6]/30",
+  "border-[#d5ff3f] bg-[#d5ff3f] text-[#06121c] shadow-[inset_0_-6px_0_rgba(0,0,0,0.14),0_10px_24px_rgba(213,255,63,0.14)]",
+  "focus:border-white focus:ring-2 focus:ring-[#d5ff3f]/30",
   "disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/10 disabled:text-white/35"
 );
 
 const btnBase = cn(
   "flex select-none items-center justify-center rounded-lg border font-black transition-all active:scale-95",
   "border-white/15 bg-black/65 text-[#d5ff3f] shadow-[inset_0_-4px_0_rgba(255,255,255,0.06)]",
-  "hover:border-[#d5ff3f] hover:bg-[#17206b] hover:text-white",
+  "hover:border-[#d5ff3f] hover:bg-[#10240b] hover:text-white",
   "disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-white/15 disabled:hover:bg-black/65 disabled:hover:text-[#d5ff3f]"
 );
 

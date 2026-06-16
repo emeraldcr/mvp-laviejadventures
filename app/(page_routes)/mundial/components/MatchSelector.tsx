@@ -88,7 +88,7 @@ export function MatchSelector({
   const tabMatches = tab === "live" ? liveMatches : tab === "today" ? todayMatches : [];
 
   return (
-    <div className="overflow-hidden rounded-lg border border-white/12 bg-[#06140f] shadow-[0_4px_20px_rgba(0,0,0,0.22)]">
+    <div className="overflow-hidden rounded-lg border border-[#f0b429]/20 bg-[#06140f] shadow-[0_4px_20px_rgba(0,0,0,0.22)]">
       <div className="flex items-center gap-1.5 border-b border-white/10 bg-black/30 px-3 py-2">
         <TabButton
           active={tab === "live"}
@@ -138,7 +138,7 @@ export function MatchSelector({
           <div className="max-h-[44vh] space-y-4 overflow-y-auto pr-0.5">
             {upcomingByDate.map((group) => (
               <div key={group.dateKey}>
-                <p className="mb-2 text-[10px] font-black uppercase tracking-[0.2em] text-[#d5ff3f]">
+                <p className="mb-2 text-[10px] font-black uppercase tracking-[0.2em] text-[#f0b429]">
                   {group.label}
                 </p>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
@@ -241,7 +241,7 @@ function CompactMatchCard({
     : closed
       ? "text-[#ffb15f]"
       : active
-        ? "text-[#62ffe6]"
+        ? "text-[#f0b429]"
         : "text-white/40";
 
   const statusLabel = live
@@ -262,12 +262,12 @@ function CompactMatchCard({
         "group rounded-lg border p-2.5 text-left transition-all",
         fill ? "w-full" : "w-[200px] shrink-0",
         selected
-          ? "border-[#d5ff3f] bg-[#17206b] shadow-[0_0_18px_rgba(213,255,63,0.22)]"
+          ? "border-[#f0b429] bg-[#1f2a0b] shadow-[0_0_18px_rgba(240,180,41,0.22)]"
           : live
             ? "border-[#9dff34]/65 bg-[#10240b]"
             : active
-              ? "border-[#62ffe6]/55 bg-[#071d2a]"
-              : "border-white/10 bg-black/35 hover:border-[#62ffe6]/50 hover:bg-black/50"
+              ? "border-[#f0b429]/65 bg-[#1a2206]"
+              : "border-white/10 bg-black/35 hover:border-[#f0b429]/50 hover:bg-black/50"
       )}
     >
       {/* Status row */}

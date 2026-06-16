@@ -166,7 +166,7 @@ function QuestionCard({
               ? "bg-gradient-to-r from-[#f0b429] to-[#fbbf24]"
               : isClosed
                 ? "bg-white/8"
-                : "bg-gradient-to-r from-[#3151ff]/60 to-[#6366f1]/40"
+                : "bg-gradient-to-r from-[#2f7d32]/70 to-[#f0b429]/45"
       )} />
 
       <div className={compact ? "p-3" : "p-4"}>
@@ -442,7 +442,7 @@ export function StatBetsPanel({
     return (
       <section className="overflow-hidden rounded-2xl border border-[#f0b429]/20 bg-[#0b0d14] shadow-[0_24px_60px_rgba(0,0,0,0.5)]">
         {/* header */}
-        <div className="relative overflow-hidden border-b border-white/8 bg-gradient-to-r from-[#1a1030] to-[#0e1520] px-4 py-3">
+        <div className="relative overflow-hidden border-b border-white/8 bg-gradient-to-r from-[#16220c] to-[#07130d] px-4 py-3">
           <div className="pointer-events-none absolute inset-0 opacity-30 [background-image:radial-gradient(ellipse_at_top_left,rgba(240,180,41,0.2),transparent_60%)]" />
           <div className="relative flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-2.5">
@@ -569,8 +569,8 @@ export function StatBetsPanel({
   return (
     <section className="overflow-hidden rounded-2xl border border-white/10 bg-[#0b0d14] shadow-[0_32px_80px_rgba(0,0,0,0.6)]">
       {/* header */}
-      <div className="relative overflow-hidden border-b border-white/8 bg-gradient-to-r from-[#1a1030] via-[#111827] to-[#0e1520] px-5 py-4">
-        <div className="pointer-events-none absolute inset-0 [background-image:radial-gradient(ellipse_at_top_left,rgba(240,180,41,0.15),transparent_55%),radial-gradient(ellipse_at_bottom_right,rgba(99,102,241,0.1),transparent_55%)]" />
+      <div className="relative overflow-hidden border-b border-white/8 bg-gradient-to-r from-[#16220c] via-[#111827] to-[#07130d] px-5 py-4">
+        <div className="pointer-events-none absolute inset-0 [background-image:radial-gradient(ellipse_at_top_left,rgba(240,180,41,0.15),transparent_55%),radial-gradient(ellipse_at_bottom_right,rgba(34,197,94,0.1),transparent_55%)]" />
 
         <div className="relative flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">

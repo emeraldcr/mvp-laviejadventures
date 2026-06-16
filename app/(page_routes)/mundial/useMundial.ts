@@ -14,6 +14,10 @@ import {
   normalizeName,
 } from "./utils";
 
+const LIVE_REFRESH_MS = 4_000;
+const ATTENTION_REFRESH_MIN_MS = 1_000;
+const CROSS_TAB_SYNC_KEY = "mundial-sync-version";
+
 export function useMundial() {
   const [playerName, setPlayerName] = useState("");
   const [showPlayerPicker, setShowPlayerPicker] = useState(false);
@@ -22,6 +26,7 @@ export function useMundial() {
   const [matches, setMatches] = useState<MundialMatch[]>([]);
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [players, setPlayers] = useState<PlayerProgress[]>([]);
+  const [serverLeaderboard, setServerLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [draftOverridesByPlayer, setDraftOverridesByPlayer] = useState<Record<string, Record<string, Draft>>>({});
   const [viewMode, setViewMode] = useState<ViewMode>("next");
   const [nowMs, setNowMs] = useState(0);
@@ -34,6 +39,9 @@ export function useMundial() {
   const [showPinModal, setShowPinModal] = useState(false);
   const [pinMode, setPinMode] = useState<"set" | "verify">("verify");
   const pinCheckedRef = useRef<Set<string>>(new Set());
+  const playerNameRef = useRef("");
+  const dataVersionRef = useRef(0);
+  const lastRefreshAtRef = useRef(0);
 
   const playerKey = useMemo(() => normalizeKey(playerName), [playerName]);
   const registeredNames = useMemo(() => players.map((p) => p.playerName).sort(), [players]);
@@ -143,7 +151,7 @@ export function useMundial() {
     });
   }, [drafts, nowMs, orderedMatches]);
 
-  const leaderboard = useMemo<LeaderboardEntry[]>(() => {
+  const computedLeaderboard = useMemo<LeaderboardEntry[]>(() => {
     const playerMap = new Map<string, LeaderboardEntry>();
 
     for (const pred of predictions) {
@@ -182,41 +190,75 @@ export function useMundial() {
       (a, b) => b.totalPoints - a.totalPoints || a.playerName.localeCompare(b.playerName)
     );
   }, [predictions, matchById]);
+  const leaderboard = serverLeaderboard.length ? serverLeaderboard : computedLeaderboard;
 
-  async function readQuiniela() {
-    const response = await fetchWithTimeout(API_URL, { cache: "no-store" });
+  async function readQuiniela(name: string) {
+    const trimmed = normalizeName(name);
+    const url = trimmed ? `${API_URL}?playerName=${encodeURIComponent(trimmed)}` : API_URL;
+    const response = await fetchWithTimeout(url, { cache: "no-store" });
     if (!response.ok) throw new Error("No se pudo cargar la quiniela.");
     return (await response.json()) as PredictionsResponse;
   }
 
-  const loadQuiniela = useCallback(async () => {
-    setIsLoading(true);
-    setError("");
-    try {
-      const data = await readQuiniela();
-      setMatches(data.matches ?? []);
-      setPredictions(data.predictions ?? []);
-      setPlayers(data.players ?? []);
-    } catch (err) {
-      console.error(err);
-      setError("No pude cargar Mongo en este momento.");
-    } finally {
-      setIsLoading(false);
-    }
+  const applyQuinielaData = useCallback((data: PredictionsResponse) => {
+    setMatches(data.matches ?? []);
+    setPredictions(data.predictions ?? []);
+    setPlayers(data.players ?? []);
+    setServerLeaderboard(data.leaderboard ?? []);
   }, []);
+
+  const refreshQuiniela = useCallback(async ({
+    showLoading = false,
+    minIntervalMs = 0,
+    suppressErrors = !showLoading,
+  }: {
+    showLoading?: boolean;
+    minIntervalMs?: number;
+    suppressErrors?: boolean;
+  } = {}) => {
+    const now = Date.now();
+    if (minIntervalMs > 0 && now - lastRefreshAtRef.current < minIntervalMs) return;
+
+    const requestPlayerName = normalizeName(playerNameRef.current);
+    const requestVersion = dataVersionRef.current;
+    lastRefreshAtRef.current = now;
+
+    if (showLoading) {
+      setIsLoading(true);
+      setError("");
+    }
+
+    try {
+      const data = await readQuiniela(requestPlayerName);
+      const stillSamePlayer = normalizeName(playerNameRef.current) === requestPlayerName;
+      const stillSameVersion = dataVersionRef.current === requestVersion;
+      if (!stillSamePlayer || !stillSameVersion) return;
+      applyQuinielaData(data);
+    } catch (err) {
+      if (!suppressErrors) {
+        console.error(err);
+        setError("No pude cargar Mongo en este momento.");
+      }
+    } finally {
+      const stillSamePlayer = normalizeName(playerNameRef.current) === requestPlayerName;
+      const stillSameVersion = dataVersionRef.current === requestVersion;
+      if (showLoading && stillSamePlayer && stillSameVersion) setIsLoading(false);
+    }
+  }, [applyQuinielaData]);
+
+  const loadQuiniela = useCallback(async () => {
+    await refreshQuiniela({ showLoading: true, suppressErrors: false });
+  }, [refreshQuiniela]);
 
   const pollPredictions = useCallback(async () => {
-    try {
-      const data = await readQuiniela();
-      setMatches(data.matches ?? []);
-      setPredictions(data.predictions ?? []);
-      setPlayers(data.players ?? []);
-    } catch {
-      // silently ignore poll failures
-    }
-  }, []);
+    await refreshQuiniela({ suppressErrors: true });
+  }, [refreshQuiniela]);
 
-  useInterval(pollPredictions, 30_000);
+  useInterval(pollPredictions, savingId || isSavingBulk ? null : LIVE_REFRESH_MS);
+
+  useEffect(() => {
+    playerNameRef.current = playerName;
+  }, [playerName]);
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
@@ -258,7 +300,34 @@ export function useMundial() {
   useEffect(() => {
     const timeout = window.setTimeout(() => { void loadQuiniela(); }, 0);
     return () => window.clearTimeout(timeout);
-  }, [loadQuiniela]);
+  }, [loadQuiniela, playerName]);
+
+  useEffect(() => {
+    function refreshWhenActive() {
+      if (document.visibilityState !== "visible") return;
+      void refreshQuiniela({ minIntervalMs: ATTENTION_REFRESH_MIN_MS, suppressErrors: true });
+    }
+
+    function refreshFromAnotherTab(event: StorageEvent) {
+      if (event.key === CROSS_TAB_SYNC_KEY) void refreshQuiniela({ suppressErrors: true });
+    }
+
+    window.addEventListener("focus", refreshWhenActive);
+    window.addEventListener("online", refreshWhenActive);
+    window.addEventListener("storage", refreshFromAnotherTab);
+    document.addEventListener("visibilitychange", refreshWhenActive);
+
+    return () => {
+      window.removeEventListener("focus", refreshWhenActive);
+      window.removeEventListener("online", refreshWhenActive);
+      window.removeEventListener("storage", refreshFromAnotherTab);
+      document.removeEventListener("visibilitychange", refreshWhenActive);
+    };
+  }, [refreshQuiniela]);
+
+  useEffect(() => {
+    void refreshQuiniela({ minIntervalMs: ATTENTION_REFRESH_MIN_MS, suppressErrors: true });
+  }, [refreshQuiniela, viewMode]);
 
   useEffect(() => {
     const tick = () => setNowMs(Date.now());
@@ -335,6 +404,9 @@ export function useMundial() {
 
     setError("");
     setSuccess("");
+    playerNameRef.current = trimmed;
+    dataVersionRef.current += 1;
+    setPredictions([]);
     setPlayerName(trimmed);
     setTrustedPlayerKey(key);
     setPlayerPickerRequired(false);
@@ -452,6 +524,8 @@ export function useMundial() {
     const validationError = validatePrediction(match);
     if (validationError) { setError(validationError); return; }
 
+    playerNameRef.current = trimmed;
+    dataVersionRef.current += 1;
     setSavingId(match.id);
     setError("");
     setSuccess("");
@@ -461,8 +535,9 @@ export function useMundial() {
       setPlayerName(trimmed);
       rememberTrustedPlayer(trimmed);
       storeSession(trimmed);
+      window.localStorage.setItem(CROSS_TAB_SYNC_KEY, String(Date.now()));
+      await refreshQuiniela({ suppressErrors: true });
       setSuccess(`Guardado: ${match.homeTeam} vs ${match.awayTeam}.`);
-      void loadQuiniela();
     } catch (err) {
       console.error(err);
       setError(err instanceof Error ? err.message : "No pude guardar en Mongo.");
@@ -484,6 +559,8 @@ export function useMundial() {
     const validationError = dirtyMatches.map(validatePrediction).find(Boolean);
     if (validationError) { setError(validationError); return; }
 
+    playerNameRef.current = trimmed;
+    dataVersionRef.current += 1;
     setIsSavingBulk(true);
     setError("");
     setSuccess("");
@@ -496,8 +573,9 @@ export function useMundial() {
       setPlayerName(trimmed);
       rememberTrustedPlayer(trimmed);
       storeSession(trimmed);
+      window.localStorage.setItem(CROSS_TAB_SYNC_KEY, String(Date.now()));
+      await refreshQuiniela({ suppressErrors: true });
       setSuccess(`${data.predictions.length} resultado guardado.`);
-      void loadQuiniela();
     } catch (err) {
       console.error(err);
       setError(err instanceof Error ? err.message : "No pude guardar en Mongo.");

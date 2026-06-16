@@ -70,6 +70,7 @@ export type PredictionsResponse = {
   matches: MundialMatch[];
   predictions: Prediction[];
   players: PlayerProgress[];
+  leaderboard?: LeaderboardEntry[];
 };
 
 export type LeaderboardEntry = {
