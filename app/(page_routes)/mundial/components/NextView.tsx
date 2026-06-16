@@ -86,7 +86,9 @@ export function NextView({
               predictions={predictions}
               playerName={playerName}
             />
+          </div>
 
+          <div className="min-w-0 xl:col-span-2">
             <StatBetsPanel
               matchId={featuredMatch.id}
               playerName={playerName}

@@ -386,12 +386,24 @@ export function StatBetsPanel({
     return () => window.clearTimeout(t);
   }, [questions.length]);
 
-  function goNext(fromId: string) {
-    const next = questions.findIndex((q, i) => {
-      if (i <= activeIndex || q.id === fromId || q.closed || q.resolved) return false;
-      return !myBets[q.id];
-    });
-    setActiveIndex(next >= 0 ? next : Math.min(activeIndex + 1, questions.length - 1));
+  useEffect(() => {
+    if (!questions.length) return;
+    const current = questions[activeIndex];
+    if (current && !myBets[current.id] && !current.closed && !current.resolved) return;
+
+    const next = questions.findIndex((q) => !myBets[q.id] && !q.closed && !q.resolved);
+    if (next >= 0) setActiveIndex(next);
+  }, [activeIndex, myBets, questions]);
+
+  function nextPendingIndex(fromId: string, bets: Record<string, string>) {
+    const fromIndex = questions.findIndex((q) => q.id === fromId);
+    const canAnswer = (q: StatQuestion) => !bets[q.id] && !q.closed && !q.resolved;
+
+    for (let i = Math.max(fromIndex + 1, 0); i < questions.length; i++) {
+      if (canAnswer(questions[i])) return i;
+    }
+
+    return questions.findIndex(canAnswer);
   }
 
   async function placeBet(questionId: string, optionId: string, advance = false) {
@@ -405,8 +417,12 @@ export function StatBetsPanel({
         body: JSON.stringify({ questionId, matchId, playerName, optionId }),
       });
       if (res.ok) {
-        setMyBets((p) => ({ ...p, [questionId]: optionId }));
-        if (advance) goNext(questionId);
+        const nextBets = { ...myBets, [questionId]: optionId };
+        setMyBets(nextBets);
+        if (advance) {
+          const nextIndex = nextPendingIndex(questionId, nextBets);
+          setActiveIndex(nextIndex >= 0 ? nextIndex : 0);
+        }
       } else {
         const body = await res.json().catch(() => ({}));
         setErrors((p) => ({ ...p, [questionId]: body.error ?? "Error guardando." }));
@@ -427,38 +443,42 @@ export function StatBetsPanel({
     return acc;
   }, 0);
   const progressPct = questions.length > 0 ? Math.round((answeredCount / questions.length) * 100) : 0;
-  const activeQuestion = questions[activeIndex] ?? questions[0];
-
-  // For mini variant: only show unanswered, open questions in the slider
+  // For mini variant: only show one unanswered question at a time.
   const pendingQuestions = questions.filter((q) => !myBets[q.id] && !q.closed && !q.resolved);
-  const clampedMiniIndex = Math.min(activeIndex, Math.max(pendingQuestions.length - 1, 0));
-  const activePendingQuestion = pendingQuestions[clampedMiniIndex] ?? null;
+  const activePendingQuestion =
+    pendingQuestions.find((q) => questions.indexOf(q) >= activeIndex) ?? pendingQuestions[0] ?? null;
+  const activeQuestionNumber = activePendingQuestion ? questions.indexOf(activePendingQuestion) + 1 : answeredCount;
+  const clampedMiniIndex = activePendingQuestion ? pendingQuestions.indexOf(activePendingQuestion) : 0;
 
   // ── MINI VARIANT ────────────────────────────────────────────────────────
 
   if (variant === "mini") {
-    const allDone = pendingQuestions.length === 0 && questions.length > 0;
+    const allDone = answeredCount === questions.length && questions.length > 0;
+    const unavailable = !allDone && pendingQuestions.length === 0;
 
     return (
       <section className="overflow-hidden rounded-2xl border border-[#f0b429]/20 bg-[#0b0d14] shadow-[0_24px_60px_rgba(0,0,0,0.5)]">
         {/* header */}
-        <div className="relative overflow-hidden border-b border-white/8 bg-gradient-to-r from-[#16220c] to-[#07130d] px-4 py-3">
+        <div className="relative overflow-hidden border-b border-white/8 bg-gradient-to-r from-[#16220c] to-[#07130d] px-4 py-4 sm:px-5">
           <div className="pointer-events-none absolute inset-0 opacity-30 [background-image:radial-gradient(ellipse_at_top_left,rgba(240,180,41,0.2),transparent_60%)]" />
           <div className="relative flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-2.5">
-              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-[#f0b429] to-[#e8a30a] shadow-[0_0_16px_rgba(240,180,41,0.4)]">
-                <Zap className="h-4 w-4 text-[#0b0d14]" />
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#f0b429] to-[#e8a30a] shadow-[0_0_16px_rgba(240,180,41,0.4)]">
+                <Zap className="h-5 w-5 text-[#0b0d14]" />
               </span>
               <div className="min-w-0">
                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#f0b429]/80">Apuestas extra</p>
-                <p className="truncate text-sm font-black text-white">
+                <p className="truncate text-lg font-black text-white">
                   {matchLabel ?? "Preguntas del partido"}
                 </p>
               </div>
             </div>
 
             <div className="flex shrink-0 items-center gap-1.5">
-              {answeredCount > 0 && (
+              <span className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-xs font-black tabular-nums text-emerald-400">
+                {answeredCount}/{questions.length}
+              </span>
+              {false && answeredCount > 0 && (
                 <span className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2 py-1 text-[11px] font-black tabular-nums text-emerald-400">
                   {answeredCount} ✓
                 </span>
@@ -479,7 +499,7 @@ export function StatBetsPanel({
         </div>
 
         {/* body */}
-        <div className="p-3">
+        <div className="p-4 sm:p-5">
           {allDone ? (
             /* all done state */
             <div className="flex items-center gap-2.5 rounded-xl border border-emerald-500/25 bg-emerald-500/8 px-3 py-3">
@@ -494,11 +514,17 @@ export function StatBetsPanel({
           ) : activePendingQuestion ? (
             <>
               {/* pending count pill */}
-              <p className="mb-2 text-[10px] font-black uppercase tracking-wider text-white/35">
-                {pendingQuestions.length} pendiente{pendingQuestions.length !== 1 ? "s" : ""}
-              </p>
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                <p className="text-[10px] font-black uppercase tracking-wider text-white/35">
+                  Pregunta {activeQuestionNumber} de {questions.length}
+                </p>
+                <p className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-black text-white/45">
+                  {pendingQuestions.length} pendiente{pendingQuestions.length !== 1 ? "s" : ""}
+                </p>
+              </div>
 
               <QuestionCard
+                key={activePendingQuestion.id}
                 question={activePendingQuestion}
                 index={questions.indexOf(activePendingQuestion)}
                 total={questions.length}
@@ -506,7 +532,7 @@ export function StatBetsPanel({
                 saving={saving === activePendingQuestion.id}
                 error={errors[activePendingQuestion.id] ?? ""}
                 compact
-                onBet={(optId) => void placeBet(activePendingQuestion.id, optId)}
+                onBet={(optId) => void placeBet(activePendingQuestion.id, optId, true)}
               />
 
               {!playerName && (
@@ -520,7 +546,7 @@ export function StatBetsPanel({
               )}
 
               {/* navigation — only render if more than 1 pending */}
-              {pendingQuestions.length > 1 && (
+              {false && pendingQuestions.length > 1 && (
                 <div className="mt-3 flex items-center gap-2">
                   <button
                     type="button"
@@ -558,6 +584,16 @@ export function StatBetsPanel({
                 </div>
               )}
             </>
+          ) : unavailable ? (
+            <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-4">
+              <Lock className="h-5 w-5 shrink-0 text-white/35" />
+              <div>
+                <p className="text-sm font-black text-white/70">No hay preguntas abiertas para responder.</p>
+                <p className="text-xs font-bold text-white/40">
+                  {answeredCount}/{questions.length} preguntas respondidas
+                </p>
+              </div>
+            </div>
           ) : null}
         </div>
       </section>

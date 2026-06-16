@@ -21,11 +21,6 @@ function normalizeKey(value: string) {
   return value.trim().toUpperCase();
 }
 
-function kickoffTime(kickoffAt: string) {
-  const t = new Date(kickoffAt).getTime();
-  return Number.isNaN(t) ? Number.POSITIVE_INFINITY : t;
-}
-
 export async function GET(req: NextRequest) {
   try {
     const matchId = req.nextUrl.searchParams.get("matchId") ?? "";
@@ -67,7 +62,6 @@ export async function GET(req: NextRequest) {
     }
 
     const db = await getDb();
-    const now = new Date();
 
     const [questions, myBets, allMatchBets] = await Promise.all([
       db.collection(STAT_QUESTIONS_COLLECTION).find({ matchId }).sort({ createdAt: 1 }).toArray(),
@@ -96,9 +90,6 @@ export async function GET(req: NextRequest) {
       (a, b) => b.earned - a.earned || b.total - a.total || a.playerName.localeCompare(b.playerName)
     );
 
-    const matchKickoff = kickoffTime(MUNDIAL_MATCHES.find((m) => m.id === matchId)?.kickoffAt ?? "");
-    const isClosed = matchKickoff <= now.getTime();
-
     return NextResponse.json({
       questions: questions.map((q) => ({
         id: q.id,
@@ -107,7 +98,7 @@ export async function GET(req: NextRequest) {
         correctOptionId: q.correctOptionId ?? null,
         resolved: Boolean(q.correctOptionId),
         pointValue: q.pointValue ?? 1,
-        closed: isClosed,
+        closed: Boolean(q.closed || q.closedAt),
       })),
       myBets: myBets.map((b) => ({
         questionId: b.questionId,
@@ -138,10 +129,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Partido no encontrado." }, { status: 404 });
     }
 
-    if (kickoffTime(match.kickoffAt) <= Date.now()) {
-      return NextResponse.json({ error: "El partido ya cerro. No se pueden cambiar apuestas." }, { status: 423 });
-    }
-
     const db = await getDb();
     const question = await db.collection(STAT_QUESTIONS_COLLECTION).findOne({ id: questionId, matchId });
 
@@ -150,6 +137,9 @@ export async function POST(req: NextRequest) {
     }
     if (question.correctOptionId) {
       return NextResponse.json({ error: "Esta pregunta ya fue resuelta." }, { status: 423 });
+    }
+    if (question.closed || question.closedAt) {
+      return NextResponse.json({ error: "Esta pregunta esta cerrada." }, { status: 423 });
     }
 
     const validOption = (question.options as StatBetOption[] | undefined)?.find((o) => o.id === optionId);

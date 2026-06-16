@@ -1,8 +1,11 @@
-import { Clock3, Lock, Loader2, Save, Timer, Trophy, Zap } from "lucide-react";
+import { useState } from "react";
+import { BarChart3, ChevronDown, ChevronUp, CircleDot, Clock3, Lock, Loader2, Save, Shield, Timer, Trophy, Zap } from "lucide-react";
+import { hasAnyLiveStats, type LiveTeamStats } from "@/lib/mundial/live-stats";
 import type { Draft, MundialMatch } from "../types";
 import {
   cn,
   formatKickoff,
+  formatUpdatedAt,
   getWinnerPickOptions,
   hasFinalScore,
   isMatchClosed,
@@ -37,6 +40,7 @@ export function FeaturedMatch({
   onUpdateDraft,
   onSave,
 }: FeaturedMatchProps) {
+  const [showMoreStats, setShowMoreStats] = useState(false);
   const isClosed = isMatchClosed(match, nowMs);
   const isLive = isMatchLive(match);
   const isActive = !!activeCountdown;
@@ -112,44 +116,11 @@ export function FeaturedMatch({
             Info del partido
           </p>
 
-          {/* Status banner */}
-          {isLive ? (
-            <div className="flex items-center gap-2 rounded-lg border border-[#9dff34]/45 bg-[#10240b]/75 px-3 py-2.5 text-[#e7ffc0]">
-              <Zap className="h-4 w-4 shrink-0 text-[#d5ff3f]" />
-              <p className="text-sm font-bold">
-                {liveScoreText(match)}
-                {match.liveNote ? <span className="text-white/70"> / {match.liveNote}</span> : null}
-              </p>
-            </div>
-          ) : isClosed ? (
-            hasFinalScore(match) ? (
-              <div className="flex items-center gap-2 rounded-lg border border-[#ffb15f]/45 bg-[#2a120b]/70 px-3 py-2.5 text-[#ffd9a8]">
-                <Lock className="h-4 w-4 shrink-0 text-[#ffb15f]" />
-                <p className="text-sm font-bold">
-                  Resultado final:{" "}
-                  <span className="font-black text-white">
-                    {match.homeTeam} {match.homeFinalScore} – {match.awayFinalScore} {match.awayTeam}
-                  </span>
-                </p>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2 rounded-lg border border-[#ffb15f]/45 bg-[#2a120b]/70 px-3 py-2.5 text-[#ffd9a8]">
-                <Lock className="h-4 w-4 shrink-0 text-[#ffb15f]" />
-                <p className="text-sm font-bold">Partido en juego; resultado pendiente.</p>
-              </div>
-            )
-          ) : (
-            <div className="flex items-center gap-2 rounded-lg border border-[#f0b429]/35 bg-[#1a2206]/75 px-3 py-2.5 text-[#fff1b8]">
-              <Clock3 className="h-4 w-4 shrink-0 text-[#f0b429]" />
-              <p className="text-sm font-bold">
-                El pick se bloquea cuando inicia el partido. Revisa y guarda antes del cierre.
-              </p>
-            </div>
-          )}
+          <MatchStatusBanner match={match} isLive={isLive} isClosed={isClosed} />
 
           {/* Live / final scoreboard */}
           {homeLiveScore !== null ? (
-            <MatchScoreboard
+            <LiveMatchScoreboard
               match={match}
               isLive={isLive}
               homeLiveScore={homeLiveScore}
@@ -172,6 +143,14 @@ export function FeaturedMatch({
                 <p className="text-sm font-black uppercase text-white">{teamCode(match.awayTeam)}</p>
               </div>
             </div>
+          )}
+
+          {homeLiveScore !== null && (
+            <LiveStatsDisclosure
+              match={match}
+              open={showMoreStats}
+              onToggle={() => setShowMoreStats((value) => !value)}
+            />
           )}
 
           {/* Live event timeline */}
@@ -277,7 +256,56 @@ export function FeaturedMatch({
   );
 }
 
-function MatchScoreboard({
+function MatchStatusBanner({
+  match,
+  isLive,
+  isClosed,
+}: {
+  match: MundialMatch;
+  isLive: boolean;
+  isClosed: boolean;
+}) {
+  if (isLive) {
+    return (
+      <div className="rounded-xl border border-[#9dff34]/45 bg-[#10240b]/80 px-3 py-3 text-[#e7ffc0]">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="inline-flex min-w-0 items-center gap-2 text-sm font-black">
+            <Zap className="h-4 w-4 shrink-0 text-[#d5ff3f]" />
+            <span>{liveStatusLabel(match)}</span>
+            <span className="text-white/30">/</span>
+            <span className="truncate">{liveScoreText(match)}</span>
+          </p>
+          <span className="rounded-md border border-white/15 bg-black/35 px-2 py-1 text-[11px] font-black text-white/70">
+            {formatUpdatedAt(match.liveUpdatedAt)}
+          </span>
+        </div>
+        {match.liveNote ? (
+          <p className="mt-2 text-sm font-bold leading-snug text-white/70">{match.liveNote}</p>
+        ) : null}
+      </div>
+    );
+  }
+
+  if (isClosed) {
+    return (
+      <div className="flex items-center gap-2 rounded-xl border border-[#ffb15f]/45 bg-[#2a120b]/70 px-3 py-2.5 text-[#ffd9a8]">
+        <Lock className="h-4 w-4 shrink-0 text-[#ffb15f]" />
+        <p className="text-sm font-bold">
+          {hasFinalScore(match) ? "Resultado final registrado." : "Partido cerrado; resultado pendiente."}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2 rounded-xl border border-[#f0b429]/35 bg-[#1a2206]/75 px-3 py-2.5 text-[#fff1b8]">
+      <Clock3 className="h-4 w-4 shrink-0 text-[#f0b429]" />
+      <p className="text-sm font-bold">El pick se bloquea cuando inicia el partido. Revisa y guarda antes del cierre.</p>
+    </div>
+  );
+}
+
+function LiveMatchScoreboard({
   match,
   isLive,
   homeLiveScore,
@@ -288,33 +316,200 @@ function MatchScoreboard({
   homeLiveScore: number;
   awayLiveScore: number;
 }) {
-  const scoreClass = isLive
-    ? "border-[#9dff34]/35 bg-[#0d1f08]/80 text-[#9dff34] shadow-[0_0_18px_rgba(157,255,52,0.12)]"
-    : "border-[#ffb15f]/35 bg-[#1e0d05]/80 text-[#ffb15f]";
-  const labelClass = isLive ? "text-[#9dff34]/60" : "text-[#ffb15f]/60";
+  const homeGoals = goalSummary(match, "home", homeLiveScore);
+  const awayGoals = goalSummary(match, "away", awayLiveScore);
+  const tone = isLive ? "border-[#9dff34]/35 bg-[#071b0b]/88" : "border-[#ffb15f]/35 bg-[#1b0d05]/88";
+  const clockTone = isLive ? "border-[#9dff34]/45 text-[#d5ff3f]" : "border-[#ffb15f]/45 text-[#ffb15f]";
 
   return (
-    <div className="mt-5 flex items-end justify-center gap-4 py-1">
-      <div className="flex flex-col items-center gap-2">
-        <Flag team={match.homeTeam} size="lg" className="rounded-sm" />
-        <p className="text-xs font-black uppercase text-white/55">{teamCode(match.homeTeam)}</p>
-        <span className={cn("w-20 rounded-lg border py-3 text-center text-5xl font-black tabular-nums", scoreClass)}>
-          {homeLiveScore}
+    <div className={cn("mt-4 overflow-hidden rounded-2xl border shadow-[0_18px_45px_rgba(0,0,0,0.25)]", tone)}>
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 bg-black/35 px-3 py-2">
+        <span className={cn("inline-flex items-center gap-2 rounded-full border bg-black/35 px-3 py-1 text-xs font-black uppercase tracking-wide", clockTone)}>
+          <span className={cn("h-2 w-2 rounded-full", isLive ? "animate-pulse bg-[#9dff34]" : "bg-[#ffb15f]")} />
+          {isLive ? "Ahora" : "Marcador"}
+        </span>
+        <span className="text-xs font-black tabular-nums text-white/75">
+          {formatLiveMinute(match)}
         </span>
       </div>
-      <div className="mb-3 flex flex-col items-center gap-1">
-        <span className={cn("text-[9px] font-black uppercase tracking-widest", labelClass)}>
-          {isLive ? liveStatusLabel(match) : "FT"}
-        </span>
-        <span className="text-2xl font-black text-white/20">–</span>
+
+      <div className="grid grid-cols-[minmax(0,1fr)_4.5rem_minmax(0,1fr)] items-stretch gap-2 px-3 py-4">
+        <ScoreboardTeam
+          team={match.homeTeam}
+          score={homeLiveScore}
+          goals={homeGoals}
+          align="left"
+          isLive={isLive}
+        />
+
+        <div className="flex flex-col items-center justify-center gap-2">
+          <span className="text-[10px] font-black uppercase tracking-[0.18em] text-white/35">
+            {isLive ? liveStatusLabel(match) : "FT"}
+          </span>
+          <span className="h-px w-10 bg-white/20" />
+          <Shield className="h-5 w-5 text-white/30" />
+        </div>
+
+        <ScoreboardTeam
+          team={match.awayTeam}
+          score={awayLiveScore}
+          goals={awayGoals}
+          align="right"
+          isLive={isLive}
+        />
       </div>
-      <div className="flex flex-col items-center gap-2">
-        <Flag team={match.awayTeam} size="lg" className="rounded-sm" />
-        <p className="text-xs font-black uppercase text-white/55">{teamCode(match.awayTeam)}</p>
-        <span className={cn("w-20 rounded-lg border py-3 text-center text-5xl font-black tabular-nums", scoreClass)}>
-          {awayLiveScore}
-        </span>
+    </div>
+  );
+}
+
+function ScoreboardTeam({
+  team,
+  score,
+  goals,
+  align,
+  isLive,
+}: {
+  team: string;
+  score: number;
+  goals: string;
+  align: "left" | "right";
+  isLive: boolean;
+}) {
+  return (
+    <div className={cn("flex min-w-0 flex-col gap-2", align === "right" ? "items-end text-right" : "items-start")}>
+      <div className={cn("flex min-w-0 items-center gap-2", align === "right" && "flex-row-reverse")}>
+        <Flag team={team} size="md" className="rounded-sm" />
+        <div className="min-w-0">
+          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/45">{teamCode(team)}</p>
+          <p className="truncate text-sm font-black text-white">{team}</p>
+        </div>
       </div>
+      <div className={cn("flex items-end gap-2", align === "right" && "flex-row-reverse")}>
+        <span className={cn(
+          "grid h-20 w-20 place-items-center rounded-xl border text-6xl font-black tabular-nums leading-none",
+          isLive ? "border-[#9dff34]/45 bg-[#0c2409] text-[#9dff34]" : "border-[#ffb15f]/45 bg-[#261006] text-[#ffb15f]"
+        )}>
+          {score}
+        </span>
+        <div className="min-w-0 pb-1">
+          <p className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wide text-white/35">
+            <CircleDot className="h-3 w-3" />
+            Goles
+          </p>
+          <p className="mt-0.5 max-w-[8.5rem] break-words text-xs font-bold leading-snug text-white/65">{goals}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LiveStatsDisclosure({
+  match,
+  open,
+  onToggle,
+}: {
+  match: MundialMatch;
+  open: boolean;
+  onToggle: () => void;
+}) {
+  const hasStats = hasAnyLiveStats(match.liveStats);
+  const possession = possessionText(match.liveStats.home.possessionPct, match.liveStats.away.possessionPct);
+  const shotsOnTarget = statPairText(match.liveStats.home.shotsOnTarget, match.liveStats.away.shotsOnTarget);
+  const cards = cardsPairText(match.liveStats.home, match.liveStats.away);
+
+  return (
+    <div className="mt-3 overflow-hidden rounded-xl border border-white/12 bg-black/25">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left transition hover:bg-white/5"
+      >
+        <span className="inline-flex min-w-0 items-center gap-2 text-xs font-black uppercase tracking-[0.18em] text-[#d5ff3f]">
+          <BarChart3 className="h-4 w-4 shrink-0" />
+          <span>Más stats</span>
+        </span>
+        <span className="hidden min-w-0 flex-1 items-center justify-end gap-1.5 sm:flex">
+          <StatChip label="Pos." value={possession} />
+          <StatChip label="TAM" value={shotsOnTarget} />
+          <StatChip label="Tarj." value={cards} />
+        </span>
+        {open ? <ChevronUp className="h-4 w-4 shrink-0 text-white/45" /> : <ChevronDown className="h-4 w-4 shrink-0 text-white/45" />}
+      </button>
+
+      {open && (
+        <div className="grid gap-2 border-t border-white/10 px-3 py-3">
+          {hasStats ? (
+            LIVE_STAT_ROWS.map((row) => (
+              <StatsComparisonRow
+                key={row.key}
+                label={row.label}
+                home={match.liveStats.home[row.key]}
+                away={match.liveStats.away[row.key]}
+                suffix={row.suffix}
+                bar={row.key === "possessionPct"}
+              />
+            ))
+          ) : (
+            <p className="rounded-lg border border-dashed border-white/15 bg-black/20 px-3 py-3 text-sm font-bold text-white/55">
+              Stats pendientes del admin.
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function StatChip({ label, value }: { label: string; value: string }) {
+  return (
+    <span className="rounded-md border border-white/10 bg-white/5 px-2 py-1 text-[10px] font-black text-white/60">
+      {label} {value}
+    </span>
+  );
+}
+
+const LIVE_STAT_ROWS: Array<{ key: keyof LiveTeamStats; label: string; suffix?: string }> = [
+  { key: "possessionPct", label: "Posesión", suffix: "%" },
+  { key: "shots", label: "Tiros" },
+  { key: "shotsOnTarget", label: "Tiros a marco" },
+  { key: "yellowCards", label: "Amarillas" },
+  { key: "redCards", label: "Rojas" },
+  { key: "corners", label: "Córners" },
+  { key: "fouls", label: "Faltas" },
+  { key: "saves", label: "Atajadas" },
+];
+
+function StatsComparisonRow({
+  label,
+  home,
+  away,
+  suffix = "",
+  bar = false,
+}: {
+  label: string;
+  home: number | null;
+  away: number | null;
+  suffix?: string;
+  bar?: boolean;
+}) {
+  const homeText = statValue(home, suffix);
+  const awayText = statValue(away, suffix);
+  const homePct = bar && home !== null ? Math.max(0, Math.min(100, home)) : null;
+
+  return (
+    <div className="grid grid-cols-[3.5rem_minmax(0,1fr)_3.5rem] items-center gap-2 rounded-lg border border-white/10 bg-[#06100b]/75 px-3 py-2">
+      <span className="text-left text-sm font-black tabular-nums text-white">{homeText}</span>
+      <div className="min-w-0">
+        <p className="mb-1 text-center text-[10px] font-black uppercase tracking-wide text-white/40">{label}</p>
+        {homePct !== null ? (
+          <div className="flex h-1.5 overflow-hidden rounded-full bg-[#ffb15f]/45">
+            <span className="block h-full bg-[#9dff34]" style={{ width: `${homePct}%` }} />
+          </div>
+        ) : (
+          <div className="h-1.5 rounded-full bg-white/10" />
+        )}
+      </div>
+      <span className="text-right text-sm font-black tabular-nums text-white">{awayText}</span>
     </div>
   );
 }
@@ -354,7 +549,7 @@ function PickTeamCard({
 }
 
 function LiveTimeline({ match }: { match: MundialMatch }) {
-  const events = [...match.liveEvents].sort((a, b) => (b.minute ?? -1) - (a.minute ?? -1));
+  const events = dedupeLiveEvents(match.liveEvents).sort((a, b) => (b.minute ?? -1) - (a.minute ?? -1));
 
   return (
     <div className="rounded-lg border border-[#9dff34]/35 bg-black/35 p-3">
@@ -419,4 +614,76 @@ function eventTypeLabel(type: string) {
   if (type === "var") return "VAR";
   if (type === "substitution") return "Cambio";
   return "Nota";
+}
+
+function formatLiveMinute(match: MundialMatch) {
+  if (match.liveStatus === "live") return match.liveMinute !== null ? `Min ${match.liveMinute}'` : "En vivo";
+  if (match.liveStatus === "halftime") return "Descanso";
+  if (match.liveStatus === "fulltime") return "Finalizado";
+  return "Programado";
+}
+
+function liveEventSignature(event: MundialMatch["liveEvents"][number]) {
+  return [
+    event.type,
+    event.team ?? "general",
+    event.minute ?? "",
+    event.player.trim().toUpperCase(),
+    event.note.trim().toUpperCase(),
+  ].join("|");
+}
+
+function dedupeLiveEvents(events: MundialMatch["liveEvents"]) {
+  const seen = new Set<string>();
+
+  return events.filter((event) => {
+    const signature = liveEventSignature(event);
+    if (seen.has(signature)) return false;
+    seen.add(signature);
+    return true;
+  });
+}
+
+function goalSummary(match: MundialMatch, team: "home" | "away", score: number) {
+  const goals = dedupeLiveEvents(match.liveEvents)
+    .filter((event) => (event.type === "goal" || event.type === "penalty") && event.team === team)
+    .sort((a, b) => (a.minute ?? 999) - (b.minute ?? 999));
+
+  if (goals.length > 0) {
+    return goals
+      .map((event) => {
+        const minute = event.minute !== null ? ` ${event.minute}'` : "";
+        const scorer = event.player || event.note || eventTypeLabel(event.type);
+        return `${scorer}${minute}`;
+      })
+      .join(", ");
+  }
+
+  if (score > 0) return `${score} gol${score === 1 ? "" : "es"} sin detalle`;
+  return "Sin goles";
+}
+
+function statValue(value: number | null, suffix = "") {
+  return value === null ? "—" : `${value}${suffix}`;
+}
+
+function statPairText(home: number | null, away: number | null, suffix = "") {
+  if (home === null && away === null) return "—";
+  return `${statValue(home, suffix)}-${statValue(away, suffix)}`;
+}
+
+function possessionText(home: number | null, away: number | null) {
+  if (home === null && away === null) return "—";
+  return `${statValue(home, "%")}/${statValue(away, "%")}`;
+}
+
+function cardValue(stats: LiveTeamStats) {
+  if (stats.yellowCards === null && stats.redCards === null) return "—";
+  const yellow = stats.yellowCards ?? 0;
+  const red = stats.redCards ?? 0;
+  return red > 0 ? `${yellow}A/${red}R` : `${yellow}A`;
+}
+
+function cardsPairText(home: LiveTeamStats, away: LiveTeamStats) {
+  return `${cardValue(home)}-${cardValue(away)}`;
 }

@@ -5,6 +5,7 @@ import { getDb } from "@/lib/helpers/mongodb";
 import { recordMundialAnalyticsEvent } from "@/lib/mundial/analytics";
 import { serializeBettingFavorite, type BettingFavorite } from "@/lib/mundial/betting";
 import { MUNDIAL_MATCHES, MUNDIAL_TOTAL_MATCHES, type MundialMatch } from "@/lib/mundial/fixtures";
+import { serializeLiveMatchStats, type LiveMatchStats } from "@/lib/mundial/live-stats";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,7 @@ type MundialMatchDoc = MundialMatch & {
   awayLiveScore?: number | null;
   liveNote?: string;
   liveEvents?: LiveMatchEventDoc[];
+  liveStats?: LiveMatchStats;
   liveUpdatedAt?: Date | string | null;
   bettingFavorite?: BettingFavorite | null;
   createdAt?: Date;
@@ -168,6 +170,7 @@ function serializeMatch(doc: MundialMatchDoc, now = new Date()) {
     awayLiveScore: typeof doc.awayLiveScore === "number" ? doc.awayLiveScore : null,
     liveNote: doc.liveNote ?? "",
     liveEvents: Array.isArray(doc.liveEvents) ? doc.liveEvents.map(serializeLiveEvent) : [],
+    liveStats: serializeLiveMatchStats(doc.liveStats),
     liveUpdatedAt: toIsoString(doc.liveUpdatedAt),
     bettingFavorite: serializeBettingFavorite(doc.bettingFavorite, {
       homeTeam: doc.homeTeam,

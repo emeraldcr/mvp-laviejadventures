@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BadgePercent, Check, ChevronDown, ChevronUp, Loader2, Lock, LockOpen, Minus, Plus, Save, Trash2, Tv2, Users } from "lucide-react";
+import { BadgePercent, BarChart3, Check, ChevronDown, ChevronUp, Loader2, Lock, LockOpen, Minus, Plus, Save, Trash2, Tv2, Users } from "lucide-react";
 import { bettingFavoriteLabel, type BettingMarket } from "@/lib/mundial/betting";
-import type { AdminLiveMatchEvent, AdminMatch, AdminRosterPlayer, LiveEventTeam, LiveEventType, LiveMatchStatus } from "../adminTypes";
+import type { AdminLiveMatchEvent, AdminLiveMatchStats, AdminLiveTeamStats, AdminMatch, AdminRosterPlayer, LiveEventTeam, LiveEventType, LiveMatchStatus } from "../adminTypes";
 import { cn, formatKickoff, getCountryFlag } from "../../utils";
 import { Flag } from "../../components/Flag";
 
@@ -27,6 +27,17 @@ const LIVE_EVENT_OPTIONS: Array<{ value: LiveEventType; label: string }> = [
   { value: "var", label: "VAR" },
   { value: "substitution", label: "Cambio" },
   { value: "note", label: "Nota" },
+];
+
+const LIVE_STATS_FIELDS: Array<{ key: keyof AdminLiveTeamStats; label: string; max?: number; suffix?: string }> = [
+  { key: "possessionPct", label: "Posesion", max: 100, suffix: "%" },
+  { key: "shots", label: "Tiros" },
+  { key: "shotsOnTarget", label: "Tiros a marco" },
+  { key: "yellowCards", label: "Amarillas" },
+  { key: "redCards", label: "Rojas" },
+  { key: "corners", label: "Corners" },
+  { key: "fouls", label: "Faltas" },
+  { key: "saves", label: "Atajadas" },
 ];
 
 function rosterForTeam(match: AdminMatch, team: LiveEventTeam) {
@@ -75,6 +86,40 @@ function numberOrNull(value: string) {
   if (value.trim() === "") return null;
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : null;
+}
+
+function liveEventSignature(event: Pick<AdminLiveMatchEvent, "type" | "team" | "minute" | "player" | "note">) {
+  return [
+    event.type,
+    event.team ?? "general",
+    event.minute ?? "",
+    event.player.trim().toUpperCase(),
+    event.note.trim().toUpperCase(),
+  ].join("|");
+}
+
+function updateTeamStat(
+  stats: AdminLiveMatchStats,
+  team: Exclude<LiveEventTeam, null>,
+  key: keyof AdminLiveTeamStats,
+  value: number | null
+): AdminLiveMatchStats {
+  return {
+    ...stats,
+    [team]: {
+      ...stats[team],
+      [key]: value,
+    },
+  };
+}
+
+function incrementTeamStat(
+  stats: AdminLiveMatchStats,
+  team: Exclude<LiveEventTeam, null>,
+  key: keyof AdminLiveTeamStats
+): AdminLiveMatchStats {
+  const current = stats[team][key] ?? 0;
+  return updateTeamStat(stats, team, key, current + 1);
 }
 
 function StatBar({ label, count, total, barColor, textColor }: {
@@ -145,6 +190,7 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
   const [awayLiveScore, setAwayLiveScore] = useState(match.awayLiveScore !== null ? String(match.awayLiveScore) : "");
   const [liveNote, setLiveNote] = useState(match.liveNote);
   const [liveEvents, setLiveEvents] = useState<AdminLiveMatchEvent[]>(match.liveEvents);
+  const [liveStats, setLiveStats] = useState<AdminLiveMatchStats>(match.liveStats);
   const [marketMode, setMarketMode] = useState<BettingMarket>(match.bettingFavorite?.market ?? "h2h_odds");
   const [marketSource, setMarketSource] = useState(match.bettingFavorite?.source ?? "");
   const [marketSourceUrl, setMarketSourceUrl] = useState(match.bettingFavorite?.sourceUrl ?? "");
@@ -185,6 +231,7 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
     setAwayLiveScore(match.awayLiveScore !== null ? String(match.awayLiveScore) : "");
     setLiveNote(match.liveNote);
     setLiveEvents(match.liveEvents);
+    setLiveStats(match.liveStats);
     setMarketMode(match.bettingFavorite?.market ?? "h2h_odds");
     setMarketSource(match.bettingFavorite?.source ?? "");
     setMarketSourceUrl(match.bettingFavorite?.sourceUrl ?? "");
@@ -258,6 +305,7 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
         awayLiveScore: awayLiveScore === "" ? null : Number(awayLiveScore),
         liveNote,
         liveEvents,
+        liveStats,
       });
       setLiveSaved(true);
       setTimeout(() => setLiveSaved(false), 2500);
@@ -319,21 +367,27 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
     note = "",
     minuteValue = liveMinute
   ) {
-    if (type === "goal" && team === "home") setHomeLiveScore((v) => safeInc(v));
-    if (type === "goal" && team === "away") setAwayLiveScore((v) => safeInc(v));
+    const nextEvent: AdminLiveMatchEvent = {
+      id: `${Date.now()}-${liveEvents.length}`,
+      type,
+      team,
+      minute: parseMinuteInput(minuteValue),
+      player: player.trim(),
+      note: note.trim(),
+      createdAt: new Date().toISOString(),
+    };
+    const signature = liveEventSignature(nextEvent);
+    if (liveEvents.some((event) => liveEventSignature(event) === signature)) return;
+
+    if ((type === "goal" || type === "penalty") && team === "home") setHomeLiveScore((v) => safeInc(v));
+    if ((type === "goal" || type === "penalty") && team === "away") setAwayLiveScore((v) => safeInc(v));
+    if ((type === "goal" || type === "penalty") && team) {
+      setLiveStats((stats) => incrementTeamStat(incrementTeamStat(stats, team, "shots"), team, "shotsOnTarget"));
+    }
+    if (type === "yellow" && team) setLiveStats((stats) => incrementTeamStat(stats, team, "yellowCards"));
+    if (type === "red" && team) setLiveStats((stats) => incrementTeamStat(stats, team, "redCards"));
     if (liveStatus === "scheduled") setLiveStatus("live");
-    setLiveEvents((curr) => [
-      {
-        id: `${Date.now()}-${curr.length}`,
-        type,
-        team,
-        minute: parseMinuteInput(minuteValue),
-        player: player.trim(),
-        note: note.trim(),
-        createdAt: new Date().toISOString(),
-      },
-      ...curr,
-    ]);
+    setLiveEvents((curr) => [nextEvent, ...curr]);
   }
 
   function selectEventPreset(type: LiveEventType, team: LiveEventTeam = null) {
@@ -356,6 +410,13 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
 
   function removeLiveEvent(id: string) {
     setLiveEvents((curr) => curr.filter((e) => e.id !== id));
+  }
+
+  function updateLiveStat(team: Exclude<LiveEventTeam, null>, key: keyof AdminLiveTeamStats, value: string) {
+    const parsed = numberOrNull(value);
+    const max = key === "possessionPct" ? 100 : undefined;
+    const normalized = parsed === null ? null : Math.max(0, Math.trunc(max ? Math.min(max, parsed) : parsed));
+    setLiveStats((stats) => updateTeamStat(stats, team, key, normalized));
   }
 
   const statusLabel = hasResult
@@ -815,6 +876,49 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
               </div>
             </div>
 
+            {/* Live stats */}
+            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+              <div className="border-b border-slate-100 bg-slate-50 px-3 py-2">
+                <div className="flex items-center justify-between gap-2">
+                  <div>
+                    <p className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wide text-slate-400">
+                      <BarChart3 className="h-3.5 w-3.5" />
+                      Stats del partido
+                    </p>
+                    <p className="text-xs font-bold text-slate-500">Posesion, tiros, tarjetas y control del partido.</p>
+                  </div>
+                  <span className="rounded bg-slate-100 px-2 py-1 text-[10px] font-black text-slate-500">
+                    Live data
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid gap-2 p-3">
+                <div className="grid grid-cols-[minmax(0,1fr)_7rem_7rem] gap-2 px-1 text-[10px] font-black uppercase tracking-wide text-slate-400">
+                  <span>Dato</span>
+                  <span className="truncate text-center">{match.homeTeam}</span>
+                  <span className="truncate text-center">{match.awayTeam}</span>
+                </div>
+                {LIVE_STATS_FIELDS.map((field) => (
+                  <div key={field.key} className="grid grid-cols-[minmax(0,1fr)_7rem_7rem] items-center gap-2">
+                    <span className="truncate text-xs font-black text-slate-600">{field.label}</span>
+                    <LiveStatInput
+                      value={liveStats.home[field.key]}
+                      max={field.max}
+                      suffix={field.suffix}
+                      onChange={(value) => updateLiveStat("home", field.key, value)}
+                    />
+                    <LiveStatInput
+                      value={liveStats.away[field.key]}
+                      max={field.max}
+                      suffix={field.suffix}
+                      onChange={(value) => updateLiveStat("away", field.key, value)}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
             {/* Event composer */}
             <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
               <div className="border-b border-slate-100 bg-slate-50 px-3 py-2">
@@ -1098,5 +1202,35 @@ function MarketNumberInput({
         )}
       </div>
     </label>
+  );
+}
+
+function LiveStatInput({
+  value,
+  onChange,
+  max,
+  suffix,
+}: {
+  value: number | null;
+  onChange: (value: string) => void;
+  max?: number;
+  suffix?: string;
+}) {
+  return (
+    <div className="grid grid-cols-[minmax(0,1fr)_auto] overflow-hidden rounded-lg border border-slate-200 bg-slate-50 focus-within:border-red-300 focus-within:bg-white focus-within:ring-2 focus-within:ring-red-100">
+      <input
+        type="number"
+        min={0}
+        max={max}
+        value={value ?? ""}
+        onChange={(e) => onChange(e.target.value)}
+        className="h-9 min-w-0 bg-transparent px-2 text-center text-sm font-black tabular-nums text-slate-800 outline-none"
+      />
+      {suffix && (
+        <span className="grid h-9 w-7 place-items-center border-l border-slate-200 text-[10px] font-black text-slate-400">
+          {suffix}
+        </span>
+      )}
+    </div>
   );
 }

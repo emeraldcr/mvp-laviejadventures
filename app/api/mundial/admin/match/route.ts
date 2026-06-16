@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/helpers/mongodb";
 import { serializeBettingFavorite } from "@/lib/mundial/betting";
+import { serializeLiveMatchStats } from "@/lib/mundial/live-stats";
 
 export const dynamic = "force-dynamic";
 
@@ -48,11 +49,27 @@ function cleanText(value: unknown, maxLength: number) {
   return String(value ?? "").trim().slice(0, maxLength);
 }
 
+function liveEventSignature(event: {
+  type: LiveEventType;
+  team: LiveEventTeam;
+  minute: number | null;
+  player: string;
+  note: string;
+}) {
+  return [
+    event.type,
+    event.team ?? "general",
+    event.minute ?? "",
+    event.player.trim().toUpperCase(),
+    event.note.trim().toUpperCase(),
+  ].join("|");
+}
+
 function parseLiveEvents(value: unknown) {
   if (!Array.isArray(value) || value.length > 40) return null;
   const now = new Date().toISOString();
 
-  return value.map((raw, index) => {
+  const parsed = value.map((raw, index) => {
     const event = raw && typeof raw === "object" ? raw as Record<string, unknown> : {};
     const type = typeof event.type === "string" && LIVE_EVENT_TYPES.has(event.type as LiveEventType)
       ? event.type as LiveEventType
@@ -71,6 +88,14 @@ function parseLiveEvents(value: unknown) {
       note: cleanText(event.note, 160),
       createdAt,
     };
+  });
+
+  const seen = new Set<string>();
+  return parsed.filter((event) => {
+    const signature = liveEventSignature(event);
+    if (seen.has(signature)) return false;
+    seen.add(signature);
+    return true;
   });
 }
 
@@ -167,6 +192,11 @@ export async function PATCH(req: NextRequest) {
         return NextResponse.json({ error: "liveEvents invalido (max 40 eventos)." }, { status: 400 });
       }
       $set.liveEvents = parsed;
+      $set.liveUpdatedAt = new Date();
+    }
+
+    if ("liveStats" in body) {
+      $set.liveStats = serializeLiveMatchStats(body.liveStats);
       $set.liveUpdatedAt = new Date();
     }
 

@@ -1,4 +1,5 @@
 import type { BettingFavorite } from "@/lib/mundial/betting";
+import type { LiveMatchStats } from "@/lib/mundial/live-stats";
 
 export type MundialStage = "group" | "round32" | "round16" | "quarterfinal" | "semifinal" | "thirdPlace" | "final";
 export type WinnerPick = "home" | "away" | null;
@@ -38,6 +39,7 @@ export type MundialMatch = {
   awayLiveScore: number | null;
   liveNote: string;
   liveEvents: LiveMatchEvent[];
+  liveStats: LiveMatchStats;
   liveUpdatedAt: string | null;
   bettingFavorite: BettingFavorite | null;
   closed: boolean;
