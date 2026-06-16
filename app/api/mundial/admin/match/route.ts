@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/helpers/mongodb";
+import { serializeBettingFavorite } from "@/lib/mundial/betting";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +11,7 @@ const MAX_LIVE_MINUTE = 130;
 type LiveMatchStatus = "scheduled" | "live" | "halftime" | "fulltime";
 type LiveEventType = "goal" | "penalty" | "yellow" | "red" | "var" | "substitution" | "note";
 type LiveEventTeam = "home" | "away" | null;
+type MatchTeams = { homeTeam?: string; awayTeam?: string };
 
 const LIVE_STATUSES = new Set<LiveMatchStatus>(["scheduled", "live", "halftime", "fulltime"]);
 const LIVE_EVENT_TYPES = new Set<LiveEventType>([
@@ -83,6 +85,16 @@ export async function PATCH(req: NextRequest) {
 
     const db = await getDb();
     const $set: Record<string, unknown> = { updatedAt: new Date() };
+    let matchTeams: MatchTeams | null = null;
+
+    async function readMatchTeams() {
+      if (!matchTeams) {
+        matchTeams = await db
+          .collection<MatchTeams>(MATCHES_COLLECTION)
+          .findOne({ id: matchId }, { projection: { homeTeam: 1, awayTeam: 1 } });
+      }
+      return matchTeams;
+    }
 
     if ("homeFinalScore" in body) {
       const parsed = body.homeFinalScore === null ? null : parseScore(homeFinalScore);
@@ -156,6 +168,22 @@ export async function PATCH(req: NextRequest) {
       }
       $set.liveEvents = parsed;
       $set.liveUpdatedAt = new Date();
+    }
+
+    if ("bettingFavorite" in body) {
+      if (body.bettingFavorite === null) {
+        $set.bettingFavorite = null;
+      } else {
+        const teams = await readMatchTeams();
+        if (!teams?.homeTeam || !teams.awayTeam) {
+          return NextResponse.json({ error: "Partido no encontrado." }, { status: 404 });
+        }
+
+        $set.bettingFavorite = serializeBettingFavorite(
+          { ...body.bettingFavorite, updatedAt: new Date() },
+          { homeTeam: teams.homeTeam, awayTeam: teams.awayTeam }
+        );
+      }
     }
 
     const result = await db

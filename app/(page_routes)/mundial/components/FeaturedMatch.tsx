@@ -14,6 +14,7 @@ import {
 } from "../utils";
 import { Flag } from "./Flag";
 import { ScoreInput } from "./ScoreInput";
+import { BettingFavoriteCard } from "./BettingFavoriteCard";
 
 type FeaturedMatchProps = {
   match: MundialMatch;
@@ -186,6 +187,8 @@ export function FeaturedMatch({
           <p className="mb-3 text-[10px] font-black uppercase tracking-[0.22em] text-white/30">
             Tu predicción
           </p>
+
+          <BettingFavoriteCard match={match} />
 
           {/* Score inputs */}
           <div className="grid grid-cols-[minmax(0,1fr)_3.5rem_minmax(0,1fr)] items-stretch gap-2 sm:grid-cols-[minmax(0,1fr)_4rem_minmax(0,1fr)]">

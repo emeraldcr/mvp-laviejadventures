@@ -66,7 +66,8 @@ export function NextView({
 
       {/* 2. Selected match detail */}
       {featuredMatch ? (
-        <div ref={detailRef} className="grid min-w-0 gap-3 scroll-mt-20">
+        <div ref={detailRef} className="grid min-w-0 scroll-mt-20 gap-4 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] xl:items-start">
+          {/* Left — prediction + live info */}
           <FeaturedMatch
             match={featuredMatch}
             draft={drafts[featuredMatch.id] ?? emptyDraft()}
@@ -78,19 +79,22 @@ export function NextView({
             onSave={onSave}
           />
 
-          <OtherPicksPanel
-            match={featuredMatch}
-            predictions={predictions}
-            playerName={playerName}
-          />
+          {/* Right — friend picks + mini bets */}
+          <div className="grid min-w-0 gap-3">
+            <OtherPicksPanel
+              match={featuredMatch}
+              predictions={predictions}
+              playerName={playerName}
+            />
 
-          <StatBetsPanel
-            matchId={featuredMatch.id}
-            playerName={playerName}
-            matchLabel={`${featuredMatch.homeTeam} vs ${featuredMatch.awayTeam}`}
-            variant="mini"
-            onOpenPlayerPicker={onOpenPlayerPicker}
-          />
+            <StatBetsPanel
+              matchId={featuredMatch.id}
+              playerName={playerName}
+              matchLabel={`${featuredMatch.homeTeam} vs ${featuredMatch.awayTeam}`}
+              variant="mini"
+              onOpenPlayerPicker={onOpenPlayerPicker}
+            />
+          </div>
         </div>
       ) : (
         <section className="grid min-h-72 place-items-center rounded-lg border border-dashed border-white/20 bg-black/35 p-8 text-center">

@@ -1,3 +1,5 @@
+import type { BettingFavorite } from "@/lib/mundial/betting";
+
 export type MundialStage = "group" | "round32" | "round16" | "quarterfinal" | "semifinal" | "thirdPlace" | "final";
 export type WinnerPick = "home" | "away" | null;
 export type ViewMode = "next" | "mine" | "players";
@@ -37,6 +39,7 @@ export type MundialMatch = {
   liveNote: string;
   liveEvents: LiveMatchEvent[];
   liveUpdatedAt: string | null;
+  bettingFavorite: BettingFavorite | null;
   closed: boolean;
   sortOrder: number;
 };

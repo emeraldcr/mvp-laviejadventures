@@ -1,4 +1,5 @@
 import type { MundialStage } from "@/lib/mundial/fixtures";
+import type { BettingFavorite } from "@/lib/mundial/betting";
 
 export type LiveMatchStatus = "scheduled" | "live" | "halftime" | "fulltime";
 export type LiveEventType = "goal" | "penalty" | "yellow" | "red" | "var" | "substitution" | "note";
@@ -48,6 +49,7 @@ export type AdminMatch = {
   liveNote: string;
   liveEvents: AdminLiveMatchEvent[];
   liveUpdatedAt: string | null;
+  bettingFavorite: BettingFavorite | null;
   closed: boolean;
   predictorCount: number;
   exactCount: number;

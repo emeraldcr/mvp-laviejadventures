@@ -3,6 +3,7 @@ import { Db, ObjectId } from "mongodb";
 
 import { getDb } from "@/lib/helpers/mongodb";
 import { recordMundialAnalyticsEvent } from "@/lib/mundial/analytics";
+import { serializeBettingFavorite, type BettingFavorite } from "@/lib/mundial/betting";
 import { MUNDIAL_MATCHES, MUNDIAL_TOTAL_MATCHES, type MundialMatch } from "@/lib/mundial/fixtures";
 
 export const dynamic = "force-dynamic";
@@ -27,6 +28,7 @@ type MundialMatchDoc = MundialMatch & {
   liveNote?: string;
   liveEvents?: LiveMatchEventDoc[];
   liveUpdatedAt?: Date | string | null;
+  bettingFavorite?: BettingFavorite | null;
   createdAt?: Date;
   updatedAt?: Date;
 };
@@ -157,6 +159,10 @@ function serializeMatch(doc: MundialMatchDoc, now = new Date()) {
     liveNote: doc.liveNote ?? "",
     liveEvents: Array.isArray(doc.liveEvents) ? doc.liveEvents.map(serializeLiveEvent) : [],
     liveUpdatedAt: toIsoString(doc.liveUpdatedAt),
+    bettingFavorite: serializeBettingFavorite(doc.bettingFavorite, {
+      homeTeam: doc.homeTeam,
+      awayTeam: doc.awayTeam,
+    }),
     closed: isMatchClosed(doc, now),
     sortOrder: doc.sortOrder,
   };

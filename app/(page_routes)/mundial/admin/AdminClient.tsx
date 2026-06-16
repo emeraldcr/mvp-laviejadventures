@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Activity, ArrowLeft, BarChart3, CheckCircle2, Loader2, RefreshCw, Shield, Tv2, Trophy, Users } from "lucide-react";
+import { Activity, ArrowLeft, BadgePercent, BarChart3, CheckCircle2, Loader2, RefreshCw, Shield, Tv2, Trophy, Users } from "lucide-react";
 import Link from "next/link";
 import type { AdminData, AdminView, LeaderboardEntry } from "./adminTypes";
 import { cn } from "../utils";
@@ -14,6 +14,7 @@ import { PlayerDetailModal } from "./components/PlayerDetailModal";
 const ADMIN_API = "/api/mundial/admin";
 const MATCH_API = "/api/mundial/admin/match";
 const STAT_Q_API = "/api/mundial/admin/stat-questions";
+const ODDS_SYNC_API = "/api/mundial/admin/odds-sync";
 
 const VIEW_OPTIONS: Array<{ id: AdminView; label: string; icon: React.ReactNode }> = [
   { id: "leaderboard", label: "Leaderboard", icon: <Trophy className="h-4 w-4" /> },
@@ -36,6 +37,8 @@ export default function AdminClient() {
   const [view, setView] = useState<AdminView>("leaderboard");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [oddsSyncMessage, setOddsSyncMessage] = useState("");
+  const [isSyncingOdds, setIsSyncingOdds] = useState(false);
   const [matchFilter, setMatchFilter] = useState<MatchFilter>("all");
   const [selectedPlayer, setSelectedPlayer] = useState<LeaderboardEntry | null>(null);
 
@@ -97,6 +100,23 @@ export default function AdminClient() {
     await load();
   }
 
+  async function syncOdds() {
+    setError("");
+    setOddsSyncMessage("");
+    setIsSyncingOdds(true);
+    try {
+      const res = await fetch(ODDS_SYNC_API, { method: "POST" });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error ?? "Error sincronizando odds.");
+      setOddsSyncMessage(`Odds actualizadas: ${body.updated ?? 0} partido(s).`);
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo sincronizar odds.");
+    } finally {
+      setIsSyncingOdds(false);
+    }
+  }
+
   const filteredMatches = (data?.matches.filter((m) => {
     if (matchFilter === "live") return m.liveStatus === "live" || m.liveStatus === "halftime";
     if (matchFilter === "open") return !m.closed;
@@ -147,6 +167,15 @@ export default function AdminClient() {
             >
               {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
               <span className="hidden sm:inline">Actualizar</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => void syncOdds()}
+              disabled={isSyncingOdds}
+              className="inline-flex h-9 items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 text-sm font-black text-amber-800 transition hover:bg-amber-100 disabled:opacity-50"
+            >
+              {isSyncingOdds ? <Loader2 className="h-4 w-4 animate-spin" /> : <BadgePercent className="h-4 w-4" />}
+              <span className="hidden sm:inline">Odds</span>
             </button>
           </div>
         </div>
@@ -255,6 +284,11 @@ export default function AdminClient() {
         {error && (
           <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-bold text-red-800">
             {error}
+          </div>
+        )}
+        {oddsSyncMessage && (
+          <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-bold text-amber-800">
+            {oddsSyncMessage}
           </div>
         )}
 
