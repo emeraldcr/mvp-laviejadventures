@@ -46,6 +46,38 @@ export type MundialMatch = {
   sortOrder: number;
 };
 
+export type PenalitosRole = "goalkeeper" | "shooter";
+export type PenalitosDirection = "left" | "center" | "right";
+export type PenalitosStatus = "waiting" | "choosing" | "finished";
+
+export type PenalitosPlayer = {
+  visitorId: string;
+  name: string;
+};
+
+export type PenalitosGame = {
+  id: string;
+  status: PenalitosStatus;
+  goalkeeper: PenalitosPlayer | null;
+  shooter: PenalitosPlayer | null;
+  goalkeeperChoice: PenalitosDirection | null;
+  shooterChoice: PenalitosDirection | null;
+  winner: PenalitosRole | null;
+  outcome: "goal" | "save" | null;
+  chooseDeadline: string | null;   // ISO string
+  resolvedAt: string | null;       // ISO string
+  finishedUntil: string | null;    // ISO string
+  roundNumber: number;
+  startedAt: string;               // ISO string
+};
+
+export type PenalitosQueueEntry = {
+  visitorId: string;
+  name: string;
+  joinedAt: string;
+  preferredRole: PenalitosRole;
+};
+
 export type Prediction = {
   id: string;
   matchId: string;

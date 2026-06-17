@@ -18,4 +18,5 @@ export const COLLECTIONS = {
   ANALYTICS_EVENTS: "analytics_events",
   MUNDIAL_ANALYTICS: "mundial_analytics",
   HERO_SLOGANS: "hero_slogans",
+  PENALITOS_STATE: "penalitos_state",
 } as const;

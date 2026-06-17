@@ -631,6 +631,6 @@ export function useMundial() {
     getDraft,
     updateDraft,
     saveMatch,
-    saveDirtyDrafts,
+    saveDirtyDrafts
   };
 }

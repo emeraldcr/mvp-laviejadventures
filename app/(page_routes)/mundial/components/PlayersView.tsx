@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays, CheckCircle2, ChevronRight, Lock, MinusCircle, Target, TrendingUp, Trophy, Users, X, Zap } from "lucide-react";
+import { CalendarDays, ChevronRight, Lock, MinusCircle, Target, TrendingUp, Trophy, Users, X, Zap } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type { LeaderboardEntry, MundialMatch, Prediction } from "../types";
 import { cn, finalScoreText, formatKickoff, normalizeKey, teamCode } from "../utils";
@@ -509,7 +509,7 @@ function PredictionRow({
           {match ? finalScoreText(match) : "Resultado pendiente"}
         </span>
         <span className={cn("inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-black", statusClass)}>
-          {status === "exact" ? <Target className="h-3.5 w-3.5" /> : status === "outcome" ? <CheckCircle2 className="h-3.5 w-3.5" /> : status === "miss" ? <MinusCircle className="h-3.5 w-3.5" /> : null}
+          {status === "exact" ? <Target className="h-3.5 w-3.5" /> : status === "outcome" ? <TrendingUp className="h-3.5 w-3.5" /> : status === "miss" ? <MinusCircle className="h-3.5 w-3.5" /> : null}
           {statusLabel}
           {score.points !== null && <span className="tabular-nums">+{score.points}</span>}
         </span>
