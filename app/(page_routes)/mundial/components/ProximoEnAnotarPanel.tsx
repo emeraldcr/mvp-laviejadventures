@@ -15,7 +15,7 @@ import { POINTS_CUALQUIERA, POINTS_EXACT, POINTS_NADIE } from "@/lib/mundial/sco
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const VISITOR_KEY = "scorer-vid";
-const BET_WINDOW_MS = 15_000;
+const BET_WINDOW_MS = 5_000;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -139,9 +139,10 @@ function TeamSection({
 type Props = {
   liveMatch: MundialMatch | null;
   playerName: string;
+  embedded?: boolean;
 };
 
-export function ProximoEnAnotarPanel({ liveMatch, playerName }: Props) {
+export function ProximoEnAnotarPanel({ liveMatch, playerName, embedded = false }: Props) {
   const [state, setState] = useState<SerializedScorerState | null>(null);
   const [connected, setConnected] = useState(true);
   const [reconnecting, setReconnecting] = useState(false);
@@ -301,7 +302,7 @@ export function ProximoEnAnotarPanel({ liveMatch, playerName }: Props) {
   // Empty state
   if (!liveMatch && !displayMatch) {
     return (
-      <div className="mt-8 rounded-3xl border border-white/10 bg-black/40 p-8 text-center">
+      <div className={cn(embedded ? "" : "mt-8", "rounded-2xl border border-white/10 bg-black/40 p-6 text-center")}>
         <p className="font-black text-white/50 text-lg">
           Próximo en Anotar se activa durante un partido en vivo ⚽
         </p>
@@ -310,18 +311,21 @@ export function ProximoEnAnotarPanel({ liveMatch, playerName }: Props) {
   }
 
   return (
-    <div className="mt-6 md:mt-10 px-1 sm:px-2">
-      <div className="rounded-3xl border border-[#f0b429]/20 bg-gradient-to-br from-[#091a0f] via-black/95 to-black shadow-2xl overflow-hidden">
+    <div className={cn(embedded ? "min-w-0" : "mt-6 px-1 sm:px-2 md:mt-10")}>
+      <div className={cn(
+        "overflow-hidden border border-[#f0b429]/20 bg-gradient-to-br from-[#091a0f] via-black/95 to-black shadow-2xl",
+        embedded ? "rounded-2xl" : "rounded-3xl"
+      )}>
 
         {/* ══ HEADER ══ */}
-        <div className="border-b border-white/5 px-5 pt-5 pb-4 sm:px-8">
+        <div className={cn("border-b border-white/5 px-5 pb-4 pt-5", !embedded && "sm:px-8")}>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex items-center gap-3">
               <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#f0b429] text-2xl text-black shadow-[0_0_20px_rgba(240,180,41,0.40)]">
                 🎯
               </div>
               <div>
-                <h2 className="text-2xl font-black tracking-tighter leading-none sm:text-3xl">
+                <h2 className={cn("font-black tracking-tighter leading-none", embedded ? "text-xl" : "text-2xl sm:text-3xl")}>
                   PRÓXIMO EN ANOTAR
                 </h2>
                 <p className="mt-0.5 text-[10px] font-black uppercase tracking-[0.22em] text-white/35">
@@ -379,14 +383,14 @@ export function ProximoEnAnotarPanel({ liveMatch, playerName }: Props) {
           </div>
         </div>
 
-        <div className="space-y-5 px-5 py-5 sm:px-8">
+        <div className={cn("space-y-5 px-5 py-5", !embedded && "sm:px-8")}>
 
           {/* ══ TIMER BAR ══ */}
           {round?.status === "betting" && (
             <div className="space-y-1">
               <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-white/35">
                 <span>Tiempo para apostar</span>
-                <span className={cn("tabular-nums", timerSec <= 5 ? "text-red-400" : "text-[#f0b429]")}>
+                <span className={cn("tabular-nums", timerSec <= 2 ? "text-red-400" : "text-[#f0b429]")}>
                   {timerSec}s
                 </span>
               </div>
@@ -490,27 +494,84 @@ export function ProximoEnAnotarPanel({ liveMatch, playerName }: Props) {
           {/* ══ STATE: WAITING ══ */}
           {round?.status === "waiting" && (
             <div className="space-y-4">
-              <div className="rounded-2xl border border-sky-500/20 bg-sky-950/30 p-5 text-center">
-                <div className="mb-3 text-4xl animate-bounce">⏳</div>
-                <p className="text-base font-black text-sky-300">Esperando el próximo gol...</p>
-                <p className="mt-1 text-xs font-bold text-white/40">
-                  Se resolverá automáticamente cuando llegue el gol
-                </p>
+              <div className="rounded-2xl border border-sky-500/20 bg-sky-950/30 p-4 text-center">
+                <div className="mb-2 text-3xl animate-bounce">⏳</div>
+                <p className="text-sm font-black text-sky-300">Ronda cerrada · el admin decide el resultado</p>
+                {myPick && (
+                  <p className="mt-2 text-sm font-bold text-white/60">
+                    Tu apuesta:{" "}
+                    <span className="font-black text-[#f0b429]">
+                      {myPick === "cualquiera" ? "⚽ Cualquiera" : myPick === "nadie" ? "🚫 Nadie" : `🎯 ${myPick}`}
+                    </span>
+                  </p>
+                )}
+                {round.betCount > 0 && (
+                  <p className="mt-1 text-[10px] font-bold text-white/30">
+                    {round.betCount} apuesta{round.betCount !== 1 ? "s" : ""} registrada{round.betCount !== 1 ? "s" : ""}
+                  </p>
+                )}
               </div>
 
-              {myPick && (
-                <div className="rounded-xl border border-[#f0b429]/25 bg-[#1a1205] px-4 py-3 text-center">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-[#f0b429]/60">Tu apuesta</p>
-                  <p className="mt-1 text-lg font-black text-white">
-                    {myPick === "cualquiera" ? "⚽ Cualquiera" : myPick === "nadie" ? "🚫 Nadie" : `🎯 ${myPick}`}
+              {/* Admin: big resolve panel shown here where it matters */}
+              {isAdmin && (
+                <div className="rounded-2xl border-2 border-[#f0b429]/50 bg-[#1a1002] p-4">
+                  <p className="mb-3 text-center text-xs font-black uppercase tracking-[0.2em] text-[#f0b429]">
+                    ⚡ Admin · ¿Quién anotó?
                   </p>
+                  {/* All players in a 2-col grid */}
+                  {round.players.length > 0 && (
+                    <div className="mb-3 space-y-2">
+                      {[
+                        { label: round.homeTeam, players: homePlayers },
+                        { label: round.awayTeam, players: awayPlayers },
+                      ].map(({ label, players }) =>
+                        players.length === 0 ? null : (
+                          <div key={label}>
+                            <p className="mb-1.5 text-[10px] font-black uppercase tracking-widest text-white/30">{label}</p>
+                            <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+                              {players.map((p) => (
+                                <button
+                                  key={p.name}
+                                  type="button"
+                                  disabled={adminBusy}
+                                  onClick={() => handleForceResolve(p.name)}
+                                  className="flex items-center gap-2 rounded-xl border border-[#f0b429]/25 bg-[#241405] px-3 py-2.5 text-left transition hover:border-[#f0b429] hover:bg-[#2e1a06] active:scale-95 disabled:opacity-40"
+                                >
+                                  {p.squadNumber !== null && (
+                                    <span className="shrink-0 w-5 text-center text-[10px] font-black text-[#f0b429]/60 tabular-nums">
+                                      {p.squadNumber}
+                                    </span>
+                                  )}
+                                  <span className="truncate text-xs font-black text-white">
+                                    {p.name.split(" ").slice(-1)[0]}
+                                  </span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  )}
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      disabled={adminBusy}
+                      onClick={() => handleForceResolve("cualquiera")}
+                      className="rounded-xl border border-white/20 bg-white/5 py-3 text-xs font-black text-white/70 transition hover:bg-white/10 active:scale-95 disabled:opacity-40"
+                    >
+                      ⚽ Gol (no listado)
+                    </button>
+                    <button
+                      type="button"
+                      disabled={adminBusy}
+                      onClick={() => handleForceResolve("nadie")}
+                      className="rounded-xl border border-red-500/30 bg-red-950/40 py-3 text-xs font-black text-red-300 transition hover:bg-red-900/40 active:scale-95 disabled:opacity-40"
+                    >
+                      🚫 Nadie anotó
+                    </button>
+                  </div>
                 </div>
-              )}
-
-              {round.betCount > 0 && (
-                <p className="text-center text-xs font-bold text-white/30">
-                  {round.betCount} apuesta{round.betCount !== 1 ? "s" : ""} registrada{round.betCount !== 1 ? "s" : ""}
-                </p>
               )}
             </div>
           )}
@@ -622,65 +683,18 @@ export function ProximoEnAnotarPanel({ liveMatch, playerName }: Props) {
             </div>
           )}
 
-          {/* ══ ADMIN CONTROLS ══ */}
-          {isAdmin && (
-            <div className="rounded-xl border border-red-500/20 bg-red-950/20 p-3">
-              <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-red-400">
-                Admin · Scorer
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {!round && (
-                  <button
-                    type="button"
-                    disabled={adminBusy}
-                    onClick={handleOpenRound}
-                    className="rounded-lg border border-[#d5ff3f]/40 bg-[#1a2206] px-4 py-2 text-xs font-black text-[#d5ff3f] transition hover:bg-[#243009] disabled:opacity-50"
-                  >
-                    {adminBusy ? "Abriendo..." : "⚡ ABRIR RONDA"}
-                  </button>
-                )}
-                {round && round.status !== "resolved" && (
-                  <>
-                    <button
-                      type="button"
-                      disabled={adminBusy}
-                      onClick={() => handleForceResolve("nadie")}
-                      className="rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-xs font-black text-white/60 transition hover:bg-white/10 disabled:opacity-50"
-                    >
-                      {adminBusy ? "..." : "Cerrar sin gol"}
-                    </button>
-                    {round.players.slice(0, 3).map((p) => (
-                      <button
-                        key={p.name}
-                        type="button"
-                        disabled={adminBusy}
-                        onClick={() => handleForceResolve(p.name)}
-                        className="rounded-lg border border-[#f0b429]/30 bg-[#1f1505] px-3 py-2 text-xs font-black text-[#f0b429] transition hover:bg-[#2a1a07] disabled:opacity-50"
-                      >
-                        Gol: {p.name.split(" ").slice(-1)[0]}
-                      </button>
-                    ))}
-                    <button
-                      type="button"
-                      disabled={adminBusy}
-                      onClick={() => handleForceResolve("cualquiera")}
-                      className="rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-xs font-black text-white/60 transition hover:bg-white/10 disabled:opacity-50"
-                    >
-                      Gol sin roster
-                    </button>
-                  </>
-                )}
-                {round?.status === "resolved" && (
-                  <button
-                    type="button"
-                    disabled={adminBusy}
-                    onClick={handleOpenRound}
-                    className="rounded-lg border border-[#d5ff3f]/40 bg-[#1a2206] px-4 py-2 text-xs font-black text-[#d5ff3f] transition hover:bg-[#243009] disabled:opacity-50"
-                  >
-                    {adminBusy ? "Abriendo..." : "⚡ SIGUIENTE RONDA"}
-                  </button>
-                )}
-              </div>
+          {/* ══ ADMIN: open/next round ══ */}
+          {isAdmin && (!round || round.status === "resolved") && (
+            <div className="rounded-xl border border-[#d5ff3f]/20 bg-[#0d1a06] px-4 py-3 flex items-center justify-between gap-3">
+              <p className="text-[10px] font-black uppercase tracking-widest text-[#d5ff3f]/50">Admin</p>
+              <button
+                type="button"
+                disabled={adminBusy}
+                onClick={handleOpenRound}
+                className="rounded-lg border border-[#d5ff3f]/40 bg-[#1a2206] px-5 py-2 text-xs font-black text-[#d5ff3f] transition hover:bg-[#243009] active:scale-95 disabled:opacity-50"
+              >
+                {adminBusy ? "Abriendo..." : round?.status === "resolved" ? "⚡ SIGUIENTE RONDA" : "⚡ ABRIR RONDA"}
+              </button>
             </div>
           )}
 

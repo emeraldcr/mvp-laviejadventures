@@ -18,6 +18,7 @@ type StatQuestion = {
   id: string;
   text: string;
   options: Array<{ id: string; label: string }>;
+  optionStats?: Array<{ optionId: string; label: string; count: number; players: string[] }>;
   correctOptionId: string | null;
   resolved: boolean;
   pointValue: number;
@@ -244,7 +245,81 @@ function QuestionCard({
         {error && (
           <p className="mt-2 text-xs font-bold text-amber-400">{error}</p>
         )}
+
+        {question.resolved && question.optionStats && question.optionStats.length > 0 && (
+          <ResolvedFriendsSummary question={question} myBet={myBet} />
+        )}
       </div>
+    </div>
+  );
+}
+
+function ResolvedFriendsSummary({ question, myBet }: { question: StatQuestion; myBet: string | undefined }) {
+  const correct = question.optionStats?.find((stat) => stat.optionId === question.correctOptionId);
+  const wrong = (question.optionStats ?? []).filter((stat) => stat.optionId !== question.correctOptionId && stat.count > 0);
+  const wrongPlayers = wrong.flatMap((stat) => stat.players.map((player) => ({ player, label: stat.label })));
+
+  return (
+    <div className="mt-3 grid gap-2 rounded-xl border border-white/10 bg-black/25 p-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/35">Amigos</p>
+        {myBet && (
+          <span className={cn(
+            "rounded-md px-2 py-0.5 text-[10px] font-black",
+            myBet === question.correctOptionId ? "bg-emerald-500/15 text-emerald-400" : "bg-red-500/15 text-red-300"
+          )}>
+            {myBet === question.correctOptionId ? "Acertaste" : "Fallaste"}
+          </span>
+        )}
+      </div>
+
+      <FriendPillGroup
+        label={`Acertaron${correct?.label ? `: ${correct.label}` : ""}`}
+        tone="win"
+        players={correct?.players ?? []}
+      />
+      <FriendPillGroup
+        label="Fallaron"
+        tone="loss"
+        players={wrongPlayers.map(({ player, label }) => `${player} (${label})`)}
+      />
+    </div>
+  );
+}
+
+function FriendPillGroup({ label, players, tone }: { label: string; players: string[]; tone: "win" | "loss" }) {
+  return (
+    <div>
+      <p className={cn(
+        "text-[10px] font-black uppercase tracking-wide",
+        tone === "win" ? "text-emerald-400/80" : "text-red-300/75"
+      )}>
+        {label}
+      </p>
+      {players.length ? (
+        <div className="mt-1 flex flex-wrap gap-1.5">
+          {players.slice(0, 8).map((player) => (
+            <span
+              key={player}
+              className={cn(
+                "rounded-md border px-2 py-1 text-[11px] font-black",
+                tone === "win"
+                  ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-300"
+                  : "border-red-500/20 bg-red-500/10 text-red-200"
+              )}
+            >
+              {player}
+            </span>
+          ))}
+          {players.length > 8 && (
+            <span className="rounded-md border border-white/10 bg-white/5 px-2 py-1 text-[11px] font-black text-white/35">
+              +{players.length - 8}
+            </span>
+          )}
+        </div>
+      ) : (
+        <p className="mt-1 text-xs font-bold text-white/30">Nadie todavia.</p>
+      )}
     </div>
   );
 }
@@ -375,6 +450,12 @@ export function StatBetsPanel({
   }, [load, matchId]);
 
   useEffect(() => {
+    if (!matchId) return;
+    const interval = window.setInterval(() => void load(), 4_000);
+    return () => window.clearInterval(interval);
+  }, [load, matchId]);
+
+  useEffect(() => {
     const t = window.setTimeout(() => setActiveIndex(0), 0);
     return () => window.clearTimeout(t);
   }, [matchId]);
@@ -419,6 +500,7 @@ export function StatBetsPanel({
       if (res.ok) {
         const nextBets = { ...myBets, [questionId]: optionId };
         setMyBets(nextBets);
+        void load();
         if (advance) {
           const nextIndex = nextPendingIndex(questionId, nextBets);
           setActiveIndex(nextIndex >= 0 ? nextIndex : 0);

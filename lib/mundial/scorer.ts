@@ -4,7 +4,7 @@ import type { Db } from "mongodb";
 export const SCORER_COLLECTION = "scorer_state";
 export const SCORER_STATE_ID = "active";
 
-const BET_WINDOW_MS = 15_000;
+const BET_WINDOW_MS = 5_000;
 const RESOLVE_SHOW_MS = 8_000;
 const GOAL_WAIT_TIMEOUT_MS = 8 * 60_000; // 8 min without goal → "nadie"
 

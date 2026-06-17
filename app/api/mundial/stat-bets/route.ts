@@ -95,6 +95,15 @@ export async function GET(req: NextRequest) {
         id: q.id,
         text: q.text,
         options: q.options,
+        optionStats: ((q.options ?? []) as StatBetOption[]).map((option) => {
+          const bets = allMatchBets.filter((bet) => bet.questionId === q.id && bet.optionId === option.id);
+          return {
+            optionId: option.id,
+            label: option.label ?? option.text ?? option.id,
+            count: bets.length,
+            players: bets.map((bet) => String(bet.playerName ?? bet.normalizedName ?? "")).filter(Boolean),
+          };
+        }),
         correctOptionId: q.correctOptionId ?? null,
         resolved: Boolean(q.correctOptionId),
         pointValue: q.pointValue ?? 1,
