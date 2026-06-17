@@ -1,12 +1,11 @@
 import { useState } from "react";
-import { BarChart3, ChevronDown, ChevronRight, ChevronUp, CircleDot, Clock3, Lock, Loader2, Save, Timer, Trophy, X, Zap } from "lucide-react";
+import { Activity, BarChart3, ChevronDown, ChevronRight, ChevronUp, CircleDot, Clock3, Lock, Timer, Trophy, X, Zap } from "lucide-react";
 import { hasAnyLiveStats, type LiveTeamStats } from "@/lib/mundial/live-stats";
 import type { Draft, MundialMatch } from "../types";
 import {
   cn,
   formatKickoff,
   formatUpdatedAt,
-  getWinnerPickOptions,
   hasFinalScore,
   isMatchClosed,
   isMatchLive,
@@ -16,37 +15,33 @@ import {
   teamCode,
 } from "../utils";
 import { Flag } from "./Flag";
-import { ScoreInput } from "./ScoreInput";
 import { BettingFavoriteCard } from "./BettingFavoriteCard";
+import { ProximoEnAnotarPanel } from "./ProximoEnAnotarPanel";
+import { StatBetsPanel } from "./StatBetsPanel";
 
 type FeaturedMatchProps = {
   match: MundialMatch;
   draft: Draft;
-  savingId: string | null;
-  isSavingBulk: boolean;
   nowMs: number;
   activeCountdown?: string;
-  onUpdateDraft: (matchId: string, patch: Partial<Draft>) => void;
-  onSave: (match: MundialMatch) => Promise<void>;
+  playerName: string;
+  onGoToMine: () => void;
+  onOpenPlayerPicker: () => void;
 };
 
 export function FeaturedMatch({
   match,
   draft,
-  savingId,
-  isSavingBulk,
   nowMs,
   activeCountdown,
-  onUpdateDraft,
-  onSave,
+  playerName,
+  onGoToMine,
+  onOpenPlayerPicker,
 }: FeaturedMatchProps) {
   const [showLiveModal, setShowLiveModal] = useState(false);
   const isClosed = isMatchClosed(match, nowMs);
   const isLive = isMatchLive(match);
   const isActive = !!activeCountdown;
-  const canEdit = !isClosed;
-  const isSaving = savingId === match.id;
-  const disabled = !canEdit || isSaving || isSavingBulk;
   const isKnockoutTie = match.stage !== "group" && draft.homeScore === draft.awayScore;
   const hasLiveDetail = isLive || match.liveEvents.length > 0 || Boolean(match.liveNote);
 
@@ -159,9 +154,17 @@ export function FeaturedMatch({
               <ChevronRight className="h-4 w-4 shrink-0 text-white/45" />
             </button>
           )}
+
+          {isLive && (
+            <LiveBetsInline
+              match={match}
+              playerName={playerName}
+              onOpenPlayerPicker={onOpenPlayerPicker}
+            />
+          )}
         </div>
 
-        {/* Panel 2 — Tu predicción */}
+        {/* Panel 2 — Tu predicción (read-only) */}
         <div className="p-4 sm:p-5">
           <p className="mb-3 text-[10px] font-black uppercase tracking-[0.22em] text-white/30">
             Tu predicción
@@ -169,87 +172,39 @@ export function FeaturedMatch({
 
           <BettingFavoriteCard match={match} />
 
-          {/* Score inputs */}
-          <div className="grid grid-cols-[minmax(0,1fr)_3.5rem_minmax(0,1fr)] items-stretch gap-2 sm:grid-cols-[minmax(0,1fr)_4rem_minmax(0,1fr)]">
-            <PickTeamCard
-              label="Local"
-              team={match.homeTeam}
-              pickScore={draft.homeScore}
-              disabled={disabled}
-              isClosed={isClosed}
-              onChange={(v) => onUpdateDraft(match.id, { homeScore: v })}
-            />
-
-            <div className="flex flex-col items-center justify-center gap-2">
-              <span className="text-[9px] font-black uppercase tracking-widest text-white/30">
-                {isLive ? liveStatusLabel(match) : activeCountdown ?? (isClosed ? "FT" : "PEND")}
-              </span>
-              <span className="grid h-9 w-9 place-items-center rounded-lg border border-white/15 bg-black text-sm font-black text-[#d5ff3f]">
-                vs
-              </span>
+          {/* Read-only pick summary */}
+          <div className="mt-4 rounded-lg border border-white/15 bg-black/35 p-4">
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-[#f0b429]">
+              {isClosed ? "Tu pick guardado" : "Tu predicción actual"}
+            </p>
+            <div className="mt-3 flex items-baseline gap-3">
+              <span className="text-5xl font-black tabular-nums text-white leading-none">{draft.homeScore}</span>
+              <span className="text-2xl font-black text-white/20">–</span>
+              <span className="text-5xl font-black tabular-nums text-white leading-none">{draft.awayScore}</span>
             </div>
-
-            <PickTeamCard
-              label="Visita"
-              team={match.awayTeam}
-              pickScore={draft.awayScore}
-              disabled={disabled}
-              isClosed={isClosed}
-              onChange={(v) => onUpdateDraft(match.id, { awayScore: v })}
-            />
-          </div>
-
-          {/* Knockout penalty tie-breaker */}
-          {isKnockoutTie && (
-            <label className="mt-4 block">
-              <span className="mb-2 block text-xs font-black uppercase tracking-[0.18em] text-[#d5ff3f]">
-                Desempate por penales
-              </span>
-              <select
-                value={draft.winnerPick ?? ""}
-                disabled={disabled}
-                onChange={(event) =>
-                  onUpdateDraft(match.id, {
-                    winnerPick:
-                      event.target.value === "home" || event.target.value === "away"
-                        ? event.target.value
-                        : null,
-                  })
-                }
-                className="h-12 w-full rounded-lg border border-[#d5ff3f]/45 bg-black/60 px-4 text-base font-black text-[#d5ff3f] outline-none focus:border-white focus:ring-2 focus:ring-[#d5ff3f]/20 disabled:opacity-40"
-                aria-label={`Ganador por penales del partido ${match.number}`}
-              >
-                {getWinnerPickOptions(match).map((option) => (
-                  <option key={option.value || "none"} value={option.value} className="bg-[#071018] text-white">
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
-
-          {/* Prediction summary + save */}
-          <div className="mt-4 flex flex-col gap-3 rounded-lg border border-white/15 bg-black/35 p-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="min-w-0">
-              <p className="text-xs font-black uppercase tracking-[0.18em] text-[#f0b429]">
-                {isClosed ? "Tu pick" : "Resultado elegido"}
+            <p className="mt-2 break-words text-xl font-black text-white/80">
+              {predictionResult(match, draft)}
+            </p>
+            {isKnockoutTie && draft.winnerPick && (
+              <p className="mt-1 text-sm font-bold text-[#d5ff3f]">
+                Penales: {draft.winnerPick === "home" ? match.homeTeam : match.awayTeam}
               </p>
-              <p className="mt-1 break-words text-2xl font-black text-white sm:text-3xl">
-                {predictionResult(match, draft)}
-              </p>
-            </div>
-            {!isClosed && (
-              <button
-                type="button"
-                onClick={() => void onSave(match)}
-                disabled={disabled || !draft.dirty}
-                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border border-[#d5ff3f] bg-[#9dff34] px-6 text-base font-black text-[#06121c] transition-all hover:border-white hover:bg-[#d5ff3f] disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/10 disabled:text-white/35 sm:w-auto sm:min-w-[10rem]"
-              >
-                {isSaving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
-                Guardar pick
-              </button>
             )}
           </div>
+
+          {/* CTA → Mis Picks */}
+          <button
+            type="button"
+            onClick={onGoToMine}
+            className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-white/15 bg-white/5 px-4 py-3 text-sm font-black text-white/60 transition hover:border-[#f0b429]/40 hover:bg-[#12200a] hover:text-white"
+          >
+            <ChevronRight className="h-4 w-4 text-[#f0b429]" />
+            {isClosed
+              ? "Ver todos mis picks →"
+              : isLive
+              ? "Ver predicción completa →"
+              : "Editar pick en Mis Picks →"}
+          </button>
         </div>
       </div>
     </section>
@@ -257,6 +212,44 @@ export function FeaturedMatch({
       <LiveDetailsModal match={match} onClose={() => setShowLiveModal(false)} />
     )}
     </>
+  );
+}
+
+function LiveBetsInline({
+  match,
+  playerName,
+  onOpenPlayerPicker,
+}: {
+  match: MundialMatch;
+  playerName: string;
+  onOpenPlayerPicker: () => void;
+}) {
+  const matchLabel = `${match.homeTeam} vs ${match.awayTeam}`;
+
+  return (
+    <div className="mt-3 overflow-hidden rounded-xl border border-[#d5ff3f]/25 bg-[#06140f]/95">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 bg-[#10240b]/80 px-3 py-2.5">
+        <span className="inline-flex min-w-0 items-center gap-2 text-xs font-black uppercase tracking-[0.18em] text-[#d5ff3f]">
+          <Activity className="h-4 w-4 shrink-0" />
+          <span>Live bets</span>
+        </span>
+        <span className="rounded-md border border-[#d5ff3f]/25 bg-black/30 px-2 py-1 text-[10px] font-black text-[#d5ff3f]">
+          Todo suma puntos
+        </span>
+      </div>
+
+      <div className="grid gap-3 p-3 xl:grid-cols-2">
+        <StatBetsPanel
+          matchId={match.id}
+          playerName={playerName}
+          matchLabel={matchLabel}
+          variant="mini"
+          questionScope="live"
+          onOpenPlayerPicker={onOpenPlayerPicker}
+        />
+        <ProximoEnAnotarPanel liveMatch={match} playerName={playerName} embedded />
+      </div>
+    </div>
   );
 }
 
@@ -515,39 +508,6 @@ function StatsComparisonRow({
   );
 }
 
-function PickTeamCard({
-  label,
-  team,
-  pickScore,
-  disabled,
-  isClosed,
-  onChange,
-}: {
-  label: string;
-  team: string;
-  pickScore: number;
-  disabled: boolean;
-  isClosed: boolean;
-  onChange: (v: number) => void;
-}) {
-  return (
-    <div className="flex min-w-0 flex-col items-center gap-3 rounded-lg border border-white/15 bg-[#06100b]/85 px-3 py-4 transition-all focus-within:border-[#f0b429]">
-      <Flag team={team} size="lg" className="rounded-sm" />
-      <div className="flex flex-col items-center gap-0.5">
-        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#d5ff3f]">{label}</p>
-        <p className="max-w-full break-words text-center text-sm font-black uppercase leading-tight text-white">
-          {team}
-        </p>
-      </div>
-      <div className="flex flex-col items-center gap-1">
-        <ScoreInput label={team} value={pickScore} disabled={disabled} featured onChange={onChange} />
-        <span className="text-[9px] font-black uppercase tracking-[0.22em] text-[#f0b429]/60">
-          {isClosed ? "Tu pick" : "Tu predicción"}
-        </span>
-      </div>
-    </div>
-  );
-}
 
 function LiveTimeline({ match }: { match: MundialMatch }) {
   const events = dedupeLiveEvents(match.liveEvents).sort((a, b) => (b.minute ?? -1) - (a.minute ?? -1));

@@ -151,6 +151,7 @@ export function ProximoEnAnotarPanel({ liveMatch, playerName, embedded = false }
   const [visitorId, setVisitorId] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [adminBusy, setAdminBusy] = useState(false);
+  const [adminError, setAdminError] = useState("");
 
   const serverClockOffsetRef = useRef(0);
   const confettiFiredRef = useRef<string | null>(null);
@@ -248,19 +249,39 @@ export function ProximoEnAnotarPanel({ liveMatch, playerName, embedded = false }
   // Admin: open round
   const handleOpenRound = useCallback(async () => {
     setAdminBusy(true);
-    try { await fetch("/api/mundial/scorer/round", { method: "POST" }); } finally { setAdminBusy(false); }
+    setAdminError("");
+    try {
+      const res = await fetch("/api/mundial/scorer/round", { method: "POST" });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        setAdminError(body.error ?? "No se pudo abrir la ronda.");
+      }
+    } catch {
+      setAdminError("Error de red abriendo la ronda.");
+    } finally {
+      setAdminBusy(false);
+    }
   }, []);
 
   // Admin: force-resolve
   const handleForceResolve = useCallback(async (scorer: string) => {
     setAdminBusy(true);
+    setAdminError("");
     try {
-      await fetch("/api/mundial/scorer/round", {
+      const res = await fetch("/api/mundial/scorer/round", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ actualScorer: scorer }),
       });
-    } finally { setAdminBusy(false); }
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        setAdminError(body.error ?? "No se pudo resolver la ronda.");
+      }
+    } catch {
+      setAdminError("Error de red resolviendo la ronda.");
+    } finally {
+      setAdminBusy(false);
+    }
   }, []);
 
   // ─── Derived ───────────────────────────────────────────────────────────────
@@ -699,6 +720,12 @@ export function ProximoEnAnotarPanel({ liveMatch, playerName, embedded = false }
           )}
 
           {/* ══ LEADERBOARD ══ */}
+          {isAdmin && adminError && (
+            <p className="rounded-xl border border-red-500/25 bg-red-950/35 px-3 py-2 text-sm font-bold text-red-200">
+              {adminError}
+            </p>
+          )}
+
           {(state?.leaderboard ?? []).length > 0 && (
             <div className="border-t border-white/5 pt-4">
               <div className="mb-3 flex items-center gap-2">

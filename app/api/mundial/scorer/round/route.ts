@@ -8,21 +8,34 @@ import { notifyScorerChanged } from "@/lib/mundial/scorer-events";
 export const dynamic = "force-dynamic";
 
 const MATCHES_COLLECTION = "mundial_matches";
+const ROSTERS_COLLECTION = "mundial_rosters";
 
 type RosterPlayer = {
   name?: string;
+  team?: string;
   pos?: string;
   position?: string;
   squadNumber?: number | null;
+  active?: boolean;
 };
 
 type MatchDoc = {
   id: string;
   homeTeam: string;
   awayTeam: string;
-  homeRoster?: RosterPlayer[];
-  awayRoster?: RosterPlayer[];
 };
+
+function mapPlayers(roster: RosterPlayer[], teamSide: "home" | "away") {
+  return roster
+    .filter((p) => p.name?.trim())
+    .slice(0, 11)
+    .map((p) => ({
+      name: (p.name ?? "").trim(),
+      team: teamSide,
+      position: p.pos ?? p.position ?? "",
+      squadNumber: typeof p.squadNumber === "number" ? p.squadNumber : null,
+    }));
+}
 
 export async function POST(_req: NextRequest) {
   try {
@@ -37,8 +50,6 @@ export async function POST(_req: NextRequest) {
           id: 1,
           homeTeam: 1,
           awayTeam: 1,
-          homeRoster: 1,
-          awayRoster: 1,
         },
       }
     );
@@ -47,23 +58,20 @@ export async function POST(_req: NextRequest) {
       return NextResponse.json({ error: "No hay partido en vivo" }, { status: 404 });
     }
 
-    const mapPlayers = (
-      roster: RosterPlayer[] | undefined,
-      team: "home" | "away"
-    ) =>
-      (roster ?? [])
-        .filter((p) => p.name?.trim())
-        .slice(0, 11)
-        .map((p) => ({
-          name: (p.name ?? "").trim(),
-          team,
-          position: p.pos ?? p.position ?? "",
-          squadNumber: typeof p.squadNumber === "number" ? p.squadNumber : null,
-        }));
+    const [homeRoster, awayRoster] = await Promise.all([
+      db.collection<RosterPlayer>(ROSTERS_COLLECTION)
+        .find({ team: match.homeTeam, active: true })
+        .sort({ squadNumber: 1, name: 1 })
+        .toArray(),
+      db.collection<RosterPlayer>(ROSTERS_COLLECTION)
+        .find({ team: match.awayTeam, active: true })
+        .sort({ squadNumber: 1, name: 1 })
+        .toArray(),
+    ]);
 
     const players = [
-      ...mapPlayers(match.homeRoster, "home"),
-      ...mapPlayers(match.awayRoster, "away"),
+      ...mapPlayers(homeRoster, "home"),
+      ...mapPlayers(awayRoster, "away"),
     ];
 
     if (players.length === 0) {

@@ -130,14 +130,11 @@ export default function MundialClient() {
                 matches={matches}
                 predictions={predictions}
                 drafts={drafts}
-                savingId={savingId}
-                isSavingBulk={isSavingBulk}
                 activeMatchId={activeMatchId}
                 nowMs={nowMs}
                 activeCountdown={activeCountdown}
                 playerName={playerName}
-                onUpdateDraft={updateDraft}
-                onSave={saveMatch}
+                onGoToMine={() => setViewMode("mine")}
                 onSelectMatch={handleSelectMatch}
                 onOpenPlayerPicker={openPlayerPicker}
               />

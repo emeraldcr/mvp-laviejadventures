@@ -38,6 +38,7 @@ type StatBetsPanelProps = {
   playerName: string;
   matchLabel?: string;
   variant?: "full" | "mini";
+  questionScope?: "all" | "live" | "final";
   onOpenPlayerPicker?: () => void;
 };
 
@@ -52,6 +53,45 @@ function pointsBadge(pts: number) {
 }
 
 // ── sub-components ─────────────────────────────────────────────────────────
+
+function normalizedText(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
+function isLiveQuestion(question: StatQuestion) {
+  const text = normalizedText(question.text);
+  return [
+    "proximo",
+    "proximos",
+    "siguiente",
+    "20 segundos",
+    "30 segundos",
+    "1 minuto",
+    "un minuto",
+    "3 minutos",
+    "5 minutos",
+    "10 minutos",
+    "antes del minuto",
+    "despues del minuto",
+    "var actua",
+    "var cambia",
+    "sale amarilla",
+    "sale roja",
+    "tiro libre peligroso",
+    "revision arbitral",
+    "atajada",
+    "la tapa",
+    "remata",
+  ].some((needle) => text.includes(needle));
+}
+
+function filterQuestions(questions: StatQuestion[], scope: StatBetsPanelProps["questionScope"]) {
+  if (!scope || scope === "all") return questions;
+  return questions.filter((question) => (scope === "live" ? isLiveQuestion(question) : !isLiveQuestion(question)));
+}
 
 function OptionButton({
   label,
@@ -418,6 +458,7 @@ export function StatBetsPanel({
   playerName,
   matchLabel,
   variant = "full",
+  questionScope = "all",
   onOpenPlayerPicker,
 }: StatBetsPanelProps) {
   const [questions, setQuestions] = useState<StatQuestion[]>([]);
@@ -434,14 +475,14 @@ export function StatBetsPanel({
     const res = await fetch(`/api/mundial/stat-bets?${params.toString()}`);
     if (!res.ok) return;
     const data = await res.json();
-    setQuestions(data.questions ?? []);
+    setQuestions(filterQuestions(data.questions ?? [], questionScope));
     setLeaderboard(data.leaderboard ?? []);
     const betsMap: Record<string, string> = {};
     for (const bet of (data.myBets ?? []) as StatBet[]) {
       betsMap[bet.questionId] = bet.optionId;
     }
     setMyBets(betsMap);
-  }, [matchId, playerName]);
+  }, [matchId, playerName, questionScope]);
 
   useEffect(() => {
     if (!matchId) return;
@@ -458,7 +499,7 @@ export function StatBetsPanel({
   useEffect(() => {
     const t = window.setTimeout(() => setActiveIndex(0), 0);
     return () => window.clearTimeout(t);
-  }, [matchId]);
+  }, [matchId, questionScope]);
 
   useEffect(() => {
     const t = window.setTimeout(() => {
@@ -549,7 +590,9 @@ export function StatBetsPanel({
                 <Zap className="h-5 w-5 text-[#0b0d14]" />
               </span>
               <div className="min-w-0">
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#f0b429]/80">Apuestas extra</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#f0b429]/80">
+                  {questionScope === "live" ? "Apuestas live" : "Apuestas extra"}
+                </p>
                 <p className="truncate text-lg font-black text-white">
                   {matchLabel ?? "Preguntas del partido"}
                 </p>
@@ -696,9 +739,11 @@ export function StatBetsPanel({
               <Zap className="h-5 w-5 text-[#0b0d14]" />
             </span>
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#f0b429]/70">Apuestas del partido</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#f0b429]/70">
+                {questionScope === "final" ? "Apuestas de cierre" : "Apuestas del partido"}
+              </p>
               <h2 className="text-xl font-black text-white">
-                {questions.length} preguntas extra
+                {questions.length} preguntas
               </h2>
             </div>
           </div>
