@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Clock, MapPin, Mountain, Trees, Users } from 'lucide-react';
 import { DEFAULT_LAYERS, MAP_POINTS, TOUR_GROUPS, VIEWBOX } from '../data/mapData';
 import type { MapLayer, MapPoint } from '../types';
@@ -12,14 +12,28 @@ import LayeredMap from './map/LayeredMap';
 
 export default function LaViejaMapClient() {
   const [activePoint, setActivePoint] = useState<MapPoint>(MAP_POINTS[2]);
-  const [zoom, setZoom] = useState(0.86);
+  const [zoom, setZoom] = useState(0.5);
   const [layers, setLayers] = useState(DEFAULT_LAYERS);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const activeGroup = useMemo(() => TOUR_GROUPS.find((group) => group.progress > 40) ?? TOUR_GROUPS[0], []);
 
   const toggleLayer = (layer: MapLayer) => {
     setLayers((current) => ({ ...current, [layer]: !current[layer] }));
   };
+
+  const handleWheel = useCallback((e: WheelEvent) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.06 : 0.06;
+    setZoom((current) => Math.min(Math.max(current + delta, 0.25), 2.0));
+  }, []);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    container.addEventListener('wheel', handleWheel, { passive: false });
+    return () => container.removeEventListener('wheel', handleWheel);
+  }, [handleWheel]);
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#efe4c8] text-stone-900">
@@ -30,9 +44,9 @@ export default function LaViejaMapClient() {
           </h1>
         </header>
 
-        <div className="absolute inset-0 overflow-auto pt-20">
+        <div ref={containerRef} className="absolute inset-0 overflow-auto pt-20">
           <div
-            className="origin-top-left transition-transform duration-300"
+            className="origin-top-left transition-transform duration-150"
             style={{ transform: `scale(${zoom})`, width: VIEWBOX.width, height: VIEWBOX.height }}
           >
             <LayeredMap layers={layers} activePoint={activePoint} onSelectPoint={setActivePoint} />
