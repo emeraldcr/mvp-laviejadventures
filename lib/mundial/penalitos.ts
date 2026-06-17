@@ -50,10 +50,23 @@ export type PenalitosStateDoc = {
   updatedAt: Date;
 };
 
+export type SerializedLiveMatch = {
+  id: string;
+  homeTeam: string;
+  awayTeam: string;
+  homeLiveScore: number | null;
+  awayLiveScore: number | null;
+  liveMinute: number | null;
+  liveStatus: "live" | "halftime" | "fulltime" | "scheduled";
+  liveNote: string;
+};
+
 export type SerializedPenalitosState = {
   game: SerializedGame | null;
   queue: SerializedQueueEntry[];
   scores: Record<string, number>;
+  liveMatch: SerializedLiveMatch | null;
+  viewerCount: number;
 };
 
 export type SerializedGame = {
@@ -253,8 +266,12 @@ export async function startGame(
   );
 }
 
-export function serializeState(state: PenalitosStateDoc | null): SerializedPenalitosState {
-  if (!state) return { game: null, queue: [], scores: {} };
+export function serializeState(
+  state: PenalitosStateDoc | null,
+  extras: { liveMatch?: SerializedLiveMatch | null; viewerCount?: number } = {}
+): SerializedPenalitosState {
+  const base = { liveMatch: extras.liveMatch ?? null, viewerCount: extras.viewerCount ?? 0 };
+  if (!state) return { game: null, queue: [], scores: {}, ...base };
 
   const game: SerializedGame | null = state.game
     ? {
@@ -281,5 +298,5 @@ export function serializeState(state: PenalitosStateDoc | null): SerializedPenal
     joinedAt: e.joinedAt?.toISOString() ?? new Date().toISOString(),
   }));
 
-  return { game, queue, scores: state.scores ?? {} };
+  return { game, queue, scores: state.scores ?? {}, ...base };
 }

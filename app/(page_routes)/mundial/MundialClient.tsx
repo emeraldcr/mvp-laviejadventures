@@ -2,8 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Check, CircleAlert, Loader2 } from "lucide-react";
-import { VIEW_OPTIONS } from "./constants";
-import type { MundialMatch, ViewMode } from "./types";
+import type { MundialMatch } from "./types";
 import { useMundial } from "./useMundial";
 import { MineView } from "./components/MineView";
 import { NextView } from "./components/NextView";
@@ -14,6 +13,7 @@ import { MundialHeader } from "./components/MundialHeader";
 
 // ←←← NUEVO IMPORT
 import { PenalitosPanel } from "./components/PenalitosPanel";
+import { LiveMatchChat } from "./components/LiveMatchChat";
 
 export default function MundialClient() {
   const {
@@ -164,7 +164,14 @@ export default function MundialClient() {
 
             {/* ====================== PENALITOS ====================== */}
             {viewMode === "next" && liveMatch && (
-              <PenalitosPanel liveMatch={liveMatch} playerName={playerName} />
+              <>
+                <PenalitosPanel liveMatch={liveMatch} playerName={playerName} />
+                <LiveMatchChat
+                  liveMatch={liveMatch}
+                  playerName={playerName}
+                  onOpenPlayerPicker={openPlayerPicker}
+                />
+              </>
             )}
             {/* ======================================================= */}
           </>
