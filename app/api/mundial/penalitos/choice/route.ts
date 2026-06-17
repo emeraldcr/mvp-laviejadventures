@@ -6,6 +6,8 @@ import {
   getState,
   PENALITOS_COLLECTION,
   PENALITOS_STATE_ID,
+  serializeState,
+  tickState,
   type PenalitosDirection,
 } from "@/lib/mundial/penalitos";
 
@@ -54,7 +56,9 @@ export async function POST(req: NextRequest) {
       { $set: { [field]: choice, updatedAt: now } }
     );
 
-    return NextResponse.json({ ok: true, choice });
+    await tickState(db);
+
+    return NextResponse.json({ ok: true, choice, ...serializeState(await getState(db)) });
   } catch (err) {
     console.error("penalitos/choice error", err);
     return NextResponse.json({ error: "Error al registrar elección" }, { status: 500 });

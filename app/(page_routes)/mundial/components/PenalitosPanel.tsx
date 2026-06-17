@@ -1,7 +1,7 @@
 // app/(page_routes)/mundial/components/PenalitosPanel.tsx
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Users, Wifi, WifiOff, Trophy } from "lucide-react";
 import confetti from "canvas-confetti";
 import { cn } from "../utils";
@@ -66,7 +66,7 @@ const GK_X: Record<PenalitosDirection, string> = {
 // -------------------------------------------------------------------
 // Sub-components
 // -------------------------------------------------------------------
-function DirectionButton({
+const DirectionButton = memo(function DirectionButton({
   dir,
   chosen,
   disabled,
@@ -94,9 +94,9 @@ function DirectionButton({
       {dir === "right" && "DERECHA →"}
     </button>
   );
-}
+});
 
-function PlayerCard({
+const PlayerCard = memo(function PlayerCard({
   emoji,
   label,
   labelColor,
@@ -133,7 +133,7 @@ function PlayerCard({
       )}
     </div>
   );
-}
+});
 
 // -------------------------------------------------------------------
 // Main Panel
@@ -160,22 +160,36 @@ export function PenalitosPanel({ liveMatch, playerName }: Props) {
   const [myChoice, setMyChoice] = useState<PenalitosDirection | null>(null);
 
   // Local clock for timer countdown
-  const [nowMs, setNowMs] = useState(Date.now());
+  const [nowMs, setNowMs] = useState(0);
 
   // Animation phase: we show the ball/GK animation for ANIM_DURATION_MS after resolvedAt
   const confettiFiredRef = useRef<string | null>(null);
+  const lastPayloadRef = useRef<string>("");
+
+  const applyPayload = useCallback((data: SSEPayload) => {
+    const signature = JSON.stringify(data);
+    if (signature === lastPayloadRef.current) return;
+    lastPayloadRef.current = signature;
+    setGame(data.game ?? null);
+    setQueue(data.queue ?? []);
+    setScores(data.scores ?? {});
+  }, []);
 
   // Init visitor identity once
   useEffect(() => {
-    setVisitorId(getOrCreateVisitorId());
-    setDisplayName(getDisplayName(playerName));
+    queueMicrotask(() => {
+      setVisitorId(getOrCreateVisitorId());
+      setDisplayName(getDisplayName(playerName));
+    });
   }, [playerName]);
 
-  // Local clock tick (every 100ms for smooth timer)
+  // Local clock only ticks while countdown/result animation needs it.
   useEffect(() => {
-    const id = setInterval(() => setNowMs(Date.now()), 100);
+    const needsClock = game?.status === "choosing" || game?.status === "finished";
+    if (!needsClock) return;
+    const id = setInterval(() => setNowMs(Date.now()), 250);
     return () => clearInterval(id);
-  }, []);
+  }, [game?.chooseDeadline, game?.resolvedAt, game?.status]);
 
   // SSE connection
   useEffect(() => {
@@ -188,9 +202,7 @@ export function PenalitosPanel({ liveMatch, playerName }: Props) {
       es.onmessage = (e) => {
         try {
           const data = JSON.parse(e.data) as SSEPayload;
-          setGame(data.game ?? null);
-          setQueue(data.queue ?? []);
-          setScores(data.scores ?? {});
+          applyPayload(data);
         } catch (err) {
           console.error("[penalitos] SSE parse error", err);
         }
@@ -207,17 +219,18 @@ export function PenalitosPanel({ liveMatch, playerName }: Props) {
       es?.close();
       clearTimeout(reconnect);
     };
-  }, []);
+  }, [applyPayload]);
 
   // Reset myChoice when a new round starts
   const prevGameIdRef = useRef<string | null>(null);
+  const gameId = game?.id ?? null;
   useEffect(() => {
-    if (!game) return;
-    if (game.id !== prevGameIdRef.current) {
-      prevGameIdRef.current = game.id;
-      setMyChoice(null);
+    if (!gameId) return;
+    if (gameId !== prevGameIdRef.current) {
+      prevGameIdRef.current = gameId;
+      queueMicrotask(() => setMyChoice(null));
     }
-  }, [game?.id]);
+  }, [gameId]);
 
   // Confetti on goal
   useEffect(() => {
@@ -237,10 +250,11 @@ export function PenalitosPanel({ liveMatch, playerName }: Props) {
   const isPlaying = isGoalkeeper || isShooter;
   const myRole: PenalitosRole | null = isGoalkeeper ? "goalkeeper" : isShooter ? "shooter" : null;
 
-  const isInQueue = !!visitorId && queue.some((e) => e.visitorId === visitorId);
-  const queuePosition = isInQueue
-    ? queue.findIndex((e) => e.visitorId === visitorId) + 1
-    : null;
+  const queuePosition = useMemo(
+    () => (visitorId ? queue.findIndex((e) => e.visitorId === visitorId) + 1 : 0),
+    [queue, visitorId]
+  );
+  const isInQueue = queuePosition > 0;
 
   const chooseDeadlineMs = game?.chooseDeadline ? new Date(game.chooseDeadline).getTime() : null;
   const timerSec = chooseDeadlineMs
@@ -256,14 +270,18 @@ export function PenalitosPanel({ liveMatch, playerName }: Props) {
   const showResult =
     game?.status === "finished" && resolvedAtMs !== null && nowMs - resolvedAtMs >= ANIM_DURATION_MS;
 
+  const serverChoice =
+    myRole === "goalkeeper"
+      ? game?.goalkeeperChoice ?? null
+      : myRole === "shooter"
+      ? game?.shooterChoice ?? null
+      : null;
+  const selectedChoice = myChoice ?? serverChoice;
   const canChoose =
-    game?.status === "choosing" && isPlaying && myChoice === null;
-  const alreadyChose = isPlaying && myChoice !== null;
+    game?.status === "choosing" && isPlaying && selectedChoice === null;
+  const alreadyChose = isPlaying && selectedChoice !== null;
 
   // Slot availability for join buttons
-  const goalkeeperOpen =
-    !game?.goalkeeper || (game.status === "waiting" && !game.goalkeeper);
-  const shooterOpen = !game?.shooter || (game.status === "waiting" && !game.shooter);
   const showJoinGoalkeeper = !isPlaying && !isInQueue && (!game || game.status === "waiting") && !game?.goalkeeper;
   const showJoinShooter = !isPlaying && !isInQueue && (!game || game.status === "waiting") && !game?.shooter;
   const showQueue = !isPlaying && !isInQueue && !showJoinGoalkeeper && !showJoinShooter;
@@ -274,12 +292,13 @@ export function PenalitosPanel({ liveMatch, playerName }: Props) {
   const gkDirX = game?.goalkeeperChoice ? GK_X[game.goalkeeperChoice] : "0px";
 
   // Top scorers for the board
-  const topScorers = Object.entries(scores)
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, 5);
+  const topScorers = useMemo(
+    () => Object.entries(scores).sort(([, a], [, b]) => b - a).slice(0, 5),
+    [scores]
+  );
 
   // ------- Handlers -------
-  const joinAs = async (role: PenalitosRole) => {
+  const joinAs = useCallback(async (role: PenalitosRole) => {
     if (!visitorId || isPlaying || isInQueue) return;
     try {
       await fetch("/api/mundial/penalitos/join", {
@@ -290,9 +309,9 @@ export function PenalitosPanel({ liveMatch, playerName }: Props) {
     } catch (err) {
       console.error("[penalitos] join error", err);
     }
-  };
+  }, [displayName, isInQueue, isPlaying, visitorId]);
 
-  const joinQueue = async (role: PenalitosRole) => {
+  const joinQueue = useCallback(async (role: PenalitosRole) => {
     if (!visitorId || isPlaying || isInQueue) return;
     try {
       await fetch("/api/mundial/penalitos/join", {
@@ -303,9 +322,9 @@ export function PenalitosPanel({ liveMatch, playerName }: Props) {
     } catch (err) {
       console.error("[penalitos] queue error", err);
     }
-  };
+  }, [displayName, isInQueue, isPlaying, visitorId]);
 
-  const leaveQueue = async () => {
+  const leaveQueue = useCallback(async () => {
     if (!visitorId) return;
     try {
       await fetch("/api/mundial/penalitos/join", {
@@ -314,21 +333,33 @@ export function PenalitosPanel({ liveMatch, playerName }: Props) {
         body: JSON.stringify({ visitorId }),
       });
     } catch {}
-  };
+  }, [visitorId]);
 
-  const makeChoice = async (choice: PenalitosDirection) => {
+  const makeChoice = useCallback(async (choice: PenalitosDirection) => {
     if (!canChoose || !visitorId) return;
     setMyChoice(choice);
     try {
-      await fetch("/api/mundial/penalitos/choice", {
+      const res = await fetch("/api/mundial/penalitos/choice", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ visitorId, choice }),
       });
+      if (!res.ok) {
+        setMyChoice(null);
+        return;
+      }
+      const data = await res.json() as Partial<SSEPayload>;
+      if (data.game !== undefined || data.queue !== undefined || data.scores !== undefined) {
+        applyPayload({
+          game: data.game ?? null,
+          queue: data.queue ?? [],
+          scores: data.scores ?? {},
+        });
+      }
     } catch {
       setMyChoice(null);
     }
-  };
+  }, [applyPayload, canChoose, visitorId]);
 
   // ------- Empty state -------
   if (!liveMatch) {
@@ -526,8 +557,8 @@ export function PenalitosPanel({ liveMatch, playerName }: Props) {
                   <DirectionButton
                     key={dir}
                     dir={dir}
-                    chosen={myChoice}
-                    disabled={!!myChoice}
+                    chosen={selectedChoice}
+                    disabled={!!selectedChoice}
                     onChoose={makeChoice}
                   />
                 ))}

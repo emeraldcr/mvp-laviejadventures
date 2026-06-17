@@ -4,12 +4,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/helpers/mongodb";
 import {
   ensureState,
-  startGame,
   PENALITOS_COLLECTION,
   PENALITOS_STATE_ID,
   MAX_QUEUE,
   type PenalitosRoleKey,
   type PenalitosPlayerDoc,
+  type PenalitosStateDoc,
 } from "@/lib/mundial/penalitos";
 
 export const dynamic = "force-dynamic";
@@ -75,11 +75,14 @@ export async function POST(req: NextRequest) {
         startedAt: now,
       };
 
-      await db.collection(PENALITOS_COLLECTION).updateOne(
+      const result = await db.collection(PENALITOS_COLLECTION).updateOne(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         { _id: PENALITOS_STATE_ID, game: null } as any,
         { $set: { game: newGame, updatedAt: now } }
       );
+      if (result.modifiedCount === 0) {
+        return NextResponse.json({ ok: true, status: "retry" });
+      }
       return NextResponse.json({ ok: true, status: "joined_game", role });
     }
 
@@ -93,9 +96,10 @@ export async function POST(req: NextRequest) {
         const shooter = needsShooter ? me : game.shooter;
         const bothReady = !!goalkeeper && !!shooter;
 
-        await db.collection(PENALITOS_COLLECTION).updateOne(
+        const slotField = needsGoalkeeper ? "game.goalkeeper" : "game.shooter";
+        const result = await db.collection(PENALITOS_COLLECTION).updateOne(
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          { _id: PENALITOS_STATE_ID as any, "game.status": "waiting" },
+          { _id: PENALITOS_STATE_ID as any, "game.status": "waiting", [slotField]: null },
           {
             $set: {
               "game.goalkeeper": goalkeeper,
@@ -109,6 +113,9 @@ export async function POST(req: NextRequest) {
             },
           }
         );
+        if (result.modifiedCount === 0) {
+          return NextResponse.json({ ok: true, status: "retry" });
+        }
         return NextResponse.json({ ok: true, status: "joined_game", role });
       }
     }
@@ -121,11 +128,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    await db.collection(PENALITOS_COLLECTION).updateOne(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      { _id: PENALITOS_STATE_ID } as any,
+    const penalitos = db.collection<PenalitosStateDoc>(PENALITOS_COLLECTION);
+
+    await penalitos.updateOne(
+      { _id: PENALITOS_STATE_ID, "queue.visitorId": { $ne: visitorId } },
       {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         $push: {
           queue: {
             visitorId,
@@ -133,13 +140,12 @@ export async function POST(req: NextRequest) {
             preferredRole: role as PenalitosRoleKey,
             joinedAt: now,
           },
-        } as any,
+        },
         $set: { updatedAt: now },
       }
     );
 
-    const queuePos = (await db.collection(PENALITOS_COLLECTION)
-      .findOne({ _id: PENALITOS_STATE_ID } as any))
+    const queuePos = (await penalitos.findOne({ _id: PENALITOS_STATE_ID }))
       ?.queue?.findIndex((e: { visitorId: string }) => e.visitorId === visitorId) ?? -1;
 
     return NextResponse.json({ ok: true, status: "queued", position: queuePos + 1 });
