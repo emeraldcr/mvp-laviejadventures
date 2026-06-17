@@ -9,6 +9,7 @@ import type {
   PenalitosDirection,
   PenalitosGame,
   PenalitosQueueEntry,
+  PenalitosRoundHistory,
   PenalitosRole,
   MundialMatch,
 } from "../types";
@@ -38,15 +39,7 @@ type SSEPayload = {
   game: PenalitosGame | null;
   queue: PenalitosQueueEntry[];
   scores: Record<string, number>;
-  history?: Array<{
-    gameId: string;
-    roundNumber: number;
-    goalkeeperChoice: PenalitosDirection;
-    shooterChoice: PenalitosDirection;
-    winner: PenalitosRole;
-    outcome: "goal" | "save";
-    resolvedAt: string;
-  }>;
+  history?: PenalitosRoundHistory[];
   liveMatch: LiveMatchSnapshot | null;
   viewerCount: number;
   version?: number;
@@ -431,14 +424,14 @@ export function PenalitosPanel({ liveMatch, playerName }: Props) {
           game: data.game ?? null,
           queue: data.queue ?? [],
           scores: data.scores ?? {},
-          liveMatch: data.liveMatch ?? null,
-          viewerCount: data.viewerCount ?? 0,
+          liveMatch: data.liveMatch ?? sseLiveMatch,
+          viewerCount: data.viewerCount ?? viewerCount,
         });
       }
     } catch {
       setMyChoice(null);
     }
-  }, [applyPayload, canChoose, visitorId]);
+  }, [applyPayload, canChoose, sseLiveMatch, viewerCount, visitorId]);
 
   // ------- Empty state -------
   if (!liveMatch && !sseLiveMatch) {
