@@ -89,7 +89,7 @@ export function MatchSelector({
 
   return (
     <div className="overflow-hidden rounded-lg border border-[#f0b429]/20 bg-[#06140f] shadow-[0_4px_20px_rgba(0,0,0,0.22)]">
-      <div className="flex items-center gap-1.5 border-b border-white/10 bg-black/30 px-3 py-2">
+      <div className="flex border-b border-white/10 bg-black/40">
         <TabButton
           active={tab === "live"}
           onClick={() => setTab("live")}
@@ -115,24 +115,22 @@ export function MatchSelector({
 
       <div className="p-3">
         {tab !== "upcoming" ? (
-          <div className="overflow-x-auto">
-            <div className="flex gap-2 pb-0.5">
-              {tabMatches.map((m) => (
-                <CompactMatchCard
-                  key={m.id}
-                  match={m}
-                  nowMs={nowMs}
-                  selected={selectedMatchId === m.id}
-                  active={m.id === activeMatchId}
-                  onClick={() => onSelectMatch(m)}
-                />
-              ))}
-              {tabMatches.length === 0 && (
-                <p className="py-3 text-sm font-bold text-white/50">
-                  {tab === "live" ? "No hay partido en vivo ahora." : "No hay partidos hoy."}
-                </p>
-              )}
-            </div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+            {tabMatches.map((m) => (
+              <CompactMatchCard
+                key={m.id}
+                match={m}
+                nowMs={nowMs}
+                selected={selectedMatchId === m.id}
+                active={m.id === activeMatchId}
+                onClick={() => onSelectMatch(m)}
+              />
+            ))}
+            {tabMatches.length === 0 && (
+              <p className="col-span-2 py-4 text-sm font-bold text-white/40">
+                {tab === "live" ? "No hay partido en vivo ahora." : "No hay partidos hoy."}
+              </p>
+            )}
           </div>
         ) : (
           <div className="max-h-[44vh] space-y-4 overflow-y-auto pr-0.5">
@@ -150,7 +148,6 @@ export function MatchSelector({
                       selected={selectedMatchId === m.id}
                       active={m.id === activeMatchId}
                       onClick={() => onSelectMatch(m)}
-                      fill
                     />
                   ))}
                 </div>
@@ -186,12 +183,22 @@ function TabButton({
       type="button"
       onClick={onClick}
       className={cn(
-        "inline-flex h-7 items-center gap-1.5 rounded border px-2 text-[11px] font-black uppercase tracking-wide transition",
+        "relative flex flex-1 items-center justify-center gap-1.5 py-3 px-2 text-[11px] font-black uppercase tracking-wide transition-all",
         active
-          ? "border-white/30 bg-white/12 text-white"
-          : "border-transparent text-white/45 hover:text-white/75"
+          ? live
+            ? "bg-[#9dff34]/8 text-[#9dff34]"
+            : "bg-[#f0b429]/8 text-[#f0b429]"
+          : "text-white/40 hover:text-white/65"
       )}
     >
+      {active && (
+        <span
+          className={cn(
+            "absolute bottom-0 left-0 right-0 h-[2px]",
+            live ? "bg-[#9dff34]" : "bg-[#f0b429]"
+          )}
+        />
+      )}
       {live ? (
         <span
           className={cn(
@@ -205,7 +212,16 @@ function TabButton({
         icon && <span className="shrink-0 opacity-75">{icon}</span>
       )}
       <span>{label}</span>
-      <span className="rounded bg-black/40 px-1 py-0.5 text-[10px] tabular-nums text-white/50">
+      <span
+        className={cn(
+          "rounded px-1 py-0.5 text-[10px] tabular-nums",
+          active
+            ? live
+              ? "bg-[#9dff34]/20 text-[#9dff34]"
+              : "bg-[#f0b429]/20 text-[#f0b429]"
+            : "bg-black/40 text-white/35"
+        )}
+      >
         {count}
       </span>
     </button>
@@ -218,14 +234,12 @@ function CompactMatchCard({
   selected,
   active,
   onClick,
-  fill,
 }: {
   match: MundialMatch;
   nowMs: number;
   selected: boolean;
   active: boolean;
   onClick: () => void;
-  fill?: boolean;
 }) {
   const live = isMatchLive(match);
   const closed = isMatchClosed(match, nowMs);
@@ -259,17 +273,30 @@ function CompactMatchCard({
       type="button"
       onClick={onClick}
       className={cn(
-        "group rounded-lg border p-2.5 text-left transition-all",
-        fill ? "w-full" : "w-[200px] shrink-0",
+        "group relative w-full rounded-lg border p-2.5 text-left transition-all active:scale-95",
         selected
-          ? "border-[#f0b429] bg-[#1f2a0b] shadow-[0_0_18px_rgba(240,180,41,0.22)]"
+          ? live
+            ? "border-[#9dff34] bg-[#0d2209] shadow-[0_0_22px_rgba(157,255,52,0.22)]"
+            : "border-[#f0b429] bg-[#1f2a0b] shadow-[0_0_22px_rgba(240,180,41,0.28)]"
           : live
-            ? "border-[#9dff34]/65 bg-[#10240b]"
+            ? "border-[#9dff34]/40 bg-[#10240b] hover:border-[#9dff34]/70"
             : active
-              ? "border-[#f0b429]/65 bg-[#1a2206]"
-              : "border-white/10 bg-black/35 hover:border-[#f0b429]/50 hover:bg-black/50"
+              ? "border-[#f0b429]/50 bg-[#1a2206] hover:border-[#f0b429]/80"
+              : closed
+                ? "border-white/8 bg-black/20 opacity-55"
+                : "border-white/10 bg-black/35 hover:border-[#f0b429]/50 hover:bg-black/50"
       )}
     >
+      {/* Top selection bar */}
+      {selected && (
+        <span
+          className={cn(
+            "absolute left-0 right-0 top-0 h-[3px] rounded-t-lg",
+            live ? "bg-[#9dff34]" : "bg-[#f0b429]"
+          )}
+        />
+      )}
+
       {/* Status row */}
       <div className="mb-2 flex items-center gap-1">
         {live && (
@@ -278,6 +305,11 @@ function CompactMatchCard({
         <span className={cn("truncate text-[9px] font-black uppercase tracking-wide", statusColor)}>
           {statusLabel}
         </span>
+        {selected && !live && (
+          <span className="ml-auto shrink-0 text-[8px] font-black uppercase tracking-widest text-white/40">
+            viendo
+          </span>
+        )}
       </div>
 
       {/* Teams + score */}
@@ -295,7 +327,7 @@ function CompactMatchCard({
             live
               ? "bg-[#9dff34]/15 text-[#9dff34]"
               : closed
-                ? "bg-[#ffb15f]/10 text-[#ffb15f]"
+                ? "bg-[#ffb15f]/10 text-[#ffb15f]/75"
                 : "bg-black/40 text-white/55"
           )}
         >
