@@ -17,11 +17,6 @@ type PredictionScore = {
   kind: "exact" | "outcome" | "miss" | "pending";
 };
 
-const PODIUM_STYLES = [
-  { card: "border-[#f0b429]/60 bg-[#10240b]", rank: "border-[#f0b429]/50 bg-[#f0b429] text-[#06121c]", pts: "text-[#d5ff3f]", bar: "bg-[#d5ff3f]" },
-  { card: "border-[#62ffe6]/45 bg-[#071d2a]", rank: "border-[#62ffe6]/45 bg-[#62ffe6] text-[#06121c]", pts: "text-[#62ffe6]", bar: "bg-[#62ffe6]" },
-  { card: "border-[#ffb15f]/45 bg-[#2a120b]", rank: "border-[#ffb15f]/45 bg-[#ffb15f] text-[#06121c]", pts: "text-[#ffb15f]", bar: "bg-[#ffb15f]" },
-];
 
 export function PlayersView({ leaderboard, matches, predictions }: PlayersViewProps) {
   const [selectedPlayerKey, setSelectedPlayerKey] = useState<string | null>(null);
@@ -58,11 +53,11 @@ export function PlayersView({ leaderboard, matches, predictions }: PlayersViewPr
                 <Trophy className="h-5 w-5" />
               </span>
               <div className="min-w-0">
-                <p className="text-xs font-black uppercase tracking-[0.2em] text-[#d5ff3f]">Picks · Partidos</p>
+                <p className="text-xs font-black uppercase tracking-[0.2em] text-[#d5ff3f]">Quiniela · Mundial 2026</p>
                 <h2 className="mt-1 text-2xl font-black uppercase text-white sm:text-3xl">
-                  Tabla de Posiciones
+                  Ranking de Puntos
                 </h2>
-                <p className="mt-1 text-xs font-bold text-white/40">{leaderboard.length} jugadores</p>
+                <p className="mt-1 text-xs font-bold text-white/40">{leaderboard.length} participantes</p>
               </div>
             </div>
 
@@ -76,50 +71,126 @@ export function PlayersView({ leaderboard, matches, predictions }: PlayersViewPr
         </div>
       </div>
 
-      {/* Podium — horizontal scroll on mobile, 3-col grid on sm+ */}
-      <div className="flex gap-3 overflow-x-auto pb-1 sm:grid sm:grid-cols-3 sm:overflow-visible sm:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-        {leaderboard.slice(0, 3).map((entry, i) => {
-          const style = PODIUM_STYLES[i];
-          const barWidth = maxPts > 0 ? Math.round((entry.totalPoints / maxPts) * 100) : 0;
-          const accuracy = accuracyPct(entry);
-          const misses = Math.max(entry.scoredPredictions - entry.correctOutcomes, 0);
+      {/* ── Cartoon Podium ── */}
+      <div className="relative overflow-hidden rounded-2xl border border-[#f0b429]/25 bg-[#04100a] shadow-[0_32px_80px_rgba(0,0,0,0.60)]">
+        {/* Grid overlay */}
+        <div className="pointer-events-none absolute inset-0 opacity-40 [background-image:linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(0deg,rgba(255,255,255,0.04)_1px,transparent_1px)] [background-size:48px_48px]" />
+        {/* Gold spotlight from top-center */}
+        <div className="pointer-events-none absolute inset-0 [background:radial-gradient(ellipse_65%_52%_at_50%_0%,rgba(240,180,41,0.18),transparent_72%)]" />
+        {/* Floating sparkles */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 select-none overflow-hidden">
+          <span className="absolute left-[6%] top-[14%] text-lg text-[#f0b429] opacity-40">✦</span>
+          <span className="absolute left-[19%] top-[7%] text-sm text-[#d5ff3f] opacity-30">★</span>
+          <span className="absolute right-[9%] top-[12%] text-base text-[#f0b429] opacity-35">✦</span>
+          <span className="absolute right-[23%] top-[5%] text-xs text-[#62ffe6] opacity-25">★</span>
+          <span className="absolute left-[47%] top-[3%] text-xs text-[#f0b429] opacity-20">✦</span>
+        </div>
 
-          return (
+        {/* Stage — all columns bottom-aligned; platform height = visual elevation */}
+        <div className="flex items-end justify-center pt-8 sm:pt-12">
+
+          {/* ── Silver (2nd) — left ── */}
+          {leaderboard[1] ? (
             <button
               type="button"
-              key={entry.normalizedName}
-              onClick={() => setSelectedPlayerKey(entry.normalizedName)}
-              className={cn(
-                "w-[72vw] shrink-0 rounded-xl border p-3.5 text-left shadow-[0_18px_52px_rgba(0,0,0,0.22)] transition hover:-translate-y-0.5 hover:ring-2 hover:ring-[#f0b429]/25 sm:w-auto sm:p-4",
-                style.card,
-                i === 0 && "ring-1 ring-[#d5ff3f]/45"
-              )}
+              onClick={() => setSelectedPlayerKey(leaderboard[1].normalizedName)}
+              className="group flex w-1/3 flex-col items-center transition hover:brightness-110 focus:outline-none"
             >
-              <div className="mb-3 flex items-start justify-between gap-2">
-                <span className={cn("grid h-9 w-9 place-items-center rounded-lg border text-lg font-black sm:h-10 sm:w-10 sm:text-xl", style.rank)}>
-                  {i + 1}
-                </span>
-                <div className="text-right">
-                  <span className={cn("text-xl font-black tabular-nums sm:text-2xl", style.pts)}>{entry.totalPoints}</span>
-                  <span className="ml-1 text-xs font-bold text-white/55">pts</span>
+              <div className="flex w-full flex-col items-center px-2 pb-3 sm:px-4">
+                <div className="mb-2 grid h-11 w-11 place-items-center rounded-full border-2 border-[#62ffe6]/60 bg-[#071d2a] text-xl font-black text-[#62ffe6] shadow-[0_0_18px_rgba(98,255,230,0.25),inset_0_1px_0_rgba(255,255,255,0.12)]">
+                  2
+                </div>
+                <div className="mb-1.5 grid h-12 w-12 place-items-center rounded-full border-2 border-[#62ffe6]/45 bg-[#071d2a] text-sm font-black text-[#62ffe6] shadow-[0_4px_16px_rgba(0,0,0,0.50)]">
+                  {leaderboard[1].playerName.slice(0, 2).toUpperCase()}
+                </div>
+                <p className="w-full truncate text-center text-[11px] font-black text-white sm:text-xs">{leaderboard[1].playerName}</p>
+                <p className="mt-0.5 text-base font-black tabular-nums text-[#62ffe6] sm:text-lg">
+                  {leaderboard[1].totalPoints}<span className="ml-0.5 text-[9px] font-bold text-white/35">pts</span>
+                </p>
+                <div className="mt-1.5 flex w-full flex-col gap-0.5 px-0.5">
+                  <span className="rounded bg-black/40 px-1 py-0.5 text-center text-[9px] font-black text-[#d5ff3f]">{leaderboard[1].exactScores} exactos</span>
+                  <span className="rounded bg-black/40 px-1 py-0.5 text-center text-[9px] font-black text-white/45">{accuracyPct(leaderboard[1])}% prec.</span>
                 </div>
               </div>
-
-              <p className="mb-1 truncate text-sm font-black text-white sm:text-base">{entry.playerName}</p>
-
-              <div className="mb-3 h-1.5 overflow-hidden rounded-full bg-black/45">
-                <div className={cn("h-full rounded-full", style.bar)} style={{ width: `${barWidth}%` }} />
-              </div>
-
-              <div className="grid grid-cols-4 gap-1">
-                <MiniStat label="Exact." value={entry.exactScores} tone="lime" />
-                <MiniStat label="Res." value={entry.correctOutcomes} tone="cyan" />
-                <MiniStat label="Fallo" value={misses} tone="orange" />
-                <MiniStat label="Prec." value={`${accuracy}%`} tone="white" />
+              <div className="relative w-full border-t-[3px] border-[#62ffe6]/65 bg-gradient-to-b from-[#0b2533] to-[#051520]" style={{ height: 88 }}>
+                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#62ffe6]/45 to-transparent" />
+                <span aria-hidden className="absolute inset-0 flex items-center justify-center select-none text-5xl font-black text-[#62ffe6]/8">2</span>
               </div>
             </button>
-          );
-        })}
+          ) : <div className="w-1/3" />}
+
+          {/* ── Gold (1st) — center, tallest ── */}
+          {leaderboard[0] ? (
+            <button
+              type="button"
+              onClick={() => setSelectedPlayerKey(leaderboard[0].normalizedName)}
+              className="group relative z-10 flex w-1/3 flex-col items-center transition hover:brightness-110 focus:outline-none"
+            >
+              {/* Crown */}
+              <div aria-hidden className="mb-0.5 select-none">
+                <svg viewBox="0 0 48 30" className="mx-auto h-9 w-14 drop-shadow-[0_3px_12px_rgba(240,180,41,0.75)]">
+                  <path d="M5 26h38v4H5z" fill="#7a4d08"/>
+                  <path d="M5 26h38v2H5z" fill="#a06610"/>
+                  <path d="M5 26L11 8l9 11L24 4l4 15 9-11 6 18z" fill="#f0b429" stroke="#9a5e0a" strokeWidth="1.5" strokeLinejoin="round"/>
+                  <circle cx="11" cy="8" r="3.5" fill="#d5ff3f" stroke="#9a5e0a" strokeWidth="1"/>
+                  <circle cx="24" cy="4" r="3.5" fill="#d5ff3f" stroke="#9a5e0a" strokeWidth="1"/>
+                  <circle cx="37" cy="8" r="3.5" fill="#d5ff3f" stroke="#9a5e0a" strokeWidth="1"/>
+                  <circle cx="11" cy="8" r="1.5" fill="white" opacity="0.7"/>
+                  <circle cx="24" cy="4" r="1.5" fill="white" opacity="0.7"/>
+                  <circle cx="37" cy="8" r="1.5" fill="white" opacity="0.7"/>
+                </svg>
+              </div>
+              <div className="flex w-full flex-col items-center px-2 pb-3 sm:px-4">
+                <div className="mb-1.5 grid h-16 w-16 place-items-center rounded-full border-[3px] border-[#f0b429] bg-[#10240b] text-xl font-black text-[#d5ff3f] shadow-[0_0_30px_rgba(240,180,41,0.55),0_6px_24px_rgba(0,0,0,0.65)]">
+                  {leaderboard[0].playerName.slice(0, 2).toUpperCase()}
+                </div>
+                <p className="w-full truncate text-center text-xs font-black text-white sm:text-sm">{leaderboard[0].playerName}</p>
+                <p className="mt-0.5 text-xl font-black tabular-nums text-[#d5ff3f] sm:text-2xl">
+                  {leaderboard[0].totalPoints}<span className="ml-0.5 text-[10px] font-bold text-white/35">pts</span>
+                </p>
+                <div className="mt-1.5 flex w-full flex-col gap-0.5 px-0.5">
+                  <span className="rounded border border-[#f0b429]/30 bg-[#f0b429]/12 px-1 py-0.5 text-center text-[9px] font-black text-[#d5ff3f]">{leaderboard[0].exactScores} exactos</span>
+                  <span className="rounded border border-[#f0b429]/25 bg-[#f0b429]/10 px-1 py-0.5 text-center text-[9px] font-black text-[#f0b429]">{accuracyPct(leaderboard[0])}% prec.</span>
+                </div>
+              </div>
+              <div className="relative w-full border-t-4 border-[#f0b429] bg-gradient-to-b from-[#2a1803] to-[#130d01] shadow-[0_0_32px_rgba(240,180,41,0.14)]" style={{ height: 122 }}>
+                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#f0b429]/65 to-transparent" />
+                <span aria-hidden className="absolute inset-0 flex items-center justify-center select-none text-7xl font-black text-[#f0b429]/8">1</span>
+              </div>
+            </button>
+          ) : <div className="w-1/3" />}
+
+          {/* ── Bronze (3rd) — right ── */}
+          {leaderboard[2] ? (
+            <button
+              type="button"
+              onClick={() => setSelectedPlayerKey(leaderboard[2].normalizedName)}
+              className="group flex w-1/3 flex-col items-center transition hover:brightness-110 focus:outline-none"
+            >
+              <div className="flex w-full flex-col items-center px-2 pb-3 sm:px-4">
+                <div className="mb-2 grid h-11 w-11 place-items-center rounded-full border-2 border-[#ffb15f]/60 bg-[#200d03] text-xl font-black text-[#ffb15f] shadow-[0_0_14px_rgba(255,177,95,0.22),inset_0_1px_0_rgba(255,255,255,0.10)]">
+                  3
+                </div>
+                <div className="mb-1.5 grid h-12 w-12 place-items-center rounded-full border-2 border-[#ffb15f]/40 bg-[#200d03] text-sm font-black text-[#ffb15f] shadow-[0_4px_16px_rgba(0,0,0,0.50)]">
+                  {leaderboard[2].playerName.slice(0, 2).toUpperCase()}
+                </div>
+                <p className="w-full truncate text-center text-[11px] font-black text-white sm:text-xs">{leaderboard[2].playerName}</p>
+                <p className="mt-0.5 text-base font-black tabular-nums text-[#ffb15f] sm:text-lg">
+                  {leaderboard[2].totalPoints}<span className="ml-0.5 text-[9px] font-bold text-white/35">pts</span>
+                </p>
+                <div className="mt-1.5 flex w-full flex-col gap-0.5 px-0.5">
+                  <span className="rounded bg-black/40 px-1 py-0.5 text-center text-[9px] font-black text-[#d5ff3f]">{leaderboard[2].exactScores} exactos</span>
+                  <span className="rounded bg-black/40 px-1 py-0.5 text-center text-[9px] font-black text-white/45">{accuracyPct(leaderboard[2])}% prec.</span>
+                </div>
+              </div>
+              <div className="relative w-full border-t-[3px] border-[#ffb15f]/60 bg-gradient-to-b from-[#2a1003] to-[#160802]" style={{ height: 66 }}>
+                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#ffb15f]/35 to-transparent" />
+                <span aria-hidden className="absolute inset-0 flex items-center justify-center select-none text-4xl font-black text-[#ffb15f]/8">3</span>
+              </div>
+            </button>
+          ) : <div className="w-1/3" />}
+
+        </div>
       </div>
 
       <div className="overflow-hidden rounded-xl border border-[#f0b429]/25 bg-[#06140f] shadow-[0_24px_70px_rgba(0,0,0,0.24)]">

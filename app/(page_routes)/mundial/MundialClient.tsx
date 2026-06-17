@@ -11,8 +11,8 @@ import { PlayerPickerModal } from "./components/PlayerPickerModal";
 import { PinModal } from "./components/PinModal";
 import { MundialHeader } from "./components/MundialHeader";
 
-// ←←← NUEVO IMPORT
 import { PenalitosPanel } from "./components/PenalitosPanel";
+import { ProximoEnAnotarPanel } from "./components/ProximoEnAnotarPanel";
 import { LiveMatchChat } from "./components/LiveMatchChat";
 
 export default function MundialClient() {
@@ -162,11 +162,11 @@ export default function MundialClient() {
               <PlayersView leaderboard={leaderboard} matches={matches} predictions={predictions} />
             )}
 
-            {/* ====================== PENALITOS + CHAT ====================== */}
-            {/* Shown in all view modes so every user can join during a live match */}
+            {/* ====================== LIVE PANELS ========================== */}
             {liveMatch && (
               <>
                 <PenalitosPanel liveMatch={liveMatch} playerName={playerName} />
+                <ProximoEnAnotarPanel liveMatch={liveMatch} playerName={playerName} />
                 <LiveMatchChat
                   liveMatch={liveMatch}
                   playerName={playerName}

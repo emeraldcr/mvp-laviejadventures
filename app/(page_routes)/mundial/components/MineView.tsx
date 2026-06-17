@@ -1,8 +1,8 @@
-import { ListChecks, Lock, Target } from "lucide-react";
-import type { ReactNode } from "react";
+import { CalendarDays, Flame, History, ListChecks, Lock, Target } from "lucide-react";
+import { useMemo, type ReactNode } from "react";
 import { TOTAL_MATCHES } from "../constants";
 import type { Draft, MundialMatch } from "../types";
-import { emptyDraft } from "../utils";
+import { cn, emptyDraft, isMatchClosed, isMatchLive, kickoffMs } from "../utils";
 import { MatchCard } from "./MatchCard";
 
 type MineViewProps = {
@@ -18,6 +18,17 @@ type MineViewProps = {
   onSave: (match: MundialMatch) => Promise<void>;
 };
 
+type MatchSection = {
+  id: string;
+  eyebrow: string;
+  title: string;
+  description: string;
+  matches: MundialMatch[];
+  tone: "today" | "upcoming" | "recent";
+};
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
 export function MineView({
   savedCount,
   lockedCount,
@@ -31,6 +42,49 @@ export function MineView({
   onSave,
 }: MineViewProps) {
   const pct = Math.round((savedCount / TOTAL_MATCHES) * 100);
+  const sections = useMemo(() => {
+    const clockMs = nowMs > 0 ? nowMs : Date.now();
+    const todayKey = crDateKey(clockMs);
+    const tomorrowKey = crDateKey(clockMs + DAY_MS);
+    const openMatches = [...mineMatches]
+      .filter((match) => !isMatchClosed(match, clockMs))
+      .sort((a, b) => compareUpcomingMatches(a, b, drafts, todayEditableMatchIds, clockMs));
+    const recentMatches = [...mineMatches]
+      .filter((match) => isMatchClosed(match, clockMs))
+      .sort((a, b) => kickoffMs(b) - kickoffMs(a) || b.number - a.number);
+
+    const nextSections: MatchSection[] = [];
+    const matchesByDate = new Map<string, MundialMatch[]>();
+
+    for (const match of openMatches) {
+      const key = crDateKey(kickoffMs(match));
+      matchesByDate.set(key, [...(matchesByDate.get(key) ?? []), match]);
+    }
+
+    for (const [dateKey, matches] of matchesByDate) {
+      nextSections.push({
+        id: `date-${dateKey}`,
+        eyebrow: dateKey === todayKey ? "Primero" : "Por dia",
+        title: daySectionTitle(dateKey, todayKey, tomorrowKey),
+        description: daySectionDescription(dateKey, todayKey, tomorrowKey, matches),
+        matches,
+        tone: dateKey === todayKey ? "today" : "upcoming",
+      });
+    }
+
+    if (recentMatches.length) {
+      nextSections.push({
+        id: "recent",
+        eyebrow: "Cerrados",
+        title: "Recientes",
+        description: "Tus picks ya cerrados, del mas nuevo al mas viejo.",
+        matches: recentMatches,
+        tone: "recent",
+      });
+    }
+
+    return nextSections;
+  }, [drafts, mineMatches, nowMs, todayEditableMatchIds]);
 
   return (
     <section className="grid gap-4">
@@ -81,12 +135,12 @@ export function MineView({
       </div>
 
       {mineMatches.length ? (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {mineMatches.map((match) => (
-            <MatchCard
-              key={match.id}
-              match={match}
-              draft={drafts[match.id] ?? emptyDraft()}
+        <div className="grid gap-5">
+          {sections.map((section) => (
+            <PickSection
+              key={section.id}
+              section={section}
+              drafts={drafts}
               savingId={savingId}
               isSavingBulk={isSavingBulk}
               todayEditableMatchIds={todayEditableMatchIds}
@@ -106,6 +160,207 @@ export function MineView({
         </div>
       )}
     </section>
+  );
+}
+
+function compareUpcomingMatches(
+  a: MundialMatch,
+  b: MundialMatch,
+  drafts: Record<string, Draft>,
+  todayEditableMatchIds: Set<string>,
+  nowMs: number
+) {
+  return dayPriority(a, nowMs) - dayPriority(b, nowMs)
+    || matchPriority(a, drafts, todayEditableMatchIds, nowMs) - matchPriority(b, drafts, todayEditableMatchIds, nowMs)
+    || kickoffMs(a) - kickoffMs(b)
+    || a.number - b.number;
+}
+
+function dayPriority(match: MundialMatch, nowMs: number) {
+  const todayKey = crDateKey(nowMs);
+  const tomorrowKey = crDateKey(nowMs + DAY_MS);
+  const matchKey = crDateKey(kickoffMs(match));
+
+  if (matchKey === todayKey) return 0;
+  if (matchKey === tomorrowKey) return 1;
+  return 2;
+}
+
+function matchPriority(
+  match: MundialMatch,
+  drafts: Record<string, Draft>,
+  todayEditableMatchIds: Set<string>,
+  nowMs: number
+) {
+  const draft = drafts[match.id] ?? emptyDraft();
+  const closed = isMatchClosed(match, nowMs);
+  const editable = todayEditableMatchIds.has(match.id) && !closed;
+
+  if (isMatchLive(match)) return 0;
+  if (draft.dirty && editable) return 1;
+  if (editable && !draft.saved) return 2;
+  if (editable) return 3;
+  if (draft.saved && !closed) return 4;
+  return 5;
+}
+
+function crDateKey(ms: number) {
+  if (!Number.isFinite(ms)) return "sin-fecha";
+
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Costa_Rica",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(ms);
+}
+
+function daySectionTitle(dateKey: string, todayKey: string, tomorrowKey: string) {
+  if (dateKey === todayKey) return "Hoy";
+  if (dateKey === tomorrowKey) return "Manana";
+
+  const [year, month, day] = dateKey.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day, 12));
+
+  return new Intl.DateTimeFormat("es-CR", {
+    timeZone: "America/Costa_Rica",
+    weekday: "long",
+    day: "2-digit",
+    month: "short",
+  }).format(date);
+}
+
+function daySectionDescription(dateKey: string, todayKey: string, tomorrowKey: string, matches: MundialMatch[]) {
+  const groups = groupSummary(matches);
+  if (dateKey === todayKey) return `Los partidos de hoy primero${groups ? ` (${groups})` : ""}.`;
+  if (dateKey === tomorrowKey) return `Luego vienen los de manana${groups ? ` (${groups})` : ""}.`;
+  return `Proximos partidos en orden de hora${groups ? ` (${groups})` : ""}.`;
+}
+
+function groupSummary(matches: MundialMatch[]) {
+  const labels = Array.from(
+    new Set(matches.map((match) => (match.group ? `Grupo ${match.group}` : match.stageLabel)).filter(Boolean))
+  );
+
+  if (!labels.length) return "";
+  if (labels.length <= 3) return labels.join(", ");
+  return `${labels.slice(0, 3).join(", ")} +${labels.length - 3}`;
+}
+
+function PickSection({
+  section,
+  drafts,
+  savingId,
+  isSavingBulk,
+  todayEditableMatchIds,
+  nowMs,
+  onUpdateDraft,
+  onSave,
+}: {
+  section: MatchSection;
+  drafts: Record<string, Draft>;
+  savingId: string | null;
+  isSavingBulk: boolean;
+  todayEditableMatchIds: Set<string>;
+  nowMs: number;
+  onUpdateDraft: (matchId: string, patch: Partial<Draft>) => void;
+  onSave: (match: MundialMatch) => Promise<void>;
+}) {
+  const saved = section.matches.filter((match) => drafts[match.id]?.saved).length;
+  const pending = section.matches.filter((match) => {
+    const draft = drafts[match.id] ?? emptyDraft();
+    const closed = isMatchClosed(match, nowMs);
+    return todayEditableMatchIds.has(match.id) && !closed && (!draft.saved || draft.dirty);
+  }).length;
+
+  return (
+    <section
+      className={cn(
+        "overflow-hidden rounded-xl border bg-black/25",
+        section.tone === "today"
+          ? "border-[#d5ff3f]/45 shadow-[0_18px_58px_rgba(157,255,52,0.12)]"
+          : section.tone === "recent"
+            ? "border-[#f0b429]/35"
+            : "border-white/12"
+      )}
+    >
+      <div
+        className={cn(
+          "flex flex-col gap-3 border-b px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5",
+          section.tone === "today"
+            ? "border-[#d5ff3f]/25 bg-[#10240b]/80"
+            : section.tone === "recent"
+              ? "border-[#f0b429]/20 bg-[#211707]/70"
+              : "border-white/10 bg-black/35"
+        )}
+      >
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <span
+              className={cn(
+                "grid h-8 w-8 shrink-0 place-items-center rounded-lg border",
+                section.tone === "today"
+                  ? "border-[#d5ff3f]/45 bg-[#9dff34] text-[#06110b]"
+                  : section.tone === "recent"
+                    ? "border-[#f0b429]/45 bg-[#f0b429] text-[#06110b]"
+                    : "border-[#62ffe6]/35 bg-[#071d2a] text-[#62ffe6]"
+              )}
+            >
+              {section.tone === "today" ? (
+                <Flame className="h-4 w-4" />
+              ) : section.tone === "recent" ? (
+                <History className="h-4 w-4" />
+              ) : (
+                <CalendarDays className="h-4 w-4" />
+              )}
+            </span>
+            <div className="min-w-0">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/45">{section.eyebrow}</p>
+              <h3 className="truncate text-2xl font-black uppercase text-white">{section.title}</h3>
+            </div>
+          </div>
+          <p className="mt-2 text-sm font-bold text-white/58">{section.description}</p>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2 sm:min-w-72">
+          <MiniStat label="Total" value={section.matches.length} />
+          <MiniStat label="Listos" value={saved} />
+          <MiniStat label="Pend." value={pending} highlight={pending > 0} />
+        </div>
+      </div>
+
+      <div className="grid gap-4 p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-3">
+        {section.matches.map((match) => (
+          <MatchCard
+            key={match.id}
+            match={match}
+            draft={drafts[match.id] ?? emptyDraft()}
+            savingId={savingId}
+            isSavingBulk={isSavingBulk}
+            todayEditableMatchIds={todayEditableMatchIds}
+            nowMs={nowMs}
+            onUpdateDraft={onUpdateDraft}
+            onSave={onSave}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function MiniStat({ label, value, highlight = false }: { label: string; value: number; highlight?: boolean }) {
+  return (
+    <div
+      className={cn(
+        "rounded-lg border px-2.5 py-2 text-center",
+        highlight
+          ? "border-[#ffb15f]/45 bg-[#2a120b]/75 text-[#ffb15f]"
+          : "border-white/12 bg-black/30 text-white"
+      )}
+    >
+      <p className="text-[10px] font-black uppercase tracking-wider text-white/45">{label}</p>
+      <p className="mt-1 text-xl font-black tabular-nums">{value}</p>
+    </div>
   );
 }
 
