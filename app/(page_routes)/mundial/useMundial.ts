@@ -15,6 +15,7 @@ import {
 } from "./utils";
 
 const LIVE_REFRESH_MS = 4_000;
+const LIVE_ACTIVE_REFRESH_MS = 2_000; // faster poll while a match is in progress
 const ATTENTION_REFRESH_MIN_MS = 1_000;
 const CROSS_TAB_SYNC_KEY = "mundial-sync-version";
 
@@ -254,7 +255,11 @@ export function useMundial() {
     await refreshQuiniela({ suppressErrors: true });
   }, [refreshQuiniela]);
 
-  useInterval(pollPredictions, savingId || isSavingBulk ? null : LIVE_REFRESH_MS);
+  const pollInterval = useMemo(() => {
+    if (savingId || isSavingBulk) return null;
+    return liveMatch ? LIVE_ACTIVE_REFRESH_MS : LIVE_REFRESH_MS;
+  }, [savingId, isSavingBulk, liveMatch]);
+  useInterval(pollPredictions, pollInterval);
 
   useEffect(() => {
     playerNameRef.current = playerName;

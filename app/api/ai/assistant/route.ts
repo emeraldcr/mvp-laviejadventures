@@ -13,7 +13,8 @@ import {
 const client = new Anthropic();
 
 type AssistantPayload = {
-  messages: ChatMessage[];
+  messages?: ChatMessage[];
+  latestMessage?: string;
   state: BookingState;
 };
 
@@ -45,6 +46,11 @@ const DEFAULT_RESULT: AssistantResult = {
 const AI_HEADERS = { "Cache-Control": "no-store" };
 const MODEL_NAME = "claude-haiku-4-5";
 const MODEL_CACHE_TTL_MS = 1000 * 60 * 10;
+const PACKAGE_PRICE_USD: Record<NonNullable<BookingState["tourPackage"]>, number> = {
+  basic: 30,
+  "full-day": 40,
+  private: 60,
+};
 const modelResponseCache = new Map<string, CachedResult>();
 const DATE_PATTERN_ISO = /\b(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})\b/;
 const DATE_PATTERN_DMY = /\b(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})\b/;
@@ -84,6 +90,10 @@ const FAQ_ENTRIES: FaqEntry[] = [
     answer: `Tenemos salidas a las ${TOUR_TIME_OPTIONS.join(", ")}. Si querés, te ayudo a elegir la mejor según tu plan del día.`,
   },
   {
+    keywords: ["precio", "costo", "tarifa", "cuanto cuesta"],
+    answer: `Los paquetes cuestan basic ($${PACKAGE_PRICE_USD.basic}), full-day ($${PACKAGE_PRICE_USD["full-day"]}) y private ($${PACKAGE_PRICE_USD.private}) por persona antes de IVA.`,
+  },
+  {
     keywords: ["paquete", "plan", "opcion", "opciones", "diferencia"],
     answer:
       "Los paquetes disponibles son basic, full-day y private. Si me contás si venís en pareja, familia o grupo, te recomiendo el que mejor les convenga.",
@@ -92,9 +102,8 @@ const FAQ_ENTRIES: FaqEntry[] = [
 
 const LOCAL_COMPLEX_REQUEST_PATTERNS = [
   /itinerario|cronograma|paso\s+a\s+paso/,
-  /compar|versus|vs\b|diferencia\s+entre/,
   /politica\s+completa|terminos|condiciones/,
-  /precio|costo|tarifa|descuento/,
+  /descuento/,
   /explicame\s+mejor|no\s+entiendo|mas\s+detalle/,
 ];
 
@@ -359,6 +368,13 @@ function getMissingFields(state: BookingState): string[] {
 
 function getFaqAnswer(input: string): string | null {
   const normalized = normalizeText(input);
+  const compact = normalized.trim();
+  if (/^(hola|buenas|pura\s+vida|hey|hello|hi)\b/.test(compact)) {
+    return "Â¡Hola! Te ayudo con la reserva o con cualquier duda del canyon tour.";
+  }
+  if (/^(gracias|ok|listo|perfecto|dale)\b/.test(compact)) {
+    return "Con gusto.";
+  }
   const entry = FAQ_ENTRIES.find((item) => item.keywords.some((keyword) => normalized.includes(keyword)));
   return entry?.answer ?? null;
 }
@@ -430,11 +446,11 @@ function buildCacheKey(state: BookingState, latestMessage: string): string {
 
 export async function POST(req: NextRequest) {
   try {
-    const { messages, state } = (await req.json()) as AssistantPayload;
+    const { messages = [], latestMessage, state } = (await req.json()) as AssistantPayload;
     const normalizedIncomingState = normalizeState(state ?? INITIAL_BOOKING_STATE);
-    const latestUserMessage = [...messages].reverse().find((msg) => msg.role === "user")?.content ?? "";
+    const latestUserMessage = latestMessage ?? [...messages].reverse().find((msg) => msg.role === "user")?.content ?? "";
 
-    const inferredState = inferFromConversation(normalizedIncomingState, messages);
+    const inferredState = inferFromLatestMessage(normalizedIncomingState, latestUserMessage);
     if (!shouldUseModel(normalizedIncomingState, inferredState, latestUserMessage)) {
       const missingFields = getMissingFields(inferredState);
       return NextResponse.json(
@@ -461,10 +477,10 @@ export async function POST(req: NextRequest) {
 
     const response = await client.messages.create({
       model: MODEL_NAME,
-      max_tokens: 450,
+      max_tokens: 320,
       temperature: 0.3,
       system: buildSystemPrompt(inferredState),
-      messages: messages.slice(-8).map((msg) => ({
+      messages: (messages.length ? messages : [{ role: "user", content: latestUserMessage } satisfies ChatMessage]).slice(-6).map((msg) => ({
         role: msg.role,
         content: msg.content,
       })),

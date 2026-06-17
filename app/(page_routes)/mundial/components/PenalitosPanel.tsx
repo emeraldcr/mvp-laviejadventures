@@ -2,7 +2,7 @@
 "use client";
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Users, Wifi, WifiOff, Trophy } from "lucide-react";
+import { Eye, Trophy, Users, Wifi, WifiOff } from "lucide-react";
 import confetti from "canvas-confetti";
 import { cn } from "../utils";
 import type {
@@ -16,9 +16,31 @@ import type {
 // -------------------------------------------------------------------
 // Constants
 // -------------------------------------------------------------------
-const ANIM_DURATION_MS = 1_800;  // ball-flying phase
+const ANIM_DURATION_MS = 1_800;
 const VISITOR_KEY = "penalitos-vid";
 const CHOICES: PenalitosDirection[] = ["left", "center", "right"];
+
+// -------------------------------------------------------------------
+// Types
+// -------------------------------------------------------------------
+type LiveMatchSnapshot = {
+  id: string;
+  homeTeam: string;
+  awayTeam: string;
+  homeLiveScore: number | null;
+  awayLiveScore: number | null;
+  liveMinute: number | null;
+  liveStatus: "live" | "halftime" | "fulltime" | "scheduled";
+  liveNote: string;
+};
+
+type SSEPayload = {
+  game: PenalitosGame | null;
+  queue: PenalitosQueueEntry[];
+  scores: Record<string, number>;
+  liveMatch: LiveMatchSnapshot | null;
+  viewerCount: number;
+};
 
 // -------------------------------------------------------------------
 // Visitor ID (UUID generated once per browser)
@@ -135,15 +157,38 @@ const PlayerCard = memo(function PlayerCard({
   );
 });
 
+// Compact live scoreboard shown inside the panel header
+const LiveScoreChip = memo(function LiveScoreChip({
+  match,
+}: {
+  match: LiveMatchSnapshot | MundialMatch;
+}) {
+  const home = match.homeLiveScore;
+  const away = match.awayLiveScore;
+  const minute = match.liveMinute;
+  const status = match.liveStatus;
+
+  if (home === null && away === null) return null;
+
+  return (
+    <div className="flex items-center gap-1.5 rounded-full border border-[#9dff34]/30 bg-[#0a2410]/80 px-3 py-1">
+      <span className="text-xs font-black text-white tabular-nums">
+        {home ?? 0}
+        <span className="mx-1 text-white/30">–</span>
+        {away ?? 0}
+      </span>
+      {status === "halftime" ? (
+        <span className="text-[10px] font-black text-[#f0b429] uppercase">HT</span>
+      ) : minute !== null ? (
+        <span className="text-[10px] font-black text-[#9dff34]">{minute}&apos;</span>
+      ) : null}
+    </div>
+  );
+});
+
 // -------------------------------------------------------------------
 // Main Panel
 // -------------------------------------------------------------------
-type SSEPayload = {
-  game: PenalitosGame | null;
-  queue: PenalitosQueueEntry[];
-  scores: Record<string, number>;
-};
-
 type Props = {
   liveMatch: MundialMatch | null;
   playerName: string;
@@ -153,7 +198,10 @@ export function PenalitosPanel({ liveMatch, playerName }: Props) {
   const [game, setGame] = useState<PenalitosGame | null>(null);
   const [queue, setQueue] = useState<PenalitosQueueEntry[]>([]);
   const [scores, setScores] = useState<Record<string, number>>({});
+  const [sseLiveMatch, setSseLiveMatch] = useState<LiveMatchSnapshot | null>(null);
+  const [viewerCount, setViewerCount] = useState(0);
   const [connected, setConnected] = useState(true);
+  const [reconnecting, setReconnecting] = useState(false);
 
   const [visitorId, setVisitorId] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -162,7 +210,6 @@ export function PenalitosPanel({ liveMatch, playerName }: Props) {
   // Local clock for timer countdown
   const [nowMs, setNowMs] = useState(0);
 
-  // Animation phase: we show the ball/GK animation for ANIM_DURATION_MS after resolvedAt
   const confettiFiredRef = useRef<string | null>(null);
   const lastPayloadRef = useRef<string>("");
 
@@ -173,6 +220,8 @@ export function PenalitosPanel({ liveMatch, playerName }: Props) {
     setGame(data.game ?? null);
     setQueue(data.queue ?? []);
     setScores(data.scores ?? {});
+    setSseLiveMatch(data.liveMatch ?? null);
+    setViewerCount(data.viewerCount ?? 0);
   }, []);
 
   // Init visitor identity once
@@ -183,41 +232,45 @@ export function PenalitosPanel({ liveMatch, playerName }: Props) {
     });
   }, [playerName]);
 
-  // Local clock only ticks while countdown/result animation needs it.
+  // Local clock only ticks while countdown/result animation needs it
   useEffect(() => {
     const needsClock = game?.status === "choosing" || game?.status === "finished";
     if (!needsClock) return;
-    const id = setInterval(() => setNowMs(Date.now()), 250);
+    const id = setInterval(() => setNowMs(Date.now()), 200);
     return () => clearInterval(id);
   }, [game?.chooseDeadline, game?.resolvedAt, game?.status]);
 
-  // SSE connection
+  // SSE connection with auto-reconnect
   useEffect(() => {
     let es: EventSource | null = null;
-    let reconnect: ReturnType<typeof setTimeout>;
+    let reconnectTimer: ReturnType<typeof setTimeout>;
 
     const connect = () => {
+      setReconnecting(false);
       es = new EventSource("/api/mundial/penalitos/live");
-      es.onopen = () => setConnected(true);
+      es.onopen = () => {
+        setConnected(true);
+        setReconnecting(false);
+      };
       es.onmessage = (e) => {
         try {
-          const data = JSON.parse(e.data) as SSEPayload;
-          applyPayload(data);
+          applyPayload(JSON.parse(e.data) as SSEPayload);
         } catch (err) {
           console.error("[penalitos] SSE parse error", err);
         }
       };
       es.onerror = () => {
         setConnected(false);
+        setReconnecting(true);
         es?.close();
-        reconnect = setTimeout(connect, 2_500);
+        reconnectTimer = setTimeout(connect, 2_500);
       };
     };
 
     connect();
     return () => {
       es?.close();
-      clearTimeout(reconnect);
+      clearTimeout(reconnectTimer);
     };
   }, [applyPayload]);
 
@@ -238,9 +291,8 @@ export function PenalitosPanel({ liveMatch, playerName }: Props) {
     const key = `${game.id}-${game.resolvedAt}`;
     if (confettiFiredRef.current === key) return;
     confettiFiredRef.current = key;
-
     if (game.outcome === "goal") {
-      confetti({ particleCount: 180, spread: 80, origin: { y: 0.6 } });
+      confetti({ particleCount: 200, spread: 90, origin: { y: 0.6 } });
     }
   }, [game?.status, game?.outcome, game?.resolvedAt, game?.id]);
 
@@ -281,21 +333,21 @@ export function PenalitosPanel({ liveMatch, playerName }: Props) {
     game?.status === "choosing" && isPlaying && selectedChoice === null;
   const alreadyChose = isPlaying && selectedChoice !== null;
 
-  // Slot availability for join buttons
   const showJoinGoalkeeper = !isPlaying && !isInQueue && (!game || game.status === "waiting") && !game?.goalkeeper;
   const showJoinShooter = !isPlaying && !isInQueue && (!game || game.status === "waiting") && !game?.shooter;
   const showQueue = !isPlaying && !isInQueue && !showJoinGoalkeeper && !showJoinShooter;
 
-  // Ball animation transform based on shooter choice
   const ballDirX = game?.shooterChoice ? BALL_X[game.shooterChoice] : "0px";
   const ballDirY = game?.shooterChoice ? BALL_Y[game.shooterChoice] : "0px";
   const gkDirX = game?.goalkeeperChoice ? GK_X[game.goalkeeperChoice] : "0px";
 
-  // Top scorers for the board
   const topScorers = useMemo(
     () => Object.entries(scores).sort(([, a], [, b]) => b - a).slice(0, 5),
     [scores]
   );
+
+  // Use SSE liveMatch for real-time score; fall back to prop
+  const displayMatch: LiveMatchSnapshot | MundialMatch | null = sseLiveMatch ?? liveMatch;
 
   // ------- Handlers -------
   const joinAs = useCallback(async (role: PenalitosRole) => {
@@ -354,6 +406,8 @@ export function PenalitosPanel({ liveMatch, playerName }: Props) {
           game: data.game ?? null,
           queue: data.queue ?? [],
           scores: data.scores ?? {},
+          liveMatch: data.liveMatch ?? null,
+          viewerCount: data.viewerCount ?? 0,
         });
       }
     } catch {
@@ -362,7 +416,7 @@ export function PenalitosPanel({ liveMatch, playerName }: Props) {
   }, [applyPayload, canChoose, visitorId]);
 
   // ------- Empty state -------
-  if (!liveMatch) {
+  if (!liveMatch && !sseLiveMatch) {
     return (
       <div className="mt-8 rounded-3xl border border-white/10 bg-black/40 p-8 text-center">
         <p className="font-black text-white/50 text-lg">
@@ -372,7 +426,7 @@ export function PenalitosPanel({ liveMatch, playerName }: Props) {
     );
   }
 
-  // ------- Status badges -------
+  // ------- Status badge -------
   const statusBadge = game?.status === "waiting"
     ? { text: "ESPERANDO JUGADORES", color: "text-white/50 bg-white/5" }
     : game?.status === "choosing"
@@ -393,37 +447,70 @@ export function PenalitosPanel({ liveMatch, playerName }: Props) {
       <div className="rounded-3xl border border-[#f0b429]/20 bg-gradient-to-br from-[#091a0f] via-black/95 to-black shadow-2xl overflow-hidden">
 
         {/* ═══ HEADER ═══ */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 sm:px-8 pt-6 pb-4 border-b border-white/5">
-          <div className="flex items-center gap-3">
-            <div className="rounded-full bg-[#f0b429] p-2.5 text-black text-2xl leading-none">⚽</div>
-            <div>
-              <h2 className="text-2xl sm:text-3xl font-black tracking-tighter leading-none">
-                PENALITOS
-              </h2>
-              <p className="text-white/40 text-sm mt-0.5 flex items-center gap-1.5">
-                {liveMatch.homeTeam} vs {liveMatch.awayTeam}
-                {liveMatch.liveMinute !== null && (
-                  <span className="text-[#f0b429]">• {liveMatch.liveMinute}&apos;</span>
-                )}
-                {connected
-                  ? <Wifi className="h-3.5 w-3.5 text-emerald-400 ml-1" />
-                  : <WifiOff className="h-3.5 w-3.5 text-red-400 ml-1" />}
-              </p>
+        <div className="px-5 sm:px-8 pt-6 pb-4 border-b border-white/5">
+          {/* Row 1: title + round + status */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="flex items-center gap-3">
+              <div className="rounded-full bg-[#f0b429] p-2.5 text-black text-2xl leading-none">⚽</div>
+              <div>
+                <h2 className="text-2xl sm:text-3xl font-black tracking-tighter leading-none">
+                  PENALITOS
+                </h2>
+                <p className="text-white/40 text-xs mt-0.5 font-bold uppercase tracking-widest">
+                  Mini-partido en vivo
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 flex-wrap">
+              {game && (
+                <span className="text-xs text-white/40 font-mono">
+                  Ronda {game.roundNumber}
+                </span>
+              )}
+              <span className={cn(
+                "px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider",
+                statusBadge.color
+              )}>
+                {statusBadge.text}
+              </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            {game && (
-              <span className="text-xs text-white/40 font-mono">
-                Ronda {game.roundNumber}
-              </span>
+          {/* Row 2: live score chip + viewers + connection */}
+          <div className="mt-3 flex items-center gap-3 flex-wrap">
+            {displayMatch && (
+              <LiveScoreChip match={displayMatch} />
             )}
-            <span className={cn(
-              "px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider",
-              statusBadge.color
-            )}>
-              {statusBadge.text}
+
+            <span className="text-white/30 text-xs">
+              {displayMatch
+                ? `${displayMatch.homeTeam} vs ${displayMatch.awayTeam}`
+                : (liveMatch?.homeTeam ?? "") + " vs " + (liveMatch?.awayTeam ?? "")}
             </span>
+
+            <div className="ml-auto flex items-center gap-3">
+              {viewerCount > 1 && (
+                <div className="flex items-center gap-1 text-white/35 text-[11px] font-bold">
+                  <Eye className="h-3 w-3" />
+                  <span>{viewerCount}</span>
+                </div>
+              )}
+
+              {reconnecting ? (
+                <span className="flex items-center gap-1 text-[10px] font-black text-orange-400 animate-pulse">
+                  <WifiOff className="h-3.5 w-3.5" />
+                  RECONECTANDO
+                </span>
+              ) : connected ? (
+                <span className="flex items-center gap-1 text-[10px] font-black text-emerald-400">
+                  <Wifi className="h-3.5 w-3.5" />
+                  LIVE
+                </span>
+              ) : (
+                <WifiOff className="h-3.5 w-3.5 text-red-400" />
+              )}
+            </div>
           </div>
         </div>
 
@@ -434,7 +521,7 @@ export function PenalitosPanel({ liveMatch, playerName }: Props) {
             <div>
               <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
                 <div
-                  className="h-full rounded-full transition-all duration-100"
+                  className="h-full rounded-full transition-all duration-200"
                   style={{
                     width: `${timerPct}%`,
                     background: timerPct > 40
@@ -463,7 +550,7 @@ export function PenalitosPanel({ liveMatch, playerName }: Props) {
             {/* Goal post */}
             <div className="absolute left-0 top-1/2 -translate-y-1/2 w-12 h-32 border-4 border-white/60 rounded-r-2xl border-l-0 bg-black/20" />
 
-            {/* Goalkeeper emoji — dives on reveal */}
+            {/* Goalkeeper emoji */}
             <div
               className="absolute text-5xl drop-shadow-xl transition-transform duration-700"
               style={{
@@ -475,10 +562,10 @@ export function PenalitosPanel({ liveMatch, playerName }: Props) {
               🧤
             </div>
 
-            {/* Shooter emoji — static */}
+            {/* Shooter emoji */}
             <div className="absolute right-8 bottom-8 text-4xl drop-shadow-xl">🥾</div>
 
-            {/* Ball — flies toward goal on reveal */}
+            {/* Ball */}
             <div
               className="absolute text-5xl drop-shadow-xl transition-all duration-700"
               style={{
@@ -574,7 +661,7 @@ export function PenalitosPanel({ liveMatch, playerName }: Props) {
           {/* ═══ SPECTATOR MESSAGE ═══ */}
           {game?.status === "choosing" && !isPlaying && (
             <p className="text-center text-white/40 text-sm italic">
-              Ronda en curso. Únete a la cola para jugar.
+              Ronda en curso — únete a la cola para jugar.
             </p>
           )}
 
@@ -632,7 +719,7 @@ export function PenalitosPanel({ liveMatch, playerName }: Props) {
           )}
 
           {isPlaying && game?.status === "waiting" && (
-            <p className="text-center text-white/50 text-sm">
+            <p className="text-center text-white/50 text-sm animate-pulse">
               Esperando al otro jugador...
             </p>
           )}

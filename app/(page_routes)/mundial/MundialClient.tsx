@@ -162,8 +162,9 @@ export default function MundialClient() {
               <PlayersView leaderboard={leaderboard} matches={matches} predictions={predictions} />
             )}
 
-            {/* ====================== PENALITOS ====================== */}
-            {viewMode === "next" && liveMatch && (
+            {/* ====================== PENALITOS + CHAT ====================== */}
+            {/* Shown in all view modes so every user can join during a live match */}
+            {liveMatch && (
               <>
                 <PenalitosPanel liveMatch={liveMatch} playerName={playerName} />
                 <LiveMatchChat
@@ -173,7 +174,7 @@ export default function MundialClient() {
                 />
               </>
             )}
-            {/* ======================================================= */}
+            {/* ============================================================= */}
           </>
         )}
       </section>

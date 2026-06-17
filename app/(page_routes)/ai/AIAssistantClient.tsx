@@ -24,6 +24,8 @@ const PACKAGE_PRICE_USD: Record<NonNullable<BookingState["tourPackage"]>, number
 const TAX_RATE = 0.13;
 const AI_BOOKING_SESSION_KEY = "aiBookingConversationState";
 const RESERVATION_RETURN_KEY = "reservationReturnPath";
+const PERSIST_DEBOUNCE_MS = 250;
+const REQUEST_HISTORY_LIMIT = 6;
 
 const PHONE_COUNTRY_OPTIONS = [
   { label: "Costa Rica (+506)", value: "+506" },
@@ -94,7 +96,11 @@ export default function AIAssistantClient() {
       input,
     };
 
-    sessionStorage.setItem(AI_BOOKING_SESSION_KEY, JSON.stringify(payload));
+    const timeout = window.setTimeout(() => {
+      sessionStorage.setItem(AI_BOOKING_SESSION_KEY, JSON.stringify(payload));
+    }, PERSIST_DEBOUNCE_MS);
+
+    return () => window.clearTimeout(timeout);
   }, [input, messages, missingFields, state]);
 
   useEffect(() => {
@@ -182,7 +188,8 @@ export default function AIAssistantClient() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: nextMessages,
+          messages: nextMessages.slice(-REQUEST_HISTORY_LIMIT),
+          latestMessage: trimmed,
           state,
         }),
       });

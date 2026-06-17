@@ -3,6 +3,7 @@ import type { Db } from "mongodb";
 export const MUNDIAL_LIVE_CHAT_COLLECTION = "mundial_live_chat";
 
 const MAX_CHAT_MESSAGES = 80;
+let indexPromise: Promise<void> | null = null;
 
 export type LiveChatMessageDoc = {
   id: string;
@@ -49,7 +50,13 @@ export function serializeLiveChatMessage(message: LiveChatMessageDoc): Serialize
   };
 }
 
+export async function ensureLiveChatIndexes(db: Db): Promise<void> {
+  indexPromise ??= col(db).createIndex({ matchId: 1, createdAt: -1 }).then(() => undefined);
+  await indexPromise;
+}
+
 export async function listLiveChatMessages(db: Db, matchId: string): Promise<SerializedLiveChatMessage[]> {
+  await ensureLiveChatIndexes(db);
   const messages = await col(db)
     .find({ matchId })
     .sort({ createdAt: -1 })
@@ -67,16 +74,19 @@ export async function addLiveChatMessage(
     playerName: string;
     text: string;
   }
-): Promise<SerializedLiveChatMessage[]> {
+): Promise<SerializedLiveChatMessage> {
+  await ensureLiveChatIndexes(db);
   const createdAt = new Date();
-  await col(db).insertOne({
+  const message: LiveChatMessageDoc = {
     id: newMessageId(),
     matchId: input.matchId,
     visitorId: input.visitorId,
     playerName: input.playerName,
     text: input.text,
     createdAt,
-  });
+  };
+
+  await col(db).insertOne(message);
 
   const oldMessages = await col(db)
     .find({ matchId: input.matchId })
@@ -89,5 +99,5 @@ export async function addLiveChatMessage(
     await col(db).deleteMany({ matchId: input.matchId, id: { $in: oldMessages.map((message) => message.id) } });
   }
 
-  return listLiveChatMessages(db, input.matchId);
+  return serializeLiveChatMessage(message);
 }

@@ -6,6 +6,7 @@ import {
   cleanChatText,
   listLiveChatMessages,
 } from "@/lib/mundial/live-chat";
+import { notifyLiveChatChanged } from "@/lib/mundial/live-chat-events";
 
 export const dynamic = "force-dynamic";
 
@@ -49,8 +50,9 @@ export async function POST(req: NextRequest) {
     if (!text) return NextResponse.json({ error: "mensaje requerido" }, { status: 400 });
 
     const db = await getDb();
-    const messages = await addLiveChatMessage(db, { matchId, visitorId, playerName, text });
-    return NextResponse.json({ ok: true, messages });
+    const message = await addLiveChatMessage(db, { matchId, visitorId, playerName, text });
+    notifyLiveChatChanged(matchId);
+    return NextResponse.json({ ok: true, message });
   } catch (err) {
     console.error("[mundial/chat] POST error", err);
     return NextResponse.json({ error: "Error enviando mensaje" }, { status: 500 });

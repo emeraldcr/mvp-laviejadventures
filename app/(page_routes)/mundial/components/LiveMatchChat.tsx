@@ -16,10 +16,16 @@ type LiveChatMessage = {
   playerName: string;
   text: string;
   createdAt: string;
+  pending?: boolean;
 };
 
 type ChatPayload = {
   messages: LiveChatMessage[];
+};
+
+type SendPayload = Partial<ChatPayload> & {
+  message?: LiveChatMessage;
+  error?: string;
 };
 
 type Props = {
@@ -46,6 +52,19 @@ function cleanDraft(value: string): string {
 
 function chatTime(iso: string): string {
   return iso.slice(11, 16);
+}
+
+function mergeMessages(current: LiveChatMessage[], incoming: LiveChatMessage[]): LiveChatMessage[] {
+  const byId = new Map<string, LiveChatMessage>();
+  for (const message of current) {
+    if (message.pending) byId.set(message.id, message);
+  }
+  for (const message of incoming) {
+    byId.set(message.id, { ...message, pending: false });
+  }
+  return Array.from(byId.values())
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+    .slice(-80);
 }
 
 const ChatMessageBubble = memo(function ChatMessageBubble({
@@ -90,13 +109,13 @@ export function LiveMatchChat({ liveMatch, playerName, onOpenPlayerPicker }: Pro
   const listRef = useRef<HTMLDivElement>(null);
 
   const matchLabel = `${liveMatch.homeTeam} vs ${liveMatch.awayTeam}`;
-  const canSend = Boolean(playerName.trim()) && Boolean(visitorId) && draft.trim().length > 0 && !isSending;
+  const canSend = Boolean(playerName.trim()) && Boolean(visitorId) && draft.trim().length > 0;
 
   const applyPayload = useCallback((payload: ChatPayload) => {
     const signature = JSON.stringify(payload.messages);
     if (signature === lastPayloadRef.current) return;
     lastPayloadRef.current = signature;
-    setMessages(payload.messages);
+    setMessages((current) => mergeMessages(current, payload.messages));
   }, []);
 
   useEffect(() => {
@@ -152,6 +171,18 @@ export function LiveMatchChat({ liveMatch, playerName, onOpenPlayerPicker }: Pro
       return;
     }
 
+    const tempMessage: LiveChatMessage = {
+      id: `temp-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
+      matchId: liveMatch.id,
+      visitorId,
+      playerName,
+      text,
+      createdAt: new Date().toISOString(),
+      pending: true,
+    };
+
+    setMessages((current) => mergeMessages(current, [tempMessage]));
+    setDraft("");
     setIsSending(true);
     setError("");
     try {
@@ -166,15 +197,24 @@ export function LiveMatchChat({ liveMatch, playerName, onOpenPlayerPicker }: Pro
         }),
       });
 
-      const payload = await res.json() as Partial<ChatPayload> & { error?: string };
+      const payload = await res.json() as SendPayload;
       if (!res.ok) {
         setError(payload.error ?? "No se pudo enviar.");
+        setMessages((current) => current.filter((message) => message.id !== tempMessage.id));
         return;
       }
-      applyPayload({ messages: payload.messages ?? [] });
-      setDraft("");
+      if (payload.message) {
+        setMessages((current) => mergeMessages(
+          current.filter((message) => message.id !== tempMessage.id),
+          [payload.message as LiveChatMessage],
+        ));
+      } else {
+        applyPayload({ messages: payload.messages ?? [] });
+      }
     } catch {
       setError("No se pudo enviar.");
+      setMessages((current) => current.filter((message) => message.id !== tempMessage.id));
+      setDraft(text);
     } finally {
       setIsSending(false);
     }
