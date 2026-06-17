@@ -10,6 +10,7 @@ import {
   tickState,
   type PenalitosDirection,
 } from "@/lib/mundial/penalitos";
+import { notifyPenalitosChanged } from "@/lib/mundial/penalitos-events";
 
 export const dynamic = "force-dynamic";
 
@@ -50,13 +51,14 @@ export async function POST(req: NextRequest) {
     }
 
     const now = new Date();
-    await db.collection(PENALITOS_COLLECTION).updateOne(
+    const result = await db.collection(PENALITOS_COLLECTION).updateOne(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      { _id: PENALITOS_STATE_ID as any, "game.status": "choosing", [field]: null },
-      { $set: { [field]: choice, updatedAt: now } }
+      { _id: PENALITOS_STATE_ID as any, "game.status": "choosing", "game.id": game.id, [field]: null },
+      { $set: { [field]: choice, updatedAt: now }, $inc: { version: 1 } }
     );
 
     await tickState(db);
+    if (result.modifiedCount > 0) notifyPenalitosChanged();
 
     return NextResponse.json({ ok: true, choice, ...serializeState(await getState(db)) });
   } catch (err) {

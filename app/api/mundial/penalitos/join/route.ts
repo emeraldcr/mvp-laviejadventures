@@ -4,13 +4,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/helpers/mongodb";
 import {
   ensureState,
+  getState,
   PENALITOS_COLLECTION,
   PENALITOS_STATE_ID,
   MAX_QUEUE,
+  tickState,
   type PenalitosRoleKey,
   type PenalitosPlayerDoc,
   type PenalitosStateDoc,
 } from "@/lib/mundial/penalitos";
+import { notifyPenalitosChanged } from "@/lib/mundial/penalitos-events";
 
 export const dynamic = "force-dynamic";
 
@@ -42,7 +45,9 @@ export async function POST(req: NextRequest) {
 
     const cleanName = name.trim().slice(0, MAX_NAME);
     const db = await getDb();
-    const state = await ensureState(db);
+    await ensureState(db);
+    await tickState(db);
+    const state = (await getState(db))!;
     const now = new Date();
 
     const alreadyInGame =
@@ -78,11 +83,12 @@ export async function POST(req: NextRequest) {
       const result = await db.collection(PENALITOS_COLLECTION).updateOne(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         { _id: PENALITOS_STATE_ID, game: null } as any,
-        { $set: { game: newGame, updatedAt: now } }
+        { $set: { game: newGame, updatedAt: now }, $inc: { version: 1 } }
       );
       if (result.modifiedCount === 0) {
         return NextResponse.json({ ok: true, status: "retry" });
       }
+      notifyPenalitosChanged();
       return NextResponse.json({ ok: true, status: "joined_game", role });
     }
 
@@ -111,11 +117,13 @@ export async function POST(req: NextRequest) {
               "game.startedAt": bothReady ? now : game.startedAt,
               updatedAt: now,
             },
+            $inc: { version: 1 },
           }
         );
         if (result.modifiedCount === 0) {
           return NextResponse.json({ ok: true, status: "retry" });
         }
+        notifyPenalitosChanged();
         return NextResponse.json({ ok: true, status: "joined_game", role });
       }
     }
@@ -142,12 +150,14 @@ export async function POST(req: NextRequest) {
           },
         },
         $set: { updatedAt: now },
+        $inc: { version: 1 },
       }
     );
 
     const queuePos = (await penalitos.findOne({ _id: PENALITOS_STATE_ID }))
       ?.queue?.findIndex((e: { visitorId: string }) => e.visitorId === visitorId) ?? -1;
 
+    notifyPenalitosChanged();
     return NextResponse.json({ ok: true, status: "queued", position: queuePos + 1 });
   } catch (err) {
     console.error("penalitos/join error", err);
@@ -163,16 +173,18 @@ export async function DELETE(req: NextRequest) {
     const db = await getDb();
     const now = new Date();
 
-    await db.collection(PENALITOS_COLLECTION).updateOne(
+    const result = await db.collection(PENALITOS_COLLECTION).updateOne(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       { _id: PENALITOS_STATE_ID } as any,
       {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         $pull: { queue: { visitorId } } as any,
         $set: { updatedAt: now },
+        $inc: { version: 1 },
       }
     );
 
+    if (result.modifiedCount > 0) notifyPenalitosChanged();
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("penalitos/join DELETE error", err);

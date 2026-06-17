@@ -11,11 +11,12 @@ import {
   type SerializedLiveMatch,
   type SerializedPenalitosState,
 } from "@/lib/mundial/penalitos";
+import { subscribePenalitosChanges } from "@/lib/mundial/penalitos-events";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 55; // Vercel streaming limit
 
-const POLL_MS = 350;
+const POLL_MS = 1_000;
 const HEARTBEAT_MS = 15_000;
 const MATCHES_COLLECTION = "mundial_matches";
 
@@ -101,6 +102,12 @@ async function refreshSnapshot() {
   return refreshPromise;
 }
 
+subscribePenalitosChanges(() => {
+  void refreshSnapshot().catch((err) => {
+    console.error("[penalitos/live] notify refresh error", err);
+  });
+});
+
 function startPoller() {
   if (pollTimerId) return;
   pollTimerId = setInterval(() => {
@@ -149,7 +156,7 @@ export async function GET(req: Request) {
       function send(payload: SerializedPenalitosState) {
         if (closed) return;
         try {
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify(payload)}\n\n`));
+          controller.enqueue(encoder.encode(`event: state\ndata: ${JSON.stringify(payload)}\n\n`));
         } catch {
           // controller may already be closed
         }
@@ -166,6 +173,11 @@ export async function GET(req: Request) {
 
       client = { send, heartbeat };
       clients.add(client);
+      try {
+        controller.enqueue(encoder.encode("retry: 1000\n\n"));
+      } catch {
+        // controller may already be closed
+      }
       send(lastPayload);
 
       try {

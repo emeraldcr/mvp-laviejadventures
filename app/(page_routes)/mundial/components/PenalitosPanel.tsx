@@ -38,8 +38,20 @@ type SSEPayload = {
   game: PenalitosGame | null;
   queue: PenalitosQueueEntry[];
   scores: Record<string, number>;
+  history?: Array<{
+    gameId: string;
+    roundNumber: number;
+    goalkeeperChoice: PenalitosDirection;
+    shooterChoice: PenalitosDirection;
+    winner: PenalitosRole;
+    outcome: "goal" | "save";
+    resolvedAt: string;
+  }>;
   liveMatch: LiveMatchSnapshot | null;
   viewerCount: number;
+  version?: number;
+  serverTime?: string;
+  updatedAt?: string | null;
 };
 
 // -------------------------------------------------------------------
@@ -208,15 +220,23 @@ export function PenalitosPanel({ liveMatch, playerName }: Props) {
   const [myChoice, setMyChoice] = useState<PenalitosDirection | null>(null);
 
   // Local clock for timer countdown
-  const [nowMs, setNowMs] = useState(0);
+  const [nowMs, setNowMs] = useState(() => Date.now());
 
   const confettiFiredRef = useRef<string | null>(null);
   const lastPayloadRef = useRef<string>("");
+  const serverClockOffsetRef = useRef(0);
 
   const applyPayload = useCallback((data: SSEPayload) => {
     const signature = JSON.stringify(data);
     if (signature === lastPayloadRef.current) return;
     lastPayloadRef.current = signature;
+    if (data.serverTime) {
+      const serverTimeMs = new Date(data.serverTime).getTime();
+      if (Number.isFinite(serverTimeMs)) {
+        serverClockOffsetRef.current = serverTimeMs - Date.now();
+        setNowMs(serverTimeMs);
+      }
+    }
     setGame(data.game ?? null);
     setQueue(data.queue ?? []);
     setScores(data.scores ?? {});
@@ -236,7 +256,7 @@ export function PenalitosPanel({ liveMatch, playerName }: Props) {
   useEffect(() => {
     const needsClock = game?.status === "choosing" || game?.status === "finished";
     if (!needsClock) return;
-    const id = setInterval(() => setNowMs(Date.now()), 200);
+    const id = setInterval(() => setNowMs(Date.now() + serverClockOffsetRef.current), 200);
     return () => clearInterval(id);
   }, [game?.chooseDeadline, game?.resolvedAt, game?.status]);
 
@@ -244,6 +264,7 @@ export function PenalitosPanel({ liveMatch, playerName }: Props) {
   useEffect(() => {
     let es: EventSource | null = null;
     let reconnectTimer: ReturnType<typeof setTimeout>;
+    let reconnectDelay = 800;
 
     const connect = () => {
       setReconnecting(false);
@@ -251,19 +272,23 @@ export function PenalitosPanel({ liveMatch, playerName }: Props) {
       es.onopen = () => {
         setConnected(true);
         setReconnecting(false);
+        reconnectDelay = 800;
       };
-      es.onmessage = (e) => {
+      const onState = (e: MessageEvent) => {
         try {
           applyPayload(JSON.parse(e.data) as SSEPayload);
         } catch (err) {
           console.error("[penalitos] SSE parse error", err);
         }
       };
+      es.onmessage = onState;
+      es.addEventListener("state", onState);
       es.onerror = () => {
         setConnected(false);
         setReconnecting(true);
         es?.close();
-        reconnectTimer = setTimeout(connect, 2_500);
+        reconnectTimer = setTimeout(connect, reconnectDelay);
+        reconnectDelay = Math.min(5_000, Math.round(reconnectDelay * 1.6));
       };
     };
 

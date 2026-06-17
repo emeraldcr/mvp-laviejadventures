@@ -78,6 +78,18 @@ export type PenalitosQueueEntry = {
   preferredRole: PenalitosRole;
 };
 
+export type PenalitosRoundHistory = {
+  gameId: string;
+  roundNumber: number;
+  goalkeeper: PenalitosPlayer | null;
+  shooter: PenalitosPlayer | null;
+  goalkeeperChoice: PenalitosDirection;
+  shooterChoice: PenalitosDirection;
+  winner: PenalitosRole;
+  outcome: "goal" | "save";
+  resolvedAt: string;
+};
+
 export type Prediction = {
   id: string;
   matchId: string;

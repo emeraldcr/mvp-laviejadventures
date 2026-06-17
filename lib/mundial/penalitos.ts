@@ -7,6 +7,7 @@ export const PENALITOS_STATE_ID = "active";
 const CHOOSE_TIMEOUT_MS = 10_000;
 const FINISHED_DURATION_MS = 5_000;
 const ANIM_REVEAL_MS = 1_800; // client uses this constant too (exported)
+const MAX_HISTORY = 30;
 
 export { ANIM_REVEAL_MS };
 
@@ -47,7 +48,21 @@ export type PenalitosStateDoc = {
   game: PenalitosGameDoc | null;
   queue: PenalitosQueueEntry[];
   scores: Record<string, number>;
+  history?: PenalitosRoundHistoryDoc[];
+  version?: number;
   updatedAt: Date;
+};
+
+export type PenalitosRoundHistoryDoc = {
+  gameId: string;
+  roundNumber: number;
+  goalkeeper: PenalitosPlayerDoc | null;
+  shooter: PenalitosPlayerDoc | null;
+  goalkeeperChoice: PenalitosDirection;
+  shooterChoice: PenalitosDirection;
+  winner: PenalitosRoleKey;
+  outcome: "goal" | "save";
+  resolvedAt: Date;
 };
 
 export type SerializedLiveMatch = {
@@ -65,8 +80,12 @@ export type SerializedPenalitosState = {
   game: SerializedGame | null;
   queue: SerializedQueueEntry[];
   scores: Record<string, number>;
+  history: SerializedRoundHistory[];
   liveMatch: SerializedLiveMatch | null;
   viewerCount: number;
+  version: number;
+  serverTime: string;
+  updatedAt: string | null;
 };
 
 export type SerializedGame = {
@@ -90,6 +109,18 @@ export type SerializedQueueEntry = {
   name: string;
   preferredRole: PenalitosRoleKey;
   joinedAt: string;
+};
+
+export type SerializedRoundHistory = {
+  gameId: string;
+  roundNumber: number;
+  goalkeeper: PenalitosPlayerDoc | null;
+  shooter: PenalitosPlayerDoc | null;
+  goalkeeperChoice: PenalitosDirection;
+  shooterChoice: PenalitosDirection;
+  winner: PenalitosRoleKey;
+  outcome: "goal" | "save";
+  resolvedAt: string;
 };
 
 const DIRECTIONS: PenalitosDirection[] = ["left", "center", "right"];
@@ -123,6 +154,8 @@ export async function ensureState(db: Db): Promise<PenalitosStateDoc> {
         game: null,
         queue: [],
         scores: {},
+        history: [],
+        version: 1,
         updatedAt: now,
       },
     },
@@ -161,10 +194,21 @@ export async function tickState(db: Db): Promise<void> {
       if (outcome === "goal" && game.shooter?.name) {
         scores[game.shooter.name] = (scores[game.shooter.name] ?? 0) + 1;
       }
+      const historyEntry: PenalitosRoundHistoryDoc = {
+        gameId: game.id,
+        roundNumber: game.roundNumber,
+        goalkeeper: game.goalkeeper,
+        shooter: game.shooter,
+        goalkeeperChoice: gkChoice,
+        shooterChoice: shChoice,
+        winner,
+        outcome,
+        resolvedAt,
+      };
 
       await col(db).updateOne(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        { _id: PENALITOS_STATE_ID as any, "game.status": "choosing" },
+        { _id: PENALITOS_STATE_ID as any, "game.status": "choosing", "game.id": game.id },
         {
           $set: {
             "game.status": "finished",
@@ -178,6 +222,13 @@ export async function tickState(db: Db): Promise<void> {
             scores,
             updatedAt: now,
           },
+          $push: {
+            history: {
+              $each: [historyEntry],
+              $slice: -MAX_HISTORY,
+            },
+          },
+          $inc: { version: 1 },
         }
       );
       return;
@@ -231,7 +282,7 @@ async function advanceToNextRound(
   await col(db).updateOne(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     { _id: PENALITOS_STATE_ID as any, "game.status": "finished" },
-    { $set: { game: newGame, queue, updatedAt: now } }
+    { $set: { game: newGame, queue, updatedAt: now }, $inc: { version: 1 } }
   );
 }
 
@@ -262,7 +313,7 @@ export async function startGame(
   await col(db).updateOne(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     { _id: PENALITOS_STATE_ID as any },
-    { $set: { game: newGame, updatedAt: now } }
+    { $set: { game: newGame, updatedAt: now }, $inc: { version: 1 } }
   );
 }
 
@@ -270,8 +321,15 @@ export function serializeState(
   state: PenalitosStateDoc | null,
   extras: { liveMatch?: SerializedLiveMatch | null; viewerCount?: number } = {}
 ): SerializedPenalitosState {
-  const base = { liveMatch: extras.liveMatch ?? null, viewerCount: extras.viewerCount ?? 0 };
-  if (!state) return { game: null, queue: [], scores: {}, ...base };
+  const now = new Date().toISOString();
+  const base = {
+    liveMatch: extras.liveMatch ?? null,
+    viewerCount: extras.viewerCount ?? 0,
+    version: state?.version ?? 0,
+    serverTime: now,
+    updatedAt: state?.updatedAt?.toISOString() ?? null,
+  };
+  if (!state) return { game: null, queue: [], scores: {}, history: [], ...base };
 
   const game: SerializedGame | null = state.game
     ? {
@@ -298,5 +356,17 @@ export function serializeState(
     joinedAt: e.joinedAt?.toISOString() ?? new Date().toISOString(),
   }));
 
-  return { game, queue, scores: state.scores ?? {}, ...base };
+  const history: SerializedRoundHistory[] = (state.history ?? []).map((round) => ({
+    gameId: round.gameId,
+    roundNumber: round.roundNumber,
+    goalkeeper: round.goalkeeper,
+    shooter: round.shooter,
+    goalkeeperChoice: round.goalkeeperChoice,
+    shooterChoice: round.shooterChoice,
+    winner: round.winner,
+    outcome: round.outcome,
+    resolvedAt: round.resolvedAt?.toISOString() ?? now,
+  }));
+
+  return { game, queue, scores: state.scores ?? {}, history, ...base };
 }
