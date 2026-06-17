@@ -7,7 +7,7 @@ import {
   formatKickoff,
   isMatchClosed,
   isMatchLive,
-  isSameDayInCR,
+  isSameMatchDayInCR,
   kickoffMs,
   liveScoreText,
   liveStatusLabel,
@@ -35,13 +35,13 @@ export function QueuePanel({
   const sortedMatches = [...matches].sort((a, b) => kickoffMs(a) - kickoffMs(b) || a.number - b.number);
   const liveMatches = sortedMatches.filter((match) => isMatchLive(match));
   const closedTodayMatches = sortedMatches
-    .filter((match) => !isMatchLive(match) && isMatchClosed(match, nowMs) && nowMs > 0 && isSameDayInCR(kickoffMs(match), nowMs))
+    .filter((match) => !isMatchLive(match) && isMatchClosed(match, nowMs) && nowMs > 0 && isSameMatchDayInCR(kickoffMs(match), nowMs))
     .reverse();
   const todayMatches = sortedMatches.filter(
-    (match) => !isMatchLive(match) && !isMatchClosed(match, nowMs) && nowMs > 0 && isSameDayInCR(kickoffMs(match), nowMs)
+    (match) => !isMatchLive(match) && !isMatchClosed(match, nowMs) && nowMs > 0 && isSameMatchDayInCR(kickoffMs(match), nowMs)
   );
   const pendingMatches = sortedMatches.filter(
-    (match) => !isMatchLive(match) && !isMatchClosed(match, nowMs) && !(nowMs > 0 && isSameDayInCR(kickoffMs(match), nowMs))
+    (match) => !isMatchLive(match) && !isMatchClosed(match, nowMs) && !(nowMs > 0 && isSameMatchDayInCR(kickoffMs(match), nowMs))
   );
 
   return (

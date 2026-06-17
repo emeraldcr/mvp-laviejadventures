@@ -43,17 +43,48 @@ export function kickoffMs(match: MundialMatch) {
   return Number.isNaN(kickoff) ? Number.POSITIVE_INFINITY : kickoff;
 }
 
-export function isSameDayInCR(leftMs: number, rightMs: number) {
-  if (!Number.isFinite(leftMs) || !Number.isFinite(rightMs)) return false;
-
-  const formatter = new Intl.DateTimeFormat("en-CA", {
+function formatCRDate(ms: number) {
+  return new Intl.DateTimeFormat("en-CA", {
     timeZone: "America/Costa_Rica",
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-  });
+  }).format(ms);
+}
 
-  return formatter.format(leftMs) === formatter.format(rightMs);
+function formatCRHour(ms: number) {
+  return Number(
+    new Intl.DateTimeFormat("en-GB", {
+      timeZone: "America/Costa_Rica",
+      hour: "2-digit",
+      hour12: false,
+    }).format(ms)
+  );
+}
+
+export function isSameDayInCR(leftMs: number, rightMs: number) {
+  if (!Number.isFinite(leftMs) || !Number.isFinite(rightMs)) return false;
+
+  return formatCRDate(leftMs) === formatCRDate(rightMs);
+}
+
+export function isSameMatchDayInCR(leftMs: number, rightMs: number) {
+  if (!Number.isFinite(leftMs) || !Number.isFinite(rightMs)) return false;
+
+  if (formatCRDate(leftMs) === formatCRDate(rightMs)) return true;
+
+  const leftDate = formatCRDate(leftMs);
+  const rightDate = formatCRDate(rightMs);
+  const [leftYear, leftMonth, leftDay] = leftDate.split("-").map(Number);
+  const [rightYear, rightMonth, rightDay] = rightDate.split("-").map(Number);
+  const leftDayUtc = Date.UTC(leftYear, leftMonth - 1, leftDay);
+  const rightDayUtc = Date.UTC(rightYear, rightMonth - 1, rightDay);
+
+  if (rightDayUtc - leftDayUtc !== 24 * 60 * 60 * 1000) return false;
+
+  const rightHour = formatCRHour(rightMs);
+  const leftHour = formatCRHour(leftMs);
+  return rightHour < 3 && leftHour >= 20;
 }
 
 export function isMatchClosed(match: MundialMatch, nowMs: number) {

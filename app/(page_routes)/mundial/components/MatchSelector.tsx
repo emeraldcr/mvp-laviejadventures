@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
 import type { MundialMatch } from "../types";
 import {
   cn,
-  isSameDayInCR,
+  isSameMatchDayInCR,
   isMatchClosed,
   isMatchLive,
   kickoffMs,
@@ -39,14 +39,14 @@ export function MatchSelector({
   const liveMatches = useMemo(() => sorted.filter(isMatchLive), [sorted]);
 
   const todayMatches = useMemo(
-    () => sorted.filter((m) => nowMs > 0 && isSameDayInCR(kickoffMs(m), nowMs)),
+    () => sorted.filter((m) => nowMs > 0 && isSameMatchDayInCR(kickoffMs(m), nowMs)),
     [sorted, nowMs]
   );
 
   const upcomingMatches = useMemo(
     () =>
       sorted.filter(
-        (m) => !isMatchClosed(m, nowMs) && !(nowMs > 0 && isSameDayInCR(kickoffMs(m), nowMs))
+        (m) => !isMatchClosed(m, nowMs) && !(nowMs > 0 && isSameMatchDayInCR(kickoffMs(m), nowMs))
       ),
     [sorted, nowMs]
   );

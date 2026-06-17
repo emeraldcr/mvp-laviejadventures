@@ -39,13 +39,14 @@ const VIEW_OPTIONS: Array<{ id: AdminView; label: string; icon: React.ReactNode 
   { id: "analytics", label: "Analytics", icon: <Activity className="h-4 w-4" /> },
 ];
 
-type MatchFilter = "all" | "open" | "closed" | "scored" | "live";
+type MatchFilter = "upcoming" | "live" | "recent" | "open" | "scored" | "all";
 const FILTER_OPTIONS: Array<{ id: MatchFilter; label: string }> = [
-  { id: "all", label: "Todos" },
-  { id: "live", label: "🔴 Live" },
-  { id: "open", label: "Abiertos" },
-  { id: "closed", label: "Cerrados" },
-  { id: "scored", label: "Con resultado" },
+  { id: "upcoming", label: "Próximos" },
+  { id: "live",     label: "🔴 Live" },
+  { id: "recent",   label: "Recientes" },
+  { id: "open",     label: "Abiertos" },
+  { id: "scored",   label: "Con resultado" },
+  { id: "all",      label: "Todos" },
 ];
 
 export default function AdminClient() {
@@ -55,7 +56,7 @@ export default function AdminClient() {
   const [error, setError] = useState("");
   const [oddsSyncMessage, setOddsSyncMessage] = useState("");
   const [isSyncingOdds, setIsSyncingOdds] = useState(false);
-  const [matchFilter, setMatchFilter] = useState<MatchFilter>("all");
+  const [matchFilter, setMatchFilter] = useState<MatchFilter>("upcoming");
   const [selectedPlayer, setSelectedPlayer] = useState<LeaderboardEntry | null>(null);
 
   const load = useCallback(async () => {
@@ -148,13 +149,35 @@ export default function AdminClient() {
 
   const allMatchesSorted = useMemo(() => sortByProximity(data?.matches ?? []), [data?.matches]);
 
-  const filteredMatches = allMatchesSorted.filter((m) => {
-    if (matchFilter === "live") return m.liveStatus === "live" || m.liveStatus === "halftime";
-    if (matchFilter === "open") return !m.closed;
-    if (matchFilter === "closed") return m.closed;
-    if (matchFilter === "scored") return m.homeFinalScore !== null && m.awayFinalScore !== null;
-    return true;
-  });
+  const isLive = (m: AdminMatch) => m.liveStatus === "live" || m.liveStatus === "halftime";
+
+  const filteredMatches = useMemo(() => {
+    const now = Date.now();
+    if (matchFilter === "upcoming") return allMatchesSorted.filter((m) => isLive(m) || new Date(m.kickoffAt).getTime() > now);
+    if (matchFilter === "live")     return allMatchesSorted.filter(isLive);
+    if (matchFilter === "recent")   return allMatchesSorted.filter((m) => m.closed).slice(0, 8);
+    if (matchFilter === "open")     return allMatchesSorted.filter((m) => !m.closed);
+    if (matchFilter === "scored")   return allMatchesSorted.filter((m) => m.homeFinalScore !== null && m.awayFinalScore !== null);
+    return allMatchesSorted;
+  }, [allMatchesSorted, matchFilter]);
+
+  // For "upcoming" and "all" modes, split into labelled sections
+  const matchSections = useMemo(() => {
+    if (matchFilter !== "upcoming" && matchFilter !== "all") return null;
+    const now = Date.now();
+    if (matchFilter === "upcoming") {
+      return {
+        live:     filteredMatches.filter(isLive),
+        upcoming: filteredMatches.filter((m) => !isLive(m)),
+        past:     [] as AdminMatch[],
+      };
+    }
+    return {
+      live:     allMatchesSorted.filter(isLive),
+      upcoming: allMatchesSorted.filter((m) => !isLive(m) && new Date(m.kickoffAt).getTime() > now),
+      past:     allMatchesSorted.filter((m) => m.closed),
+    };
+  }, [allMatchesSorted, filteredMatches, matchFilter]);
 
   // Summary stats (computed client-side from data)
   const scoredCount = data?.matches.filter((m) => m.homeFinalScore !== null).length ?? 0;
@@ -358,14 +381,59 @@ export default function AdminClient() {
                   </span>
                 </div>
 
-                {filteredMatches.length ? (
+                {matchSections ? (
+                  /* Sectioned view for "upcoming" and "all" filters */
+                  <div className="grid gap-7">
+                    {matchSections.live.length > 0 && (
+                      <div>
+                        <div className="mb-3 flex items-center gap-2">
+                          <span className="inline-flex h-5 items-center gap-1.5 rounded-full bg-red-100 px-2.5 text-[10px] font-black uppercase tracking-wide text-red-700">
+                            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-500" />
+                            En vivo · {matchSections.live.length}
+                          </span>
+                        </div>
+                        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                          {matchSections.live.map((m) => <MatchAdminCard key={m.id} match={m} onPatch={patchMatch} />)}
+                        </div>
+                      </div>
+                    )}
+
+                    {matchSections.upcoming.length > 0 && (
+                      <div>
+                        <p className="mb-3 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                          {matchFilter === "upcoming" ? "Programados" : "Próximos"} · {matchSections.upcoming.length}
+                        </p>
+                        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                          {matchSections.upcoming.map((m) => <MatchAdminCard key={m.id} match={m} onPatch={patchMatch} />)}
+                        </div>
+                      </div>
+                    )}
+
+                    {matchSections.past.length > 0 && (
+                      <div>
+                        <p className="mb-3 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                          Jugados · {matchSections.past.length}
+                        </p>
+                        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                          {matchSections.past.map((m) => <MatchAdminCard key={m.id} match={m} onPatch={patchMatch} />)}
+                        </div>
+                      </div>
+                    )}
+
+                    {matchSections.live.length === 0 && matchSections.upcoming.length === 0 && matchSections.past.length === 0 && (
+                      <div className="grid min-h-48 place-items-center rounded-xl border border-dashed border-slate-200 bg-white p-8 text-center shadow-sm">
+                        <div>
+                          <p className="text-3xl">⚽</p>
+                          <p className="mt-3 text-sm font-black text-slate-600">No hay partidos en esta categoría.</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : filteredMatches.length ? (
+                  /* Flat grid for live / recent / open / scored */
                   <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                     {filteredMatches.map((match) => (
-                      <MatchAdminCard
-                        key={match.id}
-                        match={match}
-                        onPatch={patchMatch}
-                      />
+                      <MatchAdminCard key={match.id} match={match} onPatch={patchMatch} />
                     ))}
                   </div>
                 ) : (

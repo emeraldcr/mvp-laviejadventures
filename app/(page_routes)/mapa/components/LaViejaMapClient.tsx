@@ -14,7 +14,9 @@ export default function LaViejaMapClient() {
   const [activePoint, setActivePoint] = useState<MapPoint>(MAP_POINTS[2]);
   const [zoom, setZoom] = useState(0.5);
   const [layers, setLayers] = useState(DEFAULT_LAYERS);
+  const [isDragging, setIsDragging] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const dragStart = useRef<{ x: number; y: number; scrollLeft: number; scrollTop: number } | null>(null);
 
   const activeGroup = useMemo(() => TOUR_GROUPS.find((group) => group.progress > 40) ?? TOUR_GROUPS[0], []);
 
@@ -26,6 +28,28 @@ export default function LaViejaMapClient() {
     e.preventDefault();
     const delta = e.deltaY > 0 ? -0.06 : 0.06;
     setZoom((current) => Math.min(Math.max(current + delta, 0.25), 2.0));
+  }, []);
+
+  const handleMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const container = containerRef.current;
+    if (!container) return;
+    dragStart.current = { x: e.clientX, y: e.clientY, scrollLeft: container.scrollLeft, scrollTop: container.scrollTop };
+    setIsDragging(true);
+  }, []);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!dragStart.current) return;
+    const container = containerRef.current;
+    if (!container) return;
+    const dx = e.clientX - dragStart.current.x;
+    const dy = e.clientY - dragStart.current.y;
+    container.scrollLeft = dragStart.current.scrollLeft - dx;
+    container.scrollTop = dragStart.current.scrollTop - dy;
+  }, []);
+
+  const stopDrag = useCallback(() => {
+    dragStart.current = null;
+    setIsDragging(false);
   }, []);
 
   useEffect(() => {
@@ -44,7 +68,15 @@ export default function LaViejaMapClient() {
           </h1>
         </header>
 
-        <div ref={containerRef} className="absolute inset-0 overflow-auto pt-20">
+        <div
+          ref={containerRef}
+          className="absolute inset-0 overflow-auto pt-20 select-none"
+          style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={stopDrag}
+          onMouseLeave={stopDrag}
+        >
           <div
             className="origin-top-left transition-transform duration-150"
             style={{ transform: `scale(${zoom})`, width: VIEWBOX.width, height: VIEWBOX.height }}
