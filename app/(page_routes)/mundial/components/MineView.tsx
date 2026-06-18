@@ -1,5 +1,5 @@
 import { CalendarDays, Flame, History, ListChecks, Lock, Target } from "lucide-react";
-import { useEffect, useMemo, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, type ReactNode } from "react";
 import { TOTAL_MATCHES } from "../constants";
 import type { Draft, MundialMatch } from "../types";
 import { cn, emptyDraft, isMatchClosed, isMatchLive, kickoffMs } from "../utils";
@@ -43,6 +43,7 @@ export function MineView({
   onUpdateDraft,
   onSave,
 }: MineViewProps) {
+  const lastScrolledFocusIdRef = useRef<string | null>(null);
   const pct = Math.round((savedCount / TOTAL_MATCHES) * 100);
   const sections = useMemo(() => {
     const clockMs = nowMs > 0 ? nowMs : Date.now();
@@ -89,7 +90,13 @@ export function MineView({
   }, [drafts, mineMatches, nowMs, todayEditableMatchIds]);
 
   useEffect(() => {
-    if (!focusMatchId) return;
+    if (!focusMatchId) {
+      lastScrolledFocusIdRef.current = null;
+      return;
+    }
+    if (lastScrolledFocusIdRef.current === focusMatchId) return;
+    lastScrolledFocusIdRef.current = focusMatchId;
+
     const id = window.setTimeout(() => {
       document.getElementById(`mine-match-${focusMatchId}`)?.scrollIntoView({
         behavior: "smooth",
@@ -97,7 +104,7 @@ export function MineView({
       });
     }, 80);
     return () => window.clearTimeout(id);
-  }, [focusMatchId, sections]);
+  }, [focusMatchId]);
 
   return (
     <section className="grid gap-4">
