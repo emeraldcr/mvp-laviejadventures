@@ -1,6 +1,9 @@
 import { REQUEST_TIMEOUT_MS } from "./constants";
 import { normalizeTeamName, resolveTeamFlag } from "./flags";
-import type { Draft, MundialMatch } from "./types";
+import type { Draft, LiveMatchStatus, MundialMatch } from "./types";
+
+// Max time after kickoff to treat a match as auto-live (90min + 30min ET + 15min buffer)
+const AUTO_LIVE_MAX_MS = 135 * 60_000;
 
 export async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit = {}) {
   const controller = new AbortController();
@@ -97,6 +100,32 @@ export function hasFinalScore(match: MundialMatch) {
 
 export function isMatchLive(match: MundialMatch) {
   return match.liveStatus === "live" || match.liveStatus === "halftime";
+}
+
+// Returns true when kickoff has passed but the admin hasn't set liveStatus yet.
+export function isMatchAutoLive(match: MundialMatch, nowMs: number): boolean {
+  if (!nowMs || match.liveStatus !== "scheduled") return false;
+  const elapsed = nowMs - kickoffMs(match);
+  return elapsed >= 0 && elapsed < AUTO_LIVE_MAX_MS;
+}
+
+// Estimated match minute based on elapsed time since kickoff.
+// Assumes ~45 min first half, ~15 min halftime break, max 90 displayed.
+export function autoLiveMinute(match: MundialMatch, nowMs: number): number | null {
+  const ko = kickoffMs(match);
+  if (!nowMs || nowMs < ko) return null;
+  const elapsed = Math.floor((nowMs - ko) / 60_000);
+  if (elapsed >= AUTO_LIVE_MAX_MS / 60_000) return null;
+  if (elapsed < 45) return elapsed;
+  if (elapsed < 60) return 45; // halftime break window
+  return Math.min(90, elapsed - 15); // second half offset
+}
+
+// Derived live status from elapsed time when the DB still says "scheduled".
+export function autoLiveStatus(match: MundialMatch, nowMs: number): LiveMatchStatus {
+  if (!isMatchAutoLive(match, nowMs)) return match.liveStatus;
+  const elapsed = Math.floor((nowMs - kickoffMs(match)) / 60_000);
+  return elapsed >= 45 && elapsed < 60 ? "halftime" : "live";
 }
 
 export function liveStatusLabel(match: MundialMatch) {

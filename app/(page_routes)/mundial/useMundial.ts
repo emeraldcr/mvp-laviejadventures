@@ -3,9 +3,12 @@ import { API_URL, EMPTY_DRAFTS, SESSION_KEY, SESSION_TTL_MS, STORAGE_KEY, TOTAL_
 import type { Draft, LeaderboardEntry, MundialMatch, PlayerProgress, Prediction, PredictionsResponse, ViewMode } from "./types";
 import { useInterval } from "@/lib/hooks/useInterval";
 import {
+  autoLiveMinute,
+  autoLiveStatus,
   emptyDraft,
   fetchWithTimeout,
   formatCountdown,
+  isMatchAutoLive,
   isMatchClosed,
   isMatchLive,
   isSameDayInCR,
@@ -57,10 +60,15 @@ export function useMundial() {
     () => orderedMatches.find((m) => !isMatchClosed(m, nowMs)) ?? null,
     [nowMs, orderedMatches]
   );
-  const liveMatch = useMemo(
-    () => orderedMatches.find((m) => isMatchLive(m)) ?? null,
-    [orderedMatches]
-  );
+  const liveMatch = useMemo(() => {
+    const raw = orderedMatches.find((m) => isMatchLive(m) || isMatchAutoLive(m, nowMs)) ?? null;
+    if (!raw || !isMatchAutoLive(raw, nowMs)) return raw;
+    return {
+      ...raw,
+      liveStatus: autoLiveStatus(raw, nowMs),
+      liveMinute: raw.liveMinute ?? autoLiveMinute(raw, nowMs),
+    };
+  }, [orderedMatches, nowMs]);
   const activeMatchId = activeMatch?.id ?? null;
   const todayEditableMatches = useMemo(
     () => orderedMatches.filter((m) => !isMatchClosed(m, nowMs)),
