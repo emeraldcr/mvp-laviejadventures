@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/helpers/mongodb";
 import { serializeBettingFavorite } from "@/lib/mundial/betting";
 import { serializeLiveMatchStats } from "@/lib/mundial/live-stats";
+import { notifyLiveMatchChanged } from "@/lib/mundial/live-match-events";
+import { notifyPenalitosChanged } from "@/lib/mundial/penalitos-events";
+import { notifyScorerChanged } from "@/lib/mundial/scorer-events";
 
 export const dynamic = "force-dynamic";
 
@@ -111,6 +114,7 @@ export async function PATCH(req: NextRequest) {
     const db = await getDb();
     const $set: Record<string, unknown> = { updatedAt: new Date() };
     let matchTeams: MatchTeams | null = null;
+    let touchedLiveState = false;
 
     async function readMatchTeams() {
       if (!matchTeams) {
@@ -152,6 +156,7 @@ export async function PATCH(req: NextRequest) {
       }
       $set.liveStatus = parsed;
       $set.liveUpdatedAt = new Date();
+      touchedLiveState = true;
     }
 
     if ("liveMinute" in body) {
@@ -160,7 +165,9 @@ export async function PATCH(req: NextRequest) {
         return NextResponse.json({ error: "liveMinute invalido (0-130)." }, { status: 400 });
       }
       $set.liveMinute = parsed;
+      $set.liveMinuteUpdatedAt = parsed !== null ? new Date() : null;
       $set.liveUpdatedAt = new Date();
+      touchedLiveState = true;
     }
 
     if ("homeLiveScore" in body) {
@@ -170,6 +177,7 @@ export async function PATCH(req: NextRequest) {
       }
       $set.homeLiveScore = parsed;
       $set.liveUpdatedAt = new Date();
+      touchedLiveState = true;
     }
 
     if ("awayLiveScore" in body) {
@@ -179,11 +187,13 @@ export async function PATCH(req: NextRequest) {
       }
       $set.awayLiveScore = parsed;
       $set.liveUpdatedAt = new Date();
+      touchedLiveState = true;
     }
 
     if ("liveNote" in body) {
       $set.liveNote = cleanText(body.liveNote, 220);
       $set.liveUpdatedAt = new Date();
+      touchedLiveState = true;
     }
 
     if ("liveEvents" in body) {
@@ -193,11 +203,13 @@ export async function PATCH(req: NextRequest) {
       }
       $set.liveEvents = parsed;
       $set.liveUpdatedAt = new Date();
+      touchedLiveState = true;
     }
 
     if ("liveStats" in body) {
       $set.liveStats = serializeLiveMatchStats(body.liveStats);
       $set.liveUpdatedAt = new Date();
+      touchedLiveState = true;
     }
 
     if ("bettingFavorite" in body) {
@@ -222,6 +234,12 @@ export async function PATCH(req: NextRequest) {
 
     if (!result.matchedCount) {
       return NextResponse.json({ error: "Partido no encontrado." }, { status: 404 });
+    }
+
+    if (touchedLiveState) {
+      notifyLiveMatchChanged();
+      notifyPenalitosChanged();
+      notifyScorerChanged();
     }
 
     return NextResponse.json({ ok: true });

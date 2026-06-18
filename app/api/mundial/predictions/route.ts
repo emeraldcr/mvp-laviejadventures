@@ -24,6 +24,7 @@ type MundialMatchDoc = MundialMatch & {
   actualWinner?: "home" | "away" | null;
   liveStatus?: "scheduled" | "live" | "halftime" | "fulltime";
   liveMinute?: number | null;
+  liveMinuteUpdatedAt?: Date | string | null;
   homeLiveScore?: number | null;
   awayLiveScore?: number | null;
   liveNote?: string;
@@ -166,6 +167,7 @@ function serializeMatch(doc: MundialMatchDoc, now = new Date()) {
         ? doc.liveStatus
         : "scheduled",
     liveMinute: typeof doc.liveMinute === "number" ? doc.liveMinute : null,
+    liveMinuteUpdatedAt: toIsoString(doc.liveMinuteUpdatedAt),
     homeLiveScore: typeof doc.homeLiveScore === "number" ? doc.homeLiveScore : null,
     awayLiveScore: typeof doc.awayLiveScore === "number" ? doc.awayLiveScore : null,
     liveNote: doc.liveNote ?? "",

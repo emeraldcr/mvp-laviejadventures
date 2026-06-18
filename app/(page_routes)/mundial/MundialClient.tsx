@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Check, CircleAlert, Loader2 } from "lucide-react";
+import type { ReactNode } from "react";
+import { Check, CircleAlert, Gamepad2, Loader2, Target, X } from "lucide-react";
 import type { LiveMatchStatus, MundialMatch } from "./types";
 import { useMundial } from "./useMundial";
 import { useLiveMatch } from "./useLiveMatch";
@@ -16,7 +17,6 @@ import { MundialHeader } from "./components/MundialHeader";
 import { PenalitosPanel } from "./components/PenalitosPanel";
 import { ProximoEnAnotarPanel } from "./components/ProximoEnAnotarPanel";
 import { LiveMatchChat } from "./components/LiveMatchChat";
-import LiveStreamPlayer from "./components/LiveStreamPlayer";
 
 export default function MundialClient() {
   const {
@@ -63,6 +63,7 @@ export default function MundialClient() {
 
   const [selectedInfoMatchId, setSelectedInfoMatchId] = useState<string | null>(null);
   const [featuredMatchId, setFeaturedMatchId] = useState<string | null>(null);
+  const [liveModal, setLiveModal] = useState<"penalitos" | "scorer" | null>(null);
 
   // Merge SSE live fields onto the polled liveMatch so all clients see updates
   // at the same instant. Falls back to polling data when SSE has nothing new.
@@ -89,6 +90,7 @@ export default function MundialClient() {
       homeLiveScore: liveSSE.homeLiveScore,
       awayLiveScore: liveSSE.awayLiveScore,
       liveMinute: liveSSE.liveMinute,
+      liveMinuteUpdatedAt: liveSSE.liveMinuteUpdatedAt,
       liveNote: liveSSE.liveNote,
       liveEvents: liveSSE.liveEvents,
       liveStats: liveSSE.liveStats,
@@ -211,11 +213,19 @@ export default function MundialClient() {
             {/* ====================== LIVE SECTION ========================== */}
             {effectiveLiveMatch && (
               <div className="mt-6 space-y-6">
-                <LiveStreamPlayer liveMatch={effectiveLiveMatch} />
-
-                <div className="grid gap-4 lg:grid-cols-2">
-                  <PenalitosPanel liveMatch={effectiveLiveMatch} playerName={playerName} compact />
-                  <ProximoEnAnotarPanel liveMatch={effectiveLiveMatch} playerName={playerName} />
+                <div className="grid gap-3 rounded-xl border border-[#f0b429]/20 bg-black/30 p-3 sm:grid-cols-2">
+                  <LiveToolButton
+                    icon={<Gamepad2 className="h-5 w-5" />}
+                    title="Penalitos"
+                    description="Mini-juego en vivo"
+                    onClick={() => setLiveModal("penalitos")}
+                  />
+                  <LiveToolButton
+                    icon={<Target className="h-5 w-5" />}
+                    title="Próximo en anotar"
+                    description="Mini apuestas live"
+                    onClick={() => setLiveModal("scorer")}
+                  />
                 </div>
 
                 <LiveMatchChat
@@ -229,6 +239,18 @@ export default function MundialClient() {
           </>
         )}
       </section>
+
+      {effectiveLiveMatch && liveModal === "penalitos" && (
+        <LiveToolModal title="Penalitos" onClose={() => setLiveModal(null)}>
+          <PenalitosPanel liveMatch={effectiveLiveMatch} playerName={playerName} />
+        </LiveToolModal>
+      )}
+
+      {effectiveLiveMatch && liveModal === "scorer" && (
+        <LiveToolModal title="Próximo en anotar" onClose={() => setLiveModal(null)}>
+          <ProximoEnAnotarPanel liveMatch={effectiveLiveMatch} playerName={playerName} embedded />
+        </LiveToolModal>
+      )}
 
       {showPlayerPicker && (
         <PlayerPickerModal
@@ -248,5 +270,64 @@ export default function MundialClient() {
         />
       )}
     </main>
+  );
+}
+
+function LiveToolButton({
+  icon,
+  title,
+  description,
+  onClick,
+}: {
+  icon: ReactNode;
+  title: string;
+  description: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex min-w-0 items-center gap-3 rounded-lg border border-white/12 bg-[#06140f] px-4 py-3 text-left transition hover:border-[#f0b429]/45 hover:bg-[#10240b]"
+    >
+      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-[#f0b429]/35 bg-[#1a2206] text-[#f0b429]">
+        {icon}
+      </span>
+      <span className="min-w-0">
+        <span className="block truncate text-sm font-black uppercase text-white">{title}</span>
+        <span className="mt-0.5 block truncate text-xs font-bold text-white/45">{description}</span>
+      </span>
+    </button>
+  );
+}
+
+function LiveToolModal({
+  title,
+  children,
+  onClose,
+}: {
+  title: string;
+  children: ReactNode;
+  onClose: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 p-2 backdrop-blur-sm sm:items-center sm:p-4">
+      <div className="flex max-h-[calc(100dvh-1rem)] w-full max-w-4xl flex-col overflow-hidden rounded-xl border border-[#f0b429]/35 bg-[#06140f] shadow-[0_24px_90px_rgba(0,0,0,0.85)]">
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-white/12 bg-[#12351f] px-4 py-3 [background-image:linear-gradient(135deg,rgba(240,180,41,0.18),transparent_58%)]">
+          <p className="truncate font-black text-white">{title}</p>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Cerrar"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-md border border-white/20 bg-black/20 text-white/75 transition hover:border-[#d5ff3f] hover:text-white"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto p-3 sm:p-4">
+          {children}
+        </div>
+      </div>
+    </div>
   );
 }

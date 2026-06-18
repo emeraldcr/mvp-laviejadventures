@@ -7,6 +7,7 @@ import {
   serializeLiveMatchStats,
   type LiveMatchStats,
 } from "@/lib/mundial/live-stats";
+import { subscribeLiveMatchChanges } from "@/lib/mundial/live-match-events";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 55;
@@ -34,6 +35,7 @@ export type LiveMatchPayload = {
   homeLiveScore: number | null;
   awayLiveScore: number | null;
   liveMinute: number | null;
+  liveMinuteUpdatedAt: string | null;
   liveNote: string;
   liveEvents: LiveEvent[];
   liveStats: LiveMatchStats;
@@ -48,6 +50,7 @@ type MatchDoc = {
   homeLiveScore?: number | null;
   awayLiveScore?: number | null;
   liveMinute?: number | null;
+  liveMinuteUpdatedAt?: Date | string | null;
   liveStatus?: string;
   liveNote?: string;
   liveEvents?: unknown[];
@@ -75,6 +78,7 @@ function emptyPayload(viewerCount: number): LiveMatchPayload {
     homeLiveScore: null,
     awayLiveScore: null,
     liveMinute: null,
+    liveMinuteUpdatedAt: null,
     liveNote: "",
     liveEvents: [],
     liveStats: EMPTY_LIVE_MATCH_STATS,
@@ -96,6 +100,7 @@ async function buildPayload(): Promise<LiveMatchPayload> {
         homeLiveScore: 1,
         awayLiveScore: 1,
         liveMinute: 1,
+        liveMinuteUpdatedAt: 1,
         liveStatus: 1,
         liveNote: 1,
         liveEvents: 1,
@@ -121,6 +126,7 @@ async function buildPayload(): Promise<LiveMatchPayload> {
     homeLiveScore: typeof doc.homeLiveScore === "number" ? doc.homeLiveScore : null,
     awayLiveScore: typeof doc.awayLiveScore === "number" ? doc.awayLiveScore : null,
     liveMinute: typeof doc.liveMinute === "number" ? doc.liveMinute : null,
+    liveMinuteUpdatedAt: doc.liveMinuteUpdatedAt ? new Date(doc.liveMinuteUpdatedAt as string | Date).toISOString() : null,
     liveNote: typeof doc.liveNote === "string" ? doc.liveNote : "",
     liveEvents: events,
     liveStats: serializeLiveMatchStats(doc.liveStats),
@@ -145,6 +151,10 @@ async function refreshSnapshot() {
   })().finally(() => { refreshPromise = null; });
   return refreshPromise;
 }
+
+subscribeLiveMatchChanges(() => {
+  void refreshSnapshot().catch((err) => console.error("[matches/live] notify refresh error", err));
+});
 
 function startPoller() {
   if (pollTimerId) return;

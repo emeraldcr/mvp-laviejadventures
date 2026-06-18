@@ -14,6 +14,7 @@ export type LiveMatchSSE = {
   homeLiveScore: number | null;
   awayLiveScore: number | null;
   liveMinute: number | null;
+  liveMinuteUpdatedAt: string | null;
   liveNote: string;
   liveEvents: LiveMatchEvent[];
   liveStats: LiveMatchStats;
@@ -29,6 +30,7 @@ const DEFAULT_SSE: LiveMatchSSE = {
   homeLiveScore: null,
   awayLiveScore: null,
   liveMinute: null,
+  liveMinuteUpdatedAt: null,
   liveNote: "",
   liveEvents: [],
   liveStats: EMPTY_LIVE_MATCH_STATS,

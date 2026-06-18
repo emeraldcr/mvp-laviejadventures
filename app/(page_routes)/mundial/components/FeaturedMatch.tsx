@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Activity, BarChart3, ChevronDown, ChevronRight, ChevronUp, CircleDot, ClipboardList, Clock3, Lock, Timer, Trophy, Users, X, Zap } from "lucide-react";
 import { hasAnyLiveStats, type LiveTeamStats } from "@/lib/mundial/live-stats";
 import type { Draft, MundialMatch, Prediction } from "../types";
@@ -43,6 +43,7 @@ export function FeaturedMatch({
   const [showLiveModal, setShowLiveModal] = useState(false);
   const [showPicksModal, setShowPicksModal] = useState(false);
   const [showFinalBetsModal, setShowFinalBetsModal] = useState(false);
+  const [showLiveBetsModal, setShowLiveBetsModal] = useState(false);
 
   const picksCount = useMemo(
     () => predictions.filter((p) => p.matchId === match.id).length,
@@ -178,6 +179,14 @@ export function FeaturedMatch({
             </button>
             <button
               type="button"
+              onClick={() => setShowLiveBetsModal(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[#d5ff3f]/25 bg-[#0a1e0e] px-3 py-2 text-xs font-black text-white transition hover:bg-[#12351f]"
+            >
+              <Activity className="h-3.5 w-3.5 shrink-0 text-[#d5ff3f]" />
+              Mini apuestas
+            </button>
+            <button
+              type="button"
               onClick={() => setShowPicksModal(true)}
               className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-[#0a1e0e] px-3 py-2 text-xs font-black text-white transition hover:bg-[#12351f]"
             >
@@ -192,12 +201,6 @@ export function FeaturedMatch({
           </div>
 
           {/* Live bets — full width, prominent */}
-          <LiveBetsInline
-            match={match}
-            playerName={playerName}
-            onOpenPlayerPicker={onOpenPlayerPicker}
-          />
-
           <BettingFavoriteCard match={match} />
         </div>
       ) : (
@@ -328,6 +331,14 @@ export function FeaturedMatch({
         onClose={() => setShowFinalBetsModal(false)}
       />
     )}
+    {showLiveBetsModal && (
+      <LiveBetsModal
+        match={match}
+        playerName={playerName}
+        onOpenPlayerPicker={onOpenPlayerPicker}
+        onClose={() => setShowLiveBetsModal(false)}
+      />
+    )}
     {showPicksModal && (
       <PicksModal
         match={match}
@@ -420,38 +431,47 @@ function PicksModal({
   );
 }
 
-function LiveBetsInline({
+function LiveBetsModal({
   match,
   playerName,
   onOpenPlayerPicker,
+  onClose,
 }: {
   match: MundialMatch;
   playerName: string;
   onOpenPlayerPicker: () => void;
+  onClose: () => void;
 }) {
   const matchLabel = `${match.homeTeam} vs ${match.awayTeam}`;
 
   return (
-    <div className="mt-3 overflow-hidden rounded-xl border border-[#d5ff3f]/25 bg-[#06140f]/95">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 bg-[#10240b]/80 px-3 py-2.5">
-        <span className="inline-flex min-w-0 items-center gap-2 text-xs font-black uppercase tracking-[0.18em] text-[#d5ff3f]">
-          <Activity className="h-4 w-4 shrink-0" />
-          <span>Live bets</span>
-        </span>
-        <span className="rounded-md border border-[#d5ff3f]/25 bg-black/30 px-2 py-1 text-[10px] font-black text-[#d5ff3f]">
-          Todo suma puntos
-        </span>
-      </div>
-
-      <div className="p-3">
-        <StatBetsPanel
-          matchId={match.id}
-          playerName={playerName}
-          matchLabel={matchLabel}
-          variant="mini"
-          questionScope="live"
-          onOpenPlayerPicker={onOpenPlayerPicker}
-        />
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 p-2 backdrop-blur-sm sm:items-center sm:p-4">
+      <div className="flex max-h-[calc(100dvh-1rem)] w-full max-w-3xl flex-col overflow-hidden rounded-xl border border-[#d5ff3f]/35 bg-[#06140f] shadow-[0_24px_90px_rgba(0,0,0,0.85)]">
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-white/12 bg-[#12351f] px-4 py-3 [background-image:linear-gradient(135deg,rgba(213,255,63,0.14),transparent_58%)]">
+          <div className="flex min-w-0 items-center gap-2">
+            <Activity className="h-4 w-4 shrink-0 text-[#d5ff3f]" />
+            <p className="font-black text-white">Mini apuestas</p>
+            <span className="truncate text-xs text-white/50">{matchLabel}</span>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Cerrar"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-md border border-white/20 bg-black/20 text-white/75 transition hover:border-[#d5ff3f] hover:text-white"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto p-3 sm:p-4">
+          <StatBetsPanel
+            matchId={match.id}
+            playerName={playerName}
+            matchLabel={matchLabel}
+            variant="mini"
+            questionScope="live"
+            onOpenPlayerPicker={onOpenPlayerPicker}
+          />
+        </div>
       </div>
     </div>
   );
@@ -506,36 +526,54 @@ function MatchStatusBanner({
   );
 }
 
-function useLiveClock(
-  liveMinute: number | null,
-  liveUpdatedAt: string | null,
-  isLive: boolean
-) {
-  const computeDisplay = () => {
-    if (!isLive || liveMinute === null) return null;
-    const base = liveUpdatedAt ? new Date(liveUpdatedAt).getTime() : Date.now();
-    const elapsedMs = Math.max(0, Date.now() - base);
-    const totalSec = Math.floor(elapsedMs / 1_000);
-    const mins = liveMinute + Math.floor(totalSec / 60);
-    const secs = totalSec % 60;
-    return { mins, secs };
-  };
-
-  const [display, setDisplay] = useState(computeDisplay);
-  const computeRef = useRef(computeDisplay);
-  computeRef.current = computeDisplay;
+function useLiveClock(match: MundialMatch, isLive: boolean) {
+  const [nowMs, setNowMs] = useState(() => Date.now());
 
   useEffect(() => {
-    if (!isLive || liveMinute === null) {
-      setDisplay(null);
-      return;
-    }
-    setDisplay(computeRef.current());
-    const id = setInterval(() => setDisplay(computeRef.current()), 1_000);
+    if (!isLive) return;
+    const id = setInterval(() => setNowMs(Date.now()), 1_000);
     return () => clearInterval(id);
-  }, [isLive, liveMinute, liveUpdatedAt]);
+  }, [isLive]);
 
-  return display;
+  return useMemo(() => {
+    if (!isLive) return null;
+
+    const status = match.liveStatus;
+
+    // Halftime: clock frozen at 45:00
+    if (status === "halftime") return { mins: 45, secs: 0 };
+
+    if (status !== "live") return null;
+
+    // Admin anchored the minute with its own timestamp — use that as base
+    if (match.liveMinute !== null && match.liveMinuteUpdatedAt) {
+      const anchorMs = new Date(match.liveMinuteUpdatedAt).getTime();
+      if (Number.isFinite(anchorMs)) {
+        const elapsedMs = Math.max(0, nowMs - anchorMs);
+        const totalSec = Math.floor(elapsedMs / 1_000);
+        return {
+          mins: match.liveMinute + Math.floor(totalSec / 60),
+          secs: totalSec % 60,
+        };
+      }
+    }
+
+    // Fallback: derive from kickoff (auto-live with no admin minute set)
+    const koMs = new Date(match.kickoffAt).getTime();
+    if (!Number.isFinite(koMs)) return null;
+    const totalSec = Math.max(0, Math.floor((nowMs - koMs) / 1_000));
+    const firstHalfSec = 45 * 60;
+    const halftimeSec = 15 * 60;
+
+    if (totalSec < firstHalfSec) {
+      return { mins: Math.floor(totalSec / 60), secs: totalSec % 60 };
+    }
+    if (totalSec < firstHalfSec + halftimeSec) {
+      return { mins: 45, secs: 0 };
+    }
+    const secondHalfSec = totalSec - firstHalfSec - halftimeSec;
+    return { mins: 45 + Math.floor(secondHalfSec / 60), secs: secondHalfSec % 60 };
+  }, [isLive, match, nowMs]);
 }
 
 function LiveMatchScoreboard({
@@ -549,7 +587,7 @@ function LiveMatchScoreboard({
   homeLiveScore: number;
   awayLiveScore: number;
 }) {
-  const clock = useLiveClock(match.liveMinute, match.liveUpdatedAt, isLive);
+  const clock = useLiveClock(match, isLive);
 
   const homeGoals = goalSummary(match, "home", homeLiveScore);
   const awayGoals = goalSummary(match, "away", awayLiveScore);

@@ -41,6 +41,7 @@ export type MundialMatch = {
   liveEvents: LiveMatchEvent[];
   liveStats: LiveMatchStats;
   liveUpdatedAt: string | null;
+  liveMinuteUpdatedAt: string | null;
   bettingFavorite: BettingFavorite | null;
   closed: boolean;
   sortOrder: number;
