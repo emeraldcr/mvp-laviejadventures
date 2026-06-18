@@ -212,6 +212,27 @@ export async function PATCH(req: NextRequest) {
       touchedLiveState = true;
     }
 
+    if ($set.liveStatus === "fulltime") {
+      const finalHomeScore =
+        typeof $set.homeLiveScore === "number"
+          ? $set.homeLiveScore
+          : parseScore(body.homeLiveScore);
+      const finalAwayScore =
+        typeof $set.awayLiveScore === "number"
+          ? $set.awayLiveScore
+          : parseScore(body.awayLiveScore);
+
+      if (typeof finalHomeScore === "number" && typeof finalAwayScore === "number") {
+        $set.homeFinalScore = finalHomeScore;
+        $set.awayFinalScore = finalAwayScore;
+        $set.forceClosed = true;
+        if (!("actualWinner" in body)) {
+          $set.actualWinner =
+            finalHomeScore > finalAwayScore ? "home" : finalAwayScore > finalHomeScore ? "away" : null;
+        }
+      }
+    }
+
     if ("bettingFavorite" in body) {
       if (body.bettingFavorite === null) {
         $set.bettingFavorite = null;

@@ -63,18 +63,17 @@ export default function MundialClient() {
 
   const [selectedInfoMatchId, setSelectedInfoMatchId] = useState<string | null>(null);
   const [featuredMatchId, setFeaturedMatchId] = useState<string | null>(null);
+  const [focusedMineMatchId, setFocusedMineMatchId] = useState<string | null>(null);
   const [liveModal, setLiveModal] = useState<"penalitos" | "scorer" | null>(null);
 
   // Merge SSE live fields onto the polled liveMatch so all clients see updates
   // at the same instant. Falls back to polling data when SSE has nothing new.
   const effectiveLiveMatch = useMemo<MundialMatch | null>(() => {
-    const sseIsActive = liveSSE.matchId &&
-      (liveSSE.liveStatus === "live" || liveSSE.liveStatus === "halftime");
-
+    const sseHasMatch = Boolean(liveSSE.matchId);
     // If SSE says there's a live match, find it in the matches array
     // (works even if polling hasn't refreshed the liveStatus yet)
     const base = liveMatch ?? (
-      sseIsActive
+      sseHasMatch
         ? (matches.find((m) => m.id === liveSSE.matchId) ?? null)
         : null
     );
@@ -84,11 +83,16 @@ export default function MundialClient() {
     // Only overlay SSE data when the matchId matches
     if (liveSSE.matchId !== base.id) return base;
 
+    const isFulltime = liveSSE.liveStatus === "fulltime";
+
     return {
       ...base,
       liveStatus: liveSSE.liveStatus as LiveMatchStatus,
       homeLiveScore: liveSSE.homeLiveScore,
       awayLiveScore: liveSSE.awayLiveScore,
+      homeFinalScore: isFulltime && liveSSE.homeLiveScore !== null ? liveSSE.homeLiveScore : base.homeFinalScore,
+      awayFinalScore: isFulltime && liveSSE.awayLiveScore !== null ? liveSSE.awayLiveScore : base.awayFinalScore,
+      closed: isFulltime ? true : base.closed,
       liveMinute: liveSSE.liveMinute,
       liveMinuteUpdatedAt: liveSSE.liveMinuteUpdatedAt,
       liveNote: liveSSE.liveNote,
@@ -97,6 +101,11 @@ export default function MundialClient() {
       liveUpdatedAt: liveSSE.liveUpdatedAt,
     };
   }, [liveMatch, liveSSE, matches]);
+
+  const activeLiveMatch =
+    effectiveLiveMatch?.liveStatus === "live" || effectiveLiveMatch?.liveStatus === "halftime"
+      ? effectiveLiveMatch
+      : null;
 
   const mostRecentMatch = useMemo(
     () => effectiveLiveMatch ?? recentClosedMatches[0] ?? activeMatch ?? matches[0] ?? null,
@@ -129,6 +138,11 @@ export default function MundialClient() {
   function handleSelectMatch(match: MundialMatch) {
     setSelectedInfoMatchId(match.id);
     setFeaturedMatchId(match.id);
+  }
+
+  function handleGoToMine(matchId?: string) {
+    setFocusedMineMatchId(matchId ?? null);
+    setViewMode("mine");
   }
 
   return (
@@ -181,7 +195,8 @@ export default function MundialClient() {
                 nowMs={nowMs}
                 activeCountdown={activeCountdown}
                 playerName={playerName}
-                onGoToMine={() => setViewMode("mine")}
+                todayEditableMatchIds={todayEditableMatchIds}
+                onGoToMine={handleGoToMine}
                 onSelectMatch={handleSelectMatch}
                 onOpenPlayerPicker={openPlayerPicker}
               />
@@ -197,6 +212,7 @@ export default function MundialClient() {
                 isSavingBulk={isSavingBulk}
                 todayEditableMatchIds={todayEditableMatchIds}
                 nowMs={nowMs}
+                focusMatchId={focusedMineMatchId}
                 onUpdateDraft={updateDraft}
                 onSave={saveMatch}
               />
@@ -211,7 +227,7 @@ export default function MundialClient() {
             )}
 
             {/* ====================== LIVE SECTION ========================== */}
-            {effectiveLiveMatch && (
+            {activeLiveMatch && (
               <div className="mt-6 space-y-6">
                 <div className="grid gap-3 rounded-xl border border-[#f0b429]/20 bg-black/30 p-3 sm:grid-cols-2">
                   <LiveToolButton
@@ -229,7 +245,7 @@ export default function MundialClient() {
                 </div>
 
                 <LiveMatchChat
-                  liveMatch={effectiveLiveMatch}
+                  liveMatch={activeLiveMatch}
                   playerName={playerName}
                   onOpenPlayerPicker={openPlayerPicker}
                 />
@@ -240,15 +256,15 @@ export default function MundialClient() {
         )}
       </section>
 
-      {effectiveLiveMatch && liveModal === "penalitos" && (
+      {activeLiveMatch && liveModal === "penalitos" && (
         <LiveToolModal title="Penalitos" onClose={() => setLiveModal(null)}>
-          <PenalitosPanel liveMatch={effectiveLiveMatch} playerName={playerName} />
+          <PenalitosPanel liveMatch={activeLiveMatch} playerName={playerName} />
         </LiveToolModal>
       )}
 
-      {effectiveLiveMatch && liveModal === "scorer" && (
+      {activeLiveMatch && liveModal === "scorer" && (
         <LiveToolModal title="Próximo en anotar" onClose={() => setLiveModal(null)}>
-          <ProximoEnAnotarPanel liveMatch={effectiveLiveMatch} playerName={playerName} embedded />
+          <ProximoEnAnotarPanel liveMatch={activeLiveMatch} playerName={playerName} embedded />
         </LiveToolModal>
       )}
 

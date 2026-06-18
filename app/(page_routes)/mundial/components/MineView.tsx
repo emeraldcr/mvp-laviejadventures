@@ -1,5 +1,5 @@
 import { CalendarDays, Flame, History, ListChecks, Lock, Target } from "lucide-react";
-import { useMemo, type ReactNode } from "react";
+import { useEffect, useMemo, type ReactNode } from "react";
 import { TOTAL_MATCHES } from "../constants";
 import type { Draft, MundialMatch } from "../types";
 import { cn, emptyDraft, isMatchClosed, isMatchLive, kickoffMs } from "../utils";
@@ -14,6 +14,7 @@ type MineViewProps = {
   isSavingBulk: boolean;
   todayEditableMatchIds: Set<string>;
   nowMs: number;
+  focusMatchId: string | null;
   onUpdateDraft: (matchId: string, patch: Partial<Draft>) => void;
   onSave: (match: MundialMatch) => Promise<void>;
 };
@@ -38,6 +39,7 @@ export function MineView({
   isSavingBulk,
   todayEditableMatchIds,
   nowMs,
+  focusMatchId,
   onUpdateDraft,
   onSave,
 }: MineViewProps) {
@@ -85,6 +87,17 @@ export function MineView({
 
     return nextSections;
   }, [drafts, mineMatches, nowMs, todayEditableMatchIds]);
+
+  useEffect(() => {
+    if (!focusMatchId) return;
+    const id = window.setTimeout(() => {
+      document.getElementById(`mine-match-${focusMatchId}`)?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }, 80);
+    return () => window.clearTimeout(id);
+  }, [focusMatchId, sections]);
 
   return (
     <section className="grid gap-4">
@@ -145,6 +158,7 @@ export function MineView({
               isSavingBulk={isSavingBulk}
               todayEditableMatchIds={todayEditableMatchIds}
               nowMs={nowMs}
+              focusMatchId={focusMatchId}
               onUpdateDraft={onUpdateDraft}
               onSave={onSave}
             />
@@ -254,6 +268,7 @@ function PickSection({
   isSavingBulk,
   todayEditableMatchIds,
   nowMs,
+  focusMatchId,
   onUpdateDraft,
   onSave,
 }: {
@@ -263,6 +278,7 @@ function PickSection({
   isSavingBulk: boolean;
   todayEditableMatchIds: Set<string>;
   nowMs: number;
+  focusMatchId: string | null;
   onUpdateDraft: (matchId: string, patch: Partial<Draft>) => void;
   onSave: (match: MundialMatch) => Promise<void>;
 }) {
@@ -331,17 +347,25 @@ function PickSection({
 
       <div className="grid gap-4 p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-3">
         {section.matches.map((match) => (
-          <MatchCard
+          <div
             key={match.id}
-            match={match}
-            draft={drafts[match.id] ?? emptyDraft()}
-            savingId={savingId}
-            isSavingBulk={isSavingBulk}
-            todayEditableMatchIds={todayEditableMatchIds}
-            nowMs={nowMs}
-            onUpdateDraft={onUpdateDraft}
-            onSave={onSave}
-          />
+            id={`mine-match-${match.id}`}
+            className={cn(
+              "scroll-mt-24 rounded-xl transition",
+              focusMatchId === match.id && "ring-4 ring-[#d5ff3f]/70 ring-offset-4 ring-offset-[#06140f]"
+            )}
+          >
+            <MatchCard
+              match={match}
+              draft={drafts[match.id] ?? emptyDraft()}
+              savingId={savingId}
+              isSavingBulk={isSavingBulk}
+              todayEditableMatchIds={todayEditableMatchIds}
+              nowMs={nowMs}
+              onUpdateDraft={onUpdateDraft}
+              onSave={onSave}
+            />
+          </div>
         ))}
       </div>
     </section>

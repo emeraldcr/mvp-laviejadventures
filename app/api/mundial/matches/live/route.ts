@@ -14,6 +14,7 @@ export const maxDuration = 55;
 
 const POLL_MS = 1_000;
 const HEARTBEAT_MS = 15_000;
+const FULLTIME_BROADCAST_MS = 2 * 60_000;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -45,8 +46,11 @@ export type LiveMatchPayload = {
 
 type MatchDoc = {
   id: string;
+  sortOrder?: number;
   homeTeam: string;
   awayTeam: string;
+  homeFinalScore?: number | null;
+  awayFinalScore?: number | null;
   homeLiveScore?: number | null;
   awayLiveScore?: number | null;
   liveMinute?: number | null;
@@ -55,7 +59,7 @@ type MatchDoc = {
   liveNote?: string;
   liveEvents?: unknown[];
   liveStats?: unknown;
-  liveUpdatedAt?: string | null;
+  liveUpdatedAt?: Date | string | null;
 };
 
 // ─── Module-level broadcaster (shared within a warm process instance) ─────────
@@ -89,14 +93,14 @@ function emptyPayload(viewerCount: number): LiveMatchPayload {
 
 async function buildPayload(): Promise<LiveMatchPayload> {
   const db = await getDb();
-  const doc = await db.collection<MatchDoc>("mundial_matches").findOne(
-    { liveStatus: { $in: ["live", "halftime"] } },
-    {
-      projection: {
+  const projection = {
         _id: 0,
         id: 1,
+        sortOrder: 1,
         homeTeam: 1,
         awayTeam: 1,
+        homeFinalScore: 1,
+        awayFinalScore: 1,
         homeLiveScore: 1,
         awayLiveScore: 1,
         liveMinute: 1,
@@ -106,8 +110,14 @@ async function buildPayload(): Promise<LiveMatchPayload> {
         liveEvents: 1,
         liveStats: 1,
         liveUpdatedAt: 1,
-      },
-    }
+      };
+  const collection = db.collection<MatchDoc>("mundial_matches");
+  const doc = await collection.findOne(
+    { liveStatus: { $in: ["live", "halftime"] } },
+    { projection }
+  ) ?? await collection.findOne(
+    { liveStatus: "fulltime", liveUpdatedAt: { $gte: new Date(Date.now() - FULLTIME_BROADCAST_MS) } },
+    { sort: { liveUpdatedAt: -1, sortOrder: -1 }, projection }
   );
 
   if (!doc) return emptyPayload(activeConnections);
@@ -123,14 +133,24 @@ async function buildPayload(): Promise<LiveMatchPayload> {
     homeTeam: doc.homeTeam,
     awayTeam: doc.awayTeam,
     liveStatus: doc.liveStatus ?? "scheduled",
-    homeLiveScore: typeof doc.homeLiveScore === "number" ? doc.homeLiveScore : null,
-    awayLiveScore: typeof doc.awayLiveScore === "number" ? doc.awayLiveScore : null,
+    homeLiveScore:
+      typeof doc.homeLiveScore === "number"
+        ? doc.homeLiveScore
+        : typeof doc.homeFinalScore === "number"
+          ? doc.homeFinalScore
+          : null,
+    awayLiveScore:
+      typeof doc.awayLiveScore === "number"
+        ? doc.awayLiveScore
+        : typeof doc.awayFinalScore === "number"
+          ? doc.awayFinalScore
+          : null,
     liveMinute: typeof doc.liveMinute === "number" ? doc.liveMinute : null,
     liveMinuteUpdatedAt: doc.liveMinuteUpdatedAt ? new Date(doc.liveMinuteUpdatedAt as string | Date).toISOString() : null,
     liveNote: typeof doc.liveNote === "string" ? doc.liveNote : "",
     liveEvents: events,
     liveStats: serializeLiveMatchStats(doc.liveStats),
-    liveUpdatedAt: doc.liveUpdatedAt ?? null,
+    liveUpdatedAt: doc.liveUpdatedAt ? new Date(doc.liveUpdatedAt).toISOString() : null,
     viewerCount: activeConnections,
   };
 }

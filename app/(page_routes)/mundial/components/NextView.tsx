@@ -16,7 +16,8 @@ type NextViewProps = {
   nowMs: number;
   activeCountdown: string;
   playerName: string;
-  onGoToMine: () => void;
+  todayEditableMatchIds: Set<string>;
+  onGoToMine: (matchId?: string) => void;
   onSelectMatch: (match: MundialMatch) => void;
   onOpenPlayerPicker: () => void;
 };
@@ -32,6 +33,7 @@ export function NextView({
   nowMs,
   activeCountdown,
   playerName,
+  todayEditableMatchIds,
   onGoToMine,
   onSelectMatch,
   onOpenPlayerPicker,
@@ -66,6 +68,7 @@ export function NextView({
             nowMs={nowMs}
             activeCountdown={featuredMatch.id === activeMatch?.id ? activeCountdown : undefined}
             playerName={playerName}
+            canPredict={todayEditableMatchIds.has(featuredMatch.id)}
             onGoToMine={onGoToMine}
             onOpenPlayerPicker={onOpenPlayerPicker}
           />

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Activity, BarChart3, ChevronDown, ChevronRight, ChevronUp, CircleDot, ClipboardList, Clock3, Lock, Timer, Trophy, Users, X, Zap } from "lucide-react";
+import { Activity, BarChart3, ChevronDown, ChevronRight, ChevronUp, CircleDot, ClipboardList, Clock3, ListChecks, Lock, Timer, Trophy, Users, X, Zap } from "lucide-react";
 import { hasAnyLiveStats, type LiveTeamStats } from "@/lib/mundial/live-stats";
 import type { Draft, MundialMatch, Prediction } from "../types";
 import {
@@ -26,7 +26,8 @@ type FeaturedMatchProps = {
   nowMs: number;
   activeCountdown?: string;
   playerName: string;
-  onGoToMine: () => void;
+  canPredict: boolean;
+  onGoToMine: (matchId?: string) => void;
   onOpenPlayerPicker: () => void;
 };
 
@@ -37,6 +38,7 @@ export function FeaturedMatch({
   nowMs,
   activeCountdown,
   playerName,
+  canPredict,
   onGoToMine,
   onOpenPlayerPicker,
 }: FeaturedMatchProps) {
@@ -54,6 +56,7 @@ export function FeaturedMatch({
   const isActive = !!activeCountdown;
   const isKnockoutTie = match.stage !== "group" && draft.homeScore === draft.awayScore;
   const hasLiveDetail = isLive || match.liveEvents.length > 0 || Boolean(match.liveNote);
+  const canGoPredict = !isLive && !isClosed && canPredict;
 
   const homeLiveScore = isLive
     ? (match.homeLiveScore ?? 0)
@@ -150,7 +153,7 @@ export function FeaturedMatch({
             </div>
             <button
               type="button"
-              onClick={onGoToMine}
+              onClick={() => onGoToMine(match.id)}
               className="shrink-0 text-xs font-black text-white/35 transition hover:text-white"
             >
               Ver picks →
@@ -214,6 +217,27 @@ export function FeaturedMatch({
               </p>
 
               <MatchStatusBanner match={match} isLive={false} isClosed={isClosed} />
+
+              {canGoPredict && (
+                <button
+                  type="button"
+                  onClick={() => onGoToMine(match.id)}
+                  className="mt-4 flex w-full items-center justify-between gap-3 rounded-xl border border-[#d5ff3f]/55 bg-[#d5ff3f] px-4 py-4 text-left text-[#06110b] shadow-[0_14px_36px_rgba(213,255,63,0.18)] transition hover:border-white hover:bg-[#efff9a]"
+                >
+                  <span className="flex min-w-0 items-center gap-3">
+                    <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-[#06110b] text-[#d5ff3f]">
+                      <ListChecks className="h-5 w-5" />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-base font-black uppercase leading-tight">Hacer mi pick</span>
+                      <span className="mt-0.5 block truncate text-sm font-bold text-[#174826]">
+                        Ir a Mis Picks para {match.homeTeam} vs {match.awayTeam}
+                      </span>
+                    </span>
+                  </span>
+                  <ChevronRight className="h-6 w-6 shrink-0" />
+                </button>
+              )}
 
               {homeLiveScore !== null ? (
                 <LiveMatchScoreboard
@@ -284,7 +308,7 @@ export function FeaturedMatch({
 
               <button
                 type="button"
-                onClick={onGoToMine}
+                onClick={() => onGoToMine(match.id)}
                 className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-white/15 bg-white/5 px-4 py-3 text-sm font-black text-white/60 transition hover:border-[#f0b429]/40 hover:bg-[#12200a] hover:text-white"
               >
                 <ChevronRight className="h-4 w-4 text-[#f0b429]" />
