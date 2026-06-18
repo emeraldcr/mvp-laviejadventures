@@ -2,11 +2,13 @@
 
 import { useMemo, useState } from "react";
 import { Check, CircleAlert, Loader2 } from "lucide-react";
-import type { MundialMatch } from "./types";
+import type { LiveMatchStatus, MundialMatch } from "./types";
 import { useMundial } from "./useMundial";
+import { useLiveMatch } from "./useLiveMatch";
 import { MineView } from "./components/MineView";
 import { NextView } from "./components/NextView";
 import { PlayersView } from "./components/PlayersView";
+import { GroupsView } from "./components/GroupsView";
 import { PlayerPickerModal } from "./components/PlayerPickerModal";
 import { PinModal } from "./components/PinModal";
 import { MundialHeader } from "./components/MundialHeader";
@@ -14,6 +16,7 @@ import { MundialHeader } from "./components/MundialHeader";
 import { PenalitosPanel } from "./components/PenalitosPanel";
 import { ProximoEnAnotarPanel } from "./components/ProximoEnAnotarPanel";
 import { LiveMatchChat } from "./components/LiveMatchChat";
+import LiveStreamPlayer from "./components/LiveStreamPlayer";
 
 export default function MundialClient() {
   const {
@@ -55,23 +58,65 @@ export default function MundialClient() {
     registeredNames,
   } = useMundial();
 
+  // SSE: receives live match updates pushed to all clients simultaneously
+  const { data: liveSSE } = useLiveMatch();
+
   const [selectedInfoMatchId, setSelectedInfoMatchId] = useState<string | null>(null);
   const [featuredMatchId, setFeaturedMatchId] = useState<string | null>(null);
 
+  // Merge SSE live fields onto the polled liveMatch so all clients see updates
+  // at the same instant. Falls back to polling data when SSE has nothing new.
+  const effectiveLiveMatch = useMemo<MundialMatch | null>(() => {
+    const sseIsActive = liveSSE.matchId &&
+      (liveSSE.liveStatus === "live" || liveSSE.liveStatus === "halftime");
+
+    // If SSE says there's a live match, find it in the matches array
+    // (works even if polling hasn't refreshed the liveStatus yet)
+    const base = liveMatch ?? (
+      sseIsActive
+        ? (matches.find((m) => m.id === liveSSE.matchId) ?? null)
+        : null
+    );
+
+    if (!base) return null;
+
+    // Only overlay SSE data when the matchId matches
+    if (liveSSE.matchId !== base.id) return base;
+
+    return {
+      ...base,
+      liveStatus: liveSSE.liveStatus as LiveMatchStatus,
+      homeLiveScore: liveSSE.homeLiveScore,
+      awayLiveScore: liveSSE.awayLiveScore,
+      liveMinute: liveSSE.liveMinute,
+      liveNote: liveSSE.liveNote,
+      liveEvents: liveSSE.liveEvents,
+      liveStats: liveSSE.liveStats,
+      liveUpdatedAt: liveSSE.liveUpdatedAt,
+    };
+  }, [liveMatch, liveSSE, matches]);
+
   const mostRecentMatch = useMemo(
-    () => liveMatch ?? recentClosedMatches[0] ?? activeMatch ?? matches[0] ?? null,
-    [activeMatch, liveMatch, matches, recentClosedMatches]
+    () => effectiveLiveMatch ?? recentClosedMatches[0] ?? activeMatch ?? matches[0] ?? null,
+    [activeMatch, effectiveLiveMatch, matches, recentClosedMatches]
   );
 
-  const explicitSelectedMatch = useMemo(
-    () => matches.find((match) => match.id === selectedInfoMatchId) ?? null,
-    [matches, selectedInfoMatchId]
-  );
+  // Upgrade the explicitly selected match with SSE live data if it's the live one
+  const explicitSelectedMatch = useMemo(() => {
+    const m = matches.find((match) => match.id === selectedInfoMatchId) ?? null;
+    if (!m || !effectiveLiveMatch || m.id !== effectiveLiveMatch.id) return m;
+    return effectiveLiveMatch;
+  }, [matches, selectedInfoMatchId, effectiveLiveMatch]);
 
+  // Upgrade the featured match with SSE live data if it's the live one
   const featuredMatch = useMemo(() => {
-    if (featuredMatchId) return matches.find((match) => match.id === featuredMatchId) ?? activeMatch;
-    return liveMatch ?? activeMatch;
-  }, [activeMatch, featuredMatchId, liveMatch, matches]);
+    if (featuredMatchId) {
+      const m = matches.find((match) => match.id === featuredMatchId) ?? activeMatch;
+      if (m && effectiveLiveMatch && m?.id === effectiveLiveMatch.id) return effectiveLiveMatch;
+      return m;
+    }
+    return effectiveLiveMatch ?? activeMatch;
+  }, [activeMatch, featuredMatchId, effectiveLiveMatch, matches]);
 
   const selectedInfoMatch = explicitSelectedMatch ?? featuredMatch ?? mostRecentMatch;
 
@@ -86,7 +131,7 @@ export default function MundialClient() {
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#07110b] text-white [background-image:linear-gradient(90deg,rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(0deg,rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(135deg,#06100b_0%,#0b2216_45%,#14351d_74%,#07110b_100%)] [background-size:96px_96px,96px_96px,100%_100%]">
-      
+
       <MundialHeader
         playerName={playerName}
         dirtyDrafts={dirtyDrafts}
@@ -159,17 +204,26 @@ export default function MundialClient() {
               <PlayersView leaderboard={leaderboard} matches={matches} predictions={predictions} />
             )}
 
-            {/* ====================== LIVE PANELS ========================== */}
-            {liveMatch && (
-              <>
-                <PenalitosPanel liveMatch={liveMatch} playerName={playerName} />
-                <ProximoEnAnotarPanel liveMatch={liveMatch} playerName={playerName} />
+            {viewMode === "groups" && (
+              <GroupsView matches={matches} />
+            )}
+
+            {/* ====================== LIVE SECTION ========================== */}
+            {effectiveLiveMatch && (
+              <div className="mt-6 space-y-6">
+                <LiveStreamPlayer liveMatch={effectiveLiveMatch} />
+
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <PenalitosPanel liveMatch={effectiveLiveMatch} playerName={playerName} compact />
+                  <ProximoEnAnotarPanel liveMatch={effectiveLiveMatch} playerName={playerName} />
+                </div>
+
                 <LiveMatchChat
-                  liveMatch={liveMatch}
+                  liveMatch={effectiveLiveMatch}
                   playerName={playerName}
                   onOpenPlayerPicker={openPlayerPicker}
                 />
-              </>
+              </div>
             )}
             {/* ============================================================= */}
           </>

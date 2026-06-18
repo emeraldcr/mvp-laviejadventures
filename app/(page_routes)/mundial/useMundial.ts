@@ -14,8 +14,8 @@ import {
   normalizeName,
 } from "./utils";
 
-const LIVE_REFRESH_MS = 4_000;
-const LIVE_ACTIVE_REFRESH_MS = 2_000; // faster poll while a match is in progress
+const LIVE_REFRESH_MS = 12_000;        // SSE handles real-time scores; polling only detects state changes
+const LIVE_ACTIVE_REFRESH_MS = 8_000;  // idem during active match
 const ATTENTION_REFRESH_MIN_MS = 1_000;
 const CROSS_TAB_SYNC_KEY = "mundial-sync-version";
 

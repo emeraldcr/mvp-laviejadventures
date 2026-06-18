@@ -32,6 +32,7 @@ type MatchDoc = {
   homeLiveScore?: number | null;
   awayLiveScore?: number | null;
   liveMinute?: number | null;
+  liveUpdatedAt?: string | null;
   liveStatus?: string;
   liveEvents?: GoalEvent[];
 };
@@ -57,6 +58,7 @@ async function fetchLiveMatch(
         homeLiveScore: 1,
         awayLiveScore: 1,
         liveMinute: 1,
+        liveUpdatedAt: 1,
         liveStatus: 1,
         liveEvents: 1,
       },
@@ -72,6 +74,7 @@ async function fetchLiveMatch(
       homeLiveScore: typeof doc.homeLiveScore === "number" ? doc.homeLiveScore : null,
       awayLiveScore: typeof doc.awayLiveScore === "number" ? doc.awayLiveScore : null,
       liveMinute: typeof doc.liveMinute === "number" ? doc.liveMinute : null,
+      liveUpdatedAt: doc.liveUpdatedAt ?? null,
       liveStatus: doc.liveStatus ?? "scheduled",
     },
   };

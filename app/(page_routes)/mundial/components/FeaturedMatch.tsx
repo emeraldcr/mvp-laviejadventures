@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { Activity, BarChart3, ChevronDown, ChevronRight, ChevronUp, CircleDot, Clock3, Lock, Timer, Trophy, X, Zap } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Activity, BarChart3, ChevronDown, ChevronRight, ChevronUp, CircleDot, ClipboardList, Clock3, Lock, Timer, Trophy, Users, X, Zap } from "lucide-react";
 import { hasAnyLiveStats, type LiveTeamStats } from "@/lib/mundial/live-stats";
-import type { Draft, MundialMatch } from "../types";
+import type { Draft, MundialMatch, Prediction } from "../types";
 import {
   cn,
   formatKickoff,
@@ -16,12 +16,13 @@ import {
 } from "../utils";
 import { Flag } from "./Flag";
 import { BettingFavoriteCard } from "./BettingFavoriteCard";
-import { ProximoEnAnotarPanel } from "./ProximoEnAnotarPanel";
+import { OtherPicksPanel } from "./OtherPicksPanel";
 import { StatBetsPanel } from "./StatBetsPanel";
 
 type FeaturedMatchProps = {
   match: MundialMatch;
   draft: Draft;
+  predictions: Prediction[];
   nowMs: number;
   activeCountdown?: string;
   playerName: string;
@@ -32,6 +33,7 @@ type FeaturedMatchProps = {
 export function FeaturedMatch({
   match,
   draft,
+  predictions,
   nowMs,
   activeCountdown,
   playerName,
@@ -39,6 +41,13 @@ export function FeaturedMatch({
   onOpenPlayerPicker,
 }: FeaturedMatchProps) {
   const [showLiveModal, setShowLiveModal] = useState(false);
+  const [showPicksModal, setShowPicksModal] = useState(false);
+  const [showFinalBetsModal, setShowFinalBetsModal] = useState(false);
+
+  const picksCount = useMemo(
+    () => predictions.filter((p) => p.matchId === match.id).length,
+    [predictions, match.id]
+  );
   const isClosed = isMatchClosed(match, nowMs);
   const isLive = isMatchLive(match);
   const isActive = !!activeCountdown;
@@ -104,114 +113,310 @@ export function FeaturedMatch({
         </div>
       </div>
 
-      {/* Two-panel layout */}
-      <div className="relative grid grid-cols-1 lg:grid-cols-2">
-        {/* Panel 1 — Info del partido */}
-        <div className="border-b border-white/10 p-4 sm:p-5 lg:border-b-0 lg:border-r lg:border-white/10">
-          <p className="mb-3 text-[10px] font-black uppercase tracking-[0.22em] text-white/30">
-            Info del partido
-          </p>
+      {/* ── LIVE layout: single column, breathing room ── */}
+      {isLive ? (
+        <div className="p-4 sm:p-5 space-y-3">
+          <LiveMatchScoreboard
+            match={match}
+            isLive={true}
+            homeLiveScore={homeLiveScore ?? 0}
+            awayLiveScore={awayLiveScore ?? 0}
+          />
 
-          <MatchStatusBanner match={match} isLive={isLive} isClosed={isClosed} />
-
-          {/* Live / final scoreboard */}
-          {homeLiveScore !== null ? (
-            <LiveMatchScoreboard
-              match={match}
-              isLive={isLive}
-              homeLiveScore={homeLiveScore}
-              awayLiveScore={awayLiveScore!}
-            />
-          ) : (
-            /* Pending fixture display */
-            <div className="mt-5 flex items-center justify-center gap-6 py-3">
-              <div className="flex flex-col items-center gap-2">
-                <Flag team={match.homeTeam} size="lg" className="rounded-sm" />
-                <p className="text-sm font-black uppercase text-white">{teamCode(match.homeTeam)}</p>
-              </div>
-              <div className="flex flex-col items-center gap-1">
-                <Trophy className="h-4 w-4 text-[#f0b429]" />
-                <span className="text-[9px] font-black tracking-wide text-white/25">WC26</span>
-                <span className="mt-0.5 text-base font-black text-white/20">vs</span>
-              </div>
-              <div className="flex flex-col items-center gap-2">
-                <Flag team={match.awayTeam} size="lg" className="rounded-sm" />
-                <p className="text-sm font-black uppercase text-white">{teamCode(match.awayTeam)}</p>
-              </div>
-            </div>
+          {match.liveNote && (
+            <p className="rounded-lg border border-[#9dff34]/20 bg-[#0b1e0e]/70 px-3 py-2 text-sm font-bold leading-snug text-[#e7ffc0]">
+              {match.liveNote}
+            </p>
           )}
 
-          {hasLiveDetail && (
+          {/* Prediction strip — compact, inline */}
+          <div className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/30 px-3 py-2.5">
+            <div className="flex min-w-0 items-center gap-2.5 overflow-hidden">
+              <span className="shrink-0 text-[10px] font-black uppercase tracking-[0.15em] text-[#f0b429]">
+                Tu pick
+              </span>
+              <span className="text-lg font-black tabular-nums text-white leading-none">
+                {draft.homeScore} – {draft.awayScore}
+              </span>
+              <span className="truncate text-sm font-bold text-white/55">
+                {predictionResult(match, draft)}
+              </span>
+              {isKnockoutTie && draft.winnerPick && (
+                <span className="shrink-0 text-xs font-bold text-[#d5ff3f]">
+                  · Pen: {draft.winnerPick === "home" ? match.homeTeam : match.awayTeam}
+                </span>
+              )}
+            </div>
             <button
               type="button"
-              onClick={() => setShowLiveModal(true)}
-              className="mt-3 flex w-full items-center justify-between gap-2 rounded-lg border border-[#9dff34]/25 bg-black/25 px-3 py-2.5 text-left transition hover:bg-white/5"
+              onClick={onGoToMine}
+              className="shrink-0 text-xs font-black text-white/35 transition hover:text-white"
             >
-              <span className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] text-[#d5ff3f]">
-                <Zap className="h-4 w-4 shrink-0" />
-                Ver detalles live
-              </span>
-              <ChevronRight className="h-4 w-4 shrink-0 text-white/45" />
+              Ver picks →
             </button>
-          )}
-
-          {isLive && (
-            <LiveBetsInline
-              match={match}
-              playerName={playerName}
-              onOpenPlayerPicker={onOpenPlayerPicker}
-            />
-          )}
-        </div>
-
-        {/* Panel 2 — Tu predicción (read-only) */}
-        <div className="p-4 sm:p-5">
-          <p className="mb-3 text-[10px] font-black uppercase tracking-[0.22em] text-white/30">
-            Tu predicción
-          </p>
-
-          <BettingFavoriteCard match={match} />
-
-          {/* Read-only pick summary */}
-          <div className="mt-4 rounded-lg border border-white/15 bg-black/35 p-4">
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-[#f0b429]">
-              {isClosed ? "Tu pick guardado" : "Tu predicción actual"}
-            </p>
-            <div className="mt-3 flex items-baseline gap-3">
-              <span className="text-5xl font-black tabular-nums text-white leading-none">{draft.homeScore}</span>
-              <span className="text-2xl font-black text-white/20">–</span>
-              <span className="text-5xl font-black tabular-nums text-white leading-none">{draft.awayScore}</span>
-            </div>
-            <p className="mt-2 break-words text-xl font-black text-white/80">
-              {predictionResult(match, draft)}
-            </p>
-            {isKnockoutTie && draft.winnerPick && (
-              <p className="mt-1 text-sm font-bold text-[#d5ff3f]">
-                Penales: {draft.winnerPick === "home" ? match.homeTeam : match.awayTeam}
-              </p>
-            )}
           </div>
 
-          {/* CTA → Mis Picks */}
-          <button
-            type="button"
-            onClick={onGoToMine}
-            className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-white/15 bg-white/5 px-4 py-3 text-sm font-black text-white/60 transition hover:border-[#f0b429]/40 hover:bg-[#12200a] hover:text-white"
-          >
-            <ChevronRight className="h-4 w-4 text-[#f0b429]" />
-            {isClosed
-              ? "Ver todos mis picks →"
-              : isLive
-              ? "Ver predicción completa →"
-              : "Editar pick en Mis Picks →"}
-          </button>
+          {/* Action row */}
+          <div className="flex flex-wrap gap-2">
+            {hasLiveDetail && (
+              <button
+                type="button"
+                onClick={() => setShowLiveModal(true)}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-[#9dff34]/25 bg-[#0a1e0e] px-3 py-2 text-xs font-black text-[#d5ff3f] transition hover:bg-[#12351f]"
+              >
+                <Zap className="h-3.5 w-3.5 shrink-0" />
+                Detalles live
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setShowFinalBetsModal(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[#f0b429]/25 bg-[#0a1e0e] px-3 py-2 text-xs font-black text-white transition hover:bg-[#12351f]"
+            >
+              <ClipboardList className="h-3.5 w-3.5 shrink-0 text-[#f0b429]" />
+              Apuestas al final
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowPicksModal(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-[#0a1e0e] px-3 py-2 text-xs font-black text-white transition hover:bg-[#12351f]"
+            >
+              <Users className="h-3.5 w-3.5 shrink-0 text-white/40" />
+              Picks de amigos
+              {picksCount > 0 && (
+                <span className="rounded border border-white/20 bg-black/35 px-1.5 py-0.5 text-[10px] tabular-nums text-white/55">
+                  {picksCount}
+                </span>
+              )}
+            </button>
+          </div>
+
+          {/* Live bets — full width, prominent */}
+          <LiveBetsInline
+            match={match}
+            playerName={playerName}
+            onOpenPlayerPicker={onOpenPlayerPicker}
+          />
+
+          <BettingFavoriteCard match={match} />
         </div>
-      </div>
+      ) : (
+        /* ── Non-live: 2-column layout ── */
+        <>
+          <div className="relative grid grid-cols-1 lg:grid-cols-2">
+            {/* Panel 1 — Info del partido */}
+            <div className="border-b border-white/10 p-4 sm:p-5 lg:border-b-0 lg:border-r lg:border-white/10">
+              <p className="mb-3 text-[10px] font-black uppercase tracking-[0.22em] text-white/30">
+                Info del partido
+              </p>
+
+              <MatchStatusBanner match={match} isLive={false} isClosed={isClosed} />
+
+              {homeLiveScore !== null ? (
+                <LiveMatchScoreboard
+                  match={match}
+                  isLive={false}
+                  homeLiveScore={homeLiveScore}
+                  awayLiveScore={awayLiveScore!}
+                />
+              ) : (
+                <div className="mt-5 flex items-center justify-center gap-6 py-3">
+                  <div className="flex flex-col items-center gap-2">
+                    <Flag team={match.homeTeam} size="lg" className="rounded-sm" />
+                    <p className="text-sm font-black uppercase text-white">{teamCode(match.homeTeam)}</p>
+                  </div>
+                  <div className="flex flex-col items-center gap-1">
+                    <Trophy className="h-4 w-4 text-[#f0b429]" />
+                    <span className="text-[9px] font-black tracking-wide text-white/25">WC26</span>
+                    <span className="mt-0.5 text-base font-black text-white/20">vs</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-2">
+                    <Flag team={match.awayTeam} size="lg" className="rounded-sm" />
+                    <p className="text-sm font-black uppercase text-white">{teamCode(match.awayTeam)}</p>
+                  </div>
+                </div>
+              )}
+
+              {hasLiveDetail && (
+                <button
+                  type="button"
+                  onClick={() => setShowLiveModal(true)}
+                  className="mt-3 flex w-full items-center justify-between gap-2 rounded-lg border border-[#9dff34]/25 bg-black/25 px-3 py-2.5 text-left transition hover:bg-white/5"
+                >
+                  <span className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] text-[#d5ff3f]">
+                    <Zap className="h-4 w-4 shrink-0" />
+                    Ver detalles live
+                  </span>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-white/45" />
+                </button>
+              )}
+            </div>
+
+            {/* Panel 2 — Tu predicción (read-only) */}
+            <div className="p-4 sm:p-5">
+              <p className="mb-3 text-[10px] font-black uppercase tracking-[0.22em] text-white/30">
+                Tu predicción
+              </p>
+
+              <BettingFavoriteCard match={match} />
+
+              <div className="mt-4 rounded-lg border border-white/15 bg-black/35 p-4">
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-[#f0b429]">
+                  {isClosed ? "Tu pick guardado" : "Tu predicción actual"}
+                </p>
+                <div className="mt-3 flex items-baseline gap-3">
+                  <span className="text-5xl font-black tabular-nums text-white leading-none">{draft.homeScore}</span>
+                  <span className="text-2xl font-black text-white/20">–</span>
+                  <span className="text-5xl font-black tabular-nums text-white leading-none">{draft.awayScore}</span>
+                </div>
+                <p className="mt-2 break-words text-xl font-black text-white/80">
+                  {predictionResult(match, draft)}
+                </p>
+                {isKnockoutTie && draft.winnerPick && (
+                  <p className="mt-1 text-sm font-bold text-[#d5ff3f]">
+                    Penales: {draft.winnerPick === "home" ? match.homeTeam : match.awayTeam}
+                  </p>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={onGoToMine}
+                className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-white/15 bg-white/5 px-4 py-3 text-sm font-black text-white/60 transition hover:border-[#f0b429]/40 hover:bg-[#12200a] hover:text-white"
+              >
+                <ChevronRight className="h-4 w-4 text-[#f0b429]" />
+                {isClosed ? "Ver todos mis picks →" : "Editar pick en Mis Picks →"}
+              </button>
+            </div>
+          </div>
+
+          {/* Card footer — modal shortcuts */}
+          <div className="flex flex-wrap gap-2 border-t border-white/8 p-3">
+            <button
+              type="button"
+              onClick={() => setShowFinalBetsModal(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[#f0b429]/25 bg-[#0a1e0e] px-3 py-2 text-xs font-black text-white transition hover:bg-[#12351f]"
+            >
+              <ClipboardList className="h-3.5 w-3.5 shrink-0 text-[#f0b429]" />
+              Apuestas al final
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowPicksModal(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-[#0a1e0e] px-3 py-2 text-xs font-black text-white transition hover:bg-[#12351f]"
+            >
+              <Users className="h-3.5 w-3.5 shrink-0 text-white/40" />
+              Picks de amigos
+              {picksCount > 0 && (
+                <span className="rounded border border-white/20 bg-black/35 px-1.5 py-0.5 text-[10px] tabular-nums text-white/55">
+                  {picksCount}
+                </span>
+              )}
+            </button>
+          </div>
+        </>
+      )}
     </section>
     {showLiveModal && (
       <LiveDetailsModal match={match} onClose={() => setShowLiveModal(false)} />
     )}
+    {showFinalBetsModal && (
+      <FinalBetsModal
+        match={match}
+        playerName={playerName}
+        onOpenPlayerPicker={onOpenPlayerPicker}
+        onClose={() => setShowFinalBetsModal(false)}
+      />
+    )}
+    {showPicksModal && (
+      <PicksModal
+        match={match}
+        predictions={predictions}
+        playerName={playerName}
+        onClose={() => setShowPicksModal(false)}
+      />
+    )}
     </>
+  );
+}
+
+function FinalBetsModal({
+  match,
+  playerName,
+  onOpenPlayerPicker,
+  onClose,
+}: {
+  match: MundialMatch;
+  playerName: string;
+  onOpenPlayerPicker: () => void;
+  onClose: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 p-2 backdrop-blur-sm sm:items-center sm:p-4">
+      <div className="flex max-h-[calc(100dvh-1rem)] w-full max-w-3xl flex-col overflow-hidden rounded-xl border border-[#f0b429]/35 bg-[#06140f] shadow-[0_24px_90px_rgba(0,0,0,0.85)]">
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-white/12 bg-[#12351f] px-4 py-3 [background-image:linear-gradient(135deg,rgba(240,180,41,0.18),transparent_58%)]">
+          <div className="flex min-w-0 items-center gap-2">
+            <ClipboardList className="h-4 w-4 shrink-0 text-[#f0b429]" />
+            <p className="font-black text-white">Apuestas al final</p>
+            <span className="truncate text-xs text-white/50">{match.homeTeam} vs {match.awayTeam}</span>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Cerrar"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-md border border-white/20 bg-black/20 text-white/75 transition hover:border-[#d5ff3f] hover:text-white"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <StatBetsPanel
+            matchId={match.id}
+            playerName={playerName}
+            matchLabel={`${match.homeTeam} vs ${match.awayTeam}`}
+            variant="full"
+            questionScope="final"
+            onOpenPlayerPicker={onOpenPlayerPicker}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PicksModal({
+  match,
+  predictions,
+  playerName,
+  onClose,
+}: {
+  match: MundialMatch;
+  predictions: Prediction[];
+  playerName: string;
+  onClose: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 p-2 backdrop-blur-sm sm:items-center sm:p-4">
+      <div className="flex max-h-[calc(100dvh-1rem)] w-full max-w-3xl flex-col overflow-hidden rounded-xl border border-[#f0b429]/35 bg-[#06140f] shadow-[0_24px_90px_rgba(0,0,0,0.85)]">
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-white/12 bg-[#12351f] px-4 py-3 [background-image:linear-gradient(135deg,rgba(240,180,41,0.18),transparent_58%)]">
+          <div className="flex items-center gap-2">
+            <Users className="h-4 w-4 text-[#f0b429]" />
+            <p className="font-black text-white">Picks de amigos</p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Cerrar"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-md border border-white/20 bg-black/20 text-white/75 transition hover:border-[#d5ff3f] hover:text-white"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <OtherPicksPanel match={match} predictions={predictions} playerName={playerName} showEmpty />
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -238,7 +443,7 @@ function LiveBetsInline({
         </span>
       </div>
 
-      <div className="grid gap-3 p-3 xl:grid-cols-2">
+      <div className="p-3">
         <StatBetsPanel
           matchId={match.id}
           playerName={playerName}
@@ -247,7 +452,6 @@ function LiveBetsInline({
           questionScope="live"
           onOpenPlayerPicker={onOpenPlayerPicker}
         />
-        <ProximoEnAnotarPanel liveMatch={match} playerName={playerName} embedded />
       </div>
     </div>
   );
@@ -302,6 +506,38 @@ function MatchStatusBanner({
   );
 }
 
+function useLiveClock(
+  liveMinute: number | null,
+  liveUpdatedAt: string | null,
+  isLive: boolean
+) {
+  const computeDisplay = () => {
+    if (!isLive || liveMinute === null) return null;
+    const base = liveUpdatedAt ? new Date(liveUpdatedAt).getTime() : Date.now();
+    const elapsedMs = Math.max(0, Date.now() - base);
+    const totalSec = Math.floor(elapsedMs / 1_000);
+    const mins = liveMinute + Math.floor(totalSec / 60);
+    const secs = totalSec % 60;
+    return { mins, secs };
+  };
+
+  const [display, setDisplay] = useState(computeDisplay);
+  const computeRef = useRef(computeDisplay);
+  computeRef.current = computeDisplay;
+
+  useEffect(() => {
+    if (!isLive || liveMinute === null) {
+      setDisplay(null);
+      return;
+    }
+    setDisplay(computeRef.current());
+    const id = setInterval(() => setDisplay(computeRef.current()), 1_000);
+    return () => clearInterval(id);
+  }, [isLive, liveMinute, liveUpdatedAt]);
+
+  return display;
+}
+
 function LiveMatchScoreboard({
   match,
   isLive,
@@ -313,6 +549,8 @@ function LiveMatchScoreboard({
   homeLiveScore: number;
   awayLiveScore: number;
 }) {
+  const clock = useLiveClock(match.liveMinute, match.liveUpdatedAt, isLive);
+
   const homeGoals = goalSummary(match, "home", homeLiveScore);
   const awayGoals = goalSummary(match, "away", awayLiveScore);
   const tone = isLive ? "border-[#9dff34]/35 bg-[#071b0b]/88" : "border-[#ffb15f]/35 bg-[#1b0d05]/88";
@@ -320,6 +558,12 @@ function LiveMatchScoreboard({
   const scoreTone = isLive
     ? "border-[#9dff34]/45 bg-[#0c2409] text-[#9dff34]"
     : "border-[#ffb15f]/45 bg-[#261006] text-[#ffb15f]";
+
+  const clockLabel = (() => {
+    if (!isLive) return formatLiveMinute(match);
+    if (clock) return `${clock.mins}:${String(clock.secs).padStart(2, "0")}`;
+    return "En vivo";
+  })();
 
   return (
     <div className={cn("mt-4 overflow-hidden rounded-2xl border shadow-[0_18px_45px_rgba(0,0,0,0.25)]", tone)}>
@@ -330,7 +574,7 @@ function LiveMatchScoreboard({
           {isLive ? "Ahora" : "Marcador"}
         </span>
         <span className="text-xs font-black tabular-nums text-white/75">
-          {formatLiveMinute(match)}
+          {clockLabel}
         </span>
       </div>
 

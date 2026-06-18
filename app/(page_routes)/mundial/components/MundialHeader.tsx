@@ -9,6 +9,7 @@ import {
   RefreshCw,
   Save,
   Shield,
+  Table2,
   Target,
   Trophy,
   UserRound,
@@ -39,6 +40,7 @@ function ViewIcon({ id, active }: { id: ViewMode; active: boolean }) {
 
   if (id === "next") return <Target className={className} />;
   if (id === "mine") return <ListChecks className={className} />;
+  if (id === "groups") return <Table2 className={className} />;
   return <Users className={className} />;
 }
 
@@ -60,6 +62,7 @@ export function MundialHeader({
     next: "Ahora",
     mine: "Picks",
     players: "Tabla",
+    groups: "Grupos",
   };
 
   return (

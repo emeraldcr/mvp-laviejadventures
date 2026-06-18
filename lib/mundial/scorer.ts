@@ -80,6 +80,7 @@ export type SerializedScorerLiveMatch = {
   homeLiveScore: number | null;
   awayLiveScore: number | null;
   liveMinute: number | null;
+  liveUpdatedAt: string | null;
   liveStatus: string;
 };
 

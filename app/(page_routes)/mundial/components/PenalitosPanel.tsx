@@ -197,9 +197,10 @@ const LiveScoreChip = memo(function LiveScoreChip({
 type Props = {
   liveMatch: MundialMatch | null;
   playerName: string;
+  compact?: boolean;
 };
 
-export function PenalitosPanel({ liveMatch, playerName }: Props) {
+export function PenalitosPanel({ liveMatch, playerName, compact = false }: Props) {
   const [game, setGame] = useState<PenalitosGame | null>(null);
   const [queue, setQueue] = useState<PenalitosQueueEntry[]>([]);
   const [scores, setScores] = useState<Record<string, number>>({});
@@ -461,78 +462,102 @@ export function PenalitosPanel({ liveMatch, playerName }: Props) {
     : { text: "EN ESPERA", color: "text-white/30 bg-white/5" };
 
   return (
-    <div className="mt-6 md:mt-10 px-1 sm:px-2">
+    <div className={compact ? "" : "mt-6 md:mt-10 px-1 sm:px-2"}>
       <div className="rounded-3xl border border-[#f0b429]/20 bg-gradient-to-br from-[#091a0f] via-black/95 to-black shadow-2xl overflow-hidden">
 
         {/* ═══ HEADER ═══ */}
-        <div className="px-5 sm:px-8 pt-6 pb-4 border-b border-white/5">
-          {/* Row 1: title + round + status */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div className="flex items-center gap-3">
-              <div className="rounded-full bg-[#f0b429] p-2.5 text-black text-2xl leading-none">⚽</div>
-              <div>
-                <h2 className="text-2xl sm:text-3xl font-black tracking-tighter leading-none">
-                  PENALITOS
-                </h2>
-                <p className="text-white/40 text-xs mt-0.5 font-bold uppercase tracking-widest">
-                  Mini-partido en vivo
-                </p>
+        <div className={cn("border-b border-white/5", compact ? "px-3 pt-3 pb-2" : "px-5 sm:px-8 pt-6 pb-4")}>
+          {compact ? (
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className="text-base leading-none">⚽</span>
+                <span className="text-sm font-black tracking-tight">PENALITOS</span>
+                {game && <span className="text-[10px] text-white/30 font-mono">#{game.roundNumber}</span>}
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider", statusBadge.color)}>
+                  {statusBadge.text}
+                </span>
+                {reconnecting ? (
+                  <WifiOff className="h-3 w-3 text-orange-400 animate-pulse" />
+                ) : connected ? (
+                  <Wifi className="h-3 w-3 text-emerald-400" />
+                ) : (
+                  <WifiOff className="h-3 w-3 text-red-400" />
+                )}
               </div>
             </div>
-
-            <div className="flex items-center gap-2 flex-wrap">
-              {game && (
-                <span className="text-xs text-white/40 font-mono">
-                  Ronda {game.roundNumber}
-                </span>
-              )}
-              <span className={cn(
-                "px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider",
-                statusBadge.color
-              )}>
-                {statusBadge.text}
-              </span>
-            </div>
-          </div>
-
-          {/* Row 2: live score chip + viewers + connection */}
-          <div className="mt-3 flex items-center gap-3 flex-wrap">
-            {displayMatch && (
-              <LiveScoreChip match={displayMatch} />
-            )}
-
-            <span className="text-white/30 text-xs">
-              {displayMatch
-                ? `${displayMatch.homeTeam} vs ${displayMatch.awayTeam}`
-                : (liveMatch?.homeTeam ?? "") + " vs " + (liveMatch?.awayTeam ?? "")}
-            </span>
-
-            <div className="ml-auto flex items-center gap-3">
-              {viewerCount > 1 && (
-                <div className="flex items-center gap-1 text-white/35 text-[11px] font-bold">
-                  <Eye className="h-3 w-3" />
-                  <span>{viewerCount}</span>
+          ) : (
+            <>
+              {/* Row 1: title + round + status */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div className="flex items-center gap-3">
+                  <div className="rounded-full bg-[#f0b429] p-2.5 text-black text-2xl leading-none">⚽</div>
+                  <div>
+                    <h2 className="text-2xl sm:text-3xl font-black tracking-tighter leading-none">
+                      PENALITOS
+                    </h2>
+                    <p className="text-white/40 text-xs mt-0.5 font-bold uppercase tracking-widest">
+                      Mini-partido en vivo
+                    </p>
+                  </div>
                 </div>
-              )}
 
-              {reconnecting ? (
-                <span className="flex items-center gap-1 text-[10px] font-black text-orange-400 animate-pulse">
-                  <WifiOff className="h-3.5 w-3.5" />
-                  RECONECTANDO
+                <div className="flex items-center gap-2 flex-wrap">
+                  {game && (
+                    <span className="text-xs text-white/40 font-mono">
+                      Ronda {game.roundNumber}
+                    </span>
+                  )}
+                  <span className={cn(
+                    "px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider",
+                    statusBadge.color
+                  )}>
+                    {statusBadge.text}
+                  </span>
+                </div>
+              </div>
+
+              {/* Row 2: live score chip + viewers + connection */}
+              <div className="mt-3 flex items-center gap-3 flex-wrap">
+                {displayMatch && (
+                  <LiveScoreChip match={displayMatch} />
+                )}
+
+                <span className="text-white/30 text-xs">
+                  {displayMatch
+                    ? `${displayMatch.homeTeam} vs ${displayMatch.awayTeam}`
+                    : (liveMatch?.homeTeam ?? "") + " vs " + (liveMatch?.awayTeam ?? "")}
                 </span>
-              ) : connected ? (
-                <span className="flex items-center gap-1 text-[10px] font-black text-emerald-400">
-                  <Wifi className="h-3.5 w-3.5" />
-                  LIVE
-                </span>
-              ) : (
-                <WifiOff className="h-3.5 w-3.5 text-red-400" />
-              )}
-            </div>
-          </div>
+
+                <div className="ml-auto flex items-center gap-3">
+                  {viewerCount > 1 && (
+                    <div className="flex items-center gap-1 text-white/35 text-[11px] font-bold">
+                      <Eye className="h-3 w-3" />
+                      <span>{viewerCount}</span>
+                    </div>
+                  )}
+
+                  {reconnecting ? (
+                    <span className="flex items-center gap-1 text-[10px] font-black text-orange-400 animate-pulse">
+                      <WifiOff className="h-3.5 w-3.5" />
+                      RECONECTANDO
+                    </span>
+                  ) : connected ? (
+                    <span className="flex items-center gap-1 text-[10px] font-black text-emerald-400">
+                      <Wifi className="h-3.5 w-3.5" />
+                      LIVE
+                    </span>
+                  ) : (
+                    <WifiOff className="h-3.5 w-3.5 text-red-400" />
+                  )}
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
-        <div className="px-5 sm:px-8 py-5 space-y-5">
+        <div className={cn(compact ? "px-3 py-3 space-y-3" : "px-5 sm:px-8 py-5 space-y-5")}>
 
           {/* ═══ TIMER BAR ═══ */}
           {game?.status === "choosing" && (
@@ -554,7 +579,10 @@ export function PenalitosPanel({ liveMatch, playerName }: Props) {
           )}
 
           {/* ═══ SOCCER FIELD ═══ */}
-          <div className="relative h-56 sm:h-72 rounded-2xl overflow-hidden bg-[#0a3d1f] border border-white/5 shadow-inner">
+          <div className={cn(
+            "relative rounded-2xl overflow-hidden bg-[#0a3d1f] border border-white/5 shadow-inner",
+            compact ? "h-32 sm:h-44" : "h-56 sm:h-72"
+          )}>
             {/* Field grid */}
             <div className="absolute inset-0 opacity-20"
               style={{
@@ -743,7 +771,7 @@ export function PenalitosPanel({ liveMatch, playerName }: Props) {
           )}
 
           {/* ═══ QUEUE LIST ═══ */}
-          {queue.length > 0 && (
+          {!compact && queue.length > 0 && (
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <Users className="h-3.5 w-3.5 text-white/30" />
@@ -772,7 +800,7 @@ export function PenalitosPanel({ liveMatch, playerName }: Props) {
           )}
 
           {/* ═══ SCOREBOARD ═══ */}
-          {topScorers.length > 0 && (
+          {!compact && topScorers.length > 0 && (
             <div className="border-t border-white/5 pt-4">
               <div className="flex items-center gap-2 mb-3">
                 <Trophy className="h-3.5 w-3.5 text-[#f0b429]" />

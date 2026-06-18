@@ -294,8 +294,28 @@ export function ProximoEnAnotarPanel({ liveMatch, playerName, embedded = false }
     homeLiveScore: liveMatch.homeLiveScore,
     awayLiveScore: liveMatch.awayLiveScore,
     liveMinute: liveMatch.liveMinute,
+    liveUpdatedAt: liveMatch.liveUpdatedAt,
     liveStatus: liveMatch.liveStatus,
   } : null);
+
+  // Running match clock
+  const [clockDisplay, setClockDisplay] = useState<string | null>(null);
+  useEffect(() => {
+    const min = displayMatch?.liveMinute ?? null;
+    const updatedAt = displayMatch?.liveUpdatedAt ?? null;
+    const isLiveNow = displayMatch?.liveStatus === "live";
+    if (!isLiveNow || min === null) { setClockDisplay(null); return; }
+    const compute = () => {
+      const elapsedMs = Math.max(0, Date.now() - (updatedAt ? new Date(updatedAt).getTime() : Date.now()));
+      const totalSec = Math.floor(elapsedMs / 1_000);
+      const mins = min + Math.floor(totalSec / 60);
+      const secs = totalSec % 60;
+      return `${mins}:${String(secs).padStart(2, "0")}`;
+    };
+    setClockDisplay(compute());
+    const id = setInterval(() => setClockDisplay(compute()), 1_000);
+    return () => clearInterval(id);
+  }, [displayMatch?.liveMinute, displayMatch?.liveUpdatedAt, displayMatch?.liveStatus]);
 
   const betsOpenUntilMs = round?.betsOpenUntil ? new Date(round.betsOpenUntil).getTime() : null;
   const timerSec = betsOpenUntilMs ? Math.max(0, Math.ceil((betsOpenUntilMs - nowMs) / 1000)) : 0;
@@ -373,9 +393,9 @@ export function ProximoEnAnotarPanel({ liveMatch, playerName, embedded = false }
                     <span className="mx-1 text-white/30">–</span>
                     {displayMatch.awayLiveScore ?? 0}
                   </span>
-                  {displayMatch.liveMinute !== null && (
-                    <span className="text-[10px] font-black text-[#9dff34]">
-                      {displayMatch.liveMinute}&apos;
+                  {clockDisplay !== null && (
+                    <span className="text-[10px] font-black tabular-nums text-[#9dff34]">
+                      {clockDisplay}
                     </span>
                   )}
                 </div>

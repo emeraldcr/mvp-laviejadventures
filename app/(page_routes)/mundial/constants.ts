@@ -12,4 +12,5 @@ export const VIEW_OPTIONS: Array<{ id: ViewMode; label: string }> = [
   { id: "next", label: "Ahora" },
   { id: "mine", label: "Mis picks" },
   { id: "players", label: "Jugadores" },
+  { id: "groups", label: "Grupos" },
 ];

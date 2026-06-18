@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { MessageCircle, Send, SmilePlus, Wifi, WifiOff } from "lucide-react";
+import { MessageCircle, Send, SmilePlus, Wifi, WifiOff, X } from "lucide-react";
 import { cn } from "../utils";
 import type { MundialMatch } from "../types";
 
@@ -19,20 +19,40 @@ type LiveChatMessage = {
   pending?: boolean;
 };
 
-type ChatPayload = {
-  messages: LiveChatMessage[];
-};
-
-type SendPayload = Partial<ChatPayload> & {
-  message?: LiveChatMessage;
-  error?: string;
-};
+type ChatPayload = { messages: LiveChatMessage[] };
+type SendPayload = Partial<ChatPayload> & { message?: LiveChatMessage; error?: string };
 
 type Props = {
   liveMatch: MundialMatch;
   playerName: string;
   onOpenPlayerPicker: () => void;
 };
+
+// ── Audio ─────────────────────────────────────────────────────────────────────
+
+function playMessageSound() {
+  try {
+    const Ctx =
+      window.AudioContext ??
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    const ctx = new Ctx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(900, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(660, ctx.currentTime + 0.15);
+    gain.gain.setValueAtTime(0.11, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.4);
+  } catch {
+    // not available
+  }
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function getOrCreateVisitorId(): string {
   try {
@@ -54,18 +74,19 @@ function chatTime(iso: string): string {
   return iso.slice(11, 16);
 }
 
-function mergeMessages(current: LiveChatMessage[], incoming: LiveChatMessage[]): LiveChatMessage[] {
+function mergeMessages(
+  current: LiveChatMessage[],
+  incoming: LiveChatMessage[]
+): LiveChatMessage[] {
   const byId = new Map<string, LiveChatMessage>();
-  for (const message of current) {
-    if (message.pending) byId.set(message.id, message);
-  }
-  for (const message of incoming) {
-    byId.set(message.id, { ...message, pending: false });
-  }
+  for (const m of current) if (m.pending) byId.set(m.id, m);
+  for (const m of incoming) byId.set(m.id, { ...m, pending: false });
   return Array.from(byId.values())
     .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
     .slice(-80);
 }
+
+// ── Bubble ────────────────────────────────────────────────────────────────────
 
 const ChatMessageBubble = memo(function ChatMessageBubble({
   message,
@@ -78,17 +99,27 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
     <div className={cn("flex", mine ? "justify-end" : "justify-start")}>
       <div
         className={cn(
-          "max-w-[86%] rounded-lg px-3 py-2 shadow-sm sm:max-w-[72%]",
+          "max-w-[86%] rounded-xl px-3 py-2 shadow-sm sm:max-w-[75%]",
           mine
             ? "bg-[#f0b429] text-black"
             : "border border-white/10 bg-black/35 text-white"
         )}
       >
         <div className="mb-0.5 flex items-baseline gap-2">
-          <span className={cn("truncate text-[11px] font-black uppercase", mine ? "text-black/65" : "text-[#d5ff3f]")}>
+          <span
+            className={cn(
+              "truncate text-[11px] font-black uppercase",
+              mine ? "text-black/60" : "text-[#d5ff3f]"
+            )}
+          >
             {mine ? "Vos" : message.playerName}
           </span>
-          <span className={cn("shrink-0 text-[10px] font-mono", mine ? "text-black/45" : "text-white/35")}>
+          <span
+            className={cn(
+              "shrink-0 font-mono text-[10px]",
+              mine ? "text-black/40" : "text-white/30"
+            )}
+          >
             {chatTime(message.createdAt)}
           </span>
         </div>
@@ -98,18 +129,71 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
   );
 });
 
+// ── Toast notification ────────────────────────────────────────────────────────
+
+function ChatToast({
+  message,
+  onClick,
+}: {
+  message: LiveChatMessage;
+  onClick: () => void;
+}) {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setVisible(true));
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "fixed bottom-[5.5rem] right-4 z-[60] w-64 overflow-hidden rounded-xl border border-[#f0b429]/40 bg-[#07110b]/95 shadow-[0_8px_32px_rgba(0,0,0,0.65)] backdrop-blur-md transition-all duration-300",
+        visible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+      )}
+    >
+      <div className="flex items-start gap-2.5 px-3 py-2.5">
+        <div className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#f0b429] text-black">
+          <MessageCircle className="h-3.5 w-3.5" />
+        </div>
+        <div className="min-w-0 text-left">
+          <p className="text-[11px] font-black uppercase tracking-[0.12em] text-[#f0b429]">
+            {message.playerName}
+          </p>
+          <p className="mt-0.5 truncate text-sm font-bold text-white">{message.text}</p>
+        </div>
+      </div>
+      <div className="h-0.5 w-full origin-left bg-[#f0b429]/60 [animation:shrink_3.5s_linear_forwards]" />
+    </button>
+  );
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
+
 export function LiveMatchChat({ liveMatch, playerName, onOpenPlayerPicker }: Props) {
+  const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<LiveChatMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [visitorId, setVisitorId] = useState("");
   const [connected, setConnected] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState("");
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [shaking, setShaking] = useState(false);
+  const [toast, setToast] = useState<LiveChatMessage | null>(null);
+
   const lastPayloadRef = useRef("");
   const listRef = useRef<HTMLDivElement>(null);
+  const seenIdsRef = useRef(new Set<string>());
+  const isFirstPayloadRef = useRef(true);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const shakeTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const matchLabel = `${liveMatch.homeTeam} vs ${liveMatch.awayTeam}`;
-  const canSend = Boolean(playerName.trim()) && Boolean(visitorId) && draft.trim().length > 0;
+  const canSend =
+    Boolean(playerName.trim()) && Boolean(visitorId) && draft.trim().length > 0;
 
   const applyPayload = useCallback((payload: ChatPayload) => {
     const signature = JSON.stringify(payload.messages);
@@ -118,10 +202,12 @@ export function LiveMatchChat({ liveMatch, playerName, onOpenPlayerPicker }: Pro
     setMessages((current) => mergeMessages(current, payload.messages));
   }, []);
 
+  // Visitor ID
   useEffect(() => {
     queueMicrotask(() => setVisitorId(getOrCreateVisitorId()));
   }, []);
 
+  // SSE
   useEffect(() => {
     const url = `/api/mundial/chat/live?matchId=${encodeURIComponent(liveMatch.id)}`;
     let es: EventSource | null = null;
@@ -154,14 +240,67 @@ export function LiveMatchChat({ liveMatch, playerName, onOpenPlayerPicker }: Pro
     };
   }, [applyPayload, liveMatch.id]);
 
+  // Auto-scroll when open
   useEffect(() => {
-    listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages.length]);
+    if (isOpen) {
+      listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
+    }
+  }, [messages.length, isOpen]);
 
-  const visibleMessages = useMemo(() => messages.slice(-80), [messages]);
+  // Detect new messages for notifications
+  const confirmedMessages = useMemo(() => messages.filter((m) => !m.pending), [messages]);
+
+  useEffect(() => {
+    if (confirmedMessages.length === 0) return;
+
+    const newFromOthers: LiveChatMessage[] = [];
+    for (const msg of confirmedMessages) {
+      if (!seenIdsRef.current.has(msg.id)) {
+        seenIdsRef.current.add(msg.id);
+        if (!isFirstPayloadRef.current && msg.visitorId !== visitorId) {
+          newFromOthers.push(msg);
+        }
+      }
+    }
+
+    if (isFirstPayloadRef.current) {
+      isFirstPayloadRef.current = false;
+      return;
+    }
+
+    if (newFromOthers.length === 0) return;
+
+    if (!isOpen) {
+      setUnreadCount((prev) => prev + newFromOthers.length);
+      playMessageSound();
+
+      // Shake button
+      setShaking(true);
+      clearTimeout(shakeTimerRef.current);
+      shakeTimerRef.current = setTimeout(() => setShaking(false), 650);
+
+      // Toast with latest message
+      const latest = newFromOthers[newFromOthers.length - 1];
+      setToast(latest);
+      clearTimeout(toastTimerRef.current);
+      toastTimerRef.current = setTimeout(() => setToast(null), 3_500);
+    }
+  }, [confirmedMessages, isOpen, visitorId]);
+
+  // Reset unread when opened
+  useEffect(() => {
+    if (isOpen) {
+      setUnreadCount(0);
+      setToast(null);
+    }
+  }, [isOpen]);
 
   const appendEmoji = useCallback((emoji: string) => {
-    setDraft((current) => cleanDraft(`${current}${current.endsWith(" ") || current.length === 0 ? "" : " "}${emoji}`));
+    setDraft((current) =>
+      cleanDraft(
+        `${current}${current.endsWith(" ") || current.length === 0 ? "" : " "}${emoji}`
+      )
+    );
   }, []);
 
   const sendMessage = useCallback(async () => {
@@ -185,113 +324,207 @@ export function LiveMatchChat({ liveMatch, playerName, onOpenPlayerPicker }: Pro
     setDraft("");
     setIsSending(true);
     setError("");
+
     try {
       const res = await fetch("/api/mundial/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          matchId: liveMatch.id,
-          visitorId,
-          playerName,
-          text,
-        }),
+        body: JSON.stringify({ matchId: liveMatch.id, visitorId, playerName, text }),
       });
-
-      const payload = await res.json() as SendPayload;
+      const payload = (await res.json()) as SendPayload;
       if (!res.ok) {
         setError(payload.error ?? "No se pudo enviar.");
-        setMessages((current) => current.filter((message) => message.id !== tempMessage.id));
+        setMessages((current) => current.filter((m) => m.id !== tempMessage.id));
         return;
       }
       if (payload.message) {
-        setMessages((current) => mergeMessages(
-          current.filter((message) => message.id !== tempMessage.id),
-          [payload.message as LiveChatMessage],
-        ));
+        setMessages((current) =>
+          mergeMessages(
+            current.filter((m) => m.id !== tempMessage.id),
+            [payload.message as LiveChatMessage]
+          )
+        );
       } else {
         applyPayload({ messages: payload.messages ?? [] });
       }
     } catch {
       setError("No se pudo enviar.");
-      setMessages((current) => current.filter((message) => message.id !== tempMessage.id));
+      setMessages((current) => current.filter((m) => m.id !== tempMessage.id));
       setDraft(text);
     } finally {
       setIsSending(false);
     }
   }, [applyPayload, canSend, draft, liveMatch.id, onOpenPlayerPicker, playerName, visitorId]);
 
-  return (
-    <section className="mt-4 overflow-hidden rounded-xl border border-[#f0b429]/25 bg-[#06140f]/95 shadow-2xl">
-      <div className="flex items-center justify-between gap-3 border-b border-white/10 bg-[#0d2818] px-4 py-3">
-        <div className="flex min-w-0 items-center gap-3">
-          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#f0b429] text-black">
-            <MessageCircle className="h-4 w-4" />
-          </div>
-          <div className="min-w-0">
-            <h2 className="truncate text-base font-black text-white">Chat live</h2>
-            <p className="truncate text-xs font-bold text-white/45">{matchLabel}</p>
-          </div>
-        </div>
-        <div className="flex shrink-0 items-center gap-2 rounded-full border border-white/10 bg-black/25 px-3 py-1 text-[11px] font-black uppercase text-white/55">
-          {connected ? <Wifi className="h-3.5 w-3.5 text-emerald-400" /> : <WifiOff className="h-3.5 w-3.5 text-red-400" />}
-          {connected ? "Live" : "Reconectando"}
-        </div>
-      </div>
+  const visibleMessages = useMemo(() => messages.slice(-80), [messages]);
 
-      <div ref={listRef} className="max-h-80 min-h-48 space-y-2 overflow-y-auto px-4 py-4">
-        {visibleMessages.length > 0 ? (
-          visibleMessages.map((message) => (
-            <ChatMessageBubble key={message.id} message={message} mine={message.visitorId === visitorId} />
-          ))
-        ) : (
-          <div className="grid min-h-36 place-items-center text-center">
-            <div>
-              <SmilePlus className="mx-auto h-8 w-8 text-[#f0b429]/75" />
-              <p className="mt-3 text-sm font-black text-white/65">Sé el primero en reaccionar al partido.</p>
+  return (
+    <>
+      {/* ── Toast notification (chat closed) ── */}
+      {toast && !isOpen && (
+        <ChatToast message={toast} onClick={() => setIsOpen(true)} />
+      )}
+
+      {/* ── Floating chat panel ── */}
+      <div
+        className={cn(
+          "fixed bottom-[4.75rem] right-4 z-[55] flex w-[22rem] flex-col overflow-hidden rounded-2xl border border-[#f0b429]/30 bg-[#06140f]/97 shadow-[0_24px_64px_rgba(0,0,0,0.75)] backdrop-blur-md transition-all duration-300 sm:w-96",
+          isOpen
+            ? "pointer-events-auto translate-y-0 scale-100 opacity-100"
+            : "pointer-events-none translate-y-4 scale-95 opacity-0"
+        )}
+      >
+        {/* Header */}
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-white/10 bg-[#0d2818]/90 px-4 py-3">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[#f0b429] text-black">
+              <MessageCircle className="h-4 w-4" />
+            </div>
+            <div className="min-w-0">
+              <h2 className="truncate text-sm font-black text-white">Chat live</h2>
+              <p className="truncate text-[11px] font-bold text-white/40">{matchLabel}</p>
             </div>
           </div>
-        )}
-      </div>
-
-      <div className="border-t border-white/10 bg-black/20 px-4 py-3">
-        <div className="mb-2 flex gap-1.5 overflow-x-auto pb-1">
-          {QUICK_EMOJIS.map((emoji) => (
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1 rounded-full border border-white/10 bg-black/25 px-2 py-1 text-[10px] font-black uppercase text-white/50">
+              {connected ? (
+                <Wifi className="h-3 w-3 text-emerald-400" />
+              ) : (
+                <WifiOff className="h-3 w-3 text-red-400" />
+              )}
+              {connected ? "Live" : "..."}
+            </span>
             <button
-              key={emoji}
               type="button"
-              onClick={() => appendEmoji(emoji)}
-              className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/6 text-lg transition hover:border-[#f0b429]/50 hover:bg-[#f0b429]/10"
+              onClick={() => setIsOpen(false)}
+              aria-label="Cerrar chat"
+              className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-white/15 bg-black/20 text-white/50 transition hover:border-white/30 hover:text-white"
             >
-              {emoji}
+              <X className="h-4 w-4" />
             </button>
-          ))}
+          </div>
         </div>
 
-        <form
-          className="flex gap-2"
-          onSubmit={(event) => {
-            event.preventDefault();
-            void sendMessage();
-          }}
+        {/* Messages */}
+        <div
+          ref={listRef}
+          className="max-h-72 min-h-40 space-y-2 overflow-y-auto px-4 py-3"
         >
-          <input
-            value={draft}
-            maxLength={MAX_MESSAGE_LENGTH}
-            onChange={(event) => setDraft(cleanDraft(event.target.value))}
-            placeholder={playerName ? "Escribí al chat..." : "Elegí tu jugador para chatear"}
-            className="min-w-0 flex-1 rounded-lg border border-white/12 bg-black/35 px-3 py-3 text-sm font-bold text-white outline-none transition placeholder:text-white/30 focus:border-[#f0b429]/70"
-          />
-          <button
-            type="submit"
-            disabled={!canSend}
-            aria-label="Enviar mensaje"
-            className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-[#f0b429] text-black transition hover:bg-[#ffd36b] disabled:cursor-not-allowed disabled:opacity-45"
+          {visibleMessages.length > 0 ? (
+            visibleMessages.map((message) => (
+              <ChatMessageBubble
+                key={message.id}
+                message={message}
+                mine={message.visitorId === visitorId}
+              />
+            ))
+          ) : (
+            <div className="grid min-h-32 place-items-center text-center">
+              <div>
+                <SmilePlus className="mx-auto h-7 w-7 text-[#f0b429]/60" />
+                <p className="mt-2 text-sm font-black text-white/50">
+                  Sé el primero en reaccionar.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Input */}
+        <div className="shrink-0 border-t border-white/10 bg-black/20 px-3 py-3">
+          <div className="mb-2 flex gap-1.5 overflow-x-auto pb-0.5">
+            {QUICK_EMOJIS.map((emoji) => (
+              <button
+                key={emoji}
+                type="button"
+                onClick={() => appendEmoji(emoji)}
+                className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/6 text-base transition hover:border-[#f0b429]/50 hover:bg-[#f0b429]/10"
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+          <form
+            className="flex gap-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              void sendMessage();
+            }}
           >
-            <Send className={cn("h-4 w-4", isSending && "animate-pulse")} />
-          </button>
-        </form>
-        {error && <p className="mt-2 text-xs font-bold text-red-300">{error}</p>}
+            <input
+              value={draft}
+              maxLength={MAX_MESSAGE_LENGTH}
+              onChange={(e) => setDraft(cleanDraft(e.target.value))}
+              placeholder={
+                playerName ? "Escribí al chat..." : "Elegí tu jugador para chatear"
+              }
+              className="min-w-0 flex-1 rounded-lg border border-white/12 bg-black/35 px-3 py-2.5 text-sm font-bold text-white outline-none transition placeholder:text-white/30 focus:border-[#f0b429]/60"
+            />
+            <button
+              type="submit"
+              disabled={!canSend}
+              aria-label="Enviar"
+              className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-[#f0b429] text-black transition hover:bg-[#ffd36b] disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <Send className={cn("h-4 w-4", isSending && "animate-pulse")} />
+            </button>
+          </form>
+          {error && <p className="mt-1.5 text-xs font-bold text-red-300">{error}</p>}
+        </div>
       </div>
-    </section>
+
+      {/* ── Floating trigger button ── */}
+      <button
+        type="button"
+        onClick={() => setIsOpen((prev) => !prev)}
+        aria-label={isOpen ? "Cerrar chat" : "Abrir chat live"}
+        className={cn(
+          "fixed bottom-4 right-4 z-[60] flex h-14 w-14 items-center justify-center rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.6)] transition-all duration-200",
+          isOpen
+            ? "bg-[#f0b429] text-black hover:bg-[#ffd36b]"
+            : "bg-[#0d2818] border-2 border-[#f0b429]/60 text-white hover:border-[#f0b429] hover:bg-[#12351f]",
+          shaking && "[animation:chat-shake_0.5s_ease-in-out]"
+        )}
+      >
+        {/* Pulse ring when unread */}
+        {unreadCount > 0 && !isOpen && (
+          <span className="absolute inset-0 rounded-full border-2 border-[#f0b429] [animation:chat-ping_1.2s_ease-out_infinite]" />
+        )}
+
+        {isOpen ? (
+          <X className="h-6 w-6" />
+        ) : (
+          <MessageCircle className="h-6 w-6 text-[#f0b429]" />
+        )}
+
+        {/* Unread badge */}
+        {unreadCount > 0 && !isOpen && (
+          <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-black text-white shadow-sm">
+            {unreadCount > 9 ? "9+" : unreadCount}
+          </span>
+        )}
+      </button>
+
+      {/* ── Keyframes ── */}
+      <style>{`
+        @keyframes chat-ping {
+          0% { transform: scale(1); opacity: 0.8; }
+          100% { transform: scale(1.55); opacity: 0; }
+        }
+        @keyframes chat-shake {
+          0%, 100% { transform: translateX(0) rotate(0deg); }
+          15% { transform: translateX(-4px) rotate(-6deg); }
+          30% { transform: translateX(4px) rotate(6deg); }
+          45% { transform: translateX(-3px) rotate(-4deg); }
+          60% { transform: translateX(3px) rotate(4deg); }
+          75% { transform: translateX(-2px) rotate(-2deg); }
+          90% { transform: translateX(2px) rotate(2deg); }
+        }
+        @keyframes shrink {
+          from { width: 100%; }
+          to { width: 0%; }
+        }
+      `}</style>
+    </>
   );
 }
