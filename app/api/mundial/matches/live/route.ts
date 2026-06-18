@@ -114,7 +114,7 @@ async function buildPayload(): Promise<LiveMatchPayload> {
   const collection = db.collection<MatchDoc>("mundial_matches");
   const doc = await collection.findOne(
     { liveStatus: { $in: ["live", "halftime"] } },
-    { projection }
+    { sort: { liveUpdatedAt: -1, sortOrder: -1 }, projection }
   ) ?? await collection.findOne(
     { liveStatus: "fulltime", liveUpdatedAt: { $gte: new Date(Date.now() - FULLTIME_BROADCAST_MS) } },
     { sort: { liveUpdatedAt: -1, sortOrder: -1 }, projection }

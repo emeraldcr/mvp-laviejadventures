@@ -61,7 +61,9 @@ export function useMundial() {
     [nowMs, orderedMatches]
   );
   const liveMatch = useMemo(() => {
-    const raw = orderedMatches.find((m) => isMatchLive(m) || isMatchAutoLive(m, nowMs)) ?? null;
+    // Search in reverse order so the most recently started match wins when multiple are "live"
+    const reversed = [...orderedMatches].reverse();
+    const raw = reversed.find((m) => isMatchLive(m) || isMatchAutoLive(m, nowMs)) ?? null;
     if (!raw || !isMatchAutoLive(raw, nowMs)) return raw;
     return {
       ...raw,
