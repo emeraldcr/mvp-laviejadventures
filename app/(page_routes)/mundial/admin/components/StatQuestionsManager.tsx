@@ -1,7 +1,7 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Check, ChevronDown, Loader2, Plus, Trash2, Trophy, Users, X } from "lucide-react";
+import { Check, ChevronDown, EyeOff, Loader2, Plus, Trash2, Trophy, Users, X } from "lucide-react";
 import type { AdminMatch, AdminStatQuestion, BetOptionAnalytics } from "../adminTypes";
 import { cn } from "../../utils";
 
@@ -11,9 +11,8 @@ type Props = {
   onCreateQuestion: (matchId: string, text: string, options: string[], pointValue: number) => Promise<void>;
   onResolveQuestion: (id: string, correctOptionId: string | null) => Promise<void>;
   onDeleteQuestion: (id: string) => Promise<void>;
+  onBulkDeleteQuestions: (ids: string[]) => Promise<void>;
 };
-
-// Option analytics bar
 
 function OptionBar({
   opt,
@@ -37,7 +36,6 @@ function OptionBar({
           : "border-white/12 bg-black/35"
     )}>
       <div className="px-3 py-2.5">
-        {/* label + count */}
         <div className="mb-2 flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5">
             {isCorrect && (
@@ -45,18 +43,12 @@ function OptionBar({
                 <Check className="h-2.5 w-2.5 text-white" />
               </span>
             )}
-            <span className={cn(
-              "text-sm font-black",
-              isCorrect ? "text-[#d5ff3f]" : "text-white"
-            )}>
+            <span className={cn("text-sm font-black", isCorrect ? "text-[#d5ff3f]" : "text-white")}>
               {opt.label}
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className={cn(
-              "text-xs font-black tabular-nums",
-              isCorrect ? "text-[#9dff34]" : "text-white/50"
-            )}>
+            <span className={cn("text-xs font-black tabular-nums", isCorrect ? "text-[#9dff34]" : "text-white/50")}>
               {opt.pct}%
             </span>
             <span className={cn(
@@ -67,19 +59,12 @@ function OptionBar({
             </span>
           </div>
         </div>
-
-        {/* bar */}
         <div className="h-2 overflow-hidden rounded-full bg-white/10">
           <div
-            className={cn(
-              "h-full rounded-full transition-all duration-500",
-              isCorrect ? "bg-[#10240b]" : "bg-white/35"
-            )}
+            className={cn("h-full rounded-full transition-all duration-500", isCorrect ? "bg-[#10240b]" : "bg-white/35")}
             style={{ width: `${opt.pct}%` }}
           />
         </div>
-
-        {/* player chips */}
         {hasPlayers && (
           <div className="mt-2">
             <button
@@ -98,9 +83,7 @@ function OptionBar({
                     key={name}
                     className={cn(
                       "rounded-md px-2 py-0.5 text-[11px] font-black",
-                      isCorrect
-                        ? "bg-[#9dff34]/15 text-[#d5ff3f]"
-                        : "bg-white/10 text-white/60"
+                      isCorrect ? "bg-[#9dff34]/15 text-[#d5ff3f]" : "bg-white/10 text-white/60"
                     )}
                   >
                     {name}
@@ -115,18 +98,18 @@ function OptionBar({
   );
 }
 
-// Question card
-
 function QuestionCard({
   question,
   resolvingId,
   deletingId,
+  isPastZeroBet,
   onResolve,
   onDelete,
 }: {
   question: AdminStatQuestion;
   resolvingId: string | null;
   deletingId: string | null;
+  isPastZeroBet: boolean;
   onResolve: (id: string, optionId: string | null) => void;
   onDelete: (id: string) => void;
 }) {
@@ -138,18 +121,18 @@ function QuestionCard({
   return (
     <div className={cn(
       "overflow-hidden rounded-xl border shadow-[0_18px_58px_rgba(0,0,0,0.18)]",
-      question.resolved ? "border-[#9dff34]/30 bg-[#10240b]/45" : "border-white/12 bg-black/35"
+      question.resolved
+        ? "border-[#9dff34]/30 bg-[#10240b]/45"
+        : isPastZeroBet
+          ? "border-white/8 bg-black/20 opacity-60"
+          : "border-white/12 bg-black/35"
     )}>
-      {/* header */}
       <div className={cn(
         "flex items-start justify-between gap-3 px-4 py-3",
         question.resolved ? "bg-[#10240b]/80" : "bg-black/35"
       )}>
         <div className="min-w-0">
-          <p className={cn(
-            "font-black leading-snug",
-            question.resolved ? "text-[#d5ff3f]" : "text-white"
-          )}>
+          <p className={cn("font-black leading-snug", question.resolved ? "text-[#d5ff3f]" : "text-white")}>
             {question.text}
           </p>
           <div className="mt-1 flex flex-wrap items-center gap-2">
@@ -160,6 +143,12 @@ function QuestionCard({
               <span className="inline-flex items-center gap-1 text-xs font-bold text-white/45">
                 <Users className="h-3 w-3" />
                 {question.totalBets} apuesta{question.totalBets !== 1 ? "s" : ""}
+              </span>
+            )}
+            {isPastZeroBet && (
+              <span className="inline-flex items-center gap-1 rounded-md bg-white/8 px-1.5 py-0.5 text-[11px] font-black text-white/35">
+                <EyeOff className="h-2.5 w-2.5" />
+                Sin apuestas
               </span>
             )}
             {question.resolved && (
@@ -179,8 +168,6 @@ function QuestionCard({
             )}
           </div>
         </div>
-
-        {/* delete control */}
         <div className="shrink-0">
           {confirmDelete ? (
             <div className="flex items-center gap-1.5">
@@ -216,9 +203,9 @@ function QuestionCard({
         </div>
       </div>
 
-      {/* analytics + resolve */}
       <div className="border-t border-white/10 px-4 py-3">
-        {!question.resolved && (
+        {/* Resolve buttons: only for unresolved questions that have bets (skip zero-bet past match questions) */}
+        {!question.resolved && !isPastZeroBet && (
           <div className="mb-3 rounded-lg border border-[#9dff34]/30 bg-[#10240b]/80 p-2.5">
             <p className="mb-2 text-[11px] font-black uppercase tracking-wide text-[#d5ff3f]">
               Marcar respuesta correcta
@@ -253,23 +240,22 @@ function QuestionCard({
             ))}
           </div>
         )}
-
       </div>
     </div>
   );
 }
 
-// Main component
-
-export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion, onResolveQuestion, onDeleteQuestion }: Props) {
+export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion, onResolveQuestion, onDeleteQuestion, onBulkDeleteQuestions }: Props) {
   const now = Date.now();
 
+  // "pending" here means unresolved WITH bets — those are the ones admins truly need to action
   const questionStatsByMatch = useMemo(() => {
-    const stats = new Map<string, { total: number; pending: number; bets: number }>();
+    const stats = new Map<string, { total: number; pending: number; emptyUnresolved: number; bets: number }>();
     for (const question of statQuestions) {
-      const current = stats.get(question.matchId) ?? { total: 0, pending: 0, bets: 0 };
+      const current = stats.get(question.matchId) ?? { total: 0, pending: 0, emptyUnresolved: 0, bets: 0 };
       current.total += 1;
-      if (!question.resolved) current.pending += 1;
+      if (!question.resolved && question.totalBets > 0) current.pending += 1;
+      if (!question.resolved && question.totalBets === 0) current.emptyUnresolved += 1;
       current.bets += question.totalBets;
       stats.set(question.matchId, current);
     }
@@ -284,19 +270,18 @@ export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion,
     const isLive = m.liveStatus === "live" || m.liveStatus === "halftime";
     return !isLive && (m.closed || new Date(m.kickoffAt).getTime() <= now);
   });
+  // Only matches with unresolved questions that actually have bets
   const pendingPastMatches = pastMatches.filter((match) => (questionStatsByMatch.get(match.id)?.pending ?? 0) > 0);
 
-  const [selectedMatchId, setSelectedMatchId] = useState<string>(
-    () => {
-      const pastWithPending = matches.find((m) => {
-        const isLive = m.liveStatus === "live" || m.liveStatus === "halftime";
-        const isPast = !isLive && (m.closed || new Date(m.kickoffAt).getTime() <= Date.now());
-        return isPast && statQuestions.some((q) => q.matchId === m.id && !q.resolved);
-      });
-      const withQuestions = matches.find((m) => statQuestions.some((q) => q.matchId === m.id));
-      return pastWithPending?.id ?? withQuestions?.id ?? matches.find((m) => m.closed)?.id ?? matches[0]?.id ?? "";
-    }
-  );
+  const [selectedMatchId, setSelectedMatchId] = useState<string>(() => {
+    const pastWithPending = matches.find((m) => {
+      const isLive = m.liveStatus === "live" || m.liveStatus === "halftime";
+      const isPast = !isLive && (m.closed || new Date(m.kickoffAt).getTime() <= Date.now());
+      return isPast && statQuestions.some((q) => q.matchId === m.id && !q.resolved && q.totalBets > 0);
+    });
+    const withQuestions = matches.find((m) => statQuestions.some((q) => q.matchId === m.id));
+    return pastWithPending?.id ?? withQuestions?.id ?? matches.find((m) => m.closed)?.id ?? matches[0]?.id ?? "";
+  });
   const [questionFilter, setQuestionFilter] = useState<"pending" | "all" | "resolved">("pending");
   const [newText, setNewText] = useState("");
   const [newOptions, setNewOptions] = useState(["", ""]);
@@ -306,26 +291,56 @@ export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion,
   const [resolvingId, setResolvingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [formError, setFormError] = useState("");
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
 
   const selectedMatch = matches.find((m) => m.id === selectedMatchId);
   const matchQuestions = statQuestions
     .filter((q) => q.matchId === selectedMatchId)
     .sort((a, b) => Number(a.resolved) - Number(b.resolved) || b.totalBets - a.totalBets);
+
+  const isPastMatch = useMemo(() => {
+    if (!selectedMatch) return false;
+    const isLive = selectedMatch.liveStatus === "live" || selectedMatch.liveStatus === "halftime";
+    return !isLive && (selectedMatch.closed || new Date(selectedMatch.kickoffAt).getTime() <= now);
+  }, [selectedMatch, now]);
+
+  const zeroBetQuestions = useMemo(
+    () => matchQuestions.filter((q) => !q.resolved && q.totalBets === 0),
+    [matchQuestions]
+  );
+  const pendingWithBets = useMemo(
+    () => matchQuestions.filter((q) => !q.resolved && q.totalBets > 0),
+    [matchQuestions]
+  );
+
+  const totalBetsForMatch = matchQuestions.reduce((sum, q) => sum + q.totalBets, 0);
+  const resolvedCount = matchQuestions.filter((q) => q.resolved).length;
+  // For past matches, "pending" = only those with actual bets that need resolution
+  const pendingCount = isPastMatch ? pendingWithBets.length : matchQuestions.length - resolvedCount;
+
   const visibleQuestions = matchQuestions.filter((q) => {
-    if (questionFilter === "pending") return !q.resolved;
+    if (questionFilter === "pending") {
+      // In past matches, the pending filter only shows questions with bets
+      if (isPastMatch) return !q.resolved && q.totalBets > 0;
+      return !q.resolved;
+    }
     if (questionFilter === "resolved") return q.resolved;
     return true;
   });
 
-  const totalBetsForMatch = matchQuestions.reduce((sum, q) => sum + q.totalBets, 0);
-  const resolvedCount = matchQuestions.filter((q) => q.resolved).length;
-  const pendingCount = matchQuestions.length - resolvedCount;
+  // Zero-bet questions shown as a secondary dim section only in "pending" view for past matches
+  const visibleZeroBetSection = isPastMatch && questionFilter === "pending" ? zeroBetQuestions : [];
 
   useEffect(() => {
-    if (questionFilter === "pending" && pendingCount === 0 && matchQuestions.length > 0) {
+    if (questionFilter === "pending" && pendingCount === 0 && matchQuestions.length > 0 && zeroBetQuestions.length === 0) {
       setQuestionFilter("all");
     }
-  }, [matchQuestions.length, pendingCount, questionFilter]);
+  }, [matchQuestions.length, pendingCount, questionFilter, zeroBetQuestions.length]);
+
+  useEffect(() => {
+    setConfirmBulkDelete(false);
+  }, [selectedMatchId]);
 
   const statBetLeaderboard = useMemo(() => {
     const playerMap = new Map<string, { playerName: string; earned: number; total: number }>();
@@ -376,11 +391,19 @@ export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion,
     finally { setDeletingId(null); }
   }
 
+  async function handleBulkDeleteZeroBet() {
+    setIsBulkDeleting(true);
+    setConfirmBulkDelete(false);
+    try {
+      await onBulkDeleteQuestions(zeroBetQuestions.map((q) => q.id));
+    } finally {
+      setIsBulkDeleting(false);
+    }
+  }
+
   function MatchButton({ match }: { match: AdminMatch }) {
-    const stats = questionStatsByMatch.get(match.id) ?? { total: 0, pending: 0, bets: 0 };
-    const count = stats.total;
-    const bets = stats.bets;
-    const pending = stats.pending;
+    const stats = questionStatsByMatch.get(match.id) ?? { total: 0, pending: 0, emptyUnresolved: 0, bets: 0 };
+    const { total: count, bets, pending, emptyUnresolved } = stats;
     const isSelected = selectedMatchId === match.id;
     const isLive = match.liveStatus === "live" || match.liveStatus === "halftime";
     const kickoff = new Date(match.kickoffAt);
@@ -390,17 +413,14 @@ export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion,
       <button
         key={match.id}
         type="button"
-        onClick={() => {
-          setSelectedMatchId(match.id);
-          setQuestionFilter("pending");
-        }}
+        onClick={() => { setSelectedMatchId(match.id); setQuestionFilter("pending"); }}
         className={cn(
           "flex w-full items-center justify-between gap-3 border-b border-white/10 px-4 py-3 text-left transition last:border-0",
           isSelected ? "bg-[#d5ff3f] text-[#06110b]" : "text-white/70 hover:bg-white/5"
         )}
       >
         <div className="min-w-0">
-          <p className={cn("text-[10px] font-black uppercase tracking-wide", isSelected ? "text-white/40" : "text-white/40")}>
+          <p className="text-[10px] font-black uppercase tracking-wide text-white/40">
             {isLive ? "LIVE" : dateStr} - {match.group ? `Grupo ${match.group}` : match.stageLabel}
           </p>
           <p className="truncate text-sm font-black">
@@ -422,6 +442,14 @@ export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion,
               isSelected ? "bg-[#06110b]/15 text-[#06110b]" : "bg-[#f0b429]/15 text-[#f0b429]"
             )}>
               {pending} pendientes
+            </span>
+          )}
+          {emptyUnresolved > 0 && pending === 0 && (
+            <span className={cn(
+              "rounded-md px-1.5 py-0.5 text-[10px] font-black tabular-nums",
+              isSelected ? "bg-white/10 text-white/50" : "bg-white/8 text-white/30"
+            )}>
+              {emptyUnresolved} vacías
             </span>
           )}
           {bets > 0 && (
@@ -465,7 +493,7 @@ export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion,
                 <p className="text-[10px] font-black uppercase tracking-wider text-white/40">Pasados</p>
               </div>
               {pastMatches
-                .filter((match) => !pendingPastMatches.some((pendingMatch) => pendingMatch.id === match.id))
+                .filter((match) => !pendingPastMatches.some((p) => p.id === match.id))
                 .map((match) => <MatchButton key={match.id} match={match} />)}
             </>
           )}
@@ -528,12 +556,12 @@ export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion,
               </button>
             ))}
             <span className="ml-auto text-xs font-bold text-white/45">
-              Mostrando {visibleQuestions.length}
+              Mostrando {visibleQuestions.length + visibleZeroBetSection.length}
             </span>
           </div>
         )}
 
-        {/* create form */}
+        {/* Create form */}
         {showForm && (
           <div className="rounded-xl border border-[#d5ff3f]/25 bg-[#10240b]/75 p-4">
             <p className="mb-3 text-sm font-black text-[#d5ff3f]">Nueva pregunta</p>
@@ -550,11 +578,7 @@ export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion,
                   <input
                     type="text"
                     value={opt}
-                    onChange={(e) => {
-                      const next = [...newOptions];
-                      next[i] = e.target.value;
-                      setNewOptions(next);
-                    }}
+                    onChange={(e) => { const next = [...newOptions]; next[i] = e.target.value; setNewOptions(next); }}
                     placeholder={`Opcion ${i + 1}`}
                     className="h-9 flex-1 rounded-lg border border-white/18 bg-black/35 px-3 text-sm font-bold text-white outline-none focus:border-[#d5ff3f] focus:ring-4 focus:ring-[#d5ff3f]/15"
                   />
@@ -580,8 +604,6 @@ export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion,
                 </button>
               )}
             </div>
-
-            {/* point value */}
             <div className="mb-3">
               <p className="mb-2 text-[11px] font-black uppercase tracking-wide text-[#d5ff3f]">Puntos</p>
               <div className="flex gap-2">
@@ -602,7 +624,6 @@ export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion,
                 ))}
               </div>
             </div>
-
             {formError && <p className="mb-3 text-xs font-bold text-[#ffd2c2]">{formError}</p>}
             <button
               type="button"
@@ -616,15 +637,67 @@ export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion,
           </div>
         )}
 
-        {/* questions list */}
+        {/* Zero-bet action bar — past match cleanup */}
+        {isPastMatch && zeroBetQuestions.length > 0 && (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-500/20 bg-amber-950/20 px-4 py-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <EyeOff className="h-4 w-4 shrink-0 text-amber-400/70" />
+              <span className="text-sm font-black text-amber-200/80">
+                {zeroBetQuestions.length} pregunta{zeroBetQuestions.length !== 1 ? "s" : ""} sin apuestas
+              </span>
+              {pendingWithBets.length === 0 && (
+                <span className="rounded-md bg-amber-500/15 px-1.5 py-0.5 text-[11px] font-black text-amber-300/70">
+                  Ninguna fue apostada — listo para cerrar
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              {confirmBulkDelete ? (
+                <>
+                  <span className="text-xs font-black text-amber-200/80">
+                    ¿Eliminar {zeroBetQuestions.length}?
+                  </span>
+                  <button
+                    type="button"
+                    disabled={isBulkDeleting}
+                    onClick={() => void handleBulkDeleteZeroBet()}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-red-500/50 bg-red-700 px-3 py-1.5 text-xs font-black text-white transition hover:bg-red-600 disabled:opacity-50"
+                  >
+                    {isBulkDeleting ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
+                    Confirmar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmBulkDelete(false)}
+                    className="rounded-lg border border-white/18 bg-black/35 px-3 py-1.5 text-xs font-black text-white/65 transition hover:bg-white/8"
+                  >
+                    Cancelar
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  disabled={isBulkDeleting}
+                  onClick={() => setConfirmBulkDelete(true)}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-white/18 bg-black/35 px-3 py-1.5 text-xs font-black text-white/65 transition hover:border-amber-500/45 hover:bg-amber-950/30 hover:text-amber-200 disabled:opacity-50"
+                >
+                  <Trash2 className="h-3 w-3" />
+                  Eliminar sin apuestas ({zeroBetQuestions.length})
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Questions list */}
         {!matchQuestions.length ? (
           <div className="grid min-h-40 place-items-center rounded-xl border border-dashed border-white/12 bg-black/35 p-6 text-center shadow-[0_18px_58px_rgba(0,0,0,0.18)]">
             <div>
-              <p className="text-2xl"></p>
+              <p className="text-2xl">📋</p>
               <p className="mt-2 text-sm font-black text-white/65">No hay preguntas para este partido.</p>
             </div>
           </div>
-        ) : !visibleQuestions.length ? (
+        ) : !visibleQuestions.length && !visibleZeroBetSection.length ? (
           <div className="grid min-h-32 place-items-center rounded-xl border border-dashed border-white/12 bg-black/35 p-6 text-center shadow-[0_18px_58px_rgba(0,0,0,0.18)]">
             <p className="text-sm font-black text-white/50">No hay preguntas en este filtro.</p>
           </div>
@@ -636,14 +709,40 @@ export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion,
                 question={question}
                 resolvingId={resolvingId}
                 deletingId={deletingId}
+                isPastZeroBet={isPastMatch && question.totalBets === 0}
                 onResolve={(id, optId) => void handleResolve(id, optId)}
                 onDelete={(id) => void handleDelete(id)}
               />
             ))}
+
+            {/* Zero-bet questions shown dimmed below a separator in "pending" view */}
+            {visibleZeroBetSection.length > 0 && (
+              <div className="mt-1 grid gap-3">
+                <div className="flex items-center gap-2 px-1">
+                  <div className="h-px flex-1 bg-white/10" />
+                  <p className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-white/25">
+                    <EyeOff className="h-3 w-3" />
+                    Sin apuestas · pueden eliminarse
+                  </p>
+                  <div className="h-px flex-1 bg-white/10" />
+                </div>
+                {visibleZeroBetSection.map((question) => (
+                  <QuestionCard
+                    key={question.id}
+                    question={question}
+                    resolvingId={resolvingId}
+                    deletingId={deletingId}
+                    isPastZeroBet={true}
+                    onResolve={(id, optId) => void handleResolve(id, optId)}
+                    onDelete={(id) => void handleDelete(id)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         )}
 
-        {/* per-match leaderboard */}
+        {/* Per-match leaderboard */}
         {statBetLeaderboard.length > 0 && (
           <div className="overflow-hidden rounded-xl border border-white/12 bg-black/35 shadow-[0_18px_58px_rgba(0,0,0,0.18)]">
             <div className="flex items-center gap-2 border-b border-white/10 bg-black/25 px-4 py-3">
@@ -663,7 +762,7 @@ export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion,
                 </thead>
                 <tbody className="divide-y divide-white/10">
                   {statBetLeaderboard.map((entry, i) => {
-                    const medals = ["1", "2", "3"];
+                    const medals = ["🥇", "🥈", "🥉"];
                     const isFirst = i === 0;
                     return (
                       <tr key={entry.playerName} className={isFirst ? "bg-[#211707]/80" : "hover:bg-white/5"}>
@@ -675,9 +774,7 @@ export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion,
                           )}
                         </td>
                         <td className="px-3 py-2.5">
-                          <p className={`font-black ${isFirst ? "text-[#f0b429]" : "text-white"}`}>
-                            {entry.playerName}
-                          </p>
+                          <p className={`font-black ${isFirst ? "text-[#f0b429]" : "text-white"}`}>{entry.playerName}</p>
                         </td>
                         <td className="px-3 py-2.5 text-right">
                           <span className={`font-black tabular-nums ${entry.earned > 0 ? "text-[#d5ff3f]" : "text-slate-300"}`}>

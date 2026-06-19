@@ -117,6 +117,19 @@ export default function AdminClient() {
     await load();
   }
 
+  async function bulkDeleteStatQuestions(ids: string[]) {
+    await Promise.all(
+      ids.map((id) =>
+        fetch(STAT_Q_API, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id }),
+        })
+      )
+    );
+    await load();
+  }
+
   async function resolveStatQuestion(id: string, correctOptionId: string | null) {
     const res = await fetch(STAT_Q_API, {
       method: "PATCH",
@@ -454,6 +467,7 @@ export default function AdminClient() {
                 onCreateQuestion={createStatQuestion}
                 onResolveQuestion={resolveStatQuestion}
                 onDeleteQuestion={deleteStatQuestion}
+                onBulkDeleteQuestions={bulkDeleteStatQuestions}
               />
             )}
 
