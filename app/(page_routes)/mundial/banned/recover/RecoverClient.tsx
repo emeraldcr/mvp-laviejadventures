@@ -1,12 +1,16 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode, type MouseEvent } from "react";
+import {
+  useEffect, useMemo, useRef, useState,
+  type ReactNode, type MouseEvent, type KeyboardEvent,
+} from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   AlertTriangle, ArrowLeft, Check, CheckCircle2, ChevronRight, Clock,
-  Copy, Download, FileText, HelpCircle, Loader2, Mail, MessageCircle,
-  Phone, RefreshCw, Send, ShieldOff, Upload, Wifi, X,
+  Copy, Download, FileText, HelpCircle, Loader2, Lock, Mail, MessageCircle,
+  Phone, RefreshCw, Send, Shield, ShieldAlert, ShieldOff, Smartphone,
+  Upload, User, Wifi, WifiOff, X,
 } from "lucide-react";
 import { cn } from "../../utils";
 
@@ -19,7 +23,7 @@ type Step =
 
 type ChatMessage = { role: "user" | "bot" | "system"; text: string };
 
-// ─── Fake error system ────────────────────────────────────────────────────────
+// ─── Fake error / loading system ──────────────────────────────────────────────
 
 class FakeServerError extends Error {
   constructor(msg: string) { super(msg); this.name = "FakeServerError"; }
@@ -34,6 +38,15 @@ const FAKE_ERRORS = [
   "El servidor de seguridad rechazó la solicitud. Intente en unos momentos.",
 ];
 
+const LOADING_MSGS = [
+  "Conectando con servidores seguros...",
+  "Verificando identidad...",
+  "Validando datos del solicitante...",
+  "Comprobando registros de seguridad...",
+  "Procesando solicitud cifrada...",
+  "Comunicando con base de datos central...",
+];
+
 const BOT_RESPONSES = [
   "Gracias por contactar soporte. Un agente se conectará pronto...",
   "Tiempo de espera estimado: 4 horas 32 minutos.",
@@ -44,6 +57,7 @@ const BOT_RESPONSES = [
   "Para acelerar su caso, complete todos los pasos del proceso de recuperación.",
   "Un agente especializado revisará su solicitud. Tiempo estimado: 72 horas.",
   "Error al conectar con el sistema de tickets. Por favor intente más tarde.",
+  "Le recomendamos revisar nuestra sección de preguntas frecuentes.",
 ];
 
 function rndFakeError() {
@@ -58,26 +72,129 @@ async function withFake<T>(fn: () => Promise<T>, prob = 0.22): Promise<T> {
   return fn();
 }
 
-// ─── Step indicator config ────────────────────────────────────────────────────
+// ─── Step config ──────────────────────────────────────────────────────────────
 
 const STEP_ORDER: Step[] = [
   "start", "captcha", "form", "signature",
   "email-send", "email-verify", "phone-send", "phone-verify",
   "totp-setup", "totp-verify", "done",
 ];
+
 const STEP_LABELS = [
-  { step: "captcha" as Step, label: "CAPTCHA" },
-  { step: "form" as Step, label: "Formulario" },
-  { step: "signature" as Step, label: "Firma" },
-  { step: "email-send" as Step, label: "Correo" },
-  { step: "phone-send" as Step, label: "Teléfono" },
-  { step: "totp-setup" as Step, label: "Autenticador" },
-  { step: "done" as Step, label: "Enviado" },
+  { step: "captcha" as Step, label: "CAPTCHA", icon: <Shield className="h-3 w-3" /> },
+  { step: "form" as Step, label: "Apelación", icon: <FileText className="h-3 w-3" /> },
+  { step: "signature" as Step, label: "Firma", icon: <Upload className="h-3 w-3" /> },
+  { step: "email-send" as Step, label: "Correo", icon: <Mail className="h-3 w-3" /> },
+  { step: "phone-send" as Step, label: "Teléfono", icon: <Phone className="h-3 w-3" /> },
+  { step: "totp-setup" as Step, label: "2FA", icon: <Smartphone className="h-3 w-3" /> },
+  { step: "done" as Step, label: "Enviado", icon: <Check className="h-3 w-3" /> },
 ];
 
 function stepIdx(s: Step) { return STEP_ORDER.indexOf(s); }
 function fmt(secs: number) {
   return `${Math.floor(secs / 60).toString().padStart(2, "0")}:${(secs % 60).toString().padStart(2, "0")}`;
+}
+function maskEmail(e: string) {
+  const [user, domain] = e.split("@");
+  if (!user || !domain) return e;
+  return `${user[0]}${"*".repeat(Math.max(user.length - 2, 2))}${user.slice(-1)}@${domain[0]}${"*".repeat(Math.max(domain.length - 5, 2))}.${domain.split(".").pop()}`;
+}
+
+// ─── Shared tiny components ───────────────────────────────────────────────────
+
+function Badge({ children, variant = "neutral" }: { children: ReactNode; variant?: "green" | "amber" | "red" | "neutral" }) {
+  return (
+    <span className={cn(
+      "inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-black uppercase tracking-wide",
+      variant === "green" && "bg-[#10240b] text-[#9dff34] border border-[#9dff34]/25",
+      variant === "amber" && "bg-[#211707] text-[#f0b429] border border-[#f0b429]/25",
+      variant === "red" && "bg-red-950/60 text-red-300 border border-red-500/25",
+      variant === "neutral" && "bg-white/6 text-white/50 border border-white/12",
+    )}>{children}</span>
+  );
+}
+
+// ─── OTP digit input ──────────────────────────────────────────────────────────
+
+function OtpInput({ value, onChange, onComplete }: { value: string; onChange: (v: string) => void; onComplete?: () => void }) {
+  const refs = useRef<(HTMLInputElement | null)[]>([]);
+  const digits = Array.from({ length: 6 }, (_, i) => value[i] ?? "");
+
+  function handleChange(i: number, char: string) {
+    const d = char.replace(/\D/g, "").slice(-1);
+    const arr = [...digits]; arr[i] = d;
+    const next = arr.join("");
+    onChange(next);
+    if (d && i < 5) setTimeout(() => refs.current[i + 1]?.focus(), 0);
+    if (next.replace(/\s/g, "").length === 6 && d) onComplete?.();
+  }
+
+  function handleKey(i: number, e: KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Backspace") {
+      if (digits[i]) {
+        const arr = [...digits]; arr[i] = ""; onChange(arr.join(""));
+      } else if (i > 0) {
+        refs.current[i - 1]?.focus();
+        const arr = [...digits]; arr[i - 1] = ""; onChange(arr.join(""));
+      }
+      e.preventDefault();
+    }
+    if (e.key === "ArrowLeft" && i > 0) refs.current[i - 1]?.focus();
+    if (e.key === "ArrowRight" && i < 5) refs.current[i + 1]?.focus();
+  }
+
+  function handlePaste(e: React.ClipboardEvent) {
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (pasted) { onChange(pasted.padEnd(6, "").slice(0, 6)); refs.current[Math.min(pasted.length, 5)]?.focus(); }
+    e.preventDefault();
+  }
+
+  return (
+    <div className="flex justify-center gap-2 sm:gap-3">
+      {digits.map((d, i) => (
+        <input
+          key={i}
+          ref={(el) => { refs.current[i] = el; }}
+          type="text" inputMode="numeric" maxLength={1} value={d}
+          onChange={(e) => handleChange(i, e.target.value)}
+          onKeyDown={(e) => handleKey(i, e)}
+          onPaste={handlePaste}
+          className={cn(
+            "h-14 w-11 rounded-xl border text-center text-2xl font-black tabular-nums text-white outline-none transition-all duration-150 sm:h-16 sm:w-13 sm:text-3xl",
+            d
+              ? "border-[#d5ff3f]/70 bg-[#0d1f09] shadow-[0_0_12px_rgba(213,255,63,0.15)] scale-105"
+              : "border-white/15 bg-black/40",
+            "focus:border-[#d5ff3f]/90 focus:bg-[#0d1f09] focus:shadow-[0_0_16px_rgba(213,255,63,0.2)] focus:scale-105",
+          )}
+        />
+      ))}
+    </div>
+  );
+}
+
+// ─── Loading overlay ──────────────────────────────────────────────────────────
+
+function LoadingOverlay({ visible }: { visible: boolean }) {
+  const [msgIdx, setMsgIdx] = useState(0);
+  useEffect(() => {
+    if (!visible) return;
+    const id = setInterval(() => setMsgIdx((i) => (i + 1) % LOADING_MSGS.length), 1200);
+    return () => clearInterval(id);
+  }, [visible]);
+  if (!visible) return null;
+  return (
+    <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center gap-4 bg-black/75 backdrop-blur-sm">
+      <div className="relative flex h-16 w-16 items-center justify-center">
+        <div className="absolute inset-0 animate-spin rounded-full border-2 border-transparent border-t-[#d5ff3f]/80" />
+        <div className="absolute inset-2 animate-spin rounded-full border border-transparent border-t-[#d5ff3f]/30" style={{ animationDirection: "reverse", animationDuration: "1.5s" }} />
+        <Shield className="h-6 w-6 text-[#d5ff3f]/70" />
+      </div>
+      <p className="text-sm font-bold text-white/60 transition-all duration-500">{LOADING_MSGS[msgIdx]}</p>
+      <div className="flex gap-1">
+        {[0, 1, 2].map((i) => <span key={i} className="h-1 w-1 animate-bounce rounded-full bg-[#d5ff3f]/50" style={{ animationDelay: `${i * 150}ms` }} />)}
+      </div>
+    </div>
+  );
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -88,52 +205,55 @@ export default function RecoverClient() {
   const [ticketId, setTicketId] = useState<string | null>(null);
   const [playerName, setPlayerName] = useState(params.get("playerName") ?? "");
 
-  // Captcha
   const [captchaQ, setCaptchaQ] = useState("");
   const [captchaIn, setCaptchaIn] = useState("");
   const [captchasDone, setCaptchasDone] = useState(0);
+  const [captchaExpiry, setCaptchaExpiry] = useState(120);
 
-  // Form
   const [fFullName, setFFullName] = useState("");
   const [fEmail, setFEmail] = useState("");
   const [fPhone, setFPhone] = useState("");
   const [fMsg, setFMsg] = useState("");
 
-  // Signature
   const [sigPreview, setSigPreview] = useState<string | null>(null);
   const [sigErr, setSigErr] = useState("");
+  const [sigDragging, setSigDragging] = useState(false);
 
-  // Codes
   const [emailCode, setEmailCode] = useState("");
   const [phoneCode, setPhoneCode] = useState("");
   const [codeSentAt, setCodeSentAt] = useState<number | null>(null);
 
-  // TOTP
   const [totpSecret, setTotpSecret] = useState<string | null>(null);
   const [totpIn, setTotpIn] = useState("");
   const [copied, setCopied] = useState(false);
 
-  // UI
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorCode] = useState(() => `ERR-${Math.floor(Math.random() * 90000 + 10000)}`);
   const [fakeRetry, setFakeRetry] = useState<(() => void) | null>(null);
   const [sessionSecs, setSessionSecs] = useState(900);
   const [sessionExpired, setSessionExpired] = useState(false);
 
-  // Chat
   const [showChat, setShowChat] = useState(false);
   const [chatMsgs, setChatMsgs] = useState<ChatMessage[]>([
-    { role: "system", text: "Soporte técnico — Mundial 2026" },
-    { role: "bot", text: "Hola, bienvenido al soporte. Conectando con un agente disponible..." },
+    { role: "system", text: "Soporte en línea — Sistema de Recuperación v2.4.1" },
+    { role: "bot", text: "Hola, bienvenido al soporte técnico. Conectando con el siguiente agente disponible..." },
   ]);
   const [chatIn, setChatIn] = useState("");
   const [chatTyping, setChatTyping] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  // Track view
   const [showTrack, setShowTrack] = useState(false);
 
-  // ── Session countdown ──────────────────────────────────────────────────────
+  // captcha expiry counter
+  useEffect(() => {
+    if (step !== "captcha") return;
+    setCaptchaExpiry(120);
+    const id = setInterval(() => setCaptchaExpiry((s) => Math.max(0, s - 1)), 1000);
+    return () => clearInterval(id);
+  }, [step, captchasDone]);
+
+  // session countdown
   useEffect(() => {
     if (step === "start" || step === "done" || sessionExpired) return;
     const id = setInterval(() => {
@@ -149,7 +269,6 @@ export default function RecoverClient() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatMsgs, chatTyping]);
 
-  // ── API ────────────────────────────────────────────────────────────────────
   async function callRecover(body: Record<string, unknown>) {
     const res = await fetch("/api/mundial/ban/recover", {
       method: "POST",
@@ -161,7 +280,6 @@ export default function RecoverClient() {
     return data;
   }
 
-  // ── Reset ──────────────────────────────────────────────────────────────────
   function resetToStart(msg?: string) {
     setStep("start"); setTicketId(null); setCaptchaQ(""); setCaptchaIn("");
     setCaptchasDone(0); setSigPreview(null); setEmailCode(""); setPhoneCode("");
@@ -169,13 +287,11 @@ export default function RecoverClient() {
     setSessionExpired(false); setFakeRetry(null); setError(msg ?? null);
   }
 
-  // ── Broken link ────────────────────────────────────────────────────────────
   function brokenLink(e: MouseEvent) {
     e.preventDefault();
     setError("El enlace no está disponible en este momento. Intente más tarde.");
   }
 
-  // ── Handlers ───────────────────────────────────────────────────────────────
   async function handleStart() {
     const name = playerName.trim();
     if (!name) { setError("Ingresa tu nombre de jugador."); return; }
@@ -253,10 +369,10 @@ export default function RecoverClient() {
   }
 
   async function handleVerifyEmail() {
-    if (emailCode.length !== 6) { setError("El código debe tener 6 dígitos."); return; }
+    if (emailCode.replace(/\s/g, "").length !== 6) { setError("El código debe tener 6 dígitos."); return; }
     setError(null); setLoading(true);
     try {
-      await withFake(() => callRecover({ action: "verify-email", ticketId, code: emailCode }), 0.3);
+      await withFake(() => callRecover({ action: "verify-email", ticketId, code: emailCode.replace(/\s/g, "") }), 0.3);
       setStep("phone-send");
     } catch (err) {
       if (err instanceof FakeServerError) { setFakeRetry(() => () => void handleVerifyEmail()); }
@@ -276,10 +392,10 @@ export default function RecoverClient() {
   }
 
   async function handleVerifyPhone() {
-    if (phoneCode.length !== 6) { setError("El código debe tener 6 dígitos."); return; }
+    if (phoneCode.replace(/\s/g, "").length !== 6) { setError("El código debe tener 6 dígitos."); return; }
     setError(null); setLoading(true);
     try {
-      await withFake(() => callRecover({ action: "verify-phone", ticketId, code: phoneCode }), 0.3);
+      await withFake(() => callRecover({ action: "verify-phone", ticketId, code: phoneCode.replace(/\s/g, "") }), 0.3);
       const d = await callRecover({ action: "get-totp", ticketId });
       setTotpSecret(d.secret as string ?? null);
       setStep("totp-setup");
@@ -290,10 +406,10 @@ export default function RecoverClient() {
   }
 
   async function handleVerifyTotp() {
-    if (totpIn.length !== 6) { setError("El código TOTP debe tener 6 dígitos."); return; }
+    if (totpIn.replace(/\s/g, "").length !== 6) { setError("El código TOTP debe tener 6 dígitos."); return; }
     setError(null); setLoading(true);
     try {
-      await withFake(() => callRecover({ action: "verify-totp", ticketId, code: totpIn }), 0.3);
+      await withFake(() => callRecover({ action: "verify-totp", ticketId, code: totpIn.replace(/\s/g, "") }), 0.3);
       setStep("done");
     } catch (err) {
       if (err instanceof FakeServerError) { setFakeRetry(() => () => void handleVerifyTotp()); }
@@ -311,95 +427,135 @@ export default function RecoverClient() {
     setChatMsgs((m) => [...m, { role: "bot", text: BOT_RESPONSES[Math.floor(Math.random() * BOT_RESPONSES.length)] }]);
   }
 
-  // ── Guards ─────────────────────────────────────────────────────────────────
-  if (sessionExpired) return <SessionExpired onRestart={() => resetToStart("Su sesión expiró. Debe reiniciar el proceso desde el principio.")} />;
+  if (sessionExpired) return <SessionExpired onRestart={() => resetToStart("Su sesión expiró. Debe reiniciar el proceso completamente desde el principio.")} />;
   if (showTrack) return <TrackView ticketId={ticketId} onBack={() => setShowTrack(false)} />;
 
-  return (
-    <div className="min-h-screen bg-[#060e08] text-white">
-      {/* Session timer */}
-      {step !== "start" && step !== "done" && (
-        <div className={cn(
-          "sticky top-0 z-40 border-b px-4 py-2 flex items-center justify-between text-xs font-black backdrop-blur",
-          sessionSecs < 120 ? "border-red-500/40 bg-red-950/80 text-red-300"
-          : sessionSecs < 300 ? "border-amber-500/30 bg-amber-950/60 text-amber-300"
-          : "border-white/10 bg-black/80 text-white/40"
-        )}>
-          <span className="flex items-center gap-1.5">
-            <Clock className="h-3 w-3" />
-            Sesión expira en: {fmt(sessionSecs)}
-            {sessionSecs < 300 && " — GUARDE SU PROGRESO"}
-          </span>
-          <span className="text-white/25 font-mono">{ticketId?.slice(0, 8)}...</span>
-        </div>
-      )}
+  const curStepIdx = stepIdx(step);
+  const totalDisplaySteps = STEP_LABELS.length;
+  const doneDisplaySteps = STEP_LABELS.filter((s) => curStepIdx > stepIdx(s.step)).length;
+  const progressPct = step === "done" ? 100 : Math.round((doneDisplaySteps / totalDisplaySteps) * 100);
 
-      <div className="mx-auto max-w-xl px-4 py-10">
+  return (
+    <div className="relative min-h-screen bg-[#040b06] text-white [background-image:radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(157,255,52,0.06),transparent)]">
+      <LoadingOverlay visible={loading} />
+
+      {/* Top security bar */}
+      <div className="border-b border-white/8 bg-black/60 px-4 py-2 backdrop-blur-sm">
+        <div className="mx-auto flex max-w-xl items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Shield className="h-3.5 w-3.5 text-[#9dff34]" />
+            <span className="text-[10px] font-black uppercase tracking-widest text-white/35">Sistema de Recuperación</span>
+            <Badge variant="neutral">v2.4.1</Badge>
+          </div>
+          {step !== "start" && step !== "done" && (
+            <div className={cn(
+              "flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-black",
+              sessionSecs < 120 ? "bg-red-950/80 text-red-300 animate-pulse"
+              : sessionSecs < 300 ? "bg-amber-950/70 text-amber-300"
+              : "bg-white/5 text-white/35"
+            )}>
+              <Clock className="h-3 w-3" />
+              {fmt(sessionSecs)}
+              {sessionSecs < 300 && <span className="hidden sm:inline"> — SESIÓN EXPIRA PRONTO</span>}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-xl px-4 pb-24 pt-8">
+
         {/* Header */}
-        <div className="mb-6 flex items-center gap-3">
-          <Link href="/mundial/banned" className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-white/12 bg-black/35 text-white/50 transition hover:text-white">
+        <div className="mb-7 flex items-start gap-3">
+          <Link
+            href="/mundial/banned"
+            className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-white/10 bg-black/40 text-white/40 transition hover:border-white/25 hover:text-white"
+          >
             <ArrowLeft className="h-4 w-4" />
           </Link>
-          <div>
-            <h1 className="text-lg font-black text-white">Recuperación de cuenta</h1>
-            <p className="text-xs text-white/40">Proceso de verificación de identidad completa</p>
+          <div className="min-w-0 flex-1">
+            <div className="mb-1 flex flex-wrap items-center gap-2">
+              <h1 className="text-xl font-black text-white">Recuperación de cuenta</h1>
+              {ticketId && <Badge variant="neutral">#{ticketId.slice(0, 8).toUpperCase()}</Badge>}
+            </div>
+            <p className="text-xs text-white/35">Proceso de verificación de identidad completa · Protegido con cifrado TLS 1.3</p>
           </div>
         </div>
 
-        {/* Step indicator */}
+        {/* Progress bar */}
         {step !== "start" && (
-          <div className="mb-6 flex items-center gap-1 overflow-x-auto pb-1">
-            {STEP_LABELS.map((s, i) => {
-              const cur = stepIdx(step), tIdx = stepIdx(s.step);
-              const done = cur > tIdx;
-              const active = cur >= tIdx && cur < tIdx + 2;
-              return (
-                <div key={s.step} className="flex shrink-0 items-center">
-                  <div className={cn(
-                    "flex h-6 min-w-[1.5rem] items-center justify-center rounded-full px-1.5 text-[10px] font-black",
-                    done ? "bg-[#9dff34] text-[#06110b]"
-                    : active ? "border border-[#d5ff3f]/60 bg-[#10240b] text-[#d5ff3f]"
-                    : "border border-white/15 bg-black/35 text-white/30"
-                  )}>
-                    {done ? <Check className="h-2.5 w-2.5" /> : i + 1}
+          <div className="mb-6">
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-[10px] font-black uppercase tracking-wider text-white/30">
+                Progreso de recuperación
+              </span>
+              <span className="text-[10px] font-black tabular-nums text-[#d5ff3f]">{progressPct}% completado</span>
+            </div>
+            <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-white/8">
+              <div
+                className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#9dff34] to-[#d5ff3f] transition-all duration-700 ease-out"
+                style={{ width: `${progressPct}%` }}
+              />
+            </div>
+            <div className="mt-3 flex items-start gap-0.5 overflow-x-auto pb-1">
+              {STEP_LABELS.map((s, i) => {
+                const sIdx = stepIdx(s.step);
+                const done = curStepIdx > sIdx;
+                const active = curStepIdx === sIdx || (curStepIdx === sIdx + 1 && ["email-verify", "phone-verify", "totp-verify"].includes(step));
+                const realActive = curStepIdx >= sIdx && curStepIdx < sIdx + 2;
+                return (
+                  <div key={s.step} className="flex shrink-0 flex-col items-center" style={{ flex: 1, minWidth: 0 }}>
+                    <div className={cn(
+                      "flex h-7 w-7 items-center justify-center rounded-full border text-[10px] font-black transition-all",
+                      done ? "border-[#9dff34]/50 bg-[#0d1f09] text-[#9dff34] shadow-[0_0_8px_rgba(157,255,52,0.3)]"
+                      : realActive ? "border-[#d5ff3f]/70 bg-[#111f08] text-[#d5ff3f] shadow-[0_0_12px_rgba(213,255,63,0.25)] scale-110"
+                      : "border-white/10 bg-black/35 text-white/25"
+                    )}>
+                      {done ? <Check className="h-3 w-3" /> : s.icon}
+                    </div>
+                    <span className={cn(
+                      "mt-1 hidden text-center text-[9px] font-black leading-tight sm:block",
+                      done ? "text-[#9dff34]/70" : realActive ? "text-[#d5ff3f]" : "text-white/20"
+                    )}>{s.label}</span>
+                    {i < STEP_LABELS.length - 1 && (
+                      <div className={cn("absolute hidden")} />
+                    )}
                   </div>
-                  <span className={cn("ml-1 hidden text-[10px] font-black sm:block", done ? "text-[#9dff34]" : active ? "text-[#d5ff3f]" : "text-white/25")}>
-                    {s.label}
-                  </span>
-                  {i < STEP_LABELS.length - 1 && (
-                    <div className={cn("mx-1.5 h-px w-3 shrink-0", done ? "bg-[#9dff34]/40" : "bg-white/10")} />
-                  )}
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         )}
 
-        {/* Warning */}
+        {/* Warning banner */}
         {step !== "start" && step !== "done" && (
-          <div className="mb-4 flex items-start gap-2 rounded-xl border border-amber-500/20 bg-amber-950/20 p-3">
-            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400/70" />
-            <p className="text-xs text-amber-200/65 leading-relaxed">
-              <strong className="text-amber-200/85">Importante:</strong> Si cierra esta página o la sesión expira, deberá reiniciar el proceso completamente desde el principio.
+          <div className="mb-5 flex items-start gap-2.5 rounded-xl border border-amber-500/15 bg-amber-950/15 px-4 py-3">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400/60" />
+            <p className="text-xs text-amber-200/55 leading-relaxed">
+              <strong className="text-amber-200/80">Sesión sin respaldo:</strong> Si cierra esta pestaña o la sesión expira, deberá reiniciar el proceso completamente desde el principio. No se guarda ningún progreso.
             </p>
           </div>
         )}
 
-        {/* Error display */}
+        {/* Error */}
         {error && (
-          <div className="mb-4 rounded-xl border border-red-500/30 bg-red-950/30 p-4">
-            <div className="flex items-start gap-2">
-              <Wifi className="mt-0.5 h-4 w-4 shrink-0 text-red-400" />
+          <div className="mb-5 rounded-xl border border-red-500/25 bg-red-950/25 p-4">
+            <div className="flex items-start gap-3">
+              <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-red-500/25 bg-red-950/40">
+                <WifiOff className="h-4 w-4 text-red-400" />
+              </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-black text-red-200">{error}</p>
+                <div className="mb-1 flex items-center gap-2">
+                  <p className="text-sm font-black text-red-200">{error}</p>
+                </div>
+                <p className="text-[10px] text-red-400/50 font-mono">{errorCode} · Referencia de error</p>
                 {fakeRetry && (
                   <button
                     type="button"
                     onClick={() => { setError(null); const fn = fakeRetry; setFakeRetry(null); fn(); }}
-                    className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-red-500/40 bg-red-900/40 px-3 py-1.5 text-xs font-black text-red-200 transition hover:bg-red-900/70"
+                    className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-red-500/35 bg-red-900/30 px-3 py-1.5 text-xs font-black text-red-200 transition hover:bg-red-900/55 active:scale-95"
                   >
                     <RefreshCw className="h-3 w-3" />
-                    Reintentar
+                    Reintentar solicitud
                   </button>
                 )}
               </div>
@@ -408,37 +564,29 @@ export default function RecoverClient() {
         )}
 
         {/* Steps */}
-        {step === "start" && (
-          <StartStep playerName={playerName} onName={setPlayerName} onSubmit={() => void handleStart()} loading={loading} onBroken={brokenLink} />
-        )}
-        {step === "captcha" && (
-          <CaptchaStep question={captchaQ} value={captchaIn} onChange={setCaptchaIn} onSubmit={() => void handleCaptcha()} loading={loading} done={captchasDone} total={3} />
-        )}
-        {step === "form" && (
-          <FormStep fFullName={fFullName} setFFullName={setFFullName} fEmail={fEmail} setFEmail={setFEmail} fPhone={fPhone} setFPhone={setFPhone} fMsg={fMsg} setFMsg={setFMsg} onSubmit={() => void handleForm()} loading={loading} onBroken={brokenLink} />
-        )}
-        {step === "signature" && (
-          <SigStep sigPreview={sigPreview} sigErr={sigErr} onFile={handleSigFile} onSubmit={() => void handleSignature()} loading={loading} onBroken={brokenLink} />
-        )}
-        {step === "email-send" && (
-          <EmailSendStep email={fEmail} onSend={() => void handleSendEmailCode()} loading={loading} />
-        )}
+        {step === "start" && <StartStep playerName={playerName} onName={setPlayerName} onSubmit={() => void handleStart()} loading={loading} onBroken={brokenLink} />}
+        {step === "captcha" && <CaptchaStep question={captchaQ} value={captchaIn} onChange={setCaptchaIn} onSubmit={() => void handleCaptcha()} loading={loading} done={captchasDone} total={3} expiry={captchaExpiry} />}
+        {step === "form" && <FormStep fFullName={fFullName} setFFullName={setFFullName} fEmail={fEmail} setFEmail={setFEmail} fPhone={fPhone} setFPhone={setFPhone} fMsg={fMsg} setFMsg={setFMsg} onSubmit={() => void handleForm()} loading={loading} onBroken={brokenLink} />}
+        {step === "signature" && <SigStep sigPreview={sigPreview} sigErr={sigErr} dragging={sigDragging} setDragging={setSigDragging} onFile={handleSigFile} onSubmit={() => void handleSignature()} loading={loading} onBroken={brokenLink} />}
+        {step === "email-send" && <EmailSendStep email={fEmail} onSend={() => void handleSendEmailCode()} loading={loading} />}
         {step === "email-verify" && (
           <CodeVerifyStep
-            title="Verificación de correo" icon={<Mail className="h-5 w-5" />}
-            desc={`Ingresa el código enviado a ${fEmail || "tu correo"}.`}
+            title="Verificación de correo electrónico"
+            icon={<Mail className="h-5 w-5" />}
+            accentColor="#d5ff3f"
+            destination={maskEmail(fEmail) || "tu correo"}
             value={emailCode} onChange={setEmailCode}
             onSubmit={() => void handleVerifyEmail()} onResend={() => void handleSendEmailCode()}
             loading={loading} codeSentAt={codeSentAt}
           />
         )}
-        {step === "phone-send" && (
-          <PhoneSendStep phone={fPhone} email={fEmail} onSend={() => void handleSendPhoneCode()} loading={loading} />
-        )}
+        {step === "phone-send" && <PhoneSendStep phone={fPhone} email={fEmail} onSend={() => void handleSendPhoneCode()} loading={loading} />}
         {step === "phone-verify" && (
           <CodeVerifyStep
-            title="Verificación de teléfono" icon={<Phone className="h-5 w-5" />}
-            desc={`Ingresa el código enviado a ${fEmail} para verificar el teléfono.`}
+            title="Verificación de número de teléfono"
+            icon={<Phone className="h-5 w-5" />}
+            accentColor="#34d5ff"
+            destination={maskEmail(fEmail) || "tu correo"}
             value={phoneCode} onChange={setPhoneCode}
             onSubmit={() => void handleVerifyPhone()} onResend={() => void handleSendPhoneCode()}
             loading={loading} codeSentAt={codeSentAt}
@@ -449,74 +597,79 @@ export default function RecoverClient() {
             secret={totpSecret} copied={copied}
             onCopy={() => { if (totpSecret) { void navigator.clipboard.writeText(totpSecret); setCopied(true); setTimeout(() => setCopied(false), 2000); } }}
             onContinue={() => setStep("totp-verify")}
+            onBroken={brokenLink}
           />
         )}
-        {step === "totp-verify" && (
-          <TotpVerifyStep value={totpIn} onChange={setTotpIn} onSubmit={() => void handleVerifyTotp()} loading={loading} />
-        )}
-        {step === "done" && (
-          <DoneStep ticketId={ticketId} onTrack={() => setShowTrack(true)} onBroken={brokenLink} />
-        )}
+        {step === "totp-verify" && <TotpVerifyStep value={totpIn} onChange={setTotpIn} onSubmit={() => void handleVerifyTotp()} loading={loading} />}
+        {step === "done" && <DoneStep ticketId={ticketId} onTrack={() => setShowTrack(true)} onBroken={brokenLink} />}
 
-        {/* Fake help footer */}
+        {/* Footer links */}
         {step !== "start" && step !== "done" && (
-          <div className="mt-8 flex flex-wrap justify-center gap-4 border-t border-white/8 pt-5">
-            <button onClick={brokenLink} className="flex items-center gap-1 text-xs text-white/25 hover:text-white/45"><HelpCircle className="h-3 w-3" />Centro de ayuda</button>
-            <button onClick={brokenLink} className="flex items-center gap-1 text-xs text-white/25 hover:text-white/45"><FileText className="h-3 w-3" />Términos</button>
-            <a href="mailto:soporte@laviejadventures.invalid" className="flex items-center gap-1 text-xs text-white/25 hover:text-white/45"><Mail className="h-3 w-3" />soporte@laviejadventures.com</a>
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-5 border-t border-white/6 pt-6">
+            <button onClick={brokenLink} className="flex items-center gap-1.5 text-[10px] font-bold text-white/20 hover:text-white/40 transition"><HelpCircle className="h-3 w-3" />Centro de ayuda</button>
+            <button onClick={brokenLink} className="flex items-center gap-1.5 text-[10px] font-bold text-white/20 hover:text-white/40 transition"><FileText className="h-3 w-3" />Política de privacidad</button>
+            <button onClick={brokenLink} className="flex items-center gap-1.5 text-[10px] font-bold text-white/20 hover:text-white/40 transition"><Lock className="h-3 w-3" />Seguridad</button>
+            <span className="text-[10px] text-white/12">© 2026 La Vieja Adventures</span>
           </div>
         )}
       </div>
 
       {/* Floating chat */}
-      <button
-        type="button"
-        onClick={() => setShowChat((v) => !v)}
-        className="fixed bottom-5 right-5 z-50 grid h-14 w-14 place-items-center rounded-full border border-white/20 bg-[#0b2015] shadow-[0_8px_32px_rgba(0,0,0,0.6)] transition hover:border-[#d5ff3f]/40"
-        title="Soporte en línea"
-      >
-        {showChat ? <X className="h-5 w-5 text-white/70" /> : <MessageCircle className="h-5 w-5 text-white/70" />}
-        <span className="absolute -right-0.5 -top-0.5 h-3 w-3 animate-pulse rounded-full bg-[#9dff34]" />
-      </button>
-
-      {showChat && (
-        <div className="fixed bottom-24 right-5 z-50 flex w-80 flex-col overflow-hidden rounded-2xl border border-white/15 bg-[#0b1a10] shadow-[0_24px_80px_rgba(0,0,0,0.7)]">
-          <div className="flex items-center justify-between border-b border-white/10 bg-[#0f2a18] px-4 py-3">
-            <div>
-              <p className="text-sm font-black text-white">Soporte en línea</p>
-              <p className="text-[10px] text-[#9dff34]">● Conectando...</p>
-            </div>
-            <button type="button" onClick={() => setShowChat(false)} className="grid h-7 w-7 place-items-center rounded-lg border border-white/12 text-white/40 hover:text-white"><X className="h-3.5 w-3.5" /></button>
-          </div>
-          <div className="h-56 space-y-2 overflow-y-auto p-3">
-            {chatMsgs.map((m, i) => (
-              <div key={i} className={cn(
-                "max-w-[85%] rounded-xl px-3 py-2 text-xs",
-                m.role === "system" ? "mx-auto text-center text-white/30"
-                : m.role === "user" ? "ml-auto bg-[#12351f] text-white"
-                : "bg-black/40 text-white/70"
-              )}>{m.text}</div>
-            ))}
-            {chatTyping && (
-              <div className="flex w-14 gap-1 rounded-xl bg-black/40 px-3 py-2">
-                {[0, 150, 300].map((d) => <span key={d} className="animate-bounce text-white/50" style={{ animationDelay: `${d}ms` }}>·</span>)}
+      <div className="fixed bottom-5 right-5 z-50 flex flex-col items-end gap-3">
+        {showChat && (
+          <div className="flex w-80 flex-col overflow-hidden rounded-2xl border border-white/12 bg-[#080f0a] shadow-[0_32px_100px_rgba(0,0,0,0.8)]">
+            <div className="flex items-center gap-3 border-b border-white/8 bg-[#0c1f10] px-4 py-3">
+              <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#9dff34]/30 bg-[#10240b]">
+                <Wifi className="h-3.5 w-3.5 text-[#9dff34]" />
+                <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 animate-pulse rounded-full border border-[#080f0a] bg-[#9dff34]" />
               </div>
-            )}
-            <div ref={chatEndRef} />
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-black text-white">Soporte Técnico</p>
+                <p className="text-[10px] text-[#9dff34]/70">● En línea — Tiempo de espera: 4h 32m</p>
+              </div>
+              <button type="button" onClick={() => setShowChat(false)} className="grid h-7 w-7 place-items-center rounded-lg border border-white/10 text-white/35 hover:text-white transition">
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+            <div className="h-60 space-y-2 overflow-y-auto p-3">
+              {chatMsgs.map((m, i) => (
+                <div key={i} className={cn(
+                  "max-w-[88%] rounded-2xl px-3 py-2 text-xs leading-relaxed",
+                  m.role === "system" ? "mx-auto rounded-md text-center text-white/25 text-[10px] bg-white/4 border border-white/8"
+                  : m.role === "user" ? "ml-auto rounded-br-sm bg-[#10240b] text-white"
+                  : "rounded-bl-sm bg-white/5 text-white/65"
+                )}>{m.text}</div>
+              ))}
+              {chatTyping && (
+                <div className="flex w-16 items-center gap-1 rounded-2xl rounded-bl-sm bg-white/5 px-3 py-2.5">
+                  {[0, 150, 300].map((d) => <span key={d} className="h-1.5 w-1.5 animate-bounce rounded-full bg-white/40" style={{ animationDelay: `${d}ms` }} />)}
+                </div>
+              )}
+              <div ref={chatEndRef} />
+            </div>
+            <div className="flex items-center gap-2 border-t border-white/8 p-2.5">
+              <input
+                type="text" value={chatIn}
+                onChange={(e) => setChatIn(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") void sendChatMsg(); }}
+                placeholder="Escribe un mensaje..."
+                className="h-9 flex-1 rounded-xl border border-white/10 bg-black/40 px-3 text-xs text-white outline-none placeholder:text-white/20 focus:border-white/25"
+              />
+              <button type="button" onClick={() => void sendChatMsg()} className="grid h-9 w-9 place-items-center rounded-xl bg-[#0d1f09] text-[#d5ff3f] hover:bg-[#142a10] transition active:scale-95">
+                <Send className="h-3.5 w-3.5" />
+              </button>
+            </div>
           </div>
-          <div className="flex gap-2 border-t border-white/10 p-2">
-            <input
-              type="text" value={chatIn} onChange={(e) => setChatIn(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") void sendChatMsg(); }}
-              placeholder="Escribe un mensaje..."
-              className="h-8 flex-1 rounded-lg border border-white/12 bg-black/35 px-3 text-xs text-white outline-none focus:border-[#d5ff3f]/40"
-            />
-            <button type="button" onClick={() => void sendChatMsg()} className="grid h-8 w-8 place-items-center rounded-lg bg-[#12351f] text-[#d5ff3f] hover:bg-[#1a4a2a]">
-              <Send className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        </div>
-      )}
+        )}
+        <button
+          type="button"
+          onClick={() => setShowChat((v) => !v)}
+          className="relative flex h-14 w-14 items-center justify-center rounded-full border border-white/15 bg-[#0b1f10] shadow-[0_8px_32px_rgba(0,0,0,0.5)] transition hover:border-[#d5ff3f]/35 hover:bg-[#101f13] active:scale-95"
+        >
+          {showChat ? <X className="h-5 w-5 text-white/60" /> : <MessageCircle className="h-5 w-5 text-white/60" />}
+          {!showChat && <span className="absolute -right-0.5 -top-0.5 h-3.5 w-3.5 animate-pulse rounded-full border-2 border-[#080f0a] bg-[#9dff34]" />}
+        </button>
+      </div>
     </div>
   );
 }
@@ -528,185 +681,340 @@ function StartStep({ playerName, onName, onSubmit, loading, onBroken }: {
 }) {
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl border border-white/12 bg-black/35 p-6 space-y-5">
-        <div className="flex justify-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-red-500/25 bg-red-950/30">
-            <ShieldOff className="h-8 w-8 text-red-400" />
+      {/* Hero */}
+      <div className="relative overflow-hidden rounded-2xl border border-red-500/15 bg-gradient-to-b from-red-950/25 to-black/40 p-7 text-center">
+        <div className="absolute inset-0 [background-image:radial-gradient(ellipse_60%_60%_at_50%_0%,rgba(239,68,68,0.12),transparent)]" />
+        <div className="relative">
+          <div className="relative mx-auto mb-5 flex h-20 w-20 items-center justify-center">
+            <div className="absolute inset-0 animate-pulse rounded-full bg-red-500/10" />
+            <div className="absolute inset-2 rounded-full border border-red-500/20 bg-red-950/50" />
+            <ShieldOff className="relative h-9 w-9 text-red-400" />
+          </div>
+          <h2 className="text-2xl font-black text-white">Cuenta suspendida</h2>
+          <p className="mt-2 text-sm text-white/45 leading-relaxed">
+            Para recuperar el acceso debes completar el proceso de verificación de identidad. Este proceso es <strong className="text-white/65">obligatorio</strong> y no tiene atajos.
+          </p>
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+            <Badge variant="red">Acceso bloqueado</Badge>
+            <Badge variant="amber">~20-25 min</Badge>
+            <Badge variant="neutral">7 pasos</Badge>
           </div>
         </div>
-        <div className="text-center">
-          <h2 className="text-xl font-black text-white">Iniciar recuperación</h2>
-          <p className="mt-2 text-sm text-white/45 leading-relaxed">
-            Este proceso <strong className="text-white/65">no puede ser resumido</strong> una vez iniciado. Si cierra la página, deberá empezar de cero.
-          </p>
+      </div>
+
+      {/* Requirements */}
+      <div className="rounded-2xl border border-white/10 bg-black/35 p-5 space-y-4">
+        <p className="text-xs font-black uppercase tracking-wider text-white/40">Necesitarás tener a mano</p>
+        <div className="space-y-2.5">
+          {[
+            { icon: <User className="h-4 w-4" />, text: "Tu nombre exacto en la quiniela" },
+            { icon: <FileText className="h-4 w-4" />, text: "Documento de identidad (para el formulario)" },
+            { icon: <Mail className="h-4 w-4" />, text: "Acceso a tu correo electrónico" },
+            { icon: <Phone className="h-4 w-4" />, text: "Tu número de teléfono celular" },
+            { icon: <Smartphone className="h-4 w-4" />, text: "Un teléfono con Google Authenticator" },
+          ].map(({ icon, text }) => (
+            <div key={text} className="flex items-center gap-3">
+              <div className="grid h-7 w-7 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/5 text-white/35">{icon}</div>
+              <span className="text-sm text-white/55">{text}</span>
+              <ChevronRight className="ml-auto h-3.5 w-3.5 shrink-0 text-white/15" />
+            </div>
+          ))}
         </div>
+      </div>
+
+      {/* Input + CTA */}
+      <div className="rounded-2xl border border-white/10 bg-black/35 p-5 space-y-4">
         <div>
-          <label className="mb-1 block text-xs font-black uppercase tracking-wide text-white/40">Nombre de jugador (exacto)</label>
-          <input
-            type="text" value={playerName} onChange={(e) => onName(e.target.value)}
-            placeholder="Tu nombre en la quiniela"
-            onKeyDown={(e) => { if (e.key === "Enter") onSubmit(); }}
-            className="mb-4 h-11 w-full rounded-xl border border-white/18 bg-black/35 px-4 text-sm font-bold text-white outline-none placeholder:text-white/25 focus:border-[#d5ff3f]/60 focus:ring-4 focus:ring-[#d5ff3f]/10"
-          />
-          <button type="button" onClick={onSubmit} disabled={loading} className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 py-3 text-sm font-black text-white transition hover:bg-white/8 disabled:opacity-50">
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ChevronRight className="h-4 w-4" />}
-            {loading ? "Verificando..." : "Iniciar proceso de recuperación"}
+          <label className="mb-1.5 block text-xs font-black uppercase tracking-wider text-white/40">Nombre de jugador (exacto, sensible a mayúsculas)</label>
+          <div className="relative">
+            <User className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/25" />
+            <input
+              type="text" value={playerName} onChange={(e) => onName(e.target.value)}
+              placeholder="Tu nombre en la quiniela"
+              onKeyDown={(e) => { if (e.key === "Enter") onSubmit(); }}
+              className="h-12 w-full rounded-xl border border-white/15 bg-black/40 pl-10 pr-4 text-sm font-bold text-white outline-none placeholder:text-white/20 focus:border-[#d5ff3f]/60 focus:ring-4 focus:ring-[#d5ff3f]/8 transition"
+            />
+          </div>
+        </div>
+        <button
+          type="button" onClick={onSubmit} disabled={loading || !playerName.trim()}
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#d5ff3f]/20 bg-[#0d1f09] py-3.5 text-sm font-black text-[#d5ff3f] transition hover:border-[#d5ff3f]/40 hover:bg-[#111f0d] disabled:opacity-40 active:scale-[0.99]"
+        >
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Shield className="h-4 w-4" />}
+          {loading ? "Verificando..." : "Iniciar proceso de recuperación"}
+        </button>
+      </div>
+
+      {/* Broken resources */}
+      <div className="rounded-xl border border-white/6 bg-black/20 p-4 space-y-2">
+        <p className="text-[10px] font-black uppercase tracking-wider text-white/20">Recursos de referencia</p>
+        {[
+          { icon: <FileText className="h-3.5 w-3.5" />, label: "Política de suspensión de cuentas" },
+          { icon: <Download className="h-3.5 w-3.5" />, label: "Formulario oficial de apelación (PDF)" },
+          { icon: <HelpCircle className="h-3.5 w-3.5" />, label: "Preguntas frecuentes — Recuperación de cuenta" },
+        ].map(({ icon, label }) => (
+          <button key={label} type="button" onClick={onBroken} className="flex w-full items-center gap-2 rounded-lg px-1 py-1 text-xs text-white/25 hover:text-white/45 transition">
+            <span className="text-white/20">{icon}</span>{label}
+            <span className="ml-auto flex items-center gap-1 text-[10px] text-red-400/50"><span className="h-1.5 w-1.5 rounded-full bg-red-400/50" />No disponible</span>
           </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function CaptchaStep({ question, value, onChange, onSubmit, loading, done, total, expiry }: {
+  question: string; value: string; onChange: (v: string) => void; onSubmit: () => void;
+  loading: boolean; done: number; total: number; expiry: number;
+}) {
+  const challengeId = useMemo(() => `CHK-${Math.floor(Math.random() * 900000 + 100000)}`, []);
+  return (
+    <div className="space-y-3">
+      {/* Widget header */}
+      <div className="flex items-center justify-between rounded-t-2xl border border-b-0 border-white/10 bg-black/40 px-5 py-3">
+        <div className="flex items-center gap-2">
+          <Shield className="h-4 w-4 text-[#d5ff3f]" />
+          <span className="text-xs font-black text-white/70">Verificación de seguridad</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Badge variant={expiry < 30 ? "red" : "amber"}>
+            <Clock className="h-2.5 w-2.5" />
+            {fmt(expiry)}
+          </Badge>
         </div>
       </div>
 
-      <div className="rounded-xl border border-white/8 bg-black/20 p-4 space-y-2.5">
-        <p className="text-[10px] font-black uppercase tracking-wider text-white/25">Recursos de ayuda</p>
-        {[
-          { icon: <FileText className="h-3.5 w-3.5 shrink-0" />, label: "Política de suspensión de cuentas" },
-          { icon: <Download className="h-3.5 w-3.5 shrink-0" />, label: "Formulario oficial de apelación (PDF)" },
-          { icon: <HelpCircle className="h-3.5 w-3.5 shrink-0" />, label: "Preguntas frecuentes — Recuperación de cuenta" },
-        ].map(({ icon, label }) => (
-          <button key={label} type="button" onClick={onBroken} className="flex w-full items-center gap-2 text-xs text-white/35 hover:text-white/55">
-            {icon}{label}
-            <span className="ml-auto text-[10px] text-red-400/60">● No disponible</span>
-          </button>
-        ))}
+      <div className="rounded-b-2xl border border-t-0 border-white/10 bg-black/35 p-5 space-y-5">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-wider text-[#d5ff3f]">Prueba anti-robot · {done + 1} de {total}</p>
+            <p className="mt-0.5 text-xs text-white/35">Un error reinicia el contador desde el principio</p>
+          </div>
+          <span className="text-[10px] font-mono text-white/20">{challengeId}</span>
+        </div>
+
+        {/* Progress dots */}
+        <div className="flex items-center gap-2">
+          {Array.from({ length: total }).map((_, i) => (
+            <div key={i} className="flex flex-1 flex-col items-center gap-1">
+              <div className={cn(
+                "h-7 w-7 rounded-full border flex items-center justify-center text-[10px] font-black transition-all",
+                i < done ? "border-[#9dff34]/50 bg-[#0d1f09] text-[#9dff34] shadow-[0_0_8px_rgba(157,255,52,0.3)]"
+                : i === done ? "border-[#d5ff3f]/70 bg-[#111f08] text-[#d5ff3f] shadow-[0_0_10px_rgba(213,255,63,0.2)] scale-110"
+                : "border-white/12 bg-black/30 text-white/20"
+              )}>
+                {i < done ? <Check className="h-3 w-3" /> : i + 1}
+              </div>
+              <span className={cn("text-[9px] font-black", i < done ? "text-[#9dff34]/60" : i === done ? "text-[#d5ff3f]/70" : "text-white/15")}>
+                {i < done ? "OK" : i === done ? "Activo" : "—"}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {/* Challenge */}
+        <div className="relative overflow-hidden rounded-xl border border-[#d5ff3f]/15 bg-gradient-to-br from-[#0d1f09] to-black/60 px-8 py-8 text-center">
+          <div className="absolute inset-0 [background-image:repeating-linear-gradient(45deg,rgba(213,255,63,0.015)_0px,rgba(213,255,63,0.015)_1px,transparent_1px,transparent_8px)]" />
+          <p className="relative text-4xl font-black tracking-wide text-[#d5ff3f] font-mono">{question || "Cargando..."}</p>
+          <p className="relative mt-1 text-[10px] text-white/25">Operación aritmética</p>
+        </div>
+
+        {/* Answer */}
+        <div>
+          <label className="mb-1.5 block text-xs font-black uppercase tracking-wider text-white/35">Resultado</label>
+          <input
+            type="number" value={value} onChange={(e) => onChange(e.target.value)}
+            placeholder="Ingresa el resultado..."
+            onKeyDown={(e) => { if (e.key === "Enter") onSubmit(); }}
+            className="h-12 w-full rounded-xl border border-white/15 bg-black/40 px-4 text-center text-xl font-black tabular-nums text-white outline-none focus:border-[#d5ff3f]/60 focus:ring-4 focus:ring-[#d5ff3f]/8 transition"
+          />
+        </div>
+
+        <button
+          type="button" onClick={onSubmit} disabled={loading || !value}
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#d5ff3f] py-3.5 text-sm font-black text-[#06110b] hover:bg-[#e8ff6a] disabled:opacity-45 transition active:scale-[0.99]"
+        >
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+          {loading ? "Verificando respuesta..." : "Confirmar"}
+        </button>
       </div>
     </div>
   );
 }
 
-function CaptchaStep({ question, value, onChange, onSubmit, loading, done, total }: {
-  question: string; value: string; onChange: (v: string) => void; onSubmit: () => void; loading: boolean; done: number; total: number;
-}) {
+const INPUT_CLS = "h-12 w-full rounded-xl border border-white/15 bg-black/40 px-4 text-sm font-bold text-white outline-none placeholder:text-white/20 focus:border-[#d5ff3f]/60 focus:ring-4 focus:ring-[#d5ff3f]/8 transition";
+
+function FieldRow({ label, icon, children }: { label: string; icon: ReactNode; children: ReactNode }) {
   return (
-    <div className="rounded-2xl border border-white/12 bg-black/35 p-6 space-y-5">
-      <div>
-        <p className="text-[10px] font-black uppercase tracking-wider text-[#d5ff3f]">Verificación CAPTCHA · {done + 1} de {total}</p>
-        <h2 className="mt-1 text-lg font-black text-white">Prueba anti-robot</h2>
-        <p className="mt-1 text-xs text-white/45">Debes resolver {total} operaciones consecutivas. Un error reinicia el contador.</p>
-      </div>
-      <div className="flex items-center justify-center rounded-xl border border-[#d5ff3f]/20 bg-[#10240b]/60 px-6 py-8">
-        <p className="text-3xl font-black tracking-wide text-[#d5ff3f]">{question || "Cargando..."}</p>
-      </div>
-      <div>
-        <label className="mb-1 block text-xs font-black uppercase tracking-wide text-white/40">Tu respuesta</label>
-        <input
-          type="number" value={value} onChange={(e) => onChange(e.target.value)}
-          placeholder="Resultado" onKeyDown={(e) => { if (e.key === "Enter") onSubmit(); }}
-          className="h-11 w-full rounded-xl border border-white/18 bg-black/35 px-4 text-center text-lg font-black tabular-nums text-white outline-none focus:border-[#d5ff3f]/60 focus:ring-4 focus:ring-[#d5ff3f]/10"
-        />
-      </div>
-      <div className="flex gap-2">
-        {Array.from({ length: total }).map((_, i) => (
-          <div key={i} className={cn("h-1.5 flex-1 rounded-full", i < done ? "bg-[#9dff34]" : i === done ? "bg-[#d5ff3f]/40" : "bg-white/10")} />
-        ))}
-      </div>
-      <button type="button" onClick={onSubmit} disabled={loading || !value} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#d5ff3f] py-3 text-sm font-black text-[#06110b] hover:bg-[#efff9a] disabled:opacity-50">
-        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-        {loading ? "Verificando..." : "Confirmar respuesta"}
-      </button>
+    <div>
+      <label className="mb-1.5 flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-white/35">
+        <span className="text-white/20">{icon}</span>{label}
+      </label>
+      {children}
     </div>
   );
 }
-
-function Fld({ label, children }: { label: string; children: ReactNode }) {
-  return <label className="block"><span className="mb-1 block text-xs font-black uppercase tracking-wide text-white/40">{label}</span>{children}</label>;
-}
-
-const INPUT = "h-11 w-full rounded-xl border border-white/18 bg-black/35 px-4 text-sm font-bold text-white outline-none placeholder:text-white/25 focus:border-[#d5ff3f]/60 focus:ring-4 focus:ring-[#d5ff3f]/10";
 
 function FormStep({ fFullName, setFFullName, fEmail, setFEmail, fPhone, setFPhone, fMsg, setFMsg, onSubmit, loading, onBroken }: {
   fFullName: string; setFFullName: (v: string) => void; fEmail: string; setFEmail: (v: string) => void;
   fPhone: string; setFPhone: (v: string) => void; fMsg: string; setFMsg: (v: string) => void;
   onSubmit: () => void; loading: boolean; onBroken: (e: MouseEvent) => void;
 }) {
+  const msgLen = fMsg.trim().length;
+  const msgOk = msgLen >= 20;
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl border border-white/12 bg-black/35 p-6 space-y-4">
-        <div>
-          <p className="text-[10px] font-black uppercase tracking-wider text-[#d5ff3f]">Paso 2 — Formulario de apelación</p>
-          <h2 className="mt-1 text-lg font-black text-white">Datos de identificación</h2>
-          <p className="mt-1 text-xs text-white/45">Todos los campos son obligatorios. Los datos deben coincidir con su documento de identidad.</p>
+      <div className="rounded-2xl border border-white/10 bg-black/35 p-5 space-y-5">
+        <div className="border-b border-white/8 pb-4">
+          <p className="text-[10px] font-black uppercase tracking-wider text-[#d5ff3f]">Paso 2 de 7 — Formulario de apelación</p>
+          <h2 className="mt-1 text-lg font-black text-white">Datos de identificación personal</h2>
+          <p className="mt-1 text-xs text-white/40 leading-relaxed">Todos los campos son requeridos y deben coincidir con su documento de identidad oficial.</p>
         </div>
-        <Fld label="Nombre completo (según cédula o pasaporte)">
-          <input type="text" value={fFullName} onChange={(e) => setFFullName(e.target.value)} placeholder="Nombre Apellido Apellido" className={INPUT} />
-        </Fld>
-        <Fld label="Correo electrónico de contacto">
-          <input type="email" value={fEmail} onChange={(e) => setFEmail(e.target.value)} placeholder="correo@ejemplo.com" className={INPUT} />
-        </Fld>
-        <Fld label="Número de teléfono (con código de país)">
-          <input type="tel" value={fPhone} onChange={(e) => setFPhone(e.target.value)} placeholder="+506 8888-8888" className={INPUT} />
-        </Fld>
-        <Fld label={`Motivo de la apelación (mín. 20 caracteres · ${fMsg.length} escritos)`}>
-          <textarea value={fMsg} onChange={(e) => setFMsg(e.target.value)} rows={4} placeholder="Explica detalladamente por qué tu cuenta fue suspendida por error..." className="w-full resize-none rounded-xl border border-white/18 bg-black/35 px-4 py-3 text-sm font-bold text-white outline-none placeholder:text-white/25 focus:border-[#d5ff3f]/60 focus:ring-4 focus:ring-[#d5ff3f]/10" />
-        </Fld>
-        <button type="button" onClick={onSubmit} disabled={loading} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#d5ff3f] py-3 text-sm font-black text-[#06110b] hover:bg-[#efff9a] disabled:opacity-50">
+
+        <div className="space-y-4">
+          <FieldRow label="Nombre completo (según cédula o pasaporte)" icon={<User className="h-3.5 w-3.5" />}>
+            <input type="text" value={fFullName} onChange={(e) => setFFullName(e.target.value)} placeholder="Nombre Apellido Apellido" className={INPUT_CLS} />
+          </FieldRow>
+          <FieldRow label="Correo electrónico de contacto" icon={<Mail className="h-3.5 w-3.5" />}>
+            <div className="relative">
+              <Mail className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/20" />
+              <input type="email" value={fEmail} onChange={(e) => setFEmail(e.target.value)} placeholder="correo@ejemplo.com" className={cn(INPUT_CLS, "pl-10")} />
+            </div>
+          </FieldRow>
+          <FieldRow label="Número de teléfono (con código de país)" icon={<Phone className="h-3.5 w-3.5" />}>
+            <div className="relative">
+              <Phone className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/20" />
+              <input type="tel" value={fPhone} onChange={(e) => setFPhone(e.target.value)} placeholder="+506 8888-8888" className={cn(INPUT_CLS, "pl-10")} />
+            </div>
+          </FieldRow>
+          <FieldRow label={`Motivo de la apelación`} icon={<FileText className="h-3.5 w-3.5" />}>
+            <div className="relative">
+              <textarea
+                value={fMsg} onChange={(e) => setFMsg(e.target.value)} rows={5}
+                placeholder="Explica detalladamente por qué consideras que tu cuenta fue suspendida por error..."
+                className="w-full resize-none rounded-xl border border-white/15 bg-black/40 px-4 py-3 text-sm font-bold text-white outline-none placeholder:text-white/20 focus:border-[#d5ff3f]/60 focus:ring-4 focus:ring-[#d5ff3f]/8 transition"
+              />
+              <div className={cn(
+                "absolute bottom-3 right-3 text-[10px] font-black tabular-nums transition",
+                msgOk ? "text-[#9dff34]" : msgLen > 0 ? "text-amber-400" : "text-white/20"
+              )}>
+                {msgLen}/20 mín.
+                {msgOk && <Check className="ml-1 inline h-3 w-3" />}
+              </div>
+            </div>
+          </FieldRow>
+        </div>
+
+        <button
+          type="button" onClick={onSubmit} disabled={loading}
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#d5ff3f] py-3.5 text-sm font-black text-[#06110b] hover:bg-[#e8ff6a] disabled:opacity-45 transition active:scale-[0.99]"
+        >
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ChevronRight className="h-4 w-4" />}
-          {loading ? "Guardando..." : "Continuar al siguiente paso"}
+          {loading ? "Guardando datos..." : "Guardar y continuar"}
         </button>
       </div>
-      <p className="text-center text-[10px] text-white/20">
+
+      <p className="text-center text-[10px] text-white/18 leading-relaxed">
         Al continuar acepta la{" "}
-        <button onClick={onBroken} className="underline hover:text-white/35">Política de Privacidad</button>
+        <button onClick={onBroken} className="underline hover:text-white/35 transition">Política de Privacidad</button>
         {" "}y los{" "}
-        <button onClick={onBroken} className="underline hover:text-white/35">Términos de Servicio</button>.
-        El proceso puede tomar entre 5 y 15 días hábiles.
+        <button onClick={onBroken} className="underline hover:text-white/35 transition">Términos de Servicio</button>.{" "}
+        El proceso de revisión puede tomar entre 5 y 15 días hábiles.
       </p>
     </div>
   );
 }
 
-function SigStep({ sigPreview, sigErr, onFile, onSubmit, loading, onBroken }: {
-  sigPreview: string | null; sigErr: string; onFile: (f: File) => void; onSubmit: () => void; loading: boolean; onBroken: (e: MouseEvent) => void;
+function SigStep({ sigPreview, sigErr, dragging, setDragging, onFile, onSubmit, loading, onBroken }: {
+  sigPreview: string | null; sigErr: string; dragging: boolean; setDragging: (v: boolean) => void;
+  onFile: (f: File) => void; onSubmit: () => void; loading: boolean; onBroken: (e: MouseEvent) => void;
 }) {
   const ref = useRef<HTMLInputElement>(null);
+
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault(); setDragging(false);
+    const f = e.dataTransfer.files[0]; if (f) onFile(f);
+  }
+
   return (
-    <div className="rounded-2xl border border-white/12 bg-black/35 p-6 space-y-5">
-      <div>
-        <p className="text-[10px] font-black uppercase tracking-wider text-[#d5ff3f]">Paso 3 — Firma física</p>
+    <div className="rounded-2xl border border-white/10 bg-black/35 p-5 space-y-5">
+      <div className="border-b border-white/8 pb-4">
+        <p className="text-[10px] font-black uppercase tracking-wider text-[#d5ff3f]">Paso 3 de 7 — Firma física</p>
         <h2 className="mt-1 text-lg font-black text-white">Formulario impreso y firmado</h2>
+        <p className="mt-1 text-xs text-white/40">Este paso requiere imprimir un formulario, firmarlo a mano y fotografiarlo.</p>
       </div>
-      <ol className="space-y-3 text-sm text-white/55">
-        <li className="flex items-start gap-2">
-          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/10 text-[10px] font-black">1</span>
-          <span>
-            Descargue el{" "}
-            <button onClick={onBroken} className="font-black text-[#d5ff3f] underline hover:text-[#efff9a]">formulario oficial (PDF)</button>
-            <span className="ml-1.5 text-[10px] text-red-400/70">[Servicio en mantenimiento]</span>
-          </span>
-        </li>
-        <li className="flex items-start gap-2">
-          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/10 text-[10px] font-black">2</span>
-          Imprima el formulario y llénelo a mano con tinta azul o negra.
-        </li>
-        <li className="flex items-start gap-2">
-          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/10 text-[10px] font-black">3</span>
-          Firme en el espacio indicado. La firma debe coincidir con su documento de identidad.
-        </li>
-        <li className="flex items-start gap-2">
-          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/10 text-[10px] font-black">4</span>
-          Tome una fotografía clara y súbala a continuación.
-        </li>
-      </ol>
-      <div
-        className={cn("cursor-pointer rounded-xl border-2 border-dashed p-6 text-center transition hover:bg-white/5", sigPreview ? "border-[#9dff34]/40 bg-[#10240b]/40" : "border-white/15 bg-black/25")}
-        onClick={() => ref.current?.click()}
-      >
+
+      {/* Instruction steps */}
+      <div className="space-y-2.5">
+        {[
+          {
+            n: 1,
+            content: (
+              <>Descargue el{" "}
+                <button onClick={onBroken} className="font-black text-[#d5ff3f] underline decoration-dotted underline-offset-2">formulario oficial (PDF)</button>
+                <span className="ml-2 inline-flex items-center gap-1 text-[10px] text-red-400/60"><span className="h-1.5 w-1.5 rounded-full bg-red-400/50" />En mantenimiento</span>
+              </>
+            ),
+          },
+          { n: 2, content: "Imprima el formulario y llénelo a mano con tinta azul o negra. No se aceptan copias digitales." },
+          { n: 3, content: "Firme en el espacio indicado. La firma debe coincidir exactamente con su documento de identidad." },
+          { n: 4, content: "Tome una fotografía clara del documento completo bajo buena iluminación y súbala abajo." },
+        ].map(({ n, content }) => (
+          <div key={n} className="flex items-start gap-3 rounded-xl border border-white/6 bg-black/20 px-4 py-3">
+            <span className={cn(
+              "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-black",
+              "border border-white/15 bg-white/6 text-white/45"
+            )}>{n}</span>
+            <span className="text-xs text-white/50 leading-relaxed">{content}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Upload zone */}
+      <div>
         <input ref={ref} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) onFile(f); }} />
-        {sigPreview ? (
-          <div>
-            <img src={sigPreview} alt="Firma" className="mx-auto mb-2 max-h-36 rounded-lg object-contain" />
-            <p className="text-xs font-black text-[#9dff34]">Imagen cargada. Haz clic para cambiar.</p>
-          </div>
-        ) : (
-          <div>
-            <Upload className="mx-auto mb-2 h-8 w-8 text-white/25" />
-            <p className="text-sm font-black text-white/50">Haz clic o arrastra tu imagen aquí</p>
-            <p className="mt-1 text-[10px] text-white/25">JPG / PNG · máx. 6MB</p>
-          </div>
-        )}
+        <div
+          onClick={() => ref.current?.click()}
+          onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={handleDrop}
+          className={cn(
+            "cursor-pointer rounded-xl border-2 border-dashed p-5 text-center transition-all",
+            dragging ? "border-[#d5ff3f]/60 bg-[#0d1f09]/60 scale-[1.01]"
+            : sigPreview ? "border-[#9dff34]/35 bg-[#0a1a08]/60"
+            : "border-white/12 bg-black/20 hover:border-white/25 hover:bg-white/3"
+          )}
+        >
+          {sigPreview ? (
+            <div>
+              <div className="relative mb-3 mx-auto w-fit">
+                <img src={sigPreview} alt="Firma" className="max-h-44 rounded-lg object-contain ring-2 ring-[#9dff34]/25" />
+                <div className="absolute -right-2 -top-2 flex h-7 w-7 items-center justify-center rounded-full border border-[#9dff34]/40 bg-[#0d1f09]">
+                  <Check className="h-3.5 w-3.5 text-[#9dff34]" />
+                </div>
+              </div>
+              <p className="text-xs font-black text-[#9dff34]">Imagen cargada correctamente</p>
+              <p className="mt-0.5 text-[10px] text-white/30">Haz clic para cambiar</p>
+            </div>
+          ) : (
+            <div className="py-4">
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-white/5">
+                <Upload className="h-5 w-5 text-white/30" />
+              </div>
+              <p className="text-sm font-black text-white/50">{dragging ? "Suelta aquí" : "Haz clic o arrastra tu imagen"}</p>
+              <p className="mt-1 text-[10px] text-white/25">JPG / PNG · máx. 6MB · Fondo claro recomendado</p>
+            </div>
+          )}
+        </div>
+        {sigErr && <p className="mt-2 text-xs font-bold text-red-300">{sigErr}</p>}
       </div>
-      {sigErr && <p className="text-xs font-bold text-red-300">{sigErr}</p>}
-      <button type="button" onClick={onSubmit} disabled={loading || !sigPreview} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#d5ff3f] py-3 text-sm font-black text-[#06110b] hover:bg-[#efff9a] disabled:opacity-50">
+
+      <button
+        type="button" onClick={onSubmit} disabled={loading || !sigPreview}
+        className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#d5ff3f] py-3.5 text-sm font-black text-[#06110b] hover:bg-[#e8ff6a] disabled:opacity-45 transition active:scale-[0.99]"
+      >
         {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-        {loading ? "Subiendo..." : "Subir formulario firmado"}
+        {loading ? "Subiendo documento..." : "Subir formulario firmado"}
       </button>
     </div>
   );
@@ -714,19 +1022,40 @@ function SigStep({ sigPreview, sigErr, onFile, onSubmit, loading, onBroken }: {
 
 function EmailSendStep({ email, onSend, loading }: { email: string; onSend: () => void; loading: boolean }) {
   return (
-    <div className="rounded-2xl border border-white/12 bg-black/35 p-6 space-y-5">
-      <div>
-        <p className="text-[10px] font-black uppercase tracking-wider text-[#d5ff3f]">Paso 4 — Verificación de correo</p>
+    <div className="rounded-2xl border border-white/10 bg-black/35 p-5 space-y-5">
+      <div className="border-b border-white/8 pb-4">
+        <p className="text-[10px] font-black uppercase tracking-wider text-[#d5ff3f]">Paso 4 de 7 — Verificación de correo</p>
         <h2 className="mt-1 text-lg font-black text-white">Confirmar correo electrónico</h2>
       </div>
-      <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-black/25 px-4 py-3">
-        <Mail className="h-5 w-5 shrink-0 text-white/40" />
-        <div><p className="text-xs text-white/40">Código se enviará a:</p><p className="text-sm font-black text-white">{email || "—"}</p></div>
+      <div className="relative flex items-center gap-4 overflow-hidden rounded-xl border border-white/10 bg-black/30 px-5 py-5">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5">
+          <Mail className="h-5 w-5 text-white/40" />
+        </div>
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-wide text-white/35">Código se enviará a</p>
+          <p className="mt-0.5 text-base font-black text-white">{email || "—"}</p>
+        </div>
+        <div className="absolute right-4 top-4">
+          <Badge variant="green">Verificado</Badge>
+        </div>
       </div>
-      <p className="text-xs text-white/45 leading-relaxed">Se enviará un código de 6 dígitos. Expira en 15 minutos. Revisa también tu carpeta de spam.</p>
-      <button type="button" onClick={onSend} disabled={loading} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#d5ff3f] py-3 text-sm font-black text-[#06110b] hover:bg-[#efff9a] disabled:opacity-50">
+      <div className="rounded-xl border border-white/8 bg-black/20 p-4 space-y-1.5">
+        {[
+          "El código tiene 6 dígitos y expira en 15 minutos.",
+          "Revisa también la carpeta de spam o correo no deseado.",
+          "No compartas el código con nadie.",
+        ].map((t, i) => (
+          <div key={i} className="flex items-start gap-2 text-xs text-white/35">
+            <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-white/20" />{t}
+          </div>
+        ))}
+      </div>
+      <button
+        type="button" onClick={onSend} disabled={loading}
+        className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#d5ff3f] py-3.5 text-sm font-black text-[#06110b] hover:bg-[#e8ff6a] disabled:opacity-45 transition active:scale-[0.99]"
+      >
         {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-        {loading ? "Enviando..." : "Enviar código de verificación"}
+        {loading ? "Enviando código..." : "Enviar código de verificación"}
       </button>
     </div>
   );
@@ -734,61 +1063,105 @@ function EmailSendStep({ email, onSend, loading }: { email: string; onSend: () =
 
 function PhoneSendStep({ phone, email, onSend, loading }: { phone: string; email: string; onSend: () => void; loading: boolean }) {
   return (
-    <div className="rounded-2xl border border-white/12 bg-black/35 p-6 space-y-5">
-      <div>
-        <p className="text-[10px] font-black uppercase tracking-wider text-[#d5ff3f]">Paso 5 — Verificación de teléfono</p>
+    <div className="rounded-2xl border border-white/10 bg-black/35 p-5 space-y-5">
+      <div className="border-b border-white/8 pb-4">
+        <p className="text-[10px] font-black uppercase tracking-wider text-[#d5ff3f]">Paso 5 de 7 — Verificación de teléfono</p>
         <h2 className="mt-1 text-lg font-black text-white">Confirmar número de teléfono</h2>
       </div>
-      <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-black/25 px-4 py-3">
-        <Phone className="h-5 w-5 shrink-0 text-white/40" />
-        <div><p className="text-xs text-white/40">Teléfono a verificar:</p><p className="text-sm font-black text-white">{phone || "—"}</p></div>
+      <div className="flex items-center gap-4 rounded-xl border border-white/10 bg-black/30 px-5 py-4">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5">
+          <Phone className="h-5 w-5 text-white/40" />
+        </div>
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-wide text-white/35">Teléfono a verificar</p>
+          <p className="mt-0.5 text-base font-black text-white">{phone || "—"}</p>
+        </div>
       </div>
-      <div className="flex items-start gap-2 rounded-xl border border-amber-500/20 bg-amber-950/20 p-3">
+      <div className="flex items-start gap-3 rounded-xl border border-amber-500/15 bg-amber-950/15 px-4 py-3.5">
         <Mail className="h-4 w-4 shrink-0 mt-0.5 text-amber-400/60" />
-        <p className="text-xs text-amber-200/65">El código de verificación de teléfono se enviará a <strong>{email}</strong> por razones de seguridad.</p>
+        <p className="text-xs text-amber-200/60 leading-relaxed">Por razones de seguridad, el código de verificación de teléfono se enviará a <strong className="text-amber-200/80">{email || "tu correo"}</strong> y no por SMS.</p>
       </div>
-      <button type="button" onClick={onSend} disabled={loading} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#d5ff3f] py-3 text-sm font-black text-[#06110b] hover:bg-[#efff9a] disabled:opacity-50">
+      <button
+        type="button" onClick={onSend} disabled={loading}
+        className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#d5ff3f] py-3.5 text-sm font-black text-[#06110b] hover:bg-[#e8ff6a] disabled:opacity-45 transition active:scale-[0.99]"
+      >
         {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-        {loading ? "Enviando..." : "Enviar código al correo"}
+        {loading ? "Enviando código..." : "Enviar código al correo"}
       </button>
     </div>
   );
 }
 
-function CodeVerifyStep({ title, desc, icon, value, onChange, onSubmit, onResend, loading, codeSentAt }: {
-  title: string; desc: string; icon: ReactNode; value: string; onChange: (v: string) => void;
-  onSubmit: () => void; onResend: () => void; loading: boolean; codeSentAt: number | null;
+function CodeVerifyStep({ title, destination, icon, accentColor, value, onChange, onSubmit, onResend, loading, codeSentAt }: {
+  title: string; destination: string; icon: ReactNode; accentColor: string; value: string;
+  onChange: (v: string) => void; onSubmit: () => void; onResend: () => void;
+  loading: boolean; codeSentAt: number | null;
 }) {
   const [cooldown, setCooldown] = useState(60);
+  const [codeAge, setCodeAge] = useState(0);
+
   useEffect(() => {
     const id = setInterval(() => {
-      setCooldown(codeSentAt ? Math.max(0, 60 - Math.floor((Date.now() - codeSentAt) / 1000)) : 60);
+      if (!codeSentAt) return;
+      const elapsed = Math.floor((Date.now() - codeSentAt) / 1000);
+      setCooldown(Math.max(0, 60 - elapsed));
+      setCodeAge(elapsed);
     }, 1000);
     return () => clearInterval(id);
   }, [codeSentAt]);
 
+  const codeExpiresSecs = 900 - codeAge;
+  const filled = value.replace(/\s/g, "").length;
+
   return (
-    <div className="rounded-2xl border border-white/12 bg-black/35 p-6 space-y-5">
-      <div className="flex items-center gap-3">
-        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-white/12 bg-black/35 text-white/50">{icon}</div>
-        <div><h2 className="text-lg font-black text-white">{title}</h2><p className="text-xs text-white/45">{desc}</p></div>
+    <div className="rounded-2xl border border-white/10 bg-black/35 p-5 space-y-6">
+      <div className="border-b border-white/8 pb-4">
+        <div className="flex items-center gap-3">
+          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-white/10 bg-black/40 text-white/45">{icon}</div>
+          <div>
+            <h2 className="text-base font-black text-white">{title}</h2>
+            <p className="text-xs text-white/35">Código enviado a <strong className="text-white/55">{destination}</strong></p>
+          </div>
+        </div>
       </div>
-      <div>
-        <label className="mb-1 block text-xs font-black uppercase tracking-wide text-white/40">Código de 6 dígitos</label>
-        <input
-          type="text" inputMode="numeric" maxLength={6} value={value}
-          onChange={(e) => onChange(e.target.value.replace(/\D/g, "").slice(0, 6))}
-          placeholder="000000"
-          onKeyDown={(e) => { if (e.key === "Enter") onSubmit(); }}
-          className="h-14 w-full rounded-xl border border-white/18 bg-black/35 px-4 text-center text-2xl font-black tracking-[0.5em] tabular-nums text-white outline-none focus:border-[#d5ff3f]/60 focus:ring-4 focus:ring-[#d5ff3f]/10"
-        />
+
+      {/* OTP input */}
+      <div className="space-y-3">
+        <p className="text-center text-xs font-black uppercase tracking-wider text-white/30">Ingresa el código de 6 dígitos</p>
+        <OtpInput value={value} onChange={onChange} onComplete={onSubmit} />
+        {/* Fill indicator */}
+        <div className="flex justify-center gap-1">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className={cn("h-0.5 w-8 rounded-full transition-all", i < filled ? "bg-[#d5ff3f]/80" : "bg-white/10")} />
+          ))}
+        </div>
       </div>
-      <button type="button" onClick={onSubmit} disabled={loading || value.length !== 6} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#d5ff3f] py-3 text-sm font-black text-[#06110b] hover:bg-[#efff9a] disabled:opacity-50">
+
+      {/* Expiry */}
+      {codeSentAt && (
+        <div className={cn(
+          "flex items-center justify-center gap-1.5 text-xs font-bold",
+          codeExpiresSecs < 120 ? "text-red-400" : "text-white/30"
+        )}>
+          <Clock className="h-3 w-3" />
+          {codeExpiresSecs > 0 ? `Código expira en ${fmt(codeExpiresSecs)}` : "Código expirado — reenvía uno nuevo"}
+        </div>
+      )}
+
+      <button
+        type="button" onClick={onSubmit} disabled={loading || filled !== 6}
+        className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#d5ff3f] py-3.5 text-sm font-black text-[#06110b] hover:bg-[#e8ff6a] disabled:opacity-45 transition active:scale-[0.99]"
+      >
         {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
         {loading ? "Verificando..." : "Verificar código"}
       </button>
+
       <div className="text-center">
-        <button type="button" onClick={onResend} disabled={cooldown > 0 || loading} className="text-xs font-bold text-white/40 hover:text-white/65 disabled:opacity-40 disabled:cursor-not-allowed">
+        <span className="text-[10px] text-white/25">¿No recibiste el código? </span>
+        <button
+          type="button" onClick={onResend} disabled={cooldown > 0 || loading}
+          className="text-[10px] font-black text-white/40 underline underline-offset-2 hover:text-white/65 disabled:opacity-30 disabled:no-underline disabled:cursor-not-allowed transition"
+        >
           {cooldown > 0 ? `Reenviar en ${cooldown}s` : "Reenviar código"}
         </button>
       </div>
@@ -796,206 +1169,401 @@ function CodeVerifyStep({ title, desc, icon, value, onChange, onSubmit, onResend
   );
 }
 
-function TotpSetupStep({ secret, copied, onCopy, onContinue }: { secret: string | null; copied: boolean; onCopy: () => void; onContinue: () => void }) {
+function FakeQR() {
+  const pattern = useMemo(() => {
+    return Array.from({ length: 121 }, (_, i) => {
+      const x = Math.sin(i * 127.1 + 31) * 43758.5;
+      return (x - Math.floor(x)) > 0.42;
+    });
+  }, []);
+  return (
+    <div className="relative mx-auto h-36 w-36 rounded-xl border-2 border-[#d5ff3f]/25 bg-[#0a1a08] p-2">
+      {/* Corner markers */}
+      {[
+        "top-2 left-2", "top-2 right-2", "bottom-2 left-2",
+      ].map((pos) => (
+        <div key={pos} className={cn("absolute h-7 w-7 rounded border-2 border-[#d5ff3f]/60", pos)} />
+      ))}
+      {/* QR cells */}
+      <div className="grid h-full w-full grid-cols-11 gap-[1.5px] p-4">
+        {pattern.map((on, i) => (
+          <div key={i} className={cn("rounded-[1px]", on ? "bg-[#d5ff3f]/70" : "bg-transparent")} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TotpSetupStep({ secret, copied, onCopy, onContinue, onBroken }: {
+  secret: string | null; copied: boolean; onCopy: () => void; onContinue: () => void; onBroken: (e: MouseEvent) => void;
+}) {
   const formatted = secret?.match(/.{1,4}/g)?.join(" ") ?? "";
   return (
-    <div className="rounded-2xl border border-white/12 bg-black/35 p-6 space-y-5">
-      <div>
-        <p className="text-[10px] font-black uppercase tracking-wider text-[#d5ff3f]">Paso 6 — Autenticador</p>
+    <div className="rounded-2xl border border-white/10 bg-black/35 p-5 space-y-5">
+      <div className="border-b border-white/8 pb-4">
+        <p className="text-[10px] font-black uppercase tracking-wider text-[#d5ff3f]">Paso 6 de 7 — Autenticador 2FA</p>
         <h2 className="mt-1 text-lg font-black text-white">Configurar Google Authenticator</h2>
+        <p className="mt-1 text-xs text-white/40">Agrega una capa adicional de seguridad a tu cuenta.</p>
       </div>
-      <ol className="space-y-3 text-sm text-white/55">
-        {[
-          <>Descarga <strong className="text-white/80">Google Authenticator</strong> en tu teléfono (iOS o Android).</>,
-          <>Abre la app, toca <strong className="text-white/80">"+"</strong> y elige <em className="text-white/80">"Ingresar clave de configuración"</em>.</>,
-          <>Copia y pega la clave secreta de abajo en la app.</>,
-          <>La app generará códigos de 6 dígitos cada 30 segundos.</>,
-        ].map((text, i) => (
-          <li key={i} className="flex items-start gap-2">
-            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/10 text-[10px] font-black">{i + 1}</span>
-            <span>{text}</span>
-          </li>
-        ))}
-      </ol>
+
+      {/* QR + Steps side by side on wide, stacked on mobile */}
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
+        <div className="flex flex-col items-center gap-2 sm:shrink-0">
+          <FakeQR />
+          <p className="text-[10px] text-white/25">Escanea con la app</p>
+          <div className="flex gap-2">
+            <button onClick={onBroken} className="flex items-center gap-1 rounded-md border border-white/10 bg-white/5 px-2 py-1 text-[9px] font-black text-white/30 hover:text-white/50 transition">
+              <Smartphone className="h-2.5 w-2.5" /> App Store
+              <span className="ml-1 text-red-400/50">↑</span>
+            </button>
+            <button onClick={onBroken} className="flex items-center gap-1 rounded-md border border-white/10 bg-white/5 px-2 py-1 text-[9px] font-black text-white/30 hover:text-white/50 transition">
+              <Smartphone className="h-2.5 w-2.5" /> Play Store
+              <span className="ml-1 text-red-400/50">↑</span>
+            </button>
+          </div>
+        </div>
+
+        <ol className="flex-1 space-y-3 text-xs text-white/50">
+          {[
+            <><strong className="text-white/75">Descarga</strong> Google Authenticator en iOS o Android.</>,
+            <>Toca <strong className="text-white/75">"+"</strong> → <em className="text-white/70">"Ingresar clave de configuración"</em>.</>,
+            <>Escanea el código QR <strong className="text-white/75">o copia la clave</strong> de abajo.</>,
+            <>La app generará códigos nuevos <strong className="text-white/75">cada 30 segundos</strong>.</>,
+          ].map((text, i) => (
+            <li key={i} className="flex items-start gap-2.5">
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-white/12 bg-white/6 text-[10px] font-black">{i + 1}</span>
+              <span className="leading-relaxed">{text}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      {/* Secret key */}
       <div>
-        <p className="mb-1 text-[10px] font-black uppercase tracking-wide text-white/40">Clave secreta</p>
-        <div className="flex items-center gap-2 rounded-xl border border-[#d5ff3f]/25 bg-[#10240b]/60 px-4 py-3">
-          <code className="min-w-0 flex-1 break-all font-mono text-sm font-black tracking-widest text-[#d5ff3f]">{formatted || "Cargando..."}</code>
-          <button type="button" onClick={onCopy} className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-[#d5ff3f]/30 bg-black/35 text-[#d5ff3f] hover:bg-[#12351f]">
+        <p className="mb-2 text-[10px] font-black uppercase tracking-wider text-white/35">Clave secreta (alternativa al QR)</p>
+        <div className="group flex items-center gap-2 rounded-xl border border-[#d5ff3f]/20 bg-[#0a1a08] px-4 py-3">
+          <code className="min-w-0 flex-1 break-all font-mono text-sm font-black tracking-[0.2em] text-[#d5ff3f]">
+            {formatted || "Cargando..."}
+          </code>
+          <button
+            type="button" onClick={onCopy}
+            className={cn(
+              "grid h-9 w-9 shrink-0 place-items-center rounded-lg border transition",
+              copied ? "border-[#9dff34]/50 bg-[#0d1f09] text-[#9dff34]" : "border-[#d5ff3f]/25 bg-black/35 text-[#d5ff3f] hover:border-[#d5ff3f]/50"
+            )}
+          >
             {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
           </button>
         </div>
-        <p className="mt-1.5 text-[10px] text-white/30">Guarda esta clave en un lugar seguro. No podrás recuperarla.</p>
+        <p className="mt-2 text-[10px] text-white/25 leading-relaxed">Guarda esta clave en un lugar seguro. Si pierdes el autenticador, no podrás recuperar el acceso.</p>
       </div>
-      <button type="button" onClick={onContinue} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#d5ff3f] py-3 text-sm font-black text-[#06110b] hover:bg-[#efff9a]">
-        <ChevronRight className="h-4 w-4" />
-        Ya configuré el autenticador
+
+      <button
+        type="button" onClick={onContinue}
+        className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#d5ff3f] py-3.5 text-sm font-black text-[#06110b] hover:bg-[#e8ff6a] transition active:scale-[0.99]"
+      >
+        <Check className="h-4 w-4" />
+        Ya configuré el autenticador — continuar
       </button>
     </div>
   );
 }
 
 function TotpVerifyStep({ value, onChange, onSubmit, loading }: { value: string; onChange: (v: string) => void; onSubmit: () => void; loading: boolean }) {
+  const [totpSecs, setTotpSecs] = useState(30 - (Math.floor(Date.now() / 1000) % 30));
+  useEffect(() => {
+    const id = setInterval(() => setTotpSecs(30 - (Math.floor(Date.now() / 1000) % 30)), 1000);
+    return () => clearInterval(id);
+  }, []);
+  const pct = (totpSecs / 30) * 100;
+  const filled = value.replace(/\s/g, "").length;
+
   return (
-    <div className="rounded-2xl border border-white/12 bg-black/35 p-6 space-y-5">
-      <div>
-        <p className="text-[10px] font-black uppercase tracking-wider text-[#d5ff3f]">Paso 6 — Verificación TOTP</p>
-        <h2 className="mt-1 text-lg font-black text-white">Código del autenticador</h2>
-        <p className="mt-1 text-xs text-white/45">Abre Google Authenticator e ingresa el código de 6 dígitos. Cambia cada 30 segundos.</p>
+    <div className="rounded-2xl border border-white/10 bg-black/35 p-5 space-y-6">
+      <div className="border-b border-white/8 pb-4">
+        <p className="text-[10px] font-black uppercase tracking-wider text-[#d5ff3f]">Paso 7 de 7 — Código TOTP</p>
+        <h2 className="mt-1 text-lg font-black text-white">Verificación del autenticador</h2>
       </div>
-      <div>
-        <label className="mb-1 block text-xs font-black uppercase tracking-wide text-white/40">Código TOTP</label>
-        <input
-          type="text" inputMode="numeric" maxLength={6} value={value}
-          onChange={(e) => onChange(e.target.value.replace(/\D/g, "").slice(0, 6))}
-          placeholder="000000" onKeyDown={(e) => { if (e.key === "Enter") onSubmit(); }}
-          className="h-14 w-full rounded-xl border border-white/18 bg-black/35 px-4 text-center text-2xl font-black tracking-[0.5em] tabular-nums text-white outline-none focus:border-[#d5ff3f]/60 focus:ring-4 focus:ring-[#d5ff3f]/10"
-        />
+
+      {/* TOTP timer ring */}
+      <div className="flex flex-col items-center gap-3">
+        <div className="relative flex h-20 w-20 items-center justify-center">
+          <svg className="absolute inset-0 h-full w-full -rotate-90" viewBox="0 0 64 64">
+            <circle cx="32" cy="32" r="28" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="4" />
+            <circle
+              cx="32" cy="32" r="28" fill="none"
+              stroke={totpSecs < 8 ? "#f87171" : "#d5ff3f"}
+              strokeWidth="4" strokeLinecap="round"
+              strokeDasharray={`${2 * Math.PI * 28}`}
+              strokeDashoffset={`${2 * Math.PI * 28 * (1 - pct / 100)}`}
+              style={{ transition: "stroke-dashoffset 1s linear, stroke 0.3s" }}
+            />
+          </svg>
+          <div className="text-center">
+            <p className={cn("text-2xl font-black tabular-nums leading-none", totpSecs < 8 ? "text-red-400" : "text-[#d5ff3f]")}>{totpSecs}</p>
+            <p className="text-[9px] text-white/30">segs.</p>
+          </div>
+        </div>
+        <p className="text-xs text-white/40">Abre Google Authenticator — el código cambia cada 30 segundos</p>
       </div>
-      <button type="button" onClick={onSubmit} disabled={loading || value.length !== 6} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#d5ff3f] py-3 text-sm font-black text-[#06110b] hover:bg-[#efff9a] disabled:opacity-50">
-        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-        {loading ? "Verificando TOTP..." : "Verificar y enviar solicitud"}
+
+      <div className="space-y-3">
+        <p className="text-center text-xs font-black uppercase tracking-wider text-white/30">Código de 6 dígitos</p>
+        <OtpInput value={value} onChange={onChange} onComplete={onSubmit} />
+        <div className="flex justify-center gap-1">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className={cn("h-0.5 w-8 rounded-full transition-all", i < filled ? "bg-[#d5ff3f]/80" : "bg-white/10")} />
+          ))}
+        </div>
+      </div>
+
+      <button
+        type="button" onClick={onSubmit} disabled={loading || filled !== 6}
+        className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#d5ff3f] py-3.5 text-sm font-black text-[#06110b] hover:bg-[#e8ff6a] disabled:opacity-45 transition active:scale-[0.99]"
+      >
+        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldAlert className="h-4 w-4" />}
+        {loading ? "Verificando con servidor seguro..." : "Verificar y enviar solicitud final"}
       </button>
-      <div className="rounded-xl border border-amber-500/20 bg-amber-950/20 p-3">
-        <p className="text-[10px] text-amber-200/60 leading-relaxed">Si el código no funciona: asegúrese de que la hora de su teléfono esté sincronizada automáticamente.</p>
+
+      <div className="rounded-xl border border-amber-500/12 bg-amber-950/12 px-4 py-3">
+        <p className="text-[10px] text-amber-200/50 leading-relaxed">Si el código no es aceptado: asegúrese de que la hora de su dispositivo esté sincronizada automáticamente con el servidor de tiempo.</p>
       </div>
     </div>
   );
 }
 
 function DoneStep({ ticketId, onTrack, onBroken }: { ticketId: string | null; onTrack: () => void; onBroken: (e: MouseEvent) => void }) {
+  const [copiedId, setCopiedId] = useState(false);
+  function copyTicket() {
+    if (ticketId) { void navigator.clipboard.writeText(ticketId); setCopiedId(true); setTimeout(() => setCopiedId(false), 2000); }
+  }
+
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl border border-[#9dff34]/20 bg-[#10240b]/50 p-6 text-center">
-        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-[#9dff34]/30 bg-[#10240b]">
-          <CheckCircle2 className="h-9 w-9 text-[#9dff34]" />
-        </div>
-        <h2 className="text-xl font-black text-[#d5ff3f]">Solicitud enviada</h2>
-        <p className="mt-2 text-sm text-white/50 leading-relaxed">Tu solicitud de recuperación ha sido recibida y está en cola de revisión.</p>
-        {ticketId && (
-          <div className="mt-4 rounded-xl border border-white/10 bg-black/35 px-4 py-3">
-            <p className="text-[10px] font-black uppercase tracking-wide text-white/30">Número de ticket</p>
-            <p className="mt-1 font-mono text-sm font-black text-white">{ticketId}</p>
-            <p className="mt-1 text-[10px] text-white/25">Guarda este número. Lo necesitarás para el seguimiento.</p>
+      {/* Hero */}
+      <div className="relative overflow-hidden rounded-2xl border border-[#9dff34]/15 bg-gradient-to-b from-[#0d2010] to-black/40 p-8 text-center">
+        <div className="absolute inset-0 [background-image:radial-gradient(ellipse_60%_60%_at_50%_0%,rgba(157,255,52,0.1),transparent)]" />
+        <div className="relative">
+          <div className="relative mx-auto mb-5 flex h-20 w-20 items-center justify-center">
+            <div className="absolute inset-0 rounded-full bg-[#9dff34]/8 animate-pulse" />
+            <div className="absolute inset-2 rounded-full border border-[#9dff34]/20 bg-[#0d1f09]" />
+            <CheckCircle2 className="relative h-9 w-9 text-[#9dff34]" />
           </div>
-        )}
+          <Badge variant="green">Proceso completado</Badge>
+          <h2 className="mt-3 text-2xl font-black text-white">Solicitud enviada</h2>
+          <p className="mt-2 text-sm text-white/45 leading-relaxed max-w-xs mx-auto">Tu solicitud de recuperación ha sido enviada y está en la cola de revisión del equipo de seguridad.</p>
+        </div>
       </div>
 
-      <div className="rounded-2xl border border-white/10 bg-black/25 p-5 space-y-2.5">
-        <p className="text-xs font-black uppercase tracking-wide text-white/40">¿Qué sigue?</p>
+      {/* Ticket */}
+      {ticketId && (
+        <div className="rounded-2xl border border-white/10 bg-black/35 p-5">
+          <p className="mb-3 text-[10px] font-black uppercase tracking-wider text-white/35">Número de caso — guárdalo</p>
+          <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-black/40 px-4 py-3.5">
+            <code className="min-w-0 flex-1 break-all font-mono text-sm font-black text-white">{ticketId}</code>
+            <button type="button" onClick={copyTicket} className={cn("grid h-8 w-8 shrink-0 place-items-center rounded-lg border transition", copiedId ? "border-[#9dff34]/40 bg-[#0d1f09] text-[#9dff34]" : "border-white/12 bg-white/5 text-white/40 hover:text-white")}>
+              {copiedId ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+            </button>
+          </div>
+          <p className="mt-2 text-[10px] text-white/22">Necesitarás este número para dar seguimiento a tu caso.</p>
+        </div>
+      )}
+
+      {/* What's next */}
+      <div className="rounded-2xl border border-white/10 bg-black/35 p-5 space-y-3">
+        <p className="text-[10px] font-black uppercase tracking-wider text-white/35">Próximos pasos</p>
         {[
-          "Tu solicitud será revisada por el equipo de seguridad.",
-          "El proceso puede tomar entre 5 y 15 días hábiles.",
-          "Recibirás una respuesta al correo proporcionado.",
-          "No es posible agilizar el proceso contactando soporte.",
-        ].map((t, i) => (
-          <div key={i} className="flex items-start gap-2 text-xs text-white/40">
-            <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-white/20" />{t}
+          { icon: <Clock className="h-4 w-4" />, title: "Revisión inicial", body: "El equipo de seguridad revisará tu solicitud en 1-3 días." },
+          { icon: <Mail className="h-4 w-4" />, title: "Notificación por correo", body: "Recibirás actualizaciones en el correo proporcionado." },
+          { icon: <FileText className="h-4 w-4" />, title: "Decisión final", body: "El proceso completo puede tomar hasta 15 días hábiles." },
+        ].map(({ icon, title, body }) => (
+          <div key={title} className="flex items-start gap-3">
+            <div className="grid h-7 w-7 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/5 text-white/30">{icon}</div>
+            <div>
+              <p className="text-xs font-black text-white/65">{title}</p>
+              <p className="text-[11px] text-white/35 leading-relaxed">{body}</p>
+            </div>
           </div>
         ))}
       </div>
 
-      <button type="button" onClick={onTrack} className="flex w-full items-center justify-between gap-2 rounded-2xl border border-white/10 bg-black/25 px-5 py-4 text-left transition hover:border-white/20 hover:bg-black/35">
-        <div>
-          <p className="text-sm font-black text-white">Ver estado de mi solicitud</p>
-          <p className="text-xs text-white/35">Seguimiento en tiempo real</p>
+      {/* Actions */}
+      <button
+        type="button" onClick={onTrack}
+        className="flex w-full items-center gap-4 rounded-2xl border border-white/10 bg-black/30 px-5 py-4 text-left transition hover:border-white/20 hover:bg-black/40 active:scale-[0.99]"
+      >
+        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-[#d5ff3f]/20 bg-[#0a1a08]">
+          <Shield className="h-5 w-5 text-[#d5ff3f]" />
         </div>
-        <ChevronRight className="h-5 w-5 shrink-0 text-white/25" />
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-black text-white">Ver estado de mi solicitud</p>
+          <p className="text-xs text-white/30">Seguimiento del proceso de revisión</p>
+        </div>
+        <ChevronRight className="h-4 w-4 shrink-0 text-white/20" />
       </button>
 
       <div className="space-y-2">
-        {["Descargar comprobante de solicitud", "Reenviar confirmación por correo"].map((label) => (
-          <button key={label} type="button" onClick={onBroken} className="flex w-full items-center gap-2 rounded-xl border border-white/8 bg-black/20 px-4 py-3 text-sm text-white/35 hover:text-white/55">
-            <Download className="h-4 w-4 shrink-0" />{label}
-            <span className="ml-auto text-[10px] text-red-400/60">● No disponible</span>
+        {[
+          { icon: <Download className="h-4 w-4" />, label: "Descargar comprobante de solicitud (PDF)" },
+          { icon: <Mail className="h-4 w-4" />, label: "Reenviar confirmación por correo" },
+        ].map(({ icon, label }) => (
+          <button key={label} type="button" onClick={onBroken} className="flex w-full items-center gap-3 rounded-xl border border-white/6 bg-black/20 px-4 py-3 text-sm text-white/30 hover:text-white/50 transition">
+            <span className="text-white/20">{icon}</span>{label}
+            <span className="ml-auto flex items-center gap-1 text-[10px] text-red-400/50"><span className="h-1.5 w-1.5 rounded-full bg-red-400/50" />No disponible</span>
           </button>
         ))}
       </div>
 
-      <Link href="/mundial" className="block text-center text-xs text-white/25 underline hover:text-white/45">Volver al inicio</Link>
+      <Link href="/mundial" className="block text-center text-xs text-white/20 underline underline-offset-2 hover:text-white/40 transition">Volver a la página principal</Link>
     </div>
   );
 }
 
 function SessionExpired({ onRestart }: { onRestart: () => void }) {
+  const [count, setCount] = useState(10);
+  useEffect(() => {
+    const id = setInterval(() => setCount((c) => Math.max(0, c - 1)), 1000);
+    return () => clearInterval(id);
+  }, []);
   return (
-    <div className="min-h-screen bg-[#060e08] flex flex-col items-center justify-center px-4 py-16 text-white">
-      <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full border-2 border-red-500/30 bg-red-950/40">
-        <Clock className="h-10 w-10 text-red-400" />
+    <div className="min-h-screen bg-[#0a0202] flex flex-col items-center justify-center px-4 py-16 text-white [background-image:radial-gradient(ellipse_60%_50%_at_50%_0%,rgba(220,50,50,0.08),transparent)]">
+      <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-full border-2 border-red-500/25 bg-red-950/40">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full border border-red-500/30 bg-red-950/60">
+          <Clock className="h-8 w-8 text-red-400" />
+        </div>
       </div>
-      <h1 className="mb-2 text-2xl font-black">Sesión expirada</h1>
-      <p className="mb-8 max-w-sm text-center text-sm text-white/45 leading-relaxed">
-        Tu sesión ha expirado. Por seguridad, debes iniciar el proceso completamente desde el principio.
+      <Badge variant="red" >Sesión terminada</Badge>
+      <h1 className="mt-4 text-2xl font-black">Tiempo agotado</h1>
+      <p className="mt-3 max-w-xs text-center text-sm text-white/40 leading-relaxed">
+        Tu sesión de recuperación expiró después de 15 minutos de inactividad. Por seguridad, debes iniciar el proceso completamente desde cero.
       </p>
-      <button type="button" onClick={onRestart} className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-6 py-3 text-sm font-black text-white hover:bg-white/10">
-        <RefreshCw className="h-4 w-4" />Reiniciar proceso
+      <p className="mt-6 text-xs text-white/25">No se guardó ningún progreso.</p>
+      <button
+        type="button" onClick={onRestart}
+        className="mt-6 inline-flex items-center gap-2 rounded-xl border border-red-500/25 bg-red-950/30 px-6 py-3 text-sm font-black text-red-200 hover:bg-red-950/50 transition active:scale-95"
+      >
+        <RefreshCw className="h-4 w-4" />Reiniciar desde el principio
       </button>
     </div>
   );
 }
 
 const TRACK_STAGES = [
-  { label: "Solicitud recibida", done: true, note: "Completado automáticamente" },
-  { label: "Validación inicial de identidad", done: true, note: "Sistema automatizado" },
-  { label: "Verificación de antecedentes", done: false, current: true, note: "En revisión — 1 a 3 días hábiles" },
-  { label: "Revisión del comité de seguridad", done: false, note: "Pendiente aprobación anterior" },
-  { label: "Auditoría de actividad sospechosa", done: false, note: "Proceso independiente — hasta 5 días" },
-  { label: "Segunda revisión de identidad", done: false, note: "Requerido por política interna" },
-  { label: "Aprobación final por gerencia", done: false, note: "Paso final obligatorio" },
-  { label: "Restauración de acceso", done: false, note: "Solo si todos los pasos son aprobados" },
+  { label: "Solicitud recibida y registrada", done: true, note: "Completado automáticamente · hoy" },
+  { label: "Validación inicial de identidad", done: true, note: "Sistema automatizado · hoy" },
+  { label: "Verificación de antecedentes", done: false, current: true, note: "En revisión — estimado: 1-3 días hábiles" },
+  { label: "Revisión por comité de seguridad", done: false, note: "Requiere aprobación del paso anterior" },
+  { label: "Auditoría de actividad sospechosa", done: false, note: "Proceso paralelo e independiente — hasta 5 días" },
+  { label: "Segunda validación de identidad", done: false, note: "Requerido por política de seguridad interna" },
+  { label: "Aprobación final por gerencia", done: false, note: "Último paso administrativo obligatorio" },
+  { label: "Restauración de acceso", done: false, note: "Solo si todos los pasos anteriores son aprobados" },
+];
+
+const ACTIVITY_LOG = [
+  { time: "Hoy, 15:42", event: "Verificación TOTP completada. Ticket generado." },
+  { time: "Hoy, 15:41", event: "Autenticador 2FA configurado y vinculado." },
+  { time: "Hoy, 15:38", event: "Teléfono verificado mediante código enviado a correo." },
+  { time: "Hoy, 15:35", event: "Correo electrónico verificado exitosamente." },
+  { time: "Hoy, 15:33", event: "Formulario firmado recibido — análisis en cola." },
+  { time: "Hoy, 15:30", event: "Formulario de apelación guardado en el sistema." },
+  { time: "Hoy, 15:28", event: "CAPTCHA × 3 completados. Identidad básica confirmada." },
+  { time: "Hoy, 15:27", event: "Solicitud iniciada. Sesión segura establecida." },
 ];
 
 function TrackView({ ticketId, onBack }: { ticketId: string | null; onBack: () => void }) {
   return (
-    <div className="min-h-screen bg-[#060e08] text-white">
-      <div className="mx-auto max-w-xl px-4 py-10">
-        <div className="mb-6 flex items-center gap-3">
-          <button type="button" onClick={onBack} className="grid h-9 w-9 place-items-center rounded-lg border border-white/12 bg-black/35 text-white/50 hover:text-white"><ArrowLeft className="h-4 w-4" /></button>
+    <div className="min-h-screen bg-[#040b06] text-white [background-image:radial-gradient(ellipse_80%_40%_at_50%_-5%,rgba(157,255,52,0.04),transparent)]">
+      {/* Top bar */}
+      <div className="border-b border-white/8 bg-black/60 px-4 py-2 backdrop-blur-sm">
+        <div className="mx-auto flex max-w-xl items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Shield className="h-3.5 w-3.5 text-[#9dff34]" />
+            <span className="text-[10px] font-black uppercase tracking-widest text-white/35">Sistema de Recuperación</span>
+          </div>
+          <Badge variant="amber">EN REVISIÓN</Badge>
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-xl px-4 py-8 space-y-5">
+        {/* Header */}
+        <div className="flex items-center gap-3">
+          <button type="button" onClick={onBack} className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-white/10 bg-black/40 text-white/40 hover:text-white transition">
+            <ArrowLeft className="h-4 w-4" />
+          </button>
           <div>
-            <h1 className="text-lg font-black">Estado de solicitud</h1>
-            {ticketId && <p className="text-xs text-white/30 font-mono">{ticketId}</p>}
+            <h1 className="text-lg font-black">Seguimiento de solicitud</h1>
+            {ticketId && <p className="text-xs font-mono text-white/25">{ticketId}</p>}
           </div>
         </div>
 
-        <div className="mb-5 rounded-xl border border-amber-500/20 bg-amber-950/20 p-4">
-          <p className="text-xs font-black text-amber-200/80">Estado actual: EN REVISIÓN</p>
-          <p className="mt-1 text-[10px] text-amber-200/50">Última actualización: hace 3 horas · Tiempo estimado restante: 10-14 días hábiles</p>
-        </div>
-
-        <div className="rounded-2xl border border-white/12 bg-black/35 p-5 space-y-4 mb-4">
-          {TRACK_STAGES.map((s, i) => (
-            <div key={i} className="flex items-start gap-3">
-              <div className={cn(
-                "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-[10px] font-black",
-                s.done ? "border-[#9dff34]/50 bg-[#10240b] text-[#9dff34]"
-                : s.current ? "border-[#f0b429]/50 bg-[#211707] text-[#f0b429]"
-                : "border-white/12 bg-black/35 text-white/25"
-              )}>
-                {s.done ? <Check className="h-3 w-3" /> : i + 1}
+        {/* Status card */}
+        <div className="rounded-2xl border border-amber-500/15 bg-amber-950/12 p-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="h-2 w-2 animate-pulse rounded-full bg-amber-400" />
+                <p className="text-sm font-black text-amber-200/90">Solicitud en revisión activa</p>
               </div>
-              <div className="min-w-0 flex-1">
-                <p className={cn("text-sm font-black", s.done ? "text-[#9dff34]" : s.current ? "text-[#f0b429]" : "text-white/35")}>{s.label}</p>
-                <p className="text-[10px] text-white/25">{s.note}</p>
-              </div>
-              {s.current && (
-                <span className="flex shrink-0 items-center gap-1 rounded-md bg-[#211707] px-1.5 py-0.5 text-[10px] font-black text-[#f0b429]">
-                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#f0b429]" />Activo
-                </span>
-              )}
+              <p className="text-xs text-amber-200/50">Última actualización: hace 3 horas</p>
             </div>
-          ))}
+            <div className="text-right">
+              <p className="text-xs font-black text-amber-200/60">Tiempo estimado</p>
+              <p className="text-sm font-black text-amber-200/90">10–14 días</p>
+            </div>
+          </div>
         </div>
 
-        <div className="rounded-xl border border-white/8 bg-black/20 p-4 space-y-1.5 mb-4">
-          <p className="text-[10px] font-black uppercase tracking-wide text-white/25">Historial de actividad</p>
-          {[["hace 3h", "Sistema procesó validación inicial"], ["hace 3h", "Solicitud asignada al equipo #A-7"], ["hace 3h", "Ticket creado: verificación TOTP completada"]].map(([t, e], i) => (
-            <div key={i} className="flex gap-2 text-[10px] text-white/30"><span className="w-12 shrink-0 tabular-nums">{t}</span><span>{e}</span></div>
-          ))}
+        {/* Stages */}
+        <div className="rounded-2xl border border-white/10 bg-black/35 p-5">
+          <p className="mb-4 text-[10px] font-black uppercase tracking-wider text-white/30">Etapas del proceso</p>
+          <div className="relative">
+            {/* Vertical line */}
+            <div className="absolute left-3 top-4 bottom-4 w-px bg-white/8" />
+            <div className="space-y-5">
+              {TRACK_STAGES.map((s, i) => (
+                <div key={i} className="relative flex items-start gap-4 pl-8">
+                  {/* Dot */}
+                  <div className={cn(
+                    "absolute left-0 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-[10px] font-black",
+                    s.done ? "border-[#9dff34]/40 bg-[#0d1f09] text-[#9dff34] shadow-[0_0_8px_rgba(157,255,52,0.25)]"
+                    : s.current ? "border-amber-500/50 bg-[#1a1005] text-amber-400"
+                    : "border-white/10 bg-black/40 text-white/20"
+                  )}>
+                    {s.done ? <Check className="h-3 w-3" /> : s.current ? <Loader2 className="h-3 w-3 animate-spin" /> : i + 1}
+                  </div>
+                  <div className="min-w-0 flex-1 pt-0.5">
+                    <div className="flex items-center gap-2">
+                      <p className={cn(
+                        "text-sm font-black",
+                        s.done ? "text-[#9dff34]" : s.current ? "text-amber-300" : "text-white/30"
+                      )}>{s.label}</p>
+                      {s.current && <Badge variant="amber">Activo</Badge>}
+                    </div>
+                    <p className="text-[10px] text-white/22 mt-0.5">{s.note}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
-        <div className="rounded-xl border border-red-500/15 bg-red-950/20 p-3">
-          <p className="text-[10px] text-red-300/60 leading-relaxed">
-            El proceso no puede ser acelerado. Cualquier intento de contactar soporte para agilizar la revisión resultará en reinicio del proceso desde el principio.
+        {/* Activity log */}
+        <div className="rounded-2xl border border-white/8 bg-black/25 p-5">
+          <p className="mb-3 text-[10px] font-black uppercase tracking-wider text-white/25">Registro de actividad</p>
+          <div className="space-y-2 font-mono">
+            {ACTIVITY_LOG.map(({ time, event }, i) => (
+              <div key={i} className="flex gap-3 text-[10px]">
+                <span className="w-20 shrink-0 tabular-nums text-white/20">{time}</span>
+                <span className="text-white/40">{event}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Warning */}
+        <div className="rounded-xl border border-red-500/12 bg-red-950/15 px-4 py-3.5">
+          <p className="text-[10px] text-red-300/55 leading-relaxed">
+            <strong className="text-red-300/75">Advertencia:</strong> El proceso no puede ser acelerado. Cualquier intento de contactar al equipo de soporte para agilizar la revisión resultará en el reinicio del proceso desde la etapa 1.
           </p>
         </div>
       </div>

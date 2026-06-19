@@ -9,6 +9,7 @@ import {
   RefreshCw,
   Save,
   Shield,
+  SlidersHorizontal,
   Table2,
   Target,
   Trophy,
@@ -22,6 +23,7 @@ import type { ViewMode } from "../types";
 
 interface MundialHeaderProps {
   playerName: string;
+  avatarDataUrl?: string | null;
   dirtyDrafts: unknown[];
   isSavingBulk: boolean;
   viewMode: ViewMode;
@@ -30,6 +32,7 @@ interface MundialHeaderProps {
   isLoading: boolean;
   saveDirtyDrafts: () => Promise<void> | void;
   openPlayerPicker: () => void;
+  openProfile: () => void;
 }
 
 function ViewIcon({ id, active }: { id: ViewMode; active: boolean }) {
@@ -46,6 +49,7 @@ function ViewIcon({ id, active }: { id: ViewMode; active: boolean }) {
 
 export function MundialHeader({
   playerName,
+  avatarDataUrl,
   dirtyDrafts,
   isSavingBulk,
   viewMode,
@@ -54,6 +58,7 @@ export function MundialHeader({
   isLoading,
   saveDirtyDrafts,
   openPlayerPicker,
+  openProfile,
 }: MundialHeaderProps) {
   const [showHeaderMenu, setShowHeaderMenu] = useState(false);
   const isAdmin = normalizeKey(playerName) === "ALLAN";
@@ -123,7 +128,15 @@ export function MundialHeader({
             )}
             aria-label="Menú"
           >
-            <UserRound className="h-3.5 w-3.5 text-[#f0b429]" />
+            {avatarDataUrl ? (
+              <img
+                src={avatarDataUrl}
+                alt="Avatar"
+                className="h-5 w-5 rounded-full object-cover ring-1 ring-[#f0b429]/60"
+              />
+            ) : (
+              <UserRound className="h-3.5 w-3.5 text-[#f0b429]" />
+            )}
             <span className="hidden max-w-28 truncate sm:inline">{playerName || "Jugador"}</span>
             <MoreHorizontal className="h-3.5 w-3.5" />
           </button>
@@ -147,6 +160,21 @@ export function MundialHeader({
                     <p className="truncate text-sm font-black text-white">{playerName || "—"}</p>
                   </div>
                   <ChevronDown className="ml-auto h-3.5 w-3.5 shrink-0 text-[#d5ff3f]" />
+                </button>
+
+                <div className="mx-3 h-px bg-white/10" />
+
+                {/* Mi Perfil */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    openProfile();
+                    setShowHeaderMenu(false);
+                  }}
+                  className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left transition hover:bg-white/8"
+                >
+                  <SlidersHorizontal className="h-4 w-4 shrink-0 text-[#f0b429]/70" />
+                  <span className="text-sm font-black text-white/80">Mi Perfil</span>
                 </button>
 
                 <div className="mx-3 h-px bg-white/10" />

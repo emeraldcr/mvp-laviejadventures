@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import { Check, CircleAlert, Gamepad2, Loader2, Target, X } from "lucide-react";
 import type { LiveMatchStatus, MundialMatch } from "./types";
+import { normalizeKey } from "./utils";
 import { useMundial } from "./useMundial";
 import { useLiveMatch } from "./useLiveMatch";
 import { MineView } from "./components/MineView";
@@ -14,6 +15,7 @@ import { GroupsView } from "./components/GroupsView";
 import { PlayerPickerModal } from "./components/PlayerPickerModal";
 import { PinModal } from "./components/PinModal";
 import { MundialHeader } from "./components/MundialHeader";
+import { ProfileModal } from "./components/ProfileModal";
 
 import { PenalitosPanel } from "./components/PenalitosPanel";
 import { ProximoEnAnotarPanel } from "./components/ProximoEnAnotarPanel";
@@ -73,6 +75,21 @@ export default function MundialClient() {
   const [featuredMatchId, setFeaturedMatchId] = useState<string | null>(null);
   const [focusedMineMatchId, setFocusedMineMatchId] = useState<string | null>(null);
   const [liveModal, setLiveModal] = useState<"penalitos" | "scorer" | null>(null);
+  const [showProfile, setShowProfile] = useState(false);
+  const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
+
+  const playerKey = normalizeKey(playerName);
+
+  // Load avatar whenever the active player changes
+  useEffect(() => {
+    if (!playerKey) { setProfileAvatar(null); return; }
+    fetch(`/api/mundial/profile?name=${encodeURIComponent(playerKey)}`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((data: { avatarDataUrl?: string | null } | null) => {
+        setProfileAvatar(data?.avatarDataUrl ?? null);
+      })
+      .catch(() => {});
+  }, [playerKey]);
 
   // Merge SSE live fields onto the polled liveMatch so all clients see updates
   // at the same instant. Falls back to polling data when SSE has nothing new.
@@ -158,6 +175,7 @@ export default function MundialClient() {
 
       <MundialHeader
         playerName={playerName}
+        avatarDataUrl={profileAvatar}
         dirtyDrafts={dirtyDrafts}
         isSavingBulk={isSavingBulk}
         viewMode={viewMode}
@@ -166,6 +184,7 @@ export default function MundialClient() {
         isLoading={isLoading}
         saveDirtyDrafts={saveDirtyDrafts}
         openPlayerPicker={openPlayerPicker}
+        openProfile={() => setShowProfile(true)}
       />
 
       <section className="mx-auto w-full max-w-[1600px] px-3 py-3 sm:px-5 sm:py-4">
@@ -293,6 +312,13 @@ export default function MundialClient() {
           onChangePlayer={openPlayerPicker}
         />
       )}
+
+      <ProfileModal
+        playerName={playerName}
+        open={showProfile}
+        onClose={() => setShowProfile(false)}
+        onSaved={({ avatarDataUrl }) => setProfileAvatar(avatarDataUrl)}
+      />
     </main>
   );
 }
