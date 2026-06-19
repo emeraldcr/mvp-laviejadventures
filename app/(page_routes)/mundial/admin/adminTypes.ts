@@ -137,4 +137,14 @@ export type AdminData = {
   };
 };
 
-export type AdminView = "leaderboard" | "matches" | "stats" | "analytics";
+export type AdminView = "leaderboard" | "matches" | "stats" | "analytics" | "bans";
+
+export type BanInfo = {
+  normalizedName: string;
+  playerName: string;
+  reason: string;
+  bannedAt: string;
+  bannedBy: string;
+  bannedVisitorIds: string[];
+  active: boolean;
+};

@@ -7,6 +7,7 @@ import {
   listLiveChatMessages,
 } from "@/lib/mundial/live-chat";
 import { notifyLiveChatChanged } from "@/lib/mundial/live-chat-events";
+import { isBanned } from "@/lib/mundial/bans";
 
 export const dynamic = "force-dynamic";
 
@@ -50,6 +51,9 @@ export async function POST(req: NextRequest) {
     if (!text) return NextResponse.json({ error: "mensaje requerido" }, { status: 400 });
 
     const db = await getDb();
+    const ban = await isBanned(db, playerName.toUpperCase(), visitorId);
+    if (ban) return NextResponse.json({ error: "Cuenta suspendida.", banned: true }, { status: 403 });
+
     const message = await addLiveChatMessage(db, { matchId, visitorId, playerName, text });
     notifyLiveChatChanged(matchId);
     return NextResponse.json({ ok: true, message });

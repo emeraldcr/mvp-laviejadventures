@@ -43,9 +43,9 @@ function eventLabel(event: AdminAnalyticsEventName) {
 }
 
 function eventClass(event: AdminAnalyticsEventName) {
-  if (event === "login") return "border-sky-200 bg-sky-50 text-sky-700";
-  if (event === "pick_saved") return "border-emerald-200 bg-emerald-50 text-emerald-700";
-  return "border-purple-200 bg-purple-50 text-purple-700";
+  if (event === "login") return "border-[#62ffe6]/35 bg-[#071d2a] text-[#62ffe6]";
+  if (event === "pick_saved") return "border-[#9dff34]/35 bg-[#10240b] text-[#d5ff3f]";
+  return "border-[#d5ff3f]/35 bg-[#10240b] text-[#d5ff3f]";
 }
 
 function eventIcon(event: AdminAnalyticsEventName) {
@@ -96,11 +96,11 @@ export function AdminAnalyticsPanel({ summary, events }: Props) {
         <SummaryCard label="Jugadores" value={summary.uniquePlayers} icon={<Users className="h-4 w-4" />} tone="amber" />
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <div className="flex flex-col gap-3 border-b border-slate-200 bg-slate-50 px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
+      <div className="overflow-hidden rounded-xl border border-white/12 bg-black/35 shadow-[0_18px_58px_rgba(0,0,0,0.18)]">
+        <div className="flex flex-col gap-3 border-b border-white/12 bg-black/35 px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0">
-            <h2 className="text-base font-black text-slate-950">Analytics Mundial</h2>
-            <p className="mt-1 text-xs font-bold text-slate-500">Ultimos {events.length} eventos guardados en Mongo.</p>
+            <h2 className="text-base font-black text-white">Analytics Mundial</h2>
+            <p className="mt-1 text-xs font-bold text-white/50">Ultimos {events.length} eventos guardados en Mongo.</p>
           </div>
           <div className="flex flex-wrap gap-2">
             {FILTERS.map((option) => (
@@ -111,8 +111,8 @@ export function AdminAnalyticsPanel({ summary, events }: Props) {
                 className={cn(
                   "h-8 rounded-lg border px-3 text-xs font-black transition",
                   filter === option.id
-                    ? "border-slate-950 bg-slate-950 text-white"
-                    : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                    ? "border-[#d5ff3f]/60 bg-[#d5ff3f] text-[#06110b]"
+                    : "border-white/12 bg-white/5 text-white/55 hover:border-[#d5ff3f]/40 hover:bg-[#12351f] hover:text-white"
                 )}
               >
                 {option.label}
@@ -125,19 +125,19 @@ export function AdminAnalyticsPanel({ summary, events }: Props) {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-200 bg-white text-xs">
-                  <th className="px-3 py-3 text-left font-black uppercase tracking-wide text-slate-400">Fecha</th>
-                  <th className="px-3 py-3 text-left font-black uppercase tracking-wide text-slate-400">Evento</th>
-                  <th className="px-3 py-3 text-left font-black uppercase tracking-wide text-slate-400">Jugador</th>
-                  <th className="px-3 py-3 text-left font-black uppercase tracking-wide text-slate-400">Detalle</th>
-                  <th className="hidden px-3 py-3 text-left font-black uppercase tracking-wide text-slate-400 lg:table-cell">Request</th>
+                <tr className="border-b border-white/12 bg-black/35 text-xs">
+                  <th className="px-3 py-3 text-left font-black uppercase tracking-wide text-white/40">Fecha</th>
+                  <th className="px-3 py-3 text-left font-black uppercase tracking-wide text-white/40">Evento</th>
+                  <th className="px-3 py-3 text-left font-black uppercase tracking-wide text-white/40">Jugador</th>
+                  <th className="px-3 py-3 text-left font-black uppercase tracking-wide text-white/40">Detalle</th>
+                  <th className="hidden px-3 py-3 text-left font-black uppercase tracking-wide text-white/40 lg:table-cell">Request</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-white/8">
                 {filteredEvents.map((event) => (
-                  <tr key={event.id} className="hover:bg-slate-50/80">
+                  <tr key={event.id} className="hover:bg-white/5">
                     <td className="whitespace-nowrap px-3 py-3">
-                      <span className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500">
+                      <span className="inline-flex items-center gap-1.5 text-xs font-bold text-white/50">
                         <Clock3 className="h-3.5 w-3.5" />
                         {formatDate(event.happenedAt)}
                       </span>
@@ -150,18 +150,18 @@ export function AdminAnalyticsPanel({ summary, events }: Props) {
                     </td>
                     <td className="px-3 py-3">
                       <div className="min-w-0">
-                        <p className="font-black text-slate-950">{event.playerName || event.normalizedName || "Sin jugador"}</p>
-                        <p className="text-[11px] font-bold text-slate-400">{event.normalizedName}</p>
+                        <p className="font-black text-white">{event.playerName || event.normalizedName || "Sin jugador"}</p>
+                        <p className="text-[11px] font-bold text-white/40">{event.normalizedName}</p>
                       </div>
                     </td>
                     <td className="min-w-[18rem] px-3 py-3">
-                      <p className="line-clamp-2 font-bold text-slate-700">{eventDetail(event) || "-"}</p>
+                      <p className="line-clamp-2 font-bold text-white/70">{eventDetail(event) || "-"}</p>
                     </td>
                     <td className="hidden min-w-[16rem] px-3 py-3 lg:table-cell">
-                      <p className="text-xs font-bold text-slate-500">
+                      <p className="text-xs font-bold text-white/50">
                         {[event.request.country, event.request.region, event.request.city].filter(Boolean).join(" / ") || "Sin ubicacion"}
                       </p>
-                      <p className="mt-1 max-w-xs truncate text-[11px] font-bold text-slate-400">{event.request.userAgent || "-"}</p>
+                      <p className="mt-1 max-w-xs truncate text-[11px] font-bold text-white/40">{event.request.userAgent || "-"}</p>
                     </td>
                   </tr>
                 ))}
@@ -171,8 +171,8 @@ export function AdminAnalyticsPanel({ summary, events }: Props) {
         ) : (
           <div className="grid min-h-48 place-items-center p-8 text-center">
             <div>
-              <Activity className="mx-auto h-10 w-10 text-slate-300" />
-              <p className="mt-3 text-sm font-black text-slate-600">No hay eventos para este filtro.</p>
+              <Activity className="mx-auto h-10 w-10 text-white/25" />
+              <p className="mt-3 text-sm font-black text-white/65">No hay eventos para este filtro.</p>
             </div>
           </div>
         )}
@@ -194,21 +194,21 @@ function SummaryCard({
 }) {
   const toneClass =
     tone === "sky"
-      ? "bg-sky-50 text-sky-700"
+      ? "bg-[#071d2a] text-[#62ffe6]"
       : tone === "emerald"
-        ? "bg-emerald-50 text-emerald-700"
+        ? "bg-[#10240b] text-[#d5ff3f]"
         : tone === "purple"
-          ? "bg-purple-50 text-purple-700"
+          ? "bg-[#10240b] text-[#d5ff3f]"
           : tone === "amber"
-            ? "bg-amber-50 text-amber-700"
-            : "bg-slate-100 text-slate-700";
+            ? "bg-[#211707] text-[#f0b429]"
+            : "bg-white/10 text-white/70";
 
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+    <div className="flex items-center gap-3 rounded-xl border border-white/12 bg-black/35 px-4 py-3 shadow-[0_16px_46px_rgba(0,0,0,0.18)]">
       <div className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-lg", toneClass)}>{icon}</div>
       <div className="min-w-0">
-        <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">{label}</p>
-        <p className="text-xl font-black tabular-nums text-slate-950">{value}</p>
+        <p className="text-[10px] font-black uppercase tracking-wide text-white/40">{label}</p>
+        <p className="text-xl font-black tabular-nums text-white">{value}</p>
       </div>
     </div>
   );

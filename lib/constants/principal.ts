@@ -18,13 +18,11 @@ export const principalContent = {
   goToSlideAria: "Ir a imagen {slide}",
   scrollToToursAria: "Ir a los tours",
   scrollToMainAria: "Ir al contenido principal",
-  locationBadge: "San Carlos, Costa Rica",
-  title: "Aventuras Inolvidables en San Carlos",
-  subtitle: "Cañones, cascadas secretas y pozas esmeralda en el corazón de Alajuela Norte",
-  description:
-    "Vive 6 experiencias únicas guiadas por locales expertos. Desde el icónico Tour Ciudad Esmeralda hasta rapel en cañones, avistamiento de aves, tours nocturnos y gastronomía auténtica.",
-  exploreCta: "Explorar Todas las Aventuras",
-  datesCta: "Ver Fechas Disponibles",
+  locationBadge: "San Carlos · Costa Rica",
+  title: "El Cañón te Espera. Reserva Hoy.",
+  subtitle: "Tours guiados · Grupos pequeños · Desde $30",
+  socialProof: "4.9 · +500 aventureros · Guías locales certificados",
+  trustItems: ["Cancelación gratis 48h", "Pago 100% seguro", "Confirmación inmediata"] as readonly string[],
 },
 
 tours: {
@@ -98,13 +96,11 @@ tours: {
       goToSlideAria: "Go to slide {slide}",
       scrollToToursAria: "Scroll to tours",
       scrollToMainAria: "Scroll to main content",
-      locationBadge: "San Carlos - Costa Rica",
-      title: "Adventures in San Carlos, Costa Rica",
-      subtitle: "Canyons, waterfalls, and hidden pools in Juan Castro Blanco National Water Park",
-      description:
-        "Discover 6 unique experiences with local guides, from iconic Ciudad Esmeralda to crystal-clear pools, cloud forest, and extreme canyoning.",
-      exploreCta: "Explore All Adventures",
-      datesCta: "View Available Dates",
+      locationBadge: "San Carlos · Costa Rica",
+      title: "The Canyon is Calling. Book Today.",
+      subtitle: "Guided tours · Small groups · From $30",
+      socialProof: "4.9 · 500+ adventurers · Certified local guides",
+      trustItems: ["Free cancellation 48h", "100% secure payment", "Instant confirmation"] as readonly string[],
     },
     tours: {
       eyebrow: "Explore first",

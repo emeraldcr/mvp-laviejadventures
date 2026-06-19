@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Db, ObjectId } from "mongodb";
 
 import { getDb } from "@/lib/helpers/mongodb";
+import { isBanned } from "@/lib/mundial/bans";
 import { recordMundialAnalyticsEvent } from "@/lib/mundial/analytics";
 import { serializeBettingFavorite, type BettingFavorite } from "@/lib/mundial/betting";
 import { MUNDIAL_MATCHES, MUNDIAL_TOTAL_MATCHES, type MundialMatch } from "@/lib/mundial/fixtures";
@@ -503,6 +504,12 @@ export async function POST(req: NextRequest) {
     const matches = await readMatches(db);
 
     const fallbackPlayerName = normalizeName(body.playerName);
+    const fallbackNormalizedName = normalizeKey(fallbackPlayerName);
+    if (fallbackNormalizedName) {
+      const ban = await isBanned(db, fallbackNormalizedName, null);
+      if (ban) return NextResponse.json({ error: "Cuenta suspendida.", banned: true }, { status: 403 });
+    }
+
     const payloads: PredictionPayload[] = Array.isArray(body.predictions)
       ? body.predictions.map((p: PredictionPayload) => ({
           ...p,

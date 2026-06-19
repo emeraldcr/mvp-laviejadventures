@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import { Check, CircleAlert, Gamepad2, Loader2, Target, X } from "lucide-react";
 import type { LiveMatchStatus, MundialMatch } from "./types";
@@ -19,8 +20,10 @@ import { ProximoEnAnotarPanel } from "./components/ProximoEnAnotarPanel";
 import { LiveMatchChat } from "./components/LiveMatchChat";
 
 export default function MundialClient() {
+  const router = useRouter();
   const {
     playerName,
+    isBanned,
     showPlayerPicker,
     canClosePlayerPicker,
     selectPlayer,
@@ -57,6 +60,11 @@ export default function MundialClient() {
     onPinSuccess,
     registeredNames,
   } = useMundial();
+
+  // Redirect banned players to the suspended account page
+  useEffect(() => {
+    if (isBanned) router.replace("/mundial/banned");
+  }, [isBanned, router]);
 
   // SSE: receives live match updates pushed to all clients simultaneously
   const { data: liveSSE } = useLiveMatch();

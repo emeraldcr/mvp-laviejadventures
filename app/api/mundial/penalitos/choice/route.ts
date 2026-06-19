@@ -11,6 +11,7 @@ import {
   type PenalitosDirection,
 } from "@/lib/mundial/penalitos";
 import { notifyPenalitosChanged } from "@/lib/mundial/penalitos-events";
+import { isBanned } from "@/lib/mundial/bans";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +30,9 @@ export async function POST(req: NextRequest) {
     }
 
     const db = await getDb();
+    const ban = await isBanned(db, null, visitorId);
+    if (ban) return NextResponse.json({ error: "Cuenta suspendida.", banned: true }, { status: 403 });
+
     const state = await getState(db);
 
     if (!state?.game || state.game.status !== "choosing") {

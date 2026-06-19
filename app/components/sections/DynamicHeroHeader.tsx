@@ -29,6 +29,7 @@ import { useInterval } from "@/lib/hooks/useInterval";
 import { useLanguage } from "@/lib/LanguageContext";
 import { translations } from "@/lib/translations";
 import { principalContent } from "@/lib/constants/principal";
+import { useReservationData } from "@/lib/hooks/useReservationData";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface NavLinkItem {
@@ -236,6 +237,113 @@ const MobileBottomNav = memo(() => {
 });
 MobileBottomNav.displayName = "MobileBottomNav";
 
+// ─── HeroBookingWidget ────────────────────────────────────────────────────────
+const HeroBookingWidget = memo<{ onSelectTour?: (slug: string) => void }>(
+  ({ onSelectTour }) => {
+    const { lang } = useLanguage();
+    const { tours } = useReservationData();
+    const [selectedSlug, setSelectedSlug] = useState(tours[0]?.slug ?? "");
+    const [people, setPeople] = useState(2);
+
+    useEffect(() => {
+      if (tours.length > 0 && !selectedSlug) setSelectedSlug(tours[0].slug);
+    }, [tours, selectedSlug]);
+
+    const selectedTour = tours.find((t) => t.slug === selectedSlug) ?? tours[0];
+    const minPrice = selectedTour?.packages?.[0]?.price ?? null;
+    const isEs = lang === "es";
+
+    const handleBook = () => {
+      const slug = selectedSlug || tours[0]?.slug;
+      if (!slug) return;
+      if (onSelectTour) {
+        onSelectTour(slug);
+      } else {
+        window.history.replaceState({}, "", `/?tour=${slug}#booking`);
+        document.getElementById("booking")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    };
+
+    return (
+      <div className="mt-8 w-full max-w-[44rem] sm:mt-10">
+        <div className="overflow-hidden rounded-2xl border border-white/20 bg-black/50 shadow-[0_28px_80px_rgba(0,0,0,0.65)] backdrop-blur-2xl">
+          <div className="flex flex-col divide-y divide-white/10 sm:flex-row sm:divide-x sm:divide-y-0">
+
+            {/* Tour selector */}
+            <div className="flex-1 min-w-0 px-5 py-4">
+              <p className="mb-1 text-[9px] font-black uppercase tracking-[0.25em] text-teal-400/70">
+                {isEs ? "Tour" : "Tour"}
+              </p>
+              <div className="relative">
+                <select
+                  value={selectedSlug}
+                  onChange={(e) => setSelectedSlug(e.target.value)}
+                  className="w-full appearance-none bg-transparent pr-5 text-sm font-bold text-white focus:outline-none cursor-pointer"
+                >
+                  {tours.map((t) => (
+                    <option key={t.slug} value={t.slug} className="bg-zinc-900 font-normal text-white">
+                      {isEs ? t.titleEs : t.titleEn}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown
+                  size={13}
+                  className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 text-white/40"
+                />
+              </div>
+              {minPrice != null && (
+                <p className="mt-0.5 text-[10px] text-white/40">
+                  {isEs ? `Desde $${minPrice}` : `From $${minPrice}`}
+                </p>
+              )}
+            </div>
+
+            {/* Participants */}
+            <div className="px-5 py-4 sm:min-w-[190px]">
+              <p className="mb-1 text-[9px] font-black uppercase tracking-[0.25em] text-teal-400/70">
+                {isEs ? "Participantes" : "People"}
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPeople((p) => Math.max(1, p - 1))}
+                  className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border border-white/20 text-sm font-bold text-white transition hover:border-white/50 hover:bg-white/10"
+                >
+                  −
+                </button>
+                <span className="min-w-[7rem] text-center text-sm font-bold text-white">
+                  {people}{" "}
+                  {isEs
+                    ? people === 1 ? "persona" : "personas"
+                    : people === 1 ? "person" : "people"}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setPeople((p) => Math.min(30, p + 1))}
+                  className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border border-white/20 text-sm font-bold text-white transition hover:border-white/50 hover:bg-white/10"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            {/* Book button */}
+            <button
+              type="button"
+              onClick={handleBook}
+              className="group flex items-center justify-center gap-2 bg-teal-500 px-7 py-5 text-sm font-black text-white transition-all duration-200 hover:bg-teal-400 sm:min-w-[170px] sm:text-base"
+            >
+              <span>{isEs ? "Reservar Ahora" : "Book Now"}</span>
+              <span className="inline-block transition-transform duration-150 group-hover:translate-x-1">→</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+);
+HeroBookingWidget.displayName = "HeroBookingWidget";
+
 // ─── Header ───────────────────────────────────────────────────────────────────
 const Header = memo<{ isScrolled: boolean }>(({ isScrolled }) => {
   const { lang, toggle } = useLanguage();
@@ -309,9 +417,10 @@ Header.displayName = "Header";
 interface HeroCarouselProps {
   overlay?: ReactNode;
   height?: string;
+  onSelectTour?: (slug: string) => void;
 }
 
-export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "100%" }) => {
+export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "100%", onSelectTour }) => {
   const { data: carouselImages = [], error, isLoading } = useSWR<string[]>("/api/images", fetcher);
   const { lang } = useLanguage();
   const copy = principalContent[lang].hero;
@@ -437,8 +546,14 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "1
         <div className="mx-auto flex max-w-5xl flex-col items-center">
           {overlay || (
             <>
+              {/* Social proof pill */}
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-amber-300/30 bg-amber-500/[0.12] px-4 py-1.5 backdrop-blur-md sm:mb-5">
+                <span className="text-amber-400 text-xs leading-none">★★★★★</span>
+                <span className="text-[10px] font-bold text-white/90 sm:text-[11px]">{copy.socialProof}</span>
+              </div>
+
               {/* Location badge */}
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/25 px-4 py-1.5 backdrop-blur-md sm:mb-6">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/25 px-4 py-1.5 backdrop-blur-md sm:mb-5">
                 <span className="h-1.5 w-1.5 rounded-full bg-teal-400 shadow-[0_0_16px_rgba(45,212,191,0.85)]" />
                 <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/85 sm:text-[11px]">
                   {copy.locationBadge}
@@ -446,33 +561,26 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "1
               </div>
 
               {/* Title */}
-              <h1 className="max-w-5xl text-balance font-black leading-[0.95] text-white drop-shadow-2xl text-[clamp(2.1rem,7vw,5.5rem)]">
+              <h1 className="max-w-4xl text-balance font-black leading-[0.92] text-white drop-shadow-2xl text-[clamp(2.6rem,8vw,6.5rem)]">
                 {copy.title}
               </h1>
 
-              <h2 className="mt-3 max-w-3xl text-balance font-bold leading-snug text-white/95 drop-shadow-xl text-[clamp(1rem,2.8vw,2.45rem)] sm:mt-4">
+              {/* Subtitle with price anchor */}
+              <p className="mt-4 max-w-2xl text-balance font-semibold leading-snug text-white/90 drop-shadow-xl sm:mt-5 text-[clamp(1.05rem,2.5vw,1.45rem)]">
                 {copy.subtitle}
-              </h2>
-
-              <p className="mt-4 max-w-3xl text-balance text-sm font-medium leading-relaxed text-white/80 drop-shadow-lg sm:mt-6 sm:text-base md:text-lg">
-                {copy.description}
               </p>
 
-              {/* CTAs */}
-              <div className="mt-6 flex w-full max-w-md flex-col items-stretch gap-3 sm:mt-8 sm:max-w-xl sm:flex-row sm:justify-center">
-                <a
-                  href="#tours"
-                  className="group inline-flex min-h-12 items-center justify-center gap-2.5 rounded-full bg-teal-500 px-6 py-3 text-sm font-bold text-white shadow-[0_18px_45px_rgba(20,184,166,0.34)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-teal-400 hover:shadow-[0_22px_60px_rgba(20,184,166,0.46)] sm:min-h-14 sm:text-base"
-                >
-                  <span>{copy.exploreCta}</span>
-                  <span className="inline-block group-hover:translate-x-1 transition-transform duration-200">→</span>
-                </a>
-                <a
-                  href="#booking"
-                  className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/50 bg-black/20 px-6 py-3 text-sm font-bold text-white shadow-[0_16px_40px_rgba(0,0,0,0.22)] backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-white/80 hover:bg-white/18 sm:min-h-14 sm:text-base"
-                >
-                  {copy.datesCta}
-                </a>
+              {/* Booking widget */}
+              <HeroBookingWidget onSelectTour={onSelectTour} />
+
+              {/* Trust row */}
+              <div className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5">
+                {copy.trustItems.map((item, i) => (
+                  <span key={i} className="flex items-center gap-1.5 text-[11px] font-medium text-white/55 sm:text-xs">
+                    <span className="font-black text-teal-400">✓</span>
+                    {item}
+                  </span>
+                ))}
               </div>
             </>
           )}
@@ -526,9 +634,10 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "1
 interface DynamicHeroHeaderProps {
   children?: ReactNode;
   showHeroSlider?: boolean;
+  onSelectTour?: (slug: string) => void;
 }
 
-export default function DynamicHeroHeader({ children, showHeroSlider = true }: DynamicHeroHeaderProps) {
+export default function DynamicHeroHeader({ children, showHeroSlider = true, onSelectTour }: DynamicHeroHeaderProps) {
   const scrollY = useScrollY();
   const isScrolled = useMemo(() => scrollY > SCROLL_THRESHOLD, [scrollY]);
 
@@ -537,7 +646,7 @@ export default function DynamicHeroHeader({ children, showHeroSlider = true }: D
       <Header isScrolled={isScrolled} />
       {showHeroSlider && (
         <section className="relative h-screen min-h-[600px] overflow-hidden">
-          <HeroCarousel height="100%" overlay={null} />
+          <HeroCarousel height="100%" overlay={null} onSelectTour={onSelectTour} />
           {children}
         </section>
       )}

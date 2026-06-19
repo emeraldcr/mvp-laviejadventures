@@ -14,6 +14,7 @@ import {
   type PenalitosStateDoc,
 } from "@/lib/mundial/penalitos";
 import { notifyPenalitosChanged } from "@/lib/mundial/penalitos-events";
+import { isBanned } from "@/lib/mundial/bans";
 
 export const dynamic = "force-dynamic";
 
@@ -44,7 +45,10 @@ export async function POST(req: NextRequest) {
     }
 
     const cleanName = name.trim().slice(0, MAX_NAME);
+    const normalizedName = cleanName.toUpperCase();
     const db = await getDb();
+    const ban = await isBanned(db, normalizedName, visitorId);
+    if (ban) return NextResponse.json({ error: "Cuenta suspendida.", banned: true }, { status: 403 });
     await ensureState(db);
     await tickState(db);
     const state = (await getState(db))!;

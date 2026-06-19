@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { Check, ChevronDown, Loader2, Plus, Trash2, Trophy, Users, X } from "lucide-react";
@@ -13,7 +13,7 @@ type Props = {
   onDeleteQuestion: (id: string) => Promise<void>;
 };
 
-// ── Option analytics bar ────────────────────────────────────────────────────
+// Option analytics bar
 
 function OptionBar({
   opt,
@@ -31,23 +31,23 @@ function OptionBar({
     <div className={cn(
       "overflow-hidden rounded-lg border transition-all",
       isCorrect
-        ? "border-emerald-300 bg-emerald-50"
+        ? "border-[#9dff34]/35 bg-[#10240b]"
         : totalBets > 0 && opt.count === 0
-          ? "border-slate-100 bg-slate-50 opacity-60"
-          : "border-slate-200 bg-white"
+          ? "border-white/8 bg-black/20 opacity-60"
+          : "border-white/12 bg-black/35"
     )}>
       <div className="px-3 py-2.5">
         {/* label + count */}
         <div className="mb-2 flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5">
             {isCorrect && (
-              <span className="grid h-4 w-4 shrink-0 place-items-center rounded-full bg-emerald-500">
+              <span className="grid h-4 w-4 shrink-0 place-items-center rounded-full bg-[#10240b]">
                 <Check className="h-2.5 w-2.5 text-white" />
               </span>
             )}
             <span className={cn(
               "text-sm font-black",
-              isCorrect ? "text-emerald-800" : "text-slate-800"
+              isCorrect ? "text-[#d5ff3f]" : "text-white"
             )}>
               {opt.label}
             </span>
@@ -55,13 +55,13 @@ function OptionBar({
           <div className="flex items-center gap-2">
             <span className={cn(
               "text-xs font-black tabular-nums",
-              isCorrect ? "text-emerald-600" : "text-slate-500"
+              isCorrect ? "text-[#9dff34]" : "text-white/50"
             )}>
               {opt.pct}%
             </span>
             <span className={cn(
               "rounded-md px-1.5 py-0.5 text-xs font-black tabular-nums",
-              isCorrect ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-600"
+              isCorrect ? "bg-[#9dff34]/15 text-[#d5ff3f]" : "bg-white/10 text-white/60"
             )}>
               {opt.count}
             </span>
@@ -69,11 +69,11 @@ function OptionBar({
         </div>
 
         {/* bar */}
-        <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+        <div className="h-2 overflow-hidden rounded-full bg-white/10">
           <div
             className={cn(
               "h-full rounded-full transition-all duration-500",
-              isCorrect ? "bg-emerald-500" : "bg-slate-400"
+              isCorrect ? "bg-[#10240b]" : "bg-white/35"
             )}
             style={{ width: `${opt.pct}%` }}
           />
@@ -85,7 +85,7 @@ function OptionBar({
             <button
               type="button"
               onClick={() => setExpanded((v) => !v)}
-              className="flex items-center gap-1 text-[11px] font-black text-slate-400 transition hover:text-slate-600"
+              className="flex items-center gap-1 text-[11px] font-black text-white/40 transition hover:text-white/70"
             >
               <Users className="h-3 w-3" />
               {opt.players.length} jugador{opt.players.length !== 1 ? "es" : ""}
@@ -99,8 +99,8 @@ function OptionBar({
                     className={cn(
                       "rounded-md px-2 py-0.5 text-[11px] font-black",
                       isCorrect
-                        ? "bg-emerald-100 text-emerald-700"
-                        : "bg-slate-100 text-slate-600"
+                        ? "bg-[#9dff34]/15 text-[#d5ff3f]"
+                        : "bg-white/10 text-white/60"
                     )}
                   >
                     {name}
@@ -115,7 +115,7 @@ function OptionBar({
   );
 }
 
-// ── Question card ────────────────────────────────────────────────────────────
+// Question card
 
 function QuestionCard({
   question,
@@ -137,41 +137,41 @@ function QuestionCard({
 
   return (
     <div className={cn(
-      "overflow-hidden rounded-xl border shadow-sm",
-      question.resolved ? "border-emerald-200" : "border-slate-200 bg-white"
+      "overflow-hidden rounded-xl border shadow-[0_18px_58px_rgba(0,0,0,0.18)]",
+      question.resolved ? "border-[#9dff34]/30 bg-[#10240b]/45" : "border-white/12 bg-black/35"
     )}>
       {/* header */}
       <div className={cn(
         "flex items-start justify-between gap-3 px-4 py-3",
-        question.resolved ? "bg-emerald-50" : "bg-white"
+        question.resolved ? "bg-[#10240b]/80" : "bg-black/35"
       )}>
         <div className="min-w-0">
           <p className={cn(
             "font-black leading-snug",
-            question.resolved ? "text-emerald-900" : "text-slate-950"
+            question.resolved ? "text-[#d5ff3f]" : "text-white"
           )}>
             {question.text}
           </p>
           <div className="mt-1 flex flex-wrap items-center gap-2">
-            <span className="text-xs font-bold text-slate-400">
+            <span className="text-xs font-bold text-white/45">
               {question.pointValue} pt{question.pointValue !== 1 ? "s" : ""}
             </span>
             {question.totalBets > 0 && (
-              <span className="inline-flex items-center gap-1 text-xs font-bold text-slate-400">
+              <span className="inline-flex items-center gap-1 text-xs font-bold text-white/45">
                 <Users className="h-3 w-3" />
                 {question.totalBets} apuesta{question.totalBets !== 1 ? "s" : ""}
               </span>
             )}
             {question.resolved && (
               <>
-                <span className="rounded-md bg-emerald-100 px-1.5 py-0.5 text-[11px] font-black text-emerald-700">
-                  ✓ {correctLabel}
+                <span className="rounded-md bg-[#10240b] px-1.5 py-0.5 text-[11px] font-black text-[#d5ff3f]">
+                  OK {correctLabel}
                 </span>
                 <button
                   type="button"
                   disabled={isResolving}
                   onClick={() => onResolve(question.id, null)}
-                  className="text-[11px] font-black text-slate-400 underline transition hover:text-red-600 disabled:opacity-40"
+                  className="text-[11px] font-black text-white/40 underline transition hover:text-red-600 disabled:opacity-40"
                 >
                   Quitar respuesta
                 </button>
@@ -184,7 +184,7 @@ function QuestionCard({
         <div className="shrink-0">
           {confirmDelete ? (
             <div className="flex items-center gap-1.5">
-              <span className="text-[11px] font-black text-red-700">¿Eliminar?</span>
+              <span className="text-[11px] font-black text-[#ffd2c2]">Eliminar?</span>
               <button
                 type="button"
                 disabled={isDeleting}
@@ -192,12 +192,12 @@ function QuestionCard({
                 className="inline-flex items-center gap-1 rounded-md bg-red-600 px-2 py-1 text-[11px] font-black text-white transition hover:bg-red-700 disabled:opacity-40"
               >
                 {isDeleting ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
-                Sí
+                Si
               </button>
               <button
                 type="button"
                 onClick={() => setConfirmDelete(false)}
-                className="rounded-md border border-slate-300 bg-white px-2 py-1 text-[11px] font-black text-slate-600 transition hover:bg-slate-50"
+                className="rounded-md border border-white/18 bg-black/35 px-2 py-1 text-[11px] font-black text-white/65 transition hover:bg-white/5"
               >
                 No
               </button>
@@ -207,7 +207,7 @@ function QuestionCard({
               type="button"
               disabled={isDeleting || isResolving}
               onClick={() => setConfirmDelete(true)}
-              className="grid h-7 w-7 place-items-center rounded-lg border border-slate-200 bg-white text-slate-400 transition hover:border-red-300 hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
+              className="grid h-7 w-7 place-items-center rounded-lg border border-white/12 bg-black/35 text-white/40 transition hover:border-[#ff6a3d]/50 hover:bg-[#35130d] hover:text-[#ffd2c2] disabled:opacity-40"
               title="Eliminar pregunta"
             >
               <Trash2 className="h-3.5 w-3.5" />
@@ -217,10 +217,10 @@ function QuestionCard({
       </div>
 
       {/* analytics + resolve */}
-      <div className="border-t border-slate-100 px-4 py-3">
+      <div className="border-t border-white/10 px-4 py-3">
         {!question.resolved && (
-          <div className="mb-3 rounded-lg border border-emerald-200 bg-emerald-50 p-2.5">
-            <p className="mb-2 text-[11px] font-black uppercase tracking-wide text-emerald-700">
+          <div className="mb-3 rounded-lg border border-[#9dff34]/30 bg-[#10240b]/80 p-2.5">
+            <p className="mb-2 text-[11px] font-black uppercase tracking-wide text-[#d5ff3f]">
               Marcar respuesta correcta
             </p>
             <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
@@ -230,7 +230,7 @@ function QuestionCard({
                   type="button"
                   disabled={isResolving}
                   onClick={() => onResolve(question.id, opt.id)}
-                  className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-emerald-300 bg-white px-3 py-2 text-sm font-black text-emerald-800 transition hover:border-emerald-500 hover:bg-emerald-100 disabled:opacity-40"
+                  className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-[#9dff34]/35 bg-black/35 px-3 py-2 text-sm font-black text-[#d5ff3f] transition hover:border-[#d5ff3f] hover:bg-[#12351f] disabled:opacity-40"
                 >
                   {isResolving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
                   {opt.label}
@@ -240,7 +240,7 @@ function QuestionCard({
           </div>
         )}
         {question.totalBets === 0 ? (
-          <p className="text-xs font-bold text-slate-400">Sin apuestas todavía.</p>
+          <p className="text-xs font-bold text-white/45">Sin apuestas todavia.</p>
         ) : (
           <div className="mb-3 grid gap-2">
             {question.betsByOption.map((opt) => (
@@ -259,7 +259,7 @@ function QuestionCard({
   );
 }
 
-// ── Main component ───────────────────────────────────────────────────────────
+// Main component
 
 export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion, onResolveQuestion, onDeleteQuestion }: Props) {
   const now = Date.now();
@@ -395,13 +395,13 @@ export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion,
           setQuestionFilter("pending");
         }}
         className={cn(
-          "flex w-full items-center justify-between gap-3 border-b border-slate-100 px-4 py-3 text-left transition last:border-0",
-          isSelected ? "bg-slate-950 text-white" : "text-slate-700 hover:bg-slate-50"
+          "flex w-full items-center justify-between gap-3 border-b border-white/10 px-4 py-3 text-left transition last:border-0",
+          isSelected ? "bg-[#d5ff3f] text-[#06110b]" : "text-white/70 hover:bg-white/5"
         )}
       >
         <div className="min-w-0">
-          <p className={cn("text-[10px] font-black uppercase tracking-wide", isSelected ? "text-slate-400" : "text-slate-400")}>
-            {isLive ? "🔴 LIVE" : dateStr} · {match.group ? `Grupo ${match.group}` : match.stageLabel}
+          <p className={cn("text-[10px] font-black uppercase tracking-wide", isSelected ? "text-white/40" : "text-white/40")}>
+            {isLive ? "LIVE" : dateStr} - {match.group ? `Grupo ${match.group}` : match.stageLabel}
           </p>
           <p className="truncate text-sm font-black">
             {match.homeTeam} vs {match.awayTeam}
@@ -411,7 +411,7 @@ export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion,
           {count > 0 && (
             <span className={cn(
               "rounded-md px-1.5 py-0.5 text-[10px] font-black tabular-nums",
-              isSelected ? "bg-white/15 text-white" : "bg-slate-100 text-slate-600"
+              isSelected ? "bg-white/15 text-white" : "bg-white/10 text-white/60"
             )}>
               {count}q
             </span>
@@ -419,7 +419,7 @@ export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion,
           {pending > 0 && (
             <span className={cn(
               "rounded-md px-1.5 py-0.5 text-[10px] font-black tabular-nums",
-              isSelected ? "bg-amber-300 text-slate-950" : "bg-amber-100 text-amber-700"
+              isSelected ? "bg-[#06110b]/15 text-[#06110b]" : "bg-[#f0b429]/15 text-[#f0b429]"
             )}>
               {pending} pendientes
             </span>
@@ -427,7 +427,7 @@ export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion,
           {bets > 0 && (
             <span className={cn(
               "rounded-md px-1.5 py-0.5 text-[10px] font-black tabular-nums",
-              isSelected ? "bg-white/10 text-white/60" : "bg-slate-50 text-slate-400"
+              isSelected ? "bg-white/10 text-white/60" : "bg-white/10 text-white/40"
             )}>
               {bets}b
             </span>
@@ -439,30 +439,30 @@ export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion,
 
   return (
     <div className="grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
-      {/* ── Match selector ── */}
+      {/* Match selector */}
       <aside className="grid content-start gap-2">
-        <p className="text-xs font-black uppercase tracking-wider text-slate-500">Partido</p>
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <p className="text-xs font-black uppercase tracking-wider text-white/40">Partido</p>
+        <div className="overflow-hidden rounded-xl border border-white/12 bg-black/35 shadow-[0_18px_58px_rgba(0,0,0,0.18)]">
           {pendingPastMatches.length > 0 && (
             <>
-              <div className="border-b border-amber-200 bg-amber-50 px-4 py-2">
-                <p className="text-[10px] font-black uppercase tracking-wider text-amber-700">Por resolver</p>
+              <div className="border-b border-[#f0b429]/25 bg-[#211707]/80 px-4 py-2">
+                <p className="text-[10px] font-black uppercase tracking-wider text-[#f0b429]">Por resolver</p>
               </div>
               {pendingPastMatches.map((match) => <MatchButton key={`pending-${match.id}`} match={match} />)}
             </>
           )}
           {upcomingMatches.length > 0 && (
             <>
-              <div className="border-b border-slate-100 bg-slate-50 px-4 py-2">
-                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Próximos</p>
+              <div className="border-b border-white/10 bg-black/25 px-4 py-2">
+                <p className="text-[10px] font-black uppercase tracking-wider text-white/40">Proximos</p>
               </div>
               {upcomingMatches.map((match) => <MatchButton key={match.id} match={match} />)}
             </>
           )}
           {pastMatches.length > 0 && (
             <>
-              <div className="border-b border-slate-100 bg-slate-50 px-4 py-2">
-                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Pasados</p>
+              <div className="border-b border-white/10 bg-black/25 px-4 py-2">
+                <p className="text-[10px] font-black uppercase tracking-wider text-white/40">Pasados</p>
               </div>
               {pastMatches
                 .filter((match) => !pendingPastMatches.some((pendingMatch) => pendingMatch.id === match.id))
@@ -472,24 +472,24 @@ export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion,
         </div>
       </aside>
 
-      {/* ── Questions panel ── */}
+      {/* Questions panel */}
       <div className="grid content-start gap-4">
         {selectedMatch && (
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-wider text-purple-600">Stats & Apuestas</p>
-              <h2 className="text-xl font-black text-slate-950">
+              <p className="text-[10px] font-black uppercase tracking-wider text-[#d5ff3f]">Stats & Apuestas</p>
+              <h2 className="text-xl font-black text-white">
                 #{selectedMatch.number} {selectedMatch.homeTeam} vs {selectedMatch.awayTeam}
               </h2>
               {matchQuestions.length > 0 && (
-                <div className="mt-1 flex flex-wrap items-center gap-2 text-xs font-bold text-slate-400">
+                <div className="mt-1 flex flex-wrap items-center gap-2 text-xs font-bold text-white/45">
                   <span>{matchQuestions.length} pregunta{matchQuestions.length !== 1 ? "s" : ""}</span>
-                  <span>·</span>
+                  <span>-</span>
                   <span>{totalBetsForMatch} apuesta{totalBetsForMatch !== 1 ? "s" : ""} totales</span>
                   {resolvedCount > 0 && (
                     <>
-                      <span>·</span>
-                      <span className="text-emerald-600">{resolvedCount} resuelta{resolvedCount !== 1 ? "s" : ""}</span>
+                      <span>-</span>
+                      <span className="text-[#9dff34]">{resolvedCount} resuelta{resolvedCount !== 1 ? "s" : ""}</span>
                     </>
                   )}
                 </div>
@@ -498,7 +498,7 @@ export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion,
             <button
               type="button"
               onClick={() => setShowForm((v) => !v)}
-              className="inline-flex items-center gap-2 rounded-lg border border-purple-700 bg-purple-700 px-3 py-2 text-sm font-black text-white transition hover:bg-purple-800"
+              className="inline-flex items-center gap-2 rounded-lg border border-[#d5ff3f]/60 bg-[#d5ff3f] text-[#06110b] px-3 py-2 text-sm font-black transition hover:bg-[#efff9a]"
             >
               {showForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
               {showForm ? "Cancelar" : "Nueva pregunta"}
@@ -507,7 +507,7 @@ export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion,
         )}
 
         {matchQuestions.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white p-2 shadow-sm">
+          <div className="flex flex-wrap items-center gap-2 rounded-xl border border-white/12 bg-black/35 p-2 shadow-[0_18px_58px_rgba(0,0,0,0.18)]">
             {([
               ["pending", `Pendientes (${pendingCount})`],
               ["all", `Todas (${matchQuestions.length})`],
@@ -520,14 +520,14 @@ export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion,
                 className={cn(
                   "h-8 rounded-lg border px-3 text-xs font-black transition",
                   questionFilter === id
-                    ? "border-slate-950 bg-slate-950 text-white"
-                    : "border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300 hover:bg-white"
+                    ? "border-[#d5ff3f]/60 bg-[#d5ff3f] text-[#06110b]"
+                    : "border-white/12 bg-white/5 text-white/65 hover:border-white/18 hover:bg-white/10"
                 )}
               >
                 {label}
               </button>
             ))}
-            <span className="ml-auto text-xs font-bold text-slate-400">
+            <span className="ml-auto text-xs font-bold text-white/45">
               Mostrando {visibleQuestions.length}
             </span>
           </div>
@@ -535,14 +535,14 @@ export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion,
 
         {/* create form */}
         {showForm && (
-          <div className="rounded-xl border border-purple-200 bg-purple-50 p-4">
-            <p className="mb-3 text-sm font-black text-purple-800">Nueva pregunta</p>
+          <div className="rounded-xl border border-[#d5ff3f]/25 bg-[#10240b]/75 p-4">
+            <p className="mb-3 text-sm font-black text-[#d5ff3f]">Nueva pregunta</p>
             <input
               type="text"
               value={newText}
               onChange={(e) => setNewText(e.target.value)}
-              placeholder="¿Ambos equipos anotan?"
-              className="mb-3 h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm font-bold text-slate-950 outline-none focus:border-purple-600 focus:ring-4 focus:ring-purple-100"
+              placeholder="Ambos equipos anotan?"
+              className="mb-3 h-10 w-full rounded-lg border border-white/18 bg-black/35 px-3 text-sm font-bold text-white outline-none focus:border-[#d5ff3f] focus:ring-4 focus:ring-[#d5ff3f]/15"
             />
             <div className="mb-3 grid gap-2">
               {newOptions.map((opt, i) => (
@@ -555,14 +555,14 @@ export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion,
                       next[i] = e.target.value;
                       setNewOptions(next);
                     }}
-                    placeholder={`Opción ${i + 1}`}
-                    className="h-9 flex-1 rounded-lg border border-slate-300 bg-white px-3 text-sm font-bold text-slate-950 outline-none focus:border-purple-600 focus:ring-4 focus:ring-purple-100"
+                    placeholder={`Opcion ${i + 1}`}
+                    className="h-9 flex-1 rounded-lg border border-white/18 bg-black/35 px-3 text-sm font-bold text-white outline-none focus:border-[#d5ff3f] focus:ring-4 focus:ring-[#d5ff3f]/15"
                   />
                   {newOptions.length > 2 && (
                     <button
                       type="button"
                       onClick={() => setNewOptions(newOptions.filter((_, j) => j !== i))}
-                      className="grid h-9 w-9 place-items-center rounded-lg border border-slate-300 bg-white text-slate-500 hover:text-red-600"
+                      className="grid h-9 w-9 place-items-center rounded-lg border border-white/18 bg-black/35 text-white/50 hover:text-red-600"
                     >
                       <X className="h-4 w-4" />
                     </button>
@@ -573,17 +573,17 @@ export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion,
                 <button
                   type="button"
                   onClick={() => setNewOptions([...newOptions, ""])}
-                  className="inline-flex h-9 items-center gap-2 rounded-lg border border-dashed border-slate-300 px-3 text-sm font-bold text-slate-500 hover:border-slate-400 hover:text-slate-700"
+                  className="inline-flex h-9 items-center gap-2 rounded-lg border border-dashed border-white/18 px-3 text-sm font-bold text-white/50 hover:border-slate-400 hover:text-white/65"
                 >
                   <Plus className="h-3 w-3" />
-                  Agregar opción
+                  Agregar opcion
                 </button>
               )}
             </div>
 
             {/* point value */}
             <div className="mb-3">
-              <p className="mb-2 text-[11px] font-black uppercase tracking-wide text-purple-700">Puntos</p>
+              <p className="mb-2 text-[11px] font-black uppercase tracking-wide text-[#d5ff3f]">Puntos</p>
               <div className="flex gap-2">
                 {[1, 2, 3].map((pts) => (
                   <button
@@ -593,8 +593,8 @@ export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion,
                     className={cn(
                       "h-9 w-14 rounded-lg border text-sm font-black transition",
                       newPointValue === pts
-                        ? "border-purple-700 bg-purple-700 text-white"
-                        : "border-slate-300 bg-white text-slate-600 hover:border-purple-400 hover:bg-purple-50"
+                        ? "border-[#d5ff3f]/60 bg-[#d5ff3f] text-[#06110b]"
+                        : "border-white/18 bg-black/35 text-white/65 hover:border-[#d5ff3f]/45 hover:bg-[#12351f]"
                     )}
                   >
                     {pts}pt{pts !== 1 ? "s" : ""}
@@ -603,12 +603,12 @@ export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion,
               </div>
             </div>
 
-            {formError && <p className="mb-3 text-xs font-bold text-red-700">{formError}</p>}
+            {formError && <p className="mb-3 text-xs font-bold text-[#ffd2c2]">{formError}</p>}
             <button
               type="button"
               onClick={() => void handleCreate()}
               disabled={isCreating}
-              className="inline-flex items-center gap-2 rounded-lg border border-purple-700 bg-purple-700 px-4 py-2 text-sm font-black text-white transition hover:bg-purple-800 disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-lg border border-[#d5ff3f]/60 bg-[#d5ff3f] text-[#06110b] px-4 py-2 text-sm font-black transition hover:bg-[#efff9a] disabled:opacity-50"
             >
               {isCreating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
               Crear pregunta
@@ -618,15 +618,15 @@ export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion,
 
         {/* questions list */}
         {!matchQuestions.length ? (
-          <div className="grid min-h-40 place-items-center rounded-xl border border-dashed border-slate-200 bg-white p-6 text-center shadow-sm">
+          <div className="grid min-h-40 place-items-center rounded-xl border border-dashed border-white/12 bg-black/35 p-6 text-center shadow-[0_18px_58px_rgba(0,0,0,0.18)]">
             <div>
-              <p className="text-2xl">🎰</p>
-              <p className="mt-2 text-sm font-black text-slate-600">No hay preguntas para este partido.</p>
+              <p className="text-2xl"></p>
+              <p className="mt-2 text-sm font-black text-white/65">No hay preguntas para este partido.</p>
             </div>
           </div>
         ) : !visibleQuestions.length ? (
-          <div className="grid min-h-32 place-items-center rounded-xl border border-dashed border-slate-200 bg-white p-6 text-center shadow-sm">
-            <p className="text-sm font-black text-slate-500">No hay preguntas en este filtro.</p>
+          <div className="grid min-h-32 place-items-center rounded-xl border border-dashed border-white/12 bg-black/35 p-6 text-center shadow-[0_18px_58px_rgba(0,0,0,0.18)]">
+            <p className="text-sm font-black text-white/50">No hay preguntas en este filtro.</p>
           </div>
         ) : (
           <div className="grid gap-3">
@@ -645,47 +645,47 @@ export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion,
 
         {/* per-match leaderboard */}
         {statBetLeaderboard.length > 0 && (
-          <div className="overflow-hidden rounded-xl border border-purple-200 bg-white shadow-sm">
-            <div className="flex items-center gap-2 border-b border-slate-100 bg-purple-50 px-4 py-3">
-              <Trophy className="h-4 w-4 text-purple-600" />
-              <p className="text-sm font-black text-purple-900">Tabla · Mini-apuestas</p>
-              <span className="ml-auto text-xs font-bold text-slate-400">{statBetLeaderboard.length} jugadores</span>
+          <div className="overflow-hidden rounded-xl border border-white/12 bg-black/35 shadow-[0_18px_58px_rgba(0,0,0,0.18)]">
+            <div className="flex items-center gap-2 border-b border-white/10 bg-black/25 px-4 py-3">
+              <Trophy className="h-4 w-4 text-[#d5ff3f]" />
+              <p className="text-sm font-black text-white">Tabla - Mini-apuestas</p>
+              <span className="ml-auto text-xs font-bold text-white/45">{statBetLeaderboard.length} jugadores</span>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-slate-100 bg-slate-50 text-xs">
-                    <th className="px-3 py-2.5 text-left font-black uppercase tracking-wide text-slate-400">#</th>
-                    <th className="px-3 py-2.5 text-left font-black uppercase tracking-wide text-slate-400">Jugador</th>
-                    <th className="px-3 py-2.5 text-right font-black uppercase tracking-wide text-emerald-600">Pts</th>
-                    <th className="px-3 py-2.5 text-right font-black uppercase tracking-wide text-slate-400">Apuestas</th>
+                  <tr className="border-b border-white/10 bg-black/25 text-xs">
+                    <th className="px-3 py-2.5 text-left font-black uppercase tracking-wide text-white/40">#</th>
+                    <th className="px-3 py-2.5 text-left font-black uppercase tracking-wide text-white/40">Jugador</th>
+                    <th className="px-3 py-2.5 text-right font-black uppercase tracking-wide text-[#9dff34]">Pts</th>
+                    <th className="px-3 py-2.5 text-right font-black uppercase tracking-wide text-white/40">Apuestas</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-50">
+                <tbody className="divide-y divide-white/10">
                   {statBetLeaderboard.map((entry, i) => {
-                    const medals = ["🥇", "🥈", "🥉"];
+                    const medals = ["1", "2", "3"];
                     const isFirst = i === 0;
                     return (
-                      <tr key={entry.playerName} className={isFirst ? "bg-amber-50" : "hover:bg-slate-50/70"}>
+                      <tr key={entry.playerName} className={isFirst ? "bg-[#211707]/80" : "hover:bg-white/5"}>
                         <td className="px-3 py-2.5">
                           {medals[i] ? (
                             <span className="text-base leading-none">{medals[i]}</span>
                           ) : (
-                            <span className="text-sm font-black text-slate-400">{i + 1}</span>
+                            <span className="text-sm font-black text-white/40">{i + 1}</span>
                           )}
                         </td>
                         <td className="px-3 py-2.5">
-                          <p className={`font-black ${isFirst ? "text-amber-900" : "text-slate-950"}`}>
+                          <p className={`font-black ${isFirst ? "text-[#f0b429]" : "text-white"}`}>
                             {entry.playerName}
                           </p>
                         </td>
                         <td className="px-3 py-2.5 text-right">
-                          <span className={`font-black tabular-nums ${entry.earned > 0 ? "text-emerald-700" : "text-slate-300"}`}>
+                          <span className={`font-black tabular-nums ${entry.earned > 0 ? "text-[#d5ff3f]" : "text-slate-300"}`}>
                             {entry.earned}
                           </span>
                         </td>
                         <td className="px-3 py-2.5 text-right">
-                          <span className="text-xs font-bold tabular-nums text-slate-400">{entry.total}</span>
+                          <span className="text-xs font-bold tabular-nums text-white/40">{entry.total}</span>
                         </td>
                       </tr>
                     );

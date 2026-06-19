@@ -24,6 +24,8 @@ const CROSS_TAB_SYNC_KEY = "mundial-sync-version";
 
 export function useMundial() {
   const [playerName, setPlayerName] = useState("");
+  const [isBanned, setIsBanned] = useState(false);
+  const [banReason, setBanReason] = useState<string | null>(null);
   const [showPlayerPicker, setShowPlayerPicker] = useState(false);
   const [playerPickerRequired, setPlayerPickerRequired] = useState(false);
   const [trustedPlayerKey, setTrustedPlayerKey] = useState("");
@@ -317,6 +319,23 @@ export function useMundial() {
     return () => window.clearTimeout(timeout);
   }, [loadQuiniela, playerName]);
 
+  // Check ban status whenever playerName changes
+  useEffect(() => {
+    const trimmed = normalizeName(playerName);
+    if (!trimmed) return;
+    const normalizedName = normalizeKey(trimmed);
+    const visitorId = window.localStorage.getItem("penalitos-vid") ?? "";
+    const p = new URLSearchParams({ playerName: normalizedName });
+    if (visitorId) p.set("visitorId", visitorId);
+    fetch(`/api/mundial/ban/status?${p}`)
+      .then((r) => r.json() as Promise<{ banned?: boolean; reason?: string }>)
+      .then((data) => {
+        if (data.banned) { setIsBanned(true); setBanReason(data.reason ?? null); }
+        else { setIsBanned(false); setBanReason(null); }
+      })
+      .catch(() => { /* ignore network errors */ });
+  }, [playerName]);
+
   useEffect(() => {
     function refreshWhenActive() {
       if (document.visibilityState !== "visible") return;
@@ -602,6 +621,8 @@ export function useMundial() {
   return {
     playerName,
     setPlayerName,
+    isBanned,
+    banReason,
     showPlayerPicker,
     setShowPlayerPicker,
     canClosePlayerPicker: !playerPickerRequired,
