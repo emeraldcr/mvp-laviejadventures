@@ -2,8 +2,32 @@ import { REQUEST_TIMEOUT_MS } from "./constants";
 import { normalizeTeamName, resolveTeamFlag } from "./flags";
 import type { Draft, LiveMatchStatus, MundialMatch } from "./types";
 
-// Max time after kickoff to treat a match as auto-live (90min + 30min ET + 15min buffer)
-const AUTO_LIVE_MAX_MS = 135 * 60_000;
+const HALF_MINUTES = 45;
+const STANDARD_HALFTIME_MINUTES = 15;
+const FINAL_HALFTIME_MINUTES = 27; // midpoint of the expected 24-30 minute final halftime window
+const HYDRATION_BREAK_MINUTES = 3;
+const AVERAGE_STOPPAGE_TOTAL_MINUTES = 6;
+const AVERAGE_STOPPAGE_PER_HALF_MINUTES = AVERAGE_STOPPAGE_TOTAL_MINUTES / 2;
+const HALF_REAL_DURATION_MINUTES = HALF_MINUTES + HYDRATION_BREAK_MINUTES + AVERAGE_STOPPAGE_PER_HALF_MINUTES;
+
+export const LIVE_TIMING = {
+  halfMinutes: HALF_MINUTES,
+  standardHalftimeMinutes: STANDARD_HALFTIME_MINUTES,
+  finalHalftimeMinutes: FINAL_HALFTIME_MINUTES,
+  hydrationBreakMinutes: HYDRATION_BREAK_MINUTES,
+  firstHydrationMinute: 22,
+  secondHydrationMinute: 67,
+  averageStoppageTotalMinutes: AVERAGE_STOPPAGE_TOTAL_MINUTES,
+  averageStoppagePerHalfMinutes: AVERAGE_STOPPAGE_PER_HALF_MINUTES,
+};
+
+function halftimeMinutes(match: MundialMatch) {
+  return match.stage === "final" ? FINAL_HALFTIME_MINUTES : STANDARD_HALFTIME_MINUTES;
+}
+
+function autoLiveMaxMinutes(match: MundialMatch) {
+  return (HALF_REAL_DURATION_MINUTES * 2) + halftimeMinutes(match);
+}
 
 export async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit = {}) {
   const controller = new AbortController();
@@ -106,26 +130,34 @@ export function isMatchLive(match: MundialMatch) {
 export function isMatchAutoLive(match: MundialMatch, nowMs: number): boolean {
   if (!nowMs || match.liveStatus !== "scheduled") return false;
   const elapsed = nowMs - kickoffMs(match);
-  return elapsed >= 0 && elapsed < AUTO_LIVE_MAX_MS;
+  return elapsed >= 0 && elapsed < autoLiveMaxMinutes(match) * 60_000;
 }
 
 // Estimated match minute based on elapsed time since kickoff.
-// Assumes ~45 min first half, ~15 min halftime break, max 90 displayed.
+// Includes fixed hydration windows and average stoppage time in the real match duration.
 export function autoLiveMinute(match: MundialMatch, nowMs: number): number | null {
   const ko = kickoffMs(match);
   if (!nowMs || nowMs < ko) return null;
   const elapsed = Math.floor((nowMs - ko) / 60_000);
-  if (elapsed >= AUTO_LIVE_MAX_MS / 60_000) return null;
-  if (elapsed < 45) return elapsed;
-  if (elapsed < 60) return 45; // halftime break window
-  return Math.min(90, elapsed - 15); // second half offset
+  const firstHalfEnd = HALF_REAL_DURATION_MINUTES;
+  const secondHalfStart = firstHalfEnd + halftimeMinutes(match);
+  const fullTime = secondHalfStart + HALF_REAL_DURATION_MINUTES;
+
+  if (elapsed >= fullTime) return null;
+  if (elapsed < firstHalfEnd) return Math.min(elapsed, HALF_MINUTES + AVERAGE_STOPPAGE_PER_HALF_MINUTES);
+  if (elapsed < secondHalfStart) return HALF_MINUTES; // halftime break window
+
+  const secondHalfElapsed = elapsed - secondHalfStart;
+  return Math.min(HALF_MINUTES + secondHalfElapsed, (HALF_MINUTES * 2) + AVERAGE_STOPPAGE_PER_HALF_MINUTES);
 }
 
 // Derived live status from elapsed time when the DB still says "scheduled".
 export function autoLiveStatus(match: MundialMatch, nowMs: number): LiveMatchStatus {
   if (!isMatchAutoLive(match, nowMs)) return match.liveStatus;
   const elapsed = Math.floor((nowMs - kickoffMs(match)) / 60_000);
-  return elapsed >= 45 && elapsed < 60 ? "halftime" : "live";
+  const firstHalfEnd = HALF_REAL_DURATION_MINUTES;
+  const secondHalfStart = firstHalfEnd + halftimeMinutes(match);
+  return elapsed >= firstHalfEnd && elapsed < secondHalfStart ? "halftime" : "live";
 }
 
 export function liveStatusLabel(match: MundialMatch) {

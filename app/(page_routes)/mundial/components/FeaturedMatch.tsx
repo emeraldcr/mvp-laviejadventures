@@ -11,6 +11,7 @@ import {
   isMatchLive,
   liveScoreText,
   liveStatusLabel,
+  LIVE_TIMING,
   predictionResult,
   teamCode,
 } from "../utils";
@@ -586,17 +587,28 @@ function useLiveClock(match: MundialMatch, isLive: boolean) {
     const koMs = new Date(match.kickoffAt).getTime();
     if (!Number.isFinite(koMs)) return null;
     const totalSec = Math.max(0, Math.floor((nowMs - koMs) / 1_000));
-    const firstHalfSec = 45 * 60;
-    const halftimeSec = 15 * 60;
+    const halftimeMinutes =
+      match.stage === "final"
+        ? LIVE_TIMING.finalHalftimeMinutes
+        : LIVE_TIMING.standardHalftimeMinutes;
+    const firstHalfSec =
+      (LIVE_TIMING.halfMinutes +
+        LIVE_TIMING.hydrationBreakMinutes +
+        LIVE_TIMING.averageStoppagePerHalfMinutes) * 60;
+    const halftimeSec = halftimeMinutes * 60;
+    const maxFirstHalfDisplay = (LIVE_TIMING.halfMinutes + LIVE_TIMING.averageStoppagePerHalfMinutes) * 60;
+    const maxSecondHalfDisplay = ((LIVE_TIMING.halfMinutes * 2) + LIVE_TIMING.averageStoppagePerHalfMinutes) * 60;
 
     if (totalSec < firstHalfSec) {
-      return { mins: Math.floor(totalSec / 60), secs: totalSec % 60 };
+      const displaySec = Math.min(totalSec, maxFirstHalfDisplay);
+      return { mins: Math.floor(displaySec / 60), secs: displaySec % 60 };
     }
     if (totalSec < firstHalfSec + halftimeSec) {
       return { mins: 45, secs: 0 };
     }
     const secondHalfSec = totalSec - firstHalfSec - halftimeSec;
-    return { mins: 45 + Math.floor(secondHalfSec / 60), secs: secondHalfSec % 60 };
+    const displaySec = Math.min((LIVE_TIMING.halfMinutes * 60) + secondHalfSec, maxSecondHalfDisplay);
+    return { mins: Math.floor(displaySec / 60), secs: displaySec % 60 };
   }, [isLive, match, nowMs]);
 }
 
