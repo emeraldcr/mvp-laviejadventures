@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Check, ChevronDown, Loader2, Plus, Trash2, Trophy, Users, X } from "lucide-react";
 import type { AdminMatch, AdminStatQuestion, BetOptionAnalytics } from "../adminTypes";
 import { cn } from "../../utils";
@@ -218,6 +218,27 @@ function QuestionCard({
 
       {/* analytics + resolve */}
       <div className="border-t border-slate-100 px-4 py-3">
+        {!question.resolved && (
+          <div className="mb-3 rounded-lg border border-emerald-200 bg-emerald-50 p-2.5">
+            <p className="mb-2 text-[11px] font-black uppercase tracking-wide text-emerald-700">
+              Marcar respuesta correcta
+            </p>
+            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+              {question.options.map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  disabled={isResolving}
+                  onClick={() => onResolve(question.id, opt.id)}
+                  className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-emerald-300 bg-white px-3 py-2 text-sm font-black text-emerald-800 transition hover:border-emerald-500 hover:bg-emerald-100 disabled:opacity-40"
+                >
+                  {isResolving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
         {question.totalBets === 0 ? (
           <p className="text-xs font-bold text-slate-400">Sin apuestas todavía.</p>
         ) : (
@@ -233,28 +254,6 @@ function QuestionCard({
           </div>
         )}
 
-        {/* resolve buttons */}
-        {!question.resolved && (
-          <div>
-            <p className="mb-2 text-[11px] font-black uppercase tracking-wide text-slate-400">
-              Marcar respuesta correcta
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {question.options.map((opt) => (
-                <button
-                  key={opt.id}
-                  type="button"
-                  disabled={isResolving}
-                  onClick={() => onResolve(question.id, opt.id)}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-black text-slate-700 transition hover:border-emerald-400 hover:bg-emerald-50 hover:text-emerald-800 disabled:opacity-40"
-                >
-                  {isResolving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
@@ -265,21 +264,40 @@ function QuestionCard({
 export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion, onResolveQuestion, onDeleteQuestion }: Props) {
   const now = Date.now();
 
+  const questionStatsByMatch = useMemo(() => {
+    const stats = new Map<string, { total: number; pending: number; bets: number }>();
+    for (const question of statQuestions) {
+      const current = stats.get(question.matchId) ?? { total: 0, pending: 0, bets: 0 };
+      current.total += 1;
+      if (!question.resolved) current.pending += 1;
+      current.bets += question.totalBets;
+      stats.set(question.matchId, current);
+    }
+    return stats;
+  }, [statQuestions]);
+
   const upcomingMatches = matches.filter((m) => {
     const isLive = m.liveStatus === "live" || m.liveStatus === "halftime";
-    return isLive || new Date(m.kickoffAt).getTime() > now;
+    return isLive || (!m.closed && new Date(m.kickoffAt).getTime() > now);
   });
   const pastMatches = matches.filter((m) => {
     const isLive = m.liveStatus === "live" || m.liveStatus === "halftime";
-    return !isLive && new Date(m.kickoffAt).getTime() <= now;
+    return !isLive && (m.closed || new Date(m.kickoffAt).getTime() <= now);
   });
+  const pendingPastMatches = pastMatches.filter((match) => (questionStatsByMatch.get(match.id)?.pending ?? 0) > 0);
 
   const [selectedMatchId, setSelectedMatchId] = useState<string>(
     () => {
+      const pastWithPending = matches.find((m) => {
+        const isLive = m.liveStatus === "live" || m.liveStatus === "halftime";
+        const isPast = !isLive && (m.closed || new Date(m.kickoffAt).getTime() <= Date.now());
+        return isPast && statQuestions.some((q) => q.matchId === m.id && !q.resolved);
+      });
       const withQuestions = matches.find((m) => statQuestions.some((q) => q.matchId === m.id));
-      return withQuestions?.id ?? matches.find((m) => m.closed)?.id ?? matches[0]?.id ?? "";
+      return pastWithPending?.id ?? withQuestions?.id ?? matches.find((m) => m.closed)?.id ?? matches[0]?.id ?? "";
     }
   );
+  const [questionFilter, setQuestionFilter] = useState<"pending" | "all" | "resolved">("pending");
   const [newText, setNewText] = useState("");
   const [newOptions, setNewOptions] = useState(["", ""]);
   const [newPointValue, setNewPointValue] = useState(1);
@@ -290,10 +308,24 @@ export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion,
   const [formError, setFormError] = useState("");
 
   const selectedMatch = matches.find((m) => m.id === selectedMatchId);
-  const matchQuestions = statQuestions.filter((q) => q.matchId === selectedMatchId);
+  const matchQuestions = statQuestions
+    .filter((q) => q.matchId === selectedMatchId)
+    .sort((a, b) => Number(a.resolved) - Number(b.resolved) || b.totalBets - a.totalBets);
+  const visibleQuestions = matchQuestions.filter((q) => {
+    if (questionFilter === "pending") return !q.resolved;
+    if (questionFilter === "resolved") return q.resolved;
+    return true;
+  });
 
   const totalBetsForMatch = matchQuestions.reduce((sum, q) => sum + q.totalBets, 0);
   const resolvedCount = matchQuestions.filter((q) => q.resolved).length;
+  const pendingCount = matchQuestions.length - resolvedCount;
+
+  useEffect(() => {
+    if (questionFilter === "pending" && pendingCount === 0 && matchQuestions.length > 0) {
+      setQuestionFilter("all");
+    }
+  }, [matchQuestions.length, pendingCount, questionFilter]);
 
   const statBetLeaderboard = useMemo(() => {
     const playerMap = new Map<string, { playerName: string; earned: number; total: number }>();
@@ -345,10 +377,10 @@ export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion,
   }
 
   function MatchButton({ match }: { match: AdminMatch }) {
-    const count = statQuestions.filter((q) => q.matchId === match.id).length;
-    const bets = statQuestions
-      .filter((q) => q.matchId === match.id)
-      .reduce((s, q) => s + q.totalBets, 0);
+    const stats = questionStatsByMatch.get(match.id) ?? { total: 0, pending: 0, bets: 0 };
+    const count = stats.total;
+    const bets = stats.bets;
+    const pending = stats.pending;
     const isSelected = selectedMatchId === match.id;
     const isLive = match.liveStatus === "live" || match.liveStatus === "halftime";
     const kickoff = new Date(match.kickoffAt);
@@ -358,7 +390,10 @@ export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion,
       <button
         key={match.id}
         type="button"
-        onClick={() => setSelectedMatchId(match.id)}
+        onClick={() => {
+          setSelectedMatchId(match.id);
+          setQuestionFilter("pending");
+        }}
         className={cn(
           "flex w-full items-center justify-between gap-3 border-b border-slate-100 px-4 py-3 text-left transition last:border-0",
           isSelected ? "bg-slate-950 text-white" : "text-slate-700 hover:bg-slate-50"
@@ -381,6 +416,14 @@ export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion,
               {count}q
             </span>
           )}
+          {pending > 0 && (
+            <span className={cn(
+              "rounded-md px-1.5 py-0.5 text-[10px] font-black tabular-nums",
+              isSelected ? "bg-amber-300 text-slate-950" : "bg-amber-100 text-amber-700"
+            )}>
+              {pending} pendientes
+            </span>
+          )}
           {bets > 0 && (
             <span className={cn(
               "rounded-md px-1.5 py-0.5 text-[10px] font-black tabular-nums",
@@ -400,6 +443,14 @@ export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion,
       <aside className="grid content-start gap-2">
         <p className="text-xs font-black uppercase tracking-wider text-slate-500">Partido</p>
         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+          {pendingPastMatches.length > 0 && (
+            <>
+              <div className="border-b border-amber-200 bg-amber-50 px-4 py-2">
+                <p className="text-[10px] font-black uppercase tracking-wider text-amber-700">Por resolver</p>
+              </div>
+              {pendingPastMatches.map((match) => <MatchButton key={`pending-${match.id}`} match={match} />)}
+            </>
+          )}
           {upcomingMatches.length > 0 && (
             <>
               <div className="border-b border-slate-100 bg-slate-50 px-4 py-2">
@@ -413,7 +464,9 @@ export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion,
               <div className="border-b border-slate-100 bg-slate-50 px-4 py-2">
                 <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Pasados</p>
               </div>
-              {pastMatches.map((match) => <MatchButton key={match.id} match={match} />)}
+              {pastMatches
+                .filter((match) => !pendingPastMatches.some((pendingMatch) => pendingMatch.id === match.id))
+                .map((match) => <MatchButton key={match.id} match={match} />)}
             </>
           )}
         </div>
@@ -450,6 +503,33 @@ export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion,
               {showForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
               {showForm ? "Cancelar" : "Nueva pregunta"}
             </button>
+          </div>
+        )}
+
+        {matchQuestions.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white p-2 shadow-sm">
+            {([
+              ["pending", `Pendientes (${pendingCount})`],
+              ["all", `Todas (${matchQuestions.length})`],
+              ["resolved", `Resueltas (${resolvedCount})`],
+            ] as const).map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setQuestionFilter(id)}
+                className={cn(
+                  "h-8 rounded-lg border px-3 text-xs font-black transition",
+                  questionFilter === id
+                    ? "border-slate-950 bg-slate-950 text-white"
+                    : "border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300 hover:bg-white"
+                )}
+              >
+                {label}
+              </button>
+            ))}
+            <span className="ml-auto text-xs font-bold text-slate-400">
+              Mostrando {visibleQuestions.length}
+            </span>
           </div>
         )}
 
@@ -544,9 +624,13 @@ export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion,
               <p className="mt-2 text-sm font-black text-slate-600">No hay preguntas para este partido.</p>
             </div>
           </div>
+        ) : !visibleQuestions.length ? (
+          <div className="grid min-h-32 place-items-center rounded-xl border border-dashed border-slate-200 bg-white p-6 text-center shadow-sm">
+            <p className="text-sm font-black text-slate-500">No hay preguntas en este filtro.</p>
+          </div>
         ) : (
           <div className="grid gap-3">
-            {matchQuestions.map((question) => (
+            {visibleQuestions.map((question) => (
               <QuestionCard
                 key={question.id}
                 question={question}

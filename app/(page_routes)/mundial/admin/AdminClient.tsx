@@ -33,8 +33,8 @@ const STAT_Q_API = "/api/mundial/admin/stat-questions";
 const ODDS_SYNC_API = "/api/mundial/admin/odds-sync";
 
 const VIEW_OPTIONS: Array<{ id: AdminView; label: string; icon: React.ReactNode }> = [
-  { id: "leaderboard", label: "Leaderboard", icon: <Trophy className="h-4 w-4" /> },
   { id: "matches", label: "Partidos", icon: <Tv2 className="h-4 w-4" /> },
+  { id: "leaderboard", label: "Leaderboard", icon: <Trophy className="h-4 w-4" /> },
   { id: "stats", label: "Stats & Apuestas", icon: <BarChart3 className="h-4 w-4" /> },
   { id: "analytics", label: "Analytics", icon: <Activity className="h-4 w-4" /> },
 ];
@@ -42,7 +42,7 @@ const VIEW_OPTIONS: Array<{ id: AdminView; label: string; icon: React.ReactNode 
 type MatchFilter = "upcoming" | "live" | "recent" | "open" | "scored" | "all";
 const FILTER_OPTIONS: Array<{ id: MatchFilter; label: string }> = [
   { id: "upcoming", label: "Próximos" },
-  { id: "live",     label: "🔴 Live" },
+  { id: "live",     label: "Live" },
   { id: "recent",   label: "Recientes" },
   { id: "open",     label: "Abiertos" },
   { id: "scored",   label: "Con resultado" },
@@ -51,7 +51,7 @@ const FILTER_OPTIONS: Array<{ id: MatchFilter; label: string }> = [
 
 export default function AdminClient() {
   const [data, setData] = useState<AdminData | null>(null);
-  const [view, setView] = useState<AdminView>("leaderboard");
+  const [view, setView] = useState<AdminView>("matches");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [oddsSyncMessage, setOddsSyncMessage] = useState("");
@@ -187,23 +187,23 @@ export default function AdminClient() {
   const leader = data?.leaderboard[0] ?? null;
 
   return (
-    <main className="min-h-screen bg-[#f4f7fb] text-slate-950">
+    <main className="min-h-screen overflow-x-hidden bg-[#07110b] text-white [background-image:linear-gradient(90deg,rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(0deg,rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(135deg,#06100b_0%,#0b2216_45%,#14351d_74%,#07110b_100%)] [background-size:96px_96px,96px_96px,100%_100%]">
       {/* Header */}
-      <header className="border-b border-slate-200 bg-white shadow-sm">
+      <header className="border-b border-white/12 bg-black/35 shadow-[0_16px_46px_rgba(0,0,0,0.22)] backdrop-blur">
         <div className="mx-auto flex w-full max-w-[1600px] items-center justify-between gap-4 px-4 py-4 sm:px-6">
           <div className="flex items-center gap-3">
-            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-red-200 bg-red-50">
-              <Shield className="h-5 w-5 text-red-700" />
+            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-[#f0b429]/45 bg-[#f0b429] text-[#07110b] shadow-[0_0_22px_rgba(240,180,41,0.24)]">
+              <Shield className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-red-600">Admin</p>
-              <h1 className="text-lg font-black leading-tight text-slate-950">Mundial 2026</h1>
+              <p className="text-[10px] font-black uppercase tracking-widest text-[#d5ff3f]">Admin</p>
+              <h1 className="text-lg font-black leading-tight text-white">Mundial 2026</h1>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <Link
               href="/mundial"
-              className="inline-flex h-9 items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-sm font-black text-slate-700 transition hover:bg-slate-50"
+              className="inline-flex h-9 items-center gap-2 rounded-lg border border-white/15 bg-white/5 px-3 text-sm font-black text-white/70 transition hover:border-[#d5ff3f]/45 hover:bg-[#12351f] hover:text-white"
             >
               <ArrowLeft className="h-4 w-4" />
               <span className="hidden sm:inline">Quiniela</span>
@@ -212,7 +212,7 @@ export default function AdminClient() {
               type="button"
               onClick={() => void load()}
               disabled={isLoading}
-              className="inline-flex h-9 items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-sm font-black text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+              className="inline-flex h-9 items-center gap-2 rounded-lg border border-white/15 bg-white/5 px-3 text-sm font-black text-white/70 transition hover:border-[#d5ff3f]/45 hover:bg-[#12351f] hover:text-white disabled:opacity-50"
             >
               {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
               <span className="hidden sm:inline">Actualizar</span>
@@ -221,7 +221,7 @@ export default function AdminClient() {
               type="button"
               onClick={() => void syncOdds()}
               disabled={isSyncingOdds}
-              className="inline-flex h-9 items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 text-sm font-black text-amber-800 transition hover:bg-amber-100 disabled:opacity-50"
+              className="inline-flex h-9 items-center gap-2 rounded-lg border border-[#f0b429]/45 bg-[#f0b429] px-3 text-sm font-black text-[#07110b] transition hover:bg-[#ffe083] disabled:opacity-50"
             >
               {isSyncingOdds ? <Loader2 className="h-4 w-4 animate-spin" /> : <BadgePercent className="h-4 w-4" />}
               <span className="hidden sm:inline">Odds</span>
@@ -234,36 +234,36 @@ export default function AdminClient() {
         {/* Summary stats */}
         {data && (
           <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-5">
-            <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-slate-100">
-                <Users className="h-4 w-4 text-slate-600" />
+            <div className="flex items-center gap-3 rounded-xl border border-white/12 bg-black/35 px-4 py-3 shadow-[0_16px_46px_rgba(0,0,0,0.18)]">
+              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/8">
+                <Users className="h-4 w-4 text-white/65" />
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">Jugadores</p>
-                <p className="text-xl font-black tabular-nums text-slate-950">{playerCount}</p>
+                <p className="text-[10px] font-black uppercase tracking-wide text-white/40">Jugadores</p>
+                <p className="text-xl font-black tabular-nums text-white">{playerCount}</p>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-emerald-50">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+            <div className="flex items-center gap-3 rounded-xl border border-[#9dff34]/25 bg-[#10240b]/75 px-4 py-3 shadow-[0_16px_46px_rgba(0,0,0,0.18)]">
+              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-[#9dff34]/25 bg-[#9dff34]/10">
+                <CheckCircle2 className="h-4 w-4 text-[#d5ff3f]" />
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">Con resultado</p>
-                <p className="text-xl font-black tabular-nums text-slate-950">
+                <p className="text-[10px] font-black uppercase tracking-wide text-white/40">Con resultado</p>
+                <p className="text-xl font-black tabular-nums text-white">
                   {scoredCount}
-                  <span className="text-sm font-bold text-slate-400">/{data.matches.length}</span>
+                  <span className="text-sm font-bold text-white/35">/{data.matches.length}</span>
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-amber-50">
-                <Tv2 className="h-4 w-4 text-amber-600" />
+            <div className="flex items-center gap-3 rounded-xl border border-[#f0b429]/25 bg-[#211707]/70 px-4 py-3 shadow-[0_16px_46px_rgba(0,0,0,0.18)]">
+              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-[#f0b429]/25 bg-[#f0b429]/10">
+                <Tv2 className="h-4 w-4 text-[#f0b429]" />
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">Abiertos</p>
-                <p className="text-xl font-black tabular-nums text-amber-700">{openCount}</p>
+                <p className="text-[10px] font-black uppercase tracking-wide text-white/40">Abiertos</p>
+                <p className="text-xl font-black tabular-nums text-[#f0b429]">{openCount}</p>
               </div>
             </div>
 
@@ -271,38 +271,38 @@ export default function AdminClient() {
               type="button"
               onClick={() => { setView("matches"); setMatchFilter("live"); }}
               className={cn(
-                "flex items-center gap-3 rounded-xl border px-4 py-3 shadow-sm transition text-left",
+                "flex items-center gap-3 rounded-xl border px-4 py-3 text-left shadow-[0_16px_46px_rgba(0,0,0,0.18)] transition",
                 liveCount > 0
-                  ? "border-red-300 bg-red-50 ring-1 ring-red-200 hover:bg-red-100"
-                  : "border-slate-200 bg-white hover:bg-slate-50"
+                  ? "border-[#9dff34]/55 bg-[#10240b]/85 ring-1 ring-[#9dff34]/25 hover:bg-[#16351d]"
+                  : "border-white/12 bg-black/35 hover:bg-white/8"
               )}
             >
               <div className={cn(
-                "relative grid h-9 w-9 shrink-0 place-items-center rounded-lg",
-                liveCount > 0 ? "bg-red-100" : "bg-slate-100"
+                "relative grid h-9 w-9 shrink-0 place-items-center rounded-lg border",
+                liveCount > 0 ? "border-[#9dff34]/35 bg-[#9dff34]/10" : "border-white/10 bg-white/8"
               )}>
-                <Tv2 className={cn("h-4 w-4", liveCount > 0 ? "text-red-600" : "text-slate-400")} />
+                <Tv2 className={cn("h-4 w-4", liveCount > 0 ? "text-[#d5ff3f]" : "text-white/35")} />
                 {liveCount > 0 && (
-                  <span className="absolute -top-1 -right-1 h-2.5 w-2.5 animate-pulse rounded-full bg-red-500" />
+                  <span className="absolute -right-1 -top-1 h-2.5 w-2.5 animate-pulse rounded-full bg-[#9dff34]" />
                 )}
               </div>
               <div className="min-w-0">
-                <p className={cn("text-[10px] font-black uppercase tracking-wide", liveCount > 0 ? "text-red-500" : "text-slate-400")}>
+                <p className={cn("text-[10px] font-black uppercase tracking-wide", liveCount > 0 ? "text-[#d5ff3f]" : "text-white/40")}>
                   En vivo
                 </p>
-                <p className={cn("text-xl font-black tabular-nums", liveCount > 0 ? "text-red-700" : "text-slate-400")}>
+                <p className={cn("text-xl font-black tabular-nums", liveCount > 0 ? "text-[#d5ff3f]" : "text-white/35")}>
                   {liveCount}
                 </p>
               </div>
             </button>
 
-            <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-amber-50">
-                <Trophy className="h-4 w-4 text-amber-500" />
+            <div className="flex items-center gap-3 rounded-xl border border-[#f0b429]/25 bg-black/35 px-4 py-3 shadow-[0_16px_46px_rgba(0,0,0,0.18)]">
+              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-[#f0b429]/25 bg-[#f0b429]/10">
+                <Trophy className="h-4 w-4 text-[#f0b429]" />
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">Líder</p>
-                <p className="truncate text-sm font-black text-slate-950">
+                <p className="text-[10px] font-black uppercase tracking-wide text-white/40">Líder</p>
+                <p className="truncate text-sm font-black text-white">
                   {leader ? `${leader.playerName} · ${leader.totalPoints}pts` : "—"}
                 </p>
               </div>
@@ -320,8 +320,8 @@ export default function AdminClient() {
               className={cn(
                 "inline-flex h-10 items-center gap-2 rounded-xl border px-4 text-sm font-black transition",
                 view === option.id
-                  ? "border-slate-950 bg-slate-950 text-white shadow-sm"
-                  : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+                  ? "border-[#d5ff3f]/60 bg-[#d5ff3f] text-[#06110b] shadow-[0_14px_36px_rgba(213,255,63,0.16)]"
+                  : "border-white/12 bg-black/30 text-white/55 hover:border-[#f0b429]/35 hover:bg-[#12351f] hover:text-white"
               )}
             >
               {option.icon}
@@ -331,21 +331,21 @@ export default function AdminClient() {
         </div>
 
         {error && (
-          <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-bold text-red-800">
+          <div className="mb-4 rounded-xl border border-[#ff6a3d]/60 bg-[#35130d]/80 p-3 text-sm font-bold text-[#ffd2c2]">
             {error}
           </div>
         )}
         {oddsSyncMessage && (
-          <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-bold text-amber-800">
+          <div className="mb-4 rounded-xl border border-[#f0b429]/45 bg-[#211707]/80 p-3 text-sm font-bold text-[#fff1b8]">
             {oddsSyncMessage}
           </div>
         )}
 
         {isLoading && !data ? (
-          <div className="grid min-h-80 place-items-center rounded-xl border border-dashed border-slate-300 bg-white p-8 shadow-sm">
+          <div className="grid min-h-80 place-items-center rounded-xl border border-dashed border-white/20 bg-black/35 p-8 shadow-[0_18px_58px_rgba(0,0,0,0.18)]">
             <div className="text-center">
-              <Loader2 className="mx-auto h-8 w-8 animate-spin text-slate-500" />
-              <p className="mt-3 text-sm font-black text-slate-600">Cargando panel...</p>
+              <Loader2 className="mx-auto h-8 w-8 animate-spin text-[#f0b429]" />
+              <p className="mt-3 text-sm font-black text-white/70">Cargando panel...</p>
             </div>
           </div>
         ) : data ? (
@@ -360,7 +360,7 @@ export default function AdminClient() {
             {view === "matches" && (
               <div className="grid gap-4">
                 {/* Filter bar */}
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2 rounded-xl border border-white/12 bg-black/25 p-2">
                   {FILTER_OPTIONS.map((f) => (
                     <button
                       key={f.id}
@@ -369,14 +369,14 @@ export default function AdminClient() {
                       className={cn(
                         "h-8 rounded-lg border px-3 text-xs font-black transition",
                         matchFilter === f.id
-                          ? "border-slate-950 bg-slate-950 text-white"
-                          : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                          ? "border-[#f0b429]/65 bg-[#f0b429] text-[#06110b]"
+                          : "border-white/12 bg-white/5 text-white/55 hover:border-[#d5ff3f]/40 hover:bg-[#12351f] hover:text-white"
                       )}
                     >
                       {f.label}
                     </button>
                   ))}
-                  <span className="ml-auto text-xs font-bold text-slate-400">
+                  <span className="ml-auto text-xs font-bold text-white/40">
                     {filteredMatches.length} partido{filteredMatches.length !== 1 ? "s" : ""}
                   </span>
                 </div>
@@ -387,8 +387,8 @@ export default function AdminClient() {
                     {matchSections.live.length > 0 && (
                       <div>
                         <div className="mb-3 flex items-center gap-2">
-                          <span className="inline-flex h-5 items-center gap-1.5 rounded-full bg-red-100 px-2.5 text-[10px] font-black uppercase tracking-wide text-red-700">
-                            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-500" />
+                          <span className="inline-flex h-6 items-center gap-1.5 rounded-full border border-[#9dff34]/35 bg-[#10240b] px-2.5 text-[10px] font-black uppercase tracking-wide text-[#d5ff3f]">
+                            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#9dff34]" />
                             En vivo · {matchSections.live.length}
                           </span>
                         </div>
@@ -400,7 +400,7 @@ export default function AdminClient() {
 
                     {matchSections.upcoming.length > 0 && (
                       <div>
-                        <p className="mb-3 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                        <p className="mb-3 text-[10px] font-black uppercase tracking-widest text-white/40">
                           {matchFilter === "upcoming" ? "Programados" : "Próximos"} · {matchSections.upcoming.length}
                         </p>
                         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -411,7 +411,7 @@ export default function AdminClient() {
 
                     {matchSections.past.length > 0 && (
                       <div>
-                        <p className="mb-3 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                        <p className="mb-3 text-[10px] font-black uppercase tracking-widest text-white/40">
                           Jugados · {matchSections.past.length}
                         </p>
                         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -421,10 +421,10 @@ export default function AdminClient() {
                     )}
 
                     {matchSections.live.length === 0 && matchSections.upcoming.length === 0 && matchSections.past.length === 0 && (
-                      <div className="grid min-h-48 place-items-center rounded-xl border border-dashed border-slate-200 bg-white p-8 text-center shadow-sm">
+                      <div className="grid min-h-48 place-items-center rounded-xl border border-dashed border-white/20 bg-black/35 p-8 text-center">
                         <div>
-                          <p className="text-3xl">⚽</p>
-                          <p className="mt-3 text-sm font-black text-slate-600">No hay partidos en esta categoría.</p>
+                          <Tv2 className="mx-auto h-9 w-9 text-[#f0b429]" />
+                          <p className="mt-3 text-sm font-black text-white/65">No hay partidos en esta categoría.</p>
                         </div>
                       </div>
                     )}
@@ -437,10 +437,10 @@ export default function AdminClient() {
                     ))}
                   </div>
                 ) : (
-                  <div className="grid min-h-48 place-items-center rounded-xl border border-dashed border-slate-200 bg-white p-8 text-center shadow-sm">
+                  <div className="grid min-h-48 place-items-center rounded-xl border border-dashed border-white/20 bg-black/35 p-8 text-center">
                     <div>
-                      <p className="text-3xl">⚽</p>
-                      <p className="mt-3 text-sm font-black text-slate-600">No hay partidos en esta categoría.</p>
+                      <Tv2 className="mx-auto h-9 w-9 text-[#f0b429]" />
+                      <p className="mt-3 text-sm font-black text-white/65">No hay partidos en esta categoría.</p>
                     </div>
                   </div>
                 )}
