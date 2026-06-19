@@ -14,11 +14,20 @@ import { PlayerDetailModal } from "./components/PlayerDetailModal";
 function sortByProximity(matches: AdminMatch[]): AdminMatch[] {
   const now = Date.now();
   return [...matches].sort((a, b) => {
+    // Tier 0: explicitly live or halftime
     const aLive = a.liveStatus === "live" || a.liveStatus === "halftime" ? 0 : 1;
     const bLive = b.liveStatus === "live" || b.liveStatus === "halftime" ? 0 : 1;
     if (aLive !== bLive) return aLive - bLive;
+
     const aTime = new Date(a.kickoffAt).getTime();
     const bTime = new Date(b.kickoffAt).getTime();
+
+    // Tier 1: kicked off but not yet closed (in progress, not yet marked live)
+    const aInProgress = !a.closed && aTime <= now ? 0 : 1;
+    const bInProgress = !b.closed && bTime <= now ? 0 : 1;
+    if (aInProgress !== bInProgress) return aInProgress - bInProgress;
+
+    // Tier 2: upcoming vs past
     const aUpcoming = aTime > now;
     const bUpcoming = bTime > now;
     if (aUpcoming !== bUpcoming) return aUpcoming ? -1 : 1;
@@ -166,7 +175,7 @@ export default function AdminClient() {
 
   const filteredMatches = useMemo(() => {
     const now = Date.now();
-    if (matchFilter === "upcoming") return allMatchesSorted.filter((m) => isLive(m) || new Date(m.kickoffAt).getTime() > now);
+    if (matchFilter === "upcoming") return allMatchesSorted.filter((m) => !m.closed);
     if (matchFilter === "live")     return allMatchesSorted.filter(isLive);
     if (matchFilter === "recent")   return allMatchesSorted.filter((m) => m.closed).slice(0, 8);
     if (matchFilter === "open")     return allMatchesSorted.filter((m) => !m.closed);
@@ -180,8 +189,8 @@ export default function AdminClient() {
     const now = Date.now();
     if (matchFilter === "upcoming") {
       return {
-        live:     filteredMatches.filter(isLive),
-        upcoming: filteredMatches.filter((m) => !isLive(m)),
+        live:     filteredMatches.filter((m) => isLive(m) || new Date(m.kickoffAt).getTime() <= now),
+        upcoming: filteredMatches.filter((m) => new Date(m.kickoffAt).getTime() > now),
         past:     [] as AdminMatch[],
       };
     }
