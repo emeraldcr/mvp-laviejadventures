@@ -2,13 +2,15 @@ import { NextResponse } from "next/server";
 import { getPayPalApiBaseUrl, getPayPalAccessToken } from "@/lib/helpers/paypal";
 import { getDb } from "@/lib/helpers/mongodb";
 import { COLLECTIONS } from "@/lib/constants/db";
-import { sendPremiumWelcomeEmail } from "@/lib/email/mundialPremiumEmail";
 
-interface CaptureRequest {
+interface CaptureBetRequest {
   orderID?: string;
   playerKey?: string;
   playerName?: string;
-  email?: string;
+  betId?: string;
+  betTitle?: string;
+  pick?: unknown;
+  price?: number;
 }
 
 interface PayPalCaptureResponse {
@@ -19,16 +21,22 @@ interface PayPalCaptureResponse {
       captures?: Array<{ id?: string; status?: string; amount?: { value?: string; currency_code?: string } }>;
     };
   }>;
-  payer?: { email_address?: string };
 }
 
 export async function POST(req: Request) {
   try {
-    const body: CaptureRequest = await req.json();
-    const { orderID, playerKey, playerName, email } = body;
+    const body: CaptureBetRequest = await req.json();
+    const { orderID, playerKey, playerName, betId, betTitle, pick, price } = body;
 
-    if (!orderID || !playerKey) {
+    if (!orderID || !playerKey || !betId) {
       return NextResponse.json({ success: false, message: "Faltan datos requeridos." }, { status: 400 });
+    }
+
+    // Prevent duplicate bets for the same betId
+    const db = await getDb();
+    const existing = await db.collection(COLLECTIONS.MUNDIAL_PREMIUM_PREDICTIONS).findOne({ playerKey, betId });
+    if (existing) {
+      return NextResponse.json({ success: false, message: "Ya tenés una apuesta registrada para esta categoría." }, { status: 409 });
     }
 
     const accessToken = await getPayPalAccessToken();
@@ -50,35 +58,26 @@ export async function POST(req: Request) {
 
     const capture = data.purchase_units?.[0]?.payments?.captures?.[0];
     const captureId = capture?.id;
-    const amountPaid = Number(capture?.amount?.value ?? 0);
-    const payerEmail = email || data.payer?.email_address || null;
+    const amountPaid = Number(capture?.amount?.value ?? price ?? 0);
 
-    const db = await getDb();
-    await db.collection(COLLECTIONS.MUNDIAL_PREMIUM).updateOne(
-      { playerKey },
-      {
-        $set: {
-          playerKey,
-          playerName: playerName || playerKey,
-          email: payerEmail,
-          paypalOrderId: orderID,
-          paypalCaptureId: captureId,
-          amountPaid,
-          currency: capture?.amount?.currency_code ?? "USD",
-          payer: data.payer?.email_address ?? null,
-          paidAt: new Date(),
-        },
-      },
-      { upsert: true }
-    );
+    await db.collection(COLLECTIONS.MUNDIAL_PREMIUM_PREDICTIONS).insertOne({
+      playerKey,
+      playerName: playerName || playerKey,
+      betId,
+      betTitle: betTitle || betId,
+      pick,
+      amountPaid,
+      currency: capture?.amount?.currency_code ?? "USD",
+      paypalOrderId: orderID,
+      paypalCaptureId: captureId,
+      paidAt: new Date(),
+      resolved: false,
+      result: null,
+    });
 
-    if (payerEmail) {
-      void sendPremiumWelcomeEmail({ to: payerEmail, playerName: playerName || playerKey });
-    }
-
-    return NextResponse.json({ captureID: captureId, status: data.status, orderID });
+    return NextResponse.json({ captureID: captureId, status: data.status, orderID, betId });
   } catch (err) {
-    console.error("MUNDIAL PREMIUM capture-order error:", err);
+    console.error("MUNDIAL PREMIUM-BETS capture-order error:", err);
     return NextResponse.json({ success: false, message: "Error al procesar el pago." }, { status: 500 });
   }
 }
