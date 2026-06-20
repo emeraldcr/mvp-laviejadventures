@@ -127,17 +127,51 @@ export type AdminAnalyticsSummary = {
   uniquePlayers: number;
 };
 
+export type AdminPremiumPlayer = {
+  playerKey: string;
+  playerName: string;
+  amountPaid: number | null;
+  currency: string;
+  payer: string | null;
+  paypalOrderId: string | null;
+  paypalCaptureId: string | null;
+  paidAt: string | null;
+  predictionCount: number;
+  completedCount: number;
+  updatedAt: string | null;
+};
+
+export type AdminPremiumPrediction = {
+  id: string;
+  playerKey: string;
+  playerName: string;
+  stage: string;
+  slot: number;
+  teamA: string;
+  teamB: string;
+  scoreA: number | null;
+  scoreB: number | null;
+  winner: "teamA" | "teamB" | "";
+  confidence: number | null;
+  note: string;
+  updatedAt: string | null;
+};
+
 export type AdminData = {
   matches: AdminMatch[];
   leaderboard: LeaderboardEntry[];
   statQuestions: AdminStatQuestion[];
+  premium: {
+    players: AdminPremiumPlayer[];
+    predictions: AdminPremiumPrediction[];
+  };
   analytics: {
     summary: AdminAnalyticsSummary;
     events: AdminAnalyticsEvent[];
   };
 };
 
-export type AdminView = "leaderboard" | "matches" | "stats" | "analytics" | "bans";
+export type AdminView = "leaderboard" | "matches" | "stats" | "premium" | "analytics" | "bans";
 
 export type BanInfo = {
   normalizedName: string;

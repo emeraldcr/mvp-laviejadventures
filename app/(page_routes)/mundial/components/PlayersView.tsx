@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays, ChevronRight, Lock, MinusCircle, Target, TrendingUp, Trophy, Users, X, Zap } from "lucide-react";
+import { CalendarDays, Camera, ChevronRight, Lock, MinusCircle, Target, TrendingUp, Trophy, Users, X, Zap } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type { LeaderboardEntry, MundialMatch, Prediction } from "../types";
 import { cn, finalScoreText, formatKickoff, normalizeKey, teamCode } from "../utils";
@@ -10,6 +10,8 @@ type PlayersViewProps = {
   leaderboard: LeaderboardEntry[];
   matches: MundialMatch[];
   predictions: Prediction[];
+  playerName: string;
+  onOpenProfile: () => void;
 };
 
 type PredictionScore = {
@@ -18,10 +20,35 @@ type PredictionScore = {
 };
 
 
-export function PlayersView({ leaderboard, matches, predictions }: PlayersViewProps) {
+export function PlayersView({ leaderboard, matches, predictions, playerName, onOpenProfile }: PlayersViewProps) {
   const [selectedPlayerKey, setSelectedPlayerKey] = useState<string | null>(null);
+  const [avatarByKey, setAvatarByKey] = useState<Record<string, string | null>>({});
   const matchById = useMemo(() => new Map(matches.map((match) => [match.id, match])), [matches]);
   const selectedEntry = leaderboard.find((entry) => entry.normalizedName === selectedPlayerKey) ?? null;
+
+  useEffect(() => {
+    const names = Array.from(new Set(leaderboard.map((entry) => entry.normalizedName).filter(Boolean)));
+    if (!names.length) {
+      setAvatarByKey({});
+      return;
+    }
+
+    let cancelled = false;
+    fetch("/api/mundial/profile", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ names }),
+    })
+      .then((r) => (r.ok ? r.json() : { avatars: {} }))
+      .then((data: { avatars?: Record<string, string | null> }) => {
+        if (!cancelled) setAvatarByKey(data.avatars ?? {});
+      })
+      .catch(() => {
+        if (!cancelled) setAvatarByKey({});
+      });
+
+    return () => { cancelled = true; };
+  }, [leaderboard]);
 
   if (!leaderboard.length) {
     return (
@@ -44,6 +71,8 @@ export function PlayersView({ leaderboard, matches, predictions }: PlayersViewPr
 
   return (
     <section className="grid gap-4">
+      <ProfilePhotoNotice playerName={playerName} onOpenProfile={onOpenProfile} />
+
       <div className="relative overflow-hidden rounded-xl border border-[#f0b429]/30 bg-[#06140f] shadow-[0_24px_70px_rgba(0,0,0,0.28)]">
         <div className="pointer-events-none absolute inset-0 opacity-45 [background-image:linear-gradient(90deg,rgba(240,180,41,0.06)_1px,transparent_1px),linear-gradient(0deg,rgba(255,255,255,0.05)_1px,transparent_1px)] [background-size:72px_72px]" />
         <div className="relative border-b border-white/12 bg-black/35 px-4 py-4 sm:px-6">
@@ -101,7 +130,7 @@ export function PlayersView({ leaderboard, matches, predictions }: PlayersViewPr
                   2
                 </div>
                 <div className="mb-1.5 grid h-12 w-12 place-items-center rounded-full border-2 border-[#62ffe6]/45 bg-[#071d2a] text-sm font-black text-[#62ffe6] shadow-[0_4px_16px_rgba(0,0,0,0.50)]">
-                  {leaderboard[1].playerName.slice(0, 2).toUpperCase()}
+                  <PlayerAvatar entry={leaderboard[1]} avatarUrl={avatarByKey[leaderboard[1].normalizedName]} size="md" />
                 </div>
                 <p className="w-full truncate text-center text-[11px] font-black text-white sm:text-xs">{leaderboard[1].playerName}</p>
                 <p className="mt-0.5 text-base font-black tabular-nums text-[#62ffe6] sm:text-lg">
@@ -142,7 +171,7 @@ export function PlayersView({ leaderboard, matches, predictions }: PlayersViewPr
               </div>
               <div className="flex w-full flex-col items-center px-2 pb-3 sm:px-4">
                 <div className="mb-1.5 grid h-16 w-16 place-items-center rounded-full border-[3px] border-[#f0b429] bg-[#10240b] text-xl font-black text-[#d5ff3f] shadow-[0_0_30px_rgba(240,180,41,0.55),0_6px_24px_rgba(0,0,0,0.65)]">
-                  {leaderboard[0].playerName.slice(0, 2).toUpperCase()}
+                  <PlayerAvatar entry={leaderboard[0]} avatarUrl={avatarByKey[leaderboard[0].normalizedName]} size="lg" />
                 </div>
                 <p className="w-full truncate text-center text-xs font-black text-white sm:text-sm">{leaderboard[0].playerName}</p>
                 <p className="mt-0.5 text-xl font-black tabular-nums text-[#d5ff3f] sm:text-2xl">
@@ -172,7 +201,7 @@ export function PlayersView({ leaderboard, matches, predictions }: PlayersViewPr
                   3
                 </div>
                 <div className="mb-1.5 grid h-12 w-12 place-items-center rounded-full border-2 border-[#ffb15f]/40 bg-[#200d03] text-sm font-black text-[#ffb15f] shadow-[0_4px_16px_rgba(0,0,0,0.50)]">
-                  {leaderboard[2].playerName.slice(0, 2).toUpperCase()}
+                  <PlayerAvatar entry={leaderboard[2]} avatarUrl={avatarByKey[leaderboard[2].normalizedName]} size="md" />
                 </div>
                 <p className="w-full truncate text-center text-[11px] font-black text-white sm:text-xs">{leaderboard[2].playerName}</p>
                 <p className="mt-0.5 text-base font-black tabular-nums text-[#ffb15f] sm:text-lg">
@@ -233,18 +262,21 @@ export function PlayersView({ leaderboard, matches, predictions }: PlayersViewPr
                     </td>
 
                     <td className="px-2 py-2.5 sm:px-3 sm:py-3">
-                      <div className="min-w-0">
-                        <p className={cn("text-sm font-black sm:text-base", isFirst ? "text-[#d5ff3f]" : "text-white")}>
-                          {entry.playerName}
-                        </p>
-                        <div className="mt-0.5 flex items-center gap-1.5 sm:mt-1 sm:gap-2">
-                          <div className="h-1 w-14 overflow-hidden rounded-full bg-black/55 sm:w-20">
-                            <div
-                              className={cn("h-full rounded-full", isFirst ? "bg-[#d5ff3f]" : "bg-[#62ffe6]")}
-                              style={{ width: `${barWidth}%` }}
-                            />
+                      <div className="flex min-w-0 items-center gap-2.5">
+                        <PlayerAvatar entry={entry} avatarUrl={avatarByKey[entry.normalizedName]} size="sm" />
+                        <div className="min-w-0">
+                          <p className={cn("truncate text-sm font-black sm:text-base", isFirst ? "text-[#d5ff3f]" : "text-white")}>
+                            {entry.playerName}
+                          </p>
+                          <div className="mt-0.5 flex items-center gap-1.5 sm:mt-1 sm:gap-2">
+                            <div className="h-1 w-14 overflow-hidden rounded-full bg-black/55 sm:w-20">
+                              <div
+                                className={cn("h-full rounded-full", isFirst ? "bg-[#d5ff3f]" : "bg-[#62ffe6]")}
+                                style={{ width: `${barWidth}%` }}
+                              />
+                            </div>
+                            {pending > 0 && <span className="text-[9px] font-black text-white/45 sm:text-[10px]">{pending} pend.</span>}
                           </div>
-                          {pending > 0 && <span className="text-[9px] font-black text-white/45 sm:text-[10px]">{pending} pend.</span>}
                         </div>
                       </div>
                     </td>
@@ -302,11 +334,12 @@ export function PlayersView({ leaderboard, matches, predictions }: PlayersViewPr
         </div>
       </div>
 
-      <StatBetsLeaderboard />
+      <StatBetsLeaderboard avatarByKey={avatarByKey} />
 
       {selectedEntry && (
         <PlayerPredictionsModal
           entry={selectedEntry}
+          avatarUrl={avatarByKey[selectedEntry.normalizedName]}
           predictions={predictions.filter((prediction) => normalizeKey(prediction.playerName) === selectedEntry.normalizedName)}
           matchById={matchById}
           onClose={() => setSelectedPlayerKey(null)}
@@ -318,7 +351,7 @@ export function PlayersView({ leaderboard, matches, predictions }: PlayersViewPr
 
 type GlobalStatBetEntry = { playerName: string; earned: number; total: number };
 
-function StatBetsLeaderboard() {
+function StatBetsLeaderboard({ avatarByKey }: { avatarByKey: Record<string, string | null> }) {
   const [entries, setEntries] = useState<GlobalStatBetEntry[]>([]);
   const [loaded, setLoaded] = useState(false);
 
@@ -381,14 +414,23 @@ function StatBetsLeaderboard() {
                     </span>
                   </td>
                   <td className="px-3 py-2.5">
-                    <p className={cn("font-black", isFirst ? "text-[#f0b429]" : "text-white")}>
-                      {entry.playerName}
-                    </p>
-                    <div className="mt-1 h-1 w-24 overflow-hidden rounded-full bg-black/55">
-                      <div
-                        className={cn("h-full rounded-full", isFirst ? "bg-[#f0b429]" : "bg-emerald-500/50")}
-                        style={{ width: `${barWidth}%` }}
+                    <div className="flex min-w-0 items-center gap-2.5">
+                      <PlayerAvatar
+                        entry={{ playerName: entry.playerName, normalizedName: normalizeKey(entry.playerName) }}
+                        avatarUrl={avatarByKey[normalizeKey(entry.playerName)]}
+                        size="xs"
                       />
+                      <div className="min-w-0">
+                        <p className={cn("truncate font-black", isFirst ? "text-[#f0b429]" : "text-white")}>
+                          {entry.playerName}
+                        </p>
+                        <div className="mt-1 h-1 w-24 overflow-hidden rounded-full bg-black/55">
+                          <div
+                            className={cn("h-full rounded-full", isFirst ? "bg-[#f0b429]" : "bg-emerald-500/50")}
+                            style={{ width: `${barWidth}%` }}
+                          />
+                        </div>
+                      </div>
                     </div>
                   </td>
                   <td className="px-3 py-2.5 text-right">
@@ -415,11 +457,13 @@ function StatBetsLeaderboard() {
 
 function PlayerPredictionsModal({
   entry,
+  avatarUrl,
   predictions,
   matchById,
   onClose,
 }: {
   entry: LeaderboardEntry;
+  avatarUrl?: string | null;
   predictions: Prediction[];
   matchById: Map<string, MundialMatch>;
   onClose: () => void;
@@ -439,11 +483,14 @@ function PlayerPredictionsModal({
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 p-2 backdrop-blur-sm sm:items-center sm:p-4">
       <div className="flex max-h-[calc(100dvh-1rem)] w-full max-w-5xl flex-col overflow-hidden rounded-xl border border-[#f0b429]/35 bg-[#06140f] shadow-[0_24px_90px_rgba(0,0,0,0.85)]">
         <div className="flex shrink-0 items-center justify-between gap-3 border-b border-white/12 bg-[#12351f] px-4 py-3 [background-image:linear-gradient(135deg,rgba(240,180,41,0.18),transparent_58%)]">
-          <div className="min-w-0">
-            <p className="truncate text-lg font-black uppercase text-white">{entry.playerName}</p>
-            <p className="mt-1 text-xs font-black uppercase tracking-[0.16em] text-[#d5ff3f]">
-              {modalPoints} pts visibles / {entry.totalPredictions} picks / {accuracyPct(entry)}% precision
-            </p>
+          <div className="flex min-w-0 items-center gap-3">
+            <PlayerAvatar entry={entry} avatarUrl={avatarUrl} size="md" />
+            <div className="min-w-0">
+              <p className="truncate text-lg font-black uppercase text-white">{entry.playerName}</p>
+              <p className="mt-1 text-xs font-black uppercase tracking-[0.16em] text-[#d5ff3f]">
+                {modalPoints} pts visibles / {entry.totalPredictions} picks / {accuracyPct(entry)}% precision
+              </p>
+            </div>
           </div>
           <button
             type="button"
@@ -586,6 +633,104 @@ function PredictionRow({
         </span>
       </div>
     </article>
+  );
+}
+
+function ProfilePhotoNotice({
+  playerName,
+  onOpenProfile,
+}: {
+  playerName: string;
+  onOpenProfile: () => void;
+}) {
+  const [hidden, setHidden] = useState(false);
+
+  useEffect(() => {
+    try {
+      setHidden(localStorage.getItem("mundial-profile-photo-notice") === "hidden");
+    } catch {
+      setHidden(false);
+    }
+  }, []);
+
+  if (hidden) return null;
+
+  function dismiss() {
+    setHidden(true);
+    try {
+      localStorage.setItem("mundial-profile-photo-notice", "hidden");
+    } catch {}
+  }
+
+  return (
+    <div className="overflow-hidden rounded-xl border border-[#d5ff3f]/25 bg-[#10240b]/85 shadow-[0_18px_58px_rgba(0,0,0,0.28)]">
+      <div className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-[#d5ff3f]/35 bg-[#d5ff3f] text-[#06110b]">
+            <Camera className="h-5 w-5" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-sm font-black text-white">
+              Ya pueden agregar foto de perfil al ranking.
+            </p>
+            <p className="mt-0.5 text-xs font-bold text-white/55">
+              {playerName ? "Abrí Mi Perfil y subí tu foto o elegí un avatar." : "Elegí tu jugador y luego abrí Mi Perfil para poner tu foto."}
+            </p>
+          </div>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <button
+            type="button"
+            onClick={onOpenProfile}
+            className="inline-flex h-9 items-center justify-center rounded-lg border border-[#d5ff3f]/45 bg-[#d5ff3f] px-3 text-xs font-black text-[#06110b] transition hover:bg-[#efff9a]"
+          >
+            Agregar foto
+          </button>
+          <button
+            type="button"
+            onClick={dismiss}
+            aria-label="Ocultar aviso"
+            className="grid h-9 w-9 place-items-center rounded-lg border border-white/12 bg-black/25 text-white/50 transition hover:text-white"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PlayerAvatar({
+  entry,
+  avatarUrl,
+  size = "sm",
+}: {
+  entry: Pick<LeaderboardEntry, "playerName" | "normalizedName">;
+  avatarUrl?: string | null;
+  size?: "xs" | "sm" | "md" | "lg";
+}) {
+  const sizeClass =
+    size === "lg"
+      ? "h-16 w-16 text-xl"
+      : size === "md"
+        ? "h-12 w-12 text-sm"
+        : size === "xs"
+          ? "h-8 w-8 text-[11px]"
+          : "h-9 w-9 text-xs";
+  const initials = entry.playerName.trim().slice(0, 2).toUpperCase() || "?";
+
+  return (
+    <span className={cn(
+      "grid shrink-0 place-items-center overflow-hidden rounded-full border border-white/15 bg-[#10240b] font-black text-[#d5ff3f]",
+      sizeClass
+    )}>
+      {avatarUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+      ) : (
+        <span>{initials}</span>
+      )}
+    </span>
   );
 }
 

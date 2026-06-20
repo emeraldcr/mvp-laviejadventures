@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Activity, ArrowLeft, BadgePercent, BarChart3, CheckCircle2, Loader2, RefreshCw, Shield, Tv2, Trophy, Users } from "lucide-react";
+import { Activity, ArrowLeft, BadgePercent, BarChart3, CheckCircle2, Crown, Loader2, RefreshCw, Shield, Tv2, Trophy, Users } from "lucide-react";
 import Link from "next/link";
 import type { AdminData, AdminMatch, AdminView, LeaderboardEntry } from "./adminTypes";
 import { cn } from "../utils";
@@ -10,6 +10,7 @@ import { AdminLeaderboard } from "./components/AdminLeaderboard";
 import { MatchAdminCard } from "./components/MatchAdminCard";
 import { StatQuestionsManager } from "./components/StatQuestionsManager";
 import { PlayerDetailModal } from "./components/PlayerDetailModal";
+import { AdminPremiumPredictionsPanel } from "./components/AdminPremiumPredictionsPanel";
 
 function sortByProximity(matches: AdminMatch[]): AdminMatch[] {
   const now = Date.now();
@@ -45,6 +46,7 @@ const VIEW_OPTIONS: Array<{ id: AdminView; label: string; icon: React.ReactNode 
   { id: "matches", label: "Partidos", icon: <Tv2 className="h-4 w-4" /> },
   { id: "leaderboard", label: "Leaderboard", icon: <Trophy className="h-4 w-4" /> },
   { id: "stats", label: "Stats & Apuestas", icon: <BarChart3 className="h-4 w-4" /> },
+  { id: "premium", label: "Final pagas", icon: <Crown className="h-4 w-4" /> },
   { id: "analytics", label: "Analytics", icon: <Activity className="h-4 w-4" /> },
 ];
 
@@ -477,6 +479,13 @@ export default function AdminClient() {
                 onResolveQuestion={resolveStatQuestion}
                 onDeleteQuestion={deleteStatQuestion}
                 onBulkDeleteQuestions={bulkDeleteStatQuestions}
+              />
+            )}
+
+            {view === "premium" && (
+              <AdminPremiumPredictionsPanel
+                players={data.premium.players}
+                predictions={data.premium.predictions}
               />
             )}
 

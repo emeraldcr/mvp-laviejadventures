@@ -21,4 +21,6 @@ export const COLLECTIONS = {
   PENALITOS_STATE: "penalitos_state",
   MUNDIAL_BANS: "mundial_bans",
   MUNDIAL_RECOVERY_TICKETS: "mundial_recovery_tickets",
+  MUNDIAL_PREMIUM: "mundial_premium",
+  MUNDIAL_PREMIUM_PREDICTIONS: "mundial_premium_predictions",
 } as const;

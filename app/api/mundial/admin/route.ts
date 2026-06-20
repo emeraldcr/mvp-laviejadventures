@@ -110,6 +110,33 @@ type MundialAnalyticsDoc = {
   };
 };
 
+type PremiumDoc = {
+  playerKey?: string;
+  playerName?: string;
+  paypalOrderId?: string;
+  paypalCaptureId?: string;
+  amountPaid?: number;
+  currency?: string;
+  payer?: string | null;
+  paidAt?: Date | string | null;
+};
+
+type PremiumPredictionDoc = {
+  id?: string;
+  playerKey?: string;
+  playerName?: string;
+  stage?: string;
+  slot?: number;
+  teamA?: string;
+  teamB?: string;
+  scoreA?: number | null;
+  scoreB?: number | null;
+  winner?: "teamA" | "teamB" | "";
+  confidence?: number | null;
+  note?: string;
+  updatedAt?: Date | string | null;
+};
+
 function kickoffTime(match: MundialMatchDoc | MundialMatch) {
   const t = new Date(match.kickoffAt).getTime();
   return Number.isNaN(t) ? Number.POSITIVE_INFINITY : t;
@@ -170,6 +197,16 @@ function serializeRosterPlayer(doc: RosterPlayerDoc) {
   };
 }
 
+function isPremiumPredictionComplete(doc: PremiumPredictionDoc) {
+  return Boolean(
+    doc.teamA &&
+    doc.teamB &&
+    typeof doc.scoreA === "number" &&
+    typeof doc.scoreB === "number" &&
+    (doc.winner === "teamA" || doc.winner === "teamB")
+  );
+}
+
 function predictionScores(doc: PredictionDoc) {
   if (typeof doc.homeScore === "number" && typeof doc.awayScore === "number") {
     return { homeScore: doc.homeScore, awayScore: doc.awayScore };
@@ -218,6 +255,8 @@ export async function GET() {
       analyticsEvents,
       analyticsCounts,
       analyticsPlayerKeys,
+      premiumPlayers,
+      premiumPredictions,
     ] = await Promise.all([
       db.collection<MundialMatchDoc>(MATCHES_COLLECTION).find({}).sort({ sortOrder: 1 }).toArray(),
       db.collection<PredictionDoc>(PREDICTIONS_COLLECTION).find({}).toArray(),
@@ -229,6 +268,8 @@ export async function GET() {
         { $group: { _id: "$event", count: { $sum: 1 } } },
       ]).toArray(),
       analyticsCollection.distinct("normalizedName"),
+      db.collection<PremiumDoc>(COLLECTIONS.MUNDIAL_PREMIUM).find({}).sort({ paidAt: -1 }).toArray(),
+      db.collection<PremiumPredictionDoc>(COLLECTIONS.MUNDIAL_PREMIUM_PREDICTIONS).find({}).sort({ playerName: 1, stage: 1, slot: 1 }).toArray(),
     ]);
 
     const matchesById = new Map(matches.map((m) => [m.id, m]));
@@ -435,7 +476,56 @@ export async function GET() {
       events: analyticsEvents.map(serializeAnalyticsEvent),
     };
 
-    return NextResponse.json({ matches: adminMatches, leaderboard, statQuestions: adminStatQuestions, analytics });
+    const predictionsByPlayer = new Map<string, PremiumPredictionDoc[]>();
+    for (const prediction of premiumPredictions) {
+      const key = prediction.playerKey ?? "";
+      if (!key) continue;
+      const list = predictionsByPlayer.get(key) ?? [];
+      list.push(prediction);
+      predictionsByPlayer.set(key, list);
+    }
+
+    const premium = {
+      players: premiumPlayers.map((player) => {
+        const playerKey = player.playerKey ?? "";
+        const playerPredictions = predictionsByPlayer.get(playerKey) ?? [];
+        const updatedAt = playerPredictions
+          .map((prediction) => prediction.updatedAt ? new Date(prediction.updatedAt).getTime() : 0)
+          .filter((time) => Number.isFinite(time))
+          .sort((a, b) => b - a)[0];
+
+        return {
+          playerKey,
+          playerName: player.playerName ?? playerKey,
+          amountPaid: typeof player.amountPaid === "number" ? player.amountPaid : null,
+          currency: player.currency ?? "USD",
+          payer: player.payer ?? null,
+          paypalOrderId: player.paypalOrderId ?? null,
+          paypalCaptureId: player.paypalCaptureId ?? null,
+          paidAt: toIsoString(player.paidAt),
+          predictionCount: playerPredictions.length,
+          completedCount: playerPredictions.filter(isPremiumPredictionComplete).length,
+          updatedAt: updatedAt ? new Date(updatedAt).toISOString() : null,
+        };
+      }),
+      predictions: premiumPredictions.map((prediction) => ({
+        id: prediction.id ?? `${prediction.playerKey}-${prediction.stage}-${prediction.slot}`,
+        playerKey: prediction.playerKey ?? "",
+        playerName: prediction.playerName ?? prediction.playerKey ?? "",
+        stage: prediction.stage ?? "",
+        slot: typeof prediction.slot === "number" ? prediction.slot : 0,
+        teamA: prediction.teamA ?? "",
+        teamB: prediction.teamB ?? "",
+        scoreA: typeof prediction.scoreA === "number" ? prediction.scoreA : null,
+        scoreB: typeof prediction.scoreB === "number" ? prediction.scoreB : null,
+        winner: prediction.winner ?? "",
+        confidence: typeof prediction.confidence === "number" ? prediction.confidence : null,
+        note: prediction.note ?? "",
+        updatedAt: toIsoString(prediction.updatedAt),
+      })),
+    };
+
+    return NextResponse.json({ matches: adminMatches, leaderboard, statQuestions: adminStatQuestions, premium, analytics });
   } catch (error) {
     console.error("Failed to load admin data", error);
     return NextResponse.json({ error: "No se pudo cargar el panel de admin." }, { status: 500 });

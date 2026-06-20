@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
-import { Check, CircleAlert, Gamepad2, Loader2, Target, X } from "lucide-react";
+import { Check, CircleAlert, Crown, Gamepad2, Lock, Loader2, Sparkles, Target, X } from "lucide-react";
 import type { LiveMatchStatus, MundialMatch } from "./types";
 import { normalizeKey } from "./utils";
 import { useMundial } from "./useMundial";
@@ -20,6 +20,9 @@ import { ProfileModal } from "./components/ProfileModal";
 import { PenalitosPanel } from "./components/PenalitosPanel";
 import { ProximoEnAnotarPanel } from "./components/ProximoEnAnotarPanel";
 import { LiveMatchChat } from "./components/LiveMatchChat";
+import { XLivePanel } from "./components/XLivePanel";
+import { PronosticosView } from "./components/PronosticosView";
+import { MUNDIAL_PREMIUM_PRICE_USD } from "./constants";
 
 export default function MundialClient() {
   const router = useRouter();
@@ -76,20 +79,44 @@ export default function MundialClient() {
   const [focusedMineMatchId, setFocusedMineMatchId] = useState<string | null>(null);
   const [liveModal, setLiveModal] = useState<"penalitos" | "scorer" | null>(null);
   const [showProfile, setShowProfile] = useState(false);
+  const [profileIsFirstTime, setProfileIsFirstTime] = useState(false);
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
+  const [showProfileBanner, setShowProfileBanner] = useState(false);
 
   const playerKey = normalizeKey(playerName);
 
-  // Load avatar whenever the active player changes
+  // Load avatar whenever the active player changes; show banner for players without one
   useEffect(() => {
-    if (!playerKey) { setProfileAvatar(null); return; }
+    if (!playerKey) { setProfileAvatar(null); setShowProfileBanner(false); return; }
     fetch(`/api/mundial/profile?name=${encodeURIComponent(playerKey)}`)
       .then((r) => r.ok ? r.json() : null)
       .then((data: { avatarDataUrl?: string | null } | null) => {
-        setProfileAvatar(data?.avatarDataUrl ?? null);
+        const avatar = data?.avatarDataUrl ?? null;
+        setProfileAvatar(avatar);
+        if (!avatar) {
+          const key = `mundial-profile-banner-${playerKey}`;
+          const dismissed = Boolean(localStorage.getItem(key));
+          setShowProfileBanner(!dismissed);
+        } else {
+          setShowProfileBanner(false);
+        }
       })
       .catch(() => {});
   }, [playerKey]);
+
+  function dismissProfileBanner() {
+    setShowProfileBanner(false);
+    if (playerKey) localStorage.setItem(`mundial-profile-banner-${playerKey}`, "1");
+  }
+
+  function handlePinSuccess() {
+    const isNew = pinMode === "set";
+    onPinSuccess();
+    if (isNew) {
+      setProfileIsFirstTime(true);
+      setShowProfile(true);
+    }
+  }
 
   // Merge SSE live fields onto the polled liveMatch so all clients see updates
   // at the same instant. Falls back to polling data when SSE has nothing new.
@@ -246,11 +273,29 @@ export default function MundialClient() {
             )}
 
             {viewMode === "players" && (
-              <PlayersView leaderboard={leaderboard} matches={matches} predictions={predictions} />
+              <PlayersView
+                leaderboard={leaderboard}
+                matches={matches}
+                predictions={predictions}
+                playerName={playerName}
+                onOpenProfile={() => setShowProfile(true)}
+              />
             )}
 
             {viewMode === "groups" && (
               <GroupsView matches={matches} />
+            )}
+
+            {viewMode === "pronosticos" && (
+              <PronosticosView
+                playerName={playerName}
+                onOpenPlayerPicker={openPlayerPicker}
+              />
+            )}
+
+            {/* Premium teaser — shown on all other views */}
+            {viewMode !== "pronosticos" && !isLoading && (
+              <PremiumTeaser onGoToPremium={() => setViewMode("pronosticos")} />
             )}
 
             {/* ====================== LIVE SECTION ========================== */}
@@ -276,6 +321,8 @@ export default function MundialClient() {
                   playerName={playerName}
                   onOpenPlayerPicker={openPlayerPicker}
                 />
+
+                <XLivePanel liveMatch={activeLiveMatch} />
               </div>
             )}
             {/* ============================================================= */}
@@ -308,7 +355,7 @@ export default function MundialClient() {
         <PinModal
           playerName={playerName}
           mode={pinMode}
-          onSuccess={onPinSuccess}
+          onSuccess={handlePinSuccess}
           onChangePlayer={openPlayerPicker}
         />
       )}
@@ -316,10 +363,69 @@ export default function MundialClient() {
       <ProfileModal
         playerName={playerName}
         open={showProfile}
-        onClose={() => setShowProfile(false)}
-        onSaved={({ avatarDataUrl }) => setProfileAvatar(avatarDataUrl)}
+        isFirstTime={profileIsFirstTime}
+        onClose={() => { setShowProfile(false); setProfileIsFirstTime(false); }}
+        onSaved={({ avatarDataUrl }) => {
+          setProfileAvatar(avatarDataUrl);
+          if (avatarDataUrl) setShowProfileBanner(false);
+        }}
       />
+
+      {/* Profile setup banner for existing players without an avatar */}
+      {showProfileBanner && playerName && !showProfile && (
+        <div className="fixed bottom-5 left-1/2 z-40 flex -translate-x-1/2 items-center gap-3 rounded-2xl border border-[#f0b429]/40 bg-[#080f0b]/95 px-4 py-3 shadow-[0_8px_32px_rgba(0,0,0,0.6)] backdrop-blur-md">
+          <Sparkles className="h-4 w-4 shrink-0 text-[#f0b429]" />
+          <p className="text-sm font-bold text-white/80">
+            ¡Personalizá tu avatar de jugador!
+          </p>
+          <button
+            type="button"
+            onClick={() => { dismissProfileBanner(); setShowProfile(true); }}
+            className="rounded-lg border border-[#f0b429]/50 bg-[#f0b429] px-3 py-1.5 text-xs font-black text-[#07110b] transition hover:bg-[#f5c842]"
+          >
+            Ver
+          </button>
+          <button
+            type="button"
+            onClick={dismissProfileBanner}
+            className="grid h-6 w-6 place-items-center rounded-md text-white/30 transition hover:text-white/70"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
     </main>
+  );
+}
+
+function PremiumTeaser({ onGoToPremium }: { onGoToPremium: () => void }) {
+  return (
+    <div className="mt-6 overflow-hidden rounded-xl border border-[#f0b429]/25 bg-[#06100b] shadow-[0_0_40px_rgba(240,180,41,0.08)]">
+      <div className="relative flex flex-col items-start gap-4 p-4 sm:flex-row sm:items-center sm:p-5 [background:radial-gradient(ellipse_at_right,rgba(240,180,41,0.1),transparent_55%)]">
+        <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-[#f0b429]/35 bg-[#f0b429]/10">
+          <Crown className="h-6 w-6 text-[#f0b429]" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="mb-1 flex items-center gap-2">
+            <span className="rounded-full border border-[#f0b429]/30 bg-[#f0b429]/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-[#f0b429]">
+              Premium
+            </span>
+          </div>
+          <p className="font-black text-white">Pronósticos de Eliminación Directa</p>
+          <p className="mt-0.5 text-xs leading-relaxed text-white/45">
+            Predecí Octavos, Cuartos, Semis, 3er Lugar y la Gran Final. Acceso único por <span className="font-bold text-white/70">${MUNDIAL_PREMIUM_PRICE_USD} USD</span>.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onGoToPremium}
+          className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-[#f0b429]/50 bg-[#f0b429] px-4 py-2.5 text-sm font-black text-[#07110b] transition hover:bg-[#f5c842] hover:shadow-[0_0_16px_rgba(240,180,41,0.4)]"
+        >
+          <Lock className="h-3.5 w-3.5" />
+          Desbloquear
+        </button>
+      </div>
+    </div>
   );
 }
 

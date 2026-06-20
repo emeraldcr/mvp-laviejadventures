@@ -30,6 +30,33 @@ export async function GET(req: NextRequest) {
   });
 }
 
+export async function POST(req: NextRequest) {
+  const body = (await req.json().catch(() => ({}))) as { names?: unknown };
+  const names = Array.isArray(body.names)
+    ? body.names
+        .map((name) => String(name ?? "").trim())
+        .filter(Boolean)
+        .slice(0, 250)
+    : [];
+
+  if (!names.length) return NextResponse.json({ avatars: {} });
+
+  const db = await getDb();
+  const docs = await db
+    .collection<ProfileDoc>(PROFILES_COLLECTION)
+    .find(
+      { normalizedName: { $in: names } },
+      { projection: { _id: 0, normalizedName: 1, avatarDataUrl: 1 } }
+    )
+    .toArray();
+
+  const avatars = Object.fromEntries(
+    docs.map((doc) => [doc.normalizedName, doc.avatarDataUrl ?? null])
+  );
+
+  return NextResponse.json({ avatars });
+}
+
 export async function PUT(req: NextRequest) {
   const body = (await req.json()) as {
     normalizedName?: string;

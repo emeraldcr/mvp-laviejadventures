@@ -3,6 +3,7 @@
 import { useState } from "react";
 import {
   ChevronDown,
+  Crown,
   ListChecks,
   Loader2,
   MoreHorizontal,
@@ -44,6 +45,7 @@ function ViewIcon({ id, active }: { id: ViewMode; active: boolean }) {
   if (id === "next") return <Target className={className} />;
   if (id === "mine") return <ListChecks className={className} />;
   if (id === "groups") return <Table2 className={className} />;
+  if (id === "pronosticos") return <Crown className={cn("h-4 w-4 shrink-0", active ? "text-[#07110b]" : "text-[#f0b429]/70")} />;
   return <Users className={className} />;
 }
 
@@ -68,6 +70,7 @@ export function MundialHeader({
     mine: "Picks",
     players: "Tabla",
     groups: "Grupos",
+    pronosticos: "Final",
   };
 
   return (
@@ -82,6 +85,7 @@ export function MundialHeader({
         <div className="flex min-w-0 flex-1 gap-1">
           {VIEW_OPTIONS.map((option) => {
             const active = viewMode === option.id;
+            const isPremiumTab = option.id === "pronosticos";
             return (
               <button
                 key={option.id}
@@ -91,7 +95,9 @@ export function MundialHeader({
                   "inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-1 rounded border px-1.5 font-black uppercase tracking-wide transition sm:flex-none sm:gap-1.5 sm:px-3",
                   active
                     ? "border-[#f0b429] bg-[#f0b429] text-[#07110b] shadow-[0_0_18px_rgba(240,180,41,0.28)]"
-                    : "border-white/12 bg-white/4 text-white/55 hover:border-white/25 hover:text-white/80"
+                    : isPremiumTab
+                      ? "border-[#f0b429]/30 bg-[#f0b429]/8 text-[#f0b429]/80 hover:border-[#f0b429]/60 hover:text-[#f0b429]"
+                      : "border-white/12 bg-white/4 text-white/55 hover:border-white/25 hover:text-white/80"
                 )}
               >
                 <ViewIcon id={option.id} active={active} />

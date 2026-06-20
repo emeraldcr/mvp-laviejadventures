@@ -3,7 +3,7 @@ import type { LiveMatchStats } from "@/lib/mundial/live-stats";
 
 export type MundialStage = "group" | "round32" | "round16" | "quarterfinal" | "semifinal" | "thirdPlace" | "final";
 export type WinnerPick = "home" | "away" | null;
-export type ViewMode = "next" | "mine" | "players" | "groups";
+export type ViewMode = "next" | "mine" | "players" | "groups" | "pronosticos";
 export type LiveMatchStatus = "scheduled" | "live" | "halftime" | "fulltime";
 export type LiveEventType = "goal" | "penalty" | "yellow" | "red" | "var" | "substitution" | "note";
 export type LiveEventTeam = "home" | "away" | null;
