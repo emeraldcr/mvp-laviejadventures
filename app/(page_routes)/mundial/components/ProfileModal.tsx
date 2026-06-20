@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { Camera, Check, Loader2, Mail, Phone, Sparkles, Upload, X } from "lucide-react";
 import { cn, normalizeKey } from "../utils";
 
+/* eslint-disable react-hooks/set-state-in-effect */
+
 interface Props {
   playerName: string;
   open: boolean;
@@ -12,53 +14,19 @@ interface Props {
   isFirstTime?: boolean;
 }
 
-// ── Legend avatars ─────────────────────────────────────────────────────────
-
-type Legend = {
+type AvatarIcon = {
   id: string;
   name: string;
-  short: string;   // shown inside the SVG (max ~10 chars)
-  number: number;
-  primary: string;
-  secondary: string;
-  flag: string;
+  displayName: string;
+  country: string;
+  countryCode: string;
+  imageUrl: string;
+  sourceUrl: string;
+  provider: string;
+  license: string;
+  attribution: string;
+  sortOrder: number;
 };
-
-const LEGENDS: Legend[] = [
-  { id: "messi",        name: "Messi",       short: "MESSI",    number: 10, primary: "#2C87D5", secondary: "#FFFFFF", flag: "🇦🇷" },
-  { id: "cr7",          name: "C. Ronaldo",  short: "CR7",      number: 7,  primary: "#C8102E", secondary: "#006A4E", flag: "🇵🇹" },
-  { id: "ronaldinho",   name: "Ronaldinho",  short: "R10",      number: 10, primary: "#009A44", secondary: "#FEDD00", flag: "🇧🇷" },
-  { id: "mbappe",       name: "Mbappé",      short: "MBAPPE",   number: 10, primary: "#002395", secondary: "#ED2939", flag: "🇫🇷" },
-  { id: "neymar",       name: "Neymar Jr",   short: "NEYMAR",   number: 10, primary: "#FEDD00", secondary: "#009A44", flag: "🇧🇷" },
-  { id: "pele",         name: "Pelé",        short: "PELE",     number: 10, primary: "#009A44", secondary: "#FEDD00", flag: "🇧🇷" },
-  { id: "maradona",     name: "Maradona",    short: "D10S",     number: 10, primary: "#74ACDF", secondary: "#FFFFFF", flag: "🇦🇷" },
-  { id: "zidane",       name: "Zidane",      short: "ZOU ZOU",  number: 5,  primary: "#002395", secondary: "#FFFFFF", flag: "🇫🇷" },
-  { id: "haaland",      name: "Haaland",     short: "HAALAND",  number: 9,  primary: "#EF2B2D", secondary: "#FFFFFF", flag: "🇳🇴" },
-  { id: "lewandowski",  name: "Lewandowski", short: "LEWA",     number: 9,  primary: "#DC143C", secondary: "#FFFFFF", flag: "🇵🇱" },
-  { id: "benzema",      name: "Benzema",     short: "BENZEMA",  number: 9,  primary: "#002395", secondary: "#F5A623", flag: "🇫🇷" },
-  { id: "beckham",      name: "Beckham",     short: "BECKS",    number: 7,  primary: "#CC0000", secondary: "#FFFFFF", flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
-];
-
-function makeLegendSvg(l: Legend): string {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
-  <defs>
-    <clipPath id="c"><circle cx="100" cy="100" r="100"/></clipPath>
-    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="${l.primary}"/>
-      <stop offset="100%" stop-color="${l.primary}BB"/>
-    </linearGradient>
-  </defs>
-  <g clip-path="url(#c)">
-    <rect width="200" height="200" fill="url(#g)"/>
-    <rect y="125" width="200" height="75" fill="${l.secondary}" opacity="0.35"/>
-    <text x="100" y="110" font-family="Arial Black,Arial,sans-serif" font-size="82" font-weight="900" text-anchor="middle" dominant-baseline="middle" fill="white" opacity="0.95">${l.number}</text>
-    <text x="100" y="163" font-family="Arial,sans-serif" font-size="19" font-weight="700" text-anchor="middle" fill="white" opacity="0.92">${l.short}</text>
-  </g>
-</svg>`;
-  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
-}
-
-const LEGEND_SVGS = Object.fromEntries(LEGENDS.map((l) => [l.id, makeLegendSvg(l)]));
 
 // ── Photo compression ──────────────────────────────────────────────────────
 
@@ -97,6 +65,7 @@ export function ProfileModal({ playerName, open, onClose, onSaved, isFirstTime }
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [avatarDataUrl, setAvatarDataUrl] = useState<string | null>(null);
+  const [avatarIcons, setAvatarIcons] = useState<AvatarIcon[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
 
@@ -121,6 +90,16 @@ export function ProfileModal({ playerName, open, onClose, onSaved, isFirstTime }
       .catch(() => setError("No se pudo cargar el perfil."))
       .finally(() => setLoadingFetch(false));
   }, [open, playerKey]);
+
+  useEffect(() => {
+    if (!open) return;
+    fetch("/api/mundial/avatar-icons")
+      .then((r) => (r.ok ? r.json() : { icons: [] }))
+      .then((data: { icons?: AvatarIcon[] }) => {
+        setAvatarIcons(Array.isArray(data.icons) ? data.icons : []);
+      })
+      .catch(() => setAvatarIcons([]));
+  }, [open]);
 
   async function handleFile(file: File) {
     if (!file.type.startsWith("image/")) { setError("Solo se aceptan imágenes."); return; }
@@ -233,37 +212,43 @@ export function ProfileModal({ playerName, open, onClose, onSaved, isFirstTime }
                     Elige tu ídolo
                   </p>
                 </div>
-                <div className="grid grid-cols-4 gap-2">
-                  {LEGENDS.map((legend) => {
-                    const svgUrl = LEGEND_SVGS[legend.id];
-                    const isSelected = avatarDataUrl === svgUrl;
-                    return (
-                      <button
-                        key={legend.id}
-                        type="button"
-                        onClick={() => { setAvatarDataUrl(isSelected ? null : svgUrl); setError(""); }}
-                        className={cn(
-                          "group flex flex-col items-center gap-1.5 rounded-xl border p-2 transition",
-                          isSelected
-                            ? "border-[#f0b429] bg-[#f0b429]/10 shadow-[0_0_12px_rgba(240,180,41,0.25)]"
-                            : "border-white/10 bg-white/4 hover:border-white/25 hover:bg-white/8"
-                        )}
-                      >
-                        <div className="relative h-14 w-14 overflow-hidden rounded-full border border-white/15">
-                          <img src={svgUrl} alt={legend.name} className="h-full w-full object-cover" />
-                          {isSelected && (
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                              <Check className="h-5 w-5 text-[#f0b429]" />
-                            </div>
+                {avatarIcons.length > 0 ? (
+                  <div className="grid grid-cols-4 gap-2">
+                    {avatarIcons.map((icon) => {
+                      const isSelected = avatarDataUrl === icon.imageUrl;
+                      return (
+                        <button
+                          key={icon.id}
+                          type="button"
+                          onClick={() => { setAvatarDataUrl(isSelected ? null : icon.imageUrl); setError(""); }}
+                          title={`${icon.displayName} - ${icon.provider}`}
+                          className={cn(
+                            "group flex flex-col items-center gap-1.5 rounded-xl border p-2 transition",
+                            isSelected
+                              ? "border-[#f0b429] bg-[#f0b429]/10 shadow-[0_0_12px_rgba(240,180,41,0.25)]"
+                              : "border-white/10 bg-white/4 hover:border-white/25 hover:bg-white/8"
                           )}
-                        </div>
-                        <span className="max-w-full truncate text-center text-[9px] font-black leading-tight text-white/60">
-                          {legend.flag} {legend.name}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
+                        >
+                          <div className="relative h-14 w-14 overflow-hidden rounded-full border border-white/15">
+                            <img src={icon.imageUrl} alt={icon.displayName} className="h-full w-full object-cover" />
+                            {isSelected && (
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                                <Check className="h-5 w-5 text-[#f0b429]" />
+                              </div>
+                            )}
+                          </div>
+                          <span className="max-w-full truncate text-center text-[9px] font-black leading-tight text-white/60">
+                            {icon.name}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="rounded-xl border border-white/10 bg-white/4 px-3 py-2 text-xs font-bold text-white/40">
+                    No hay iconos cargados todavia.
+                  </p>
+                )}
               </div>
 
               {/* Photo upload section */}

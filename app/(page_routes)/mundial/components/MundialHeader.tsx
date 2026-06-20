@@ -70,19 +70,19 @@ export function MundialHeader({
     mine: "Picks",
     players: "Tabla",
     groups: "Grupos",
-    pronosticos: "Final",
+    pronosticos: "Finales",
   };
 
   return (
     <header className="sticky top-0 z-20 border-b border-[#f0b429]/20 bg-[#060a08]/95 backdrop-blur-md">
-      <div className="mx-auto flex w-full max-w-[1600px] items-center gap-2 px-3 py-1.5 sm:px-5">
+      <div className="mx-auto flex w-full max-w-[1600px] flex-wrap items-center gap-2 px-3 py-2 sm:flex-nowrap sm:px-5 sm:py-1.5">
         {/* Logo */}
-        <span className="grid h-7 w-7 shrink-0 place-items-center rounded border border-[#f0b429]/40 bg-[#f0b429] text-[#07110b]">
+        <span className="order-1 grid h-8 w-8 shrink-0 place-items-center rounded border border-[#f0b429]/40 bg-[#f0b429] text-[#07110b] sm:h-7 sm:w-7">
           <Trophy className="h-3.5 w-3.5" />
         </span>
 
         {/* View tabs */}
-        <div className="flex min-w-0 flex-1 gap-1">
+        <div className="order-3 grid min-w-0 basis-full grid-cols-5 gap-1 sm:order-2 sm:flex sm:flex-1 sm:basis-auto">
           {VIEW_OPTIONS.map((option) => {
             const active = viewMode === option.id;
             const isPremiumTab = option.id === "pronosticos";
@@ -92,7 +92,7 @@ export function MundialHeader({
                 type="button"
                 onClick={() => setViewMode(option.id)}
                 className={cn(
-                  "inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-1 rounded border px-1.5 font-black uppercase tracking-wide transition sm:flex-none sm:gap-1.5 sm:px-3",
+                  "inline-flex h-12 min-w-0 flex-col items-center justify-center gap-0.5 rounded border px-1 font-black uppercase tracking-wide transition sm:h-9 sm:flex-none sm:flex-row sm:gap-1.5 sm:px-3",
                   active
                     ? "border-[#f0b429] bg-[#f0b429] text-[#07110b] shadow-[0_0_18px_rgba(240,180,41,0.28)]"
                     : isPremiumTab
@@ -101,7 +101,7 @@ export function MundialHeader({
                 )}
               >
                 <ViewIcon id={option.id} active={active} />
-                <span className="text-[10px] sm:hidden">{shortLabels[option.id]}</span>
+                <span className="max-w-full truncate text-[9px] leading-none sm:hidden">{shortLabels[option.id]}</span>
                 <span className="hidden text-xs sm:inline">{option.label}</span>
               </button>
             );
@@ -114,7 +114,7 @@ export function MundialHeader({
             type="button"
             onClick={() => void saveDirtyDrafts()}
             disabled={isSavingBulk}
-            className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded border border-[#d5ff3f] bg-[#9dff34] px-2.5 text-xs font-black text-[#06121c] transition hover:bg-[#d5ff3f] disabled:opacity-50"
+            className="order-2 ml-auto inline-flex h-8 shrink-0 items-center gap-1.5 rounded border border-[#d5ff3f] bg-[#9dff34] px-2.5 text-xs font-black text-[#06121c] transition hover:bg-[#d5ff3f] disabled:opacity-50 sm:order-3 sm:ml-0"
           >
             {isSavingBulk ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
             <span>{dirtyDrafts.length}</span>
@@ -122,7 +122,7 @@ export function MundialHeader({
         )}
 
         {/* ··· menu */}
-        <div className="relative shrink-0">
+        <div className={cn("relative order-2 shrink-0 sm:order-4", dirtyDrafts.length === 0 && "ml-auto sm:ml-0")}>
           <button
             type="button"
             onClick={() => setShowHeaderMenu((v) => !v)}
