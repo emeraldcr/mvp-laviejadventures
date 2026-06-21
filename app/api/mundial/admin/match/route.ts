@@ -5,6 +5,7 @@ import { serializeLiveMatchStats } from "@/lib/mundial/live-stats";
 import { notifyLiveMatchChanged } from "@/lib/mundial/live-match-events";
 import { notifyPenalitosChanged } from "@/lib/mundial/penalitos-events";
 import { notifyScorerChanged } from "@/lib/mundial/scorer-events";
+import { applyBracketPropagation } from "@/lib/mundial/apply-bracket";
 
 export const dynamic = "force-dynamic";
 
@@ -261,6 +262,14 @@ export async function PATCH(req: NextRequest) {
       notifyLiveMatchChanged();
       notifyPenalitosChanged();
       notifyScorerChanged();
+    }
+
+    // When a match closes, propagate bracket in the background so the next-round
+    // slots show the real team names without needing a manual admin trigger.
+    if ($set.forceClosed === true || $set.liveStatus === "fulltime") {
+      void applyBracketPropagation(db).catch((err) =>
+        console.error("Background bracket propagation failed:", err),
+      );
     }
 
     return NextResponse.json({ ok: true });
