@@ -46,15 +46,70 @@ function getNsfwModel(): Promise<NsfwModel> {
   return _nsfwPromise;
 }
 
+// Analiza la imagen 3 veces con distintos crops y promedia para mayor precisión
 async function isContentSafe(dataUrl: string): Promise<boolean> {
   const model = await getNsfwModel();
-  const img = new Image();
-  img.src = dataUrl;
-  await new Promise<void>((res) => { img.onload = () => res(); });
-  const predictions = await model.classify(img);
-  return !predictions.some(
-    (p) => (p.className === "Porn" || p.className === "Hentai") && p.probability > 0.65,
-  );
+
+  // Clasificar la imagen original + 2 crops (top-left, bottom-right) para reducir falsos negativos
+  async function classifyAt(sx: number, sy: number, size: number, src: string) {
+    return new Promise<ReturnType<NsfwModel["classify"]>>((resolve, reject) => {
+      const img = new Image();
+      img.onload = async () => {
+        if (size === img.naturalWidth) {
+          // Sin crop
+          resolve(model.classify(img));
+          return;
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) { reject(new Error("canvas")); return; }
+        ctx.drawImage(img, sx, sy, size, size, 0, 0, size, size);
+        const croppedImg = new Image();
+        croppedImg.onload = () => resolve(model.classify(croppedImg));
+        croppedImg.onerror = reject;
+        croppedImg.src = canvas.toDataURL("image/jpeg", 0.9);
+      };
+      img.onerror = reject;
+      img.src = src;
+    });
+  }
+
+  // Imagen completa + 2 crops para cubrir partes que el modelo podría pasar por alto
+  const [full, topLeft, bottomRight] = await Promise.all([
+    classifyAt(0, 0, 256, dataUrl),      // imagen completa (ya está a 256px)
+    classifyAt(0, 0, 192, dataUrl),      // cuadrante top-left
+    classifyAt(64, 64, 192, dataUrl),    // cuadrante bottom-right
+  ]);
+
+  // Promediar las 3 clasificaciones por clase
+  const allSets = [full, topLeft, bottomRight] as Awaited<ReturnType<NsfwModel["classify"]>>[];
+  const averaged: Record<string, number> = {};
+  for (const set of allSets) {
+    for (const { className, probability } of set) {
+      averaged[className] = (averaged[className] ?? 0) + probability / allSets.length;
+    }
+  }
+
+  // Umbrales individuales por categoría
+  const BLOCK_RULES = [
+    { className: "Porn",   threshold: 0.15 },
+    { className: "Hentai", threshold: 0.20 },
+    { className: "Sexy",   threshold: 0.25 },
+  ];
+  for (const { className, threshold } of BLOCK_RULES) {
+    if ((averaged[className] ?? 0) > threshold) return false;
+  }
+
+  // Score combinado — la suma de las 3 categorías inapropiadas
+  const unsafeTotal =
+    (averaged["Porn"]   ?? 0) +
+    (averaged["Hentai"] ?? 0) +
+    (averaged["Sexy"]   ?? 0);
+  if (unsafeTotal > 0.35) return false;
+
+  return true;
 }
 
 // ── Photo compression ──────────────────────────────────────────────────────
