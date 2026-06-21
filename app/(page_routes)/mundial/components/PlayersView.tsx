@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays, Camera, ChevronRight, Lock, MinusCircle, Target, TrendingUp, Trophy, Users, X, Zap } from "lucide-react";
+import { CalendarDays, Camera, ChevronRight, Crown, Lock, MinusCircle, Target, TrendingUp, Trophy, Users, X, Zap } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type { LeaderboardEntry, MundialMatch, Prediction } from "../types";
 import { cn, finalScoreText, formatKickoff, normalizeKey, teamCode } from "../utils";
@@ -19,10 +19,25 @@ type PredictionScore = {
   kind: "exact" | "outcome" | "miss" | "pending";
 };
 
+function PremiumCrown({ className }: { className?: string }) {
+  return (
+    <span
+      title="Premium"
+      aria-label="Premium"
+      className={cn(
+        "inline-grid shrink-0 place-items-center rounded-full border border-[#f0b429]/40 bg-[#f0b429]/15 text-[#f0b429] shadow-[0_0_10px_rgba(240,180,41,0.16)]",
+        className
+      )}
+    >
+      <Crown className="h-2.5 w-2.5" />
+    </span>
+  );
+}
 
 export function PlayersView({ leaderboard, matches, predictions, playerName, onOpenProfile }: PlayersViewProps) {
   const [selectedPlayerKey, setSelectedPlayerKey] = useState<string | null>(null);
   const [avatarByKey, setAvatarByKey] = useState<Record<string, string | null>>({});
+  const [premiumKeys, setPremiumKeys] = useState<Set<string>>(() => new Set());
   const matchById = useMemo(() => new Map(matches.map((match) => [match.id, match])), [matches]);
   const selectedEntry = leaderboard.find((entry) => entry.normalizedName === selectedPlayerKey) ?? null;
 
@@ -49,6 +64,20 @@ export function PlayersView({ leaderboard, matches, predictions, playerName, onO
 
     return () => { cancelled = true; };
   }, [leaderboard]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/mundial/premium/players")
+      .then((r) => (r.ok ? r.json() : { players: [] }))
+      .then((data: { players?: string[] }) => {
+        if (!cancelled) setPremiumKeys(new Set((data.players ?? []).map(normalizeKey)));
+      })
+      .catch(() => {
+        if (!cancelled) setPremiumKeys(new Set());
+      });
+
+    return () => { cancelled = true; };
+  }, []);
 
   if (!leaderboard.length) {
     return (
@@ -132,7 +161,10 @@ export function PlayersView({ leaderboard, matches, predictions, playerName, onO
                 <div className="mb-1.5 grid h-12 w-12 place-items-center rounded-full border-2 border-[#62ffe6]/45 bg-[#071d2a] text-sm font-black text-[#62ffe6] shadow-[0_4px_16px_rgba(0,0,0,0.50)]">
                   <PlayerAvatar entry={leaderboard[1]} avatarUrl={avatarByKey[leaderboard[1].normalizedName]} size="md" />
                 </div>
-                <p className="w-full truncate text-center text-[11px] font-black text-white sm:text-xs">{leaderboard[1].playerName}</p>
+                <div className="flex w-full min-w-0 items-center justify-center gap-1.5">
+                  <p className="min-w-0 truncate text-center text-[11px] font-black text-white sm:text-xs">{leaderboard[1].playerName}</p>
+                  {premiumKeys.has(leaderboard[1].normalizedName) && <PremiumCrown className="h-4 w-4" />}
+                </div>
                 <p className="mt-0.5 text-base font-black tabular-nums text-[#62ffe6] sm:text-lg">
                   {leaderboard[1].totalPoints}<span className="ml-0.5 text-[9px] font-bold text-white/35">pts</span>
                 </p>
@@ -173,7 +205,10 @@ export function PlayersView({ leaderboard, matches, predictions, playerName, onO
                 <div className="mb-1.5 grid h-16 w-16 place-items-center rounded-full border-[3px] border-[#f0b429] bg-[#10240b] text-xl font-black text-[#d5ff3f] shadow-[0_0_30px_rgba(240,180,41,0.55),0_6px_24px_rgba(0,0,0,0.65)]">
                   <PlayerAvatar entry={leaderboard[0]} avatarUrl={avatarByKey[leaderboard[0].normalizedName]} size="lg" />
                 </div>
-                <p className="w-full truncate text-center text-xs font-black text-white sm:text-sm">{leaderboard[0].playerName}</p>
+                <div className="flex w-full min-w-0 items-center justify-center gap-1.5">
+                  <p className="min-w-0 truncate text-center text-xs font-black text-white sm:text-sm">{leaderboard[0].playerName}</p>
+                  {premiumKeys.has(leaderboard[0].normalizedName) && <PremiumCrown className="h-4 w-4" />}
+                </div>
                 <p className="mt-0.5 text-xl font-black tabular-nums text-[#d5ff3f] sm:text-2xl">
                   {leaderboard[0].totalPoints}<span className="ml-0.5 text-[10px] font-bold text-white/35">pts</span>
                 </p>
@@ -203,7 +238,10 @@ export function PlayersView({ leaderboard, matches, predictions, playerName, onO
                 <div className="mb-1.5 grid h-12 w-12 place-items-center rounded-full border-2 border-[#ffb15f]/40 bg-[#200d03] text-sm font-black text-[#ffb15f] shadow-[0_4px_16px_rgba(0,0,0,0.50)]">
                   <PlayerAvatar entry={leaderboard[2]} avatarUrl={avatarByKey[leaderboard[2].normalizedName]} size="md" />
                 </div>
-                <p className="w-full truncate text-center text-[11px] font-black text-white sm:text-xs">{leaderboard[2].playerName}</p>
+                <div className="flex w-full min-w-0 items-center justify-center gap-1.5">
+                  <p className="min-w-0 truncate text-center text-[11px] font-black text-white sm:text-xs">{leaderboard[2].playerName}</p>
+                  {premiumKeys.has(leaderboard[2].normalizedName) && <PremiumCrown className="h-4 w-4" />}
+                </div>
                 <p className="mt-0.5 text-base font-black tabular-nums text-[#ffb15f] sm:text-lg">
                   {leaderboard[2].totalPoints}<span className="ml-0.5 text-[9px] font-bold text-white/35">pts</span>
                 </p>
@@ -265,9 +303,12 @@ export function PlayersView({ leaderboard, matches, predictions, playerName, onO
                       <div className="flex min-w-0 items-center gap-2.5">
                         <PlayerAvatar entry={entry} avatarUrl={avatarByKey[entry.normalizedName]} size="sm" />
                         <div className="min-w-0">
-                          <p className={cn("truncate text-sm font-black sm:text-base", isFirst ? "text-[#d5ff3f]" : "text-white")}>
-                            {entry.playerName}
-                          </p>
+                          <div className="flex min-w-0 items-center gap-1.5">
+                            <p className={cn("min-w-0 truncate text-sm font-black sm:text-base", isFirst ? "text-[#d5ff3f]" : "text-white")}>
+                              {entry.playerName}
+                            </p>
+                            {premiumKeys.has(entry.normalizedName) && <PremiumCrown className="h-4 w-4" />}
+                          </div>
                           <div className="mt-0.5 flex items-center gap-1.5 sm:mt-1 sm:gap-2">
                             <div className="h-1 w-14 overflow-hidden rounded-full bg-black/55 sm:w-20">
                               <div
@@ -334,7 +375,7 @@ export function PlayersView({ leaderboard, matches, predictions, playerName, onO
         </div>
       </div>
 
-      <StatBetsLeaderboard avatarByKey={avatarByKey} />
+      <StatBetsLeaderboard avatarByKey={avatarByKey} premiumKeys={premiumKeys} />
 
       {selectedEntry && (
         <PlayerPredictionsModal
@@ -351,7 +392,13 @@ export function PlayersView({ leaderboard, matches, predictions, playerName, onO
 
 type GlobalStatBetEntry = { playerName: string; earned: number; total: number };
 
-function StatBetsLeaderboard({ avatarByKey }: { avatarByKey: Record<string, string | null> }) {
+function StatBetsLeaderboard({
+  avatarByKey,
+  premiumKeys,
+}: {
+  avatarByKey: Record<string, string | null>;
+  premiumKeys: Set<string>;
+}) {
   const [entries, setEntries] = useState<GlobalStatBetEntry[]>([]);
   const [loaded, setLoaded] = useState(false);
 
@@ -421,9 +468,12 @@ function StatBetsLeaderboard({ avatarByKey }: { avatarByKey: Record<string, stri
                         size="xs"
                       />
                       <div className="min-w-0">
-                        <p className={cn("truncate font-black", isFirst ? "text-[#f0b429]" : "text-white")}>
-                          {entry.playerName}
-                        </p>
+                        <div className="flex min-w-0 items-center gap-1.5">
+                          <p className={cn("min-w-0 truncate font-black", isFirst ? "text-[#f0b429]" : "text-white")}>
+                            {entry.playerName}
+                          </p>
+                          {premiumKeys.has(normalizeKey(entry.playerName)) && <PremiumCrown className="h-4 w-4" />}
+                        </div>
                         <div className="mt-1 h-1 w-24 overflow-hidden rounded-full bg-black/55">
                           <div
                             className={cn("h-full rounded-full", isFirst ? "bg-[#f0b429]" : "bg-emerald-500/50")}

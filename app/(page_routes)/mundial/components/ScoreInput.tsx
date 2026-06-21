@@ -61,13 +61,13 @@ export function ScoreInput({ label, value, disabled, featured = false, onChange 
   }
 
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-0.5 min-[380px]:gap-1">
       <button
         type="button"
         onClick={() => onChange(clampScore(value - 1))}
         disabled={disabled || value <= 0}
         aria-label={`Restar gol de ${label}`}
-        className={cn(btnBase, "h-12 w-8 shrink-0 text-sm")}
+        className={cn(btnBase, "h-11 w-7 shrink-0 text-sm min-[380px]:h-12 min-[380px]:w-8")}
       >
         -
       </button>
@@ -80,14 +80,14 @@ export function ScoreInput({ label, value, disabled, featured = false, onChange 
         disabled={disabled}
         onChange={(event) => onChange(clampScore(Number(event.target.value)))}
         aria-label={`Goles de ${label}`}
-        className={cn(inputBase, "h-12 w-[52px] text-2xl")}
+        className={cn(inputBase, "h-11 w-11 text-xl min-[380px]:h-12 min-[380px]:w-[52px] min-[380px]:text-2xl")}
       />
       <button
         type="button"
         onClick={() => onChange(clampScore(value + 1))}
         disabled={disabled}
         aria-label={`Sumar gol de ${label}`}
-        className={cn(btnBase, "h-12 w-8 shrink-0 text-sm")}
+        className={cn(btnBase, "h-11 w-7 shrink-0 text-sm min-[380px]:h-12 min-[380px]:w-8")}
       >
         +
       </button>

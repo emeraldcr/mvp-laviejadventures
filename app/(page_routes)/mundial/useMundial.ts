@@ -279,7 +279,7 @@ export function useMundial() {
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
-      // Check time-limited session first (30 min TTL)
+      // Check time-limited PIN session first.
       try {
         const raw = window.localStorage.getItem(SESSION_KEY);
         if (raw) {
@@ -299,16 +299,18 @@ export function useMundial() {
         }
       } catch {}
 
-      // Fallback: existing trusted player logic
+      // Fallback: use the last player seen on this browser and let the PIN
+      // effect verify if needed. This avoids sending returning users back to
+      // the player list on their own device.
       const storedPlayerName = normalizeName(window.localStorage.getItem(STORAGE_KEY) ?? "");
       const storedTrustedKey = window.localStorage.getItem(TRUSTED_PLAYER_KEY) ?? "";
       const storedPlayerKey = normalizeKey(storedPlayerName);
-      const canTrustStoredPlayer = Boolean(storedPlayerName && storedTrustedKey === storedPlayerKey);
+      const hasStoredPlayer = Boolean(storedPlayerName);
 
       setPlayerName(storedPlayerName);
-      setTrustedPlayerKey(storedTrustedKey);
-      setPlayerPickerRequired(!canTrustStoredPlayer);
-      setShowPlayerPicker(!canTrustStoredPlayer);
+      setTrustedPlayerKey(storedTrustedKey || storedPlayerKey);
+      setPlayerPickerRequired(!hasStoredPlayer);
+      setShowPlayerPicker(!hasStoredPlayer);
     }, 0);
 
     return () => window.clearTimeout(timeout);

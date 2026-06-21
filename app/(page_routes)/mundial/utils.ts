@@ -230,6 +230,32 @@ export function predictionResult(match: MundialMatch, draft: Draft) {
   return "Falta pase";
 }
 
+export function livePickStatus(match: MundialMatch, draft: Draft) {
+  if (!draft.saved || !isMatchLive(match)) return null;
+  if (match.homeLiveScore === null || match.awayLiveScore === null) return null;
+
+  const pickText = `${draft.homeScore}-${draft.awayScore}`;
+  const liveText = `${match.homeLiveScore}-${match.awayLiveScore}`;
+
+  if (match.homeLiveScore > draft.homeScore || match.awayLiveScore > draft.awayScore) {
+    return {
+      tone: "lost" as const,
+      title: "Exacto quemado",
+      message: `Tu ${pickText} ya no puede pasar: van ${liveText}.`,
+    };
+  }
+
+  if (match.homeLiveScore === draft.homeScore && match.awayLiveScore === draft.awayScore) {
+    return {
+      tone: "alive" as const,
+      title: "Vas exacto",
+      message: `Tu ${pickText} sigue vivo. Que nadie toque ese marcador.`,
+    };
+  }
+
+  return null;
+}
+
 export function getWinnerPickOptions(match: MundialMatch) {
   return [
     { value: "", label: "Pasa por penales" },

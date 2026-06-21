@@ -17,13 +17,14 @@ const ROSTERS_COLLECTION = "mundial_rosters";
 const ANALYTICS_LIMIT = 250;
 
 type WinnerPick = "home" | "away" | null;
+type LiveMatchStatus = "scheduled" | "live" | "halftime" | "fulltime";
 
 type MundialMatchDoc = MundialMatch & {
   forceClosed?: boolean;
   actualWinner?: WinnerPick;
   homeFinalScore?: number;
   awayFinalScore?: number;
-  liveStatus?: "scheduled" | "live" | "halftime" | "fulltime";
+  liveStatus?: LiveMatchStatus;
   liveMinute?: number | null;
   homeLiveScore?: number | null;
   awayLiveScore?: number | null;
@@ -93,6 +94,13 @@ type RosterPlayerDoc = {
 
 type MundialAnalyticsEventName = "login" | "pick_saved" | "stat_bet_saved";
 
+const HALF_MINUTES = 45;
+const STANDARD_HALFTIME_MINUTES = 15;
+const FINAL_HALFTIME_MINUTES = 27;
+const HYDRATION_BREAK_MINUTES = 3;
+const AVERAGE_STOPPAGE_PER_HALF_MINUTES = 3;
+const HALF_REAL_DURATION_MINUTES = HALF_MINUTES + HYDRATION_BREAK_MINUTES + AVERAGE_STOPPAGE_PER_HALF_MINUTES;
+
 type MundialAnalyticsDoc = {
   _id: ObjectId;
   event?: MundialAnalyticsEventName;
@@ -145,6 +153,52 @@ function kickoffTime(match: MundialMatchDoc | MundialMatch) {
 function isMatchClosed(match: MundialMatchDoc | MundialMatch, now: Date) {
   if ((match as MundialMatchDoc).forceClosed) return true;
   return kickoffTime(match) <= now.getTime();
+}
+
+function halftimeMinutes(match: MundialMatchDoc) {
+  return match.stage === "final" ? FINAL_HALFTIME_MINUTES : STANDARD_HALFTIME_MINUTES;
+}
+
+function autoLiveMaxMinutes(match: MundialMatchDoc) {
+  return (HALF_REAL_DURATION_MINUTES * 2) + halftimeMinutes(match);
+}
+
+function storedLiveStatus(match: MundialMatchDoc): LiveMatchStatus {
+  return match.liveStatus === "live" || match.liveStatus === "halftime" || match.liveStatus === "fulltime"
+    ? match.liveStatus
+    : "scheduled";
+}
+
+function isMatchAutoLive(match: MundialMatchDoc, nowMs: number) {
+  if (!nowMs || storedLiveStatus(match) !== "scheduled" || match.forceClosed) return false;
+  if (typeof match.homeFinalScore === "number" && typeof match.awayFinalScore === "number") return false;
+  const elapsed = nowMs - kickoffTime(match);
+  return elapsed >= 0 && elapsed < autoLiveMaxMinutes(match) * 60_000;
+}
+
+function autoLiveMinute(match: MundialMatchDoc, nowMs: number): number | null {
+  const ko = kickoffTime(match);
+  if (!nowMs || nowMs < ko) return null;
+  const elapsed = Math.floor((nowMs - ko) / 60_000);
+  const firstHalfEnd = HALF_REAL_DURATION_MINUTES;
+  const secondHalfStart = firstHalfEnd + halftimeMinutes(match);
+  const fullTime = secondHalfStart + HALF_REAL_DURATION_MINUTES;
+
+  if (elapsed >= fullTime) return null;
+  if (elapsed < firstHalfEnd) return Math.min(elapsed, HALF_MINUTES + AVERAGE_STOPPAGE_PER_HALF_MINUTES);
+  if (elapsed < secondHalfStart) return HALF_MINUTES;
+
+  const secondHalfElapsed = elapsed - secondHalfStart;
+  return Math.min(HALF_MINUTES + secondHalfElapsed, (HALF_MINUTES * 2) + AVERAGE_STOPPAGE_PER_HALF_MINUTES);
+}
+
+function effectiveLiveStatus(match: MundialMatchDoc, nowMs: number): LiveMatchStatus {
+  const status = storedLiveStatus(match);
+  if (!isMatchAutoLive(match, nowMs)) return status;
+  const elapsed = Math.floor((nowMs - kickoffTime(match)) / 60_000);
+  const firstHalfEnd = HALF_REAL_DURATION_MINUTES;
+  const secondHalfStart = firstHalfEnd + halftimeMinutes(match);
+  return elapsed >= firstHalfEnd && elapsed < secondHalfStart ? "halftime" : "live";
 }
 
 function toIsoString(value: unknown) {
@@ -394,6 +448,13 @@ export async function GET() {
     };
     const adminMatches = matches.map((match) => {
       const ms = matchStatMap.get(match.id) ?? emptyMatchStat;
+      const liveStatus = effectiveLiveStatus(match, now.getTime());
+      const liveMinute =
+        typeof match.liveMinute === "number"
+          ? match.liveMinute
+          : liveStatus === "live" || liveStatus === "halftime"
+            ? autoLiveMinute(match, now.getTime())
+            : null;
       return {
         id: match.id,
         number: match.number,
@@ -410,11 +471,8 @@ export async function GET() {
         awayFinalScore: typeof match.awayFinalScore === "number" ? match.awayFinalScore : null,
         forceClosed: match.forceClosed ?? false,
         actualWinner: match.actualWinner ?? null,
-        liveStatus:
-          match.liveStatus === "live" || match.liveStatus === "halftime" || match.liveStatus === "fulltime"
-            ? match.liveStatus
-            : "scheduled",
-        liveMinute: typeof match.liveMinute === "number" ? match.liveMinute : null,
+        liveStatus,
+        liveMinute,
         homeLiveScore: typeof match.homeLiveScore === "number" ? match.homeLiveScore : null,
         awayLiveScore: typeof match.awayLiveScore === "number" ? match.awayLiveScore : null,
         liveNote: match.liveNote ?? "",

@@ -41,6 +41,10 @@ function normalizeKey(value: unknown) {
   return String(value ?? "").trim().toUpperCase();
 }
 
+function isPremiumAdmin(playerKey: string) {
+  return playerKey === "ALLAN";
+}
+
 function cleanText(value: unknown, max = MAX_TEXT) {
   return String(value ?? "").trim().replace(/\s+/g, " ").slice(0, max);
 }
@@ -71,6 +75,8 @@ function serialize(doc: PremiumPredictionDoc) {
 }
 
 async function hasPremium(playerKey: string) {
+  if (isPremiumAdmin(playerKey)) return true;
+
   const db = await getDb();
   const record = await db.collection(COLLECTIONS.MUNDIAL_PREMIUM).findOne({ playerKey });
   return Boolean(record);

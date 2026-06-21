@@ -115,7 +115,7 @@ export function MatchSelector({
 
       <div className="p-3">
         {tab !== "upcoming" ? (
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+          <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
             {tabMatches.map((m) => (
               <CompactMatchCard
                 key={m.id}
@@ -127,7 +127,7 @@ export function MatchSelector({
               />
             ))}
             {tabMatches.length === 0 && (
-              <p className="col-span-2 py-4 text-sm font-bold text-white/40">
+              <p className="py-4 text-sm font-bold text-white/40 min-[420px]:col-span-2">
                 {tab === "live" ? "No hay partido en vivo ahora." : "No hay partidos hoy."}
               </p>
             )}
@@ -139,7 +139,7 @@ export function MatchSelector({
                 <p className="mb-2 text-[10px] font-black uppercase tracking-[0.2em] text-[#f0b429]">
                   {group.label}
                 </p>
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                   {group.matches.map((m) => (
                     <CompactMatchCard
                       key={m.id}
@@ -183,7 +183,7 @@ function TabButton({
       type="button"
       onClick={onClick}
       className={cn(
-        "relative flex flex-1 items-center justify-center gap-1.5 py-3 px-2 text-[11px] font-black uppercase tracking-wide transition-all",
+        "relative flex flex-1 items-center justify-center gap-1 px-1.5 py-3 text-[10px] font-black uppercase tracking-wide transition-all min-[380px]:gap-1.5 min-[380px]:px-2 min-[380px]:text-[11px]",
         active
           ? live
             ? "bg-[#9dff34]/8 text-[#9dff34]"
@@ -273,7 +273,7 @@ function CompactMatchCard({
       type="button"
       onClick={onClick}
       className={cn(
-        "group relative w-full rounded-lg border p-2.5 text-left transition-all active:scale-95",
+        "group relative w-full rounded-lg border p-2 text-left transition-all active:scale-95 min-[420px]:p-2.5",
         selected
           ? live
             ? "border-[#9dff34] bg-[#0d2209] shadow-[0_0_22px_rgba(157,255,52,0.22)]"
@@ -313,17 +313,17 @@ function CompactMatchCard({
       </div>
 
       {/* Teams + score */}
-      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-1.5">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1.5">
         <div className="flex min-w-0 flex-col items-center gap-1">
           <Flag team={match.homeTeam} size="xs" />
-          <span className="w-full truncate text-center text-[9px] font-black uppercase text-white">
+          <span className="w-full truncate text-center text-[9px] font-black uppercase leading-tight text-white">
             {match.homeTeam}
           </span>
         </div>
 
         <span
           className={cn(
-            "shrink-0 rounded px-1 py-0.5 text-center text-[11px] font-black tabular-nums leading-none",
+            "shrink-0 rounded px-1.5 py-1 text-center text-xs font-black tabular-nums leading-none",
             live
               ? "bg-[#9dff34]/15 text-[#9dff34]"
               : closed
@@ -336,7 +336,7 @@ function CompactMatchCard({
 
         <div className="flex min-w-0 flex-col items-center gap-1">
           <Flag team={match.awayTeam} size="xs" />
-          <span className="w-full truncate text-center text-[9px] font-black uppercase text-white">
+          <span className="w-full truncate text-center text-[9px] font-black uppercase leading-tight text-white">
             {match.awayTeam}
           </span>
         </div>

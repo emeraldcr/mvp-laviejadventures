@@ -25,6 +25,7 @@ import type { ViewMode } from "../types";
 interface MundialHeaderProps {
   playerName: string;
   avatarDataUrl?: string | null;
+  hasPremium?: boolean;
   dirtyDrafts: unknown[];
   isSavingBulk: boolean;
   viewMode: ViewMode;
@@ -52,6 +53,7 @@ function ViewIcon({ id, active }: { id: ViewMode; active: boolean }) {
 export function MundialHeader({
   playerName,
   avatarDataUrl,
+  hasPremium = false,
   dirtyDrafts,
   isSavingBulk,
   viewMode,
@@ -134,15 +136,25 @@ export function MundialHeader({
             )}
             aria-label="Menú"
           >
-            {avatarDataUrl ? (
-              <img
-                src={avatarDataUrl}
-                alt="Avatar"
-                className="h-5 w-5 rounded-full object-cover ring-1 ring-[#f0b429]/60"
-              />
-            ) : (
-              <UserRound className="h-3.5 w-3.5 text-[#f0b429]" />
-            )}
+            <span className="relative shrink-0">
+              {avatarDataUrl ? (
+                <img
+                  src={avatarDataUrl}
+                  alt="Avatar"
+                  className={cn(
+                    "h-5 w-5 rounded-full object-cover ring-1",
+                    hasPremium ? "ring-[#f0b429] shadow-[0_0_10px_rgba(240,180,41,0.45)]" : "ring-[#f0b429]/60"
+                  )}
+                />
+              ) : (
+                <UserRound className="h-3.5 w-3.5 text-[#f0b429]" />
+              )}
+              {hasPremium && (
+                <span className="absolute -right-1.5 -top-1.5 grid h-3.5 w-3.5 place-items-center rounded-full border border-[#07110b] bg-[#f0b429] text-[#07110b] shadow-[0_0_10px_rgba(240,180,41,0.55)]">
+                  <Crown className="h-2.5 w-2.5" />
+                </span>
+              )}
+            </span>
             <span className="hidden max-w-28 truncate sm:inline">{playerName || "Jugador"}</span>
             <MoreHorizontal className="h-3.5 w-3.5" />
           </button>
@@ -163,7 +175,9 @@ export function MundialHeader({
                   <UserRound className="h-4 w-4 shrink-0 text-[#f0b429]" />
                   <div className="min-w-0">
                     <p className="text-[10px] font-black uppercase tracking-wider text-white/35">Jugador</p>
-                    <p className="truncate text-sm font-black text-white">{playerName || "—"}</p>
+                    <div className="flex min-w-0 items-center gap-2">
+                      <p className="truncate text-sm font-black text-white">{playerName || "—"}</p>
+                    </div>
                   </div>
                   <ChevronDown className="ml-auto h-3.5 w-3.5 shrink-0 text-[#d5ff3f]" />
                 </button>

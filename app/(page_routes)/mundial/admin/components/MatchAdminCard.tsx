@@ -108,6 +108,12 @@ function numberOrNull(value: string) {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+function scoreOrNull(value: string) {
+  if (value.trim() === "") return null;
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed >= 0 ? parsed : null;
+}
+
 function liveEventSignature(event: Pick<AdminLiveMatchEvent, "type" | "team" | "minute" | "player" | "note">) {
   return [
     event.type,
@@ -308,7 +314,21 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
     setError("");
     setIsTogglingClose(true);
     try {
-      await onPatch(match.id, { forceClosed: !match.forceClosed });
+      const isClosing = !match.forceClosed;
+      const patch: Record<string, unknown> = { forceClosed: isClosing };
+      const liveHome = scoreOrNull(homeLiveScore);
+      const liveAway = scoreOrNull(awayLiveScore);
+
+      if (isClosing && liveHome !== null && liveAway !== null) {
+        patch.homeFinalScore = liveHome;
+        patch.awayFinalScore = liveAway;
+        if (isKnockout) {
+          patch.actualWinner =
+            liveHome > liveAway ? "home" : liveAway > liveHome ? "away" : actualWinner || null;
+        }
+      }
+
+      await onPatch(match.id, patch);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error.");
     } finally {
@@ -845,7 +865,7 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
         </button>
 
         {showLive && (
-          <div className="px-4 pb-4 pt-2 space-y-4">
+          <div className="space-y-4 px-3 pb-4 pt-2 min-[380px]:px-4">
             <datalist id={homePlayersListId}>
               {match.homeRoster.map((player) => (
                 <option key={`${match.id}-home-${player.name}`} value={player.name} label={playerOptionLabel(player)} />
@@ -858,14 +878,14 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
             </datalist>
 
             {/* Status selector */}
-            <div className="grid grid-cols-4 gap-1">
+            <div className="grid grid-cols-2 gap-1 min-[430px]:grid-cols-4">
               {LIVE_STATUS_OPTIONS.map((opt) => (
                 <button
                   key={opt.value}
                   type="button"
                   onClick={() => setLiveStatus(opt.value)}
                   className={cn(
-                    "h-8 rounded-lg text-xs font-black transition",
+                    "h-9 rounded-lg text-xs font-black transition min-[430px]:h-8",
                     liveStatus === opt.value ? opt.color : "border border-white/12 bg-black/35 text-white/65 hover:bg-black/25"
                   )}
                 >
@@ -876,16 +896,16 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
 
             {/* Live scoreboard */}
             <div className="overflow-hidden rounded-xl bg-slate-950">
-              <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 py-4">
+              <div className="grid grid-cols-[minmax(0,1fr)_3.5rem_minmax(0,1fr)] items-center gap-2 px-2.5 py-3 min-[380px]:grid-cols-[1fr_auto_1fr] min-[380px]:gap-4 min-[380px]:px-4 min-[380px]:py-4">
                 {/* Home */}
                 <div className="flex flex-col items-center gap-2">
                   <Flag team={match.homeTeam} size="sm" />
-                  <p className="max-w-full truncate text-center text-[10px] font-black uppercase text-white/50">{match.homeTeam}</p>
-                  <div className="flex items-center gap-1.5">
+                  <p className="max-w-20 truncate text-center text-[10px] font-black uppercase text-white/50 min-[380px]:max-w-full">{match.homeTeam}</p>
+                  <div className="flex items-center gap-0.5 min-[380px]:gap-1.5">
                     <button
                       type="button"
                       onClick={() => setHomeLiveScore((v) => safeDec(v))}
-                      className="grid h-7 w-7 place-items-center rounded-lg bg-white/10 text-white hover:bg-white/20"
+                      className="grid h-7 w-6 place-items-center rounded-lg bg-white/10 text-white hover:bg-white/20 min-[380px]:w-7"
                     >
                       <Minus className="h-3 w-3" />
                     </button>
@@ -895,12 +915,12 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
                       value={homeLiveScore}
                       onChange={(e) => setHomeLiveScore(e.target.value)}
                       placeholder="0"
-                      className="h-10 w-12 rounded-lg bg-white/10 text-center text-2xl font-black tabular-nums text-white outline-none focus:bg-white/15"
+                      className="h-10 w-10 rounded-lg bg-white/10 text-center text-xl font-black tabular-nums text-white outline-none focus:bg-white/15 min-[380px]:w-12 min-[380px]:text-2xl"
                     />
                     <button
                       type="button"
                       onClick={() => setHomeLiveScore((v) => safeInc(v))}
-                      className="grid h-7 w-7 place-items-center rounded-lg bg-white/10 text-white hover:bg-white/20"
+                      className="grid h-7 w-6 place-items-center rounded-lg bg-white/10 text-white hover:bg-white/20 min-[380px]:w-7"
                     >
                       <Plus className="h-3 w-3" />
                     </button>
@@ -916,7 +936,7 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
                     value={liveMinute}
                     onChange={(e) => setLiveMinute(e.target.value)}
                     placeholder="-"
-                    className="h-9 w-14 rounded-lg bg-white/10 text-center text-sm font-black tabular-nums text-white outline-none focus:bg-white/15"
+                    className="h-9 w-12 rounded-lg bg-white/10 text-center text-sm font-black tabular-nums text-white outline-none focus:bg-white/15 min-[380px]:w-14"
                   />
                   <p className="text-[10px] font-bold text-white/30">min</p>
                 </div>
@@ -924,12 +944,12 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
                 {/* Away */}
                 <div className="flex flex-col items-center gap-2">
                   <Flag team={match.awayTeam} size="sm" />
-                  <p className="max-w-full truncate text-center text-[10px] font-black uppercase text-white/50">{match.awayTeam}</p>
-                  <div className="flex items-center gap-1.5">
+                  <p className="max-w-20 truncate text-center text-[10px] font-black uppercase text-white/50 min-[380px]:max-w-full">{match.awayTeam}</p>
+                  <div className="flex items-center gap-0.5 min-[380px]:gap-1.5">
                     <button
                       type="button"
                       onClick={() => setAwayLiveScore((v) => safeDec(v))}
-                      className="grid h-7 w-7 place-items-center rounded-lg bg-white/10 text-white hover:bg-white/20"
+                      className="grid h-7 w-6 place-items-center rounded-lg bg-white/10 text-white hover:bg-white/20 min-[380px]:w-7"
                     >
                       <Minus className="h-3 w-3" />
                     </button>
@@ -939,12 +959,12 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
                       value={awayLiveScore}
                       onChange={(e) => setAwayLiveScore(e.target.value)}
                       placeholder="0"
-                      className="h-10 w-12 rounded-lg bg-white/10 text-center text-2xl font-black tabular-nums text-white outline-none focus:bg-white/15"
+                      className="h-10 w-10 rounded-lg bg-white/10 text-center text-xl font-black tabular-nums text-white outline-none focus:bg-white/15 min-[380px]:w-12 min-[380px]:text-2xl"
                     />
                     <button
                       type="button"
                       onClick={() => setAwayLiveScore((v) => safeInc(v))}
-                      className="grid h-7 w-7 place-items-center rounded-lg bg-white/10 text-white hover:bg-white/20"
+                      className="grid h-7 w-6 place-items-center rounded-lg bg-white/10 text-white hover:bg-white/20 min-[380px]:w-7"
                     >
                       <Plus className="h-3 w-3" />
                     </button>
@@ -1018,13 +1038,13 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
               )}
 
               <div className="grid gap-2 p-3">
-                <div className="grid grid-cols-[minmax(0,1fr)_7rem_7rem] gap-2 px-1 text-[10px] font-black uppercase tracking-wide text-slate-400">
+                <div className="grid grid-cols-[minmax(0,1fr)_4.75rem_4.75rem] gap-1.5 px-1 text-[10px] font-black uppercase tracking-wide text-slate-400 min-[430px]:grid-cols-[minmax(0,1fr)_7rem_7rem] min-[430px]:gap-2">
                   <span>Dato</span>
                   <span className="truncate text-center">{match.homeTeam}</span>
                   <span className="truncate text-center">{match.awayTeam}</span>
                 </div>
                 {LIVE_STATS_FIELDS.map((field) => (
-                  <div key={field.key} className="grid grid-cols-[minmax(0,1fr)_7rem_7rem] items-center gap-2">
+                  <div key={field.key} className="grid grid-cols-[minmax(0,1fr)_4.75rem_4.75rem] items-center gap-1.5 min-[430px]:grid-cols-[minmax(0,1fr)_7rem_7rem] min-[430px]:gap-2">
                     <span className="truncate text-xs font-black text-white/65">{field.label}</span>
                     <LiveStatInput
                       value={liveStats.home[field.key]}

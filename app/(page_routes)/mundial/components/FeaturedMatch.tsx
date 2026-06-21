@@ -9,6 +9,7 @@ import {
   hasFinalScore,
   isMatchClosed,
   isMatchLive,
+  livePickStatus,
   liveScoreText,
   liveStatusLabel,
   LIVE_TIMING,
@@ -58,6 +59,7 @@ export function FeaturedMatch({
   const isKnockoutTie = match.stage !== "group" && draft.homeScore === draft.awayScore;
   const hasLiveDetail = isLive || match.liveEvents.length > 0 || Boolean(match.liveNote);
   const canGoPredict = !isLive && !isClosed && canPredict;
+  const pickLiveStatus = livePickStatus(match, draft);
 
   const homeLiveScore = isLive
     ? (match.homeLiveScore ?? 0)
@@ -120,7 +122,7 @@ export function FeaturedMatch({
 
       {/* ── LIVE layout: single column, breathing room ── */}
       {isLive ? (
-        <div className="p-4 sm:p-5 space-y-3">
+        <div className="space-y-3 p-3 min-[380px]:p-4 sm:p-5">
           <LiveMatchScoreboard
             match={match}
             isLive={true}
@@ -135,15 +137,15 @@ export function FeaturedMatch({
           )}
 
           {/* Prediction strip — compact, inline */}
-          <div className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/30 px-3 py-2.5">
-            <div className="flex min-w-0 items-center gap-2.5 overflow-hidden">
+          <div className="flex flex-col gap-2 rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 min-[460px]:flex-row min-[460px]:items-center min-[460px]:justify-between">
+            <div className="flex min-w-0 flex-wrap items-center gap-2 min-[460px]:flex-nowrap min-[460px]:gap-2.5 min-[460px]:overflow-hidden">
               <span className="shrink-0 text-[10px] font-black uppercase tracking-[0.15em] text-[#f0b429]">
                 Tu pick
               </span>
               <span className="text-lg font-black tabular-nums text-white leading-none">
                 {draft.homeScore} – {draft.awayScore}
               </span>
-              <span className="truncate text-sm font-bold text-white/55">
+              <span className="min-w-0 break-words text-sm font-bold text-white/55 min-[460px]:truncate">
                 {predictionResult(match, draft)}
               </span>
               {isKnockoutTie && draft.winnerPick && (
@@ -155,19 +157,35 @@ export function FeaturedMatch({
             <button
               type="button"
               onClick={() => onGoToMine(match.id)}
-              className="shrink-0 text-xs font-black text-white/35 transition hover:text-white"
+              className="self-start shrink-0 text-xs font-black text-white/45 transition hover:text-white min-[460px]:self-auto"
             >
               Ver picks →
             </button>
           </div>
 
+          {pickLiveStatus && (
+            <div
+              className={cn(
+                "rounded-xl border px-3 py-2.5",
+                pickLiveStatus.tone === "lost"
+                  ? "border-[#ff6a3d]/55 bg-[#35130d]/85 text-[#ffd2c2]"
+                  : "border-[#9dff34]/45 bg-[#10240b]/85 text-[#e7ffc0]"
+              )}
+            >
+              <p className="text-[11px] font-black uppercase tracking-[0.16em]">
+                {pickLiveStatus.title}
+              </p>
+              <p className="mt-1 text-sm font-bold leading-snug">{pickLiveStatus.message}</p>
+            </div>
+          )}
+
           {/* Action row */}
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-1 gap-2 min-[430px]:grid-cols-2 sm:flex sm:flex-wrap">
             {hasLiveDetail && (
               <button
                 type="button"
                 onClick={() => setShowLiveModal(true)}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-[#9dff34]/25 bg-[#0a1e0e] px-3 py-2 text-xs font-black text-[#d5ff3f] transition hover:bg-[#12351f]"
+                className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-[#9dff34]/25 bg-[#0a1e0e] px-3 py-2 text-xs font-black text-[#d5ff3f] transition hover:bg-[#12351f] sm:justify-start"
               >
                 <Zap className="h-3.5 w-3.5 shrink-0" />
                 Detalles live
@@ -176,7 +194,7 @@ export function FeaturedMatch({
             <button
               type="button"
               onClick={() => setShowFinalBetsModal(true)}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-[#f0b429]/25 bg-[#0a1e0e] px-3 py-2 text-xs font-black text-white transition hover:bg-[#12351f]"
+              className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-[#f0b429]/25 bg-[#0a1e0e] px-3 py-2 text-xs font-black text-white transition hover:bg-[#12351f] sm:justify-start"
             >
               <ClipboardList className="h-3.5 w-3.5 shrink-0 text-[#f0b429]" />
               Apuestas al final
@@ -184,7 +202,7 @@ export function FeaturedMatch({
             <button
               type="button"
               onClick={() => setShowLiveBetsModal(true)}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-[#d5ff3f]/25 bg-[#0a1e0e] px-3 py-2 text-xs font-black text-white transition hover:bg-[#12351f]"
+              className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-[#d5ff3f]/25 bg-[#0a1e0e] px-3 py-2 text-xs font-black text-white transition hover:bg-[#12351f] sm:justify-start"
             >
               <Activity className="h-3.5 w-3.5 shrink-0 text-[#d5ff3f]" />
               Mini apuestas
@@ -192,7 +210,7 @@ export function FeaturedMatch({
             <button
               type="button"
               onClick={() => setShowPicksModal(true)}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-[#0a1e0e] px-3 py-2 text-xs font-black text-white transition hover:bg-[#12351f]"
+              className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-white/15 bg-[#0a1e0e] px-3 py-2 text-xs font-black text-white transition hover:bg-[#12351f] sm:justify-start"
             >
               <Users className="h-3.5 w-3.5 shrink-0 text-white/40" />
               Picks de amigos
@@ -640,7 +658,7 @@ function LiveMatchScoreboard({
   })();
 
   return (
-    <div className={cn("mt-4 overflow-hidden rounded-2xl border shadow-[0_18px_45px_rgba(0,0,0,0.25)]", tone)}>
+    <div className={cn("mt-3 overflow-hidden rounded-xl border shadow-[0_18px_45px_rgba(0,0,0,0.25)] min-[380px]:mt-4 min-[380px]:rounded-2xl", tone)}>
       {/* Header */}
       <div className="flex items-center justify-between gap-2 border-b border-white/10 bg-black/35 px-3 py-2">
         <span className={cn("inline-flex items-center gap-2 rounded-full border bg-black/35 px-3 py-1 text-xs font-black uppercase tracking-wide", clockTone)}>
@@ -652,44 +670,44 @@ function LiveMatchScoreboard({
         </span>
       </div>
 
-      <div className="px-3 py-4">
+      <div className="px-2.5 py-3 min-[380px]:px-3 min-[380px]:py-4">
         {/* [Home team] [SCORE – SCORE] [Away team] */}
-        <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:gap-3">
-          <div className="flex min-w-0 items-center gap-1.5">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1.5 sm:gap-3">
+          <div className="flex min-w-0 flex-col items-center gap-1 text-center min-[420px]:flex-row min-[420px]:text-left">
             <Flag team={match.homeTeam} size="sm" className="rounded-sm" />
             <div className="min-w-0">
               <p className="text-[10px] font-black uppercase tracking-[0.14em] text-white/45">{teamCode(match.homeTeam)}</p>
-              <p className="truncate text-xs font-black text-white">{match.homeTeam}</p>
+              <p className="max-w-16 truncate text-[11px] font-black text-white min-[420px]:max-w-none min-[420px]:text-xs">{match.homeTeam}</p>
             </div>
           </div>
 
-          <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+          <div className="flex shrink-0 items-center gap-0.5 min-[380px]:gap-1 sm:gap-2">
             <span className={cn(
-              "grid h-14 w-14 place-items-center rounded-xl border text-5xl font-black tabular-nums leading-none sm:h-20 sm:w-20 sm:text-6xl",
+              "grid h-11 w-11 place-items-center rounded-lg border text-4xl font-black tabular-nums leading-none min-[380px]:h-14 min-[380px]:w-14 min-[380px]:rounded-xl min-[380px]:text-5xl sm:h-20 sm:w-20 sm:text-6xl",
               scoreTone
             )}>
               {homeLiveScore}
             </span>
             <span className="text-sm font-black text-white/25">–</span>
             <span className={cn(
-              "grid h-14 w-14 place-items-center rounded-xl border text-5xl font-black tabular-nums leading-none sm:h-20 sm:w-20 sm:text-6xl",
+              "grid h-11 w-11 place-items-center rounded-lg border text-4xl font-black tabular-nums leading-none min-[380px]:h-14 min-[380px]:w-14 min-[380px]:rounded-xl min-[380px]:text-5xl sm:h-20 sm:w-20 sm:text-6xl",
               scoreTone
             )}>
               {awayLiveScore}
             </span>
           </div>
 
-          <div className="flex min-w-0 items-center justify-end gap-1.5">
+          <div className="flex min-w-0 flex-col-reverse items-center justify-end gap-1 text-center min-[420px]:flex-row min-[420px]:text-right">
             <div className="min-w-0 text-right">
               <p className="text-[10px] font-black uppercase tracking-[0.14em] text-white/45">{teamCode(match.awayTeam)}</p>
-              <p className="truncate text-xs font-black text-white">{match.awayTeam}</p>
+              <p className="max-w-16 truncate text-[11px] font-black text-white min-[420px]:max-w-none min-[420px]:text-xs">{match.awayTeam}</p>
             </div>
             <Flag team={match.awayTeam} size="sm" className="rounded-sm" />
           </div>
         </div>
 
         {/* Goals row */}
-        <div className="mt-3 grid grid-cols-2 gap-2 border-t border-white/8 pt-3">
+        <div className="mt-3 grid grid-cols-1 gap-2 border-t border-white/8 pt-3 min-[420px]:grid-cols-2">
           <div className="min-w-0">
             <p className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wide text-white/35">
               <CircleDot className="h-3 w-3" />
@@ -697,8 +715,8 @@ function LiveMatchScoreboard({
             </p>
             <p className="mt-0.5 break-words text-xs font-bold leading-snug text-white/65">{homeGoals}</p>
           </div>
-          <div className="min-w-0 text-right">
-            <p className="inline-flex w-full items-center justify-end gap-1 text-[10px] font-black uppercase tracking-wide text-white/35">
+          <div className="min-w-0 min-[420px]:text-right">
+            <p className="inline-flex w-full items-center gap-1 text-[10px] font-black uppercase tracking-wide text-white/35 min-[420px]:justify-end">
               Goles
               <CircleDot className="h-3 w-3" />
             </p>

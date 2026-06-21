@@ -177,7 +177,7 @@ export default function AdminClient() {
 
   const filteredMatches = useMemo(() => {
     const now = Date.now();
-    if (matchFilter === "upcoming") return allMatchesSorted.filter((m) => !m.closed);
+    if (matchFilter === "upcoming") return allMatchesSorted.filter((m) => !m.closed || isLive(m));
     if (matchFilter === "live")     return allMatchesSorted.filter(isLive);
     if (matchFilter === "recent")   return allMatchesSorted.filter((m) => m.closed).slice(0, 8);
     if (matchFilter === "open")     return allMatchesSorted.filter((m) => !m.closed);
