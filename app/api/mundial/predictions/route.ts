@@ -274,7 +274,11 @@ function buildLeaderboard(
   }
 
   return [...playerMap.values()].sort(
-    (a, b) => b.totalPoints - a.totalPoints || a.playerName.localeCompare(b.playerName)
+    (a, b) =>
+      b.totalPoints - a.totalPoints ||
+      b.exactScores - a.exactScores ||
+      b.correctOutcomes - a.correctOutcomes ||
+      a.playerName.localeCompare(b.playerName)
   );
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { UserRound, X, Plus } from "lucide-react";
 import { cn } from "../utils";
 
@@ -15,6 +15,13 @@ export function PlayerPickerModal({ players, onSelect, onClose, allowClose }: Pr
   const [showNew, setShowNew] = useState(players.length === 0);
   const [name, setName] = useState("");
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!allowClose || !onClose) return;
+    function onKey(e: KeyboardEvent) { if (e.key === "Escape") onClose(); }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [allowClose, onClose]);
 
   function handleSubmit() {
     const trimmed = name.trim();

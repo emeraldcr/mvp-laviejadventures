@@ -1,15 +1,43 @@
-import { CalendarDays, Check, TrendingUp, Users, X as XIcon } from "lucide-react";
+import { CalendarDays, Check, Star, TrendingUp, Users, X as XIcon } from "lucide-react";
 import { useMemo } from "react";
 import type { MundialMatch, Prediction } from "../types";
 import { cn, formatKickoff, normalizeKey, teamCode } from "../utils";
 import { Flag } from "./Flag";
 
 type Outcome = "home" | "draw" | "away";
+type PickStatus = {
+  showIndicator: boolean;
+  isWinning: boolean;
+  isExact: boolean;
+};
 
 function getOutcome(home: number, away: number): Outcome {
   if (home > away) return "home";
   if (away > home) return "away";
   return "draw";
+}
+
+function pickStatus(match: MundialMatch, prediction: Prediction): PickStatus {
+  const hasFinalScore =
+    match.homeFinalScore !== null &&
+    match.awayFinalScore !== null;
+  const hasLiveScore =
+    match.homeLiveScore !== null &&
+    match.awayLiveScore !== null;
+
+  const refHome = hasFinalScore ? match.homeFinalScore : match.homeLiveScore;
+  const refAway = hasFinalScore ? match.awayFinalScore : match.awayLiveScore;
+  const hasRef = refHome !== null && refAway !== null;
+  const showIndicator = hasRef && (hasFinalScore || match.closed || hasLiveScore);
+
+  if (!hasRef) {
+    return { showIndicator: false, isWinning: false, isExact: false };
+  }
+
+  const isWinning = getOutcome(prediction.homeScore, prediction.awayScore) === getOutcome(refHome, refAway);
+  const isExact = prediction.homeScore === refHome && prediction.awayScore === refAway;
+
+  return { showIndicator, isWinning, isExact };
 }
 
 type OtherPicksPanelProps = {
@@ -52,6 +80,10 @@ export function OtherPicksPanel({ match, predictions, playerName, showEmpty = fa
   const sorted = [...matchPicks].sort((a, b) => {
     const aIsMe = normalizeKey(a.playerName) === myKey;
     const bIsMe = normalizeKey(b.playerName) === myKey;
+    const aStatus = pickStatus(match, a);
+    const bStatus = pickStatus(match, b);
+    if (aStatus.isExact !== bStatus.isExact) return aStatus.isExact ? -1 : 1;
+    if (aStatus.isWinning !== bStatus.isWinning) return aStatus.isWinning ? -1 : 1;
     if (aIsMe && !bIsMe) return -1;
     if (!aIsMe && bIsMe) return 1;
     return a.playerName.localeCompare(b.playerName);
@@ -105,31 +137,18 @@ export function OtherPicksPanel({ match, predictions, playerName, showEmpty = fa
                 {sorted.map((p) => {
                   const isMe = normalizeKey(p.playerName) === myKey;
                   const outcome = getOutcome(p.homeScore, p.awayScore);
-
-                  const isClosed =
-                    match.closed &&
-                    match.homeFinalScore !== null &&
-                    match.awayFinalScore !== null;
-
-                  // Live score check (match in progress)
-                  const isLive =
-                    !match.closed &&
-                    match.homeLiveScore !== null &&
-                    match.awayLiveScore !== null;
-
-                  // Outcome relative to the best available score (final > live)
-                  const refHome = isClosed ? match.homeFinalScore! : match.homeLiveScore;
-                  const refAway = isClosed ? match.awayFinalScore! : match.awayLiveScore;
-                  const hasRef = refHome !== null && refAway !== null;
-                  const isWinning = hasRef && outcome === getOutcome(refHome!, refAway!);
-                  const showIndicator = isClosed || isLive;
+                  const { showIndicator, isWinning, isExact } = pickStatus(match, p);
 
                   return (
                     <div
                       key={p.id}
                       className={cn(
                         "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg border px-3 py-2.5",
-                        isMe ? "border-[#9dff34]/60 bg-[#10240b]/80" : "border-white/10 bg-black/35"
+                        isExact
+                          ? "border-[#f0b429]/70 bg-[#211706]/80 shadow-[0_0_18px_rgba(240,180,41,0.14)]"
+                          : isMe
+                            ? "border-[#9dff34]/60 bg-[#10240b]/80"
+                            : "border-white/10 bg-black/35"
                       )}
                     >
                       <div className="flex min-w-0 items-center gap-2">
@@ -137,6 +156,11 @@ export function OtherPicksPanel({ match, predictions, playerName, showEmpty = fa
                         <span className={cn("min-w-0 truncate text-base font-black", isMe ? "text-[#d5ff3f]" : "text-white")}>
                           {isMe ? "Vos" : p.playerName}
                         </span>
+                        {isExact && (
+                          <span className="hidden shrink-0 rounded border border-[#f0b429]/55 bg-[#f0b429]/15 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.08em] text-[#f0b429] min-[460px]:inline">
+                            Exacto
+                          </span>
+                        )}
                       </div>
 
                       <div className="flex min-w-0 shrink-0 items-center justify-end gap-1.5">
@@ -160,7 +184,9 @@ export function OtherPicksPanel({ match, predictions, playerName, showEmpty = fa
                           </span>
                         )}
                         {showIndicator && (
-                          isWinning ? (
+                          isExact ? (
+                            <Star className="h-4 w-4 shrink-0 fill-[#f0b429] text-[#f0b429]" />
+                          ) : isWinning ? (
                             <Check className="h-4 w-4 shrink-0 text-[#9dff34]" />
                           ) : (
                             <XIcon className="h-4 w-4 shrink-0 text-[#ff6a3d]" />

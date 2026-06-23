@@ -182,6 +182,13 @@ export function ProfileModal({ playerName, open, onClose, onSaved, isFirstTime, 
 
   useEffect(() => {
     if (!open) return;
+    function onKey(e: KeyboardEvent) { if (e.key === "Escape") onClose(); }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
+  useEffect(() => {
+    if (!open) return;
     fetch("/api/mundial/avatar-icons")
       .then((r) => (r.ok ? r.json() : { icons: [] }))
       .then((data: { icons?: AvatarIcon[] }) => {
