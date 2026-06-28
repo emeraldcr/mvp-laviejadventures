@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rótulos · La Vieja Adventures — Solicitud de Cotización</title>
+<style>
+  :root{
+    --verde:#1f7a4d; --verde-osc:#13593a; --verde-claro:#e8f4ee;
+    --tierra:#7a5230; --amar:#f2b705; --gris:#5b6770; --gris-claro:#f4f6f7;
+    --linea:#e1e6e9; --rojo:#c0392b; --texto:#22312b; --blanco:#fff;
+    --sombra:0 1px 3px rgba(0,0,0,.08),0 4px 14px rgba(0,0,0,.06);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--texto);background:var(--gris-claro);line-height:1.5}
+  a{color:var(--verde)}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 18px}
+
+  /* Header */
+  header.top{background:linear-gradient(135deg,var(--verde-osc),var(--verde));color:#fff;padding:30px 0 26px}
+  header.top h1{margin:0;font-size:1.7rem;letter-spacing:.3px}
+  header.top .sub{opacity:.92;margin-top:4px;font-size:.95rem}
+  .meta{display:flex;flex-wrap:wrap;gap:10px 26px;margin-top:18px;font-size:.86rem}
+  .meta div{opacity:.95}
+  .meta b{display:block;opacity:.7;font-weight:600;font-size:.72rem;text-transform:uppercase;letter-spacing:.5px}
+
+  /* Aviso */
+  .aviso{background:#fff;border-left:4px solid var(--amar);box-shadow:var(--sombra);
+    border-radius:10px;padding:16px 18px;margin:22px 0;font-size:.92rem}
+  .aviso h3{margin:0 0 6px;font-size:1rem}
+
+  /* Stat cards */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin:22px 0}
+  .stat{background:#fff;border-radius:12px;box-shadow:var(--sombra);padding:16px 18px}
+  .stat .n{font-size:1.5rem;font-weight:700;color:var(--verde-osc)}
+  .stat .l{font-size:.78rem;color:var(--gris);text-transform:uppercase;letter-spacing:.4px;margin-top:2px}
+
+  h2.sec{font-size:1.25rem;margin:34px 0 6px;display:flex;align-items:center;gap:10px}
+  .sec-desc{color:var(--gris);font-size:.9rem;margin:0 0 14px}
+
+  /* Categoria details */
+  details.cat{background:#fff;border-radius:12px;box-shadow:var(--sombra);margin:14px 0;overflow:hidden;border:1px solid var(--linea)}
+  details.cat>summary{list-style:none;cursor:pointer;padding:16px 18px;display:flex;align-items:center;gap:12px;
+    font-weight:600;font-size:1.02rem;user-select:none}
+  details.cat>summary::-webkit-details-marker{display:none}
+  details.cat>summary .chev{margin-left:auto;color:var(--gris);transition:transform .2s;font-size:1.1rem}
+  details.cat[open]>summary .chev{transform:rotate(90deg)}
+  details.cat>summary .badge{background:var(--verde-claro);color:var(--verde-osc);font-size:.74rem;
+    padding:3px 9px;border-radius:20px;font-weight:700}
+  details.cat>summary .sub-est{font-size:.82rem;color:var(--gris);font-weight:600}
+  .cat-body{padding:4px 18px 18px}
+
+  /* Item cards */
+  .items{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+  .item{border:1px solid var(--linea);border-radius:10px;overflow:hidden;background:#fff;display:flex;flex-direction:column}
+  .item .mock{background:var(--gris-claro);display:flex;align-items:center;justify-content:center;
+    border-bottom:1px solid var(--linea);padding:10px;min-height:130px}
+  .item .mock svg{max-width:100%;height:auto}
+  .item .ibody{padding:12px 13px;flex:1;display:flex;flex-direction:column;gap:6px}
+  .item .iname{font-weight:700;font-size:.96rem}
+  .item .ispec{font-size:.82rem;color:var(--gris)}
+  .item .ispec b{color:var(--texto);font-weight:600}
+  .item .tagrow{display:flex;flex-wrap:wrap;gap:5px;margin-top:2px}
+  .tag{font-size:.72rem;background:var(--gris-claro);border:1px solid var(--linea);padding:2px 8px;border-radius:6px;color:var(--gris)}
+  .item .price{margin-top:auto;padding-top:8px;border-top:1px dashed var(--linea);display:flex;justify-content:space-between;align-items:baseline}
+  .item .price .u{font-size:.78rem;color:var(--gris)}
+  .item .price .v{font-weight:700;color:var(--verde-osc)}
+
+  /* Tabla */
+  .tablewrap{overflow-x:auto;background:#fff;border-radius:12px;box-shadow:var(--sombra);border:1px solid var(--linea)}
+  table{border-collapse:collapse;width:100%;font-size:.88rem;min-width:640px}
+  th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--linea)}
+  thead th{background:var(--verde-osc);color:#fff;font-size:.78rem;text-transform:uppercase;letter-spacing:.4px;position:sticky;top:0}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+  tbody tr:hover{background:var(--verde-claro)}
+  tr.grupo td{background:var(--gris-claro);font-weight:700;color:var(--verde-osc)}
+  tfoot td{font-weight:700;background:#fff;border-top:2px solid var(--verde-osc)}
+  tfoot tr.total td{font-size:1.05rem;color:var(--verde-osc)}
+
+  /* Comparacion */
+  .compa td.empty{color:#b6bfc4;font-style:italic}
+  .note{font-size:.82rem;color:var(--gris);margin-top:8px}
+
+  footer{margin:40px 0 30px;color:var(--gris);font-size:.82rem;text-align:center}
+  .btnrow{margin:18px 0;display:flex;gap:10px;flex-wrap:wrap}
+  .btn{background:var(--verde);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:.9rem;cursor:pointer;font-weight:600}
+  .btn.sec{background:#fff;color:var(--verde-osc);border:1px solid var(--verde)}
+  @media print{
+    body{background:#fff}
+    .btnrow,.chev{display:none}
+    details.cat{break-inside:avoid;box-shadow:none}
+    details.cat:not([open])>*:not(summary){display:block!important}
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <h1>Rótulos — Solicitud de Cotización</h1>
+    <div class="sub">La Vieja Adventures · San Carlos, Costa Rica</div>
+    <div class="meta">
+      <div><b>Solicitante</b>Allan Rodríguez</div>
+      <div><b>Ubicación</b>San Carlos, Alajuela</div>
+      <div><b>Fecha</b>24 de junio, 2026</div>
+      <div><b>Moneda</b>Colones costarricenses (₡)</div>
+      <div><b>Cotizaciones</b>3 empresas</div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="aviso">
+    <h3>📋 Para el cotizador</h3>
+    Esta página resume <b>todo el lote de rótulos</b> que necesitamos producir e instalar. Cada rótulo incluye un
+    <b>mockup de referencia</b>, su <b>tamaño</b>, <b>cantidad</b>, <b>material sugerido</b> y un <b>precio estimado</b>
+    (solo referencia interna — por favor coloque su precio real). Use la tabla final para entregar su cotización.
+    Los diseños son orientativos; el arte final se entregará en vectores. Se requiere precio <b>con y sin instalación</b>.
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="btnrow">
+    <button class="btn" onclick="window.print()">🖨️ Imprimir / Guardar PDF</button>
+    <button class="btn sec" onclick="toggleAll(true)">Expandir todo</button>
+    <button class="btn sec" onclick="toggleAll(false)">Contraer todo</button>
+  </div>
+
+  <h2 class="sec">🗂️ Detalle por categoría</h2>
+  <p class="sec-desc">Haga clic en cada categoría para expandir y ver los rótulos, mockups y especificaciones.</p>
+  <div id="categorias"></div>
+
+  <h2 class="sec">🧾 Tabla de cotización</h2>
+  <p class="sec-desc">Resumen de cantidades, precio estimado unitario y subtotal estimado por línea.</p>
+  <div class="tablewrap"><table id="tabla"></table></div>
+
+  <h2 class="sec">⚖️ Comparación de empresas</h2>
+  <p class="sec-desc">Complete con el total entregado por cada empresa para comparar de un vistazo.</p>
+  <div class="tablewrap"><table class="compa" id="compara"></table></div>
+  <p class="note">* Precios estimados internos basados en rangos de mercado para rótulos en Costa Rica. Sirven como referencia, no como tope.</p>
+
+  <footer>
+    Documento generado para solicitud de cotización · La Vieja Adventures · San Carlos, Costa Rica · 2026
+  </footer>
+</div>
+
+<script>
+/* ---------- Mockups SVG por tipo ---------- */
+function mock(type, label){
+  const t = {
+    entrada:`<svg viewBox="0 0 220 150"><rect width="220" height="150" fill="#13593a"/><rect x="14" y="14" width="192" height="122" rx="6" fill="#1f7a4d" stroke="#f2b705" stroke-width="3"/><text x="110" y="55" fill="#fff" font-size="17" font-weight="700" text-anchor="middle" font-family="sans-serif">BIENVENIDOS</text><text x="110" y="80" fill="#f2b705" font-size="15" font-weight="700" text-anchor="middle" font-family="sans-serif">LA VIEJA</text><text x="110" y="98" fill="#f2b705" font-size="12" text-anchor="middle" font-family="sans-serif">ADVENTURES</text><path d="M40 118 q70 -22 140 0" stroke="#fff" stroke-width="2" fill="none"/></svg>`,
+    mapa:`<svg viewBox="0 0 220 150"><rect width="220" height="150" fill="#e8f4ee"/><rect x="10" y="10" width="200" height="130" rx="6" fill="#fff" stroke="#1f7a4d" stroke-width="3"/><text x="110" y="30" fill="#13593a" font-size="12" font-weight="700" text-anchor="middle" font-family="sans-serif">MAPA DE SENDEROS</text><path d="M30 60 C70 50 90 95 130 80 S190 70 195 100" stroke="#7a5230" stroke-width="3" fill="none" stroke-dasharray="5 4"/><circle cx="30" cy="60" r="5" fill="#c0392b"/><circle cx="130" cy="80" r="5" fill="#1f7a4d"/><circle cx="195" cy="100" r="5" fill="#f2b705"/><text x="40" y="125" fill="#5b6770" font-size="8" font-family="sans-serif">Inicio</text></svg>`,
+    seguridad:`<svg viewBox="0 0 220 150"><rect width="220" height="150" fill="#fff"/><rect x="10" y="10" width="200" height="130" rx="6" fill="#13593a"/><polygon points="110,28 150,52 150,90 110,108 70,90 70,52" fill="#f2b705"/><text x="110" y="78" fill="#13593a" font-size="26" font-weight="700" text-anchor="middle" font-family="sans-serif">!</text><text x="110" y="128" fill="#fff" font-size="12" font-weight="700" text-anchor="middle" font-family="sans-serif">SEGURIDAD EN EL RÍO</text></svg>`,
+    recepcion:`<svg viewBox="0 0 220 150"><rect width="220" height="150" fill="#1f7a4d"/><rect x="12" y="12" width="196" height="126" rx="6" fill="#fff"/><text x="110" y="60" fill="#13593a" font-size="20" font-weight="700" text-anchor="middle" font-family="sans-serif">RECEPCIÓN</text><text x="110" y="86" fill="#5b6770" font-size="12" text-anchor="middle" font-family="sans-serif">Punto de encuentro</text><rect x="70" y="100" width="80" height="18" rx="9" fill="#f2b705"/><text x="110" y="113" fill="#13593a" font-size="10" font-weight="700" text-anchor="middle" font-family="sans-serif">CHECK-IN</text></svg>`,
+    restaurante:`<svg viewBox="0 0 220 150"><rect width="220" height="150" fill="#7a5230"/><rect x="12" y="12" width="196" height="126" rx="6" fill="#fff"/><text x="110" y="55" fill="#7a5230" font-size="18" font-weight="700" text-anchor="middle" font-family="sans-serif">SODA / RESTAURANTE</text><g stroke="#1f7a4d" stroke-width="3" fill="none"><path d="M85 80 v34 M85 80 q-7 0 -7 10 t7 10"/><circle cx="125" cy="92" r="13"/><path d="M125 105 v9"/></g><text x="110" y="130" fill="#5b6770" font-size="10" text-anchor="middle" font-family="sans-serif">Comida típica</text></svg>`,
+    parkingGrande:`<svg viewBox="0 0 220 150"><rect width="220" height="150" fill="#1f4e79"/><rect x="12" y="12" width="196" height="126" rx="6" fill="#fff"/><text x="110" y="74" fill="#1f4e79" font-size="58" font-weight="800" text-anchor="middle" font-family="sans-serif">P</text><text x="110" y="112" fill="#5b6770" font-size="14" font-weight="700" text-anchor="middle" font-family="sans-serif">PARQUEO</text></svg>`,
+    normas:`<svg viewBox="0 0 220 150"><rect width="220" height="150" fill="#fff"/><rect x="10" y="10" width="200" height="130" rx="6" fill="#13593a"/><text x="110" y="34" fill="#f2b705" font-size="13" font-weight="700" text-anchor="middle" font-family="sans-serif">REGLAMENTO</text><g fill="#fff" font-family="sans-serif" font-size="9"><text x="30" y="58">• Respeta la naturaleza</text><text x="30" y="76">• No dejar basura</text><text x="30" y="94">• Uso obligatorio de equipo</text><text x="30" y="112">• Sigue al guía</text></g></svg>`,
+    parkingSmall:`<svg viewBox="0 0 160 150"><rect width="160" height="150" fill="#fff"/><rect x="8" y="8" width="144" height="134" rx="8" fill="#1f4e79"/><text x="80" y="70" fill="#fff" font-size="46" font-weight="800" text-anchor="middle" font-family="sans-serif">P</text><text x="80" y="106" fill="#fff" font-size="12" text-anchor="middle" font-family="sans-serif">Visitantes</text></svg>`,
+    flecha:`<svg viewBox="0 0 160 150"><rect width="160" height="150" fill="#1f7a4d"/><rect x="8" y="8" width="144" height="134" rx="8" fill="#1f7a4d" stroke="#fff" stroke-width="2"/><polygon points="40,75 95,75 95,55 125,82 95,109 95,90 40,90" fill="#fff"/><text x="80" y="130" fill="#fff" font-size="11" text-anchor="middle" font-family="sans-serif">Direccional</text></svg>`,
+    bano:`<svg viewBox="0 0 160 150"><rect width="160" height="150" fill="#fff"/><rect x="8" y="8" width="144" height="134" rx="8" fill="#5b6770"/><g fill="#fff"><circle cx="58" cy="48" r="9"/><path d="M50 62 h16 l5 30 h-7 l-2 26 h-8 l-2 -26 h-7z"/><circle cx="104" cy="48" r="9"/><path d="M104 60 l-13 30 h8 l2 28 h6 l2 -28 h8z"/></g><text x="80" y="138" fill="#fff" font-size="11" text-anchor="middle" font-family="sans-serif">Servicios</text></svg>`,
+    info:`<svg viewBox="0 0 160 150"><rect width="160" height="150" fill="#fff"/><rect x="8" y="8" width="144" height="134" rx="8" fill="#1f7a4d"/><circle cx="80" cy="62" r="30" fill="#fff"/><text x="80" y="76" fill="#1f7a4d" font-size="40" font-weight="800" text-anchor="middle" font-family="serif">i</text><text x="80" y="124" fill="#fff" font-size="12" text-anchor="middle" font-family="sans-serif">Información</text></svg>`,
+    primeros:`<svg viewBox="0 0 160 150"><rect width="160" height="150" fill="#fff"/><rect x="8" y="8" width="144" height="134" rx="8" fill="#c0392b"/><rect x="62" y="40" width="36" height="60" fill="#fff"/><rect x="50" y="52" width="60" height="36" fill="#fff"/><text x="80" y="128" fill="#fff" font-size="11" text-anchor="middle" font-family="sans-serif">Primeros Auxilios</text></svg>`,
+    planta:`<svg viewBox="0 0 160 150"><rect width="160" height="150" fill="#e8f4ee"/><rect x="20" y="14" width="120" height="74" rx="8" fill="#13593a"/><text x="80" y="42" fill="#fff" font-size="12" font-weight="700" text-anchor="middle" font-family="sans-serif">Heliconia</text><text x="80" y="60" fill="#cdebd9" font-size="8" font-style="italic" text-anchor="middle" font-family="sans-serif">Heliconia rostrata</text><text x="80" y="77" fill="#f2b705" font-size="7" text-anchor="middle" font-family="sans-serif">Nativa · Zona Norte</text><rect x="76" y="88" width="8" height="52" fill="#7a5230"/><polygon points="80,140 74,150 86,150" fill="#7a5230"/></svg>`,
+    precaucion:`<svg viewBox="0 0 160 150"><rect width="160" height="150" fill="#fff"/><polygon points="80,18 142,128 18,128" fill="#f2b705" stroke="#13593a" stroke-width="3"/><text x="80" y="108" fill="#13593a" font-size="40" font-weight="800" text-anchor="middle" font-family="sans-serif">!</text><text x="80" y="146" fill="#5b6770" font-size="10" text-anchor="middle" font-family="sans-serif">Precaución</text></svg>`,
+    prohibido:`<svg viewBox="0 0 160 150"><rect width="160" height="150" fill="#fff"/><circle cx="80" cy="68" r="46" fill="none" stroke="#c0392b" stroke-width="9"/><line x1="48" y1="36" x2="112" y2="100" stroke="#c0392b" stroke-width="9"/><text x="80" y="138" fill="#5b6770" font-size="11" text-anchor="middle" font-family="sans-serif">Prohibición</text></svg>`,
+    equipo:`<svg viewBox="0 0 160 150"><rect width="160" height="150" fill="#fff"/><rect x="8" y="8" width="144" height="134" rx="8" fill="#1f4e79"/><path d="M52 70 a28 24 0 0 1 56 0 z" fill="#fff"/><rect x="50" y="70" width="60" height="8" fill="#fff"/><text x="80" y="120" fill="#fff" font-size="10" text-anchor="middle" font-family="sans-serif">Uso de casco/chaleco</text></svg>`
+  };
+  return t[type] || `<svg viewBox="0 0 160 150"><rect width="160" height="150" fill="#e1e6e9"/><text x="80" y="78" fill="#5b6770" font-size="12" text-anchor="middle" font-family="sans-serif">${label||'Rótulo'}</text></svg>`;
+}
+
+/* ---------- Datos ---------- */
+const data = [
+  {
+    id:'grandes', icon:'🪧', title:'Rótulos grandes 2×2 m', open:true,
+    desc:'Rótulos principales de gran formato (2.0 × 2.0 m). Estructura metálica + lámina, arte a full color, resistente a intemperie.',
+    items:[
+      {name:'Bienvenida / Entrada principal', size:'2.0 × 2.0 m', qty:1, mat:'Estructura metálica + ACM/lámina, vinil full color UV', type:'entrada', unit:220000, tags:['Doble poste','Iluminable (opcional)']},
+      {name:'Mapa de senderos del parque', size:'2.0 × 2.0 m', qty:1, mat:'ACM 3mm + impresión UV + laminado mate', type:'mapa', unit:180000, tags:['Mapa ilustrado']},
+      {name:'Seguridad en el río / Rafting', size:'2.0 × 2.0 m', qty:1, mat:'Lámina galvanizada + vinil reflectivo', type:'seguridad', unit:150000, tags:['Reflectivo']},
+      {name:'Recepción / Punto de encuentro', size:'2.0 × 2.0 m', qty:1, mat:'ACM 3mm + vinil full color', type:'recepcion', unit:150000, tags:[]},
+      {name:'Soda / Restaurante', size:'2.0 × 2.0 m', qty:1, mat:'ACM 3mm + vinil full color', type:'restaurante', unit:160000, tags:[]},
+      {name:'Parqueo (rótulo grande)', size:'2.0 × 2.0 m', qty:1, mat:'Lámina + vinil reflectivo + poste', type:'parkingGrande', unit:140000, tags:['Reflectivo']},
+      {name:'Reglamento / Normas del parque', size:'2.0 × 2.0 m', qty:1, mat:'ACM 3mm + vinil full color', type:'normas', unit:150000, tags:['Texto detallado']}
+    ]
+  },
+  {
+    id:'parking', icon:'🅿️', title:'Parqueo y direccionales', open:false,
+    desc:'Señalización de parqueo y flechas direccionales en formato mediano para circulación interna.',
+    items:[
+      {name:'Señal de parqueo', size:'40 × 60 cm', qty:6, mat:'Lámina galvanizada + vinil reflectivo + tubo', type:'parkingSmall', unit:18000, tags:['Reflectivo','Con tubo']},
+      {name:'Flecha direccional', size:'30 × 40 cm', qty:10, mat:'PVC 3mm / lámina + vinil', type:'flecha', unit:12000, tags:['Izq/Der']},
+      {name:'Espacio reservado / discapacidad', size:'30 × 45 cm', qty:2, mat:'Lámina + vinil reflectivo', type:'parkingSmall', unit:14000, tags:['Reflectivo']}
+    ]
+  },
+  {
+    id:'senal', icon:'🚻', title:'Señalización de instalaciones', open:false,
+    desc:'Rótulos pequeños para identificar áreas y servicios dentro de las instalaciones.',
+    items:[
+      {name:'Servicios sanitarios (H/M)', size:'20 × 30 cm', qty:4, mat:'PVC/acrílico + vinil', type:'bano', unit:9000, tags:[]},
+      {name:'Información / Punto info', size:'20 × 30 cm', qty:3, mat:'PVC 3mm + vinil', type:'info', unit:9000, tags:[]},
+      {name:'Oficina / Administración', size:'15 × 30 cm', qty:3, mat:'Acrílico + vinil', type:'info', unit:10000, tags:[]},
+      {name:'Primeros auxilios', size:'25 × 25 cm', qty:2, mat:'PVC + vinil reflectivo', type:'primeros', unit:11000, tags:['Reflectivo']}
+    ]
+  },
+  {
+    id:'plantas', icon:'🌿', title:'Indicadores de plantas', open:false,
+    desc:'Estacas / placas pequeñas para identificar especies de plantas (nombre común, científico y origen).',
+    items:[
+      {name:'Placa identificadora de planta con estaca', size:'10 × 15 cm + estaca', qty:30, mat:'PVC/aluminio + vinil laminado + estaca', type:'planta', unit:4500, tags:['Con estaca','Resistente sol']}
+    ]
+  },
+  {
+    id:'seguridad', icon:'⚠️', title:'Señalización de seguridad pequeña', open:false,
+    desc:'Señales pequeñas de precaución, prohibición y uso de equipo distribuidas por el sitio.',
+    items:[
+      {name:'Precaución (piso mojado / desnivel)', size:'20 × 30 cm', qty:4, mat:'PVC + vinil reflectivo', type:'precaucion', unit:9000, tags:['Reflectivo']},
+      {name:'Prohibido (no fumar / no basura)', size:'20 × 20 cm', qty:4, mat:'PVC + vinil', type:'prohibido', unit:8500, tags:[]},
+      {name:'Uso obligatorio de equipo', size:'20 × 30 cm', qty:4, mat:'PVC + vinil', type:'equipo', unit:9000, tags:[]},
+      {name:'Zona de río / precaución corriente', size:'30 × 40 cm', qty:3, mat:'Lámina + vinil reflectivo + tubo', type:'precaucion', unit:13000, tags:['Reflectivo']}
+    ]
+  }
+];
+
+/* ---------- Helpers ---------- */
+const CRC = n => '₡' + n.toLocaleString('es-CR');
+const subItem = it => it.qty * it.unit;
+const subCat  = c => c.items.reduce((s,it)=>s+subItem(it),0);
+const qtyCat  = c => c.items.reduce((s,it)=>s+it.qty,0);
+const grandTotal = data.reduce((s,c)=>s+subCat(c),0);
+const totalUnidades = data.reduce((s,c)=>s+qtyCat(c),0);
+const totalTipos = data.reduce((s,c)=>s+c.items.length,0);
+const grandes2x2 = data.find(c=>c.id==='grandes').items.reduce((s,it)=>s+it.qty,0);
+
+/* ---------- Render stats ---------- */
+document.getElementById('stats').innerHTML = [
+  ['Rótulos 2×2 m', grandes2x2],
+  ['Tipos de rótulo', totalTipos],
+  ['Unidades totales', totalUnidades],
+  ['Total estimado', CRC(grandTotal)]
+].map(([l,n])=>`<div class="stat"><div class="n">${n}</div><div class="l">${l}</div></div>`).join('');
+
+/* ---------- Render categorías ---------- */
+document.getElementById('categorias').innerHTML = data.map(c=>`
+  <details class="cat" ${c.open?'open':''}>
+    <summary>
+      <span>${c.icon}</span>
+      <span>${c.title}</span>
+      <span class="badge">${qtyCat(c)} uds</span>
+      <span class="sub-est">${CRC(subCat(c))}</span>
+      <span class="chev">›</span>
+    </summary>
+    <div class="cat-body">
+      <p class="sec-desc">${c.desc}</p>
+      <div class="items">
+        ${c.items.map(it=>`
+          <div class="item">
+            <div class="mock">${mock(it.type,it.name)}</div>
+            <div class="ibody">
+              <div class="iname">${it.name}</div>
+              <div class="ispec">Tamaño: <b>${it.size}</b></div>
+              <div class="ispec">Cantidad: <b>${it.qty}</b></div>
+              <div class="ispec">${it.mat}</div>
+              <div class="tagrow">${it.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+              <div class="price">
+                <span class="u">Estimado unitario</span>
+                <span class="v">${CRC(it.unit)}</span>
+              </div>
+              <div class="price" style="border-top:none;padding-top:2px">
+                <span class="u">Subtotal (${it.qty})</span>
+                <span class="v">${CRC(subItem(it))}</span>
+              </div>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>
+  </details>`).join('');
+
+/* ---------- Render tabla cotización ---------- */
+let rows = '';
+data.forEach(c=>{
+  rows += `<tr class="grupo"><td colspan="5">${c.icon} ${c.title}</td></tr>`;
+  c.items.forEach(it=>{
+    rows += `<tr>
+      <td>${it.name}</td>
+      <td>${it.size}</td>
+      <td class="num">${it.qty}</td>
+      <td class="num">${CRC(it.unit)}</td>
+      <td class="num">${CRC(subItem(it))}</td>
+    </tr>`;
+  });
+});
+document.getElementById('tabla').innerHTML = `
+  <thead><tr><th>Rótulo</th><th>Tamaño</th><th class="num">Cant.</th><th class="num">Est. unit.</th><th class="num">Subtotal est.</th></tr></thead>
+  <tbody>${rows}</tbody>
+  <tfoot>
+    <tr><td colspan="2">Unidades totales</td><td class="num">${totalUnidades}</td><td></td><td></td></tr>
+    <tr class="total"><td colspan="4">TOTAL ESTIMADO (sin IVA)</td><td class="num">${CRC(grandTotal)}</td></tr>
+  </tfoot>`;
+
+/* ---------- Render comparación empresas ---------- */
+document.getElementById('compara').innerHTML = `
+  <thead><tr>
+    <th>Concepto</th><th>Empresa 1</th><th>Empresa 2</th><th>Empresa 3</th>
+  </tr></thead>
+  <tbody>
+    <tr><td>Nombre de la empresa</td><td class="empty">—</td><td class="empty">—</td><td class="empty">—</td></tr>
+    <tr><td>Total sin instalación</td><td class="empty">₡ ____</td><td class="empty">₡ ____</td><td class="empty">₡ ____</td></tr>
+    <tr><td>Total con instalación</td><td class="empty">₡ ____</td><td class="empty">₡ ____</td><td class="empty">₡ ____</td></tr>
+    <tr><td>Tiempo de entrega</td><td class="empty">__ días</td><td class="empty">__ días</td><td class="empty">__ días</td></tr>
+    <tr><td>Garantía</td><td class="empty">—</td><td class="empty">—</td><td class="empty">—</td></tr>
+    <tr><td>Incluye arte/diseño</td><td class="empty">Sí/No</td><td class="empty">Sí/No</td><td class="empty">Sí/No</td></tr>
+  </tbody>`;
+
+/* ---------- Toggle all ---------- */
+function toggleAll(open){ document.querySelectorAll('details.cat').forEach(d=>d.open=open); }
+</script>
+</body>
+</html>

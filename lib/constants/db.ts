@@ -18,6 +18,7 @@ export const COLLECTIONS = {
   ANALYTICS_EVENTS: "analytics_events",
   MUNDIAL_ANALYTICS: "mundial_analytics",
   HERO_SLOGANS: "hero_slogans",
+  DJ_TRACKS: "dj_tracks",
   PENALITOS_STATE: "penalitos_state",
   MUNDIAL_BANS: "mundial_bans",
   MUNDIAL_RECOVERY_TICKETS: "mundial_recovery_tickets",
