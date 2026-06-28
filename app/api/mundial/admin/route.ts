@@ -26,6 +26,7 @@ type MundialMatchDoc = MundialMatch & {
   awayFinalScore?: number;
   liveStatus?: LiveMatchStatus;
   liveMinute?: number | null;
+  liveMinuteUpdatedAt?: Date | string | null;
   homeLiveScore?: number | null;
   awayLiveScore?: number | null;
   liveNote?: string;
@@ -464,8 +465,11 @@ export async function GET() {
         number: match.number,
         stage: match.stage,
         stageLabel: match.stageLabel,
+        date: match.date,
         homeTeam: match.homeTeam,
         awayTeam: match.awayTeam,
+        homeSeed: match.homeSeed ?? null,
+        awaySeed: match.awaySeed ?? null,
         homeRoster: rostersByTeam.get(match.homeTeam) ?? [],
         awayRoster: rostersByTeam.get(match.awayTeam) ?? [],
         kickoffAt: match.kickoffAt,
@@ -477,6 +481,7 @@ export async function GET() {
         actualWinner: match.actualWinner ?? null,
         liveStatus,
         liveMinute,
+        liveMinuteUpdatedAt: toIsoString(match.liveMinuteUpdatedAt),
         homeLiveScore: typeof match.homeLiveScore === "number" ? match.homeLiveScore : null,
         awayLiveScore: typeof match.awayLiveScore === "number" ? match.awayLiveScore : null,
         liveNote: match.liveNote ?? "",
@@ -494,6 +499,7 @@ export async function GET() {
         homeWinPicks: ms.homeWinPicks,
         drawPicks: ms.drawPicks,
         awayWinPicks: ms.awayWinPicks,
+        sortOrder: match.sortOrder,
       };
     });
 

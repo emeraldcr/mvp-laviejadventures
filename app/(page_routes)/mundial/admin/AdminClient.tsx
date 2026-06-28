@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Activity, ArrowLeft, BadgePercent, BarChart3, CheckCircle2, Crown, Loader2, RefreshCw, Shield, Tv2, Trophy, Users } from "lucide-react";
+import { Activity, ArrowLeft, BadgePercent, BarChart3, CheckCircle2, Crown, GitMerge, Loader2, RefreshCw, Shield, Tv2, Trophy, Users } from "lucide-react";
 import Link from "next/link";
 import type { AdminData, AdminMatch, AdminView, LeaderboardEntry } from "./adminTypes";
 import { cn } from "../utils";
@@ -11,9 +11,9 @@ import { MatchAdminCard } from "./components/MatchAdminCard";
 import { StatQuestionsManager } from "./components/StatQuestionsManager";
 import { PlayerDetailModal } from "./components/PlayerDetailModal";
 import { AdminPremiumPredictionsPanel } from "./components/AdminPremiumPredictionsPanel";
+import { buildTeamResolver } from "../utils";
 
-function sortByProximity(matches: AdminMatch[]): AdminMatch[] {
-  const now = Date.now();
+function sortByProximity(matches: AdminMatch[], nowMs: number): AdminMatch[] {
   return [...matches].sort((a, b) => {
     // Tier 0: explicitly live or halftime
     const aLive = a.liveStatus === "live" || a.liveStatus === "halftime" ? 0 : 1;
@@ -24,8 +24,8 @@ function sortByProximity(matches: AdminMatch[]): AdminMatch[] {
     const bTime = new Date(b.kickoffAt).getTime();
 
     // Tier 1: kicked off but not yet closed (in progress, not yet marked live)
-    const aInProgress = !a.closed && aTime <= now ? 0 : 1;
-    const bInProgress = !b.closed && bTime <= now ? 0 : 1;
+    const aInProgress = !a.closed && nowMs > 0 && aTime <= nowMs ? 0 : 1;
+    const bInProgress = !b.closed && nowMs > 0 && bTime <= nowMs ? 0 : 1;
     if (aInProgress !== bInProgress) return aInProgress - bInProgress;
 
     // Tier 2: upcoming vs past
@@ -41,6 +41,7 @@ const ADMIN_API = "/api/mundial/admin";
 const MATCH_API = "/api/mundial/admin/match";
 const STAT_Q_API = "/api/mundial/admin/stat-questions";
 const ODDS_SYNC_API = "/api/mundial/admin/odds-sync";
+const BRACKET_API = "/api/mundial/admin/propagate-bracket";
 
 const VIEW_OPTIONS: Array<{ id: AdminView; label: string; icon: React.ReactNode }> = [
   { id: "matches", label: "Partidos", icon: <Tv2 className="h-4 w-4" /> },
@@ -63,10 +64,13 @@ const FILTER_OPTIONS: Array<{ id: MatchFilter; label: string }> = [
 export default function AdminClient() {
   const [data, setData] = useState<AdminData | null>(null);
   const [view, setView] = useState<AdminView>("matches");
+  const [nowMs, setNowMs] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [oddsSyncMessage, setOddsSyncMessage] = useState("");
   const [isSyncingOdds, setIsSyncingOdds] = useState(false);
+  const [bracketMessage, setBracketMessage] = useState("");
+  const [isPropagatingBracket, setIsPropagatingBracket] = useState(false);
   const [matchFilter, setMatchFilter] = useState<MatchFilter>("upcoming");
   const [selectedPlayer, setSelectedPlayer] = useState<LeaderboardEntry | null>(null);
 
@@ -88,6 +92,13 @@ export default function AdminClient() {
     const timeout = window.setTimeout(() => { void load(); }, 0);
     return () => window.clearTimeout(timeout);
   }, [load]);
+
+  useEffect(() => {
+    const tick = () => setNowMs(Date.now());
+    tick();
+    const interval = window.setInterval(tick, 60_000);
+    return () => window.clearInterval(interval);
+  }, []);
 
   async function patchMatch(matchId: string, patch: Record<string, unknown>) {
     const res = await fetch(MATCH_API, {
@@ -154,6 +165,27 @@ export default function AdminClient() {
     await load();
   }
 
+  async function propagateBracket() {
+    setError("");
+    setBracketMessage("");
+    setIsPropagatingBracket(true);
+    try {
+      const res = await fetch(BRACKET_API, { method: "POST" });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error ?? "Error propagando bracket.");
+      setBracketMessage(
+        body.updated > 0
+          ? `Bracket: ${body.updated} campo(s) actualizado(s).`
+          : "Bracket: sin cambios pendientes."
+      );
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo propagar el bracket.");
+    } finally {
+      setIsPropagatingBracket(false);
+    }
+  }
+
   async function syncOdds() {
     setError("");
     setOddsSyncMessage("");
@@ -171,13 +203,38 @@ export default function AdminClient() {
     }
   }
 
-  const allMatchesSorted = useMemo(() => sortByProximity(data?.matches ?? []), [data?.matches]);
+  const resolvedMatches = useMemo(() => {
+    const matches = data?.matches ?? [];
+    const resolveTeam = buildTeamResolver(matches);
+    const rostersByTeam = new Map<string, AdminMatch["homeRoster"]>();
+
+    for (const match of matches) {
+      if (!rostersByTeam.has(match.homeTeam)) rostersByTeam.set(match.homeTeam, match.homeRoster);
+      if (!rostersByTeam.has(match.awayTeam)) rostersByTeam.set(match.awayTeam, match.awayRoster);
+    }
+
+    return matches.map((match) => {
+      const homeTeam = resolveTeam(match.homeTeam);
+      const awayTeam = resolveTeam(match.awayTeam);
+
+      if (homeTeam === match.homeTeam && awayTeam === match.awayTeam) return match;
+
+      return {
+        ...match,
+        homeTeam,
+        awayTeam,
+        homeRoster: rostersByTeam.get(homeTeam) ?? match.homeRoster,
+        awayRoster: rostersByTeam.get(awayTeam) ?? match.awayRoster,
+      };
+    });
+  }, [data?.matches]);
+
+  const allMatchesSorted = useMemo(() => sortByProximity(resolvedMatches, nowMs), [nowMs, resolvedMatches]);
 
   const isLive = (m: AdminMatch) => m.liveStatus === "live" || m.liveStatus === "halftime";
 
   const filteredMatches = useMemo(() => {
-    const now = Date.now();
-    if (matchFilter === "upcoming") return allMatchesSorted.filter((m) => !m.closed || isLive(m));
+    if (matchFilter === "upcoming") return allMatchesSorted.filter((m) => !m.closed || isLive(m) || (m.homeFinalScore === null && m.awayFinalScore === null));
     if (matchFilter === "live")     return allMatchesSorted.filter(isLive);
     if (matchFilter === "recent")   return allMatchesSorted.filter((m) => m.closed).slice(0, 8);
     if (matchFilter === "open")     return allMatchesSorted.filter((m) => !m.closed);
@@ -188,20 +245,19 @@ export default function AdminClient() {
   // For "upcoming" and "all" modes, split into labelled sections
   const matchSections = useMemo(() => {
     if (matchFilter !== "upcoming" && matchFilter !== "all") return null;
-    const now = Date.now();
     if (matchFilter === "upcoming") {
       return {
-        live:     filteredMatches.filter((m) => isLive(m) || new Date(m.kickoffAt).getTime() <= now),
-        upcoming: filteredMatches.filter((m) => new Date(m.kickoffAt).getTime() > now),
+        live:     filteredMatches.filter((m) => isLive(m) || (nowMs > 0 && new Date(m.kickoffAt).getTime() <= nowMs)),
+        upcoming: filteredMatches.filter((m) => nowMs === 0 || new Date(m.kickoffAt).getTime() > nowMs),
         past:     [] as AdminMatch[],
       };
     }
     return {
       live:     allMatchesSorted.filter(isLive),
-      upcoming: allMatchesSorted.filter((m) => !isLive(m) && new Date(m.kickoffAt).getTime() > now),
+      upcoming: allMatchesSorted.filter((m) => !isLive(m) && (nowMs === 0 || new Date(m.kickoffAt).getTime() > nowMs)),
       past:     allMatchesSorted.filter((m) => m.closed),
     };
-  }, [allMatchesSorted, filteredMatches, matchFilter]);
+  }, [allMatchesSorted, filteredMatches, matchFilter, nowMs]);
 
   // Summary stats (computed client-side from data)
   const scoredCount = data?.matches.filter((m) => m.homeFinalScore !== null).length ?? 0;
@@ -240,6 +296,16 @@ export default function AdminClient() {
             >
               {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
               <span className="hidden sm:inline">Actualizar</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => void propagateBracket()}
+              disabled={isPropagatingBracket}
+              className="inline-flex h-9 items-center gap-2 rounded-lg border border-sky-600/60 bg-sky-700 px-3 text-sm font-black text-white transition hover:bg-sky-600 disabled:opacity-50"
+              title="Resolver equipos del bracket desde los resultados de grupos"
+            >
+              {isPropagatingBracket ? <Loader2 className="h-4 w-4 animate-spin" /> : <GitMerge className="h-4 w-4" />}
+              <span className="hidden sm:inline">Bracket</span>
             </button>
             <button
               type="button"
@@ -362,6 +428,11 @@ export default function AdminClient() {
         {oddsSyncMessage && (
           <div className="mb-4 rounded-xl border border-[#f0b429]/45 bg-[#211707]/80 p-3 text-sm font-bold text-[#fff1b8]">
             {oddsSyncMessage}
+          </div>
+        )}
+        {bracketMessage && (
+          <div className="mb-4 rounded-xl border border-sky-600/45 bg-sky-950/80 p-3 text-sm font-bold text-sky-200">
+            {bracketMessage}
           </div>
         )}
 

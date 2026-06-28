@@ -35,8 +35,11 @@ export type AdminMatch = {
   number: number;
   stage: MundialStage;
   stageLabel: string;
+  date: string;
   homeTeam: string;
   awayTeam: string;
+  homeSeed: string | null;
+  awaySeed: string | null;
   homeRoster: AdminRosterPlayer[];
   awayRoster: AdminRosterPlayer[];
   kickoffAt: string;
@@ -48,6 +51,7 @@ export type AdminMatch = {
   actualWinner: "home" | "away" | null;
   liveStatus: LiveMatchStatus;
   liveMinute: number | null;
+  liveMinuteUpdatedAt: string | null;
   homeLiveScore: number | null;
   awayLiveScore: number | null;
   liveNote: string;
@@ -62,6 +66,7 @@ export type AdminMatch = {
   homeWinPicks: number;
   drawPicks: number;
   awayWinPicks: number;
+  sortOrder: number;
 };
 
 export type LeaderboardEntry = {
