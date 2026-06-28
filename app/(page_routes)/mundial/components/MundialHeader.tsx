@@ -3,7 +3,6 @@
 import { useState } from "react";
 import {
   ChevronDown,
-  Crown,
   ListChecks,
   Loader2,
   MoreHorizontal,
@@ -11,7 +10,6 @@ import {
   Save,
   Shield,
   SlidersHorizontal,
-  Table2,
   Target,
   Trophy,
   UserRound,
@@ -25,7 +23,6 @@ import type { ViewMode } from "../types";
 interface MundialHeaderProps {
   playerName: string;
   avatarDataUrl?: string | null;
-  hasPremium?: boolean;
   dirtyDrafts: unknown[];
   isSavingBulk: boolean;
   viewMode: ViewMode;
@@ -45,15 +42,12 @@ function ViewIcon({ id, active }: { id: ViewMode; active: boolean }) {
 
   if (id === "next") return <Target className={className} />;
   if (id === "mine") return <ListChecks className={className} />;
-  if (id === "groups") return <Table2 className={className} />;
-  if (id === "pronosticos") return <Crown className={cn("h-4 w-4 shrink-0", active ? "text-[#07110b]" : "text-[#f0b429]/70")} />;
   return <Users className={className} />;
 }
 
 export function MundialHeader({
   playerName,
   avatarDataUrl,
-  hasPremium = false,
   dirtyDrafts,
   isSavingBulk,
   viewMode,
@@ -71,8 +65,6 @@ export function MundialHeader({
     next: "Ahora",
     mine: "Picks",
     players: "Tabla",
-    groups: "Grupos",
-    pronosticos: "Finales",
   };
 
   return (
@@ -84,10 +76,9 @@ export function MundialHeader({
         </span>
 
         {/* View tabs */}
-        <div className="order-3 grid min-w-0 basis-full grid-cols-5 gap-1 sm:order-2 sm:flex sm:flex-1 sm:basis-auto">
+        <div className="order-3 grid min-w-0 basis-full grid-cols-3 gap-1 sm:order-2 sm:flex sm:flex-1 sm:basis-auto">
           {VIEW_OPTIONS.map((option) => {
             const active = viewMode === option.id;
-            const isPremiumTab = option.id === "pronosticos";
             return (
               <button
                 key={option.id}
@@ -97,9 +88,7 @@ export function MundialHeader({
                   "inline-flex h-12 min-w-0 flex-col items-center justify-center gap-0.5 rounded border px-1 font-black uppercase tracking-wide transition sm:h-9 sm:flex-none sm:flex-row sm:gap-1.5 sm:px-3",
                   active
                     ? "border-[#f0b429] bg-[#f0b429] text-[#07110b] shadow-[0_0_18px_rgba(240,180,41,0.28)]"
-                    : isPremiumTab
-                      ? "border-[#f0b429]/30 bg-[#f0b429]/8 text-[#f0b429]/80 hover:border-[#f0b429]/60 hover:text-[#f0b429]"
-                      : "border-white/12 bg-white/4 text-white/55 hover:border-white/25 hover:text-white/80"
+                    : "border-white/12 bg-white/4 text-white/55 hover:border-white/25 hover:text-white/80"
                 )}
               >
                 <ViewIcon id={option.id} active={active} />
@@ -141,18 +130,10 @@ export function MundialHeader({
                 <img
                   src={avatarDataUrl}
                   alt="Avatar"
-                  className={cn(
-                    "h-5 w-5 rounded-full object-cover ring-1",
-                    hasPremium ? "ring-[#f0b429] shadow-[0_0_10px_rgba(240,180,41,0.45)]" : "ring-[#f0b429]/60"
-                  )}
+                  className="h-5 w-5 rounded-full object-cover ring-1 ring-[#f0b429]/60"
                 />
               ) : (
                 <UserRound className="h-3.5 w-3.5 text-[#f0b429]" />
-              )}
-              {hasPremium && (
-                <span className="absolute -right-1.5 -top-1.5 grid h-3.5 w-3.5 place-items-center rounded-full border border-[#07110b] bg-[#f0b429] text-[#07110b] shadow-[0_0_10px_rgba(240,180,41,0.55)]">
-                  <Crown className="h-2.5 w-2.5" />
-                </span>
               )}
             </span>
             <span className="hidden max-w-28 truncate sm:inline">{playerName || "Jugador"}</span>

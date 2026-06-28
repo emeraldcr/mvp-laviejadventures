@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
-import { Check, CircleAlert, Crown, Gamepad2, Lock, Loader2, Sparkles, Star, Target, X } from "lucide-react";
+import { Check, CircleAlert, Gamepad2, Loader2, Sparkles, Target, X } from "lucide-react";
 import type { LiveMatchStatus, MundialMatch } from "./types";
 import { normalizeKey } from "./utils";
 import { useMundial } from "./useMundial";
@@ -11,18 +11,14 @@ import { useLiveMatch } from "./useLiveMatch";
 import { MineView } from "./components/MineView";
 import { NextView } from "./components/NextView";
 import { PlayersView } from "./components/PlayersView";
-import { GroupsView } from "./components/GroupsView";
 import { PlayerPickerModal } from "./components/PlayerPickerModal";
 import { PinModal } from "./components/PinModal";
 import { MundialHeader } from "./components/MundialHeader";
 import { ProfileModal } from "./components/ProfileModal";
-
 import { PenalitosPanel } from "./components/PenalitosPanel";
 import { ProximoEnAnotarPanel } from "./components/ProximoEnAnotarPanel";
 import { LiveMatchChat } from "./components/LiveMatchChat";
 import { XLivePanel } from "./components/XLivePanel";
-import { PronosticosView } from "./components/PronosticosView";
-import { MUNDIAL_PREMIUM_PRICE_USD } from "./constants";
 
 export default function MundialClient() {
   const router = useRouter();
@@ -82,18 +78,8 @@ export default function MundialClient() {
   const [profileIsFirstTime, setProfileIsFirstTime] = useState(false);
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
   const [showProfileBanner, setShowProfileBanner] = useState(false);
-  const [hasPremium, setHasPremium] = useState(false);
 
   const playerKey = normalizeKey(playerName);
-
-  // Check premium status whenever the player changes
-  useEffect(() => {
-    if (!playerKey) { setHasPremium(false); return; }
-    fetch(`/api/mundial/premium/check?name=${encodeURIComponent(playerKey)}`)
-      .then((r) => r.ok ? r.json() : null)
-      .then((d: { hasPremium: boolean } | null) => setHasPremium(Boolean(d?.hasPremium)))
-      .catch(() => setHasPremium(false));
-  }, [playerKey]);
 
   // Load avatar whenever the active player changes; show banner for players without one
   useEffect(() => {
@@ -213,7 +199,6 @@ export default function MundialClient() {
       <MundialHeader
         playerName={playerName}
         avatarDataUrl={profileAvatar}
-        hasPremium={hasPremium}
         dirtyDrafts={dirtyDrafts}
         isSavingBulk={isSavingBulk}
         viewMode={viewMode}
@@ -293,23 +278,6 @@ export default function MundialClient() {
               />
             )}
 
-            {viewMode === "groups" && (
-              <GroupsView matches={matches} />
-            )}
-
-            {viewMode === "pronosticos" && (
-              <PronosticosView
-                playerName={playerName}
-                onOpenPlayerPicker={openPlayerPicker}
-                matches={matches}
-              />
-            )}
-
-            {/* Premium teaser — shown on all other views */}
-            {viewMode !== "pronosticos" && !isLoading && (
-              <PremiumTeaser onGoToPremium={() => setViewMode("pronosticos")} />
-            )}
-
             {/* ====================== LIVE SECTION ========================== */}
             {activeLiveMatch && (
               <div className="mt-6 space-y-6">
@@ -321,34 +289,19 @@ export default function MundialClient() {
                     description="Mini-juego en vivo · Gratis"
                     onClick={() => setLiveModal("penalitos")}
                   />
-                  {/* Próximo en anotar — solo premium */}
-                  {hasPremium ? (
-                    <LiveToolButton
-                      icon={<Target className="h-5 w-5" />}
-                      title="Próximo en anotar"
-                      description="Mini apuestas live"
-                      onClick={() => setLiveModal("scorer")}
-                    />
-                  ) : (
-                    <LiveToolButtonLocked
-                      icon={<Target className="h-5 w-5" />}
-                      title="Próximo en anotar"
-                      description="Solo para Premium"
-                      onUnlock={() => setViewMode("pronosticos")}
-                    />
-                  )}
+                  <LiveToolButton
+                    icon={<Target className="h-5 w-5" />}
+                    title="Próximo en anotar"
+                    description="Mini apuestas live"
+                    onClick={() => setLiveModal("scorer")}
+                  />
                 </div>
 
-                {/* Chat — solo premium */}
-                {hasPremium ? (
-                  <LiveMatchChat
-                    liveMatch={activeLiveMatch}
-                    playerName={playerName}
-                    onOpenPlayerPicker={openPlayerPicker}
-                  />
-                ) : (
-                  <LiveChatPremiumGate onUnlock={() => setViewMode("pronosticos")} />
-                )}
+                <LiveMatchChat
+                  liveMatch={activeLiveMatch}
+                  playerName={playerName}
+                  onOpenPlayerPicker={openPlayerPicker}
+                />
 
                 <XLivePanel liveMatch={activeLiveMatch} />
               </div>
@@ -396,7 +349,6 @@ export default function MundialClient() {
       <ProfileModal
         playerName={playerName}
         open={showProfile}
-        hasPremium={hasPremium}
         isFirstTime={profileIsFirstTime}
         onClose={() => { setShowProfile(false); setProfileIsFirstTime(false); }}
         onSaved={({ avatarDataUrl }) => {
@@ -432,37 +384,6 @@ export default function MundialClient() {
   );
 }
 
-function PremiumTeaser({ onGoToPremium }: { onGoToPremium: () => void }) {
-  return (
-    <div className="mt-6 overflow-hidden rounded-xl border border-[#f0b429]/25 bg-[#06100b] shadow-[0_0_40px_rgba(240,180,41,0.08)]">
-      <div className="relative flex flex-col items-start gap-4 p-4 sm:flex-row sm:items-center sm:p-5 [background:radial-gradient(ellipse_at_right,rgba(240,180,41,0.1),transparent_55%)]">
-        <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-[#f0b429]/35 bg-[#f0b429]/10">
-          <Crown className="h-6 w-6 text-[#f0b429]" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="mb-1 flex items-center gap-2">
-            <span className="rounded-full border border-[#f0b429]/30 bg-[#f0b429]/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-[#f0b429]">
-              Premium
-            </span>
-          </div>
-          <p className="font-black text-white">Pronósticos de Eliminación Directa</p>
-          <p className="mt-0.5 text-xs leading-relaxed text-white/45">
-            Predecí Octavos, Cuartos, Semis, 3er Lugar y la Gran Final. Acceso único por <span className="font-bold text-white/70">${MUNDIAL_PREMIUM_PRICE_USD} USD</span>.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={onGoToPremium}
-          className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-[#f0b429]/50 bg-[#f0b429] px-4 py-2.5 text-sm font-black text-[#07110b] transition hover:bg-[#f5c842] hover:shadow-[0_0_16px_rgba(240,180,41,0.4)]"
-        >
-          <Lock className="h-3.5 w-3.5" />
-          Desbloquear
-        </button>
-      </div>
-    </div>
-  );
-}
-
 function LiveToolButton({
   icon,
   title,
@@ -488,84 +409,6 @@ function LiveToolButton({
         <span className="mt-0.5 block min-w-0 break-words text-xs font-bold leading-snug text-white/45 sm:truncate">{description}</span>
       </span>
     </button>
-  );
-}
-
-function LiveToolButtonLocked({
-  icon,
-  title,
-  description,
-  onUnlock,
-}: {
-  icon: ReactNode;
-  title: string;
-  description: string;
-  onUnlock: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onUnlock}
-      className="group relative flex min-w-0 items-center gap-3 overflow-hidden rounded-lg border border-[#f0b429]/20 bg-[#06140f] px-3 py-3 text-left transition hover:border-[#f0b429]/40 sm:px-4"
-    >
-      {/* dim overlay */}
-      <span className="pointer-events-none absolute inset-0 bg-black/40" />
-      <span className="relative grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/5 text-white/30">
-        {icon}
-      </span>
-      <span className="relative min-w-0 flex-1">
-        <span className="flex items-center gap-1.5">
-          <span className="block min-w-0 break-words text-sm font-black uppercase leading-tight text-white/40 sm:truncate">{title}</span>
-          <Lock className="h-3 w-3 shrink-0 text-white/30" />
-        </span>
-        <span className="mt-0.5 block min-w-0 break-words text-xs font-bold leading-snug text-white/25 sm:truncate">{description}</span>
-      </span>
-      <span className="relative hidden shrink-0 items-center gap-1 rounded-lg border border-[#f0b429]/40 bg-[#f0b429]/10 px-2.5 py-1.5 text-[10px] font-black text-[#f0b429] transition group-hover:bg-[#f0b429]/20 min-[380px]:flex">
-        <Crown className="h-3 w-3" /> Premium
-      </span>
-    </button>
-  );
-}
-
-function LiveChatPremiumGate({ onUnlock }: { onUnlock: () => void }) {
-  return (
-    <div className="relative overflow-hidden rounded-2xl border border-[#f0b429]/20 bg-[#0b0d14]">
-      {/* blurred fake chat rows */}
-      <div className="pointer-events-none select-none space-y-3 p-5 blur-[3px] opacity-40">
-        {["🔥 Qué golazo!", "Ese defensa estuvo muy lento", "VAR lo va a anular 😬", "Vamos, quedan 10 min!"].map((msg, i) => (
-          <div key={i} className="flex items-start gap-2">
-            <div className="mt-0.5 h-7 w-7 shrink-0 rounded-full bg-white/10" />
-            <div className="min-w-0 flex-1">
-              <div className="mb-1 h-2.5 w-16 rounded bg-white/10" />
-              <div className="rounded-xl rounded-tl-none bg-white/8 px-3 py-2 text-xs text-white/60">{msg}</div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* overlay gate */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-t from-[#0b0d14] via-[#0b0d14]/90 to-transparent p-6 text-center">
-        <div className="grid h-14 w-14 place-items-center rounded-2xl border border-[#f0b429]/35 bg-[#f0b429]/10 shadow-[0_0_28px_rgba(240,180,41,0.2)]">
-          <Crown className="h-7 w-7 text-[#f0b429]" />
-        </div>
-        <div>
-          <div className="mb-1 inline-flex items-center gap-1.5 rounded-full border border-[#f0b429]/30 bg-[#f0b429]/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-[#f0b429]">
-            <Star className="h-2.5 w-2.5" /> Solo Premium
-          </div>
-          <p className="mt-2 text-base font-black text-white">Chat en vivo · Exclusivo</p>
-          <p className="mt-1 max-w-xs text-xs leading-relaxed text-white/45">
-            El chat durante el partido es una función exclusiva de los jugadores premium. Charlá con todos en tiempo real.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={onUnlock}
-          className="inline-flex items-center gap-2 rounded-xl border border-[#f0b429]/50 bg-[#f0b429] px-5 py-2.5 text-sm font-black text-[#07110b] transition hover:bg-[#f5c842] hover:shadow-[0_0_20px_rgba(240,180,41,0.4)]"
-        >
-          <Lock className="h-3.5 w-3.5" /> Desbloquear por $5 USD
-        </button>
-      </div>
-    </div>
   );
 }
 
