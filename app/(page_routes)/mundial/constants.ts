@@ -9,9 +9,9 @@ export const SESSION_KEY = "mundial-session";
 export const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 export const EMPTY_DRAFTS: Record<string, Draft> = {};
 export const VIEW_OPTIONS: Array<{ id: ViewMode; label: string }> = [
-  { id: "next", label: "Ahora" },
-  { id: "mine", label: "Mis picks" },
-  { id: "players", label: "Jugadores" },
+  { id: "next", label: "En Vivo" },
+  { id: "mine", label: "Predicciones" },
+  { id: "players", label: "Tabla de Líderes" },
 ];
 
 export const MUNDIAL_PREMIUM_PRICE_USD = 5;

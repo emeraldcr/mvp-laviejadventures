@@ -62,9 +62,9 @@ export function MundialHeader({
   const isAdmin = normalizeKey(playerName) === "ALLAN";
 
   const shortLabels: Record<string, string> = {
-    next: "Ahora",
+    next: "En Vivo",
     mine: "Picks",
-    players: "Tabla",
+    players: "Líderes",
   };
 
   return (

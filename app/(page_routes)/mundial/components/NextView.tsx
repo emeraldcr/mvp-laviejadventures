@@ -4,6 +4,7 @@ import type { Draft, MundialMatch, Prediction } from "../types";
 import { emptyDraft } from "../utils";
 import { FeaturedMatch } from "./FeaturedMatch";
 import { MatchSelector } from "./MatchSelector";
+import { OtherPicksPanel } from "./OtherPicksPanel";
 
 type NextViewProps = {
   activeMatch: MundialMatch | null;
@@ -71,6 +72,11 @@ export function NextView({
             canPredict={todayEditableMatchIds.has(featuredMatch.id)}
             onGoToMine={onGoToMine}
             onOpenPlayerPicker={onOpenPlayerPicker}
+          />
+          <OtherPicksPanel
+            match={featuredMatch}
+            predictions={predictions}
+            playerName={playerName}
           />
         </div>
       ) : (

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Activity, BarChart3, ChevronDown, ChevronRight, ChevronUp, CircleDot, ClipboardList, Clock3, ListChecks, Lock, Timer, Trophy, Users, X, Zap } from "lucide-react";
+import { Activity, BarChart3, ChevronDown, ChevronRight, ChevronUp, CircleDot, ClipboardList, Clock3, ListChecks, Lock, Timer, Trophy, X, Zap } from "lucide-react";
 import { hasAnyLiveStats, type LiveTeamStats } from "@/lib/mundial/live-stats";
 import type { Draft, MundialMatch, Prediction } from "../types";
 import {
@@ -18,7 +18,6 @@ import {
 } from "../utils";
 import { Flag } from "./Flag";
 import { BettingFavoriteCard } from "./BettingFavoriteCard";
-import { OtherPicksPanel } from "./OtherPicksPanel";
 import { StatBetsPanel } from "./StatBetsPanel";
 
 type FeaturedMatchProps = {
@@ -45,14 +44,8 @@ export function FeaturedMatch({
   onOpenPlayerPicker,
 }: FeaturedMatchProps) {
   const [showLiveModal, setShowLiveModal] = useState(false);
-  const [showPicksModal, setShowPicksModal] = useState(false);
   const [showFinalBetsModal, setShowFinalBetsModal] = useState(false);
   const [showLiveBetsModal, setShowLiveBetsModal] = useState(false);
-
-  const picksCount = useMemo(
-    () => predictions.filter((p) => p.matchId === match.id).length,
-    [predictions, match.id]
-  );
   const isClosed = isMatchClosed(match, nowMs);
   const isLive = isMatchLive(match);
   const isActive = !!activeCountdown;
@@ -207,19 +200,6 @@ export function FeaturedMatch({
               <Activity className="h-3.5 w-3.5 shrink-0 text-[#d5ff3f]" />
               Mini apuestas
             </button>
-            <button
-              type="button"
-              onClick={() => setShowPicksModal(true)}
-              className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-white/15 bg-[#0a1e0e] px-3 py-2 text-xs font-black text-white transition hover:bg-[#12351f] sm:justify-start"
-            >
-              <Users className="h-3.5 w-3.5 shrink-0 text-white/40" />
-              Picks de amigos
-              {picksCount > 0 && (
-                <span className="rounded border border-white/20 bg-black/35 px-1.5 py-0.5 text-[10px] tabular-nums text-white/55">
-                  {picksCount}
-                </span>
-              )}
-            </button>
           </div>
 
           {/* Live bets — full width, prominent */}
@@ -346,19 +326,6 @@ export function FeaturedMatch({
               <ClipboardList className="h-3.5 w-3.5 shrink-0 text-[#f0b429]" />
               Apuestas al final
             </button>
-            <button
-              type="button"
-              onClick={() => setShowPicksModal(true)}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-[#0a1e0e] px-3 py-2 text-xs font-black text-white transition hover:bg-[#12351f]"
-            >
-              <Users className="h-3.5 w-3.5 shrink-0 text-white/40" />
-              Picks de amigos
-              {picksCount > 0 && (
-                <span className="rounded border border-white/20 bg-black/35 px-1.5 py-0.5 text-[10px] tabular-nums text-white/55">
-                  {picksCount}
-                </span>
-              )}
-            </button>
           </div>
         </>
       )}
@@ -380,14 +347,6 @@ export function FeaturedMatch({
         playerName={playerName}
         onOpenPlayerPicker={onOpenPlayerPicker}
         onClose={() => setShowLiveBetsModal(false)}
-      />
-    )}
-    {showPicksModal && (
-      <PicksModal
-        match={match}
-        predictions={predictions}
-        playerName={playerName}
-        onClose={() => setShowPicksModal(false)}
       />
     )}
     </>
@@ -438,48 +397,6 @@ function FinalBetsModal({
             questionScope="final"
             onOpenPlayerPicker={onOpenPlayerPicker}
           />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function PicksModal({
-  match,
-  predictions,
-  playerName,
-  onClose,
-}: {
-  match: MundialMatch;
-  predictions: Prediction[];
-  playerName: string;
-  onClose: () => void;
-}) {
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) { if (e.key === "Escape") onClose(); }
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [onClose]);
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 p-2 backdrop-blur-sm sm:items-center sm:p-4">
-      <div className="flex max-h-[calc(100dvh-1rem)] w-full max-w-3xl flex-col overflow-hidden rounded-xl border border-[#f0b429]/35 bg-[#06140f] shadow-[0_24px_90px_rgba(0,0,0,0.85)]">
-        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-white/12 bg-[#12351f] px-4 py-3 [background-image:linear-gradient(135deg,rgba(240,180,41,0.18),transparent_58%)]">
-          <div className="flex items-center gap-2">
-            <Users className="h-4 w-4 text-[#f0b429]" />
-            <p className="font-black text-white">Picks de amigos</p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Cerrar"
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-md border border-white/20 bg-black/20 text-white/75 transition hover:border-[#d5ff3f] hover:text-white"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-        <div className="min-h-0 flex-1 overflow-y-auto">
-          <OtherPicksPanel match={match} predictions={predictions} playerName={playerName} showEmpty />
         </div>
       </div>
     </div>

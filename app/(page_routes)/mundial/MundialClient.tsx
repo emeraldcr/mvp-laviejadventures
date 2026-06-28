@@ -18,7 +18,6 @@ import { ProfileModal } from "./components/ProfileModal";
 import { PenalitosPanel } from "./components/PenalitosPanel";
 import { ProximoEnAnotarPanel } from "./components/ProximoEnAnotarPanel";
 import { LiveMatchChat } from "./components/LiveMatchChat";
-import { XLivePanel } from "./components/XLivePanel";
 
 export default function MundialClient() {
   const router = useRouter();
@@ -303,12 +302,6 @@ export default function MundialClient() {
                   onOpenPlayerPicker={openPlayerPicker}
                 />
 
-                <XLivePanel liveMatch={activeLiveMatch} />
-              </div>
-            )}
-            {!activeLiveMatch && mostRecentMatch?.closed && (
-              <div className="mt-6">
-                <XLivePanel liveMatch={mostRecentMatch} />
               </div>
             )}
             {/* ============================================================= */}
