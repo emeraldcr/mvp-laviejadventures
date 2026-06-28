@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useEffect, useState } from "react";
-import { BadgePercent, BarChart3, Braces, Check, ChevronDown, ChevronUp, ClipboardPaste, Loader2, Lock, LockOpen, Minus, Plus, Save, Trash2, Tv2, Users } from "lucide-react";
+import { BadgePercent, BarChart3, Braces, Check, ChevronDown, ChevronUp, ClipboardPaste, Heart, Loader2, Lock, LockOpen, MessageCircle, Minus, Plus, RefreshCw, Repeat2, Save, Send, Trash2, Tv2, Users } from "lucide-react";
 import { bettingFavoriteLabel, type BettingMarket } from "@/lib/mundial/betting";
 import type { AdminLiveMatchEvent, AdminLiveMatchStats, AdminLiveTeamStats, AdminMatch, AdminRosterPlayer, LiveEventTeam, LiveEventType, LiveMatchStatus } from "../adminTypes";
 import { cn, formatKickoff, getCountryFlag } from "../../utils";
@@ -10,6 +10,28 @@ import { Flag } from "../../components/Flag";
 type MatchAdminCardProps = {
   match: AdminMatch;
   onPatch: (matchId: string, patch: Record<string, unknown>) => Promise<void>;
+};
+
+type AdminXPost = {
+  id: string;
+  text: string;
+  createdAt: string | null;
+  author: {
+    name: string;
+    username: string;
+    verified: boolean;
+  };
+  metrics: {
+    likes: number;
+    reposts: number;
+    replies: number;
+  };
+};
+
+type AdminXPayload = {
+  posts: AdminXPost[];
+  fetchedAt: string | null;
+  error?: string;
 };
 
 const LIVE_STATUS_OPTIONS: Array<{ value: LiveMatchStatus; label: string; color: string }> = [
@@ -112,6 +134,23 @@ function scoreOrNull(value: string) {
   if (value.trim() === "") return null;
   const parsed = Number(value);
   return Number.isInteger(parsed) && parsed >= 0 ? parsed : null;
+}
+
+function relativeTime(iso: string | null) {
+  if (!iso) return "";
+  const diffMs = Date.now() - new Date(iso).getTime();
+  if (!Number.isFinite(diffMs)) return "";
+  const minutes = Math.max(0, Math.floor(diffMs / 60_000));
+  if (minutes < 1) return "ahora";
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h`;
+  return `${Math.floor(hours / 24)}d`;
+}
+
+function compactNumber(value: number) {
+  if (value <= 0) return "";
+  return new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 }).format(value);
 }
 
 function liveEventSignature(event: Pick<AdminLiveMatchEvent, "type" | "team" | "minute" | "player" | "note">) {
@@ -246,9 +285,15 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
   const [showEdit, setShowEdit] = useState(!hasResult);
   const [showLive, setShowLive] = useState(match.liveStatus !== "scheduled");
   const [showMarket, setShowMarket] = useState(Boolean(match.bettingFavorite));
+  const [showXFeed, setShowXFeed] = useState(match.liveStatus !== "scheduled");
   const [showStatsJson, setShowStatsJson] = useState(false);
   const [statsJsonText, setStatsJsonText] = useState("");
   const [statsJsonError, setStatsJsonError] = useState("");
+  const [xPosts, setXPosts] = useState<AdminXPost[]>([]);
+  const [xDraft, setXDraft] = useState("");
+  const [isLoadingXPosts, setIsLoadingXPosts] = useState(false);
+  const [isPublishingXPost, setIsPublishingXPost] = useState(false);
+  const [xFeedError, setXFeedError] = useState("");
 
   useEffect(() => {
     setHomeScore(match.homeFinalScore !== null ? String(match.homeFinalScore) : "");
@@ -276,8 +321,15 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
     setDraftPlayer("");
     setDraftNote("");
     if (match.liveStatus !== "scheduled") setShowLive(true);
+    if (match.liveStatus !== "scheduled") setShowXFeed(true);
     if (match.bettingFavorite) setShowMarket(true);
   }, [match]);
+
+  useEffect(() => {
+    if (!showXFeed) return;
+    void loadXFeed();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showXFeed, match.id]);
 
   const isKnockout = match.stage !== "group";
   const parsedHome = homeScore === "" ? null : Number(homeScore);
@@ -467,6 +519,65 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
       ? Math.max(0, Math.round(parsed * 10) / 10)
       : Math.max(0, Math.trunc(max ? Math.min(max, parsed) : parsed));
     setLiveStats((stats) => updateTeamStat(stats, team, key, normalized));
+  }
+
+  async function loadXFeed() {
+    setIsLoadingXPosts(true);
+    setXFeedError("");
+    try {
+      const res = await fetch(`/api/mundial/x-live?matchId=${encodeURIComponent(match.id)}`, { cache: "no-store" });
+      const data = (await res.json()) as AdminXPayload;
+      if (!res.ok) throw new Error(data.error ?? "No se pudo cargar el feed.");
+      setXPosts(data.posts ?? []);
+    } catch (err) {
+      setXFeedError(err instanceof Error ? err.message : "No se pudo cargar el feed.");
+    } finally {
+      setIsLoadingXPosts(false);
+    }
+  }
+
+  async function publishXPost() {
+    const text = xDraft.trim();
+    if (!text) return;
+
+    setIsPublishingXPost(true);
+    setXFeedError("");
+    try {
+      const res = await fetch("/api/mundial/x-live", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          matchId: match.id,
+          text,
+          authorName: "Mundial La Vieja",
+          authorUsername: "MundialLV",
+        }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error ?? "No se pudo publicar.");
+      setXDraft("");
+      await loadXFeed();
+    } catch (err) {
+      setXFeedError(err instanceof Error ? err.message : "No se pudo publicar.");
+    } finally {
+      setIsPublishingXPost(false);
+    }
+  }
+
+  async function deleteXPost(id: string) {
+    setXFeedError("");
+    try {
+      const res = await fetch("/api/mundial/x-live", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error ?? "No se pudo borrar.");
+      setXPosts((posts) => posts.filter((post) => post.id !== id));
+    } catch (err) {
+      setXFeedError(err instanceof Error ? err.message : "No se pudo borrar.");
+    }
   }
 
   function applyStatsJson() {
@@ -836,6 +947,147 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
               >
                 <Trash2 className="h-4 w-4" />
               </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="border-t border-white/10">
+        <button
+          type="button"
+          onClick={() => setShowXFeed((v) => !v)}
+          className="flex w-full items-center justify-between gap-2 px-4 py-2.5 text-xs font-black text-white/45 transition hover:text-white"
+        >
+          <div className="flex min-w-0 items-center gap-1.5">
+            <span className="grid h-4 w-4 place-items-center rounded-sm bg-white text-[10px] font-black text-black">X</span>
+            <span>Noticias X</span>
+            {xPosts.length > 0 && (
+              <span className="rounded bg-[#1d9bf0]/15 px-1.5 py-0.5 text-[10px] font-black text-[#8ecdf8]">
+                {xPosts.length}
+              </span>
+            )}
+          </div>
+          {showXFeed ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+        </button>
+
+        {showXFeed && (
+          <div className="space-y-3 px-3 pb-4 pt-2 min-[380px]:px-4">
+            <div className="overflow-hidden rounded-xl border border-[#2f3336] bg-black text-white">
+              <div className="border-b border-[#2f3336] px-3 py-2">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-sm font-black text-white">Postear noticia</p>
+                    <p className="truncate text-[11px] font-bold text-[#71767b]">
+                      {match.homeTeam} vs {match.awayTeam}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void loadXFeed()}
+                    disabled={isLoadingXPosts}
+                    className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-[#e7e9ea] transition hover:bg-[#181818] disabled:opacity-40"
+                    aria-label="Refrescar noticias X"
+                  >
+                    <RefreshCw className={cn("h-4 w-4", isLoadingXPosts && "animate-spin")} />
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex gap-3 border-b border-[#2f3336] p-3">
+                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white text-lg font-black text-black">
+                  X
+                </div>
+                <div className="min-w-0 flex-1">
+                  <textarea
+                    value={xDraft}
+                    onChange={(e) => setXDraft(e.target.value.slice(0, 280))}
+                    placeholder="Que esta pasando en el partido?"
+                    rows={3}
+                    className="w-full resize-none border-0 bg-transparent text-[15px] font-medium leading-snug text-[#e7e9ea] outline-none placeholder:text-[#71767b]"
+                  />
+                  <div className="mt-2 flex items-center justify-between gap-2 border-t border-[#2f3336] pt-2">
+                    <span className={cn("text-xs font-bold", xDraft.length > 260 ? "text-[#ff7a7a]" : "text-[#71767b]")}>
+                      {xDraft.length}/280
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => void publishXPost()}
+                      disabled={isPublishingXPost || !xDraft.trim()}
+                      className="inline-flex h-8 items-center gap-2 rounded-full bg-[#1d9bf0] px-4 text-xs font-black text-white transition hover:bg-[#1a8cd8] disabled:opacity-45"
+                    >
+                      {isPublishingXPost ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                      Postear
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {xFeedError && (
+                <p className="border-b border-[#2f3336] px-3 py-2 text-xs font-bold text-[#ff7a7a]">{xFeedError}</p>
+              )}
+
+              <div className="max-h-72 overflow-y-auto">
+                {isLoadingXPosts && xPosts.length === 0 ? (
+                  <div className="grid min-h-24 place-items-center">
+                    <Loader2 className="h-6 w-6 animate-spin text-[#1d9bf0]" />
+                  </div>
+                ) : xPosts.length > 0 ? (
+                  xPosts.map((post) => (
+                    <article key={post.id} className="border-b border-[#2f3336] px-3 py-3 transition hover:bg-[#080808]">
+                      <div className="flex items-start gap-3">
+                        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white text-base font-black text-black">
+                          X
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                            <span className="truncate text-sm font-black text-[#e7e9ea]">{post.author.name}</span>
+                            {post.author.verified && (
+                              <span className="grid h-4 w-4 shrink-0 place-items-center rounded-full bg-[#1d9bf0] text-[10px] font-black leading-none text-white">
+                                ✓
+                              </span>
+                            )}
+                            <span className="truncate text-sm font-medium text-[#71767b]">@{post.author.username}</span>
+                            <span className="text-sm font-medium text-[#71767b]">·</span>
+                            <span className="text-sm font-medium text-[#71767b]">{relativeTime(post.createdAt)}</span>
+                          </div>
+                          <p className="mt-1 whitespace-pre-wrap break-words text-[15px] font-medium leading-snug text-[#e7e9ea]">
+                            {post.text}
+                          </p>
+                          <div className="mt-3 flex items-center justify-between gap-2 text-[#71767b]">
+                            <div className="grid w-full max-w-40 grid-cols-3">
+                              <span className="inline-flex items-center gap-1 text-xs font-bold">
+                                <MessageCircle className="h-4 w-4" />
+                                {compactNumber(post.metrics.replies)}
+                              </span>
+                              <span className="inline-flex items-center gap-1 text-xs font-bold">
+                                <Repeat2 className="h-4 w-4" />
+                                {compactNumber(post.metrics.reposts)}
+                              </span>
+                              <span className="inline-flex items-center gap-1 text-xs font-bold">
+                                <Heart className="h-4 w-4" />
+                                {compactNumber(post.metrics.likes)}
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => void deleteXPost(post.id)}
+                              className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-[#71767b] transition hover:bg-[#2a1214] hover:text-[#ff7a7a]"
+                              aria-label="Borrar noticia"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </article>
+                  ))
+                ) : (
+                  <div className="px-4 py-6 text-center">
+                    <p className="text-sm font-black text-[#e7e9ea]">Sin posts todavia</p>
+                    <p className="mt-1 text-xs font-bold text-[#71767b]">El primer post aparece en el panel live al instante que refresque.</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}

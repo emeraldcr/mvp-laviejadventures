@@ -301,6 +301,7 @@ export default function MundialClient() {
               <PronosticosView
                 playerName={playerName}
                 onOpenPlayerPicker={openPlayerPicker}
+                matches={matches}
               />
             )}
 
@@ -350,6 +351,11 @@ export default function MundialClient() {
                 )}
 
                 <XLivePanel liveMatch={activeLiveMatch} />
+              </div>
+            )}
+            {!activeLiveMatch && mostRecentMatch?.closed && (
+              <div className="mt-6">
+                <XLivePanel liveMatch={mostRecentMatch} />
               </div>
             )}
             {/* ============================================================= */}

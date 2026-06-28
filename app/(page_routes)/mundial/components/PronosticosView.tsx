@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import type { MundialMatch } from "../types";
 import {
   CheckCircle2, ChevronDown, ChevronUp, Crown, Filter, Loader2, Lock,
   ShieldCheck, Sparkles, Star, Target, TrendingUp, Trophy, Users, Wallet, X,
@@ -424,15 +425,71 @@ function formatMoney(value: number, currency = "USD") {
   }).format(Number.isFinite(value) ? value : 0);
 }
 
+/* ─── Derive qualified teams from match data ─── */
+function getQualifiedTeams(matches: MundialMatch[]): string[] | null {
+  // If knockout-stage matches already have real teams assigned, use them
+  const knockoutTeams = new Set<string>();
+  for (const match of matches) {
+    if (match.stage === "group") continue;
+    if (TEAM_OPTIONS.includes(match.homeTeam)) knockoutTeams.add(match.homeTeam);
+    if (TEAM_OPTIONS.includes(match.awayTeam)) knockoutTeams.add(match.awayTeam);
+  }
+  if (knockoutTeams.size >= 16) return [...knockoutTeams].sort();
+
+  // Otherwise compute from completed group standings
+  type Entry = { team: string; points: number; goalDiff: number; goalsFor: number; played: number };
+  const groups = new Map<string, Map<string, Entry>>();
+
+  for (const match of matches) {
+    if (match.stage !== "group" || !match.group) continue;
+    if (match.homeFinalScore === null || match.awayFinalScore === null) continue;
+
+    if (!groups.has(match.group)) groups.set(match.group, new Map());
+    const g = groups.get(match.group)!;
+    if (!g.has(match.homeTeam)) g.set(match.homeTeam, { team: match.homeTeam, points: 0, goalDiff: 0, goalsFor: 0, played: 0 });
+    if (!g.has(match.awayTeam)) g.set(match.awayTeam, { team: match.awayTeam, points: 0, goalDiff: 0, goalsFor: 0, played: 0 });
+
+    const home = g.get(match.homeTeam)!;
+    const away = g.get(match.awayTeam)!;
+    home.played++; away.played++;
+    home.goalsFor += match.homeFinalScore; away.goalsFor += match.awayFinalScore;
+    home.goalDiff += match.homeFinalScore - match.awayFinalScore;
+    away.goalDiff += match.awayFinalScore - match.homeFinalScore;
+    if (match.homeFinalScore > match.awayFinalScore) { home.points += 3; }
+    else if (match.homeFinalScore < match.awayFinalScore) { away.points += 3; }
+    else { home.points += 1; away.points += 1; }
+  }
+
+  const qualified: string[] = [];
+  const thirdPlace: Entry[] = [];
+
+  for (const [, groupTeams] of groups) {
+    const sorted = [...groupTeams.values()].sort(
+      (a, b) => b.points - a.points || b.goalDiff - a.goalDiff || b.goalsFor - a.goalsFor || a.team.localeCompare(b.team)
+    );
+    if (!sorted.every((t) => t.played === 3)) continue; // skip incomplete groups
+    if (sorted[0]) qualified.push(sorted[0].team);
+    if (sorted[1]) qualified.push(sorted[1].team);
+    if (sorted[2]) thirdPlace.push(sorted[2]);
+  }
+
+  // Best 8 third-place teams also qualify (World Cup 2026 format)
+  thirdPlace.sort((a, b) => b.points - a.points || b.goalDiff - a.goalDiff || b.goalsFor - a.goalsFor);
+  for (const t of thirdPlace.slice(0, 8)) qualified.push(t.team);
+
+  return qualified.length >= 16 ? qualified.sort() : null;
+}
+
 /* ═══════════════════════════════════════════════════════════════ */
 /*  PronosticosView — main component                               */
 /* ═══════════════════════════════════════════════════════════════ */
 interface Props {
   playerName: string;
   onOpenPlayerPicker: () => void;
+  matches: MundialMatch[];
 }
 
-export function PronosticosView({ playerName, onOpenPlayerPicker }: Props) {
+export function PronosticosView({ playerName, onOpenPlayerPicker, matches }: Props) {
   const [status, setStatus] = useState<PremiumStatus>("checking");
   const [sdkReady, setSdkReady] = useState(false);
   const [email, setEmail] = useState("");
@@ -442,6 +499,7 @@ export function PronosticosView({ playerName, onOpenPlayerPicker }: Props) {
   const router = useRouter();
 
   const playerKey = normalizeKey(playerName);
+  const qualifiedTeams = useMemo(() => getQualifiedTeams(matches), [matches]);
 
   useEffect(() => {
     if (!playerKey) { setStatus("locked"); return; }
@@ -494,6 +552,7 @@ export function PronosticosView({ playerName, onOpenPlayerPicker }: Props) {
         pool={pool}
         betsLoading={betsLoading}
         sdkReady={sdkReady}
+        qualifiedTeams={qualifiedTeams}
         onBetPlaced={refreshBets}
       />
     );
@@ -1014,7 +1073,7 @@ type SortOption = "default" | "price_asc" | "price_desc" | "difficulty";
 type CategoryFilter = "all" | BetCategory;
 
 function UnlockedContent({
-  playerName, playerKey, myBets, pool, betsLoading, sdkReady, onBetPlaced,
+  playerName, playerKey, myBets, pool, betsLoading, sdkReady, qualifiedTeams, onBetPlaced,
 }: {
   playerName: string;
   playerKey: string;
@@ -1022,6 +1081,7 @@ function UnlockedContent({
   pool: PremiumPool;
   betsLoading: boolean;
   sdkReady: boolean;
+  qualifiedTeams: string[] | null;
   onBetPlaced: () => void;
 }) {
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
@@ -1166,6 +1226,7 @@ function UnlockedContent({
                     playerKey={playerKey}
                     playerName={playerName}
                     sdkReady={sdkReady}
+                    qualifiedTeams={qualifiedTeams}
                     inCart={cartItems.some((item) => item.betId === bet.id)}
                     onAddToCart={addToCart}
                     onFreeBetPlaced={onBetPlaced}
@@ -1275,13 +1336,14 @@ type CartItem = {
 };
 
 function BetCard({
-  bet, existingBet, playerKey, playerName, inCart, onAddToCart, onFreeBetPlaced,
+  bet, existingBet, playerKey, playerName, inCart, qualifiedTeams, onAddToCart, onFreeBetPlaced,
 }: {
   bet: BetConfig;
   existingBet: PlayerBet | null;
   playerKey: string;
   playerName: string;
   sdkReady: boolean;
+  qualifiedTeams: string[] | null;
   inCart: boolean;
   onAddToCart: (item: CartItem) => void;
   onFreeBetPlaced: () => void;
@@ -1381,7 +1443,7 @@ function BetCard({
               <p className="mt-1 truncate text-xs font-bold text-white/58">{formatPick(existingBet?.pick ?? pick)}</p>
             </div>
           ) : (
-            <PickForm bet={bet} value={pick} onChange={setPick} />
+            <PickForm bet={bet} value={pick} onChange={setPick} qualifiedTeams={qualifiedTeams} />
           )}
         </div>
 
@@ -1421,12 +1483,12 @@ function BetCard({
 }
 
 /* ─── Pick form per bet type ─── */
-function PickForm({ bet, value, onChange }: { bet: BetConfig; value: PickValue | null; onChange: (v: PickValue) => void }) {
+function PickForm({ bet, value, onChange, qualifiedTeams }: { bet: BetConfig; value: PickValue | null; onChange: (v: PickValue) => void; qualifiedTeams: string[] | null }) {
   const selectClass = "w-full rounded-lg border border-white/12 bg-[#08140d] px-3 py-2 text-sm font-bold text-white outline-none transition focus:border-[#f0b429]/50 focus:ring-1 focus:ring-[#f0b429]/25";
 
   if (bet.pickType === "text") {
     const text = (value && "text" in value) ? value.text : "";
-    const options = textPickOptions(bet);
+    const options = textPickOptions(bet, qualifiedTeams);
     return (
       <div>
         {bet.pickLabel && <label className="mb-1 block text-[11px] font-black uppercase tracking-wider text-white/40">{bet.pickLabel}</label>}
@@ -1516,7 +1578,7 @@ function PickForm({ bet, value, onChange }: { bet: BetConfig; value: PickValue |
               className={selectClass}
             >
               <option value="">Elegir equipo {i + 1}...</option>
-              {TEAM_OPTIONS.map((team) => (
+              {(qualifiedTeams ?? TEAM_OPTIONS).map((team) => (
                 <option key={team} value={team} disabled={teams.includes(team) && teams[i] !== team}>{team}</option>
               ))}
             </select>
@@ -1539,7 +1601,7 @@ function PickForm({ bet, value, onChange }: { bet: BetConfig; value: PickValue |
           <p className="mb-1 text-[10px] text-white/35">🏆 País campeón</p>
           <select value={champion} onChange={(e) => upd("champion", e.target.value)} className={selectClass}>
             <option value="">Elegir campeon...</option>
-            {TEAM_OPTIONS.map((team) => <option key={team} value={team}>{team}</option>)}
+            {(qualifiedTeams ?? TEAM_OPTIONS).map((team) => <option key={team} value={team}>{team}</option>)}
           </select>
         </div>
         <div>
@@ -1580,14 +1642,14 @@ function PickForm({ bet, value, onChange }: { bet: BetConfig; value: PickValue |
   return null;
 }
 
-function textPickOptions(bet: BetConfig) {
+function textPickOptions(bet: BetConfig, qualifiedTeams?: string[] | null) {
   if (bet.id === "top_scorer" || bet.id === "mvp" || bet.id === "first_goal") return PLAYER_OPTIONS;
   if (bet.id === "golden_glove") return GOALKEEPER_OPTIONS;
   if (bet.id === "group_goals") return GROUP_OPTIONS;
   if (bet.id === "biggest_blowout") return BLOWOUT_OPTIONS;
   if (bet.id === "first_upset") return UPSET_OPTIONS;
   if (bet.id === "dark_horse") return DARK_HORSE_OPTIONS;
-  return TEAM_OPTIONS;
+  return qualifiedTeams ?? TEAM_OPTIONS;
 }
 
 function QuickPickButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {

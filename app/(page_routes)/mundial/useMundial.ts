@@ -5,6 +5,7 @@ import { useInterval } from "@/lib/hooks/useInterval";
 import {
   autoLiveMinute,
   autoLiveStatus,
+  buildTeamResolver,
   emptyDraft,
   fetchWithTimeout,
   formatCountdown,
@@ -53,11 +54,23 @@ export function useMundial() {
   const registeredNames = useMemo(() => players.map((p) => p.playerName).sort(), [players]);
   const registeredKeys = useMemo(() => new Set(players.map((p) => p.key)), [players]);
   const isAuthenticated = !playerKey || pinVerifiedPlayers.has(playerKey) || !registeredKeys.has(playerKey);
-  const orderedMatches = useMemo(
-    () => [...matches].sort((a, b) => kickoffMs(a) - kickoffMs(b) || a.number - b.number),
-    [matches]
+
+  // Resolve knockout-stage placeholder names ("1ro Grupo C" → actual team) based on group standings
+  const teamResolver = useMemo(() => buildTeamResolver(matches), [matches]);
+  const resolvedMatches = useMemo(
+    () => matches.map((m) => ({
+      ...m,
+      homeTeam: teamResolver(m.homeTeam),
+      awayTeam: teamResolver(m.awayTeam),
+    })),
+    [matches, teamResolver]
   );
-  const matchById = useMemo(() => new Map(matches.map((m) => [m.id, m])), [matches]);
+
+  const orderedMatches = useMemo(
+    () => [...resolvedMatches].sort((a, b) => kickoffMs(a) - kickoffMs(b) || a.number - b.number),
+    [resolvedMatches]
+  );
+  const matchById = useMemo(() => new Map(resolvedMatches.map((m) => [m.id, m])), [resolvedMatches]);
   const activeMatch = useMemo(
     () => orderedMatches.find((m) => !isMatchClosed(m, nowMs)) ?? null,
     [nowMs, orderedMatches]
@@ -106,7 +119,7 @@ export function useMundial() {
   );
   const baseDrafts = useMemo(() => {
     const next: Record<string, Draft> = {};
-    for (const match of matches) {
+    for (const match of resolvedMatches) {
       const prediction = predictionByMatch.get(match.id);
       const closed = isMatchClosed(match, nowMs);
       if (prediction) {
@@ -122,7 +135,7 @@ export function useMundial() {
       }
     }
     return next;
-  }, [matches, nowMs, predictionByMatch]);
+  }, [resolvedMatches, nowMs, predictionByMatch]);
   const playerDraftOverrides = useMemo(
     () => draftOverridesByPlayer[playerKey] ?? EMPTY_DRAFTS,
     [draftOverridesByPlayer, playerKey]
@@ -640,7 +653,7 @@ export function useMundial() {
     pinMode,
     isAuthenticated,
     onPinSuccess,
-    matches,
+    matches: resolvedMatches,
     predictions,
     players,
     leaderboard,

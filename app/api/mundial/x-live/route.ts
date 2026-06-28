@@ -1,191 +1,165 @@
 import { NextResponse } from "next/server";
-import { TwitterApi } from "twitter-api-v2";
+import { ObjectId } from "mongodb";
+
+import { getDb } from "@/lib/helpers/mongodb";
 
 export const dynamic = "force-dynamic";
 
-const CACHE_MS = 60_000;
+const MATCHES_COLLECTION = "mundial_matches";
+const POSTS_COLLECTION = "mundial_x_posts";
+const MAX_POST_LENGTH = 280;
 
-type XUser = {
-  id: string;
-  name?: string;
-  username?: string;
-  profile_image_url?: string;
-  verified?: boolean;
-};
-
-type XTweet = {
-  id: string;
-  text?: string;
-  author_id?: string;
-  created_at?: string;
-  lang?: string;
-  public_metrics?: {
-    like_count?: number;
-    retweet_count?: number;
-    reply_count?: number;
-    quote_count?: number;
-  };
-};
-
-type XSearchPayload = {
-  data?: XTweet[];
-  includes?: { users?: XUser[] };
-};
-
-type XPost = {
-  id: string;
+type XPostDoc = {
+  _id: ObjectId;
+  matchId: string;
   text: string;
-  createdAt: string | null;
-  url: string;
-  author: {
-    id: string | null;
-    name: string;
-    username: string;
-    avatarUrl: string | null;
-    verified: boolean;
-  };
-  metrics: {
-    likes: number;
-    reposts: number;
-    replies: number;
-    quotes: number;
-  };
+  authorName?: string;
+  authorUsername?: string;
+  createdAt?: Date | string | null;
+  updatedAt?: Date | string | null;
 };
 
-type CacheEntry = {
-  key: string;
-  expiresAt: number;
-  payload: {
-    configured: boolean;
-    query: string;
-    searchUrl: string;
-    posts: XPost[];
-    fetchedAt: string | null;
-    error?: string;
-  };
+type MatchDoc = {
+  id: string;
+  homeTeam?: string;
+  awayTeam?: string;
 };
 
-let cache: CacheEntry | null = null;
-
-function buildQuery(home: string, away: string): string {
-  const tag = `${home}vs${away}`;
-  return `(${tag} OR "${home} vs ${away}" OR #${tag}) (WorldCup26 OR "World Cup 2026" OR FIFA) -is:retweet`;
+function cleanText(value: unknown, maxLength = MAX_POST_LENGTH) {
+  return String(value ?? "").replace(/\s+/g, " ").trim().slice(0, maxLength);
 }
 
-function searchUrl(query: string) {
-  return `https://x.com/search?q=${encodeURIComponent(query)}&src=typed_query&f=live`;
+function toIsoString(value: unknown) {
+  if (!value) return null;
+  const date = value instanceof Date ? value : new Date(String(value));
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
 
-function getClient() {
-  const bearerToken = process.env.TWITTER_BEARER_TOKEN?.trim();
-  if (bearerToken) return new TwitterApi(bearerToken);
+function serializePost(doc: XPostDoc) {
+  const username = cleanText(doc.authorUsername, 32) || "MundialLV";
 
-  const appKey = process.env.TWITTER_API_KEY?.trim();
-  const appSecret = process.env.TWITTER_API_SECRET?.trim();
-  const accessToken = process.env.TWITTER_ACCESS_TOKEN?.trim();
-  const accessSecret = process.env.TWITTER_ACCESS_SECRET?.trim();
-
-  if (!appKey || !appSecret || !accessToken || !accessSecret) return null;
-
-  return new TwitterApi({ appKey, appSecret, accessToken, accessSecret });
+  return {
+    id: doc._id.toString(),
+    text: doc.text,
+    createdAt: toIsoString(doc.createdAt),
+    url: "#",
+    author: {
+      name: cleanText(doc.authorName, 60) || "Mundial La Vieja",
+      username,
+      avatarUrl: null,
+      verified: true,
+    },
+    metrics: {
+      likes: 0,
+      reposts: 0,
+      replies: 0,
+      quotes: 0,
+    },
+  };
 }
 
-function serializePosts(payload: XSearchPayload): XPost[] {
-  const users = new Map((payload.includes?.users ?? []).map((user) => [user.id, user]));
+async function findMatch(matchId: string) {
+  const db = await getDb();
+  return db.collection<MatchDoc>(MATCHES_COLLECTION).findOne(
+    { id: matchId },
+    { projection: { id: 1, homeTeam: 1, awayTeam: 1 } },
+  );
+}
 
-  return (payload.data ?? []).slice(0, 8).map((tweet) => {
-    const user = tweet.author_id ? users.get(tweet.author_id) : undefined;
-    const username = user?.username ?? "x";
-    const metrics = tweet.public_metrics ?? {};
+function payloadFor(match: MatchDoc, posts: XPostDoc[]) {
+  const query = `${match.homeTeam ?? ""} vs ${match.awayTeam ?? ""}`.trim();
 
-    return {
-      id: tweet.id,
-      text: tweet.text ?? "",
-      createdAt: tweet.created_at ?? null,
-      url: `https://x.com/${username}/status/${tweet.id}`,
-      author: {
-        id: tweet.author_id ?? null,
-        name: user?.name ?? username,
-        username,
-        avatarUrl: user?.profile_image_url ?? null,
-        verified: Boolean(user?.verified),
-      },
-      metrics: {
-        likes: metrics.like_count ?? 0,
-        reposts: metrics.retweet_count ?? 0,
-        replies: metrics.reply_count ?? 0,
-        quotes: metrics.quote_count ?? 0,
-      },
-    };
-  });
+  return {
+    configured: true,
+    query,
+    searchUrl: "#",
+    posts: posts.map(serializePost),
+    fetchedAt: new Date().toISOString(),
+  };
 }
 
 export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
-  const home = searchParams.get("home")?.trim().toUpperCase() ?? "";
-  const away = searchParams.get("away")?.trim().toUpperCase() ?? "";
-
-  if (!home || !away) {
-    return NextResponse.json({ error: "Missing home/away params" }, { status: 400 });
-  }
-
-  const cacheKey = `${home}:${away}`;
-  const now = Date.now();
-
-  if (cache && cache.key === cacheKey && cache.expiresAt > now) {
-    return NextResponse.json(cache.payload);
-  }
-
-  const query = buildQuery(home, away);
-  const client = getClient();
-  const fallback = {
-    configured: false,
-    query,
-    searchUrl: searchUrl(query),
-    posts: [] as XPost[],
-    fetchedAt: null,
-  };
-
-  if (!client) {
-    cache = { key: cacheKey, expiresAt: now + CACHE_MS, payload: fallback };
-    return NextResponse.json(fallback);
-  }
-
   try {
-    const raw = await client.v2.get("tweets/search/recent", {
-      query,
-      max_results: 10,
-      sort_order: "recency",
-      "tweet.fields": ["author_id", "created_at", "lang", "public_metrics"],
-      expansions: ["author_id"],
-      "user.fields": ["name", "username", "profile_image_url", "verified"],
+    const { searchParams } = new URL(req.url);
+    const matchId = searchParams.get("matchId")?.trim() ?? "";
+
+    if (!matchId) {
+      return NextResponse.json({ error: "matchId requerido." }, { status: 400 });
+    }
+
+    const db = await getDb();
+    const match = await findMatch(matchId);
+    if (!match) {
+      return NextResponse.json({ error: "Partido no encontrado." }, { status: 404 });
+    }
+
+    const posts = await db
+      .collection<XPostDoc>(POSTS_COLLECTION)
+      .find({ matchId })
+      .sort({ createdAt: -1, _id: -1 })
+      .limit(30)
+      .toArray();
+
+    return NextResponse.json(payloadFor(match, posts));
+  } catch (error) {
+    console.error("Failed to load local X feed", error);
+    return NextResponse.json({ error: "No se pudo cargar el feed local de X." }, { status: 500 });
+  }
+}
+
+export async function POST(req: Request) {
+  try {
+    const body = await req.json().catch(() => ({}));
+    const matchId = cleanText(body.matchId, 80);
+    const text = cleanText(body.text);
+    const authorName = cleanText(body.authorName, 60) || "Mundial La Vieja";
+    const authorUsername = cleanText(body.authorUsername, 32) || "MundialLV";
+
+    if (!matchId) {
+      return NextResponse.json({ error: "matchId requerido." }, { status: 400 });
+    }
+    if (!text) {
+      return NextResponse.json({ error: "Escribi una noticia para publicar." }, { status: 400 });
+    }
+
+    const match = await findMatch(matchId);
+    if (!match) {
+      return NextResponse.json({ error: "Partido no encontrado." }, { status: 404 });
+    }
+
+    const db = await getDb();
+    const now = new Date();
+    const result = await db.collection(POSTS_COLLECTION).insertOne({
+      matchId,
+      text,
+      authorName,
+      authorUsername,
+      createdAt: now,
+      updatedAt: now,
     });
 
-    const payload = {
-      configured: true,
-      query,
-      searchUrl: searchUrl(query),
-      posts: serializePosts(raw as XSearchPayload),
-      fetchedAt: new Date().toISOString(),
-    };
-
-    cache = { key: cacheKey, expiresAt: now + CACHE_MS, payload };
-    return NextResponse.json(payload);
+    const inserted = await db.collection<XPostDoc>(POSTS_COLLECTION).findOne({ _id: result.insertedId });
+    return NextResponse.json({ ok: true, post: inserted ? serializePost(inserted) : null });
   } catch (error) {
-    // 403 = credentials valid but plan doesn't include search (requires Basic tier+)
-    const is403 =
-      (error instanceof Error && error.message.includes("403")) ||
-      (typeof error === "object" && error !== null && "code" in error && (error as { code: unknown }).code === 403);
+    console.error("Failed to publish local X post", error);
+    return NextResponse.json({ error: "No se pudo publicar la noticia." }, { status: 500 });
+  }
+}
 
-    const payload = {
-      ...fallback,
-      configured: !is403,
-      fetchedAt: new Date().toISOString(),
-      error: is403
-        ? "El plan de API de X no incluye búsqueda de tweets. Se requiere el nivel Basic o superior."
-        : (error instanceof Error ? error.message : "No se pudo conectar con X."),
-    };
-    cache = { key: cacheKey, expiresAt: now + CACHE_MS, payload };
-    return NextResponse.json(payload, { status: 200 });
+export async function DELETE(req: Request) {
+  try {
+    const body = await req.json().catch(() => ({}));
+    const id = cleanText(body.id, 80);
+
+    if (!ObjectId.isValid(id)) {
+      return NextResponse.json({ error: "id invalido." }, { status: 400 });
+    }
+
+    const db = await getDb();
+    await db.collection(POSTS_COLLECTION).deleteOne({ _id: new ObjectId(id) });
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("Failed to delete local X post", error);
+    return NextResponse.json({ error: "No se pudo borrar la noticia." }, { status: 500 });
   }
 }

@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ExternalLink, Heart, MessageCircle, RefreshCw, Repeat2, Search, WifiOff } from "lucide-react";
+import { Heart, MessageCircle, RefreshCw, Repeat2, Search } from "lucide-react";
 import type { MundialMatch } from "../types";
-import { cn, teamCode } from "../utils";
+import { cn } from "../utils";
 
 type XPost = {
   id: string;
@@ -50,11 +50,24 @@ function relativeTime(iso: string | null) {
 }
 
 function compactNumber(value: number) {
+  if (value <= 0) return "";
   return new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 }).format(value);
 }
 
-function cleanText(text: string) {
-  return text.replace(/\s*https:\/\/t\.co\/\S+/g, "").trim();
+function VerifiedBadge() {
+  return (
+    <span className="grid h-4 w-4 shrink-0 place-items-center rounded-full bg-[#1d9bf0] text-[10px] font-black leading-none text-white">
+      ✓
+    </span>
+  );
+}
+
+function XAvatar() {
+  return (
+    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white text-lg font-black text-black">
+      X
+    </div>
+  );
 }
 
 export function XLivePanel({ liveMatch }: Props) {
@@ -63,9 +76,6 @@ export function XLivePanel({ liveMatch }: Props) {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const matchLabel = `${liveMatch.homeTeam} vs ${liveMatch.awayTeam}`;
-  const homeCode = teamCode(liveMatch.homeTeam);
-  const awayCode = teamCode(liveMatch.awayTeam);
-  const searchUrl = payload?.searchUrl ?? `https://x.com/search?q=${encodeURIComponent(`${homeCode}vs${awayCode} WorldCup26`)}&src=typed_query&f=live`;
   const posts = useMemo(() => payload?.posts ?? [], [payload]);
 
   const loadFeed = useCallback(async (background = false) => {
@@ -73,150 +83,124 @@ export function XLivePanel({ liveMatch }: Props) {
     else { setIsLoading(true); setPayload(null); }
     try {
       const res = await fetch(
-        `/api/mundial/x-live?home=${encodeURIComponent(homeCode)}&away=${encodeURIComponent(awayCode)}`,
+        `/api/mundial/x-live?matchId=${encodeURIComponent(liveMatch.id)}`,
         { cache: "no-store" }
       );
       const data = (await res.json()) as XPayload;
       setPayload(data);
     } catch {
       setPayload({
-        configured: false,
-        query: `${homeCode}vs${awayCode}`,
-        searchUrl: `https://x.com/search?q=${encodeURIComponent(`${homeCode}vs${awayCode} WorldCup26`)}&src=typed_query&f=live`,
+        configured: true,
+        query: matchLabel,
+        searchUrl: "#",
         posts: [],
         fetchedAt: null,
-        error: "No se pudo cargar X.",
+        error: "No se pudo cargar el feed.",
       });
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, [homeCode, awayCode]);
+  }, [liveMatch.id, matchLabel]);
 
   useEffect(() => {
     void loadFeed();
-    const timer = setInterval(() => void loadFeed(true), 90_000);
+    const timer = setInterval(() => void loadFeed(true), 45_000);
     return () => clearInterval(timer);
   }, [loadFeed]);
 
   return (
-    <section className="overflow-hidden rounded-xl border border-white/12 bg-[#06140f]/95 shadow-[0_18px_58px_rgba(0,0,0,0.35)]">
-      <div className="flex items-start justify-between gap-3 border-b border-white/10 bg-black/25 px-4 py-3">
-        <div className="min-w-0">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#d5ff3f]">X live</p>
-          <h2 className="mt-0.5 truncate text-base font-black text-white">{homeCode}vs{awayCode} WorldCup26</h2>
-          <p className="mt-0.5 truncate text-xs font-bold text-white/45">{matchLabel}</p>
-        </div>
-        <div className="flex shrink-0 items-center gap-2">
+    <section className="overflow-hidden rounded-xl border border-[#2f3336] bg-black text-white shadow-[0_18px_58px_rgba(0,0,0,0.35)]">
+      <div className="sticky top-0 z-10 border-b border-[#2f3336] bg-black/90 px-4 py-3 backdrop-blur">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <p className="truncate text-lg font-black leading-tight text-white">X</p>
+              <span className="rounded-full bg-[#1d9bf0]/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-[#1d9bf0]">
+                Partido live
+              </span>
+            </div>
+            <p className="mt-0.5 truncate text-xs font-bold text-[#71767b]">{matchLabel}</p>
+          </div>
           <button
             type="button"
             onClick={() => void loadFeed(true)}
             disabled={isRefreshing}
-            aria-label="Refrescar X"
-            className="grid h-9 w-9 place-items-center rounded-lg border border-white/12 bg-black/35 text-white/60 transition hover:border-[#d5ff3f]/50 hover:text-white disabled:opacity-40"
+            aria-label="Refrescar feed"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-[#e7e9ea] transition hover:bg-[#181818] disabled:opacity-40"
           >
             <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
           </button>
-          <a
-            href={searchUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="grid h-9 w-9 place-items-center rounded-lg border border-white/12 bg-black/35 text-white/60 transition hover:border-[#d5ff3f]/50 hover:text-white"
-            aria-label="Abrir busqueda en X"
-          >
-            <ExternalLink className="h-4 w-4" />
-          </a>
         </div>
       </div>
 
-      <div className="max-h-[28rem] overflow-y-auto px-3 py-3">
+      <div className="max-h-[32rem] overflow-y-auto">
         {isLoading ? (
           <div className="grid min-h-36 place-items-center text-center">
             <div>
-              <RefreshCw className="mx-auto h-7 w-7 animate-spin text-[#f0b429]" />
-              <p className="mt-2 text-sm font-black text-white/55">Cargando X...</p>
+              <RefreshCw className="mx-auto h-7 w-7 animate-spin text-[#1d9bf0]" />
+              <p className="mt-2 text-sm font-black text-[#71767b]">Cargando feed...</p>
             </div>
           </div>
         ) : posts.length > 0 ? (
-          <div className="space-y-2.5">
-            {posts.map((post) => (
-              <a
-                key={post.id}
-                href={post.url}
-                target="_blank"
-                rel="noreferrer"
-                className="block rounded-xl border border-white/10 bg-black/30 p-3 transition hover:border-[#d5ff3f]/35 hover:bg-[#10240b]/70"
-              >
-                <div className="flex items-start gap-2.5">
-                  {post.author.avatarUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={post.author.avatarUrl}
-                      alt=""
-                      className="h-9 w-9 shrink-0 rounded-full border border-white/10 bg-black/35"
-                    />
-                  ) : (
-                    <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-white/10 bg-black/35 text-xs font-black text-white/50">
-                      X
-                    </div>
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <div className="flex min-w-0 items-center gap-1.5">
-                      <span className="truncate text-sm font-black text-white">{post.author.name}</span>
-                      {post.author.verified && <span className="text-[10px] font-black text-[#8fd7ff]">OK</span>}
-                      <span className="truncate text-xs font-bold text-white/35">@{post.author.username}</span>
-                      <span className="shrink-0 text-xs font-bold text-white/25">{relativeTime(post.createdAt)}</span>
-                    </div>
-                    <p className="mt-1 whitespace-pre-wrap break-words text-sm font-bold leading-snug text-white/82">
-                      {cleanText(post.text)}
-                    </p>
-                    <div className="mt-2 flex items-center gap-3 text-[11px] font-black text-white/35">
-                      <span className="inline-flex items-center gap-1">
-                        <MessageCircle className="h-3 w-3" />
-                        {compactNumber(post.metrics.replies)}
-                      </span>
-                      <span className="inline-flex items-center gap-1">
-                        <Repeat2 className="h-3 w-3" />
-                        {compactNumber(post.metrics.reposts)}
-                      </span>
-                      <span className="inline-flex items-center gap-1">
-                        <Heart className="h-3 w-3" />
-                        {compactNumber(post.metrics.likes)}
-                      </span>
-                    </div>
+          posts.map((post) => (
+            <article key={post.id} className="border-b border-[#2f3336] px-4 py-3 transition hover:bg-[#080808]">
+              <div className="flex items-start gap-3">
+                {post.author.avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={post.author.avatarUrl}
+                    alt=""
+                    className="h-10 w-10 shrink-0 rounded-full bg-[#16181c]"
+                  />
+                ) : (
+                  <XAvatar />
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                    <span className="truncate text-sm font-black text-[#e7e9ea]">{post.author.name}</span>
+                    {post.author.verified && <VerifiedBadge />}
+                    <span className="truncate text-sm font-medium text-[#71767b]">@{post.author.username}</span>
+                    <span className="text-sm font-medium text-[#71767b]">·</span>
+                    <span className="shrink-0 text-sm font-medium text-[#71767b]">{relativeTime(post.createdAt)}</span>
+                  </div>
+                  <p className="mt-1 whitespace-pre-wrap break-words text-[15px] font-medium leading-snug text-[#e7e9ea]">
+                    {post.text}
+                  </p>
+                  <div className="mt-3 grid max-w-xs grid-cols-3 text-[#71767b]">
+                    <span className="inline-flex items-center gap-1 text-xs font-bold">
+                      <MessageCircle className="h-4 w-4" />
+                      {compactNumber(post.metrics.replies)}
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-xs font-bold">
+                      <Repeat2 className="h-4 w-4" />
+                      {compactNumber(post.metrics.reposts)}
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-xs font-bold">
+                      <Heart className="h-4 w-4" />
+                      {compactNumber(post.metrics.likes)}
+                    </span>
                   </div>
                 </div>
-              </a>
-            ))}
-          </div>
+              </div>
+            </article>
+          ))
         ) : (
-          <div className="grid min-h-40 place-items-center rounded-xl border border-dashed border-white/12 bg-black/25 p-5 text-center">
+          <div className="grid min-h-44 place-items-center px-6 py-8 text-center">
             <div>
-              {payload?.configured === false ? (
-                <WifiOff className="mx-auto h-7 w-7 text-[#f0b429]/70" />
-              ) : (
-                <Search className="mx-auto h-7 w-7 text-[#f0b429]/70" />
-              )}
-              <p className="mt-2 text-sm font-black text-white/70">
-                {payload?.configured === false ? "Conecta credenciales de X para traer posts aqui." : "No hay posts recientes en este filtro."}
+              <Search className="mx-auto h-8 w-8 text-[#71767b]" />
+              <p className="mt-3 text-base font-black text-[#e7e9ea]">Sin noticias todavia</p>
+              <p className="mt-1 text-sm font-bold leading-relaxed text-[#71767b]">
+                Cuando el admin publique desde el panel del partido, va a aparecer aqui como un post de X.
               </p>
-              {payload?.error && <p className="mt-1 text-xs font-bold text-[#ffd2c2]">{payload.error}</p>}
-              <a
-                href={searchUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-3 inline-flex items-center gap-2 rounded-lg border border-[#d5ff3f]/35 bg-[#10240b] px-3 py-2 text-xs font-black text-[#d5ff3f] transition hover:bg-[#12351f]"
-              >
-                Abrir en X
-                <ExternalLink className="h-3.5 w-3.5" />
-              </a>
+              {payload?.error && <p className="mt-2 text-xs font-bold text-[#ff7a7a]">{payload.error}</p>}
             </div>
           </div>
         )}
       </div>
 
-      <div className="border-t border-white/10 bg-black/20 px-4 py-2 text-[11px] font-bold text-white/35">
-        {payload?.fetchedAt ? `Actualizado ${relativeTime(payload.fetchedAt)}` : "Busqueda live en X"}
+      <div className="border-t border-[#2f3336] px-4 py-2 text-[11px] font-bold text-[#71767b]">
+        {payload?.fetchedAt ? `Actualizado ${relativeTime(payload.fetchedAt)}` : "Feed local del partido"}
       </div>
     </section>
   );

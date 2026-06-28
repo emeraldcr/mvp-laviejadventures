@@ -268,6 +268,116 @@ export function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
 
+/**
+ * Builds a function that resolves knockout-stage placeholder team names like
+ * "1ro Grupo C" or "2do Grupo A" into actual team names derived from
+ * completed group-stage standings.
+ *
+ * For multi-group 3rd-place slots like "3ro Grupo A/B/C/D/F" it picks the
+ * best-ranked qualifying 3rd-place team from those groups (top-8 thirds).
+ *
+ * Returns the original string unchanged when it can't be resolved yet.
+ */
+export function buildTeamResolver(allMatches: MundialMatch[]): (teamName: string) => string {
+  type Entry = { team: string; points: number; goalDiff: number; goalsFor: number; played: number };
+  const groupMap = new Map<string, Map<string, Entry>>();
+
+  for (const match of allMatches) {
+    if (match.stage !== "group" || !match.group) continue;
+    if (match.homeFinalScore === null || match.awayFinalScore === null) continue;
+
+    if (!groupMap.has(match.group)) groupMap.set(match.group, new Map());
+    const g = groupMap.get(match.group)!;
+
+    for (const [team, gf, ga] of [
+      [match.homeTeam, match.homeFinalScore, match.awayFinalScore],
+      [match.awayTeam, match.awayFinalScore, match.homeFinalScore],
+    ] as [string, number, number][]) {
+      if (!g.has(team)) g.set(team, { team, points: 0, goalDiff: 0, goalsFor: 0, played: 0 });
+      const e = g.get(team)!;
+      e.played++;
+      e.goalsFor += gf;
+      e.goalDiff += gf - ga;
+      if (gf > ga) e.points += 3; else if (gf === ga) e.points += 1;
+    }
+  }
+
+  // Only include groups where every team has played 3 matches (complete groups)
+  const groupStandings = new Map<string, Entry[]>();
+  for (const [group, teamMap] of groupMap) {
+    const sorted = [...teamMap.values()].sort(
+      (a, b) => b.points - a.points || b.goalDiff - a.goalDiff || b.goalsFor - a.goalsFor || a.team.localeCompare(b.team)
+    );
+    if (sorted.every((t) => t.played === 3)) groupStandings.set(group, sorted);
+  }
+
+  // Rank all 3rd-place teams; top 8 advance in WC 2026 format
+  const allThirds = [...groupStandings.values()].map((s) => s[2]).filter((t): t is Entry => Boolean(t));
+  const rankedThirds = [...allThirds].sort(
+    (a, b) => b.points - a.points || b.goalDiff - a.goalDiff || b.goalsFor - a.goalsFor
+  );
+  const top8Thirds = new Set(rankedThirds.slice(0, 8).map((t) => t.team));
+
+  // Build position lookup: "pos:GROUP" → team name
+  const posLookup = new Map<string, string>();
+  for (const [group, sorted] of groupStandings) {
+    sorted.forEach((entry, i) => posLookup.set(`${i + 1}:${group.toUpperCase()}`, entry.team));
+  }
+
+  // Pre-compute 3rd-place slot assignments in match-number order so each
+  // qualifying 3rd team is assigned to exactly one slot (no duplicates).
+  const seedToTeam = new Map<string, string>(); // "A/B/C/D/F" → team name
+  const assignedThirds = new Set<string>();
+
+  const knockoutsSorted = allMatches
+    .filter((m) => m.stage !== "group")
+    .sort((a, b) => (a.number ?? 0) - (b.number ?? 0));
+
+  for (const match of knockoutsSorted) {
+    for (const seed of [match.homeSeed, match.awaySeed]) {
+      if (!seed || !seed.startsWith("3")) continue;
+      const groups = seed.slice(1).split("/").map((g) => g.toUpperCase());
+      const seedKey = groups.join("/");
+      if (seedToTeam.has(seedKey)) continue;
+
+      for (const t of rankedThirds) {
+        const tGroup = [...groupStandings.keys()].find(
+          (g) => groupStandings.get(g)?.[2]?.team === t.team
+        );
+        if (
+          tGroup &&
+          groups.includes(tGroup.toUpperCase()) &&
+          top8Thirds.has(t.team) &&
+          !assignedThirds.has(t.team)
+        ) {
+          seedToTeam.set(seedKey, t.team);
+          assignedThirds.add(t.team);
+          break;
+        }
+      }
+    }
+  }
+
+  return function resolve(teamName: string): string {
+    const m = teamName.trim().match(/^(\d+)(?:ro|do|to|er|°)?\s+[Gg]rupo\s+([A-Za-z](?:\/[A-Za-z])*)/i);
+    if (!m) return teamName;
+
+    const pos = Number(m[1]);
+    const groups = m[2].toUpperCase().split("/");
+
+    // Single-group seed: "1ro Grupo C" → 1st place of Group C
+    if (groups.length === 1) return posLookup.get(`${pos}:${groups[0]}`) ?? teamName;
+
+    // Multi-group 3rd-place slot: use pre-computed unique assignment
+    if (pos === 3) {
+      const seedKey = groups.join("/");
+      return seedToTeam.get(seedKey) ?? teamName;
+    }
+
+    return teamName;
+  };
+}
+
 export { normalizeTeamName };
 
 export function getCountryFlag(teamName: string): string {
