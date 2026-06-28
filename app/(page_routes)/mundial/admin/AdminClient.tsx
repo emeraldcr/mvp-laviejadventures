@@ -29,8 +29,8 @@ function sortByProximity(matches: AdminMatch[], nowMs: number): AdminMatch[] {
     if (aInProgress !== bInProgress) return aInProgress - bInProgress;
 
     // Tier 2: upcoming vs past
-    const aUpcoming = aTime > now;
-    const bUpcoming = bTime > now;
+    const aUpcoming = nowMs === 0 || aTime > nowMs;
+    const bUpcoming = nowMs === 0 || bTime > nowMs;
     if (aUpcoming !== bUpcoming) return aUpcoming ? -1 : 1;
     if (aUpcoming) return aTime - bTime;
     return bTime - aTime;
