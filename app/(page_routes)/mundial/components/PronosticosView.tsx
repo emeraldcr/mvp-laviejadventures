@@ -502,7 +502,10 @@ export function PronosticosView({ playerName, onOpenPlayerPicker, matches }: Pro
   const qualifiedTeams = useMemo(() => getQualifiedTeams(matches), [matches]);
 
   useEffect(() => {
-    if (!playerKey) { setStatus("locked"); return; }
+    if (!playerKey) {
+      queueMicrotask(() => setStatus("locked"));
+      return;
+    }
     fetch(`/api/mundial/premium/check?name=${encodeURIComponent(playerKey)}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((d: { hasPremium: boolean } | null) => setStatus(d?.hasPremium ? "unlocked" : "locked"))
@@ -525,7 +528,9 @@ export function PronosticosView({ playerName, onOpenPlayerPicker, matches }: Pro
   }, [playerKey]);
 
   useEffect(() => {
-    if (status === "unlocked") refreshBets();
+    if (status === "unlocked") {
+      queueMicrotask(() => refreshBets());
+    }
   }, [status, refreshBets]);
 
   useEffect(() => {
@@ -640,7 +645,12 @@ function LockedContent({
     return () => { live = false; };
   }, [sdkReady, emailOk, playerKey, playerName, email, paypalInitialized, onSuccess]);
 
-  useEffect(() => { setPaypalInitialized(false); setPaypalError(null); }, [email]);
+  useEffect(() => {
+    queueMicrotask(() => {
+      setPaypalInitialized(false);
+      setPaypalError(null);
+    });
+  }, [email]);
 
   const totalBetValue = BETS.reduce((s, b) => s + b.price, 0);
 

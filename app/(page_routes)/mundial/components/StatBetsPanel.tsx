@@ -514,7 +514,7 @@ export function StatBetsPanel({
     if (current && !myBets[current.id] && !current.closed && !current.resolved) return;
 
     const next = questions.findIndex((q) => !myBets[q.id] && !q.closed && !q.resolved);
-    if (next >= 0) setActiveIndex(next);
+    if (next >= 0) queueMicrotask(() => setActiveIndex(next));
   }, [activeIndex, myBets, questions]);
 
   function nextPendingIndex(fromId: string, bets: Record<string, string>) {

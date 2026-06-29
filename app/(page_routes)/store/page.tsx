@@ -129,25 +129,20 @@ const currency = new Intl.NumberFormat("en-US", {
 export default function StorePage() {
   const { lang } = useLanguage();
   const [activeCategory, setActiveCategory] = useState<ProductCategory>("all");
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [hasLoadedCart, setHasLoadedCart] = useState(false);
+  const [cart, setCart] = useState<CartItem[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const stored = window.localStorage.getItem(cartStorageKey);
+      return stored ? (JSON.parse(stored) as CartItem[]) : [];
+    } catch {
+      return [];
+    }
+  });
   const [cartOpen, setCartOpen] = useState(false);
 
   useEffect(() => {
-    try {
-      const stored = window.localStorage.getItem(cartStorageKey);
-      if (stored) setCart(JSON.parse(stored) as CartItem[]);
-    } catch {
-      // Ignore invalid or unavailable cart storage.
-    } finally {
-      setHasLoadedCart(true);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!hasLoadedCart) return;
     window.localStorage.setItem(cartStorageKey, JSON.stringify(cart));
-  }, [cart, hasLoadedCart]);
+  }, [cart]);
 
   const categoryLabels: Record<ProductCategory, string> = {
     all: lang === "es" ? "Todo" : "All",

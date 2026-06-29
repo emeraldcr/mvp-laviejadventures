@@ -296,33 +296,35 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
   const [xFeedError, setXFeedError] = useState("");
 
   useEffect(() => {
-    setHomeScore(match.homeFinalScore !== null ? String(match.homeFinalScore) : "");
-    setAwayScore(match.awayFinalScore !== null ? String(match.awayFinalScore) : "");
-    setActualWinner(match.actualWinner ?? "");
-    setLiveStatus(match.liveStatus);
-    setLiveMinute(match.liveMinute !== null ? String(match.liveMinute) : "");
-    setHomeLiveScore(match.homeLiveScore !== null ? String(match.homeLiveScore) : "");
-    setAwayLiveScore(match.awayLiveScore !== null ? String(match.awayLiveScore) : "");
-    setLiveNote(match.liveNote);
-    setLiveEvents(match.liveEvents);
-    setLiveStats(match.liveStats);
-    setMarketMode(match.bettingFavorite?.market ?? "h2h_odds");
-    setMarketSource(match.bettingFavorite?.source ?? "");
-    setMarketSourceUrl(match.bettingFavorite?.sourceUrl ?? "");
-    setMarketBookmaker(match.bettingFavorite?.bookmaker ?? "");
-    setMarketHomePrice(numberDraft(match.bettingFavorite?.homePrice));
-    setMarketDrawPrice(numberDraft(match.bettingFavorite?.drawPrice));
-    setMarketAwayPrice(numberDraft(match.bettingFavorite?.awayPrice));
-    setMarketHomeBetPct(numberDraft(match.bettingFavorite?.homeBetPct));
-    setMarketDrawBetPct(numberDraft(match.bettingFavorite?.drawBetPct));
-    setMarketAwayBetPct(numberDraft(match.bettingFavorite?.awayBetPct));
-    setMarketNote(match.bettingFavorite?.note ?? "");
-    setDraftMinute(match.liveMinute !== null ? String(match.liveMinute) : "");
-    setDraftPlayer("");
-    setDraftNote("");
-    if (match.liveStatus !== "scheduled") setShowLive(true);
-    if (match.liveStatus !== "scheduled") setShowXFeed(true);
-    if (match.bettingFavorite) setShowMarket(true);
+    queueMicrotask(() => {
+      setHomeScore(match.homeFinalScore !== null ? String(match.homeFinalScore) : "");
+      setAwayScore(match.awayFinalScore !== null ? String(match.awayFinalScore) : "");
+      setActualWinner(match.actualWinner ?? "");
+      setLiveStatus(match.liveStatus);
+      setLiveMinute(match.liveMinute !== null ? String(match.liveMinute) : "");
+      setHomeLiveScore(match.homeLiveScore !== null ? String(match.homeLiveScore) : "");
+      setAwayLiveScore(match.awayLiveScore !== null ? String(match.awayLiveScore) : "");
+      setLiveNote(match.liveNote);
+      setLiveEvents(match.liveEvents);
+      setLiveStats(match.liveStats);
+      setMarketMode(match.bettingFavorite?.market ?? "h2h_odds");
+      setMarketSource(match.bettingFavorite?.source ?? "");
+      setMarketSourceUrl(match.bettingFavorite?.sourceUrl ?? "");
+      setMarketBookmaker(match.bettingFavorite?.bookmaker ?? "");
+      setMarketHomePrice(numberDraft(match.bettingFavorite?.homePrice));
+      setMarketDrawPrice(numberDraft(match.bettingFavorite?.drawPrice));
+      setMarketAwayPrice(numberDraft(match.bettingFavorite?.awayPrice));
+      setMarketHomeBetPct(numberDraft(match.bettingFavorite?.homeBetPct));
+      setMarketDrawBetPct(numberDraft(match.bettingFavorite?.drawBetPct));
+      setMarketAwayBetPct(numberDraft(match.bettingFavorite?.awayBetPct));
+      setMarketNote(match.bettingFavorite?.note ?? "");
+      setDraftMinute(match.liveMinute !== null ? String(match.liveMinute) : "");
+      setDraftPlayer("");
+      setDraftNote("");
+      if (match.liveStatus !== "scheduled") setShowLive(true);
+      if (match.liveStatus !== "scheduled") setShowXFeed(true);
+      if (match.bettingFavorite) setShowMarket(true);
+    });
   }, [match]);
 
   useEffect(() => {

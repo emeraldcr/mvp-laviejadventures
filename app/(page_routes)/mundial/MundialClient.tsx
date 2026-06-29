@@ -82,19 +82,27 @@ export default function MundialClient() {
 
   // Load avatar whenever the active player changes; show banner for players without one
   useEffect(() => {
-    if (!playerKey) { setProfileAvatar(null); setShowProfileBanner(false); return; }
+    if (!playerKey) {
+      queueMicrotask(() => {
+        setProfileAvatar(null);
+        setShowProfileBanner(false);
+      });
+      return;
+    }
     fetch(`/api/mundial/profile?name=${encodeURIComponent(playerKey)}`)
       .then((r) => r.ok ? r.json() : null)
       .then((data: { avatarDataUrl?: string | null } | null) => {
         const avatar = data?.avatarDataUrl ?? null;
-        setProfileAvatar(avatar);
-        if (!avatar) {
-          const key = `mundial-profile-banner-${playerKey}`;
-          const dismissed = Boolean(localStorage.getItem(key));
-          setShowProfileBanner(!dismissed);
-        } else {
-          setShowProfileBanner(false);
-        }
+        queueMicrotask(() => {
+          setProfileAvatar(avatar);
+          if (!avatar) {
+            const key = `mundial-profile-banner-${playerKey}`;
+            const dismissed = Boolean(localStorage.getItem(key));
+            setShowProfileBanner(!dismissed);
+          } else {
+            setShowProfileBanner(false);
+          }
+        });
       })
       .catch(() => {});
   }, [playerKey]);

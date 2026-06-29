@@ -12,7 +12,6 @@ import {
   isMatchAutoLive,
   isMatchClosed,
   isMatchLive,
-  isSameDayInCR,
   kickoffMs,
   normalizeKey,
   normalizeName,
@@ -383,7 +382,7 @@ export function useMundial() {
   }, [refreshQuiniela, viewMode]);
 
   useEffect(() => {
-    const tick = () => setNowMs(Date.now());
+    const tick = () => queueMicrotask(() => setNowMs(Date.now()));
     tick();
     const interval = window.setInterval(tick, 1000);
     return () => window.clearInterval(interval);

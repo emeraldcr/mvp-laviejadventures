@@ -304,7 +304,13 @@ export function ProximoEnAnotarPanel({ liveMatch, playerName, embedded = false }
     const min = displayMatch?.liveMinute ?? null;
     const updatedAt = displayMatch?.liveUpdatedAt ?? null;
     const isLiveNow = displayMatch?.liveStatus === "live";
-    if (!isLiveNow || min === null) { setClockDisplay(null); return; }
+    const applyClock = (value: string | null) => {
+      queueMicrotask(() => setClockDisplay(value));
+    };
+    if (!isLiveNow || min === null) {
+      applyClock(null);
+      return;
+    }
     const compute = () => {
       const elapsedMs = Math.max(0, Date.now() - (updatedAt ? new Date(updatedAt).getTime() : Date.now()));
       const totalSec = Math.floor(elapsedMs / 1_000);
@@ -312,8 +318,8 @@ export function ProximoEnAnotarPanel({ liveMatch, playerName, embedded = false }
       const secs = totalSec % 60;
       return `${mins}:${String(secs).padStart(2, "0")}`;
     };
-    setClockDisplay(compute());
-    const id = setInterval(() => setClockDisplay(compute()), 1_000);
+    applyClock(compute());
+    const id = setInterval(() => applyClock(compute()), 1_000);
     return () => clearInterval(id);
   }, [displayMatch?.liveMinute, displayMatch?.liveUpdatedAt, displayMatch?.liveStatus]);
 

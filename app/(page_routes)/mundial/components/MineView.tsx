@@ -46,7 +46,7 @@ export function MineView({
   const lastScrolledFocusIdRef = useRef<string | null>(null);
   const pct = Math.round((savedCount / TOTAL_MATCHES) * 100);
   const sections = useMemo(() => {
-    const clockMs = nowMs > 0 ? nowMs : Date.now();
+    const clockMs = nowMs > 0 ? nowMs : (typeof window !== "undefined" ? Date.now() : 0);
     const todayKey = crDateKey(clockMs);
     const tomorrowKey = crDateKey(clockMs + DAY_MS);
     const openMatches = [...mineMatches]

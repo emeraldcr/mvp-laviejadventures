@@ -248,7 +248,7 @@ export default function RecoverClient() {
   // captcha expiry counter
   useEffect(() => {
     if (step !== "captcha") return;
-    setCaptchaExpiry(120);
+    queueMicrotask(() => setCaptchaExpiry(120));
     const id = setInterval(() => setCaptchaExpiry((s) => Math.max(0, s - 1)), 1000);
     return () => clearInterval(id);
   }, [step, captchasDone]);
@@ -500,7 +500,6 @@ export default function RecoverClient() {
               {STEP_LABELS.map((s, i) => {
                 const sIdx = stepIdx(s.step);
                 const done = curStepIdx > sIdx;
-                const active = curStepIdx === sIdx || (curStepIdx === sIdx + 1 && ["email-verify", "phone-verify", "totp-verify"].includes(step));
                 const realActive = curStepIdx >= sIdx && curStepIdx < sIdx + 2;
                 return (
                   <div key={s.step} className="flex shrink-0 flex-col items-center" style={{ flex: 1, minWidth: 0 }}>
@@ -767,7 +766,7 @@ function CaptchaStep({ question, value, onChange, onSubmit, loading, done, total
   question: string; value: string; onChange: (v: string) => void; onSubmit: () => void;
   loading: boolean; done: number; total: number; expiry: number;
 }) {
-  const challengeId = useMemo(() => `CHK-${Math.floor(Math.random() * 900000 + 100000)}`, []);
+  const challengeId = useMemo(() => `CHK-${question.length}-${done + 1}`, [done, question]);
   return (
     <div className="space-y-3">
       {/* Widget header */}
@@ -988,6 +987,7 @@ function SigStep({ sigPreview, sigErr, dragging, setDragging, onFile, onSubmit, 
           {sigPreview ? (
             <div>
               <div className="relative mb-3 mx-auto w-fit">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={sigPreview} alt="Firma" className="max-h-44 rounded-lg object-contain ring-2 ring-[#9dff34]/25" />
                 <div className="absolute -right-2 -top-2 flex h-7 w-7 items-center justify-center rounded-full border border-[#9dff34]/40 bg-[#0d1f09]">
                   <Check className="h-3.5 w-3.5 text-[#9dff34]" />
@@ -1092,8 +1092,8 @@ function PhoneSendStep({ phone, email, onSend, loading }: { phone: string; email
   );
 }
 
-function CodeVerifyStep({ title, destination, icon, accentColor, value, onChange, onSubmit, onResend, loading, codeSentAt }: {
-  title: string; destination: string; icon: ReactNode; accentColor: string; value: string;
+function CodeVerifyStep({ title, destination, icon, value, onChange, onSubmit, onResend, loading, codeSentAt }: {
+  title: string; destination: string; icon: ReactNode; value: string;
   onChange: (v: string) => void; onSubmit: () => void; onResend: () => void;
   loading: boolean; codeSentAt: number | null;
 }) {
@@ -1270,8 +1270,9 @@ function TotpSetupStep({ secret, copied, onCopy, onContinue, onBroken }: {
 }
 
 function TotpVerifyStep({ value, onChange, onSubmit, loading }: { value: string; onChange: (v: string) => void; onSubmit: () => void; loading: boolean }) {
-  const [totpSecs, setTotpSecs] = useState(30 - (Math.floor(Date.now() / 1000) % 30));
+  const [totpSecs, setTotpSecs] = useState(30);
   useEffect(() => {
+    queueMicrotask(() => setTotpSecs(30 - (Math.floor(Date.now() / 1000) % 30)));
     const id = setInterval(() => setTotpSecs(30 - (Math.floor(Date.now() / 1000) % 30)), 1000);
     return () => clearInterval(id);
   }, []);
@@ -1420,11 +1421,6 @@ function DoneStep({ ticketId, onTrack, onBroken }: { ticketId: string | null; on
 }
 
 function SessionExpired({ onRestart }: { onRestart: () => void }) {
-  const [count, setCount] = useState(10);
-  useEffect(() => {
-    const id = setInterval(() => setCount((c) => Math.max(0, c - 1)), 1000);
-    return () => clearInterval(id);
-  }, []);
   return (
     <div className="min-h-screen bg-[#0a0202] flex flex-col items-center justify-center px-4 py-16 text-white [background-image:radial-gradient(ellipse_60%_50%_at_50%_0%,rgba(220,50,50,0.08),transparent)]">
       <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-full border-2 border-red-500/25 bg-red-950/40">

@@ -7,8 +7,7 @@ import { format } from "date-fns";
 import { es, enUS } from "date-fns/locale";
 import { useLanguage } from "@/lib/LanguageContext";
 import { translations } from "@/lib/translations";
-import { getPackageSchedule, isPackageAvailableOnDate } from "@/lib/tour-packages";
-import { AlertCircle, Camera, Check, ChevronDown, Clock3, Info, MapPin, Minus, Plus, Route, Search, ShieldCheck, Sparkles, TreePalm, Users, UtensilsCrossed } from "lucide-react";
+import { AlertCircle, Check, ChevronDown, Clock3, MapPin, Minus, Plus, Route, Search, ShieldCheck, Sparkles, TreePalm, Users, UtensilsCrossed } from "lucide-react";
 import { trackAnalyticsEvent } from "@/lib/analytics/client";
 import { PHONE_COUNTRIES as ALL_PHONE_COUNTRIES } from "@/app/components/reservation/phoneCountries";
 
@@ -21,68 +20,55 @@ const DEFAULT_DEPARTURE_TIMES = ["08:00", "09:00", "10:00"];
 export type TourTime = string;
 type BookingStepId = 1 | 2 | 3;
 
-// ---------------------- PACKAGES ----------------------
-export type TourPackage = string;
-
-interface PackageOption extends TourPackageOption {
-  id: TourPackage;
-  name: string;
+// ---------------------- ADD-ONS ----------------------
+interface AddOnOption {
+  id: string;
+  nameEs: string;
+  nameEn: string;
+  descriptionEs: string;
+  descriptionEn: string;
   price: number;
-  priceCRC: number | null;
-  departureTimes: string[];
+  icon: typeof TreePalm;
 }
 
-export type { TourSummary };
-
-// Keep tour selection as a plain helper so production minification does not wrap
-// dependent tour lookups in hook closures that can hit temporal dead zone errors.
-const resolveSelectedTourSlug = (
-  tours: TourSummary[],
-  manualSelectedTourSlug: string | null,
-  initialSelectedTourSlug?: string
-): string => {
-  if (manualSelectedTourSlug && tours.some((tour) => tour.slug === manualSelectedTourSlug)) {
-    return manualSelectedTourSlug;
-  }
-
-  if (initialSelectedTourSlug && tours.some((tour) => tour.slug === initialSelectedTourSlug)) {
-    return initialSelectedTourSlug;
-  }
-
-  return tours[0]?.slug ?? "tour-ciudad-esmeralda";
-};
-
-const PACKAGE_META = [
+const ADDON_OPTIONS: AddOnOption[] = [
   {
-    icon: TreePalm,
-    accent: "from-sky-500/20 to-emerald-500/10",
-    highlightEs: ["Guía certificado local", "Ingreso a zonas naturales", "Briefing de seguridad"],
-    highlightEn: ["Certified local guide", "Nature area access", "Safety briefing"],
-  },
-  {
+    id: "almuerzo",
+    nameEs: "Almuerzo Típico",
+    nameEn: "Traditional Lunch",
+    descriptionEs: "Casado costarricense (pollo, res o vegetariano) con bebida natural y postre.",
+    descriptionEn: "Costa Rican casado (chicken, beef or vegetarian) with natural drink and dessert.",
+    price: 15,
     icon: UtensilsCrossed,
-    accent: "from-violet-500/20 to-indigo-500/10",
-    highlightEs: ["Incluye almuerzo típico", "Paradas fotográficas", "Ruta extendida todo el día"],
-    highlightEn: ["Traditional lunch included", "Photo stops", "Extended full-day route"],
   },
   {
-    icon: Sparkles,
-    accent: "from-amber-500/20 to-orange-500/10",
-    highlightEs: ["Atención exclusiva", "Ritmo personalizado", "Ideal para parejas o grupos"],
-    highlightEn: ["Exclusive attention", "Custom pace", "Great for couples or groups"],
+    id: "guia-privado",
+    nameEs: "Guía Privado",
+    nameEn: "Private Guide",
+    descriptionEs: "Guía exclusivo para tu grupo con atención personalizada y ritmo flexible.",
+    descriptionEn: "Exclusive guide for your group with personalized attention and flexible pace.",
+    price: 25,
+    icon: Users,
+  },
+  {
+    id: "alojamiento",
+    nameEs: "Alojamiento",
+    nameEn: "Lodging",
+    descriptionEs: "Noche de hospedaje en alojamiento local cerca de la experiencia.",
+    descriptionEn: "One night stay at local lodging near the experience.",
+    price: 40,
+    icon: TreePalm,
+  },
+  {
+    id: "transporte",
+    nameEs: "Transporte",
+    nameEn: "Transport",
+    descriptionEs: "Traslado de ida y vuelta desde puntos de encuentro designados.",
+    descriptionEn: "Round-trip transfer from designated meeting points.",
+    price: 15,
+    icon: Route,
   },
 ];
-
-const slugifyPackageId = (value: string, index: number) => {
-  const slug = value
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-
-  return slug || `package-${index + 1}`;
-};
 
 const formatDepartureLabel = (value: string) => {
   const normalized = value.trim();
@@ -96,14 +82,10 @@ const formatDepartureLabel = (value: string) => {
   return `${hour12}:${minute} ${period}`;
 };
 
-type PackageMeta = {
-  icon: typeof TreePalm;
-  accent: string;
-  highlightEs: string[];
-  highlightEn: string[];
-};
-
 // ---------------------- TYPES ----------------------
+export type TourPackage = string;
+export type { TourSummary };
+
 interface ReservationFormState {
   name: string;
   email: string;
@@ -128,7 +110,27 @@ interface ReservationOrderPayload {
   tourName: string;
   packagePrice: number;
   specialRequests: string;
+  addons: string[];
+  addonsPrice: number;
 }
+
+// Keep tour selection as a plain helper so production minification does not wrap
+// dependent tour lookups in hook closures that can hit temporal dead zone errors.
+const resolveSelectedTourSlug = (
+  tours: TourSummary[],
+  manualSelectedTourSlug: string | null,
+  initialSelectedTourSlug?: string
+): string => {
+  if (manualSelectedTourSlug && tours.some((tour) => tour.slug === manualSelectedTourSlug)) {
+    return manualSelectedTourSlug;
+  }
+
+  if (initialSelectedTourSlug && tours.some((tour) => tour.slug === initialSelectedTourSlug)) {
+    return initialSelectedTourSlug;
+  }
+
+  return tours[0]?.slug ?? "tour-ciudad-esmeralda";
+};
 
 // ---------------------- CUSTOM HOOK ----------------------
 const useReservationForm = (initialState: ReservationFormState) => {
@@ -158,7 +160,7 @@ const useReservationForm = (initialState: ReservationFormState) => {
     };
   }, [formState]);
 
-  return { formState, setFormState, handleChange, validation };
+  return { formState, handleChange, validation };
 };
 
 // ---------------------- CHILD COMPONENTS ----------------------
@@ -412,7 +414,6 @@ export default function ReservationDetails({
   tourInfo,
   tours,
   initialSelectedTourSlug,
-  initialSelectedPackageId,
   hasPreselectedTour = false,
   ivaRatePercent = 13,
 }: Props) {
@@ -432,14 +433,13 @@ export default function ReservationDetails({
   );
 
   const [tourTime, setTourTime] = useState<TourTime | null>(null);
-  const [tourPackage, setTourPackage] = useState<TourPackage | null>(null);
+  const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
   const [currentStep, setCurrentStep] = useState<BookingStepId>(1);
   const currentStepRef = useRef<BookingStepId>(1);
   const stepEnteredAtRef = useRef(0);
   const completedStepsRef = useRef<Set<BookingStepId>>(new Set());
   const nextStepFocusRef = useRef<BookingStepId | null>(null);
   const step1FieldFocusRef = useRef<"schedule" | "tickets" | null>(null);
-  const packageSectionRef = useRef<HTMLDivElement | null>(null);
   const scheduleSectionRef = useRef<HTMLElement | null>(null);
   const ticketsInputRef = useRef<HTMLInputElement | null>(null);
   const travelerSectionRef = useRef<HTMLDivElement | null>(null);
@@ -501,42 +501,21 @@ export default function ReservationDetails({
       }
     : selectedTourFallbackInfo ?? (tourInfo ? { ...defaultMainTourInfo, ...tourInfo, cancellationPolicy: tourInfo.cancellationPolicy ?? defaultMainTourInfo.cancellationPolicy } : defaultMainTourInfo);
 
-  const PACKAGES = useMemo<PackageOption[]>(() => {
-    if (!selectedTour) return [];
+  // Base price per person in USD (entry fee only, no packages)
+  const basePriceUSD = useMemo(() => {
+    if (selectedTour?.priceCRC) return Math.round(selectedTour.priceCRC / 525);
+    return 30;
+  }, [selectedTour]);
 
-    const dbPackages = Array.isArray(selectedTour.packages) ? selectedTour.packages : [];
-    if (dbPackages.length > 0) {
-      return dbPackages
-        .filter((pkg) => typeof pkg.name === "string" && pkg.name.trim() && Number.isFinite(Number(pkg.price)))
-        .map((pkg, index) => ({
-          ...pkg,
-          id: pkg.id?.trim() || slugifyPackageId(pkg.nameEs || pkg.name, index),
-          name: pkg.name,
-          price: Number(pkg.price),
-          priceCRC: typeof pkg.priceCRC === "number" ? pkg.priceCRC : null,
-          includes: Array.isArray(pkg.includes) ? pkg.includes : [],
-          departureTimes: Array.isArray(pkg.departureTimes) && pkg.departureTimes.length > 0
-            ? pkg.departureTimes
-            : DEFAULT_DEPARTURE_TIMES,
-        }));
+  // Departure times from tour data or defaults
+  const availableTimeSlots = useMemo(() => {
+    if (selectedTour?.packages && Array.isArray(selectedTour.packages) && selectedTour.packages.length > 0) {
+      const times = (selectedTour.packages as TourPackageOption[]).flatMap((p) => p.departureTimes ?? []);
+      const unique = Array.from(new Set(times.map((t) => t.trim()).filter(Boolean)));
+      if (unique.length > 0) return unique;
     }
-
-    const exchangeRate = 525;
-    const fallbackPriceUSD = selectedTour.priceCRC ? Math.round(selectedTour.priceCRC / exchangeRate) : 40;
-
-    return [{
-      id: "standard-package",
-      name: lang === "es" ? "Paquete Estandar" : "Standard Package",
-      nameEs: "Paquete Estandar",
-      price: fallbackPriceUSD,
-      priceCRC: selectedTour.priceCRC ?? null,
-      descriptionEs: selectedTour.descriptionEs,
-      descriptionEn: selectedTour.descriptionEn,
-      includes: selectedTour.inclusions ?? [],
-      groupTour: true,
-      departureTimes: DEFAULT_DEPARTURE_TIMES,
-    }];
-  }, [lang, selectedTour]);
+    return DEFAULT_DEPARTURE_TIMES;
+  }, [selectedTour]);
 
   useEffect(() => {
     let isMounted = true;
@@ -564,30 +543,6 @@ export default function ReservationDetails({
     return /[áéíóúñ]|\b(entrada|guía|recorrido|cañón|horas|cancelación|solo|adultos|incluye)\b/i.test(value);
   }, []);
 
-  const localizedDetails = useMemo(() => {
-    if (lang === "es") {
-      return resolvedTourInfo.details || selectedTourDescription || tr.tourInfoFallbackDetails;
-    }
-
-    if (!seemsSpanish(resolvedTourInfo.details)) {
-      return resolvedTourInfo.details || selectedTourDescription || tr.tourInfoFallbackDetails;
-    }
-
-    return selectedTour?.descriptionEn || tr.tourInfoFallbackDetails;
-  }, [lang, resolvedTourInfo.details, selectedTour?.descriptionEn, selectedTourDescription, seemsSpanish, tr.tourInfoFallbackDetails]);
-
-  const localizedDuration = useMemo(() => {
-    if (lang === "es") {
-      return resolvedTourInfo.duration || tr.defaultDuration;
-    }
-
-    if (!seemsSpanish(resolvedTourInfo.duration)) {
-      return resolvedTourInfo.duration || tr.defaultDuration;
-    }
-
-    return tr.defaultDuration;
-  }, [lang, resolvedTourInfo.duration, seemsSpanish, tr.defaultDuration]);
-
   const localizedCancellationPolicy = useMemo(() => {
     if (lang === "es") {
       return resolvedTourInfo.cancellationPolicy || tr.defaultCancellationPolicy;
@@ -600,88 +555,29 @@ export default function ReservationDetails({
     return tr.defaultCancellationPolicy;
   }, [lang, resolvedTourInfo.cancellationPolicy, seemsSpanish, tr.defaultCancellationPolicy]);
 
-  const localizedLocation = resolvedTourInfo.location || tr.locationValue;
-  const localizedRoute = selectedTour?.difficulty || resolvedTourInfo.restrictions || tr.routeValue;
-  const localizedPrice = resolvedTourInfo.price || (
-    typeof selectedTour?.priceCRC === "number"
-      ? new Intl.NumberFormat("es-CR", {
-          style: "currency",
-          currency: "CRC",
-          maximumFractionDigits: 0,
-        }).format(selectedTour.priceCRC)
-      : ""
+  // Addon price per person for selected addons
+  const addonsPricePerPerson = useMemo(
+    () => ADDON_OPTIONS.filter((a) => selectedAddons.includes(a.id)).reduce((sum, a) => sum + a.price, 0),
+    [selectedAddons]
   );
 
-  const selectedPackageCandidate = useMemo(
-    () => PACKAGES.find((p) => p.id === tourPackage) ?? null,
-    [tourPackage, PACKAGES]
-  );
-  const selectedPackage = useMemo(
-    () => selectedPackageCandidate && isPackageAvailableOnDate(selectedPackageCandidate, reservationDateIso)
-      ? selectedPackageCandidate
-      : null,
-    [reservationDateIso, selectedPackageCandidate]
-  );
-
-  useEffect(() => {
-    if (!initialSelectedPackageId) return;
-
-    const matchingPackage = PACKAGES.find((pkg) => pkg.id === initialSelectedPackageId);
-    if (!matchingPackage || !isPackageAvailableOnDate(matchingPackage, reservationDateIso)) return;
-
-    setTourPackage(matchingPackage.id);
-  }, [PACKAGES, initialSelectedPackageId, reservationDateIso]);
-
-  const availableTimeSlots = useMemo(() => {
-    const sourceTimes = selectedPackage
-      ? selectedPackage.departureTimes
-      : PACKAGES.flatMap((pkg) => pkg.departureTimes);
-    const uniqueTimes = Array.from(new Set(sourceTimes.map((time) => time.trim()).filter(Boolean)));
-    return uniqueTimes.length > 0 ? uniqueTimes : DEFAULT_DEPARTURE_TIMES;
-  }, [PACKAGES, selectedPackage]);
-
-  const effectiveTourPackage = selectedPackage?.id ?? null;
-  const effectiveSelectedPackage = selectedPackage;
-  const selectedPackageUnavailable = Boolean(selectedPackageCandidate && !selectedPackage);
-
-  useEffect(() => {
-    if (tourPackage && !PACKAGES.some((pkg) => pkg.id === tourPackage)) {
-      setTourPackage(null);
-    }
-  }, [PACKAGES, tourPackage]);
-
-  useEffect(() => {
-    if (!tourPackage || !selectedPackageCandidate) return;
-    if (isPackageAvailableOnDate(selectedPackageCandidate, reservationDateIso)) return;
-
-    setTourPackage(null);
-    setTourTime(null);
-  }, [reservationDateIso, selectedPackageCandidate, tourPackage]);
-
-  useEffect(() => {
-    if (tourTime && !availableTimeSlots.includes(tourTime)) {
-      setTourTime(null);
-    }
-  }, [availableTimeSlots, tourTime]);
+  const pricePerPerson = basePriceUSD + addonsPricePerPerson;
 
   const { subtotalRaw, taxesRaw, totalWithTaxesRaw } = useMemo(() => {
     const safeTickets = Number.isFinite(tickets) ? Math.max(0, tickets) : 0;
-    const pricePerPerson = Number.isFinite(effectiveSelectedPackage?.price)
-      ? Math.max(0, effectiveSelectedPackage?.price ?? 0)
-      : 0;
     const sub = safeTickets * pricePerPerson;
     const normalizedTaxRate = Number.isFinite(ivaRatePercent)
       ? Math.max(0, ivaRatePercent) / 100
       : 0;
     const tax = sub * normalizedTaxRate;
     return { subtotalRaw: sub, taxesRaw: tax, totalWithTaxesRaw: sub + tax };
-  }, [tickets, effectiveSelectedPackage, ivaRatePercent]);
+  }, [tickets, pricePerPerson, ivaRatePercent]);
 
   const subtotal = Number.isFinite(subtotalRaw) ? subtotalRaw : 0;
   const taxes = Number.isFinite(taxesRaw) ? taxesRaw : 0;
   const totalWithTaxes = Number.isFinite(totalWithTaxesRaw) ? totalWithTaxesRaw : 0;
 
-  const { formState, setFormState, handleChange, validation } = useReservationForm({
+  const { formState, handleChange, validation } = useReservationForm({
     name: "",
     email: "",
     phoneCode: ALL_PHONE_COUNTRIES[0].code,
@@ -690,23 +586,19 @@ export default function ReservationDetails({
     agreeTerms: false,
   });
 
-  const isStep1Valid =
-    isTicketsValid &&
-    tourTime !== null &&
-    effectiveTourPackage !== null &&
-    Boolean(selectedTour);
+  // Step 1 only requires time + tickets (no package selection)
+  const isStep1Valid = isTicketsValid && tourTime !== null && Boolean(selectedTour);
   const isStep2Valid = validation.isNameValid && validation.isEmailValid && validation.isPhoneNumberValid;
 
   const missingStep1Items = useMemo(() => {
     const missing: string[] = [];
 
-    if (!effectiveTourPackage) missing.push(tr.missing.package);
-    if (effectiveTourPackage && !tourTime) missing.push(tr.missing.time);
+    if (!tourTime) missing.push(tr.missing.time);
     if (!selectedTour) missing.push(lang === "es" ? "Elegir un tour." : "Choose a tour.");
     if (!isTicketsValid) missing.push(tr.missing.tickets);
 
     return missing;
-  }, [tourTime, effectiveTourPackage, isTicketsValid, selectedTour, tr.missing, lang]);
+  }, [tourTime, isTicketsValid, selectedTour, tr.missing, lang]);
 
   const missingStep2Items = useMemo(() => {
     const missing: string[] = [];
@@ -744,13 +636,12 @@ export default function ReservationDetails({
   const missingStep1Keys = useMemo(() => {
     const missing: string[] = [];
 
-    if (!effectiveTourPackage) missing.push("tour_package");
-    if (effectiveTourPackage && !tourTime) missing.push("tour_time");
+    if (!tourTime) missing.push("tour_time");
     if (!selectedTour) missing.push("tour");
     if (!isTicketsValid) missing.push("tickets");
 
     return missing;
-  }, [tourTime, effectiveTourPackage, isTicketsValid, selectedTour]);
+  }, [tourTime, isTicketsValid, selectedTour]);
 
   const missingStep2Keys = useMemo(() => {
     const missing: string[] = [];
@@ -779,8 +670,9 @@ export default function ReservationDetails({
     slots,
     hasSelectedTime: Boolean(tourTime),
     selectedTime: tourTime,
-    hasSelectedPackage: Boolean(effectiveTourPackage),
-    selectedPackage: effectiveTourPackage,
+    selectedAddons,
+    addonsPricePerPerson,
+    pricePerPerson,
     subtotal: subtotalRaw,
     taxes: taxesRaw,
     totalWithTaxes,
@@ -794,7 +686,9 @@ export default function ReservationDetails({
     tickets,
     slots,
     tourTime,
-    effectiveTourPackage,
+    selectedAddons,
+    addonsPricePerPerson,
+    pricePerPerson,
     subtotalRaw,
     taxesRaw,
     totalWithTaxes,
@@ -948,11 +842,10 @@ export default function ReservationDetails({
   }, []);
 
   const getStep1GuideTarget = useCallback(() => {
-    if (!effectiveTourPackage) return { element: packageSectionRef.current, focus: false };
     if (!tourTime) return { element: scheduleSectionRef.current, focus: false };
     if (!isTicketsValid) return { element: ticketsInputRef.current, focus: true };
     return { element: ticketsInputRef.current, focus: true };
-  }, [effectiveTourPackage, isTicketsValid, tourTime]);
+  }, [isTicketsValid, tourTime]);
 
   const getStep2GuideTarget = useCallback(() => {
     if (!validation.isNameValid) return { element: nameInputRef.current, focus: true };
@@ -1006,20 +899,14 @@ export default function ReservationDetails({
   useEffect(() => {
     if (currentStep !== 1 || !step1FieldFocusRef.current) return;
 
-    if (step1FieldFocusRef.current === "schedule" && effectiveSelectedPackage) {
-      step1FieldFocusRef.current = null;
-      guideToElement(scheduleSectionRef.current, false);
-      return;
-    }
-
     if (step1FieldFocusRef.current === "tickets" && tourTime) {
       step1FieldFocusRef.current = null;
       guideToElement(ticketsInputRef.current, true);
     }
-  }, [currentStep, effectiveSelectedPackage, guideToElement, tourTime]);
+  }, [currentStep, guideToElement, tourTime]);
 
   const handleReserve = useCallback(() => {
-    if (!isFormValid || !effectiveSelectedPackage || !tourTime || !effectiveTourPackage || !selectedTour) {
+    if (!isFormValid || !tourTime || !selectedTour) {
       trackBlockedStep("checkout", "checkout_button");
       guideToStep(currentStep);
       return;
@@ -1033,11 +920,13 @@ export default function ReservationDetails({
         stepLabel: "review",
         tickets,
         tourTime,
-        tourPackage: effectiveTourPackage,
         tourSlug: selectedTour.slug,
+        selectedAddons,
         totalWithTaxes,
       },
     });
+
+    const selectedAddonObjects = ADDON_OPTIONS.filter((a) => selectedAddons.includes(a.id));
 
     onReserve({
       tickets,
@@ -1049,28 +938,28 @@ export default function ReservationDetails({
       phone: `${formState.phoneCode} ${formState.phoneNumber}`,
       specialRequests: formState.specialRequests,
       tourTime,
-      packageId: effectiveSelectedPackage.id,
-      tourPackage: lang === "es" ? (effectiveSelectedPackage.nameEs || effectiveSelectedPackage.name) : effectiveSelectedPackage.name,
+      packageId: "entrada-general",
+      tourPackage: lang === "es" ? "Entrada General" : "General Entry",
       tourSlug: selectedTour.slug,
       tourName: selectedTourName,
-      packagePrice: effectiveSelectedPackage.price,
+      packagePrice: basePriceUSD,
+      addons: selectedAddonObjects.map((a) => (lang === "es" ? a.nameEs : a.nameEn)),
+      addonsPrice: addonsPricePerPerson * tickets,
     });
   }, [
     isFormValid,
-    effectiveSelectedPackage,
     tourTime,
-    effectiveTourPackage,
     onReserve,
     tickets,
     formattedDate,
-    currentMonth,
-    currentYear,
-    selectedDate,
     reservationDateIso,
     totalWithTaxes,
     formState,
     selectedTour,
     selectedTourName,
+    basePriceUSD,
+    selectedAddons,
+    addonsPricePerPerson,
     lang,
     trackBlockedStep,
     trackStepCompleted,
@@ -1167,46 +1056,21 @@ export default function ReservationDetails({
     });
   }, [getAnalyticsBookingSnapshot, stepLabels]);
 
-  const handlePackageSelect = useCallback((pkg: PackageOption) => {
-    if (!isPackageAvailableOnDate(pkg, reservationDateIso)) {
-      trackAnalyticsEvent("booking_step_blocked", {
-        metadata: {
-          step: 1,
-          stepLabel: stepLabels[1],
-          targetStep: "package_date_availability",
-          targetStepLabel: "package_date_availability",
-          source: "package_card",
-          missingKeys: ["tour_package"],
-          selectedDate: reservationDateIso,
-          blockedPackage: pkg.id,
-          booking: getAnalyticsBookingSnapshot(),
-        },
-      });
-      return;
-    }
-
-    setTourPackage(pkg.id);
-    setTourTime(null);
-    step1FieldFocusRef.current = "schedule";
-
+  const handleAddonToggle = useCallback((addonId: string) => {
+    setSelectedAddons((prev) => {
+      const next = prev.includes(addonId) ? prev.filter((id) => id !== addonId) : [...prev, addonId];
+      return next;
+    });
     trackAnalyticsEvent("booking_selection_changed", {
       metadata: {
         step: 1,
         stepLabel: stepLabels[1],
-        field: "tour_package",
-        value: pkg.id,
-        priceUSD: pkg.price,
-        departureTimes: pkg.departureTimes,
-        booking: {
-          ...getAnalyticsBookingSnapshot(),
-          selectedPackage: pkg.id,
-          hasSelectedPackage: true,
-          selectedTime: null,
-          hasSelectedTime: false,
-        },
+        field: "addon",
+        addonId,
+        booking: getAnalyticsBookingSnapshot(),
       },
     });
-  }, [getAnalyticsBookingSnapshot, reservationDateIso, stepLabels]);
+  }, [getAnalyticsBookingSnapshot, stepLabels]);
 
   const handleTicketsChange = useCallback((rawValue: string) => {
     const parsedValue = Number(rawValue);
@@ -1317,259 +1181,67 @@ export default function ReservationDetails({
         </div>
       </div>
 
-      <div className={`mb-6 text-center ${!selectedTour ? "rounded-xl ring-2 ring-amber-300/70 p-3" : ""}`}>
-        <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.22em] text-emerald-400">
-          {tr.selectedTourLabel}
-        </p>
-        <h3 className="mx-auto max-w-xl text-2xl font-black leading-tight text-zinc-900 dark:text-zinc-50">
-          {selectedTourName}
-        </h3>
-      </div>
-
-      <div className="mb-6 rounded-2xl border border-zinc-200 bg-gradient-to-br from-teal-50 via-white to-cyan-50 p-5 shadow-sm dark:border-zinc-700 dark:from-zinc-900 dark:via-zinc-900 dark:to-teal-950/30">
-        <div className="mb-4 text-center">
-          <div className="mx-auto mb-3 inline-flex h-9 w-9 items-center justify-center rounded-full border border-teal-300/60 bg-teal-100/70 text-teal-700 dark:border-teal-700/60 dark:bg-teal-900/30 dark:text-teal-300" title={tr.tooltips.tourInfoCard}>
-            <Info className="h-4 w-4" aria-hidden />
-          </div>
-          <div>
-            <h3 className="mb-1 text-xl font-black text-teal-900 dark:text-teal-300">
-              {tr.tourInfoTitle}
-            </h3>
-            <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">{selectedTourName}</p>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">{tr.tourInfoSubtitle}</p>
-          </div>
+      <div className={`mb-5 flex items-center gap-3 rounded-xl border border-zinc-200 bg-white p-3 dark:border-zinc-700 dark:bg-zinc-900/60 ${!selectedTour ? "ring-2 ring-amber-300/70" : ""}`}>
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-300">
+          <MapPin className="h-4 w-4" aria-hidden />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-emerald-400">{tr.selectedTourLabel}</p>
+          <h3 className="truncate text-lg font-black leading-tight text-zinc-900 dark:text-zinc-50">{selectedTourName}</h3>
         </div>
-
-        <p className="mx-auto mb-4 max-w-2xl text-center text-zinc-700 dark:text-zinc-400">{localizedDetails}</p>
-
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-xl border border-zinc-200/70 bg-white/85 p-3 dark:border-zinc-700 dark:bg-zinc-900/70" title={tr.tooltips.durationCard}>
-            <p className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-              <Clock3 className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" aria-hidden />
-              {tr.duration}
-            </p>
-            <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">{localizedDuration}</p>
-          </div>
-          <div className="rounded-xl border border-zinc-200/70 bg-white/85 p-3 dark:border-zinc-700 dark:bg-zinc-900/70" title={tr.tooltips.routeCard}>
-            <p className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-              <Route className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" aria-hidden />
-              {tr.routeLabel}
-            </p>
-            <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">{localizedRoute}</p>
-          </div>
-          <div className="rounded-xl border border-zinc-200/70 bg-white/85 p-3 dark:border-zinc-700 dark:bg-zinc-900/70" title={tr.tooltips.locationCard}>
-            <p className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-              <MapPin className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" aria-hidden />
-              {tr.locationLabel}
-            </p>
-            <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">{localizedLocation}</p>
-          </div>
-          {localizedPrice && (
-            <div className="rounded-xl border border-zinc-200/70 bg-white/85 p-3 dark:border-zinc-700 dark:bg-zinc-900/70">
-              <p className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                <Sparkles className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" aria-hidden />
-                {tr.priceFrom}
-              </p>
-              <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">{localizedPrice}</p>
-            </div>
-          )}
-        </div>
-
-        <div className="mt-4 rounded-xl border border-zinc-200/80 bg-white/80 p-4 dark:border-zinc-700 dark:bg-zinc-900/70">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">{tr.bookingStrategyTitle}</p>
-          <ul className="space-y-1.5 text-sm text-zinc-700 dark:text-zinc-300">
-            {tr.bookingStrategyItems.map((item) => (
-              <li key={item} className="flex items-start gap-2">
-                <ShieldCheck className="mt-0.5 h-4 w-4 text-emerald-600 dark:text-emerald-400" aria-hidden />
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <span className="shrink-0 rounded-full border border-teal-200 bg-teal-50 px-3 py-1 text-sm font-black text-teal-800 dark:border-teal-700 dark:bg-teal-950/30 dark:text-teal-300">
+          {lang === "es" ? "Desde" : "From"} ${basePriceUSD}
+        </span>
       </div>
 
       {currentStep === 1 && (
         <>
-          <div ref={packageSectionRef} className={`mb-6 rounded-xl ${!effectiveTourPackage ? "ring-2 ring-amber-300/70 p-3" : ""}`}>
-            <h3 className="text-xl font-semibold mb-3">{tr.packageTitle}</h3>
-            {!effectiveTourPackage && <p className="mb-3 flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-400"><AlertCircle className="h-4 w-4" aria-hidden /> {tr.indicators.choosePackage}</p>}
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {PACKAGES.map((pkg, index) => {
-                const isSelected = effectiveTourPackage === pkg.id;
-                const packageSchedule = getPackageSchedule(pkg);
-                const isPackageAvailable = isPackageAvailableOnDate(pkg, reservationDateIso);
-                const availabilityLabel = packageSchedule === "weekday"
-                  ? tr.weekdaysOnly
-                  : packageSchedule === "weekend"
-                  ? tr.weekendsOnly
-                  : null;
-                const pkgName = lang === "es" ? (pkg.nameEs || pkg.name) : pkg.name;
-                const pkgDescription = lang === "es"
-                  ? (pkg.descriptionEs || pkg.descriptionEn || "")
-                  : (pkg.descriptionEn || pkg.descriptionEs || "");
-                const pkgMeta: PackageMeta = PACKAGE_META[index % PACKAGE_META.length];
-                const Icon = pkgMeta.icon;
-                const packageHighlights = pkg.includes && pkg.includes.length > 0
-                  ? pkg.includes
-                  : lang === "es" ? pkgMeta.highlightEs : pkgMeta.highlightEn;
-
-                return (
-                  <button
-                    key={pkg.id}
-                    type="button"
-                    onClick={() => handlePackageSelect(pkg)}
-                    disabled={!isPackageAvailable}
-                    aria-pressed={isSelected}
-                    aria-disabled={!isPackageAvailable}
-                    className={`group relative flex h-full min-h-[430px] overflow-hidden text-left p-5 rounded-2xl border-2 outline-none transition-all focus-visible:ring-4 focus-visible:ring-emerald-300/60 ${
-                      isSelected
-                        ? "scale-[1.015] border-emerald-500 bg-emerald-50/95 shadow-2xl shadow-emerald-500/25 ring-4 ring-emerald-300/45 dark:bg-emerald-950/35 dark:shadow-emerald-900/35 dark:ring-emerald-400/25"
-                        : isPackageAvailable
-                        ? "border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 hover:-translate-y-0.5 hover:border-emerald-400 hover:shadow-lg hover:shadow-emerald-500/10 cursor-pointer"
-                        : "cursor-not-allowed border-zinc-200 bg-zinc-100 opacity-60 dark:border-zinc-800 dark:bg-zinc-950"
-                    }`}
-                  >
-                    {isSelected && (
-                      <>
-                        <div className="pointer-events-none absolute -left-12 -top-12 h-44 w-44 rounded-full bg-emerald-400/35 blur-3xl" />
-                        <div className="pointer-events-none absolute -bottom-16 -right-10 h-52 w-52 rounded-full bg-cyan-400/30 blur-3xl" />
-                        <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br from-emerald-400/20 via-cyan-300/10 to-amber-300/20" />
-                      </>
+          <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.42fr)]">
+            <div className="space-y-4">
+            <section
+              ref={scheduleSectionRef}
+              className={`rounded-2xl border bg-white p-4 shadow-sm transition-all dark:bg-zinc-900/70 sm:p-5 ${
+                !tourTime
+                  ? "border-amber-300 ring-2 ring-amber-300/35 dark:border-amber-600"
+                  : "border-zinc-200 dark:border-zinc-700"
+              }`}
+            >
+              <div className="mb-4 flex items-start justify-between gap-3">
+                <div className="flex min-w-0 items-start gap-3">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-300">
+                    <Clock3 className="h-5 w-5" aria-hidden />
+                  </span>
+                  <div className="min-w-0">
+                    <h3 className="text-lg font-black leading-tight text-zinc-900 dark:text-zinc-50 sm:text-xl">{tr.tourTimeTitle}</h3>
+                    {!tourTime && (
+                      <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-amber-700 dark:text-amber-400">
+                        <AlertCircle className="h-4 w-4 shrink-0" aria-hidden /> {tr.indicators.chooseTourTime}
+                      </p>
                     )}
-                    <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${pkgMeta.accent} ${isSelected ? "opacity-95" : "opacity-70"}`} />
-                    <div className="relative z-10 flex h-full w-full flex-col">
-                      <div className="mb-4 flex items-start justify-between gap-3">
-                        <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/90 text-emerald-700 shadow-sm dark:bg-zinc-800/90 dark:text-emerald-300">
-                          <Icon className="h-5 w-5" aria-hidden />
-                        </span>
-                        <div className="flex shrink-0 flex-col items-end gap-2">
-                          {isSelected && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-black uppercase tracking-wide text-white shadow-lg shadow-emerald-700/20 dark:bg-emerald-400 dark:text-zinc-950">
-                              <Check className="h-3.5 w-3.5" aria-hidden />
-                              {lang === "es" ? "Seleccionado" : "Selected"}
-                            </span>
-                          )}
-                          {availabilityLabel && (
-                            <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-semibold leading-none ${
-                              packageSchedule === "weekday"
-                                ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400"
-                                : "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300"
-                            }`}>
-                              {availabilityLabel}
-                            </span>
-                          )}
-                          {pkg.groupTour === false && (
-                            <span className="inline-flex items-center rounded-md bg-amber-100 px-2 py-1 text-xs font-semibold leading-none text-amber-700 dark:bg-amber-900/40 dark:text-amber-400">
-                              {lang === "es" ? "Privado" : "Private"}
-                            </span>
-                          )}
-                          {pkg.groupTour !== false && (
-                            <span className="inline-flex items-center rounded-md bg-sky-100 px-2 py-1 text-xs font-semibold leading-none text-sky-700 dark:bg-sky-900/40 dark:text-sky-300">
-                              {lang === "es" ? "Grupal" : "Group"}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="mb-4 min-h-[126px]">
-                        <p className="mb-2 text-lg font-bold leading-tight text-zinc-800 dark:text-zinc-100">{pkgName}</p>
-                        <p className="text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">{pkgDescription}</p>
-                      </div>
-                      <ul className="mb-5 space-y-2">
-                        {packageHighlights.map((item) => (
-                          <li key={item} className="flex items-start gap-2 text-xs leading-snug text-zinc-700 dark:text-zinc-300">
-                            <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden />
-                            <span className="min-w-0">{item}</span>
-                          </li>
-                        ))}
-                      </ul>
-                      <div className={`mt-auto flex items-end justify-between gap-3 border-t pt-4 ${
-                        isSelected
-                          ? "border-emerald-300/80 dark:border-emerald-500/40"
-                          : "border-zinc-200/70 dark:border-zinc-700/80"
-                      }`}>
-                        <div>
-                          <p className="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">{tr.priceFrom}</p>
-                          <p className={`font-bold text-xl ${isSelected ? "text-emerald-800 dark:text-emerald-200" : "text-zinc-900 dark:text-zinc-100"}`}>${pkg.price}</p>
-                        </div>
-                        <p className="max-w-[7rem] text-right text-xs font-semibold leading-tight text-zinc-500 dark:text-zinc-400">USD / {tr.perPerson}</p>
-                      </div>
-                      {pkg.scheduleNote && (
-                        <p className="mt-3 text-xs leading-snug text-zinc-500 dark:text-zinc-400">{pkg.scheduleNote}</p>
-                      )}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-            <div className="mt-4 grid grid-cols-1 gap-3 rounded-2xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-900/40 sm:grid-cols-3">
-              <div className="flex items-start gap-2">
-                <Users className="mt-0.5 h-4 w-4 text-emerald-600 dark:text-emerald-400" aria-hidden />
-                <p className="text-xs text-zinc-600 dark:text-zinc-300">{tr.packageFootnotes.capacity}</p>
-              </div>
-              <div className="flex items-start gap-2">
-                <Camera className="mt-0.5 h-4 w-4 text-emerald-600 dark:text-emerald-400" aria-hidden />
-                <p className="text-xs text-zinc-600 dark:text-zinc-300">{tr.packageFootnotes.photo}</p>
-              </div>
-              <div className="flex items-start gap-2">
-                <ShieldCheck className="mt-0.5 h-4 w-4 text-emerald-600 dark:text-emerald-400" aria-hidden />
-                <p className="text-xs text-zinc-600 dark:text-zinc-300">{tr.packageFootnotes.support}</p>
-              </div>
-            </div>
-            {selectedPackageUnavailable && (
-              <div className="mt-3 flex items-start gap-2 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700">
-                <span className="text-red-500 mt-0.5">⚠</span>
-                <p className="text-sm text-red-600 dark:text-red-400">{tr.packageAvailabilityWarning}</p>
-              </div>
-            )}
-          </div>
-
-          <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(280px,0.9fr)]">
-            {effectiveSelectedPackage && (
-              <section
-                ref={scheduleSectionRef}
-                className={`rounded-2xl border bg-white p-4 shadow-sm transition-all dark:bg-zinc-900/70 sm:p-5 ${
-                  !tourTime
-                    ? "border-amber-300 ring-2 ring-amber-300/35 dark:border-amber-600"
-                    : "border-zinc-200 dark:border-zinc-700"
-                }`}
-              >
-                <div className="mb-4 flex items-start justify-between gap-3">
-                  <div className="flex min-w-0 items-start gap-3">
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-300">
-                      <Clock3 className="h-5 w-5" aria-hidden />
-                    </span>
-                    <div className="min-w-0">
-                      <h3 className="text-lg font-black leading-tight text-zinc-900 dark:text-zinc-50 sm:text-xl">{tr.tourTimeTitle}</h3>
-                      {!tourTime && (
-                        <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-amber-700 dark:text-amber-400">
-                          <AlertCircle className="h-4 w-4 shrink-0" aria-hidden /> {tr.indicators.chooseTourTime}
-                        </p>
-                      )}
-                    </div>
                   </div>
                 </div>
+              </div>
 
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                  {availableTimeSlots.map((slot) => {
-                    const isSelected = tourTime === slot;
-                    return (
-                      <button
-                        key={slot}
-                        type="button"
-                        onClick={() => handleTourTimeSelect(slot)}
-                        className={`min-h-14 rounded-xl border-2 px-4 py-3 text-center text-base font-black transition-all ${
-                          isSelected
-                            ? "border-emerald-500 bg-emerald-500 text-white shadow-lg shadow-emerald-900/15 dark:bg-emerald-500 dark:text-zinc-950"
-                            : "border-zinc-200 bg-zinc-50 text-zinc-800 hover:-translate-y-0.5 hover:border-emerald-400 hover:bg-emerald-50 dark:border-zinc-700 dark:bg-zinc-950/40 dark:text-zinc-200 dark:hover:bg-emerald-950/30"
-                        }`}
-                      >
-                        {formatDepartureLabel(slot)}
-                      </button>
-                    );
-                  })}
-                </div>
-              </section>
-            )}
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                {availableTimeSlots.map((slot) => {
+                  const isSelected = tourTime === slot;
+                  return (
+                    <button
+                      key={slot}
+                      type="button"
+                      onClick={() => handleTourTimeSelect(slot)}
+                      className={`min-h-14 rounded-xl border-2 px-4 py-3 text-center text-base font-black transition-all ${
+                        isSelected
+                          ? "border-emerald-500 bg-emerald-500 text-white shadow-lg shadow-emerald-900/15 dark:bg-emerald-500 dark:text-zinc-950"
+                          : "border-zinc-200 bg-zinc-50 text-zinc-800 hover:-translate-y-0.5 hover:border-emerald-400 hover:bg-emerald-50 dark:border-zinc-700 dark:bg-zinc-950/40 dark:text-zinc-200 dark:hover:bg-emerald-950/30"
+                      }`}
+                    >
+                      {formatDepartureLabel(slot)}
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
 
             <section
               className={`rounded-2xl border bg-white p-4 shadow-sm transition-all dark:bg-zinc-900/70 sm:p-5 ${
@@ -1636,8 +1308,151 @@ export default function ReservationDetails({
                   </button>
                 </div>
               </div>
+
+              {/* Base price display */}
+              <div className="mt-3 flex items-center justify-between rounded-xl border border-zinc-200 bg-white px-4 py-3 dark:border-zinc-700 dark:bg-zinc-900">
+                <span className="text-sm font-semibold text-zinc-600 dark:text-zinc-400">
+                  {lang === "es" ? "Entrada General" : "General Entry"}
+                </span>
+                <span className="font-black text-zinc-900 dark:text-zinc-50">${basePriceUSD} / {tr.perPerson}</span>
+              </div>
             </section>
+
+            <section className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-700 dark:bg-zinc-900/70 sm:p-5">
+              <div className="mb-4 flex items-start justify-between gap-3">
+                <div className="flex min-w-0 items-start gap-3">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-300">
+                    <Sparkles className="h-5 w-5" aria-hidden />
+                  </span>
+                  <div className="min-w-0">
+                    <h3 className="text-lg font-black leading-tight text-zinc-900 dark:text-zinc-50 sm:text-xl">
+                      {lang === "es" ? "Mejora tu experiencia" : "Upgrade your experience"}
+                    </h3>
+                    <p className="mt-1 text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                      {lang === "es" ? "Opcional. Se calcula por persona." : "Optional. Calculated per person."}
+                    </p>
+                  </div>
+                </div>
+                {selectedAddons.length > 0 && (
+                  <span className="shrink-0 rounded-full bg-emerald-500 px-2.5 py-1 text-xs font-black text-white">
+                    +{selectedAddons.length}
+                  </span>
+                )}
+              </div>
+
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {ADDON_OPTIONS.map((addon) => {
+                    const isSelected = selectedAddons.includes(addon.id);
+                    const Icon = addon.icon;
+                    const addonName = lang === "es" ? addon.nameEs : addon.nameEn;
+                    const addonDesc = lang === "es" ? addon.descriptionEs : addon.descriptionEn;
+
+                    return (
+                      <button
+                        key={addon.id}
+                        type="button"
+                        onClick={() => handleAddonToggle(addon.id)}
+                        aria-pressed={isSelected}
+                        className={`flex min-h-[104px] items-start gap-3 rounded-xl border p-3 text-left transition-all outline-none focus-visible:ring-4 focus-visible:ring-emerald-300/60 ${
+                          isSelected
+                            ? "border-emerald-500 bg-emerald-50/90 shadow-md shadow-emerald-500/15 dark:border-emerald-500 dark:bg-emerald-950/30"
+                            : "border-zinc-200 bg-zinc-50 hover:border-emerald-300 hover:bg-white dark:border-zinc-700 dark:bg-zinc-950/35 dark:hover:border-emerald-700"
+                        }`}
+                      >
+                        <span className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-colors ${
+                          isSelected
+                            ? "bg-emerald-500 text-white"
+                            : "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
+                        }`}>
+                          <Icon className="h-4 w-4" aria-hidden />
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className={`text-sm font-black leading-tight ${isSelected ? "text-emerald-800 dark:text-emerald-200" : "text-zinc-900 dark:text-zinc-100"}`}>
+                              {addonName}
+                            </p>
+                            <span className={`shrink-0 text-sm font-black ${isSelected ? "text-emerald-700 dark:text-emerald-300" : "text-zinc-800 dark:text-zinc-100"}`}>
+                              +${addon.price}
+                            </span>
+                          </div>
+                          <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">{addonDesc}</p>
+                        </div>
+                        {isSelected && (
+                          <span className="ml-1 mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white">
+                            <Check className="h-3.5 w-3.5" aria-hidden />
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {selectedAddons.length > 0 && (
+                  <div className="mt-3 flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 dark:border-emerald-800/50 dark:bg-emerald-950/20">
+                    <span className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
+                      {lang === "es" ? "Extra por persona" : "Extra per person"}
+                    </span>
+                    <span className="font-black text-emerald-800 dark:text-emerald-300">+${addonsPricePerPerson}</span>
+                  </div>
+                )}
+            </section>
+            </div>
+
+            <aside className="lg:sticky lg:top-24 lg:self-start">
+              <div className="overflow-hidden rounded-2xl border border-emerald-200 bg-white shadow-xl shadow-black/5 dark:border-emerald-900/60 dark:bg-zinc-900">
+                <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-5 text-white">
+                  <p className="text-[11px] font-black uppercase tracking-[0.22em] text-emerald-50/80">
+                    {lang === "es" ? "Total estimado" : "Estimated total"}
+                  </p>
+                  <p className="mt-2 text-4xl font-black tracking-tight">${totalWithTaxes.toFixed(2)}</p>
+                  <p className="mt-1 text-sm font-semibold text-emerald-50/85">
+                    {tickets} {lang === "es" ? "persona(s)" : "guest(s)"} | ${pricePerPerson} {tr.perPerson}
+                  </p>
+                </div>
+                <div className="space-y-3 p-5">
+                  <div className="flex justify-between gap-3 text-sm">
+                    <span className="text-zinc-500 dark:text-zinc-400">{lang === "es" ? "Tour" : "Tour"}</span>
+                    <span className="text-right font-bold text-zinc-900 dark:text-zinc-50">{selectedTourName}</span>
+                  </div>
+                  <div className="flex justify-between gap-3 text-sm">
+                    <span className="text-zinc-500 dark:text-zinc-400">{lang === "es" ? "Hora" : "Time"}</span>
+                    <span className="font-bold text-zinc-900 dark:text-zinc-50">{tourTime ? formatDepartureLabel(tourTime) : "—"}</span>
+                  </div>
+                  <div className="flex justify-between gap-3 text-sm">
+                    <span className="text-zinc-500 dark:text-zinc-400">{lang === "es" ? "Base" : "Base"}</span>
+                    <span className="font-bold text-zinc-900 dark:text-zinc-50">${basePriceUSD} / {tr.perPerson}</span>
+                  </div>
+                  <div className="flex justify-between gap-3 text-sm">
+                    <span className="text-zinc-500 dark:text-zinc-400">{lang === "es" ? "Extras" : "Add-ons"}</span>
+                    <span className="font-bold text-zinc-900 dark:text-zinc-50">+${addonsPricePerPerson} / {tr.perPerson}</span>
+                  </div>
+                  <div className="border-t border-zinc-200 pt-3 dark:border-zinc-800">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-zinc-500 dark:text-zinc-400">{tr.subtotalLabel}</span>
+                      <span className="font-bold text-zinc-900 dark:text-zinc-50">${subtotal.toFixed(2)}</span>
+                    </div>
+                    <div className="mt-2 flex justify-between text-sm">
+                      <span className="text-zinc-500 dark:text-zinc-400">{tr.taxes} ({ivaRatePercent}%)</span>
+                      <span className="font-bold text-zinc-900 dark:text-zinc-50">${taxes.toFixed(2)}</span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={goToNextStep}
+                    aria-disabled={!isStep1Valid}
+                    className={`inline-flex min-h-12 w-full items-center justify-center rounded-xl px-5 py-3 font-black text-white transition ${
+                      !isStep1Valid
+                        ? "cursor-not-allowed bg-zinc-400 opacity-70"
+                        : "bg-zinc-950 hover:-translate-y-0.5 hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-500"
+                    }`}
+                  >
+                    {lang === "es" ? "Continuar a mis datos" : "Continue to details"}
+                  </button>
+                </div>
+              </div>
+            </aside>
           </div>
+
           {!isStep1Valid && (
             <div className="mb-6 rounded-xl border border-amber-300 bg-amber-50 p-4 dark:border-amber-700 dark:bg-amber-900/20">
               <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">{tr.completeStepOneHint}</p>
@@ -1660,11 +1475,33 @@ export default function ReservationDetails({
               <TravelerInputField id="name" label={tr.fullName} value={formState.name} onChange={(v) => handleChange("name", v)} onBlur={() => trackFieldBlur("name")} onKeyDown={handleNameEnter} inputRef={nameInputRef} placeholder={tr.namePlaceholder} isValid={validation.isNameValid} validationMessage={tr.nameRequired} required />
               <TravelerInputField id="email" label={tr.emailLabel} type="email" value={formState.email} onChange={(v) => handleChange("email", v)} onBlur={() => trackFieldBlur("email")} onKeyDown={handleEmailEnter} inputRef={emailInputRef} placeholder={tr.emailPlaceholder} isValid={validation.isEmailValid} validationMessage={tr.emailInvalid} required />
               <TravelerPhoneInput phoneCode={formState.phoneCode} phoneNumber={formState.phoneNumber} setPhoneCode={(v) => handleChange("phoneCode", v)} setPhoneNumber={(v) => handleChange("phoneNumber", v)} onBlur={() => trackFieldBlur("phone")} onKeyDown={handlePhoneEnter} inputRef={phoneInputRef} isValid={validation.isPhoneNumberValid} label={tr.phoneLabel} placeholder={tr.phonePlaceholder} validationMessage={tr.phoneInvalid} />
+              <div className="md:col-span-2">
+                <label htmlFor="specialRequests" className="mb-2 block text-lg font-semibold">
+                  {lang === "es" ? "¿Necesitas algo extra?" : "Need anything extra?"}
+                  <span className="ml-2 text-sm font-normal text-zinc-500">
+                    {lang === "es" ? "opcional" : "optional"}
+                  </span>
+                </label>
+                <textarea
+                  id="specialRequests"
+                  value={formState.specialRequests}
+                  onChange={(event) => handleChange("specialRequests", event.target.value)}
+                  onBlur={() => trackFieldBlur("specialRequests")}
+                  rows={3}
+                  className="w-full rounded-xl border border-zinc-300 bg-white p-3 text-zinc-900 outline-none transition focus:border-teal-500 focus:ring-4 focus:ring-teal-500/15 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+                  placeholder={
+                    lang === "es"
+                      ? "Ej: transporte desde hotel, comida vegetariana, cumpleaños, guia privado, fotos..."
+                      : "Ex: hotel pickup, vegetarian meal, birthday, private guide, photos..."
+                  }
+                />
+                <p className="mt-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                  {lang === "es"
+                    ? "Lo revisamos antes de confirmar si requiere costo adicional."
+                    : "We review it before confirmation if it requires an extra cost."}
+                </p>
+              </div>
             </div>
-          </div>
-          <div className="mb-6">
-            <h3 className="text-xl font-semibold mb-4">{tr.specialTitle}</h3>
-            <textarea id="specialRequests" value={formState.specialRequests} onChange={(e) => handleChange("specialRequests", e.target.value)} onBlur={() => trackFieldBlur("specialRequests")} className="w-full p-3 rounded-lg border bg-white dark:bg-zinc-800 h-24 border-zinc-300 dark:border-zinc-700 focus:ring-teal-500 focus:border-teal-500" placeholder={tr.specialPlaceholder} />
           </div>
           {!isStep2Valid && (
             <div className="mb-6 rounded-xl border border-amber-300 bg-amber-50 p-4 dark:border-amber-700 dark:bg-amber-900/20">
@@ -1683,8 +1520,28 @@ export default function ReservationDetails({
         <>
           <div ref={reviewSectionRef} className="mb-6 bg-zinc-100 dark:bg-zinc-800 p-4 rounded-xl">
             <div className="flex justify-between mb-2"><span>{tr.tourLabel}</span><span className="font-medium">{selectedTourName}</span></div>
-            <div className="flex justify-between mb-2"><span>{tr.packageLabel}</span><span className="font-medium">{effectiveSelectedPackage ? (lang === "es" ? effectiveSelectedPackage.nameEs || effectiveSelectedPackage.name : effectiveSelectedPackage.name) : "—"}</span></div>
+            <div className="flex justify-between mb-2">
+              <span>{lang === "es" ? "Entrada General" : "General Entry"}</span>
+              <span className="font-medium">${basePriceUSD} / {tr.perPerson}</span>
+            </div>
             <div className="flex justify-between mb-2"><span>{tr.tourTimeTitle}</span><span>{tourTime ?? "—"}</span></div>
+            <div className="flex justify-between mb-2">
+              <span>{lang === "es" ? "Personas" : "People"}</span>
+              <span>{tickets}</span>
+            </div>
+            {selectedAddons.length > 0 && (
+              <div className="mb-2 border-t border-zinc-300 dark:border-zinc-600 pt-2 mt-2">
+                <p className="text-sm font-semibold text-zinc-600 dark:text-zinc-400 mb-1">
+                  {lang === "es" ? "Servicios extra:" : "Extra services:"}
+                </p>
+                {ADDON_OPTIONS.filter((a) => selectedAddons.includes(a.id)).map((addon) => (
+                  <div key={addon.id} className="flex justify-between text-sm mb-1">
+                    <span className="text-zinc-700 dark:text-zinc-300">{lang === "es" ? addon.nameEs : addon.nameEn}</span>
+                    <span>+${addon.price} / {tr.perPerson}</span>
+                  </div>
+                ))}
+              </div>
+            )}
             <div className="flex justify-between mb-2"><span>{tr.subtotalLabel}</span><span>${subtotal.toFixed(2)}</span></div>
             <div className="flex justify-between mb-2"><span>{tr.taxes} ({ivaRatePercent}%)</span><span>${taxes.toFixed(2)}</span></div>
             <div className="flex justify-between font-bold text-lg border-t pt-2 border-zinc-300 dark:border-zinc-700"><span>{tr.total}</span><span>${totalWithTaxes.toFixed(2)}</span></div>
@@ -1731,7 +1588,19 @@ export default function ReservationDetails({
         </>
       )}
 
-      <div className="flex flex-col-reverse gap-3 border-t border-zinc-200 pt-5 dark:border-zinc-800 sm:flex-row sm:justify-end">
+      {/* Trust signals */}
+      <div className="flex flex-wrap justify-center gap-x-5 gap-y-1.5 border-t border-zinc-200 pt-4 pb-1 dark:border-zinc-800">
+        <span className="flex items-center gap-1.5 text-xs font-medium text-zinc-500 dark:text-zinc-400">
+          <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" aria-hidden />
+          {lang === "es" ? "Cancelación gratuita hasta 24h antes" : "Free cancellation up to 24h before"}
+        </span>
+        <span className="flex items-center gap-1.5 text-xs font-medium text-zinc-500 dark:text-zinc-400">
+          <Check className="h-3.5 w-3.5 text-emerald-500" aria-hidden />
+          {lang === "es" ? "Confirmación inmediata" : "Instant confirmation"}
+        </span>
+      </div>
+
+      <div className="flex flex-col-reverse gap-3 pt-4 sm:flex-row sm:justify-end">
         {currentStep > 1 && (
           <button type="button" onClick={goToPrevStep} className="min-h-12 rounded-full border border-zinc-300 px-6 py-3 font-semibold text-zinc-800 transition hover:border-zinc-400 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-100 dark:hover:bg-zinc-800 sm:min-w-32">
             {tr.backBtn}
@@ -1742,13 +1611,15 @@ export default function ReservationDetails({
             type="button"
             onClick={goToNextStep}
             aria-disabled={(currentStep === 1 && !isStep1Valid) || (currentStep === 2 && !isStep2Valid)}
-            className={`min-h-12 rounded-full bg-teal-600 px-8 py-3 font-bold text-white shadow-lg shadow-teal-950/20 transition-all sm:min-w-44 ${
+            className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-8 py-3 font-bold text-white shadow-lg transition-all sm:min-w-44 ${
               (currentStep === 1 && !isStep1Valid) || (currentStep === 2 && !isStep2Valid)
-                ? "cursor-not-allowed opacity-50"
-                : "hover:-translate-y-0.5 hover:bg-teal-500 hover:shadow-xl hover:shadow-teal-950/25"
+                ? "cursor-not-allowed bg-zinc-400 opacity-70 shadow-none"
+                : "bg-teal-600 shadow-teal-950/20 hover:-translate-y-0.5 hover:bg-teal-500 hover:shadow-xl hover:shadow-teal-950/25"
             }`}
           >
-            {tr.nextBtn}
+            {currentStep === 1
+              ? (lang === "es" ? "Mis datos →" : "My details →")
+              : (lang === "es" ? "Revisar reserva →" : "Review booking →")}
           </button>
         )}
         {currentStep === 3 && (
@@ -1756,10 +1627,13 @@ export default function ReservationDetails({
             type="button"
             onClick={handleReserve}
             aria-disabled={!isFormValid}
-            className={`min-h-12 rounded-full bg-teal-600 px-8 py-3 font-bold text-white shadow-lg shadow-teal-950/20 transition-all sm:min-w-44 ${
-              !isFormValid ? "cursor-not-allowed opacity-50" : "hover:-translate-y-0.5 hover:bg-teal-500 hover:shadow-xl hover:shadow-teal-950/25"
+            className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-8 py-3 font-bold text-white shadow-lg transition-all sm:min-w-44 ${
+              !isFormValid
+                ? "cursor-not-allowed bg-zinc-400 opacity-70 shadow-none"
+                : "bg-emerald-600 shadow-emerald-900/25 hover:-translate-y-0.5 hover:bg-emerald-500 hover:shadow-xl hover:shadow-emerald-900/30"
             }`}
           >
+            <ShieldCheck className="h-5 w-5" aria-hidden />
             {tr.proceedBtn}
           </button>
         )}

@@ -1,7 +1,7 @@
 "use client";
 
 import { CalendarDays, Timer } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import type { MundialMatch } from "../types";
 import {
@@ -54,10 +54,7 @@ export function MatchSelector({
   const defaultTab: SelectorTab =
     liveMatches.length > 0 ? "live" : todayMatches.length > 0 ? "today" : "upcoming";
   const [tab, setTab] = useState<SelectorTab>(defaultTab);
-
-  useEffect(() => {
-    if (liveMatches.length > 0) setTab("live");
-  }, [liveMatches.length]);
+  const effectiveTab = liveMatches.length > 0 ? "live" : tab;
 
   const upcomingByDate = useMemo(() => {
     const groups: Array<{ label: string; dateKey: string; matches: MundialMatch[] }> = [];
@@ -85,20 +82,20 @@ export function MatchSelector({
     return groups;
   }, [upcomingMatches]);
 
-  const tabMatches = tab === "live" ? liveMatches : tab === "today" ? todayMatches : [];
+  const tabMatches = effectiveTab === "live" ? liveMatches : effectiveTab === "today" ? todayMatches : [];
 
   return (
     <div className="overflow-hidden rounded-lg border border-[#f0b429]/20 bg-[#06140f] shadow-[0_4px_20px_rgba(0,0,0,0.22)]">
       <div className="flex border-b border-white/10 bg-black/40">
         <TabButton
-          active={tab === "live"}
+          active={effectiveTab === "live"}
           onClick={() => setTab("live")}
           label="Live"
           count={liveMatches.length}
           live
         />
         <TabButton
-          active={tab === "today"}
+          active={effectiveTab === "today"}
           onClick={() => setTab("today")}
           label="Hoy"
           count={todayMatches.length}

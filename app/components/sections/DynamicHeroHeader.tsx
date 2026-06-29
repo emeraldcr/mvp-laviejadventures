@@ -11,15 +11,21 @@ import {
 } from "react";
 import Image from "next/image";
 import {
+  ArrowRight,
+  CalendarCheck,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  Home,
+  Clock3,
   Compass,
-  CalendarCheck,
   GalleryHorizontal,
-  Info as InfoIcon,
   Globe,
+  Home,
+  Info as InfoIcon,
+  MapPin,
+  ShieldCheck,
+  Sparkles,
+  Zap,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
@@ -30,6 +36,8 @@ import { useLanguage } from "@/lib/LanguageContext";
 import { translations } from "@/lib/translations";
 import { principalContent } from "@/lib/constants/principal";
 import { useReservationData } from "@/lib/hooks/useReservationData";
+import { getTourImage } from "@/lib/tour-display";
+import type { TourSummary } from "@/lib/types/index";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface NavLinkItem {
@@ -162,7 +170,7 @@ LangToggle.displayName = "LangToggle";
 // ─── Mobile Bottom Tab Bar ────────────────────────────────────────────────────
 const MobileBottomNav = memo(() => {
   const pathname = usePathname() ?? "";
-  const { lang, toggle } = useLanguage();
+  const { lang } = useLanguage();
   const tr = translations[lang].nav;
 
   const tabs = [
@@ -245,16 +253,13 @@ const HeroBookingWidget = memo<{ onSelectTour?: (slug: string) => void }>(
     const [selectedSlug, setSelectedSlug] = useState(tours[0]?.slug ?? "");
     const [people, setPeople] = useState(2);
 
-    useEffect(() => {
-      if (tours.length > 0 && !selectedSlug) setSelectedSlug(tours[0].slug);
-    }, [tours, selectedSlug]);
-
-    const selectedTour = tours.find((t) => t.slug === selectedSlug) ?? tours[0];
+    const resolvedSelectedSlug = selectedSlug || tours[0]?.slug || "";
+    const selectedTour = tours.find((t) => t.slug === resolvedSelectedSlug) ?? tours[0];
     const minPrice = selectedTour?.packages?.[0]?.price ?? null;
     const isEs = lang === "es";
 
     const handleBook = () => {
-      const slug = selectedSlug || tours[0]?.slug;
+      const slug = resolvedSelectedSlug || tours[0]?.slug;
       if (!slug) return;
       if (onSelectTour) {
         onSelectTour(slug);
@@ -276,7 +281,7 @@ const HeroBookingWidget = memo<{ onSelectTour?: (slug: string) => void }>(
               </p>
               <div className="relative">
                 <select
-                  value={selectedSlug}
+                  value={resolvedSelectedSlug}
                   onChange={(e) => setSelectedSlug(e.target.value)}
                   className="w-full appearance-none bg-transparent pr-5 text-sm font-bold text-white focus:outline-none cursor-pointer"
                 >
@@ -343,6 +348,47 @@ const HeroBookingWidget = memo<{ onSelectTour?: (slug: string) => void }>(
   }
 );
 HeroBookingWidget.displayName = "HeroBookingWidget";
+
+type TourMetric = {
+  label: string;
+  value: string;
+};
+
+const getLowestPackagePrice = (tour?: TourSummary | null) => {
+  const packagePrices = (tour?.packages ?? [])
+    .map((option) => option.price)
+    .filter((price): price is number => typeof price === "number" && price > 0);
+
+  if (packagePrices.length > 0) return Math.min(...packagePrices);
+  return typeof tour?.priceCRC === "number" ? tour.priceCRC : null;
+};
+
+const formatTourPrice = (tour: TourSummary | undefined, isEs: boolean) => {
+  const price = getLowestPackagePrice(tour);
+  if (price == null) return isEs ? "Consultar" : "Ask";
+  if (price > 1000) {
+    return new Intl.NumberFormat(isEs ? "es-CR" : "en-US", {
+      style: "currency",
+      currency: "CRC",
+      maximumFractionDigits: 0,
+    }).format(price);
+  }
+  return `$${price}`;
+};
+
+const getPriceLabel = (tour: TourSummary | undefined, isEs: boolean) => ({
+  prefix: isEs ? "Desde" : "From",
+  value: formatTourPrice(tour, isEs),
+  suffix: isEs ? "por persona" : "per person",
+});
+
+const getTourTitle = (tour: TourSummary, isEs: boolean) => (isEs ? tour.titleEs : tour.titleEn);
+
+const buildTourMetrics = (tour: TourSummary | undefined, isEs: boolean): TourMetric[] => [
+  { label: isEs ? "Duracion" : "Duration", value: tour?.duration ?? "3-4 h" },
+  { label: isEs ? "Desde" : "From", value: formatTourPrice(tour, isEs) },
+  { label: isEs ? "Zona" : "Zone", value: tour?.location?.split("-")[0]?.trim() || "San Carlos" },
+];
 
 // ─── Header ───────────────────────────────────────────────────────────────────
 const Header = memo<{ isScrolled: boolean }>(({ isScrolled }) => {
@@ -631,6 +677,304 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "1
 };
 
 // ─── DynamicHeroHeader ────────────────────────────────────────────────────────
+const HeroCommandCenter: React.FC<Pick<HeroCarouselProps, "height" | "onSelectTour">> = ({
+  height = "100%",
+  onSelectTour,
+}) => {
+  const { lang } = useLanguage();
+  const { tours } = useReservationData();
+  const isEs = lang === "es";
+  const [activeSlug, setActiveSlug] = useState(tours[0]?.slug ?? "");
+
+  const activeTour = useMemo(
+    () => tours.find((tour) => tour.slug === activeSlug) ?? tours[0],
+    [activeSlug, tours]
+  );
+
+  const activeImage = getTourImage(activeTour?.slug);
+  const handleBook = useCallback(
+    (slug = activeTour?.slug) => {
+      if (!slug) return;
+      if (onSelectTour) {
+        onSelectTour(slug);
+      } else {
+        window.history.replaceState({}, "", `/?tour=${slug}#booking`);
+        document.getElementById("booking")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    },
+    [activeTour?.slug, onSelectTour]
+  );
+
+  if (!activeTour) {
+    return (
+      <section className="flex w-full items-center justify-center bg-zinc-950 text-white" style={{ height }}>
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-teal-400 border-t-transparent" />
+      </section>
+    );
+  }
+
+  return (
+    <section className="relative w-full overflow-hidden bg-[#03080c] text-white" style={{ height }}>
+      <Image
+        key={activeImage}
+        src={activeImage}
+        alt={getTourTitle(activeTour, isEs)}
+        fill
+        priority
+        sizes="100vw"
+        className="object-cover opacity-35 transition-opacity duration-500"
+      />
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(3,8,12,0.97),rgba(3,8,12,0.88)_52%,rgba(3,8,12,0.60)),linear-gradient(180deg,rgba(3,8,12,0.75),rgba(3,8,12,0.18)_44%,rgba(3,8,12,0.97))]" />
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(94,234,212,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(94,234,212,0.04)_1px,transparent_1px)] bg-[size:64px_64px]" />
+
+      <div className="relative z-10 mx-auto h-full max-w-7xl px-4 pb-20 pt-16 md:px-8 md:pb-8 md:pt-24 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(400px,0.82fr)] lg:items-stretch lg:gap-8">
+
+        {/* LEFT: Compact title + Tour catalog */}
+        <div className="flex flex-col">
+          <div className="mb-4 flex flex-wrap items-center gap-2">
+            <div className="inline-flex items-center gap-2 rounded-full border border-teal-100/25 bg-black/32 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.24em] text-teal-50 backdrop-blur-xl">
+              <Sparkles size={13} className="text-amber-300" />
+              {isEs ? "Tours reales · San Carlos" : "Real tours · San Carlos"}
+            </div>
+            <div className="hidden items-center gap-2 rounded-full border border-white/12 bg-black/28 px-3 py-1.5 text-[11px] font-semibold text-white/70 backdrop-blur-xl sm:flex">
+              <ShieldCheck size={14} className="text-teal-200" />
+              {isEs ? "Guías locales | Reserva inmediata" : "Local guides | Instant booking"}
+            </div>
+          </div>
+
+          <h1 className="mb-2 max-w-xl text-balance font-black leading-[0.95] text-white text-[clamp(1.85rem,3.8vw,3.2rem)]">
+            {isEs ? "Elige tu próxima aventura en el Río La Vieja" : "Choose your next Río La Vieja adventure"}
+          </h1>
+          <p className="mb-5 max-w-lg text-sm font-medium text-white/55">
+            {isEs
+              ? "Selecciona un tour para ver detalles, duración, nivel y reservar."
+              : "Select a tour to see details, duration, level and book."}
+          </p>
+
+          <div className="flex-1 space-y-2 overflow-y-auto pb-2 pr-1 [scrollbar-color:rgba(94,234,212,0.35)_rgba(15,23,42,0.5)] [scrollbar-width:thin]">
+            {tours.map((tour, index) => {
+              const active = tour.slug === activeTour.slug;
+              const price = getPriceLabel(tour, isEs);
+              return (
+                <button
+                  key={tour.slug}
+                  type="button"
+                  onClick={() => setActiveSlug(tour.slug)}
+                  onDoubleClick={() => handleBook(tour.slug)}
+                  className={[
+                    "group grid w-full grid-cols-[56px_minmax(0,1fr)_auto] items-center gap-3 rounded-[10px] border p-2.5 text-left transition-all duration-200",
+                    active
+                      ? "border-amber-200/70 bg-amber-200/10 shadow-[0_0_20px_rgba(251,191,36,0.10)]"
+                      : "border-white/10 bg-white/[0.04] hover:border-teal-200/40 hover:bg-white/[0.08]",
+                  ].join(" ")}
+                >
+                  <span className="relative h-14 w-14 overflow-hidden rounded-[8px] border border-white/12 bg-black/30">
+                    <Image
+                      src={getTourImage(tour.slug)}
+                      alt={getTourTitle(tour, isEs)}
+                      fill
+                      sizes="56px"
+                      className="object-cover transition duration-300 group-hover:scale-105"
+                    />
+                    <span className="absolute left-1 top-1 rounded-full bg-black/65 px-1.5 py-0.5 text-[9px] font-black text-white/85">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-black leading-tight text-white">
+                      {getTourTitle(tour, isEs)}
+                    </span>
+                    <span className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0 text-[11px] text-white/50">
+                      {tour.duration && (
+                        <span className="inline-flex items-center gap-1">
+                          <Clock3 size={11} />
+                          {tour.duration}
+                        </span>
+                      )}
+                      {tour.difficulty && (
+                        <span className="inline-flex items-center gap-1">
+                          <Zap size={11} />
+                          {tour.difficulty}
+                        </span>
+                      )}
+                      {tour.location && (
+                        <span className="inline-flex items-center gap-1 truncate">
+                          <MapPin size={11} />
+                          {tour.location.split("-")[0].trim()}
+                        </span>
+                      )}
+                    </span>
+                  </span>
+                  <span className="shrink-0 rounded-[8px] border border-amber-200/20 bg-black/22 px-2.5 py-2 text-right">
+                    <span className="block text-[9px] font-black uppercase tracking-[0.1em] text-amber-100/55">
+                      {price.prefix}
+                    </span>
+                    <span className="block text-sm font-black text-amber-100">{price.value}</span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* RIGHT: Selected tour detail card (desktop only) */}
+        <div className="hidden lg:flex lg:flex-col lg:justify-center">
+          <div className="flex flex-col overflow-hidden rounded-[12px] border border-white/15 bg-black/62 shadow-[0_28px_80px_rgba(0,0,0,0.55)] backdrop-blur-2xl">
+            <div className="relative h-44 w-full overflow-hidden">
+              <Image
+                key={activeImage}
+                src={activeImage}
+                alt={getTourTitle(activeTour, isEs)}
+                fill
+                sizes="480px"
+                className="object-cover transition-opacity duration-500"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent" />
+              {(isEs ? activeTour.tagEs : activeTour.tagEn) && (
+                <span className="absolute left-4 top-4 inline-flex items-center rounded-full border border-amber-300/30 bg-amber-300/15 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-amber-200 backdrop-blur-sm">
+                  {isEs ? activeTour.tagEs : activeTour.tagEn}
+                </span>
+              )}
+              <div className="absolute bottom-0 left-0 right-0 px-5 pb-4">
+                <h2 className="text-lg font-black leading-tight text-white">
+                  {getTourTitle(activeTour, isEs)}
+                </h2>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-4 p-5">
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { Icon: Clock3, label: isEs ? "Duración" : "Duration", value: activeTour.duration || "3-4h" },
+                  { Icon: Zap, label: isEs ? "Nivel" : "Level", value: activeTour.difficulty || (isEs ? "Intermedio" : "Intermediate") },
+                  { Icon: MapPin, label: isEs ? "Zona" : "Zone", value: activeTour.location?.split("-")[0]?.trim() || "San Carlos" },
+                ].map(({ Icon, label, value }) => (
+                  <div key={label} className="rounded-[8px] border border-white/10 bg-white/[0.055] p-2.5">
+                    <Icon size={13} className="mb-1.5 text-teal-300" />
+                    <p className="text-[9px] font-black uppercase tracking-wider text-white/40">{label}</p>
+                    <p className="mt-0.5 truncate text-xs font-black text-white">{value}</p>
+                  </div>
+                ))}
+              </div>
+
+              <p className="text-sm leading-relaxed text-white/65">
+                {(isEs ? activeTour.descriptionEs : activeTour.descriptionEn) ||
+                  (isEs
+                    ? "Aventura guiada con naturaleza real, agua cristalina y rutas locales certificadas."
+                    : "Guided adventure with real nature, crystal water and certified local routes.")}
+              </p>
+
+              {activeTour.inclusions && activeTour.inclusions.length > 0 && (
+                <div>
+                  <p className="mb-2 text-[10px] font-black uppercase tracking-wider text-teal-300">
+                    {isEs ? "¿Qué incluye?" : "What's included?"}
+                  </p>
+                  <ul className="space-y-1.5">
+                    {activeTour.inclusions.slice(0, 5).map((inc) => (
+                      <li key={inc} className="flex items-start gap-2 text-xs text-white/65">
+                        <Check size={12} className="mt-0.5 shrink-0 text-teal-400" />
+                        {inc}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {activeTour.packages && activeTour.packages.length > 0 && (
+                <div>
+                  <p className="mb-2 text-[10px] font-black uppercase tracking-wider text-teal-300">
+                    {isEs ? "Opciones disponibles" : "Available options"}
+                  </p>
+                  <div className="space-y-1.5">
+                    {activeTour.packages.slice(0, 3).map((pkg) => (
+                      <div key={pkg.id ?? pkg.name} className="flex items-center justify-between rounded-[8px] border border-white/10 bg-white/[0.04] px-3 py-2">
+                        <p className="text-xs font-semibold text-white/75">
+                          {isEs ? (pkg.nameEs ?? pkg.name) : pkg.name}
+                        </p>
+                        <span className="shrink-0 text-xs font-black text-teal-300">${pkg.price}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="border-t border-white/10 pt-4">
+                <div className="mb-3 flex items-baseline justify-between">
+                  <span className="text-xs text-white/45">{isEs ? "Precio desde" : "Starting from"}</span>
+                  <div>
+                    <span className="text-2xl font-black text-white">{getPriceLabel(activeTour, isEs).value}</span>
+                    <span className="ml-1 text-xs text-white/40">{isEs ? "/ persona" : "/ person"}</span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleBook()}
+                  className="group flex w-full items-center justify-center gap-2 rounded-[10px] bg-teal-400 py-3 text-sm font-black text-zinc-950 shadow-[0_12px_34px_rgba(45,212,191,0.22)] transition-all hover:-translate-y-0.5 hover:bg-amber-300"
+                >
+                  {isEs ? "Reservar este tour" : "Book this tour"}
+                  <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+                </button>
+                <p className="mt-2 flex items-center justify-center gap-1.5 text-[10px] text-white/35">
+                  <ShieldCheck size={11} />
+                  {isEs ? "Cancelación gratuita hasta 24h antes" : "Free cancellation up to 24h before"}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile: compact CTA for selected tour */}
+        <div className="mt-4 lg:hidden">
+          <div className="overflow-hidden rounded-[10px] border border-white/15 bg-black/55 backdrop-blur-xl">
+            <div className="grid grid-cols-[72px_minmax(0,1fr)]">
+              <div className="relative min-h-[80px] overflow-hidden">
+                <Image
+                  src={activeImage}
+                  alt={getTourTitle(activeTour, isEs)}
+                  fill
+                  sizes="72px"
+                  className="object-cover"
+                />
+              </div>
+              <div className="p-3">
+                <p className="truncate text-sm font-black text-white">{getTourTitle(activeTour, isEs)}</p>
+                <p className="text-[11px] text-white/50">
+                  {activeTour.duration}
+                  {activeTour.difficulty ? ` · ${activeTour.difficulty}` : ""}
+                </p>
+                {activeTour.inclusions && activeTour.inclusions.length > 0 && (
+                  <ul className="mt-1.5 space-y-0.5">
+                    {activeTour.inclusions.slice(0, 2).map((inc) => (
+                      <li key={inc} className="flex items-start gap-1.5 text-[11px] text-white/55">
+                        <Check size={10} className="mt-0.5 shrink-0 text-teal-400" />
+                        <span className="truncate">{inc}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center justify-between gap-3 border-t border-white/10 px-4 py-3">
+              <span className="text-sm font-black text-white">
+                {getPriceLabel(activeTour, isEs).value}
+                <span className="ml-1 text-xs font-normal text-white/40">{isEs ? "/ persona" : "/ person"}</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => handleBook()}
+                className="inline-flex items-center gap-1.5 rounded-[8px] bg-teal-400 px-4 py-2 text-sm font-black text-zinc-950 transition hover:bg-amber-300"
+              >
+                {isEs ? "Reservar" : "Book"}
+                <ArrowRight size={14} />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
 interface DynamicHeroHeaderProps {
   children?: ReactNode;
   showHeroSlider?: boolean;
@@ -645,8 +989,8 @@ export default function DynamicHeroHeader({ children, showHeroSlider = true, onS
     <>
       <Header isScrolled={isScrolled} />
       {showHeroSlider && (
-        <section className="relative h-screen min-h-[600px] overflow-hidden">
-          <HeroCarousel height="100%" overlay={null} onSelectTour={onSelectTour} />
+        <section className="relative h-screen min-h-[760px] overflow-hidden md:min-h-[680px]">
+          <HeroCommandCenter height="100%" onSelectTour={onSelectTour} />
           {children}
         </section>
       )}

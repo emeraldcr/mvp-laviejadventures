@@ -178,7 +178,7 @@ export function ProfileModal({ playerName, open, onClose, onSaved, isFirstTime, 
       })
       .catch(() => setError("No se pudo cargar el perfil."))
       .finally(() => setLoadingFetch(false));
-  }, [open, playerKey]);
+  }, [isFirstTime, open, playerKey]);
 
   useEffect(() => {
     if (!open) return;
@@ -304,6 +304,7 @@ export function ProfileModal({ playerName, open, onClose, onSaved, isFirstTime, 
                       )}
                     >
                       {avatarDataUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
                         <img src={avatarDataUrl} alt="Avatar" className="h-full w-full object-cover" />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#243d18] to-[#0e1d0a]">
@@ -407,6 +408,7 @@ export function ProfileModal({ playerName, open, onClose, onSaved, isFirstTime, 
 
                           {/* Photo */}
                           <div className="idol-sticker-photo relative mt-3 h-16 w-16 overflow-hidden rounded-full border-2 border-white/25 bg-[#07110b] min-[390px]:h-20 min-[390px]:w-20">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={icon.imageUrl} alt={icon.displayName} className="h-full w-full object-cover" />
                             <span className="idol-photo-gloss" />
                             {isSelected && (

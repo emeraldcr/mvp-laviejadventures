@@ -502,6 +502,9 @@ export type OrderDetails = {
   tourSlug: string;
   tourName: string;
   packagePrice: number;
+  specialRequests?: string;
+  addons?: string[];
+  addonsPrice?: number;
 };
 
 export type PaymentModalProps = {

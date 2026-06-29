@@ -271,27 +271,31 @@ export function LiveMatchChat({ liveMatch, playerName, onOpenPlayerPicker }: Pro
     if (newFromOthers.length === 0) return;
 
     if (!isOpen) {
-      setUnreadCount((prev) => prev + newFromOthers.length);
-      playMessageSound();
+      queueMicrotask(() => {
+        setUnreadCount((prev) => prev + newFromOthers.length);
+        playMessageSound();
 
-      // Shake button
-      setShaking(true);
-      clearTimeout(shakeTimerRef.current);
-      shakeTimerRef.current = setTimeout(() => setShaking(false), 650);
+        // Shake button
+        setShaking(true);
+        clearTimeout(shakeTimerRef.current);
+        shakeTimerRef.current = setTimeout(() => setShaking(false), 650);
 
-      // Toast with latest message
-      const latest = newFromOthers[newFromOthers.length - 1];
-      setToast(latest);
-      clearTimeout(toastTimerRef.current);
-      toastTimerRef.current = setTimeout(() => setToast(null), 3_500);
+        // Toast with latest message
+        const latest = newFromOthers[newFromOthers.length - 1];
+        setToast(latest);
+        clearTimeout(toastTimerRef.current);
+        toastTimerRef.current = setTimeout(() => setToast(null), 3_500);
+      });
     }
   }, [confirmedMessages, isOpen, visitorId]);
 
   // Reset unread when opened
   useEffect(() => {
     if (isOpen) {
-      setUnreadCount(0);
-      setToast(null);
+      queueMicrotask(() => {
+        setUnreadCount(0);
+        setToast(null);
+      });
     }
   }, [isOpen]);
 

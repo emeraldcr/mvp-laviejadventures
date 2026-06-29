@@ -23,7 +23,7 @@ import { StatBetsPanel } from "./StatBetsPanel";
 type FeaturedMatchProps = {
   match: MundialMatch;
   draft: Draft;
-  predictions: Prediction[];
+  _predictions: Prediction[];
   nowMs: number;
   activeCountdown?: string;
   playerName: string;
@@ -35,7 +35,7 @@ type FeaturedMatchProps = {
 export function FeaturedMatch({
   match,
   draft,
-  predictions,
+  _predictions,
   nowMs,
   activeCountdown,
   playerName,

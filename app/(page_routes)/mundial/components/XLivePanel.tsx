@@ -104,7 +104,9 @@ export function XLivePanel({ liveMatch }: Props) {
   }, [liveMatch.id, matchLabel]);
 
   useEffect(() => {
-    void loadFeed();
+    queueMicrotask(() => {
+      void loadFeed();
+    });
     const timer = setInterval(() => void loadFeed(true), 45_000);
     return () => clearInterval(timer);
   }, [loadFeed]);

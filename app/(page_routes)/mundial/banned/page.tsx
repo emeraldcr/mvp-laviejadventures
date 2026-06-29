@@ -23,7 +23,7 @@ export default function BannedPage() {
       return;
     }
 
-    setPlayerName(storedName || null);
+    queueMicrotask(() => setPlayerName(storedName || null));
 
     const params = new URLSearchParams();
     if (storedName) params.set("playerName", storedName.toUpperCase());

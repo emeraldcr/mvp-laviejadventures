@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { flagCdnUrl, resolveTeamFlag } from "../flags";
 
 type FlagProps = {
@@ -23,10 +23,6 @@ export function Flag({ team, size = "md", className }: FlagProps) {
   const flagUrl = useMemo(() => (flag.code ? flagCdnUrl(flag.code) : null), [flag.code]);
   const [imageFailed, setImageFailed] = useState(false);
 
-  useEffect(() => {
-    setImageFailed(false);
-  }, [flagUrl]);
-
   const sizeClass = sizeMap[size];
   const classes = `${sizeClass} ${className || ""}`;
 
@@ -44,6 +40,7 @@ export function Flag({ team, size = "md", className }: FlagProps) {
 
   return (
     <img
+      key={flagUrl}
       src={flagUrl}
       alt={`Bandera de ${team}`}
       className={`${classes} object-contain`}

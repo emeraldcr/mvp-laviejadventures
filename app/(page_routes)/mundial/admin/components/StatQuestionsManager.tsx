@@ -246,7 +246,7 @@ function QuestionCard({
 }
 
 export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion, onResolveQuestion, onDeleteQuestion, onBulkDeleteQuestions }: Props) {
-  const now = Date.now();
+  const [now] = useState(() => Date.now());
 
   // "pending" here means unresolved WITH bets — those are the ones admins truly need to action
   const questionStatsByMatch = useMemo(() => {
@@ -334,12 +334,12 @@ export function StatQuestionsManager({ matches, statQuestions, onCreateQuestion,
 
   useEffect(() => {
     if (questionFilter === "pending" && pendingCount === 0 && matchQuestions.length > 0 && zeroBetQuestions.length === 0) {
-      setQuestionFilter("all");
+      queueMicrotask(() => setQuestionFilter("all"));
     }
   }, [matchQuestions.length, pendingCount, questionFilter, zeroBetQuestions.length]);
 
   useEffect(() => {
-    setConfirmBulkDelete(false);
+    queueMicrotask(() => setConfirmBulkDelete(false));
   }, [selectedMatchId]);
 
   const statBetLeaderboard = useMemo(() => {
