@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 
 const MATCHES_COLLECTION = "mundial_matches";
 const PREDICTIONS_COLLECTION = "mundial_predictions";
-const FIXTURE_VERSION = "2026-06-13-costa-rica-kickoffs";
+const FIXTURE_VERSION = "2026-06-29-knockout-bracket";
 const LEGACY_MATCH_ID = "mexico-sudafrica-2026-06-11-13";
 const MAX_SCORE = 30;
 
@@ -139,12 +139,6 @@ function serializeLiveEvent(event: LiveMatchEventDoc, index: number) {
     note: event.note ?? "",
     createdAt: toIsoString(event.createdAt),
   };
-}
-
-function nextOpenMatch(matches: Array<MundialMatchDoc | MundialMatch>, now = new Date()) {
-  return [...matches]
-    .sort((a, b) => kickoffTime(a) - kickoffTime(b) || a.number - b.number)
-    .find((match) => !isMatchClosed(match, now));
 }
 
 function serializeMatch(doc: MundialMatchDoc, now = new Date()) {
@@ -333,15 +327,19 @@ async function ensureMundialData(db: Db) {
 
   await matches.bulkWrite(
     MUNDIAL_MATCHES.map((match) => {
-      // Scores are admin-managed — never overwrite them from fixture data.
-      // Only seed them on first insert via $setOnInsert so version-bumps don't wipe admin entries.
+      // Fixture scores are only defined for confirmed results that should update the public bracket.
       const { homeFinalScore, awayFinalScore, ...fixtureData } = match;
+      const scorePatch =
+        typeof homeFinalScore === "number" && typeof awayFinalScore === "number"
+          ? { homeFinalScore, awayFinalScore }
+          : {};
       return {
         updateOne: {
           filter: { id: match.id },
           update: {
             $set: {
               ...fixtureData,
+              ...scorePatch,
               source: "fifa-world-cup-2026",
               sourceVersion: FIXTURE_VERSION,
               updatedAt: now,
@@ -430,7 +428,6 @@ async function savePrediction(
   const winnerPick = parseWinnerPick(payload.winnerPick);
   const locked = Boolean(payload.locked);
   const now = new Date();
-  const activeMatch = nextOpenMatch(dbMatches, now);
 
   if (!match) throw new ApiError("Partido invalido.");
   if (isMatchClosed(match, now)) throw new ApiError("Ese partido ya cerro. Solo se puede guardar antes del inicio.", 423);

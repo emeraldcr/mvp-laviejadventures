@@ -13,6 +13,7 @@ import Image from "next/image";
 import {
   ArrowRight,
   CalendarCheck,
+  Check,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -349,11 +350,6 @@ const HeroBookingWidget = memo<{ onSelectTour?: (slug: string) => void }>(
 );
 HeroBookingWidget.displayName = "HeroBookingWidget";
 
-type TourMetric = {
-  label: string;
-  value: string;
-};
-
 const getLowestPackagePrice = (tour?: TourSummary | null) => {
   const packagePrices = (tour?.packages ?? [])
     .map((option) => option.price)
@@ -383,12 +379,6 @@ const getPriceLabel = (tour: TourSummary | undefined, isEs: boolean) => ({
 });
 
 const getTourTitle = (tour: TourSummary, isEs: boolean) => (isEs ? tour.titleEs : tour.titleEn);
-
-const buildTourMetrics = (tour: TourSummary | undefined, isEs: boolean): TourMetric[] => [
-  { label: isEs ? "Duracion" : "Duration", value: tour?.duration ?? "3-4 h" },
-  { label: isEs ? "Desde" : "From", value: formatTourPrice(tour, isEs) },
-  { label: isEs ? "Zona" : "Zone", value: tour?.location?.split("-")[0]?.trim() || "San Carlos" },
-];
 
 // ─── Header ───────────────────────────────────────────────────────────────────
 const Header = memo<{ isScrolled: boolean }>(({ isScrolled }) => {

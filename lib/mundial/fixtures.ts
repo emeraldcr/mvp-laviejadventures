@@ -45,12 +45,17 @@ type KnockoutFixture = {
   kickoffAt: string;
   homeSeed: string;
   awaySeed: string;
+  venue?: string;
+  homeTeam?: string;
+  awayTeam?: string;
+  homeFinalScore?: number;
+  awayFinalScore?: number;
 };
 
 const STAGE_LABELS: Record<MundialStage, string> = {
   group: "Grupos",
-  round32: "32avos",
-  round16: "16avos",
+  round32: "Dieciseisavos",
+  round16: "Octavos",
   quarterfinal: "Cuartos",
   semifinal: "Semis",
   thirdPlace: "Tercer lugar",
@@ -205,38 +210,38 @@ const GROUP_FIXTURES: GroupFixture[] = [
 ];
 
 const KNOCKOUT_FIXTURES: KnockoutFixture[] = [
-  { number: 73, stage: "round32", date: "2026-06-28", kickoffAt: "2026-06-28T13:00:00-06:00", homeSeed: "2A", awaySeed: "2B" },
-  { number: 74, stage: "round32", date: "2026-06-29", kickoffAt: "2026-06-29T14:30:00-06:00", homeSeed: "1E", awaySeed: "3A/B/C/D/F" },
-  { number: 75, stage: "round32", date: "2026-06-30", kickoffAt: "2026-06-29T19:00:00-06:00", homeSeed: "1F", awaySeed: "2C" },
-  { number: 76, stage: "round32", date: "2026-06-29", kickoffAt: "2026-06-29T11:00:00-06:00", homeSeed: "1C", awaySeed: "2F" },
-  { number: 77, stage: "round32", date: "2026-06-30", kickoffAt: "2026-06-30T15:00:00-06:00", homeSeed: "1I", awaySeed: "3C/D/F/G/H" },
-  { number: 78, stage: "round32", date: "2026-06-30", kickoffAt: "2026-06-30T11:00:00-06:00", homeSeed: "2E", awaySeed: "2I" },
-  { number: 79, stage: "round32", date: "2026-07-01", kickoffAt: "2026-06-30T19:00:00-06:00", homeSeed: "1A", awaySeed: "3C/E/F/H/I" },
-  { number: 80, stage: "round32", date: "2026-07-01", kickoffAt: "2026-07-01T10:00:00-06:00", homeSeed: "1L", awaySeed: "3E/H/I/J/K" },
-  { number: 81, stage: "round32", date: "2026-07-02", kickoffAt: "2026-07-01T18:00:00-06:00", homeSeed: "1D", awaySeed: "3B/E/F/I/J" },
-  { number: 82, stage: "round32", date: "2026-07-01", kickoffAt: "2026-07-01T14:00:00-06:00", homeSeed: "1G", awaySeed: "3A/E/H/I/J" },
-  { number: 83, stage: "round32", date: "2026-07-03", kickoffAt: "2026-07-02T17:00:00-06:00", homeSeed: "2K", awaySeed: "2L" },
-  { number: 84, stage: "round32", date: "2026-07-02", kickoffAt: "2026-07-02T13:00:00-06:00", homeSeed: "1H", awaySeed: "2J" },
-  { number: 85, stage: "round32", date: "2026-07-03", kickoffAt: "2026-07-02T21:00:00-06:00", homeSeed: "1B", awaySeed: "3E/F/G/I/J" },
-  { number: 86, stage: "round32", date: "2026-07-03", kickoffAt: "2026-07-03T16:00:00-06:00", homeSeed: "1J", awaySeed: "2H" },
-  { number: 87, stage: "round32", date: "2026-07-04", kickoffAt: "2026-07-03T19:30:00-06:00", homeSeed: "1K", awaySeed: "3D/E/I/J/L" },
-  { number: 88, stage: "round32", date: "2026-07-03", kickoffAt: "2026-07-03T12:00:00-06:00", homeSeed: "2D", awaySeed: "2G" },
-  { number: 89, stage: "round16", date: "2026-07-04", kickoffAt: "2026-07-04T11:00:00-06:00", homeSeed: "W73", awaySeed: "W75" },
-  { number: 90, stage: "round16", date: "2026-07-04", kickoffAt: "2026-07-04T15:00:00-06:00", homeSeed: "W74", awaySeed: "W77" },
-  { number: 91, stage: "round16", date: "2026-07-05", kickoffAt: "2026-07-05T14:00:00-06:00", homeSeed: "W76", awaySeed: "W78" },
-  { number: 92, stage: "round16", date: "2026-07-06", kickoffAt: "2026-07-05T18:00:00-06:00", homeSeed: "W79", awaySeed: "W80" },
-  { number: 93, stage: "round16", date: "2026-07-06", kickoffAt: "2026-07-06T13:00:00-06:00", homeSeed: "W83", awaySeed: "W84" },
-  { number: 94, stage: "round16", date: "2026-07-07", kickoffAt: "2026-07-06T18:00:00-06:00", homeSeed: "W81", awaySeed: "W82" },
-  { number: 95, stage: "round16", date: "2026-07-07", kickoffAt: "2026-07-07T10:00:00-06:00", homeSeed: "W86", awaySeed: "W88" },
-  { number: 96, stage: "round16", date: "2026-07-07", kickoffAt: "2026-07-07T14:00:00-06:00", homeSeed: "W85", awaySeed: "W87" },
+  { number: 73, stage: "round32", date: "2026-06-28", kickoffAt: "2026-06-28T17:00:00-04:00", homeSeed: "South Africa", awaySeed: "Canada", homeTeam: "South Africa", awayTeam: "Canada", venue: "SoFi Stadium, Los Angeles", homeFinalScore: 0, awayFinalScore: 1 },
+  { number: 74, stage: "round32", date: "2026-06-29", kickoffAt: "2026-06-29T13:00:00-04:00", homeSeed: "Brazil", awaySeed: "Japan", homeTeam: "Brazil", awayTeam: "Japan", venue: "NRG Stadium, Houston" },
+  { number: 75, stage: "round32", date: "2026-06-29", kickoffAt: "2026-06-29T16:30:00-04:00", homeSeed: "Germany", awaySeed: "Paraguay", homeTeam: "Germany", awayTeam: "Paraguay", venue: "Gillette Stadium, Foxborough" },
+  { number: 76, stage: "round32", date: "2026-06-29", kickoffAt: "2026-06-29T21:00:00-04:00", homeSeed: "Netherlands", awaySeed: "Morocco", homeTeam: "Netherlands", awayTeam: "Morocco", venue: "Estadio BBVA, Monterrey" },
+  { number: 77, stage: "round32", date: "2026-06-30", kickoffAt: "2026-06-30T13:00:00-04:00", homeSeed: "Cote d'Ivoire", awaySeed: "Norway", homeTeam: "Cote d'Ivoire", awayTeam: "Norway", venue: "AT&T Stadium, Arlington" },
+  { number: 78, stage: "round32", date: "2026-06-30", kickoffAt: "2026-06-30T17:00:00-04:00", homeSeed: "France", awaySeed: "Sweden", homeTeam: "France", awayTeam: "Sweden", venue: "MetLife Stadium, East Rutherford" },
+  { number: 79, stage: "round32", date: "2026-06-30", kickoffAt: "2026-06-30T21:00:00-04:00", homeSeed: "Mexico", awaySeed: "Ecuador", homeTeam: "Mexico", awayTeam: "Ecuador", venue: "Estadio Azteca, Mexico City" },
+  { number: 80, stage: "round32", date: "2026-07-01", kickoffAt: "2026-07-01T12:00:00-04:00", homeSeed: "England", awaySeed: "Congo DR", homeTeam: "England", awayTeam: "Congo DR", venue: "Mercedes-Benz Stadium, Atlanta" },
+  { number: 81, stage: "round32", date: "2026-07-01", kickoffAt: "2026-07-01T16:00:00-04:00", homeSeed: "Belgium", awaySeed: "Senegal", homeTeam: "Belgium", awayTeam: "Senegal", venue: "Lumen Field, Seattle" },
+  { number: 82, stage: "round32", date: "2026-07-01", kickoffAt: "2026-07-01T20:00:00-04:00", homeSeed: "USA", awaySeed: "Bosnia and Herzegovina", homeTeam: "USA", awayTeam: "Bosnia and Herzegovina", venue: "Levi's Stadium, Santa Clara" },
+  { number: 83, stage: "round32", date: "2026-07-02", kickoffAt: "2026-07-02T15:00:00-04:00", homeSeed: "Spain", awaySeed: "Austria", homeTeam: "Spain", awayTeam: "Austria", venue: "SoFi Stadium, Los Angeles" },
+  { number: 84, stage: "round32", date: "2026-07-02", kickoffAt: "2026-07-02T19:00:00-04:00", homeSeed: "Portugal", awaySeed: "Croatia", homeTeam: "Portugal", awayTeam: "Croatia", venue: "BMO Field, Toronto" },
+  { number: 85, stage: "round32", date: "2026-07-02", kickoffAt: "2026-07-02T23:00:00-04:00", homeSeed: "Switzerland", awaySeed: "Algeria", homeTeam: "Switzerland", awayTeam: "Algeria", venue: "BC Place, Vancouver" },
+  { number: 86, stage: "round32", date: "2026-07-03", kickoffAt: "2026-07-03T14:00:00-04:00", homeSeed: "Argentina", awaySeed: "Cabo Verde", homeTeam: "Argentina", awayTeam: "Cabo Verde", venue: "Hard Rock Stadium, Miami" },
+  { number: 87, stage: "round32", date: "2026-07-03", kickoffAt: "2026-07-03T18:00:00-04:00", homeSeed: "Colombia", awaySeed: "Ghana", homeTeam: "Colombia", awayTeam: "Ghana", venue: "Arrowhead Stadium, Kansas City" },
+  { number: 88, stage: "round32", date: "2026-07-03", kickoffAt: "2026-07-03T21:30:00-04:00", homeSeed: "Australia", awaySeed: "Egypt", homeTeam: "Australia", awayTeam: "Egypt", venue: "AT&T Stadium, Arlington" },
+  { number: 89, stage: "round16", date: "2026-07-04", kickoffAt: "2026-07-04T13:00:00-04:00", homeSeed: "W74", awaySeed: "W77" },
+  { number: 90, stage: "round16", date: "2026-07-04", kickoffAt: "2026-07-04T17:00:00-04:00", homeSeed: "W75", awaySeed: "W78" },
+  { number: 91, stage: "round16", date: "2026-07-05", kickoffAt: "2026-07-05T13:00:00-04:00", homeSeed: "W76", awaySeed: "W73" },
+  { number: 92, stage: "round16", date: "2026-07-05", kickoffAt: "2026-07-05T17:00:00-04:00", homeSeed: "W79", awaySeed: "W80" },
+  { number: 93, stage: "round16", date: "2026-07-06", kickoffAt: "2026-07-06T13:00:00-04:00", homeSeed: "W84", awaySeed: "W83" },
+  { number: 94, stage: "round16", date: "2026-07-06", kickoffAt: "2026-07-06T17:00:00-04:00", homeSeed: "W82", awaySeed: "W81" },
+  { number: 95, stage: "round16", date: "2026-07-07", kickoffAt: "2026-07-07T13:00:00-04:00", homeSeed: "W86", awaySeed: "W88" },
+  { number: 96, stage: "round16", date: "2026-07-07", kickoffAt: "2026-07-07T17:00:00-04:00", homeSeed: "W85", awaySeed: "W87" },
   { number: 97, stage: "quarterfinal", date: "2026-07-09", kickoffAt: "2026-07-09T14:00:00-06:00", homeSeed: "W89", awaySeed: "W90" },
   { number: 98, stage: "quarterfinal", date: "2026-07-10", kickoffAt: "2026-07-10T13:00:00-06:00", homeSeed: "W93", awaySeed: "W94" },
   { number: 99, stage: "quarterfinal", date: "2026-07-11", kickoffAt: "2026-07-11T15:00:00-06:00", homeSeed: "W91", awaySeed: "W92" },
   { number: 100, stage: "quarterfinal", date: "2026-07-11", kickoffAt: "2026-07-11T19:00:00-06:00", homeSeed: "W95", awaySeed: "W96" },
   { number: 101, stage: "semifinal", date: "2026-07-14", kickoffAt: "2026-07-14T13:00:00-06:00", homeSeed: "W97", awaySeed: "W98" },
   { number: 102, stage: "semifinal", date: "2026-07-15", kickoffAt: "2026-07-15T13:00:00-06:00", homeSeed: "W99", awaySeed: "W100" },
-  { number: 103, stage: "thirdPlace", date: "2026-07-18", kickoffAt: "2026-07-18T15:00:00-06:00", homeSeed: "L101", awaySeed: "L102" },
-  { number: 104, stage: "final", date: "2026-07-19", kickoffAt: "2026-07-19T13:00:00-06:00", homeSeed: "W101", awaySeed: "W102" },
+  { number: 103, stage: "thirdPlace", date: "2026-07-18", kickoffAt: "2026-07-18T17:00:00-04:00", homeSeed: "L101", awaySeed: "L102", venue: "Hard Rock Stadium, Miami" },
+  { number: 104, stage: "final", date: "2026-07-19", kickoffAt: "2026-07-19T15:00:00-04:00", homeSeed: "W101", awaySeed: "W102", venue: "MetLife Stadium, East Rutherford" },
 ];
 
 function matchId(number: number) {
@@ -275,11 +280,13 @@ export const MUNDIAL_MATCHES: MundialMatch[] = [
     stageLabel: STAGE_LABELS[fixture.stage],
     date: fixture.date,
     kickoffAt: fixture.kickoffAt,
-    venue: "Por confirmar",
-    homeTeam: knockoutTeam(fixture.homeSeed),
-    awayTeam: knockoutTeam(fixture.awaySeed),
+    venue: fixture.venue ?? "Por confirmar",
+    homeTeam: fixture.homeTeam ?? knockoutTeam(fixture.homeSeed),
+    awayTeam: fixture.awayTeam ?? knockoutTeam(fixture.awaySeed),
     homeSeed: fixture.homeSeed,
     awaySeed: fixture.awaySeed,
+    homeFinalScore: fixture.homeFinalScore,
+    awayFinalScore: fixture.awayFinalScore,
     sortOrder: fixture.number,
   })),
 ];
