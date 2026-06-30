@@ -116,6 +116,7 @@ export async function PATCH(req: NextRequest) {
     const $set: Record<string, unknown> = { updatedAt: new Date() };
     let matchTeams: MatchTeams | null = null;
     let touchedLiveState = false;
+    let touchedFinalScore = false;
 
     async function readMatchTeams() {
       if (!matchTeams) {
@@ -132,6 +133,7 @@ export async function PATCH(req: NextRequest) {
         return NextResponse.json({ error: "homeFinalScore invalido (0-30)." }, { status: 400 });
       }
       $set.homeFinalScore = parsed;
+      touchedFinalScore = true;
     }
 
     if ("awayFinalScore" in body) {
@@ -140,6 +142,7 @@ export async function PATCH(req: NextRequest) {
         return NextResponse.json({ error: "awayFinalScore invalido (0-30)." }, { status: 400 });
       }
       $set.awayFinalScore = parsed;
+      touchedFinalScore = true;
     }
 
     if ("forceClosed" in body) {
@@ -231,6 +234,49 @@ export async function PATCH(req: NextRequest) {
           $set.actualWinner =
             finalHomeScore > finalAwayScore ? "home" : finalAwayScore > finalHomeScore ? "away" : null;
         }
+      }
+    }
+
+    if (touchedFinalScore) {
+      const existingMatch = await db
+        .collection<{
+          homeFinalScore?: number | null;
+          awayFinalScore?: number | null;
+          stage?: string;
+          actualWinner?: "home" | "away" | null;
+        }>(MATCHES_COLLECTION)
+        .findOne({ id: matchId }, { projection: { homeFinalScore: 1, awayFinalScore: 1, stage: 1, actualWinner: 1 } });
+
+      if (!existingMatch) {
+        return NextResponse.json({ error: "Partido no encontrado." }, { status: 404 });
+      }
+
+      const finalHomeScore =
+        "homeFinalScore" in $set ? $set.homeFinalScore : existingMatch.homeFinalScore;
+      const finalAwayScore =
+        "awayFinalScore" in $set ? $set.awayFinalScore : existingMatch.awayFinalScore;
+
+      if (typeof finalHomeScore === "number" && typeof finalAwayScore === "number") {
+        const finalActualWinner =
+          "actualWinner" in $set ? $set.actualWinner : existingMatch.actualWinner;
+
+        if (existingMatch.stage !== "group" && finalHomeScore !== finalAwayScore) {
+          $set.actualWinner = finalHomeScore > finalAwayScore ? "home" : "away";
+        }
+
+        if (
+          existingMatch.stage !== "group" &&
+          finalHomeScore === finalAwayScore &&
+          finalActualWinner !== "home" &&
+          finalActualWinner !== "away"
+        ) {
+          return NextResponse.json(
+            { error: "En eliminatoria empatada tenes que elegir quien pasa." },
+            { status: 400 }
+          );
+        }
+
+        if (!("forceClosed" in body)) $set.forceClosed = true;
       }
     }
 

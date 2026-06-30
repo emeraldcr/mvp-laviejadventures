@@ -1,23 +1,30 @@
 'use client';
-import type { GameState } from '../types';
+import * as THREE from 'three';
+import type { GameState, LevelData } from '../types';
+import { TrailMiniMap } from './TrailMiniMap';
 
 interface Props {
   state: GameState;
+  level: LevelData;
+  playerPosRef: React.MutableRefObject<THREE.Vector3>;
   onRestart: () => void;
+  onEnterLevel: (levelIndex: number) => void;
+  onResetAdventure: () => void;
 }
 
-export function GameUI({ state, onRestart }: Props) {
+export function GameUI({ state, level, playerPosRef, onRestart, onEnterLevel, onResetAdventure }: Props) {
   const { lives, score, crystals, totalCrystals, status } = state;
 
   return (
     <div
       style={{
-        position: 'absolute', inset: 0,
-        pointerEvents: 'none', zIndex: 10,
+        position: 'absolute',
+        inset: 0,
+        pointerEvents: 'none',
+        zIndex: 10,
         fontFamily: '"Courier New", monospace',
       }}
     >
-      {/* HUD top-left */}
       <div style={{ position: 'absolute', top: 16, left: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
         <div style={{ display: 'flex', gap: 6 }}>
           {Array.from({ length: 3 }).map((_, i) => (
@@ -34,39 +41,74 @@ export function GameUI({ state, onRestart }: Props) {
         </div>
       </div>
 
-      {/* Title top-center */}
       <div style={{ position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)', textAlign: 'center' }}>
         <div style={{ color: '#4fc3f7', fontSize: 11, letterSpacing: 3, textShadow: '0 0 12px #4fc3f7' }}>
           FANTASMA DE LA CIUDAD ESMERALDA
         </div>
+        <div style={{ color: '#ffffff78', fontSize: 10, marginTop: 4 }}>
+          {level.title}
+        </div>
       </div>
 
-      {/* Controls hint bottom-right */}
-      <div style={{ position: 'absolute', bottom: 14, right: 14, color: '#ffffff40', fontSize: 10, textAlign: 'right', lineHeight: 1.6 }}>
-        ← → / A D — mover<br />
-        ESPACIO / ↑ — saltar<br />
-        Mantén ESPACIO en aire — planear
-      </div>
+      {status === 'playing' || status === 'dead' ? (
+        <TrailMiniMap state={state} level={level} playerPosRef={playerPosRef} />
+      ) : null}
 
-      {/* Death overlay */}
-      {status === 'dead' && (
+      {status === 'playing' ? (
+        <div style={{ position: 'absolute', bottom: 14, right: 14, color: '#ffffff40', fontSize: 10, textAlign: 'right', lineHeight: 1.6 }}>
+          ← → / A D - mover<br />
+          ESPACIO / ↑ - saltar<br />
+          Manten ESPACIO en aire - planear
+        </div>
+      ) : null}
+
+      {(status === 'map' || status === 'complete') && (
         <div style={{
-          position: 'absolute', inset: 0,
-          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          background: 'rgba(5,0,15,0.72)',
+          position: 'absolute',
+          inset: 0,
+          pointerEvents: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 14,
+          padding: 16,
+          background: 'radial-gradient(circle at 50% 35%, rgba(0, 80, 52, 0.28), rgba(5, 12, 16, 0.94) 62%)',
         }}>
-          <p style={{ color: '#ff4444', fontSize: 30, margin: 0, textShadow: '0 0 24px #ff4444' }}>
-            ¡Caíste al Río La Vieja!
-          </p>
-          <p style={{ color: '#888', fontSize: 13, marginTop: 10 }}>Reapareciendo…</p>
+          <TrailMiniMap state={state} level={level} variant="full" onEnterLevel={onEnterLevel} />
+          {status === 'complete' ? (
+            <button onClick={onResetAdventure} style={btnStyle('#00e676')}>REINICIAR AVENTURA</button>
+          ) : null}
         </div>
       )}
 
-      {/* Game Over */}
+      {status === 'dead' && (
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'rgba(5,0,15,0.72)',
+        }}>
+          <p style={{ color: '#ff4444', fontSize: 30, margin: 0, textShadow: '0 0 24px #ff4444' }}>
+            Caíste al Rio La Vieja
+          </p>
+          <p style={{ color: '#888', fontSize: 13, marginTop: 10 }}>Reapareciendo...</p>
+        </div>
+      )}
+
       {status === 'gameover' && (
         <div style={{
-          position: 'absolute', inset: 0, pointerEvents: 'auto',
-          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16,
+          position: 'absolute',
+          inset: 0,
+          pointerEvents: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 16,
           background: 'rgba(5,0,15,0.88)',
         }}>
           <p style={{ color: '#ff4444', fontSize: 36, margin: 0, textShadow: '0 0 30px #ff4444' }}>
@@ -75,24 +117,29 @@ export function GameUI({ state, onRestart }: Props) {
           <p style={{ color: '#ffd700', fontSize: 16, margin: 0 }}>
             💎 {crystals}/{totalCrystals} cristales · ⭐ {score} pts
           </p>
-          <button onClick={onRestart} style={btnStyle('#ff4444')}>REINTENTAR</button>
+          <button onClick={onRestart} style={btnStyle('#ff4444')}>REINTENTAR TRAMO</button>
         </div>
       )}
 
-      {/* Win */}
       {status === 'win' && (
         <div style={{
-          position: 'absolute', inset: 0, pointerEvents: 'auto',
-          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16,
+          position: 'absolute',
+          inset: 0,
+          pointerEvents: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 16,
           background: 'rgba(0,15,8,0.88)',
         }}>
           <p style={{ color: '#00e676', fontSize: 32, margin: 0, textShadow: '0 0 30px #00e676', letterSpacing: 2 }}>
-            ¡NIVEL COMPLETO!
+            NIVEL COMPLETO
           </p>
           <p style={{ color: '#ffd700', fontSize: 16, margin: 0 }}>
             💎 {crystals}/{totalCrystals} cristales · ⭐ {score} pts
           </p>
-          <button onClick={onRestart} style={btnStyle('#00e676')}>JUGAR DE NUEVO</button>
+          <button onClick={onRestart} style={btnStyle('#00e676')}>SEGUIR</button>
         </div>
       )}
     </div>

@@ -22,6 +22,7 @@ export type MundialMatch = {
   awaySeed?: string;
   homeFinalScore?: number;
   awayFinalScore?: number;
+  actualWinner?: "home" | "away" | null;
   sortOrder: number;
 };
 
@@ -50,6 +51,7 @@ type KnockoutFixture = {
   awayTeam?: string;
   homeFinalScore?: number;
   awayFinalScore?: number;
+  actualWinner?: "home" | "away" | null;
 };
 
 const STAGE_LABELS: Record<MundialStage, string> = {
@@ -211,9 +213,9 @@ const GROUP_FIXTURES: GroupFixture[] = [
 
 const KNOCKOUT_FIXTURES: KnockoutFixture[] = [
   { number: 73, stage: "round32", date: "2026-06-28", kickoffAt: "2026-06-28T17:00:00-04:00", homeSeed: "South Africa", awaySeed: "Canada", homeTeam: "South Africa", awayTeam: "Canada", venue: "SoFi Stadium, Los Angeles", homeFinalScore: 0, awayFinalScore: 1 },
-  { number: 74, stage: "round32", date: "2026-06-29", kickoffAt: "2026-06-29T13:00:00-04:00", homeSeed: "Brazil", awaySeed: "Japan", homeTeam: "Brazil", awayTeam: "Japan", venue: "NRG Stadium, Houston" },
-  { number: 75, stage: "round32", date: "2026-06-29", kickoffAt: "2026-06-29T16:30:00-04:00", homeSeed: "Germany", awaySeed: "Paraguay", homeTeam: "Germany", awayTeam: "Paraguay", venue: "Gillette Stadium, Foxborough" },
-  { number: 76, stage: "round32", date: "2026-06-29", kickoffAt: "2026-06-29T21:00:00-04:00", homeSeed: "Netherlands", awaySeed: "Morocco", homeTeam: "Netherlands", awayTeam: "Morocco", venue: "Estadio BBVA, Monterrey" },
+  { number: 74, stage: "round32", date: "2026-06-29", kickoffAt: "2026-06-29T13:00:00-04:00", homeSeed: "Brazil", awaySeed: "Japan", homeTeam: "Brazil", awayTeam: "Japan", venue: "NRG Stadium, Houston", homeFinalScore: 2, awayFinalScore: 1 },
+  { number: 75, stage: "round32", date: "2026-06-29", kickoffAt: "2026-06-29T16:30:00-04:00", homeSeed: "Germany", awaySeed: "Paraguay", homeTeam: "Germany", awayTeam: "Paraguay", venue: "Gillette Stadium, Foxborough", homeFinalScore: 1, awayFinalScore: 1, actualWinner: "away" },
+  { number: 76, stage: "round32", date: "2026-06-29", kickoffAt: "2026-06-29T21:00:00-04:00", homeSeed: "Netherlands", awaySeed: "Morocco", homeTeam: "Netherlands", awayTeam: "Morocco", venue: "Estadio BBVA, Monterrey", homeFinalScore: 1, awayFinalScore: 1, actualWinner: "away" },
   { number: 77, stage: "round32", date: "2026-06-30", kickoffAt: "2026-06-30T13:00:00-04:00", homeSeed: "Cote d'Ivoire", awaySeed: "Norway", homeTeam: "Cote d'Ivoire", awayTeam: "Norway", venue: "AT&T Stadium, Arlington" },
   { number: 78, stage: "round32", date: "2026-06-30", kickoffAt: "2026-06-30T17:00:00-04:00", homeSeed: "France", awaySeed: "Sweden", homeTeam: "France", awayTeam: "Sweden", venue: "MetLife Stadium, East Rutherford" },
   { number: 79, stage: "round32", date: "2026-06-30", kickoffAt: "2026-06-30T21:00:00-04:00", homeSeed: "Mexico", awaySeed: "Ecuador", homeTeam: "Mexico", awayTeam: "Ecuador", venue: "Estadio Azteca, Mexico City" },
@@ -287,6 +289,7 @@ export const MUNDIAL_MATCHES: MundialMatch[] = [
     awaySeed: fixture.awaySeed,
     homeFinalScore: fixture.homeFinalScore,
     awayFinalScore: fixture.awayFinalScore,
+    actualWinner: fixture.actualWinner,
     sortOrder: fixture.number,
   })),
 ];

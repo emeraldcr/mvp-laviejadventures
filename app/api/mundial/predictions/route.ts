@@ -5,14 +5,16 @@ import { getDb } from "@/lib/helpers/mongodb";
 import { isBanned } from "@/lib/mundial/bans";
 import { recordMundialAnalyticsEvent } from "@/lib/mundial/analytics";
 import { serializeBettingFavorite, type BettingFavorite } from "@/lib/mundial/betting";
-import { MUNDIAL_MATCHES, MUNDIAL_TOTAL_MATCHES, type MundialMatch } from "@/lib/mundial/fixtures";
+import type { MundialMatch } from "@/lib/mundial/fixtures";
 import { serializeLiveMatchStats, type LiveMatchStats } from "@/lib/mundial/live-stats";
+import {
+  MUNDIAL_FIXTURE_VERSION,
+  MUNDIAL_PREDICTIONS_COLLECTION,
+  readMundialMatches,
+} from "@/lib/mundial/matches-store";
 
 export const dynamic = "force-dynamic";
 
-const MATCHES_COLLECTION = "mundial_matches";
-const PREDICTIONS_COLLECTION = "mundial_predictions";
-const FIXTURE_VERSION = "2026-06-29-knockout-bracket";
 const LEGACY_MATCH_ID = "mexico-sudafrica-2026-06-11-13";
 const MAX_SCORE = 30;
 
@@ -309,58 +311,8 @@ function serializePlayer(player: {
   };
 }
 
-async function ensureMundialData(db: Db) {
-  const matches = db.collection<MundialMatchDoc>(MATCHES_COLLECTION);
-  const predictions = db.collection<PredictionDoc>(PREDICTIONS_COLLECTION);
-  const seededCount = await matches.countDocuments({ sourceVersion: FIXTURE_VERSION });
-
-  await Promise.all([
-    matches.createIndex({ id: 1 }, { unique: true }),
-    matches.createIndex({ sortOrder: 1 }),
-    predictions.createIndex({ matchId: 1, normalizedName: 1 }, { unique: true }),
-    predictions.createIndex({ normalizedName: 1, updatedAt: -1 }),
-  ]);
-
-  if (seededCount === MUNDIAL_TOTAL_MATCHES) return;
-
-  const now = new Date();
-
-  await matches.bulkWrite(
-    MUNDIAL_MATCHES.map((match) => {
-      // Fixture scores are only defined for confirmed results that should update the public bracket.
-      const { homeFinalScore, awayFinalScore, ...fixtureData } = match;
-      const scorePatch =
-        typeof homeFinalScore === "number" && typeof awayFinalScore === "number"
-          ? { homeFinalScore, awayFinalScore }
-          : {};
-      return {
-        updateOne: {
-          filter: { id: match.id },
-          update: {
-            $set: {
-              ...fixtureData,
-              ...scorePatch,
-              source: "fifa-world-cup-2026",
-              sourceVersion: FIXTURE_VERSION,
-              updatedAt: now,
-            },
-            $setOnInsert: {
-              createdAt: now,
-              ...(homeFinalScore !== undefined && { homeFinalScore }),
-              ...(awayFinalScore !== undefined && { awayFinalScore }),
-            },
-          },
-          upsert: true,
-        },
-      };
-    }),
-    { ordered: false }
-  );
-}
-
 async function readMatches(db: Db) {
-  await ensureMundialData(db);
-  return db.collection<MundialMatchDoc>(MATCHES_COLLECTION).find({}).sort({ sortOrder: 1 }).toArray();
+  return readMundialMatches<MundialMatchDoc>(db);
 }
 
 async function readPlayers(
@@ -376,7 +328,7 @@ async function readPlayers(
   const predictionDocs =
     docs ??
     (await db
-      .collection<PredictionDoc>(PREDICTIONS_COLLECTION)
+      .collection<PredictionDoc>(MUNDIAL_PREDICTIONS_COLLECTION)
       .find({})
       .sort({ updatedAt: -1 })
       .toArray());
@@ -434,7 +386,7 @@ async function savePrediction(
   if (!playerName || homeScore === null || awayScore === null) throw new ApiError("Faltan datos para guardar la prediccion.");
   if (match.stage !== "group" && homeScore === awayScore && !winnerPick) throw new ApiError("Elegis quien pasa antes de guardar una llave empatada.");
 
-  const predictions = db.collection<PredictionDoc>(PREDICTIONS_COLLECTION);
+  const predictions = db.collection<PredictionDoc>(MUNDIAL_PREDICTIONS_COLLECTION);
   const existing = await predictions.findOne({ matchId, normalizedName });
   const currentScores = existing ? predictionScores(existing) : null;
   const changesLockedScore =
@@ -480,13 +432,13 @@ export async function GET(req: NextRequest) {
     const matches = await readMatches(db);
     const now = new Date();
     const matchesById = new Map(matches.map((m) => [m.id, m]));
-    const predictions = db.collection<PredictionDoc>(PREDICTIONS_COLLECTION);
+    const predictions = db.collection<PredictionDoc>(MUNDIAL_PREDICTIONS_COLLECTION);
     const predictionDocs = await predictions.find({}).sort({ updatedAt: -1, playerName: 1 }).toArray();
     const players = await readPlayers(db, matchesById, now, predictionDocs);
     const visiblePredictions = visiblePredictionDocs(predictionDocs, playerName);
 
     return NextResponse.json({
-      fixtureVersion: FIXTURE_VERSION,
+      fixtureVersion: MUNDIAL_FIXTURE_VERSION,
       matches: matches.map((m) => serializeMatch(m, now)),
       predictions: visiblePredictions.map((p) => serializePrediction(p, matchesById, now)),
       players: players.map(serializePlayer),

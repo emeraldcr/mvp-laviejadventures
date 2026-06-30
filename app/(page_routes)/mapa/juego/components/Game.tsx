@@ -8,7 +8,8 @@ import { Environment } from './Environment';
 import { GameUI }      from './GameUI';
 import { useKeyboard } from '../hooks/useKeyboard';
 import { useGameState } from '../hooks/useGameState';
-import { SPAWN_POSITION, PLATFORMS } from '../data/levelData';
+import { GAME_LEVELS } from '../data/levelData';
+import type { LevelData } from '../types';
 
 // ── Camera Rig ────────────────────────────────────────────────────────────────
 function CameraRig({ targetRef }: { targetRef: React.MutableRefObject<THREE.Vector3> }) {
@@ -30,6 +31,7 @@ function CameraRig({ targetRef }: { targetRef: React.MutableRefObject<THREE.Vect
 function Scene({
   gameStatus,
   playerPosRef,
+  level,
   levelKey,
   onDie,
   onCollect,
@@ -38,6 +40,7 @@ function Scene({
 }: {
   gameStatus:   string;
   playerPosRef: React.MutableRefObject<THREE.Vector3>;
+  level:         LevelData;
   levelKey:     number;
   onDie:        () => void;
   onCollect:    (id: string) => void;
@@ -52,8 +55,8 @@ function Scene({
       <Environment />
       <Player
         keys={keys}
-        platforms={PLATFORMS}
-        spawnPos={SPAWN_POSITION}
+        platforms={level.platforms}
+        spawnPos={level.spawnPosition}
         playerPosRef={playerPosRef}
         gameStatus={gameStatus}
         onDie={onDie}
@@ -61,6 +64,7 @@ function Scene({
       {/* key forces a full remount of Level (and child Collectibles) on restart */}
       <Level
         key={levelKey}
+        level={level}
         playerPosRef={playerPosRef}
         onCollect={onCollect}
         onPlayerHit={onPlayerHit}
@@ -73,8 +77,9 @@ function Scene({
 
 // ── Game root ─────────────────────────────────────────────────────────────────
 export default function Game() {
-  const { state, collectCrystal, die, respawn, win, restart } = useGameState();
-  const playerPosRef = useRef(new THREE.Vector3(...SPAWN_POSITION));
+  const { state, collectCrystal, die, respawn, win, restart, enterLevel, resetAdventure } = useGameState();
+  const level = GAME_LEVELS[state.currentLevelIndex] ?? GAME_LEVELS[0];
+  const playerPosRef = useRef(new THREE.Vector3(...level.spawnPosition));
 
   // Auto-respawn 2 s after death (not game over)
   useEffect(() => {
@@ -86,9 +91,9 @@ export default function Game() {
   // Snap player position ref on respawn so camera doesn't lag
   useEffect(() => {
     if (state.status === 'playing') {
-      playerPosRef.current.set(...SPAWN_POSITION);
+      playerPosRef.current.set(...level.spawnPosition);
     }
-  }, [state.restartKey]); // only on full restart
+  }, [level.spawnPosition, state.restartKey, state.status]);
 
   return (
     <div
@@ -101,19 +106,20 @@ export default function Game() {
     >
       <Canvas
         camera={{
-          position: [SPAWN_POSITION[0], SPAWN_POSITION[1] + 2.8, 10],
+          position: [level.spawnPosition[0], level.spawnPosition[1] + 2.8, 10],
           fov: 62,
           near: 0.1,
           far: 100,
         }}
         style={{ width: '100%', height: '100%' }}
-        gl={{ antialias: true, alpha: false }}
-        dpr={[1, 2]}
+        gl={{ antialias: false, alpha: false, powerPreference: 'high-performance' }}
+        dpr={1}
       >
         <Suspense fallback={null}>
           <Scene
             gameStatus={state.status}
             playerPosRef={playerPosRef}
+            level={level}
             levelKey={state.restartKey}
             onDie={die}
             onCollect={collectCrystal}
@@ -123,7 +129,14 @@ export default function Game() {
         </Suspense>
       </Canvas>
 
-      <GameUI state={state} onRestart={restart} />
+      <GameUI
+        state={state}
+        level={level}
+        playerPosRef={playerPosRef}
+        onRestart={restart}
+        onEnterLevel={enterLevel}
+        onResetAdventure={resetAdventure}
+      />
     </div>
   );
 }

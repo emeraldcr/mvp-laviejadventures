@@ -4,9 +4,10 @@ import { Platform }    from './Platform';
 import { Collectible } from './Collectible';
 import { Enemy }       from './Enemy';
 import { Goal }        from './Goal';
-import { PLATFORMS, COLLECTIBLES, ENEMIES, GOAL_POSITION } from '../data/levelData';
+import type { LevelData } from '../types';
 
 interface Props {
+  level: LevelData;
   playerPosRef: React.MutableRefObject<THREE.Vector3>;
   onCollect:    (id: string) => void;
   onPlayerHit:  () => void;
@@ -14,12 +15,12 @@ interface Props {
   gameStatus:   string;
 }
 
-export function Level({ playerPosRef, onCollect, onPlayerHit, onWin, gameStatus }: Props) {
+export function Level({ level, playerPosRef, onCollect, onPlayerHit, onWin, gameStatus }: Props) {
   return (
     <>
-      {PLATFORMS.map(p => <Platform key={p.id} data={p} />)}
+      {level.platforms.map(p => <Platform key={p.id} data={p} />)}
 
-      {COLLECTIBLES.map(c => (
+      {level.collectibles.map(c => (
         <Collectible
           key={c.id}
           data={c}
@@ -28,7 +29,7 @@ export function Level({ playerPosRef, onCollect, onPlayerHit, onWin, gameStatus 
         />
       ))}
 
-      {ENEMIES.map(e => (
+      {level.enemies.map(e => (
         <Enemy
           key={e.id}
           data={e}
@@ -39,7 +40,7 @@ export function Level({ playerPosRef, onCollect, onPlayerHit, onWin, gameStatus 
       ))}
 
       <Goal
-        position={GOAL_POSITION}
+        position={level.goalPosition}
         playerPosRef={playerPosRef}
         onWin={onWin}
         gameStatus={gameStatus}

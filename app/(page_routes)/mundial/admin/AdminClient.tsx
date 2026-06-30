@@ -71,7 +71,7 @@ export default function AdminClient() {
   const [isSyncingOdds, setIsSyncingOdds] = useState(false);
   const [bracketMessage, setBracketMessage] = useState("");
   const [isPropagatingBracket, setIsPropagatingBracket] = useState(false);
-  const [matchFilter, setMatchFilter] = useState<MatchFilter>("upcoming");
+  const [matchFilter, setMatchFilter] = useState<MatchFilter>("recent");
   const [selectedPlayer, setSelectedPlayer] = useState<LeaderboardEntry | null>(null);
 
   const load = useCallback(async () => {

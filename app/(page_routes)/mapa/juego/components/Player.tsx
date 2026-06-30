@@ -27,6 +27,7 @@ interface Props {
 
 export function Player({ keys, platforms, spawnPos, playerPosRef, gameStatus, onDie }: Props) {
   const groupRef   = useRef<THREE.Group>(null);
+  const visualRef  = useRef<THREE.Group>(null);
   const vel        = useRef(new THREE.Vector3());
   const grounded   = useRef(false);
   const jumpCount  = useRef(0);
@@ -90,39 +91,36 @@ export function Player({ keys, platforms, spawnPos, playerPosRef, gameStatus, on
     }
     jumpWas.current = jumpNow;
 
-    // ── Apply velocity ────────────────────────────────────────
+    // ── Apply X, resolve X collisions ────────────────────────
     pos.x += vel.current.x * dt;
-    pos.y += vel.current.y * dt;
-
-    // ── AABB Platform collision ───────────────────────────────
     for (const p of platforms) {
       const [px, py] = p.position;
       const [pw, ph] = p.size;
-
-      // Signed overlap on each axis (negative = penetrating)
       const ox = Math.abs(pos.x - px) - (pw * 0.5 + P_HALF_W);
       const oy = Math.abs(pos.y - py) - (ph * 0.5 + P_HALF_H);
-
       if (ox < 0 && oy < 0) {
-        // Resolve minimum penetration axis
-        if (ox > oy) {
-          // Less penetration in X → horizontal collision
-          const pushX = pw * 0.5 + P_HALF_W - Math.abs(pos.x - px);
-          pos.x += pos.x > px ? pushX : -pushX;
-          vel.current.x = 0;
+        const pushX = pw * 0.5 + P_HALF_W - Math.abs(pos.x - px);
+        pos.x += pos.x > px ? pushX : -pushX;
+        vel.current.x = 0;
+      }
+    }
+
+    // ── Apply Y, resolve Y collisions ────────────────────────
+    pos.y += vel.current.y * dt;
+    for (const p of platforms) {
+      const [px, py] = p.position;
+      const [pw, ph] = p.size;
+      const ox = Math.abs(pos.x - px) - (pw * 0.5 + P_HALF_W);
+      const oy = Math.abs(pos.y - py) - (ph * 0.5 + P_HALF_H);
+      if (ox < 0 && oy < 0) {
+        if (pos.y > py) {
+          pos.y = py + ph * 0.5 + P_HALF_H;
+          if (vel.current.y < 0) vel.current.y = 0;
+          grounded.current  = true;
+          jumpCount.current = 0;
         } else {
-          // Less penetration in Y → vertical collision
-          if (pos.y > py) {
-            // Land on top
-            pos.y = py + ph * 0.5 + P_HALF_H;
-            if (vel.current.y < 0) vel.current.y = 0;
-            grounded.current  = true;
-            jumpCount.current = 0;
-          } else {
-            // Hit ceiling
-            pos.y = py - ph * 0.5 - P_HALF_H;
-            if (vel.current.y > 0) vel.current.y = 0;
-          }
+          pos.y = py - ph * 0.5 - P_HALF_H;
+          if (vel.current.y > 0) vel.current.y = 0;
         }
       }
     }
@@ -138,18 +136,20 @@ export function Player({ keys, platforms, spawnPos, playerPosRef, gameStatus, on
 
     // ── Visual animations ─────────────────────────────────────
     const g = groupRef.current;
+    const v = visualRef.current;
 
     // Flip based on facing
     g.scale.x = facingR.current ? 1 : -1;
 
     if (grounded.current) {
-      // Ghost hover wobble
-      g.position.y += Math.sin(animT.current * 4.5) * 0.007;
+      // Hover wobble on the visual group only (doesn't touch physics position)
+      if (v) v.position.y = Math.sin(animT.current * 4.5) * 0.007;
       // Running lean
       g.rotation.z = THREE.MathUtils.lerp(g.rotation.z, -moveX * 0.14, 0.14);
       // Squash to normal
       g.scale.y = THREE.MathUtils.lerp(g.scale.y, 1,    0.18);
     } else {
+      if (v) v.position.y = 0;
       // Stretch on ascent, squish on descent
       const stretch = vel.current.y > 0 ? 1.28 : 0.84;
       g.scale.y  = THREE.MathUtils.lerp(g.scale.y,  stretch, 0.14);
@@ -165,58 +165,61 @@ export function Player({ keys, platforms, spawnPos, playerPosRef, gameStatus, on
 
   return (
     <group ref={groupRef} position={spawnPos}>
-      {/* Ghost body sphere */}
-      <mesh>
-        <sphereGeometry args={[0.34, 18, 18]} />
-        <meshStandardMaterial
-          color="#d4f0ff"
-          emissive="#4fc3f7"
-          emissiveIntensity={0.65}
-          transparent
-          opacity={0.87}
-        />
-      </mesh>
+      {/* Visual-only group for wobble — isolated from physics position */}
+      <group ref={visualRef}>
+        {/* Ghost body sphere */}
+        <mesh>
+          <sphereGeometry args={[0.34, 18, 18]} />
+          <meshStandardMaterial
+            color="#d4f0ff"
+            emissive="#4fc3f7"
+            emissiveIntensity={0.65}
+            transparent
+            opacity={0.87}
+          />
+        </mesh>
 
-      {/* Ghost skirt / tail cone */}
-      <mesh position={[0, -0.27, 0]}>
-        <coneGeometry args={[0.34, 0.44, 8, 1, true]} />
-        <meshStandardMaterial
-          color="#c4e8ff"
-          emissive="#4fc3f7"
-          emissiveIntensity={0.5}
-          transparent
-          opacity={0.7}
-          side={THREE.DoubleSide}
-        />
-      </mesh>
-
-      {/* Wavy skirt lobes */}
-      {[-0.14, 0, 0.14].map((xoff, i) => (
-        <mesh key={i} position={[xoff, -0.48, 0]}>
-          <sphereGeometry args={[0.087, 8, 8]} />
+        {/* Ghost skirt / tail cone */}
+        <mesh position={[0, -0.27, 0]}>
+          <coneGeometry args={[0.34, 0.44, 8, 1, true]} />
           <meshStandardMaterial
             color="#c4e8ff"
             emissive="#4fc3f7"
-            emissiveIntensity={0.4}
+            emissiveIntensity={0.5}
             transparent
-            opacity={0.62}
+            opacity={0.7}
+            side={THREE.DoubleSide}
           />
         </mesh>
-      ))}
 
-      {/* Left eye */}
-      <mesh ref={eyeL} position={[0.12, 0.08, 0.29]}>
-        <sphereGeometry args={[0.062, 8, 8]} />
-        <meshStandardMaterial color="#001e3c" emissive="#1565c0" emissiveIntensity={1.8} />
-      </mesh>
-      {/* Right eye */}
-      <mesh ref={eyeR} position={[-0.12, 0.08, 0.29]}>
-        <sphereGeometry args={[0.062, 8, 8]} />
-        <meshStandardMaterial color="#001e3c" emissive="#1565c0" emissiveIntensity={1.8} />
-      </mesh>
+        {/* Wavy skirt lobes */}
+        {[-0.14, 0, 0.14].map((xoff, i) => (
+          <mesh key={i} position={[xoff, -0.48, 0]}>
+            <sphereGeometry args={[0.087, 8, 8]} />
+            <meshStandardMaterial
+              color="#c4e8ff"
+              emissive="#4fc3f7"
+              emissiveIntensity={0.4}
+              transparent
+              opacity={0.62}
+            />
+          </mesh>
+        ))}
 
-      {/* Ghostly glow point light */}
-      <pointLight color="#4fc3f7" intensity={2.2} distance={3.8} decay={2} />
+        {/* Left eye */}
+        <mesh ref={eyeL} position={[0.12, 0.08, 0.29]}>
+          <sphereGeometry args={[0.062, 8, 8]} />
+          <meshStandardMaterial color="#001e3c" emissive="#1565c0" emissiveIntensity={1.8} />
+        </mesh>
+        {/* Right eye */}
+        <mesh ref={eyeR} position={[-0.12, 0.08, 0.29]}>
+          <sphereGeometry args={[0.062, 8, 8]} />
+          <meshStandardMaterial color="#001e3c" emissive="#1565c0" emissiveIntensity={1.8} />
+        </mesh>
+
+        {/* Ghostly glow point light */}
+        <pointLight color="#4fc3f7" intensity={2.2} distance={3.8} decay={2} />
+      </group>
     </group>
   );
 }

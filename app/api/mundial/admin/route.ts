@@ -6,6 +6,8 @@ import { COLLECTIONS } from "@/lib/constants/db";
 import { serializeBettingFavorite, type BettingFavorite } from "@/lib/mundial/betting";
 import type { MundialMatch, MundialStage } from "@/lib/mundial/fixtures";
 import { serializeLiveMatchStats, type LiveMatchStats } from "@/lib/mundial/live-stats";
+import { applyBracketPropagation } from "@/lib/mundial/apply-bracket";
+import { ensureMundialData } from "@/lib/mundial/matches-store";
 
 export const dynamic = "force-dynamic";
 
@@ -299,6 +301,8 @@ export async function GET() {
   try {
     const db = await getDb();
     const now = new Date();
+    await ensureMundialData(db);
+    await applyBracketPropagation(db);
 
     const analyticsCollection = db.collection<MundialAnalyticsDoc>(COLLECTIONS.MUNDIAL_ANALYTICS);
     const [

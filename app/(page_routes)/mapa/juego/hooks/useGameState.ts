@@ -1,21 +1,21 @@
 'use client';
 import { useState, useCallback, useRef } from 'react';
 import type { GameState } from '../types';
-import { COLLECTIBLES } from '../data/levelData';
+import { GAME_LEVELS } from '../data/levelData';
 
-const TOTAL = COLLECTIBLES.length;
-
-const INITIAL: GameState = {
+const makeInitialState = (levelIndex = 0): GameState => ({
   lives: 3,
   score: 0,
   crystals: 0,
-  totalCrystals: TOTAL,
-  status: 'playing',
+  totalCrystals: GAME_LEVELS[levelIndex]?.collectibles.length ?? 0,
+  status: 'map',
+  currentLevelIndex: levelIndex,
+  unlockedStationIndex: 0,
   restartKey: 0,
-};
+});
 
 export function useGameState() {
-  const [state, setState] = useState<GameState>(INITIAL);
+  const [state, setState] = useState<GameState>(() => makeInitialState());
   const collectedRef = useRef(new Set<string>());
 
   const collectCrystal = useCallback((id: string) => {
@@ -36,13 +36,57 @@ export function useGameState() {
   }, []);
 
   const win = useCallback(() => {
-    setState(s => ({ ...s, status: 'win', score: s.score + 500 }));
+    collectedRef.current.clear();
+    setState(s => {
+      const nextStationIndex = Math.min(s.currentLevelIndex + 1, GAME_LEVELS.length);
+      const isComplete = s.currentLevelIndex >= GAME_LEVELS.length - 1;
+
+      return {
+        ...s,
+        status: isComplete ? 'complete' : 'map',
+        score: s.score + 500,
+        crystals: 0,
+        totalCrystals: GAME_LEVELS[Math.min(s.currentLevelIndex + 1, GAME_LEVELS.length - 1)]?.collectibles.length ?? s.totalCrystals,
+        unlockedStationIndex: Math.max(s.unlockedStationIndex, nextStationIndex),
+        currentLevelIndex: isComplete ? s.currentLevelIndex : s.currentLevelIndex + 1,
+      };
+    });
   }, []);
 
   const restart = useCallback(() => {
     collectedRef.current.clear();
-    setState(s => ({ ...INITIAL, restartKey: s.restartKey + 1 }));
+    setState(s => ({
+      ...s,
+      lives: 3,
+      crystals: 0,
+      totalCrystals: GAME_LEVELS[s.currentLevelIndex]?.collectibles.length ?? s.totalCrystals,
+      status: 'playing',
+      restartKey: s.restartKey + 1,
+    }));
   }, []);
 
-  return { state, collectCrystal, die, respawn, win, restart };
+  const enterLevel = useCallback((levelIndex: number) => {
+    collectedRef.current.clear();
+    setState(s => {
+      const clamped = Math.max(0, Math.min(levelIndex, GAME_LEVELS.length - 1));
+      const level = GAME_LEVELS[clamped];
+
+      return {
+        ...s,
+        lives: 3,
+        crystals: 0,
+        totalCrystals: level.collectibles.length,
+        status: 'playing',
+        currentLevelIndex: clamped,
+        restartKey: s.restartKey + 1,
+      };
+    });
+  }, []);
+
+  const resetAdventure = useCallback(() => {
+    collectedRef.current.clear();
+    setState(s => ({ ...makeInitialState(), restartKey: s.restartKey + 1 }));
+  }, []);
+
+  return { state, collectCrystal, die, respawn, win, restart, enterLevel, resetAdventure };
 }
