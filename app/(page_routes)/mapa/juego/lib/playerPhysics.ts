@@ -53,13 +53,19 @@ export const resolveVerticalCollisions = (
   for (const platform of platformBounds) {
     const overlapsX = pos.x + P_HALF_W > platform.minX && pos.x - P_HALF_W < platform.maxX;
     const overlapsY = pos.y + P_HALF_H > platform.minY && pos.y - P_HALF_H < platform.maxY;
-    if (!overlapsX || !overlapsY) continue;
+    if (!overlapsX) continue;
 
-    if (prevY - P_HALF_H >= platform.maxY - COLLISION_EPS && velocity.y <= 0) {
+    const prevBottom = prevY - P_HALF_H;
+    const nextBottom = pos.y - P_HALF_H;
+    const crossedTop = prevBottom >= platform.maxY - COLLISION_EPS
+      && nextBottom <= platform.maxY + COLLISION_EPS
+      && pos.y + P_HALF_H >= platform.minY;
+
+    if ((overlapsY || crossedTop) && crossedTop && velocity.y <= 0) {
       pos.y = platform.maxY + P_HALF_H;
       velocity.y = 0;
       landed = true;
-    } else if (prevY + P_HALF_H <= platform.minY + COLLISION_EPS && velocity.y > 0) {
+    } else if (overlapsY && prevY + P_HALF_H <= platform.minY + COLLISION_EPS && velocity.y > 0) {
       pos.y = platform.minY - P_HALF_H;
       velocity.y = 0;
     }

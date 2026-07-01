@@ -1,64 +1,87 @@
 import type { PlatformData, CollectibleData, EnemyData, PowerUpData } from '../../types';
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  LEVEL 1 – "El Sendero Verde"  (Recepción → Cafetales)
-//  Shape: DOWN → UP to hilltop → BIG DROP → canyon zigzag up/down
-//  Secret: enclosed bohío above the hilltop, reached going right-then-left
+//  LEVEL 1 – "El Sendero Verde"  (Versión Maximizada)
+//  Duración aproximada: 6-10 minutos (explorando)
+//  Concepto: Recepción → Cafetales → Subida a loma → Gran caída → Cañón zigzag
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const platforms: PlatformData[] = [
-  // ── Main path ─────────────────────────────────────────────────────
-  { id: 'p1',  position: [2.5,  5.5,  0], size: [7.0, 1.0,  2.4], kind: 'trail' },
-  { id: 'p2',  position: [9.0,  3.8,  0], size: [3.5, 0.85, 2.2], kind: 'mud'   },
-  { id: 'p3',  position: [13.5, 2.2,  0], size: [3.2, 0.85, 2.0], kind: 'root'  },
-  // Hill – goes UP before coming back down
-  { id: 'p4',  position: [18.0, 3.8,  0], size: [3.2, 0.85, 2.2], kind: 'mud'   },
-  { id: 'p5',  position: [22.5, 5.8,  0], size: [4.0, 0.9,  2.3], kind: 'trail' },
-  // Descent from hilltop
-  { id: 'p6',  position: [27.5, 3.2,  0], size: [3.0, 0.85, 2.0], kind: 'root'  },
-  { id: 'p7',  position: [32.0, 0.5,  0], size: [3.5, 0.85, 2.1], kind: 'trail' },
-  // Canyon zigzag – alternates up and down
-  { id: 'p8',  position: [36.0, -1.8, 0], size: [3.5, 0.85, 2.0], kind: 'mud'   },
-  { id: 'p9',  position: [39.5, -3.5, 0], size: [3.0, 0.85, 2.0], kind: 'root'  },
-  { id: 'p10', position: [42.5, -1.5, 0], size: [3.0, 0.85, 2.0], kind: 'trail' },
-  { id: 'p11', position: [45.5, -3.2, 0], size: [3.0, 0.85, 2.0], kind: 'mud'   },
-  { id: 'p12', position: [47.0, -4.15,0], size: [6.5, 1.0,  2.3], kind: 'trail' },
-  // ── Secret bohío above hilltop (go right of p5, then loop left) ──
-  { id: 'sec-a',    position: [24.5, 7.5,  0], size: [2.0, 0.6,  1.5], kind: 'root'  },
-  { id: 'sec-b',    position: [21.5, 9.0,  0], size: [2.5, 0.6,  1.5], kind: 'mud'   },
-  { id: 'sec-c',    position: [18.0, 9.0,  0], size: [3.5, 0.6,  1.5], kind: 'trail' },
-  { id: 'sec-wall', position: [16.3, 9.9,  0], size: [0.62,2.5,  1.5], kind: 'root'  },
-  { id: 'sec-lid',  position: [19.8, 10.8, 0], size: [7.0, 0.45, 1.5], kind: 'root'  },
+  // ── SECCIÓN 1: Sendero inicial entre cafetales ────────────────────
+  { id: 'p1',  position: [2.0,  5.8, 0], size: [6.5, 1.0, 2.5], kind: 'trail' },
+  { id: 'p2',  position: [8.0,  4.6, 0], size: [3.2, 0.85, 2.1], kind: 'mud'   },
+  { id: 'p3',  position: [12.0, 3.5, 0], size: [3.0, 0.85, 2.0], kind: 'root'  },
+  { id: 'p4',  position: [15.5, 2.6, 0], size: [2.8, 0.85, 1.9], kind: 'mud'   },
+
+  // ── SECCIÓN 2: Subida hacia la loma ───────────────────────────────
+  { id: 'p5',  position: [19.0, 3.7, 0], size: [3.0, 0.85, 2.0], kind: 'root'  },
+  { id: 'p6',  position: [22.5, 4.9, 0], size: [3.2, 0.85, 2.1], kind: 'mud'   },
+  { id: 'p7',  position: [26.0, 6.0, 0], size: [3.5, 0.9, 2.2], kind: 'trail' }, // Loma
+
+  // ── SECCIÓN 3: Cima de la loma (momento de respiro) ───────────────
+  { id: 'p8',  position: [30.0, 7.2, 0], size: [4.0, 0.95, 2.4], kind: 'trail' }, // CIMA DE LA LOMA
+
+  // ── SECCIÓN 4: Gran caída hacia el cañón ──────────────────────────
+  { id: 'p9',  position: [34.5, 5.0, 0], size: [3.0, 0.85, 2.0], kind: 'root'  },
+  { id: 'p10', position: [38.0, 3.2, 0], size: [3.2, 0.85, 2.1], kind: 'mud'   },
+  { id: 'p11', position: [41.5, 1.3, 0], size: [3.0, 0.85, 2.0], kind: 'trail' },
+
+  // ── SECCIÓN 5: Zigzag del cañón (más dinámico) ────────────────────
+  { id: 'p12', position: [45.0, -0.3, 0], size: [3.2, 0.85, 2.1], kind: 'mud'   },
+  { id: 'p13', position: [48.5, -2.0, 0], size: [3.0, 0.85, 2.0], kind: 'root'  },
+  { id: 'p14', position: [52.0, -0.8, 0], size: [3.0, 0.85, 2.0], kind: 'trail' },
+  { id: 'p15', position: [55.5, -2.5, 0], size: [3.0, 0.85, 2.0], kind: 'mud'   },
+  { id: 'p16', position: [59.0, -1.2, 0], size: [3.2, 0.85, 2.1], kind: 'root'  },
+  { id: 'p17', position: [62.5, -3.0, 0], size: [3.5, 0.9, 2.2], kind: 'trail' },
+
+  // ── SECCIÓN 6: Plataforma final antes de la meta ──────────────────
+  { id: 'p18', position: [66.5, -4.3, 0], size: [5.0, 1.0, 2.4], kind: 'trail' },
+
+  // ── SECRETO: Bohío escondido arriba de la loma ────────────────────
+  { id: 'sec-a',    position: [27.5, 8.8, 0], size: [2.0, 0.6, 1.5], kind: 'root'  },
+  { id: 'sec-b',    position: [24.5, 10.1, 0], size: [2.6, 0.6, 1.5], kind: 'mud'   },
+  { id: 'sec-c',    position: [21.0, 10.1, 0], size: [3.2, 0.6, 1.5], kind: 'trail' },
+  { id: 'sec-wall', position: [18.8, 11.0, 0], size: [0.6, 2.4, 1.5], kind: 'root'  },
+  { id: 'sec-lid',  position: [23.0, 11.85,0], size: [7.5, 0.45, 1.5], kind: 'root'  },
 ];
 
+// ── COLECCIONABLES ───────────────────────────────────────────────────
 export const collectibles: CollectibleData[] = [
-  { id: 'c1',  position: [2.5,  7.15, 0] },
-  { id: 'c2',  position: [9.0,  5.5,  0] },
-  { id: 'c3',  position: [13.5, 3.9,  0] },
-  { id: 'c4',  position: [18.0, 5.5,  0] },
-  { id: 'c5',  position: [22.5, 7.5,  0] },  // conspicuous on hilltop
-  { id: 'c6',  position: [27.5, 4.9,  0] },
-  { id: 'c7',  position: [32.0, 2.2,  0] },
-  { id: 'c8',  position: [36.0, -0.1, 0] },
-  { id: 'c9',  position: [39.5, -1.8, 0] },
-  { id: 'c10', position: [42.5, 0.2,  0] },
-  { id: 'c11', position: [45.5, -1.5, 0] },
-  { id: 'c12', position: [47.0, -2.4, 0] },
-  // Hidden emeralds inside the bohío
-  { id: 'esm-r1a', position: [17.5, 10.2, 0], kind: 'emerald' },
-  { id: 'esm-r1b', position: [19.2, 10.2, 0], kind: 'emerald' },
+  // Ruta principal
+  { id: 'c1',  position: [3.5,  7.45, 0] },
+  { id: 'c2',  position: [10.0, 6.35, 0] },
+  { id: 'c3',  position: [14.5, 4.85, 0] },
+  { id: 'c4',  position: [17.5, 4.25, 0] },
+  { id: 'c5',  position: [24.0, 7.45, 0] },   // loma
+  { id: 'c6',  position: [28.5, 8.85, 0] },   // cima
+  { id: 'c7',  position: [33.5, 6.65, 0] },
+  { id: 'c8',  position: [39.5, 4.85, 0] },
+  { id: 'c9',  position: [44.0, 1.95, 0] },
+  { id: 'c10', position: [49.5, 0.65, 0] },
+  { id: 'c11', position: [54.0, -1.85, 0] },
+  { id: 'c12', position: [58.5, -0.55, 0] },
+  { id: 'c13', position: [64.5, -2.35, 0] },
+
+  // Esmeraldas escondidas en el bohío
+  { id: 'esm-r1a', position: [20.5, 11.4, 0], kind: 'emerald' },
+  { id: 'esm-r1b', position: [22.5, 11.4, 0], kind: 'emerald' },
+  { id: 'esm-r1c', position: [24.5, 11.4, 0], kind: 'emerald' },
 ];
 
+// ── ENEMIGOS ─────────────────────────────────────────────────────────
 export const enemies: EnemyData[] = [
-  { id: 'e1', position: [13.5, 3.15, 0], patrolRange: 1.1 },
-  { id: 'e2', position: [22.5, 6.65, 0], patrolRange: 1.8 },  // hilltop guardian!
-  { id: 'e3', position: [32.0, 1.35, 0], patrolRange: 1.35 },
-  { id: 'e4', position: [36.0, -0.9, 0], patrolRange: 1.4  },
-  { id: 'e5', position: [42.5, -0.5, 0], patrolRange: 1.2  },
-  { id: 'e6', position: [45.5, -2.3, 0], patrolRange: 1.0  },
+  { id: 'e1', position: [11.5, 4.15, 0], patrolRange: 1.2 },
+  { id: 'e2', position: [20.5, 5.45, 0], patrolRange: 1.4 },
+  { id: 'e3', position: [26.5, 7.65, 0], patrolRange: 1.6 }, // Guardián de la loma
+  { id: 'e4', position: [35.5, 4.85, 0], patrolRange: 1.3 },
+  { id: 'e5', position: [43.5, 2.0,  0], patrolRange: 1.4 },
+  { id: 'e6', position: [51.0, -1.45, 0], patrolRange: 1.3 },
+  { id: 'e7', position: [57.5, -2.0, 0], patrolRange: 1.2 },
 ];
 
+// ── POWER-UPS ────────────────────────────────────────────────────────
 export const powerUps: PowerUpData[] = [
-  { id: 'pu-r1', position: [9.0,  5.1,  0], kind: 'ruby'     },
-  { id: 'pu-s1', position: [36.0, -0.7, 0], kind: 'sapphire' },
+  { id: 'pu-r1', position: [10.5, 6.15, 0], kind: 'ruby'     }, // zona media-temprana
+  { id: 'pu-s1', position: [37.5, 4.85, 0], kind: 'sapphire' }, // antes de la gran caída
+  { id: 'pu-r1b', position: [55.5, 0.65, 0], kind: 'ruby'     }, // mitad del zigzag
 ];

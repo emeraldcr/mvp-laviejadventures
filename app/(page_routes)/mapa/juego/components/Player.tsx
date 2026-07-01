@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useMemo, useRef } from 'react';
+import { useLayoutEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useGameRuntimeContext } from '../context/GameContext';
@@ -49,11 +49,14 @@ export function Player({
 
   const platformBounds = useMemo(() => buildPlatformBounds(platforms), [platforms]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (gameStatus === 'playing') {
       if (groupRef.current) groupRef.current.position.set(...spawnPos);
+      playerPosRef.current.set(...spawnPos);
       vel.current.set(0, 0, 0);
       jumpCount.current = 0;
+      jumpWas.current = false;
+      fireWas.current = false;
       deathFired.current = false;
       grounded.current = false;
       // Reset powerups on respawn
@@ -62,7 +65,7 @@ export function Player({
       playerImmuneRef.current = false;
       handlePowerUpChange(false, false);
     }
-  }, [gameStatus, spawnPos, playerImmuneRef, handlePowerUpChange]);
+  }, [gameStatus, spawnPos, playerPosRef, playerImmuneRef, handlePowerUpChange]);
 
   useFrame((_, delta) => {
     if (!groupRef.current || gameStatus !== 'playing') return;
