@@ -17,7 +17,6 @@ import {
   teamCode,
 } from "../utils";
 import { Flag } from "./Flag";
-import { BettingFavoriteCard } from "./BettingFavoriteCard";
 import { StatBetsPanel } from "./StatBetsPanel";
 
 type FeaturedMatchProps = {
@@ -203,7 +202,6 @@ export function FeaturedMatch({
           </div>
 
           {/* Live bets — full width, prominent */}
-          <BettingFavoriteCard match={match} />
         </div>
       ) : (
         /* ── Non-live: 2-column layout ── */
@@ -283,8 +281,6 @@ export function FeaturedMatch({
               <p className="mb-3 text-[10px] font-black uppercase tracking-[0.22em] text-white/30">
                 Tu predicción
               </p>
-
-              <BettingFavoriteCard match={match} />
 
               <div className="mt-4 rounded-lg border border-white/15 bg-black/35 p-4">
                 <p className="text-xs font-black uppercase tracking-[0.18em] text-[#f0b429]">

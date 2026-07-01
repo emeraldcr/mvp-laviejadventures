@@ -3,10 +3,8 @@ import { ObjectId } from "mongodb";
 
 import { getDb } from "@/lib/helpers/mongodb";
 import { COLLECTIONS } from "@/lib/constants/db";
-import { serializeBettingFavorite, type BettingFavorite } from "@/lib/mundial/betting";
 import type { MundialMatch, MundialStage } from "@/lib/mundial/fixtures";
 import { serializeLiveMatchStats, type LiveMatchStats } from "@/lib/mundial/live-stats";
-import { applyBracketPropagation } from "@/lib/mundial/apply-bracket";
 import { ensureMundialData } from "@/lib/mundial/matches-store";
 
 export const dynamic = "force-dynamic";
@@ -35,7 +33,6 @@ type MundialMatchDoc = MundialMatch & {
   liveEvents?: LiveMatchEventDoc[];
   liveStats?: LiveMatchStats;
   liveUpdatedAt?: Date | string | null;
-  bettingFavorite?: BettingFavorite | null;
 };
 
 type LiveMatchEventDoc = {
@@ -302,7 +299,6 @@ export async function GET() {
     const db = await getDb();
     const now = new Date();
     await ensureMundialData(db);
-    await applyBracketPropagation(db);
 
     const analyticsCollection = db.collection<MundialAnalyticsDoc>(COLLECTIONS.MUNDIAL_ANALYTICS);
     const [
@@ -492,10 +488,7 @@ export async function GET() {
         liveEvents: Array.isArray(match.liveEvents) ? match.liveEvents.map(serializeLiveEvent) : [],
         liveStats: serializeLiveMatchStats(match.liveStats),
         liveUpdatedAt: toIsoString(match.liveUpdatedAt),
-        bettingFavorite: serializeBettingFavorite(match.bettingFavorite, {
-          homeTeam: match.homeTeam,
-          awayTeam: match.awayTeam,
-        }),
+        bettingFavorite: null,
         closed: isMatchClosed(match, now),
         predictorCount: ms.total,
         exactCount: ms.exactCount,

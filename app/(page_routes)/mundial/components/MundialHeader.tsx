@@ -3,6 +3,7 @@
 import { useState } from "react";
 import {
   ChevronDown,
+  GitMerge,
   ListChecks,
   Loader2,
   MoreHorizontal,
@@ -42,6 +43,7 @@ function ViewIcon({ id, active }: { id: ViewMode; active: boolean }) {
 
   if (id === "next") return <Target className={className} />;
   if (id === "mine") return <ListChecks className={className} />;
+  if (id === "bracket") return <GitMerge className={className} />;
   return <Users className={className} />;
 }
 
@@ -65,6 +67,7 @@ export function MundialHeader({
     next: "En Vivo",
     mine: "Picks",
     players: "Líderes",
+    bracket: "Bracket",
   };
 
   return (
@@ -76,7 +79,7 @@ export function MundialHeader({
         </span>
 
         {/* View tabs */}
-        <div className="order-3 grid min-w-0 basis-full grid-cols-3 gap-1 sm:order-2 sm:flex sm:flex-1 sm:basis-auto">
+        <div className="order-3 grid min-w-0 basis-full grid-cols-4 gap-1 sm:order-2 sm:flex sm:flex-1 sm:basis-auto">
           {VIEW_OPTIONS.map((option) => {
             const active = viewMode === option.id;
             return (

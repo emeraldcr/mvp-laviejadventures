@@ -43,18 +43,18 @@ const parseStoredOrderDetails = (stored: string | null): OrderDetails | null => 
 
 const getReservationReturnPathSnapshot = (): string => {
   if (typeof window === "undefined") {
-    return "/#booking";
+    return "/reservar";
   }
 
   const returnPath = sessionStorage.getItem(RESERVATION_RETURN_KEY);
   if (!returnPath || !returnPath.startsWith("/")) {
-    return "/#booking";
+    return "/reservar";
   }
 
   return returnPath;
 };
 
-const getServerReservationReturnPathSnapshot = () => "/#booking";
+const getServerReservationReturnPathSnapshot = () => "/reservar";
 
 
 const getReturnHref = (returnPath: string): string => {
@@ -112,7 +112,7 @@ export default function ReservationPage() {
             <Link href="/galeria" className="transition-colors hover:text-white">{navTr.gallery}</Link>
             <Link href="/ai" className="transition-colors hover:text-white">AI</Link>
             <Link
-              href="/#booking"
+              href="/reservar"
               className="rounded-full border border-teal-300/40 bg-teal-400/10 px-3 py-1 text-teal-200 transition hover:bg-teal-400/20"
             >
               {navTr.reserve}

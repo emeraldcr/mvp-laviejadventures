@@ -1,8 +1,7 @@
 ﻿"use client";
 
 import { useEffect, useState } from "react";
-import { BadgePercent, BarChart3, Braces, Check, ChevronDown, ChevronUp, ClipboardPaste, Heart, Loader2, Lock, LockOpen, MessageCircle, Minus, Plus, RefreshCw, Repeat2, Save, Send, Trash2, Tv2, Users } from "lucide-react";
-import { bettingFavoriteLabel, type BettingMarket } from "@/lib/mundial/betting";
+import { BarChart3, Braces, Check, ChevronDown, ChevronUp, ClipboardPaste, Heart, Loader2, Lock, LockOpen, MessageCircle, Minus, Plus, RefreshCw, Repeat2, Save, Send, Trash2, Tv2, Users } from "lucide-react";
 import type { AdminLiveMatchEvent, AdminLiveMatchStats, AdminLiveTeamStats, AdminMatch, AdminRosterPlayer, LiveEventTeam, LiveEventType, LiveMatchStatus } from "../adminTypes";
 import { cn, formatKickoff, getCountryFlag } from "../../utils";
 import { Flag } from "../../components/Flag";
@@ -122,12 +121,6 @@ function parseMinuteInput(value: string) {
 
 function numberDraft(value: number | null | undefined) {
   return typeof value === "number" ? String(value) : "";
-}
-
-function numberOrNull(value: string) {
-  if (value.trim() === "") return null;
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : null;
 }
 
 function scoreOrNull(value: string) {
@@ -256,17 +249,6 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
   const [liveNote, setLiveNote] = useState(match.liveNote);
   const [liveEvents, setLiveEvents] = useState<AdminLiveMatchEvent[]>(match.liveEvents);
   const [liveStats, setLiveStats] = useState<AdminLiveMatchStats>(match.liveStats);
-  const [marketMode, setMarketMode] = useState<BettingMarket>(match.bettingFavorite?.market ?? "h2h_odds");
-  const [marketSource, setMarketSource] = useState(match.bettingFavorite?.source ?? "");
-  const [marketSourceUrl, setMarketSourceUrl] = useState(match.bettingFavorite?.sourceUrl ?? "");
-  const [marketBookmaker, setMarketBookmaker] = useState(match.bettingFavorite?.bookmaker ?? "");
-  const [marketHomePrice, setMarketHomePrice] = useState(numberDraft(match.bettingFavorite?.homePrice));
-  const [marketDrawPrice, setMarketDrawPrice] = useState(numberDraft(match.bettingFavorite?.drawPrice));
-  const [marketAwayPrice, setMarketAwayPrice] = useState(numberDraft(match.bettingFavorite?.awayPrice));
-  const [marketHomeBetPct, setMarketHomeBetPct] = useState(numberDraft(match.bettingFavorite?.homeBetPct));
-  const [marketDrawBetPct, setMarketDrawBetPct] = useState(numberDraft(match.bettingFavorite?.drawBetPct));
-  const [marketAwayBetPct, setMarketAwayBetPct] = useState(numberDraft(match.bettingFavorite?.awayBetPct));
-  const [marketNote, setMarketNote] = useState(match.bettingFavorite?.note ?? "");
   const [draftType, setDraftType] = useState<LiveEventType>("goal");
   const [draftTeam, setDraftTeam] = useState<LiveEventTeam>("home");
   const [draftMinute, setDraftMinute] = useState(match.liveMinute !== null ? String(match.liveMinute) : "");
@@ -275,16 +257,12 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [isTogglingClose, setIsTogglingClose] = useState(false);
   const [isSavingLive, setIsSavingLive] = useState(false);
-  const [isSavingMarket, setIsSavingMarket] = useState(false);
   const [saved, setSaved] = useState(false);
   const [liveSaved, setLiveSaved] = useState(false);
-  const [marketSaved, setMarketSaved] = useState(false);
   const [error, setError] = useState("");
   const [liveError, setLiveError] = useState("");
-  const [marketError, setMarketError] = useState("");
   const [showEdit, setShowEdit] = useState(!hasResult);
   const [showLive, setShowLive] = useState(match.liveStatus !== "scheduled");
-  const [showMarket, setShowMarket] = useState(Boolean(match.bettingFavorite));
   const [showXFeed, setShowXFeed] = useState(match.liveStatus !== "scheduled");
   const [showStatsJson, setShowStatsJson] = useState(false);
   const [statsJsonText, setStatsJsonText] = useState("");
@@ -307,23 +285,11 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
       setLiveNote(match.liveNote);
       setLiveEvents(match.liveEvents);
       setLiveStats(match.liveStats);
-      setMarketMode(match.bettingFavorite?.market ?? "h2h_odds");
-      setMarketSource(match.bettingFavorite?.source ?? "");
-      setMarketSourceUrl(match.bettingFavorite?.sourceUrl ?? "");
-      setMarketBookmaker(match.bettingFavorite?.bookmaker ?? "");
-      setMarketHomePrice(numberDraft(match.bettingFavorite?.homePrice));
-      setMarketDrawPrice(numberDraft(match.bettingFavorite?.drawPrice));
-      setMarketAwayPrice(numberDraft(match.bettingFavorite?.awayPrice));
-      setMarketHomeBetPct(numberDraft(match.bettingFavorite?.homeBetPct));
-      setMarketDrawBetPct(numberDraft(match.bettingFavorite?.drawBetPct));
-      setMarketAwayBetPct(numberDraft(match.bettingFavorite?.awayBetPct));
-      setMarketNote(match.bettingFavorite?.note ?? "");
       setDraftMinute(match.liveMinute !== null ? String(match.liveMinute) : "");
       setDraftPlayer("");
       setDraftNote("");
       if (match.liveStatus !== "scheduled") setShowLive(true);
       if (match.liveStatus !== "scheduled") setShowXFeed(true);
-      if (match.bettingFavorite) setShowMarket(true);
     });
   }, [match]);
 
@@ -345,7 +311,6 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
   const draftPlayersListId =
     draftTeam === "home" ? homePlayersListId : draftTeam === "away" ? awayPlayersListId : undefined;
   const draftRoster = rosterForTeam(match, draftTeam);
-  const marketSummary = match.bettingFavorite ? bettingFavoriteLabel(match.bettingFavorite) : "Sin dato";
 
   async function handleSaveScore() {
     setError("");
@@ -410,50 +375,6 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
       setLiveError(err instanceof Error ? err.message : "Error guardando live.");
     } finally {
       setIsSavingLive(false);
-    }
-  }
-
-  async function handleSaveMarket() {
-    setMarketError("");
-    setMarketSaved(false);
-    setIsSavingMarket(true);
-    try {
-      await onPatch(match.id, {
-        bettingFavorite: {
-          market: marketMode,
-          source: marketSource,
-          sourceUrl: marketSourceUrl,
-          bookmaker: marketBookmaker,
-          homePrice: numberOrNull(marketHomePrice),
-          drawPrice: numberOrNull(marketDrawPrice),
-          awayPrice: numberOrNull(marketAwayPrice),
-          homeBetPct: numberOrNull(marketHomeBetPct),
-          drawBetPct: numberOrNull(marketDrawBetPct),
-          awayBetPct: numberOrNull(marketAwayBetPct),
-          note: marketNote,
-        },
-      });
-      setMarketSaved(true);
-      setTimeout(() => setMarketSaved(false), 2500);
-    } catch (err) {
-      setMarketError(err instanceof Error ? err.message : "Error guardando favorito.");
-    } finally {
-      setIsSavingMarket(false);
-    }
-  }
-
-  async function handleClearMarket() {
-    setMarketError("");
-    setMarketSaved(false);
-    setIsSavingMarket(true);
-    try {
-      await onPatch(match.id, { bettingFavorite: null });
-      setMarketSaved(true);
-      setTimeout(() => setMarketSaved(false), 2500);
-    } catch (err) {
-      setMarketError(err instanceof Error ? err.message : "Error limpiando favorito.");
-    } finally {
-      setIsSavingMarket(false);
     }
   }
 
@@ -828,129 +749,6 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
         )}
         {hasResult && !showEdit && error && (
           <p className="mt-2 rounded-lg border border-[#ff6a3d]/50 bg-[#35130d] px-3 py-2 text-xs font-bold text-[#ffd2c2]">{error}</p>
-        )}
-      </div>
-
-      {/* Live section */}
-      <div className="border-t border-white/10">
-        <button
-          type="button"
-          onClick={() => setShowMarket((v) => !v)}
-          className="flex w-full items-center justify-between gap-2 px-4 py-2.5 text-xs font-black text-white/45 transition hover:text-white"
-        >
-          <div className="flex min-w-0 items-center gap-1.5">
-            <BadgePercent className="h-3.5 w-3.5 shrink-0" />
-            <span>Favorito</span>
-            {match.bettingFavorite && (
-              <span className="min-w-0 truncate rounded bg-[#211707] px-1.5 py-0.5 text-[10px] font-black text-[#f0b429]">
-                {marketSummary}
-              </span>
-            )}
-          </div>
-          {showMarket ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-        </button>
-
-        {showMarket && (
-          <div className="space-y-3 px-4 pb-4 pt-2">
-            <div className="grid gap-2 sm:grid-cols-[10rem_minmax(0,1fr)]">
-              <label className="grid gap-1">
-                <span className="text-[10px] font-black uppercase text-white/40">Dato</span>
-                <select
-                  value={marketMode}
-                  onChange={(e) => setMarketMode(e.target.value as BettingMarket)}
-                  className="h-10 rounded-lg border border-white/12 bg-black/25 px-2 text-sm font-black text-white/70 outline-none focus:border-amber-400 focus:bg-black/35 focus:ring-2 focus:ring-amber-100"
-                >
-                  <option value="public_bets">Apuestas publicas</option>
-                  <option value="h2h_odds">Cuotas 1X2</option>
-                  <option value="bookmaker_consensus">Consenso casas</option>
-                </select>
-              </label>
-
-              <div className="grid gap-2 sm:grid-cols-2">
-                <label className="grid gap-1">
-                  <span className="text-[10px] font-black uppercase text-white/40">Fuente</span>
-                  <input
-                    type="text"
-                    value={marketSource}
-                    onChange={(e) => setMarketSource(e.target.value)}
-                    placeholder="The Odds API, Action Network..."
-                    className="h-10 rounded-lg border border-white/12 bg-black/25 px-3 text-sm font-bold text-white/70 outline-none placeholder:text-white/25 focus:border-amber-400 focus:bg-black/35 focus:ring-2 focus:ring-amber-100"
-                  />
-                </label>
-                <label className="grid gap-1">
-                  <span className="text-[10px] font-black uppercase text-white/40">Casa</span>
-                  <input
-                    type="text"
-                    value={marketBookmaker}
-                    onChange={(e) => setMarketBookmaker(e.target.value)}
-                    placeholder="DraftKings, FanDuel..."
-                    className="h-10 rounded-lg border border-white/12 bg-black/25 px-3 text-sm font-bold text-white/70 outline-none placeholder:text-white/25 focus:border-amber-400 focus:bg-black/35 focus:ring-2 focus:ring-amber-100"
-                  />
-                </label>
-              </div>
-            </div>
-
-            <label className="grid gap-1">
-              <span className="text-[10px] font-black uppercase text-white/40">URL fuente</span>
-              <input
-                type="url"
-                value={marketSourceUrl}
-                onChange={(e) => setMarketSourceUrl(e.target.value)}
-                placeholder="https://..."
-                className="h-10 rounded-lg border border-white/12 bg-black/25 px-3 text-sm font-bold text-white/70 outline-none placeholder:text-white/25 focus:border-amber-400 focus:bg-black/35 focus:ring-2 focus:ring-amber-100"
-              />
-            </label>
-
-            <div>
-              <p className="mb-1 text-[10px] font-black uppercase text-white/40">Porcentaje apuestas</p>
-              <div className="grid grid-cols-3 gap-2">
-                <MarketNumberInput label={match.homeTeam} value={marketHomeBetPct} onChange={setMarketHomeBetPct} suffix="%" />
-                <MarketNumberInput label="Empate" value={marketDrawBetPct} onChange={setMarketDrawBetPct} suffix="%" />
-                <MarketNumberInput label={match.awayTeam} value={marketAwayBetPct} onChange={setMarketAwayBetPct} suffix="%" />
-              </div>
-            </div>
-
-            <div>
-              <p className="mb-1 text-[10px] font-black uppercase text-white/40">Cuotas decimales</p>
-              <div className="grid grid-cols-3 gap-2">
-                <MarketNumberInput label={match.homeTeam} value={marketHomePrice} onChange={setMarketHomePrice} step="0.01" />
-                <MarketNumberInput label="Empate" value={marketDrawPrice} onChange={setMarketDrawPrice} step="0.01" />
-                <MarketNumberInput label={match.awayTeam} value={marketAwayPrice} onChange={setMarketAwayPrice} step="0.01" />
-              </div>
-            </div>
-
-            <textarea
-              value={marketNote}
-              onChange={(e) => setMarketNote(e.target.value)}
-              placeholder="Nota opcional"
-              rows={2}
-              className="w-full resize-none rounded-lg border border-white/12 bg-black/25 px-3 py-2 text-xs font-bold text-white/70 outline-none placeholder:text-white/25 focus:border-amber-400 focus:bg-black/35 focus:ring-2 focus:ring-amber-100"
-            />
-
-            {marketError && (
-              <p className="rounded-lg border border-[#ff6a3d]/50 bg-[#35130d] px-3 py-2 text-xs font-bold text-[#ffd2c2]">{marketError}</p>
-            )}
-
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => void handleSaveMarket()}
-                disabled={isSavingMarket}
-                className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-amber-600 bg-[#211707] px-3 py-2.5 text-sm font-black text-white transition hover:bg-amber-600 disabled:opacity-50"
-              >
-                {isSavingMarket ? <Loader2 className="h-4 w-4 animate-spin" /> : marketSaved ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />}
-                {marketSaved ? "Guardado" : "Guardar favorito"}
-              </button>
-              <button
-                type="button"
-                onClick={() => void handleClearMarket()}
-                disabled={isSavingMarket || !match.bettingFavorite}
-                className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/18 bg-black/35 px-3 py-2 text-sm font-black text-white/70 transition hover:bg-white/10 disabled:opacity-40"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
         )}
       </div>
 
@@ -1566,42 +1364,6 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
         )}
       </div>
     </article>
-  );
-}
-
-function MarketNumberInput({
-  label,
-  value,
-  onChange,
-  suffix,
-  step = "1",
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  suffix?: string;
-  step?: string;
-}) {
-  return (
-    <label className="min-w-0">
-      <span className="mb-1 block truncate text-[10px] font-black uppercase text-white/40">{label}</span>
-      <div className="grid grid-cols-[minmax(0,1fr)_auto] overflow-hidden rounded-lg border border-white/12 bg-black/25 focus-within:border-amber-400 focus-within:bg-black/35 focus-within:ring-2 focus-within:ring-amber-100">
-        <input
-          type="number"
-          min={0}
-          max={suffix ? 100 : undefined}
-          step={step}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="h-10 min-w-0 bg-transparent px-2 text-center text-sm font-black tabular-nums text-white/80 outline-none"
-        />
-        {suffix && (
-          <span className="grid h-10 w-7 place-items-center border-l border-white/12 text-[10px] font-black text-slate-400">
-            {suffix}
-          </span>
-        )}
-      </div>
-    </label>
   );
 }
 

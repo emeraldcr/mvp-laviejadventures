@@ -3,6 +3,8 @@ import { useState, useCallback, useRef } from 'react';
 import type { GameState } from '../types';
 import { GAME_LEVELS } from '../data/levelData';
 
+export const DEV_UNLOCK_ALL_LEVELS = process.env.NODE_ENV === 'development';
+
 const makeInitialState = (levelIndex = 0): GameState => ({
   lives: 3,
   score: 0,
@@ -10,7 +12,7 @@ const makeInitialState = (levelIndex = 0): GameState => ({
   totalCrystals: GAME_LEVELS[levelIndex]?.collectibles.length ?? 0,
   status: 'map',
   currentLevelIndex: levelIndex,
-  unlockedStationIndex: 0,
+  unlockedStationIndex: DEV_UNLOCK_ALL_LEVELS ? GAME_LEVELS.length : 0,
   restartKey: 0,
 });
 
@@ -70,6 +72,9 @@ export function useGameState() {
     setState(s => {
       const clamped = Math.max(0, Math.min(levelIndex, GAME_LEVELS.length - 1));
       const level = GAME_LEVELS[clamped];
+      const unlockedStationIndex = DEV_UNLOCK_ALL_LEVELS
+        ? GAME_LEVELS.length
+        : Math.max(s.unlockedStationIndex, clamped);
 
       return {
         ...s,
@@ -78,6 +83,7 @@ export function useGameState() {
         totalCrystals: level.collectibles.length,
         status: 'playing',
         currentLevelIndex: clamped,
+        unlockedStationIndex,
         restartKey: s.restartKey + 1,
       };
     });

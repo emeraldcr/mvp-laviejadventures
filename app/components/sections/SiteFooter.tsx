@@ -1,6 +1,6 @@
 "use client";
 
-import type { ElementType, ReactNode } from "react";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import {
   Bot,
@@ -20,6 +20,7 @@ import {
   Sparkles,
   Twitter,
   Youtube,
+  type LucideIcon,
 } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
 import { TOUR_INFO } from "@/lib/tour-info";
@@ -140,7 +141,7 @@ export default function SiteFooter() {
     { href: "/tiempo", label: copy.links.weather, icon: CloudSun },
     { href: "/docs", label: copy.links.docs, icon: FileText },
     { href: "/ai", label: copy.links.ai, icon: Bot },
-    { href: "/#booking", label: copy.links.booking, icon: MessageCircle },
+    { href: "/reservar", label: copy.links.booking, icon: MessageCircle },
   ];
 
   const legalLinks = [
@@ -280,7 +281,7 @@ function FooterLinkColumn({
   links,
 }: {
   title: string;
-  links: Array<{ href: string; label: string; icon: ElementType }>;
+  links: Array<{ href: string; label: string; icon: LucideIcon }>;
 }) {
   return (
     <nav aria-label={title}>

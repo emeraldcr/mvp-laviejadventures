@@ -2,6 +2,7 @@ export interface PlatformData {
   id: string;
   position: [number, number, number];
   size: [number, number, number];
+  kind?: 'trail' | 'mud' | 'root' | 'rock' | 'stair' | 'bridge' | 'river';
 }
 
 export interface CollectibleData {
@@ -19,6 +20,7 @@ export interface LevelData {
   id: string;
   title: string;
   subtitle: string;
+  theme: 'reception' | 'cafetal' | 'montanita' | 'stairs' | 'river';
   stationId: string;
   nextStationId?: string;
   spawnPosition: [number, number, number];

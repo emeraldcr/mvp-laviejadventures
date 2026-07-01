@@ -38,7 +38,7 @@ const steps = {
       title: "Selecciona fecha y paquete",
       description:
         "Desde la página principal, usa el calendario para elegir una fecha disponible y luego el paquete del tour que deseas reservar.",
-      href: "/#booking",
+      href: "/reservar",
       cta: "Ir a reservar",
       icon: CalendarCheck2,
     },
@@ -80,7 +80,7 @@ const steps = {
       title: "Pick date and package",
       description:
         "From the home page, use the booking calendar to select an available date and then choose your preferred tour package.",
-      href: "/#booking",
+      href: "/reservar",
       cta: "Go to booking",
       icon: CalendarCheck2,
     },

@@ -18,6 +18,7 @@ import { ProfileModal } from "./components/ProfileModal";
 import { PenalitosPanel } from "./components/PenalitosPanel";
 import { ProximoEnAnotarPanel } from "./components/ProximoEnAnotarPanel";
 import { LiveMatchChat } from "./components/LiveMatchChat";
+import { BracketView } from "./components/BracketView";
 
 export default function MundialClient() {
   const router = useRouter();
@@ -282,6 +283,15 @@ export default function MundialClient() {
                 predictions={predictions}
                 playerName={playerName}
                 onOpenProfile={() => setShowProfile(true)}
+              />
+            )}
+
+            {viewMode === "bracket" && (
+              <BracketView
+                matches={matches}
+                leaderboard={leaderboard}
+                predictions={predictions}
+                playerName={playerName}
               />
             )}
 

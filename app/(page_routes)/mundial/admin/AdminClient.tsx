@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Activity, ArrowLeft, BadgePercent, BarChart3, CheckCircle2, Crown, GitMerge, Loader2, RefreshCw, Shield, Tv2, Trophy, Users } from "lucide-react";
+import { Activity, ArrowLeft, BarChart3, CheckCircle2, Crown, Loader2, RefreshCw, Shield, Tv2, Trophy, Users } from "lucide-react";
 import Link from "next/link";
 import type { AdminData, AdminMatch, AdminView, LeaderboardEntry } from "./adminTypes";
 import { cn } from "../utils";
@@ -40,8 +40,6 @@ function sortByProximity(matches: AdminMatch[], nowMs: number): AdminMatch[] {
 const ADMIN_API = "/api/mundial/admin";
 const MATCH_API = "/api/mundial/admin/match";
 const STAT_Q_API = "/api/mundial/admin/stat-questions";
-const ODDS_SYNC_API = "/api/mundial/admin/odds-sync";
-const BRACKET_API = "/api/mundial/admin/propagate-bracket";
 
 const VIEW_OPTIONS: Array<{ id: AdminView; label: string; icon: React.ReactNode }> = [
   { id: "matches", label: "Partidos", icon: <Tv2 className="h-4 w-4" /> },
@@ -67,10 +65,6 @@ export default function AdminClient() {
   const [nowMs, setNowMs] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
-  const [oddsSyncMessage, setOddsSyncMessage] = useState("");
-  const [isSyncingOdds, setIsSyncingOdds] = useState(false);
-  const [bracketMessage, setBracketMessage] = useState("");
-  const [isPropagatingBracket, setIsPropagatingBracket] = useState(false);
   const [matchFilter, setMatchFilter] = useState<MatchFilter>("recent");
   const [selectedPlayer, setSelectedPlayer] = useState<LeaderboardEntry | null>(null);
 
@@ -163,44 +157,6 @@ export default function AdminClient() {
       throw new Error(body.error ?? "Error resolviendo pregunta.");
     }
     await load();
-  }
-
-  async function propagateBracket() {
-    setError("");
-    setBracketMessage("");
-    setIsPropagatingBracket(true);
-    try {
-      const res = await fetch(BRACKET_API, { method: "POST" });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body.error ?? "Error propagando bracket.");
-      setBracketMessage(
-        body.updated > 0
-          ? `Bracket: ${body.updated} campo(s) actualizado(s).`
-          : "Bracket: sin cambios pendientes."
-      );
-      await load();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo propagar el bracket.");
-    } finally {
-      setIsPropagatingBracket(false);
-    }
-  }
-
-  async function syncOdds() {
-    setError("");
-    setOddsSyncMessage("");
-    setIsSyncingOdds(true);
-    try {
-      const res = await fetch(ODDS_SYNC_API, { method: "POST" });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body.error ?? "Error sincronizando odds.");
-      setOddsSyncMessage(`Odds actualizadas: ${body.updated ?? 0} partido(s).`);
-      await load();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo sincronizar odds.");
-    } finally {
-      setIsSyncingOdds(false);
-    }
   }
 
   const resolvedMatches = useMemo(() => {
@@ -296,25 +252,6 @@ export default function AdminClient() {
             >
               {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
               <span className="hidden sm:inline">Actualizar</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => void propagateBracket()}
-              disabled={isPropagatingBracket}
-              className="inline-flex h-9 items-center gap-2 rounded-lg border border-sky-600/60 bg-sky-700 px-3 text-sm font-black text-white transition hover:bg-sky-600 disabled:opacity-50"
-              title="Resolver equipos del bracket desde los resultados de grupos"
-            >
-              {isPropagatingBracket ? <Loader2 className="h-4 w-4 animate-spin" /> : <GitMerge className="h-4 w-4" />}
-              <span className="hidden sm:inline">Bracket</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => void syncOdds()}
-              disabled={isSyncingOdds}
-              className="inline-flex h-9 items-center gap-2 rounded-lg border border-[#f0b429]/45 bg-[#f0b429] px-3 text-sm font-black text-[#07110b] transition hover:bg-[#ffe083] disabled:opacity-50"
-            >
-              {isSyncingOdds ? <Loader2 className="h-4 w-4 animate-spin" /> : <BadgePercent className="h-4 w-4" />}
-              <span className="hidden sm:inline">Odds</span>
             </button>
           </div>
         </div>
@@ -425,17 +362,6 @@ export default function AdminClient() {
             {error}
           </div>
         )}
-        {oddsSyncMessage && (
-          <div className="mb-4 rounded-xl border border-[#f0b429]/45 bg-[#211707]/80 p-3 text-sm font-bold text-[#fff1b8]">
-            {oddsSyncMessage}
-          </div>
-        )}
-        {bracketMessage && (
-          <div className="mb-4 rounded-xl border border-sky-600/45 bg-sky-950/80 p-3 text-sm font-bold text-sky-200">
-            {bracketMessage}
-          </div>
-        )}
-
         {isLoading && !data ? (
           <div className="grid min-h-80 place-items-center rounded-xl border border-dashed border-white/20 bg-black/35 p-8 shadow-[0_18px_58px_rgba(0,0,0,0.18)]">
             <div className="text-center">

@@ -12,6 +12,7 @@ export const VIEW_OPTIONS: Array<{ id: ViewMode; label: string }> = [
   { id: "next", label: "En Vivo" },
   { id: "mine", label: "Predicciones" },
   { id: "players", label: "Tabla de Líderes" },
+  { id: "bracket", label: "Bracket" },
 ];
 
 export const MUNDIAL_PREMIUM_PRICE_USD = 5;

@@ -1,47 +1,46 @@
 'use client';
-import { useRef, useEffect, type MutableRefObject } from 'react';
+import { useEffect, useRef, type MutableRefObject } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { KeyState } from '../hooks/useKeyboard';
 import type { PlatformData } from '../types';
 import { DEATH_Y } from '../data/levelData';
 
-// Physics constants
-const SPEED         = 6;
-const JUMP_VEL      = 12;
-const JUMP2_VEL     = 10.5;
-const GRAVITY       = -28;
-const GLIDE_FALL    = -4.2;   // max fall speed while gliding (holding jump)
-const MAX_JUMPS     = 2;
-const P_HALF_W      = 0.28;
-const P_HALF_H      = 0.42;
+const SPEED = 6;
+const JUMP_VEL = 12;
+const JUMP2_VEL = 10.5;
+const GRAVITY = -28;
+const GLIDE_FALL = -4.2;
+const MAX_JUMPS = 2;
+const P_HALF_W = 0.28;
+const P_HALF_H = 0.42;
+const MAX_FRAME_DT = 1 / 30;
+const PHYSICS_STEP = 1 / 120;
 
 interface Props {
-  keys:         MutableRefObject<KeyState>;
-  platforms:    PlatformData[];
-  spawnPos:     [number, number, number];
+  keys: MutableRefObject<KeyState>;
+  platforms: PlatformData[];
+  spawnPos: [number, number, number];
   playerPosRef: MutableRefObject<THREE.Vector3>;
-  gameStatus:   string;
-  onDie:        () => void;
+  gameStatus: string;
+  onDie: () => void;
 }
 
 export function Player({ keys, platforms, spawnPos, playerPosRef, gameStatus, onDie }: Props) {
-  const groupRef   = useRef<THREE.Group>(null);
-  const visualRef  = useRef<THREE.Group>(null);
-  const vel        = useRef(new THREE.Vector3());
-  const grounded   = useRef(false);
-  const jumpCount  = useRef(0);
-  const jumpWas    = useRef(false);
+  const groupRef = useRef<THREE.Group>(null);
+  const visualRef = useRef<THREE.Group>(null);
+  const vel = useRef(new THREE.Vector3());
+  const grounded = useRef(false);
+  const jumpCount = useRef(0);
+  const jumpWas = useRef(false);
   const deathFired = useRef(false);
-  const animT      = useRef(0);
-  const facingR    = useRef(true);
+  const animT = useRef(0);
+  const facingR = useRef(true);
 
-  // Eyes refs for blinking
   const eyeL = useRef<THREE.Mesh>(null);
   const eyeR = useRef<THREE.Mesh>(null);
   const blinkT = useRef(0);
 
-  // Reset player state on respawn / restart
   useEffect(() => {
     if (gameStatus === 'playing') {
       if (groupRef.current) groupRef.current.position.set(...spawnPos);
@@ -56,33 +55,23 @@ export function Player({ keys, platforms, spawnPos, playerPosRef, gameStatus, on
     if (!groupRef.current || gameStatus !== 'playing') return;
 
     const pos = groupRef.current.position;
-    const k   = keys.current;
-    const dt  = Math.min(delta, 0.05);
+    const k = keys.current;
+    const frameDt = Math.min(delta, MAX_FRAME_DT);
+    const steps = Math.max(1, Math.ceil(frameDt / PHYSICS_STEP));
+    const dt = frameDt / steps;
 
     animT.current += delta;
     blinkT.current += delta;
 
     const wasGrounded = grounded.current;
-    grounded.current  = false;
-
-    // ── Horizontal ──────────────────────────────────────────
     const moveX = (k.right ? 1 : 0) - (k.left ? 1 : 0);
     vel.current.x = moveX * SPEED;
     if (moveX !== 0) facingR.current = moveX > 0;
 
-    // ── Gravity ──────────────────────────────────────────────
-    vel.current.y += GRAVITY * dt;
-
-    // Glide: hold jump while falling after at least 1 jump
-    if (k.jump && vel.current.y < GLIDE_FALL && jumpCount.current >= 1) {
-      vel.current.y = GLIDE_FALL;
-    }
-
-    // ── Jump (edge-detect on press) ───────────────────────────
     const jumpNow = k.jump;
     if (jumpNow && !jumpWas.current) {
       if (wasGrounded) {
-        vel.current.y   = JUMP_VEL;
+        vel.current.y = JUMP_VEL;
         jumpCount.current = 1;
       } else if (jumpCount.current < MAX_JUMPS) {
         vel.current.y = JUMP2_VEL;
@@ -91,72 +80,76 @@ export function Player({ keys, platforms, spawnPos, playerPosRef, gameStatus, on
     }
     jumpWas.current = jumpNow;
 
-    // ── Apply X, resolve X collisions ────────────────────────
-    pos.x += vel.current.x * dt;
-    for (const p of platforms) {
-      const [px, py] = p.position;
-      const [pw, ph] = p.size;
-      const ox = Math.abs(pos.x - px) - (pw * 0.5 + P_HALF_W);
-      const oy = Math.abs(pos.y - py) - (ph * 0.5 + P_HALF_H);
-      if (ox < 0 && oy < 0) {
-        const pushX = pw * 0.5 + P_HALF_W - Math.abs(pos.x - px);
-        pos.x += pos.x > px ? pushX : -pushX;
-        vel.current.x = 0;
-      }
-    }
+    grounded.current = false;
 
-    // ── Apply Y, resolve Y collisions ────────────────────────
-    pos.y += vel.current.y * dt;
-    for (const p of platforms) {
-      const [px, py] = p.position;
-      const [pw, ph] = p.size;
-      const ox = Math.abs(pos.x - px) - (pw * 0.5 + P_HALF_W);
-      const oy = Math.abs(pos.y - py) - (ph * 0.5 + P_HALF_H);
-      if (ox < 0 && oy < 0) {
-        if (pos.y > py) {
-          pos.y = py + ph * 0.5 + P_HALF_H;
-          if (vel.current.y < 0) vel.current.y = 0;
-          grounded.current  = true;
-          jumpCount.current = 0;
-        } else {
-          pos.y = py - ph * 0.5 - P_HALF_H;
-          if (vel.current.y > 0) vel.current.y = 0;
+    for (let step = 0; step < steps; step++) {
+      vel.current.y += GRAVITY * dt;
+
+      if (k.jump && vel.current.y < GLIDE_FALL && jumpCount.current >= 1) {
+        vel.current.y = GLIDE_FALL;
+      }
+
+      pos.x += vel.current.x * dt;
+      for (const p of platforms) {
+        const [px, py] = p.position;
+        const [pw, ph] = p.size;
+        const ox = Math.abs(pos.x - px) - (pw * 0.5 + P_HALF_W);
+        const oy = Math.abs(pos.y - py) - (ph * 0.5 + P_HALF_H);
+
+        if (ox < 0 && oy < 0) {
+          const pushX = pw * 0.5 + P_HALF_W - Math.abs(pos.x - px);
+          pos.x += pos.x > px ? pushX : -pushX;
+          vel.current.x = 0;
+        }
+      }
+
+      const prevY = pos.y;
+      pos.y += vel.current.y * dt;
+
+      for (const p of platforms) {
+        const [px, py] = p.position;
+        const [pw, ph] = p.size;
+        const platformTop = py + ph * 0.5;
+        const platformBottom = py - ph * 0.5;
+        const ox = Math.abs(pos.x - px) - (pw * 0.5 + P_HALF_W);
+        const oy = Math.abs(pos.y - py) - (ph * 0.5 + P_HALF_H);
+
+        if (ox < 0 && oy < 0) {
+          if (prevY - P_HALF_H >= platformTop && vel.current.y <= 0) {
+            pos.y = platformTop + P_HALF_H;
+            vel.current.y = 0;
+            grounded.current = true;
+            jumpCount.current = 0;
+          } else if (prevY + P_HALF_H <= platformBottom && vel.current.y > 0) {
+            pos.y = platformBottom - P_HALF_H;
+            vel.current.y = 0;
+          }
         }
       }
     }
 
-    // ── Death zone ────────────────────────────────────────────
     if (pos.y < DEATH_Y && !deathFired.current) {
       deathFired.current = true;
       onDie();
     }
 
-    // Broadcast position to other components
     playerPosRef.current.copy(pos);
 
-    // ── Visual animations ─────────────────────────────────────
     const g = groupRef.current;
     const v = visualRef.current;
-
-    // Flip based on facing
     g.scale.x = facingR.current ? 1 : -1;
 
     if (grounded.current) {
-      // Hover wobble on the visual group only (doesn't touch physics position)
       if (v) v.position.y = Math.sin(animT.current * 4.5) * 0.007;
-      // Running lean
       g.rotation.z = THREE.MathUtils.lerp(g.rotation.z, -moveX * 0.14, 0.14);
-      // Squash to normal
-      g.scale.y = THREE.MathUtils.lerp(g.scale.y, 1,    0.18);
+      g.scale.y = THREE.MathUtils.lerp(g.scale.y, 1, 0.18);
     } else {
       if (v) v.position.y = 0;
-      // Stretch on ascent, squish on descent
       const stretch = vel.current.y > 0 ? 1.28 : 0.84;
-      g.scale.y  = THREE.MathUtils.lerp(g.scale.y,  stretch, 0.14);
+      g.scale.y = THREE.MathUtils.lerp(g.scale.y, stretch, 0.14);
       g.rotation.z = THREE.MathUtils.lerp(g.rotation.z, 0, 0.09);
     }
 
-    // Eye blink every ~3 sec
     const blink = blinkT.current % 3 < 0.1;
     const eyeScaleY = blink ? 0.15 : 1;
     if (eyeL.current) eyeL.current.scale.y = eyeScaleY;
@@ -165,9 +158,7 @@ export function Player({ keys, platforms, spawnPos, playerPosRef, gameStatus, on
 
   return (
     <group ref={groupRef} position={spawnPos}>
-      {/* Visual-only group for wobble — isolated from physics position */}
       <group ref={visualRef}>
-        {/* Ghost body sphere */}
         <mesh>
           <sphereGeometry args={[0.34, 18, 18]} />
           <meshStandardMaterial
@@ -179,7 +170,6 @@ export function Player({ keys, platforms, spawnPos, playerPosRef, gameStatus, on
           />
         </mesh>
 
-        {/* Ghost skirt / tail cone */}
         <mesh position={[0, -0.27, 0]}>
           <coneGeometry args={[0.34, 0.44, 8, 1, true]} />
           <meshStandardMaterial
@@ -192,7 +182,6 @@ export function Player({ keys, platforms, spawnPos, playerPosRef, gameStatus, on
           />
         </mesh>
 
-        {/* Wavy skirt lobes */}
         {[-0.14, 0, 0.14].map((xoff, i) => (
           <mesh key={i} position={[xoff, -0.48, 0]}>
             <sphereGeometry args={[0.087, 8, 8]} />
@@ -206,18 +195,15 @@ export function Player({ keys, platforms, spawnPos, playerPosRef, gameStatus, on
           </mesh>
         ))}
 
-        {/* Left eye */}
         <mesh ref={eyeL} position={[0.12, 0.08, 0.29]}>
           <sphereGeometry args={[0.062, 8, 8]} />
           <meshStandardMaterial color="#001e3c" emissive="#1565c0" emissiveIntensity={1.8} />
         </mesh>
-        {/* Right eye */}
         <mesh ref={eyeR} position={[-0.12, 0.08, 0.29]}>
           <sphereGeometry args={[0.062, 8, 8]} />
           <meshStandardMaterial color="#001e3c" emissive="#1565c0" emissiveIntensity={1.8} />
         </mesh>
 
-        {/* Ghostly glow point light */}
         <pointLight color="#4fc3f7" intensity={2.2} distance={3.8} decay={2} />
       </group>
     </group>

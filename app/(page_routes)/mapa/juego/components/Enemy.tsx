@@ -1,5 +1,5 @@
 'use client';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { EnemyData } from '../types';
@@ -12,19 +12,27 @@ interface Props {
 }
 
 const PATROL_SPEED = 2.4;
-const HIT_DIST = 0.72;
+const SIDE_HIT_X = 0.62;
+const SIDE_HIT_Y = 0.42;
+const STOMP_X = 0.58;
+const STOMP_MIN_Y = 0.36;
+const STOMP_MAX_Y = 0.92;
 
 export function Enemy({ data, playerPosRef, onPlayerHit, gameStatus }: Props) {
+  const [defeated, setDefeated] = useState(false);
+  const [defeatedPosition, setDefeatedPosition] = useState<[number, number, number]>(data.position);
   const groupRef  = useRef<THREE.Group>(null);
   const posX      = useRef(data.position[0]);
   const dir       = useRef(1);
   const hitCd     = useRef(false);
+  const stomped   = useRef(false);
+  const lastPlayerY = useRef(data.position[1] + STOMP_MAX_Y);
   const leftWing  = useRef<THREE.Mesh>(null);
   const rightWing = useRef<THREE.Mesh>(null);
   const t         = useRef(0);
 
   useFrame((_, delta) => {
-    if (gameStatus !== 'playing' || !groupRef.current) return;
+    if (gameStatus !== 'playing' || !groupRef.current || defeated) return;
     t.current += delta;
 
     const minX = data.position[0] - data.patrolRange;
@@ -36,7 +44,8 @@ export function Enemy({ data, playerPosRef, onPlayerHit, gameStatus }: Props) {
 
     // Float and move
     groupRef.current.position.x = posX.current;
-    groupRef.current.position.y = data.position[1] + Math.sin(t.current * 3.5) * 0.18;
+    const enemyY = data.position[1] + Math.sin(t.current * 3.5) * 0.18;
+    groupRef.current.position.y = enemyY;
     groupRef.current.scale.x = dir.current; // flip to face direction
 
     // Wing flap
@@ -44,17 +53,40 @@ export function Enemy({ data, playerPosRef, onPlayerHit, gameStatus }: Props) {
     if (leftWing.current)  leftWing.current.rotation.z  =  flapAngle;
     if (rightWing.current) rightWing.current.rotation.z = -flapAngle;
 
-    // Player hit detection
+    // Player hit detection: stomp from above defeats the enemy; side contact hurts the player.
     const dx = playerPosRef.current.x - posX.current;
-    const dy = playerPosRef.current.y - data.position[1];
-    const dist = Math.sqrt(dx * dx + dy * dy);
+    const dy = playerPosRef.current.y - enemyY;
+    const fallingOrLevel = playerPosRef.current.y <= lastPlayerY.current + 0.02;
+    const stompHit = Math.abs(dx) < STOMP_X && dy > STOMP_MIN_Y && dy < STOMP_MAX_Y && fallingOrLevel;
 
-    if (dist < HIT_DIST && !hitCd.current) {
+    if (stompHit && !stomped.current) {
+      stomped.current = true;
+      setDefeatedPosition([posX.current, enemyY, data.position[2]]);
+      setDefeated(true);
+      return;
+    }
+
+    const sideHit = Math.abs(dx) < SIDE_HIT_X && Math.abs(dy) < SIDE_HIT_Y;
+
+    if (sideHit && !hitCd.current) {
       hitCd.current = true;
       onPlayerHit();
       setTimeout(() => { hitCd.current = false; }, 2200);
     }
+
+    lastPlayerY.current = playerPosRef.current.y;
   });
+
+  if (defeated) {
+    return (
+      <group position={defeatedPosition}>
+        <mesh scale={[0.9, 0.18, 0.5]}>
+          <sphereGeometry args={[0.42, 10, 8]} />
+          <meshStandardMaterial color="#7a2fa8" emissive="#00e676" emissiveIntensity={0.7} transparent opacity={0.55} />
+        </mesh>
+      </group>
+    );
+  }
 
   return (
     <group ref={groupRef} position={data.position}>

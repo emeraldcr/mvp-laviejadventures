@@ -4,6 +4,8 @@ import * as THREE from 'three';
 import type { GameState, LevelData, TrailStation } from '../types';
 import { GAME_LEVELS, TRAIL_CONNECTIONS, TRAIL_STATIONS } from '../data/levelData';
 
+const DEV_UNLOCK_ALL_LEVELS = process.env.NODE_ENV === 'development';
+
 interface Props {
   state: GameState;
   level: LevelData;
@@ -15,13 +17,15 @@ interface Props {
 export function TrailMiniMap({ state, level, playerPosRef, variant = 'mini', onEnterLevel }: Props) {
   const ghostRef = useRef<SVGGElement>(null);
   const isFull = variant === 'full';
+  const levelStationIndex = Math.max(0, stationIndex(level.stationId));
   const activeStationIndex = Math.min(
-    state.status === 'complete' ? state.unlockedStationIndex : state.currentLevelIndex,
+    state.status === 'complete' ? state.unlockedStationIndex : levelStationIndex,
     TRAIL_STATIONS.length - 1,
   );
   const activeStation = TRAIL_STATIONS[activeStationIndex];
-  const nextStation = TRAIL_STATIONS[Math.min(activeStationIndex + 1, TRAIL_STATIONS.length - 1)];
-  const canEnter = state.currentLevelIndex <= state.unlockedStationIndex && state.currentLevelIndex < GAME_LEVELS.length;
+  const nextStation = level.nextStationId ? getStation(level.nextStationId) : TRAIL_STATIONS[Math.min(activeStationIndex + 1, TRAIL_STATIONS.length - 1)];
+  const unlockedStationIndex = DEV_UNLOCK_ALL_LEVELS ? GAME_LEVELS.length : state.unlockedStationIndex;
+  const canEnter = state.currentLevelIndex <= unlockedStationIndex && state.currentLevelIndex < GAME_LEVELS.length;
 
   const ghostPoint = useMemo(() => {
     if (!activeStation || !nextStation) return activeStation ?? TRAIL_STATIONS[0];
@@ -75,8 +79,8 @@ export function TrailMiniMap({ state, level, playerPosRef, variant = 'mini', onE
           const from = getStation(connection.from);
           const to = getStation(connection.to);
           const isUnlocked =
-            stationIndex(connection.from) <= state.unlockedStationIndex &&
-            stationIndex(connection.to) <= state.unlockedStationIndex + 1;
+            stationIndex(connection.from) <= unlockedStationIndex &&
+            stationIndex(connection.to) <= unlockedStationIndex + 1;
 
           return (
             <line
@@ -95,7 +99,7 @@ export function TrailMiniMap({ state, level, playerPosRef, variant = 'mini', onE
         })}
 
         {TRAIL_STATIONS.map((station, index) => {
-          const isUnlocked = index <= state.unlockedStationIndex;
+          const isUnlocked = index <= unlockedStationIndex;
           const isCurrent = index === activeStationIndex;
 
           return (
@@ -143,6 +147,25 @@ export function TrailMiniMap({ state, level, playerPosRef, variant = 'mini', onE
               ENTRAR AL TRAMO
             </button>
           )}
+          <div style={levelPickerStyle}>
+            {GAME_LEVELS.map((gameLevel, index) => {
+              const isUnlocked = DEV_UNLOCK_ALL_LEVELS || index <= state.unlockedStationIndex;
+              const isActive = index === state.currentLevelIndex;
+              return (
+                <button
+                  key={gameLevel.id}
+                  type="button"
+                  onClick={() => isUnlocked && onEnterLevel?.(index)}
+                  disabled={!isUnlocked}
+                  style={levelButtonStyle(isActive, isUnlocked)}
+                  title={gameLevel.title}
+                >
+                  {index + 1}
+                </button>
+              );
+            })}
+          </div>
+          {DEV_UNLOCK_ALL_LEVELS ? <p style={devTextStyle}>DEV: todos los tramos desbloqueados</p> : null}
         </div>
       ) : (
         <div style={miniFooterStyle}>{level.title}</div>
@@ -224,6 +247,30 @@ const stationTextStyle: React.CSSProperties = { margin: '6px 0 0', color: '#f4ff
 const routeTextStyle: React.CSSProperties = { margin: 0, color: '#ffd166', fontSize: 14, fontWeight: 700 };
 const hintTextStyle: React.CSSProperties = { margin: 0, color: '#a7bdb2', fontSize: 12, lineHeight: 1.45 };
 const completeTextStyle: React.CSSProperties = { margin: '8px 0 0', color: '#00e676', fontSize: 16, fontWeight: 700 };
+const devTextStyle: React.CSSProperties = { margin: 0, color: '#8ff7c1', fontSize: 11, letterSpacing: 1.1, textTransform: 'uppercase' };
+const levelPickerStyle: React.CSSProperties = {
+  display: 'flex',
+  flexWrap: 'wrap',
+  justifyContent: 'center',
+  gap: 8,
+  marginTop: 8,
+};
+
+function levelButtonStyle(active: boolean, unlocked: boolean): React.CSSProperties {
+  return {
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    border: active ? '1px solid #eafff4' : '1px solid rgba(255, 209, 102, 0.34)',
+    background: unlocked ? (active ? '#00c853' : 'rgba(255, 209, 102, 0.16)') : 'rgba(60, 70, 65, 0.5)',
+    color: unlocked ? '#f4fff8' : '#7d8d85',
+    fontFamily: '"Courier New", monospace',
+    fontSize: 13,
+    fontWeight: 700,
+    cursor: unlocked ? 'pointer' : 'not-allowed',
+    boxShadow: active ? '0 0 20px rgba(0, 230, 118, 0.35)' : 'none',
+  };
+}
 
 const enterButtonStyle: React.CSSProperties = {
   marginTop: 8,

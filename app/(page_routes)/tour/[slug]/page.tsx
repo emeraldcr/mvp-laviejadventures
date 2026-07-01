@@ -104,10 +104,10 @@ export default async function TourDetailPage({ params }: TourDetailPageProps) {
 
   const gallery = getTourGallery(tour.slug);
   const heroImage = getTourImage(tour.slug);
-  const bookingHref = `/?tour=${encodeURIComponent(tour.slug)}#booking`;
+  const bookingHref = `/reservar?tour=${encodeURIComponent(tour.slug)}`;
   const bookingHrefForPackage = (packageId?: string | null) => {
     const packageParam = packageId ? `&package=${encodeURIComponent(packageId)}` : "";
-    return `/?tour=${encodeURIComponent(tour.slug)}${packageParam}#booking`;
+    return `/reservar?tour=${encodeURIComponent(tour.slug)}${packageParam}`;
   };
   const title = tour.titleEs || tour.titleEn || "Tour";
   const description = tour.details || tour.descriptionEs || tour.descriptionEn;
@@ -143,7 +143,7 @@ export default async function TourDetailPage({ params }: TourDetailPageProps) {
                 Reservar este tour
                 <ChevronRight className="h-4 w-4" aria-hidden />
               </Link>
-              <Link href="/#booking" className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-6 py-3 text-sm font-bold uppercase tracking-[0.16em] text-white transition hover:border-white/50 hover:bg-white/15">
+              <Link href="/reservar" className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-6 py-3 text-sm font-bold uppercase tracking-[0.16em] text-white transition hover:border-white/50 hover:bg-white/15">
                 Volver a reserva
               </Link>
             </div>

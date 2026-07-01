@@ -84,7 +84,7 @@ export default function TourWeatherDashboard() {
             <Link href="/galeria" className="transition-colors hover:text-white">Galería</Link>
             <Link href="/ai" className="transition-colors hover:text-white">AI</Link>
             <Link
-              href="/#booking"
+              href="/reservar"
               className="rounded-full border border-teal-300/40 bg-teal-400/10 px-3 py-1 text-teal-200 transition hover:bg-teal-400/20"
             >
               Reservar

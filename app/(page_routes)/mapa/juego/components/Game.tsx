@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable react-hooks/immutability */
 import { useRef, useEffect, Suspense } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -52,7 +53,7 @@ function Scene({
   return (
     <>
       <CameraRig targetRef={playerPosRef} />
-      <Environment />
+      <Environment level={level} />
       <Player
         keys={keys}
         platforms={level.platforms}

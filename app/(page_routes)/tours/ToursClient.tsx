@@ -121,7 +121,7 @@ export function ToursClient({ tours }: { tours: TourData[] }) {
                 </p>
                 <p className="mt-1 text-xs text-zinc-500">{tr.perPerson}</p>
                 <Link
-                  href={`/?tour=${featuredTour.slug}#booking`}
+                  href={`/reservar?tour=${encodeURIComponent(featuredTour.slug)}`}
                   className="mt-4 inline-flex items-center gap-2 rounded-full bg-teal-500 px-6 py-3 text-sm font-bold text-black shadow-lg shadow-teal-900/40 transition-all duration-200 hover:bg-teal-400"
                 >
                   {tr.bookNow} <ChevronRight size={16} />
@@ -194,7 +194,7 @@ export function ToursClient({ tours }: { tours: TourData[] }) {
                     </p>
                   </div>
                   <Link
-                    href={`/?tour=${tour.slug}#booking`}
+                    href={`/reservar?tour=${encodeURIComponent(tour.slug)}`}
                     className="flex flex-shrink-0 items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition-all duration-200 hover:bg-white/20"
                   >
                     {tr.reserve} <ChevronRight size={14} />

@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/helpers/mongodb";
-import { serializeBettingFavorite } from "@/lib/mundial/betting";
 import { serializeLiveMatchStats } from "@/lib/mundial/live-stats";
 import { notifyLiveMatchChanged } from "@/lib/mundial/live-match-events";
 import { notifyPenalitosChanged } from "@/lib/mundial/penalitos-events";
 import { notifyScorerChanged } from "@/lib/mundial/scorer-events";
-import { applyBracketPropagation } from "@/lib/mundial/apply-bracket";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +14,6 @@ const MAX_LIVE_MINUTE = 130;
 type LiveMatchStatus = "scheduled" | "live" | "halftime" | "fulltime";
 type LiveEventType = "goal" | "penalty" | "yellow" | "red" | "var" | "substitution" | "note";
 type LiveEventTeam = "home" | "away" | null;
-type MatchTeams = { homeTeam?: string; awayTeam?: string };
 
 const LIVE_STATUSES = new Set<LiveMatchStatus>(["scheduled", "live", "halftime", "fulltime"]);
 const LIVE_EVENT_TYPES = new Set<LiveEventType>([
@@ -114,18 +111,8 @@ export async function PATCH(req: NextRequest) {
 
     const db = await getDb();
     const $set: Record<string, unknown> = { updatedAt: new Date() };
-    let matchTeams: MatchTeams | null = null;
     let touchedLiveState = false;
     let touchedFinalScore = false;
-
-    async function readMatchTeams() {
-      if (!matchTeams) {
-        matchTeams = await db
-          .collection<MatchTeams>(MATCHES_COLLECTION)
-          .findOne({ id: matchId }, { projection: { homeTeam: 1, awayTeam: 1 } });
-      }
-      return matchTeams;
-    }
 
     if ("homeFinalScore" in body) {
       const parsed = body.homeFinalScore === null ? null : parseScore(homeFinalScore);
@@ -280,22 +267,6 @@ export async function PATCH(req: NextRequest) {
       }
     }
 
-    if ("bettingFavorite" in body) {
-      if (body.bettingFavorite === null) {
-        $set.bettingFavorite = null;
-      } else {
-        const teams = await readMatchTeams();
-        if (!teams?.homeTeam || !teams.awayTeam) {
-          return NextResponse.json({ error: "Partido no encontrado." }, { status: 404 });
-        }
-
-        $set.bettingFavorite = serializeBettingFavorite(
-          { ...body.bettingFavorite, updatedAt: new Date() },
-          { homeTeam: teams.homeTeam, awayTeam: teams.awayTeam }
-        );
-      }
-    }
-
     const result = await db
       .collection(MATCHES_COLLECTION)
       .updateOne({ id: matchId }, { $set });
@@ -308,14 +279,6 @@ export async function PATCH(req: NextRequest) {
       notifyLiveMatchChanged();
       notifyPenalitosChanged();
       notifyScorerChanged();
-    }
-
-    // When a match closes, propagate bracket in the background so the next-round
-    // slots show the real team names without needing a manual admin trigger.
-    if ($set.forceClosed === true || $set.liveStatus === "fulltime") {
-      void applyBracketPropagation(db).catch((err) =>
-        console.error("Background bracket propagation failed:", err),
-      );
     }
 
     return NextResponse.json({ ok: true });

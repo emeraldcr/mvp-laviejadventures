@@ -56,7 +56,7 @@ export default function ReservationSection({ className, preselectedTourSlug }: P
 
   const handleReserve = (data: OrderPayload) => {
     sessionStorage.setItem("reservationOrderDetails", JSON.stringify(data));
-    sessionStorage.setItem(RESERVATION_RETURN_KEY, "/#booking");
+    sessionStorage.setItem(RESERVATION_RETURN_KEY, `/reservar?tour=${encodeURIComponent(data.tourSlug)}`);
     router.push("/reservation");
   };
 

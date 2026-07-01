@@ -15,7 +15,6 @@ import {
 } from "../utils";
 import { Flag } from "./Flag";
 import { ScoreInput } from "./ScoreInput";
-import { BettingFavoriteCard } from "./BettingFavoriteCard";
 
 type MatchStatus = {
   label: string;
@@ -138,8 +137,6 @@ export function MatchCard({ match, draft, savingId, isSavingBulk, todayEditableM
           onChange={(value) => onUpdateDraft(match.id, { awayScore: value })}
         />
       </div>
-
-      <BettingFavoriteCard match={match} variant="compact" />
 
       {isKnockoutTie && canEdit && (
         <select
