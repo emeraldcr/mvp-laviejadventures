@@ -1,12 +1,51 @@
 'use client';
-import { Suspense } from 'react';
+import { Suspense, useMemo } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Scene } from './Scene';
 import { GameUI } from './GameUI/GameUI';
-import { useGameContext } from '../context/GameContext';
+import { GameRuntimeProvider, useGameContext } from '../context/GameContext';
+import type { GameRuntimeContextValue } from '../types';
 
 export function GameCanvas() {
-  const { level } = useGameContext();
+  const {
+    collectCrystal,
+    handleDie,
+    handlePlayerHit,
+    handlePowerUpChange,
+    handleWin,
+    keys,
+    level,
+    levelKey,
+    pendingPowerUpRef,
+    playerImmuneRef,
+    playerPosRef,
+    bulletsRef,
+    state,
+  } = useGameContext();
+
+  const runtimeValue = useMemo<GameRuntimeContextValue>(() => ({
+    keys,
+    playerPosRef,
+    bulletsRef,
+    pendingPowerUpRef,
+    playerImmuneRef,
+    handlePowerUpChange,
+    handlePlayerHit,
+    handleDie,
+    handleWin,
+    collectCrystal,
+  }), [
+    keys,
+    playerPosRef,
+    bulletsRef,
+    pendingPowerUpRef,
+    playerImmuneRef,
+    handlePowerUpChange,
+    handlePlayerHit,
+    handleDie,
+    handleWin,
+    collectCrystal,
+  ]);
 
   return (
     <div
@@ -29,7 +68,14 @@ export function GameCanvas() {
         dpr={1}
       >
         <Suspense fallback={null}>
-          <Scene />
+          <GameRuntimeProvider value={runtimeValue}>
+            <Scene
+              level={level}
+              levelKey={levelKey}
+              playerPosRef={playerPosRef}
+              gameStatus={state.status}
+            />
+          </GameRuntimeProvider>
         </Suspense>
       </Canvas>
 

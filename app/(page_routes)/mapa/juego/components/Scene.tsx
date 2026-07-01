@@ -7,7 +7,6 @@ import { Player } from './Player';
 import { Level } from './Level';
 import { Environment } from './Environment';
 import { Bullets } from './Bullets';
-import { useGameContext } from '../context/GameContext';
 import type { GameState, LevelData } from '../types';
 
 function CameraRig({ targetRef }: { targetRef: React.MutableRefObject<THREE.Vector3> }) {
@@ -24,20 +23,7 @@ function CameraRig({ targetRef }: { targetRef: React.MutableRefObject<THREE.Vect
   return null;
 }
 
-export function Scene() {
-  const { level, levelKey, playerPosRef, state } = useGameContext();
-
-  return (
-    <SceneView
-      level={level}
-      levelKey={levelKey}
-      playerPosRef={playerPosRef}
-      gameStatus={state.status}
-    />
-  );
-}
-
-const SceneView = memo(function SceneView({
+export const Scene = memo(function Scene({
   level,
   levelKey,
   playerPosRef,

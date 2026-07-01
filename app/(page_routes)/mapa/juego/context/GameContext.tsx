@@ -1,5 +1,5 @@
 'use client';
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import * as THREE from 'three';
 import type { BulletState, GameContextValue, GameProviderProps, GameRuntimeContextValue, PowerUpKind } from '../types';
 import { useGameState } from '../hooks/useGameState';
@@ -150,6 +150,20 @@ export function useGameContext(): GameContextValue {
   const ctx = useContext(GameContext);
   if (!ctx) throw new Error('useGameContext must be used within a GameProvider');
   return ctx;
+}
+
+export function GameRuntimeProvider({
+  children,
+  value,
+}: {
+  children: ReactNode;
+  value: GameRuntimeContextValue;
+}) {
+  return (
+    <GameRuntimeContext.Provider value={value}>
+      {children}
+    </GameRuntimeContext.Provider>
+  );
 }
 
 export function useGameRuntimeContext(): GameRuntimeContextValue {
