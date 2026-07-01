@@ -12,11 +12,11 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "ws": "^8.13.0",
     "@anthropic-ai/sdk": "^0.100.1",
     "@auth0/nextjs-auth0": "^4.17.0",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.1",
+    "@react-three/rapier": "^2.2.0",
     "@tensorflow/tfjs": "^4.22.0",
     "@types/three": "^0.184.1",
     "@vercel/analytics": "^1.6.1",
@@ -44,7 +44,8 @@
     "swr": "^2.4.0",
     "tailwind-merge": "^3.5.0",
     "three": "^0.184.0",
-    "twitter-api-v2": "^1.29.0"
+    "twitter-api-v2": "^1.29.0",
+    "ws": "^8.13.0"
   },
   "overrides": {
     "encoding-sniffer": "1.0.2",

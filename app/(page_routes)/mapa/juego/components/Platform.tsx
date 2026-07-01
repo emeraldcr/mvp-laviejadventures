@@ -1,6 +1,7 @@
 'use client';
 import { memo } from 'react';
 import type { PlatformData } from '../types';
+import { getBoxGeometry, getStandardMaterial } from '../lib/renderAssets';
 
 interface Props {
   data: PlatformData;
@@ -12,31 +13,38 @@ export const Platform = memo(function Platform({ data }: Props) {
   const palette = platformPalette(data.kind);
 
   return (
-    <group position={[px, py, pz]}>
-      <mesh>
-        <boxGeometry args={[pw, ph, pd]} />
-        <meshStandardMaterial color={palette.base} roughness={0.96} metalness={0.04} />
+    <group position={[px, py, pz]} dispose={null}>
+      <mesh geometry={getBoxGeometry(pw, ph, pd)} material={getStandardMaterial({ color: palette.base, roughness: 0.96, metalness: 0.04 })}>
       </mesh>
-      <mesh position={[0, ph / 2 - 0.09, 0]}>
-        <boxGeometry args={[pw * 0.97, 0.07, pd * 0.97]} />
-        <meshStandardMaterial color={palette.under} roughness={1} />
+      <mesh
+        position={[0, ph / 2 - 0.09, 0]}
+        geometry={getBoxGeometry(pw * 0.97, 0.07, pd * 0.97)}
+        material={getStandardMaterial({ color: palette.under })}
+      >
       </mesh>
-      <mesh position={[0, ph / 2 - 0.03, 0]}>
-        <boxGeometry args={[pw * 0.96, 0.1, pd * 0.96]} />
-        <meshStandardMaterial color={palette.top} roughness={0.68} />
+      <mesh
+        position={[0, ph / 2 - 0.03, 0]}
+        geometry={getBoxGeometry(pw * 0.96, 0.1, pd * 0.96)}
+        material={getStandardMaterial({ color: palette.top, roughness: 0.68 })}
+      >
       </mesh>
       {data.kind === 'stair' ? (
-        <mesh position={[0, ph / 2 + 0.07, 0]}>
-          <boxGeometry args={[pw * 0.78, 0.08, pd * 0.88]} />
-          <meshStandardMaterial color="#5d4730" roughness={0.9} />
+        <mesh
+          position={[0, ph / 2 + 0.07, 0]}
+          geometry={getBoxGeometry(pw * 0.78, 0.08, pd * 0.88)}
+          material={getStandardMaterial({ color: '#5d4730', roughness: 0.9 })}
+        >
         </mesh>
       ) : null}
       {data.kind === 'bridge' ? (
         <>
           {[-0.33, 0, 0.33].map((offset) => (
-            <mesh key={offset} position={[0, ph / 2 + 0.05, offset * pd]}>
-              <boxGeometry args={[pw * 0.92, 0.07, 0.08]} />
-              <meshStandardMaterial color="#6b4a25" roughness={0.85} />
+            <mesh
+              key={offset}
+              position={[0, ph / 2 + 0.05, offset * pd]}
+              geometry={getBoxGeometry(pw * 0.92, 0.07, 0.08)}
+              material={getStandardMaterial({ color: '#6b4a25', roughness: 0.85 })}
+            >
             </mesh>
           ))}
         </>

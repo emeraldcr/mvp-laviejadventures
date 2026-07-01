@@ -40,7 +40,21 @@ interface GameContextValue {
   resetAdventure: () => void;
 }
 
+interface GameRuntimeContextValue {
+  keys: React.MutableRefObject<KeyState>;
+  playerPosRef: React.MutableRefObject<THREE.Vector3>;
+  bulletsRef: React.MutableRefObject<BulletState[]>;
+  pendingPowerUpRef: React.MutableRefObject<PowerUpKind | null>;
+  playerImmuneRef: React.MutableRefObject<boolean>;
+  handlePowerUpChange: (ruby: boolean, sapphire: boolean) => void;
+  handlePlayerHit: () => void;
+  handleDie: () => void;
+  handleWin: () => void;
+  collectCrystal: (id: string) => void;
+}
+
 const GameContext = createContext<GameContextValue | null>(null);
+const GameRuntimeContext = createContext<GameRuntimeContextValue | null>(null);
 
 export function GameProvider({
   children,
@@ -148,11 +162,45 @@ export function GameProvider({
     registerPlayer, clearPlayer, collectCrystal, respawn, restart, enterLevel, resetAdventure,
   ]);
 
-  return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
+  const runtimeValue = useMemo<GameRuntimeContextValue>(() => ({
+    keys,
+    playerPosRef,
+    bulletsRef,
+    pendingPowerUpRef,
+    playerImmuneRef,
+    handlePowerUpChange,
+    handlePlayerHit,
+    handleDie: dieFromFall,
+    handleWin,
+    collectCrystal,
+  }), [
+    keys,
+    playerPosRef,
+    bulletsRef,
+    pendingPowerUpRef,
+    playerImmuneRef,
+    handlePowerUpChange,
+    handlePlayerHit,
+    dieFromFall,
+    handleWin,
+    collectCrystal,
+  ]);
+
+  return (
+    <GameRuntimeContext.Provider value={runtimeValue}>
+      <GameContext.Provider value={value}>{children}</GameContext.Provider>
+    </GameRuntimeContext.Provider>
+  );
 }
 
 export function useGameContext(): GameContextValue {
   const ctx = useContext(GameContext);
   if (!ctx) throw new Error('useGameContext must be used within a GameProvider');
+  return ctx;
+}
+
+export function useGameRuntimeContext(): GameRuntimeContextValue {
+  const ctx = useContext(GameRuntimeContext);
+  if (!ctx) throw new Error('useGameRuntimeContext must be used within a GameProvider');
   return ctx;
 }

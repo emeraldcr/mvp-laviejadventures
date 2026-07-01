@@ -3,7 +3,7 @@ import { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { CollectibleData } from '../types';
-import { useGameContext } from '../context/GameContext';
+import { useGameRuntimeContext } from '../context/GameContext';
 
 interface Props {
   data: CollectibleData;
@@ -14,7 +14,7 @@ const COLLECT_DIST_SQ = COLLECT_DIST * COLLECT_DIST;
 const _vec = new THREE.Vector3();
 
 export function Collectible({ data }: Props) {
-  const { playerPosRef, collectCrystal } = useGameContext();
+  const { playerPosRef, collectCrystal } = useGameRuntimeContext();
   const [collected, setCollected] = useState(false);
   const groupRef = useRef<THREE.Group>(null);
   const phase = useRef((data.id.charCodeAt(1) || 1) * 0.9);

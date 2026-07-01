@@ -2,11 +2,12 @@
 import { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import type { EnemyData } from '../types';
-import { useGameContext } from '../context/GameContext';
+import type { EnemyData, GameState } from '../types';
+import { useGameRuntimeContext } from '../context/GameContext';
 
 interface Props {
   data: EnemyData;
+  gameStatus: GameState['status'];
 }
 
 const PATROL_SPEED = 2.4;
@@ -18,9 +19,8 @@ const STOMP_MAX_Y  = 0.92;
 const BULLET_HIT_X = 0.52;
 const BULLET_HIT_Y = 0.38;
 
-export function Enemy({ data }: Props) {
-  const { playerPosRef, bulletsRef, handlePlayerHit, state } = useGameContext();
-  const gameStatus = state.status;
+export function Enemy({ data, gameStatus }: Props) {
+  const { playerPosRef, bulletsRef, handlePlayerHit } = useGameRuntimeContext();
   const [defeated, setDefeated] = useState(false);
   const [defeatedPos, setDefeatedPos] = useState<[number, number, number]>(data.position);
   const groupRef  = useRef<THREE.Group>(null);

@@ -2,13 +2,14 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { useGameContext } from '../context/GameContext';
+import { useGameRuntimeContext } from '../context/GameContext';
 import {
   SPEED, JUMP_VEL, JUMP2_VEL, GRAVITY, GLIDE_FALL, MAX_JUMPS,
   P_HALF_W, P_HALF_H, MAX_FRAME_DT, PHYSICS_STEP, COLLISION_EPS,
   RUBY_DURATION, SAPPH_DURATION, FIRE_COOLDOWN,
 } from '../constants/physics';
 import { DEATH_Y } from '../constants/world';
+import type { GameState, LevelData } from '../types';
 
 type PlatformBounds = {
   minX: number; maxX: number;
@@ -16,12 +17,17 @@ type PlatformBounds = {
   centerX: number;
 };
 
-export function Player() {
+export function Player({
+  level,
+  gameStatus,
+}: {
+  level: LevelData;
+  gameStatus: GameState['status'];
+}) {
   const {
-    state, keys, level, playerPosRef, bulletsRef,
+    keys, playerPosRef, bulletsRef,
     pendingPowerUpRef, playerImmuneRef, handlePowerUpChange, handleDie,
-  } = useGameContext();
-  const gameStatus = state.status;
+  } = useGameRuntimeContext();
   const platforms = level.platforms;
   const spawnPos = level.spawnPosition;
 

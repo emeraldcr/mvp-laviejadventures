@@ -5,6 +5,15 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { LevelData } from '../types';
 import { THEMES } from '../constants/themes';
+import { getBasicMaterial, getBoxGeometry, getPlaneGeometry, getSphereGeometry, getStandardMaterial } from '../lib/renderAssets';
+
+const FAR_BLOCKS = [-48, -28, -8, 14, 34, 56, 78];
+const FAR_TRUNKS = [-38, -12, 18, 46, 72];
+const MID_LEAVES = Array.from({ length: 8 }, (_, i) => i);
+const STAIRS_STEPS = Array.from({ length: 7 }, (_, i) => i);
+const RIVER_ROCKS = [-2, 8, 19, 31, 43];
+const CAFETAL_TRUNKS = [-2, 6, 14, 23, 31, 39, 47];
+const FOREST_TRUNKS = [0, 12, 24, 36, 48];
 
 export function Environment({ level }: { level: LevelData }) {
   const { scene } = useThree();
@@ -39,49 +48,62 @@ export function Environment({ level }: { level: LevelData }) {
       <directionalLight position={[8, 18, 4]} color={theme.sun} intensity={1.25} />
       <hemisphereLight args={['#1a4a28', '#3a2a14', 0.35]} />
 
-      <group ref={farRef} position={[20, 0, -22]}>
-        <mesh>
-          <planeGeometry args={[150, 58]} />
-          <meshBasicMaterial color={theme.backdrop} />
+      <group ref={farRef} position={[20, 0, -22]} dispose={null}>
+        <mesh geometry={getPlaneGeometry(150, 58)} material={getBasicMaterial({ color: theme.backdrop })}>
         </mesh>
 
-        {[-48, -28, -8, 14, 34, 56, 78].map((x, i) => (
-          <mesh key={x} position={[x, 7 + (i % 3) * 1.5, 0.12]}>
-            <boxGeometry args={[18 + (i % 2) * 6, 22 + (i % 3) * 4, 0.1]} />
-            <meshBasicMaterial color={i % 2 === 0 ? theme.farA : theme.farB} />
+        {FAR_BLOCKS.map((x, i) => (
+          <mesh
+            key={x}
+            position={[x, 7 + (i % 3) * 1.5, 0.12]}
+            geometry={getBoxGeometry(18 + (i % 2) * 6, 22 + (i % 3) * 4, 0.1)}
+            material={getBasicMaterial({ color: i % 2 === 0 ? theme.farA : theme.farB })}
+          >
           </mesh>
         ))}
 
-        {[-38, -12, 18, 46, 72].map((x, i) => (
-          <mesh key={x} position={[x, 13 - i * 0.5, 0.22]}>
-            <boxGeometry args={[0.12, 13 + i, 0.04]} />
-            <meshBasicMaterial color={theme.trunks} />
+        {FAR_TRUNKS.map((x, i) => (
+          <mesh
+            key={x}
+            position={[x, 13 - i * 0.5, 0.22]}
+            geometry={getBoxGeometry(0.12, 13 + i, 0.04)}
+            material={getBasicMaterial({ color: theme.trunks })}
+          >
           </mesh>
         ))}
       </group>
 
-      <group ref={midRef} position={[20, 0, -11]}>
-        {Array.from({ length: 8 }).map((_, i) => (
-          <mesh key={i} position={[-22 + i * 8, -2.7 + (i % 2) * 0.45, 0]} rotation={[0, 0, i % 2 ? -0.14 : 0.14]}>
-            <planeGeometry args={[3.4, 4.4]} />
-            <meshBasicMaterial color={theme.leaves} side={THREE.DoubleSide} />
+      <group ref={midRef} position={[20, 0, -11]} dispose={null}>
+        {MID_LEAVES.map((i) => (
+          <mesh
+            key={i}
+            position={[-22 + i * 8, -2.7 + (i % 2) * 0.45, 0]}
+            rotation={[0, 0, i % 2 ? -0.14 : 0.14]}
+            geometry={getPlaneGeometry(3.4, 4.4)}
+            material={getBasicMaterial({ color: theme.leaves, side: THREE.DoubleSide })}
+          >
           </mesh>
         ))}
       </group>
 
       <mesh ref={riverRef} position={[22, -3.1, -1]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[100, 7]} />
+        <primitive attach="geometry" object={getPlaneGeometry(100, 7)} />
         <meshBasicMaterial color={theme.water} transparent opacity={theme.waterOpacity} />
       </mesh>
-      <mesh position={[22, -2.86, -0.5]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[100, 4]} />
-        <meshBasicMaterial color={theme.waterGlow} transparent opacity={0.38} />
+      <mesh
+        position={[22, -2.86, -0.5]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        geometry={getPlaneGeometry(100, 4)}
+        material={getBasicMaterial({ color: theme.waterGlow, transparent: true, opacity: 0.38 })}
+      >
       </mesh>
 
       <StationScenery theme={level.theme} />
-      <mesh position={[22, -5, 0]}>
-        <boxGeometry args={[70, 3, 2.5]} />
-        <meshStandardMaterial color={theme.floor} roughness={1} />
+      <mesh
+        position={[22, -5, 0]}
+        geometry={getBoxGeometry(70, 3, 2.5)}
+        material={getStandardMaterial({ color: theme.floor })}
+      >
       </mesh>
     </>
   );
@@ -93,10 +115,13 @@ function StationScenery({ theme }: { theme: LevelData['theme'] }) {
       <>
         <CanonWall x={-7} color="#2d241d" />
         <CanonWall x={50} color="#3a2b22" />
-        {Array.from({ length: 7 }).map((_, i) => (
-          <mesh key={i} position={[9 + i * 4.1, -2.3 + i * 0.28, -0.65]}>
-            <boxGeometry args={[1.5, 0.22, 0.2]} />
-            <meshStandardMaterial color="#9c7444" roughness={0.92} />
+        {STAIRS_STEPS.map((i) => (
+          <mesh
+            key={i}
+            position={[9 + i * 4.1, -2.3 + i * 0.28, -0.65]}
+            geometry={getBoxGeometry(1.5, 0.22, 0.2)}
+            material={getStandardMaterial({ color: '#9c7444', roughness: 0.92 })}
+          >
           </mesh>
         ))}
       </>
@@ -108,10 +133,13 @@ function StationScenery({ theme }: { theme: LevelData['theme'] }) {
       <>
         <CanonWall x={-7} color="#25302e" />
         <CanonWall x={50} color="#293b36" />
-        {[-2, 8, 19, 31, 43].map((x, i) => (
-          <mesh key={x} position={[x, -2.25 + (i % 2) * 0.18, 0.35]}>
-            <sphereGeometry args={[1.4 + (i % 2) * 0.5, 12, 8]} />
-            <meshStandardMaterial color="#566b63" roughness={1} />
+        {RIVER_ROCKS.map((x, i) => (
+          <mesh
+            key={x}
+            position={[x, -2.25 + (i % 2) * 0.18, 0.35]}
+            geometry={getSphereGeometry(1.4 + (i % 2) * 0.5, 12, 8)}
+            material={getStandardMaterial({ color: '#566b63' })}
+          >
           </mesh>
         ))}
       </>
@@ -122,10 +150,14 @@ function StationScenery({ theme }: { theme: LevelData['theme'] }) {
     <>
       <CanonWall x={-7} color={theme === 'montanita' ? '#2c2f20' : '#281e10'} />
       <CanonWall x={50} color={theme === 'montanita' ? '#343824' : '#281e10'} />
-      {(theme === 'cafetal' ? [-2, 6, 14, 23, 31, 39, 47] : [0, 12, 24, 36, 48]).map((x, i) => (
-        <mesh key={x} position={[x, -0.8, -0.25]} rotation={[0, 0, i % 2 ? -0.08 : 0.08]}>
-          <boxGeometry args={[0.35, theme === 'cafetal' ? 4.4 : 5.8, 0.25]} />
-          <meshStandardMaterial color={theme === 'cafetal' ? '#355024' : '#3c2b17'} roughness={1} />
+      {(theme === 'cafetal' ? CAFETAL_TRUNKS : FOREST_TRUNKS).map((x, i) => (
+        <mesh
+          key={x}
+          position={[x, -0.8, -0.25]}
+          rotation={[0, 0, i % 2 ? -0.08 : 0.08]}
+          geometry={getBoxGeometry(0.35, theme === 'cafetal' ? 4.4 : 5.8, 0.25)}
+          material={getStandardMaterial({ color: theme === 'cafetal' ? '#355024' : '#3c2b17' })}
+        >
         </mesh>
       ))}
     </>
@@ -134,9 +166,11 @@ function StationScenery({ theme }: { theme: LevelData['theme'] }) {
 
 function CanonWall({ x, color }: { x: number; color: string }) {
   return (
-    <mesh position={[x, 6, 0]}>
-      <boxGeometry args={[5, 28, 2.5]} />
-      <meshStandardMaterial color={color} roughness={1} />
+    <mesh
+      position={[x, 6, 0]}
+      geometry={getBoxGeometry(5, 28, 2.5)}
+      material={getStandardMaterial({ color })}
+    >
     </mesh>
   );
 }

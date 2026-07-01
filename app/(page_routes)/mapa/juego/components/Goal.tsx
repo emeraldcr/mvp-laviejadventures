@@ -2,17 +2,18 @@
 import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { useGameContext } from '../context/GameContext';
+import { useGameRuntimeContext } from '../context/GameContext';
+import type { GameState } from '../types';
 
 interface Props {
   position: [number, number, number];
+  gameStatus: GameState['status'];
 }
 
 const WIN_DIST = 1.3;
 
-export function Goal({ position }: Props) {
-  const { playerPosRef, handleWin, state } = useGameContext();
-  const gameStatus = state.status;
+export function Goal({ position, gameStatus }: Props) {
+  const { playerPosRef, handleWin } = useGameRuntimeContext();
   const winFired = useRef(false);
   const flagRef  = useRef<THREE.Mesh>(null);
   const glowRef  = useRef<THREE.PointLight>(null);
