@@ -11,6 +11,7 @@ interface Props {
 }
 
 const COLLECT_DIST = 0.75;
+const COLLECT_DIST_SQ = COLLECT_DIST * COLLECT_DIST;
 const _vec = new THREE.Vector3();
 
 export function Collectible({ data, playerPosRef, onCollect }: Props) {
@@ -26,7 +27,7 @@ export function Collectible({ data, playerPosRef, onCollect }: Props) {
     groupRef.current.position.y = data.position[1] + Math.sin(phase.current * 1.8) * 0.1;
 
     _vec.set(data.position[0], groupRef.current.position.y, data.position[2]);
-    if (playerPosRef.current.distanceTo(_vec) < COLLECT_DIST) {
+    if (playerPosRef.current.distanceToSquared(_vec) < COLLECT_DIST_SQ) {
       setCollected(true);
       onCollect(data.id);
     }

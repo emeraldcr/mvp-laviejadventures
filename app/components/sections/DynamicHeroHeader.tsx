@@ -24,6 +24,7 @@ import {
   Home,
   Info as InfoIcon,
   MapPin,
+  MessageCircle,
   ShieldCheck,
   Sparkles,
   Zap,
@@ -56,6 +57,7 @@ interface NavGroup {
 // ─── Constants ────────────────────────────────────────────────────────────────
 const SCROLL_THRESHOLD = 60;
 const SLIDE_DURATION = 5000;
+const WHATSAPP_RESERVAS_HREF = "https://wa.me/50662332535";
 const GALLERY_STRIP = [
   "/image/IMG_6810.jpg", "/image/IMG_6812.jpg", "/image/IMG_4671.jpg",
   "/image/IMG_4257.jpg", "/image/IMG_6813.jpg", "/image/IMG_4197.jpg",
@@ -469,12 +471,31 @@ const Header = memo<{ isScrolled: boolean }>(({ isScrolled }) => {
 
           <div className="mx-2 h-5 w-px bg-white/15" />
 
+          <a
+            href={WHATSAPP_RESERVAS_HREF}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={lang === "es" ? "Hablar por WhatsApp" : "Chat on WhatsApp"}
+            className="emerald-wave-button inline-flex items-center gap-2 rounded-full border border-emerald-100/25 bg-white/[0.08] px-3.5 py-2 text-sm font-black text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-100/60 hover:bg-emerald-300/15 hover:text-emerald-50"
+          >
+            <MessageCircle size={16} className="text-emerald-200" />
+            WhatsApp
+          </a>
           <NavLink href="/reservar" label={tr.reserve} variant="primary" />
           <LangToggle onClick={toggle} currentLang={lang} />
         </nav>
 
         {/* Mobile: language toggle only (nav is at bottom) */}
         <div className="flex items-center gap-2 md:hidden">
+          <a
+            href={WHATSAPP_RESERVAS_HREF}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={lang === "es" ? "Hablar por WhatsApp" : "Chat on WhatsApp"}
+            className="emerald-wave-button flex h-9 w-9 items-center justify-center rounded-full border border-emerald-100/30 bg-white/10 text-emerald-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.16)] backdrop-blur-xl transition hover:border-emerald-100/60 hover:bg-emerald-300/15"
+          >
+            <MessageCircle size={17} />
+          </a>
           <LangToggle onClick={toggle} currentLang={lang} compact />
         </div>
       </div>

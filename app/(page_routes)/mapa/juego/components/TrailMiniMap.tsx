@@ -45,8 +45,14 @@ export function TrailMiniMap({ state, level, playerPosRef, variant = 'mini', onE
     let frame = 0;
     let lastProgress = -1;
     const tick = () => {
-      const span = level.goalPosition[0] - level.spawnPosition[0];
-      const raw = span === 0 ? 0 : (playerPosRef.current.x - level.spawnPosition[0]) / span;
+      const dx = level.goalPosition[0] - level.spawnPosition[0];
+      const dy = level.goalPosition[1] - level.spawnPosition[1];
+      const lenSq = dx * dx + dy * dy;
+      const raw = lenSq === 0
+        ? 0
+        : ((playerPosRef.current.x - level.spawnPosition[0]) * dx +
+            (playerPosRef.current.y - level.spawnPosition[1]) * dy) /
+          lenSq;
       const progress = Math.max(0, Math.min(1, raw));
 
       if (Math.abs(progress - lastProgress) > 0.006) {
@@ -72,8 +78,9 @@ export function TrailMiniMap({ state, level, playerPosRef, variant = 'mini', onE
 
       <svg viewBox="0 0 100 100" style={isFull ? fullSvgStyle : miniSvgStyle} aria-hidden="true">
         <rect x="3" y="6" width="94" height="88" rx="4" fill="#092319" stroke="#1f7a4d" strokeWidth="1.4" />
-        <path d="M8 72 C25 54 35 71 50 48 S75 26 93 43" fill="none" stroke="#0f5132" strokeWidth="8" opacity="0.45" />
-        <path d="M10 78 C24 64 37 70 50 58 S74 50 90 76" fill="none" stroke="#0e7490" strokeWidth="5" opacity="0.42" />
+        <path d="M20 12 C30 24 35 35 47 45 S58 56 66 66 S74 76 82 86" fill="none" stroke="#0f5132" strokeWidth="8" opacity="0.45" />
+        <path d="M12 88 C29 83 42 86 56 82 S78 77 92 86" fill="none" stroke="#0e7490" strokeWidth="5" opacity="0.46" />
+        <path d="M26 19 L33 25 L30 31 L39 37 L36 43 L49 50 L46 57 L59 64 L56 70 L68 76" fill="none" stroke="#8b6b3a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" opacity="0.55" />
 
         {TRAIL_CONNECTIONS.map((connection) => {
           const from = getStation(connection.from);
@@ -196,7 +203,8 @@ const miniWrapStyle: React.CSSProperties = {
 };
 
 const fullWrapStyle: React.CSSProperties = {
-  width: 'min(720px, calc(100vw - 32px))',
+  width: '100%',
+  maxWidth: 720,
   padding: 18,
   borderRadius: 8,
   background: 'rgba(4, 17, 14, 0.94)',

@@ -1,21 +1,31 @@
 'use client';
-import { useEffect, useRef, type MutableRefObject } from 'react';
+import { useEffect, useMemo, useRef, type MutableRefObject } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { KeyState } from '../hooks/useKeyboard';
-import type { PlatformData } from '../types';
+import type { PlatformData, PowerUpKind, BulletState } from '../types';
 import { DEATH_Y } from '../data/levelData';
 
-const SPEED = 6;
-const JUMP_VEL = 12;
-const JUMP2_VEL = 10.5;
-const GRAVITY = -28;
-const GLIDE_FALL = -4.2;
-const MAX_JUMPS = 2;
-const P_HALF_W = 0.28;
-const P_HALF_H = 0.42;
-const MAX_FRAME_DT = 1 / 30;
-const PHYSICS_STEP = 1 / 120;
+const SPEED       = 6;
+const JUMP_VEL    = 12;
+const JUMP2_VEL   = 10.5;
+const GRAVITY     = -28;
+const GLIDE_FALL  = -4.2;
+const MAX_JUMPS   = 2;
+const P_HALF_W    = 0.28;
+const P_HALF_H    = 0.42;
+const MAX_FRAME_DT   = 1 / 30;
+const PHYSICS_STEP   = 1 / 120;
+const COLLISION_EPS  = 0.035;
+const RUBY_DURATION  = 8;
+const SAPPH_DURATION = 15;
+const FIRE_COOLDOWN  = 0.35;
+
+type PlatformBounds = {
+  minX: number; maxX: number;
+  minY: number; maxY: number;
+  centerX: number;
+};
 
 interface Props {
   keys: MutableRefObject<KeyState>;
@@ -24,22 +34,49 @@ interface Props {
   playerPosRef: MutableRefObject<THREE.Vector3>;
   gameStatus: string;
   onDie: () => void;
+  bulletsRef: MutableRefObject<BulletState[]>;
+  pendingPowerUpRef: MutableRefObject<PowerUpKind | null>;
+  playerImmuneRef: MutableRefObject<boolean>;
+  onPowerUpChange: (ruby: boolean, sapphire: boolean) => void;
 }
 
-export function Player({ keys, platforms, spawnPos, playerPosRef, gameStatus, onDie }: Props) {
-  const groupRef = useRef<THREE.Group>(null);
-  const visualRef = useRef<THREE.Group>(null);
-  const vel = useRef(new THREE.Vector3());
-  const grounded = useRef(false);
-  const jumpCount = useRef(0);
-  const jumpWas = useRef(false);
-  const deathFired = useRef(false);
-  const animT = useRef(0);
-  const facingR = useRef(true);
+export function Player({
+  keys, platforms, spawnPos, playerPosRef, gameStatus, onDie,
+  bulletsRef, pendingPowerUpRef, playerImmuneRef, onPowerUpChange,
+}: Props) {
+  const groupRef    = useRef<THREE.Group>(null);
+  const visualRef   = useRef<THREE.Group>(null);
+  const bodyMatRef  = useRef<THREE.MeshStandardMaterial>(null);
+  const vel         = useRef(new THREE.Vector3());
+  const grounded    = useRef(false);
+  const jumpCount   = useRef(0);
+  const jumpWas     = useRef(false);
+  const fireWas     = useRef(false);
+  const fireCd      = useRef(false);
+  const deathFired  = useRef(false);
+  const animT       = useRef(0);
+  const facingR     = useRef(true);
+  const nextBulletId = useRef(0);
+
+  const rubyTimer   = useRef(0);
+  const sapphTimer  = useRef(0);
 
   const eyeL = useRef<THREE.Mesh>(null);
   const eyeR = useRef<THREE.Mesh>(null);
   const blinkT = useRef(0);
+
+  const platformBounds = useMemo<PlatformBounds[]>(
+    () => platforms.map((p) => {
+      const [px, py] = p.position;
+      const [pw, ph] = p.size;
+      return {
+        minX: px - pw * 0.5, maxX: px + pw * 0.5,
+        minY: py - ph * 0.5, maxY: py + ph * 0.5,
+        centerX: px,
+      };
+    }),
+    [platforms]
+  );
 
   useEffect(() => {
     if (gameStatus === 'playing') {
@@ -48,8 +85,13 @@ export function Player({ keys, platforms, spawnPos, playerPosRef, gameStatus, on
       jumpCount.current = 0;
       deathFired.current = false;
       grounded.current = false;
+      // Reset powerups on respawn
+      rubyTimer.current = 0;
+      sapphTimer.current = 0;
+      playerImmuneRef.current = false;
+      onPowerUpChange(false, false);
     }
-  }, [gameStatus, spawnPos]);
+  }, [gameStatus, spawnPos, playerImmuneRef, onPowerUpChange]);
 
   useFrame((_, delta) => {
     if (!groupRef.current || gameStatus !== 'playing') return;
@@ -63,6 +105,60 @@ export function Player({ keys, platforms, spawnPos, playerPosRef, gameStatus, on
     animT.current += delta;
     blinkT.current += delta;
 
+    // ── Pending power-up grant ──────────────────────────────────────────────
+    const pending = pendingPowerUpRef.current;
+    if (pending) {
+      pendingPowerUpRef.current = null;
+      if (pending === 'ruby') {
+        rubyTimer.current = RUBY_DURATION;
+      } else {
+        sapphTimer.current = SAPPH_DURATION;
+      }
+      onPowerUpChange(rubyTimer.current > 0, sapphTimer.current > 0);
+    }
+
+    // ── Power-up timers ────────────────────────────────────────────────────
+    const hadRuby  = rubyTimer.current > 0;
+    const hadSapph = sapphTimer.current > 0;
+    if (rubyTimer.current  > 0) rubyTimer.current  -= delta;
+    if (sapphTimer.current > 0) sapphTimer.current -= delta;
+    const hasRuby  = rubyTimer.current > 0;
+    const hasSapph = sapphTimer.current > 0;
+    if (hadRuby !== hasRuby || hadSapph !== hasSapph) {
+      onPowerUpChange(hasRuby, hasSapph);
+    }
+    playerImmuneRef.current = hasRuby;
+
+    // ── Visual colour update ───────────────────────────────────────────────
+    if (bodyMatRef.current) {
+      const mat = bodyMatRef.current;
+      if (hasRuby) {
+        const flash = Math.sin(animT.current * 10) > 0;
+        mat.emissive.set(flash ? '#ff1744' : '#ff6b6b');
+        mat.emissiveIntensity = flash ? 2.8 : 1.0;
+        mat.color.set(flash ? '#ffcdd2' : '#ff8a80');
+      } else if (hasSapph) {
+        mat.emissive.set('#0d47a1');
+        mat.emissiveIntensity = 2.0;
+        mat.color.set('#bbdefb');
+      } else {
+        mat.emissive.set('#4fc3f7');
+        mat.emissiveIntensity = 0.65;
+        mat.color.set('#d4f0ff');
+      }
+    }
+
+    // ── Sapphire shooting ─────────────────────────────────────────────────
+    const fireNow = k.fire;
+    if (hasSapph && fireNow && !fireWas.current && !fireCd.current) {
+      fireCd.current = true;
+      const bx = pos.x + (facingR.current ? 0.55 : -0.55);
+      bulletsRef.current.push({ id: nextBulletId.current++, x: bx, y: pos.y, dir: facingR.current ? 1 : -1 });
+      setTimeout(() => { fireCd.current = false; }, FIRE_COOLDOWN * 1000);
+    }
+    fireWas.current = fireNow;
+
+    // ── Movement ───────────────────────────────────────────────────────────
     const wasGrounded = grounded.current;
     const moveX = (k.right ? 1 : 0) - (k.left ? 1 : 0);
     vel.current.x = moveX * SPEED;
@@ -84,44 +180,36 @@ export function Player({ keys, platforms, spawnPos, playerPosRef, gameStatus, on
 
     for (let step = 0; step < steps; step++) {
       vel.current.y += GRAVITY * dt;
-
       if (k.jump && vel.current.y < GLIDE_FALL && jumpCount.current >= 1) {
         vel.current.y = GLIDE_FALL;
       }
 
       pos.x += vel.current.x * dt;
-      for (const p of platforms) {
-        const [px, py] = p.position;
-        const [pw, ph] = p.size;
-        const ox = Math.abs(pos.x - px) - (pw * 0.5 + P_HALF_W);
-        const oy = Math.abs(pos.y - py) - (ph * 0.5 + P_HALF_H);
-
-        if (ox < 0 && oy < 0) {
-          const pushX = pw * 0.5 + P_HALF_W - Math.abs(pos.x - px);
-          pos.x += pos.x > px ? pushX : -pushX;
+      for (const p of platformBounds) {
+        const overlapsX = pos.x + P_HALF_W > p.minX && pos.x - P_HALF_W < p.maxX;
+        const overlapsY = pos.y + P_HALF_H > p.minY && pos.y - P_HALF_H < p.maxY;
+        const standingOnTop = pos.y - P_HALF_H >= p.maxY - COLLISION_EPS;
+        if (overlapsX && overlapsY && !standingOnTop) {
+          const pushLeft = p.minX - P_HALF_W;
+          const pushRight = p.maxX + P_HALF_W;
+          pos.x = pos.x < p.centerX ? pushLeft : pushRight;
           vel.current.x = 0;
         }
       }
 
       const prevY = pos.y;
       pos.y += vel.current.y * dt;
-
-      for (const p of platforms) {
-        const [px, py] = p.position;
-        const [pw, ph] = p.size;
-        const platformTop = py + ph * 0.5;
-        const platformBottom = py - ph * 0.5;
-        const ox = Math.abs(pos.x - px) - (pw * 0.5 + P_HALF_W);
-        const oy = Math.abs(pos.y - py) - (ph * 0.5 + P_HALF_H);
-
-        if (ox < 0 && oy < 0) {
-          if (prevY - P_HALF_H >= platformTop && vel.current.y <= 0) {
-            pos.y = platformTop + P_HALF_H;
+      for (const p of platformBounds) {
+        const overlapsX = pos.x + P_HALF_W > p.minX && pos.x - P_HALF_W < p.maxX;
+        const overlapsY = pos.y + P_HALF_H > p.minY && pos.y - P_HALF_H < p.maxY;
+        if (overlapsX && overlapsY) {
+          if (prevY - P_HALF_H >= p.maxY - COLLISION_EPS && vel.current.y <= 0) {
+            pos.y = p.maxY + P_HALF_H;
             vel.current.y = 0;
             grounded.current = true;
             jumpCount.current = 0;
-          } else if (prevY + P_HALF_H <= platformBottom && vel.current.y > 0) {
-            pos.y = platformBottom - P_HALF_H;
+          } else if (prevY + P_HALF_H <= p.minY + COLLISION_EPS && vel.current.y > 0) {
+            pos.y = p.minY - P_HALF_H;
             vel.current.y = 0;
           }
         }
@@ -162,6 +250,7 @@ export function Player({ keys, platforms, spawnPos, playerPosRef, gameStatus, on
         <mesh>
           <sphereGeometry args={[0.34, 18, 18]} />
           <meshStandardMaterial
+            ref={bodyMatRef}
             color="#d4f0ff"
             emissive="#4fc3f7"
             emissiveIntensity={0.65}

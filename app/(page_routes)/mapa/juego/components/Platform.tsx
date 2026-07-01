@@ -1,11 +1,12 @@
 'use client';
+import { memo } from 'react';
 import type { PlatformData } from '../types';
 
 interface Props {
   data: PlatformData;
 }
 
-export function Platform({ data }: Props) {
+export const Platform = memo(function Platform({ data }: Props) {
   const [px, py, pz] = data.position;
   const [pw, ph, pd] = data.size;
   const palette = platformPalette(data.kind);
@@ -42,7 +43,7 @@ export function Platform({ data }: Props) {
       ) : null}
     </group>
   );
-}
+});
 
 function platformPalette(kind: PlatformData['kind']) {
   switch (kind) {

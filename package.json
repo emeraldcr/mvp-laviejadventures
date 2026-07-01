@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "game-ws": "node scripts/game-ws-server.mjs",
     "build": "next build",
     "build:cloudflare": "npx @cloudflare/next-on-pages@latest",
     "preview": "npx wrangler pages dev .next",
@@ -11,6 +12,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "ws": "^8.13.0",
     "@anthropic-ai/sdk": "^0.100.1",
     "@auth0/nextjs-auth0": "^4.17.0",
     "@react-three/drei": "^10.7.7",
