@@ -40,7 +40,7 @@ import type {
   ReservationOrderPayload,
   ReservationDetailsProps,
 } from "@/lib/reservation/types";
-import useReservationForm from "./hooks/useReservationForm";
+import useReservationForm from "@/hooks/useReservationForm";
 import {
   TravelerInputField,
   TravelerPhoneInput,
