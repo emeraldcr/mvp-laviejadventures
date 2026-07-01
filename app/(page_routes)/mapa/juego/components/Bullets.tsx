@@ -2,11 +2,7 @@
 import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import type { BulletState } from '../types';
-
-interface Props {
-  bulletsRef: React.MutableRefObject<BulletState[]>;
-}
+import { useGameContext } from '../context/GameContext';
 
 const BULLET_SPEED = 16;
 const BULLET_MAX_X = 70;
@@ -19,7 +15,8 @@ const bulletMat = new THREE.MeshStandardMaterial({
   roughness: 0.1,
 });
 
-export function Bullets({ bulletsRef }: Props) {
+export function Bullets() {
+  const { bulletsRef } = useGameContext();
   const groupRef = useRef<THREE.Group>(null);
   const meshPool = useRef<Map<number, THREE.Mesh>>(new Map());
 

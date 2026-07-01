@@ -2,12 +2,11 @@
 import { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import type { PowerUpData, PowerUpKind } from '../types';
+import type { PowerUpData } from '../types';
+import { useGameContext } from '../context/GameContext';
 
 interface Props {
   data: PowerUpData;
-  playerPosRef: React.MutableRefObject<THREE.Vector3>;
-  pendingPowerUpRef: React.MutableRefObject<PowerUpKind | null>;
 }
 
 const COLLECT_DIST = 0.9;
@@ -17,7 +16,8 @@ const RUBY_EMISSIVE = '#b71c1c';
 const SAPPH_COLOR    = '#1e88e5';
 const SAPPH_EMISSIVE = '#0d47a1';
 
-export function PowerUp({ data, playerPosRef, pendingPowerUpRef }: Props) {
+export function PowerUp({ data }: Props) {
+  const { playerPosRef, pendingPowerUpRef } = useGameContext();
   const [collected, setCollected] = useState(false);
   const groupRef = useRef<THREE.Group>(null);
   const phase = useRef(Math.random() * Math.PI * 2);

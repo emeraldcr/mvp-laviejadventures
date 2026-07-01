@@ -1,4 +1,6 @@
 'use client';
+import { useEffect, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 
 const Game = dynamic(() => import('./components/Game'), {
@@ -27,5 +29,9 @@ const Game = dynamic(() => import('./components/Game'), {
 });
 
 export default function GameClient() {
-  return <Game />;
+  const params = useSearchParams();
+  const levelParam = params?.get('level');
+  const startLevel = levelParam !== null ? parseInt(levelParam, 10) : undefined;
+
+  return <Game startLevel={isNaN(startLevel as number) ? undefined : startLevel} />;
 }

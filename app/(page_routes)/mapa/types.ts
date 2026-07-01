@@ -16,6 +16,8 @@ export interface MapPoint {
   difficulty: PointDifficulty;
   description: string;
   align?: 'left' | 'right' | 'center';
+  /** Índice del nivel del juego que corresponde a esta zona (0-4). Si undefined, no hay nivel. */
+  levelIndex?: number;
 }
 
 export interface TourGroup {

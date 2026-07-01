@@ -2,14 +2,11 @@
 import { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import type { EnemyData, BulletState } from '../types';
+import type { EnemyData } from '../types';
+import { useGameContext } from '../context/GameContext';
 
 interface Props {
   data: EnemyData;
-  playerPosRef: React.MutableRefObject<THREE.Vector3>;
-  onPlayerHit: () => void;
-  gameStatus: string;
-  bulletsRef: React.MutableRefObject<BulletState[]>;
 }
 
 const PATROL_SPEED = 2.4;
@@ -21,7 +18,9 @@ const STOMP_MAX_Y  = 0.92;
 const BULLET_HIT_X = 0.52;
 const BULLET_HIT_Y = 0.38;
 
-export function Enemy({ data, playerPosRef, onPlayerHit, gameStatus, bulletsRef }: Props) {
+export function Enemy({ data }: Props) {
+  const { playerPosRef, bulletsRef, handlePlayerHit, state } = useGameContext();
+  const gameStatus = state.status;
   const [defeated, setDefeated] = useState(false);
   const [defeatedPos, setDefeatedPos] = useState<[number, number, number]>(data.position);
   const groupRef  = useRef<THREE.Group>(null);
@@ -82,7 +81,7 @@ export function Enemy({ data, playerPosRef, onPlayerHit, gameStatus, bulletsRef 
     const sideHit = Math.abs(dx) < SIDE_HIT_X && Math.abs(dy) < SIDE_HIT_Y;
     if (sideHit && !hitCd.current) {
       hitCd.current = true;
-      onPlayerHit();
+      handlePlayerHit();
       setTimeout(() => { hitCd.current = false; }, 2200);
     }
 

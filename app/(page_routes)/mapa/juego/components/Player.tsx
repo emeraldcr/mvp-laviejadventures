@@ -1,25 +1,14 @@
 'use client';
-import { useEffect, useMemo, useRef, type MutableRefObject } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import type { KeyState } from '../hooks/useKeyboard';
-import type { PlatformData, PowerUpKind, BulletState } from '../types';
-import { DEATH_Y } from '../data/levelData';
-
-const SPEED       = 6;
-const JUMP_VEL    = 12;
-const JUMP2_VEL   = 10.5;
-const GRAVITY     = -28;
-const GLIDE_FALL  = -4.2;
-const MAX_JUMPS   = 2;
-const P_HALF_W    = 0.28;
-const P_HALF_H    = 0.42;
-const MAX_FRAME_DT   = 1 / 30;
-const PHYSICS_STEP   = 1 / 120;
-const COLLISION_EPS  = 0.035;
-const RUBY_DURATION  = 8;
-const SAPPH_DURATION = 15;
-const FIRE_COOLDOWN  = 0.35;
+import { useGameContext } from '../context/GameContext';
+import {
+  SPEED, JUMP_VEL, JUMP2_VEL, GRAVITY, GLIDE_FALL, MAX_JUMPS,
+  P_HALF_W, P_HALF_H, MAX_FRAME_DT, PHYSICS_STEP, COLLISION_EPS,
+  RUBY_DURATION, SAPPH_DURATION, FIRE_COOLDOWN,
+} from '../constants/physics';
+import { DEATH_Y } from '../constants/world';
 
 type PlatformBounds = {
   minX: number; maxX: number;
@@ -27,23 +16,15 @@ type PlatformBounds = {
   centerX: number;
 };
 
-interface Props {
-  keys: MutableRefObject<KeyState>;
-  platforms: PlatformData[];
-  spawnPos: [number, number, number];
-  playerPosRef: MutableRefObject<THREE.Vector3>;
-  gameStatus: string;
-  onDie: () => void;
-  bulletsRef: MutableRefObject<BulletState[]>;
-  pendingPowerUpRef: MutableRefObject<PowerUpKind | null>;
-  playerImmuneRef: MutableRefObject<boolean>;
-  onPowerUpChange: (ruby: boolean, sapphire: boolean) => void;
-}
+export function Player() {
+  const {
+    state, keys, level, playerPosRef, bulletsRef,
+    pendingPowerUpRef, playerImmuneRef, handlePowerUpChange, handleDie,
+  } = useGameContext();
+  const gameStatus = state.status;
+  const platforms = level.platforms;
+  const spawnPos = level.spawnPosition;
 
-export function Player({
-  keys, platforms, spawnPos, playerPosRef, gameStatus, onDie,
-  bulletsRef, pendingPowerUpRef, playerImmuneRef, onPowerUpChange,
-}: Props) {
   const groupRef    = useRef<THREE.Group>(null);
   const visualRef   = useRef<THREE.Group>(null);
   const bodyMatRef  = useRef<THREE.MeshStandardMaterial>(null);
@@ -89,9 +70,9 @@ export function Player({
       rubyTimer.current = 0;
       sapphTimer.current = 0;
       playerImmuneRef.current = false;
-      onPowerUpChange(false, false);
+      handlePowerUpChange(false, false);
     }
-  }, [gameStatus, spawnPos, playerImmuneRef, onPowerUpChange]);
+  }, [gameStatus, spawnPos, playerImmuneRef, handlePowerUpChange]);
 
   useFrame((_, delta) => {
     if (!groupRef.current || gameStatus !== 'playing') return;
@@ -114,7 +95,7 @@ export function Player({
       } else {
         sapphTimer.current = SAPPH_DURATION;
       }
-      onPowerUpChange(rubyTimer.current > 0, sapphTimer.current > 0);
+      handlePowerUpChange(rubyTimer.current > 0, sapphTimer.current > 0);
     }
 
     // ── Power-up timers ────────────────────────────────────────────────────
@@ -125,7 +106,7 @@ export function Player({
     const hasRuby  = rubyTimer.current > 0;
     const hasSapph = sapphTimer.current > 0;
     if (hadRuby !== hasRuby || hadSapph !== hasSapph) {
-      onPowerUpChange(hasRuby, hasSapph);
+      handlePowerUpChange(hasRuby, hasSapph);
     }
     playerImmuneRef.current = hasRuby;
 
@@ -218,7 +199,7 @@ export function Player({
 
     if (pos.y < DEATH_Y && !deathFired.current) {
       deathFired.current = true;
-      onDie();
+      handleDie();
     }
 
     playerPosRef.current.copy(pos);

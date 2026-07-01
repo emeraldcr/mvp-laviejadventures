@@ -2,10 +2,8 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import type { GameState, LeaderboardEntry, DeathCause } from '../types';
 import { GAME_LEVELS } from '../data/levelData';
-
-export const DEV_UNLOCK_ALL_LEVELS = process.env.NODE_ENV === 'development';
-const LEADERBOARD_KEY = 'lva-ghost-leaderboard';
-const PLAYER_KEY = 'lva-ghost-player-name';
+import { DEV_UNLOCK_ALL_LEVELS, PLAYER_KEY, UNLOCKED_STATION_KEY } from '../constants/storage';
+import { readLeaderboard, upsertLeaderboard } from '../lib/leaderboard';
 
 const makeInitialState = (levelIndex = 0): GameState => ({
   lives: 3,
@@ -21,47 +19,6 @@ const makeInitialState = (levelIndex = 0): GameState => ({
   deathCause: null,
   deathMessageIdx: 0,
 });
-
-function readLeaderboard(): LeaderboardEntry[] {
-  if (typeof window === 'undefined') return [];
-  try {
-    const parsed = JSON.parse(window.localStorage.getItem(LEADERBOARD_KEY) ?? '[]') as LeaderboardEntry[];
-    return Array.isArray(parsed) ? parsed.filter((entry) => entry?.name) : [];
-  } catch {
-    return [];
-  }
-}
-
-function writeLeaderboard(entries: LeaderboardEntry[]) {
-  if (typeof window === 'undefined') return;
-  window.localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(entries.slice(0, 20)));
-}
-
-function upsertLeaderboard(name: string, crystalsToAdd: number, score: number) {
-  const safeName = name.trim().slice(0, 24);
-  if (!safeName) return readLeaderboard();
-
-  const entries = readLeaderboard();
-  const existing = entries.find((entry) => entry.name.toLowerCase() === safeName.toLowerCase());
-
-  if (existing) {
-    existing.name = safeName;
-    existing.crystals += crystalsToAdd;
-    existing.bestScore = Math.max(existing.bestScore, score);
-    existing.lastPlayedAt = Date.now();
-  } else {
-    entries.push({
-      name: safeName,
-      crystals: Math.max(0, crystalsToAdd),
-      bestScore: Math.max(0, score),
-      lastPlayedAt: Date.now(),
-    });
-  }
-
-  entries.sort((a, b) => b.crystals - a.crystals || b.bestScore - a.bestScore || b.lastPlayedAt - a.lastPlayedAt);
-  writeLeaderboard(entries);
-  return entries;
-}
 
 export function useGameState() {
   const [state, setState] = useState<GameState>(() => makeInitialState());
@@ -160,6 +117,10 @@ export function useGameState() {
     setState(s => {
       const nextStationIndex = Math.min(s.currentLevelIndex + 1, GAME_LEVELS.length);
       const isComplete = s.currentLevelIndex >= GAME_LEVELS.length - 1;
+      const newUnlocked = Math.max(s.unlockedStationIndex, nextStationIndex);
+
+      // Persist so the main /mapa page can read it
+      try { window.localStorage.setItem(UNLOCKED_STATION_KEY, String(newUnlocked)); } catch {}
 
       return {
         ...s,
@@ -167,7 +128,7 @@ export function useGameState() {
         score: s.score + 500,
         crystals: 0,
         totalCrystals: GAME_LEVELS[Math.min(s.currentLevelIndex + 1, GAME_LEVELS.length - 1)]?.collectibles.length ?? s.totalCrystals,
-        unlockedStationIndex: Math.max(s.unlockedStationIndex, nextStationIndex),
+        unlockedStationIndex: newUnlocked,
         currentLevelIndex: isComplete ? s.currentLevelIndex : s.currentLevelIndex + 1,
       };
     });
@@ -214,5 +175,10 @@ export function useGameState() {
     setState(s => ({ ...makeInitialState(), playerName: s.playerName, restartKey: s.restartKey + 1 }));
   }, []);
 
-  return { state, leaderboard, registerPlayer, clearPlayer, collectCrystal, dieFromFall, dieFromEnemy, respawn, win, restart, enterLevel, resetAdventure };
+  const preSelectLevel = useCallback((levelIndex: number) => {
+    const clamped = Math.max(0, Math.min(levelIndex, GAME_LEVELS.length - 1));
+    setState(s => ({ ...s, currentLevelIndex: clamped }));
+  }, []);
+
+  return { state, leaderboard, registerPlayer, clearPlayer, collectCrystal, dieFromFall, dieFromEnemy, respawn, win, restart, enterLevel, preSelectLevel, resetAdventure };
 }

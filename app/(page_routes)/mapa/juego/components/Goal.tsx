@@ -2,17 +2,17 @@
 import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { useGameContext } from '../context/GameContext';
 
 interface Props {
   position: [number, number, number];
-  playerPosRef: React.MutableRefObject<THREE.Vector3>;
-  onWin: () => void;
-  gameStatus: string;
 }
 
 const WIN_DIST = 1.3;
 
-export function Goal({ position, playerPosRef, onWin, gameStatus }: Props) {
+export function Goal({ position }: Props) {
+  const { playerPosRef, handleWin, state } = useGameContext();
+  const gameStatus = state.status;
   const winFired = useRef(false);
   const flagRef  = useRef<THREE.Mesh>(null);
   const glowRef  = useRef<THREE.PointLight>(null);
@@ -32,7 +32,7 @@ export function Goal({ position, playerPosRef, onWin, gameStatus }: Props) {
     const dy = playerPosRef.current.y - position[1];
     if (Math.sqrt(dx * dx + dy * dy) < WIN_DIST) {
       winFired.current = true;
-      onWin();
+      handleWin();
     }
   });
 
