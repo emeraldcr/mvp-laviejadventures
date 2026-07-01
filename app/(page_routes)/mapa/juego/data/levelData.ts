@@ -1,6 +1,5 @@
 import type { PlatformData, CollectibleData, EnemyData, LevelData, PowerUpData } from '../types';
-import { GOAL_POSITION } from '../constants/world';
-import { getSafeSpawnPosition } from '../lib/levelSpawn';
+import { getSafeGoalPosition, getSafeSpawnPosition } from '../lib/levelSpawn';
 import * as reception from './levels/reception';
 import * as cafetales from './levels/cafetales';
 import * as montanita from './levels/montanita';
@@ -33,7 +32,7 @@ const makeLevel = (
   stationId,
   nextStationId,
   spawnPosition: getSafeSpawnPosition(platforms),
-  goalPosition: GOAL_POSITION,
+  goalPosition: getSafeGoalPosition(platforms),
   platforms,
   collectibles,
   enemies,

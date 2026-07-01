@@ -56,3 +56,11 @@ export type GameRuntimeContextValue = Pick<
   | 'handleWin'
   | 'collectCrystal'
 >;
+
+export interface GameSceneContextValue {
+  gameStatus: GameState['status'];
+  level: LevelData;
+  levelKey: number;
+  playerPosRef: React.MutableRefObject<THREE.Vector3>;
+  runtimeValue: GameRuntimeContextValue;
+}

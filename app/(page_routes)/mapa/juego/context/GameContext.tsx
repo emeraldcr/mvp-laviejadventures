@@ -1,13 +1,31 @@
 'use client';
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  startTransition,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 import * as THREE from 'three';
-import type { BulletState, GameContextValue, GameProviderProps, GameRuntimeContextValue, PowerUpKind } from '../types';
+import type {
+  BulletState,
+  GameContextValue,
+  GameProviderProps,
+  GameRuntimeContextValue,
+  GameSceneContextValue,
+  PowerUpKind,
+} from '../types';
 import { useGameState } from '../hooks/useGameState';
 import { useKeyboard } from '../hooks/useKeyboard';
 import { GAME_LEVELS } from '../data/levelData';
 
 const GameContext = createContext<GameContextValue | null>(null);
 const GameRuntimeContext = createContext<GameRuntimeContextValue | null>(null);
+const GameSceneContext = createContext<GameSceneContextValue | null>(null);
 
 export function GameProvider({
   children,
@@ -46,7 +64,11 @@ export function GameProvider({
   const [activePowerUps, setActivePowerUps] = useState({ ruby: false, sapphire: false });
 
   const handlePowerUpChange = useCallback((ruby: boolean, sapphire: boolean) => {
-    setActivePowerUps({ ruby, sapphire });
+    startTransition(() => {
+      setActivePowerUps((current) => (
+        current.ruby === ruby && current.sapphire === sapphire ? current : { ruby, sapphire }
+      ));
+    });
   }, []);
 
   const handlePlayerHit = useCallback(() => {
@@ -139,9 +161,25 @@ export function GameProvider({
     collectCrystal,
   ]);
 
+  const sceneValue = useMemo<GameSceneContextValue>(() => ({
+    gameStatus: state.status,
+    level,
+    levelKey: state.restartKey,
+    playerPosRef,
+    runtimeValue,
+  }), [
+    level,
+    playerPosRef,
+    runtimeValue,
+    state.restartKey,
+    state.status,
+  ]);
+
   return (
     <GameRuntimeContext.Provider value={runtimeValue}>
-      <GameContext.Provider value={value}>{children}</GameContext.Provider>
+      <GameSceneContext.Provider value={sceneValue}>
+        <GameContext.Provider value={value}>{children}</GameContext.Provider>
+      </GameSceneContext.Provider>
     </GameRuntimeContext.Provider>
   );
 }
@@ -164,6 +202,12 @@ export function GameRuntimeProvider({
       {children}
     </GameRuntimeContext.Provider>
   );
+}
+
+export function useGameSceneContext(): GameSceneContextValue {
+  const ctx = useContext(GameSceneContext);
+  if (!ctx) throw new Error('useGameSceneContext must be used within a GameProvider');
+  return ctx;
 }
 
 export function useGameRuntimeContext(): GameRuntimeContextValue {

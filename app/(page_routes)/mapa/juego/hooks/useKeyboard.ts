@@ -12,7 +12,18 @@ export function useKeyboard() {
   const keys = useRef<KeyState>({ left: false, right: false, jump: false, fire: false });
 
   useEffect(() => {
-    const GAME_KEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space', 'ControlLeft', 'ControlRight'];
+    const GAME_KEYS = [
+      'ArrowLeft',
+      'ArrowRight',
+      'ArrowUp',
+      'ArrowDown',
+      'KeyA',
+      'KeyD',
+      'KeyW',
+      'Space',
+      'ControlLeft',
+      'ControlRight',
+    ];
 
     const onDown = (e: KeyboardEvent) => {
       if (GAME_KEYS.includes(e.code)) e.preventDefault();

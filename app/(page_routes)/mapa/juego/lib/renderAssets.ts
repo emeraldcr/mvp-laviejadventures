@@ -58,15 +58,16 @@ export function getStandardMaterial({
   const key = keyOf([color.toString(), emissive?.toString(), emissiveIntensity, roughness, metalness, transparent, opacity]);
   let material = standardMaterialCache.get(key);
   if (!material) {
-    material = new THREE.MeshStandardMaterial({
+    const params: THREE.MeshStandardMaterialParameters = {
       color,
-      emissive,
       emissiveIntensity,
       roughness,
       metalness,
       transparent,
       opacity,
-    });
+    };
+    if (emissive !== undefined) params.emissive = emissive;
+    material = new THREE.MeshStandardMaterial(params);
     standardMaterialCache.set(key, material);
   }
   return material;
@@ -86,7 +87,9 @@ export function getBasicMaterial({
   const key = keyOf([color.toString(), transparent, opacity, side]);
   let material = basicMaterialCache.get(key);
   if (!material) {
-    material = new THREE.MeshBasicMaterial({ color, transparent, opacity, side });
+    const params: THREE.MeshBasicMaterialParameters = { color, transparent, opacity };
+    if (side !== undefined) params.side = side;
+    material = new THREE.MeshBasicMaterial(params);
     basicMaterialCache.set(key, material);
   }
   return material;

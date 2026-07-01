@@ -1,51 +1,18 @@
 'use client';
-import { Suspense, useMemo } from 'react';
+import { memo, Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Scene } from './Scene';
 import { GameUI } from './GameUI/GameUI';
-import { GameRuntimeProvider, useGameContext } from '../context/GameContext';
-import type { GameRuntimeContextValue } from '../types';
+import { GameRuntimeProvider, useGameSceneContext } from '../context/GameContext';
 
-export function GameCanvas() {
+export const GameCanvas = memo(function GameCanvas() {
   const {
-    collectCrystal,
-    handleDie,
-    handlePlayerHit,
-    handlePowerUpChange,
-    handleWin,
-    keys,
+    gameStatus,
     level,
     levelKey,
-    pendingPowerUpRef,
-    playerImmuneRef,
     playerPosRef,
-    bulletsRef,
-    state,
-  } = useGameContext();
-
-  const runtimeValue = useMemo<GameRuntimeContextValue>(() => ({
-    keys,
-    playerPosRef,
-    bulletsRef,
-    pendingPowerUpRef,
-    playerImmuneRef,
-    handlePowerUpChange,
-    handlePlayerHit,
-    handleDie,
-    handleWin,
-    collectCrystal,
-  }), [
-    keys,
-    playerPosRef,
-    bulletsRef,
-    pendingPowerUpRef,
-    playerImmuneRef,
-    handlePowerUpChange,
-    handlePlayerHit,
-    handleDie,
-    handleWin,
-    collectCrystal,
-  ]);
+    runtimeValue,
+  } = useGameSceneContext();
 
   return (
     <div
@@ -73,7 +40,7 @@ export function GameCanvas() {
               level={level}
               levelKey={levelKey}
               playerPosRef={playerPosRef}
-              gameStatus={state.status}
+              gameStatus={gameStatus}
             />
           </GameRuntimeProvider>
         </Suspense>
@@ -82,4 +49,4 @@ export function GameCanvas() {
       <GameUI />
     </div>
   );
-}
+});
