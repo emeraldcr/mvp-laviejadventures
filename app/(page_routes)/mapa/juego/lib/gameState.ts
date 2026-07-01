@@ -42,3 +42,87 @@ export const applyDeath = (state: GameState, deathCause: DeathCause): GameState 
     deathMessageIdx: randomDeathMessageIndex(),
   };
 };
+
+export const applyStoredPlayer = (
+  state: GameState,
+  safeName: string,
+  entry?: { crystals: number; bestScore: number },
+): GameState => ({
+  ...state,
+  playerName: safeName || null,
+  lifetimeCrystals: entry?.crystals ?? state.lifetimeCrystals,
+  score: Math.max(state.score, entry?.bestScore ?? 0),
+});
+
+export const applyRegisteredPlayer = (
+  state: GameState,
+  safeName: string,
+  entry?: { crystals: number; bestScore: number },
+): GameState => ({
+  ...state,
+  playerName: safeName,
+  lifetimeCrystals: entry?.crystals ?? 0,
+  score: Math.max(state.score, entry?.bestScore ?? 0),
+});
+
+export const applyCrystalCollect = (state: GameState): GameState => ({
+  ...state,
+  crystals: state.crystals + 1,
+  lifetimeCrystals: state.lifetimeCrystals + 1,
+  score: state.score + 100,
+});
+
+export const getWinState = (state: GameState) => {
+  const nextStationIndex = Math.min(state.currentLevelIndex + 1, GAME_LEVELS.length);
+  const isComplete = state.currentLevelIndex >= GAME_LEVELS.length - 1;
+  const newUnlocked = Math.max(state.unlockedStationIndex, nextStationIndex);
+
+  return {
+    newUnlocked,
+    nextState: {
+      ...state,
+      status: isComplete ? 'complete' : 'map',
+      score: state.score + 500,
+      crystals: 0,
+      totalCrystals: GAME_LEVELS[Math.min(state.currentLevelIndex + 1, GAME_LEVELS.length - 1)]?.collectibles.length ?? state.totalCrystals,
+      unlockedStationIndex: newUnlocked,
+      currentLevelIndex: isComplete ? state.currentLevelIndex : state.currentLevelIndex + 1,
+    } satisfies GameState,
+  };
+};
+
+export const applyRestart = (state: GameState): GameState => ({
+  ...state,
+  lives: 3,
+  crystals: 0,
+  totalCrystals: GAME_LEVELS[state.currentLevelIndex]?.collectibles.length ?? state.totalCrystals,
+  status: 'playing',
+  restartKey: state.restartKey + 1,
+  deathCause: null,
+});
+
+export const applyEnterLevel = (state: GameState, levelIndex: number): GameState => {
+  const clamped = clampLevelIndex(levelIndex);
+  const level = GAME_LEVELS[clamped];
+  const unlockedStationIndex = DEV_UNLOCK_ALL_LEVELS
+    ? GAME_LEVELS.length
+    : Math.max(state.unlockedStationIndex, clamped);
+
+  return {
+    ...state,
+    lives: 3,
+    crystals: 0,
+    totalCrystals: level.collectibles.length,
+    status: 'playing',
+    currentLevelIndex: clamped,
+    unlockedStationIndex,
+    restartKey: state.restartKey + 1,
+    deathCause: null,
+  };
+};
+
+export const applyResetAdventure = (state: GameState): GameState => ({
+  ...makeInitialState(),
+  playerName: state.playerName,
+  restartKey: state.restartKey + 1,
+});

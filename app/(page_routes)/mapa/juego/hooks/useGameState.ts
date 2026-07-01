@@ -1,10 +1,21 @@
 'use client';
 import { useState, useCallback, useEffect, useRef } from 'react';
 import type { GameState, LeaderboardEntry } from '../types';
-import { GAME_LEVELS } from '../data/levelData';
-import { DEV_UNLOCK_ALL_LEVELS, PLAYER_KEY, UNLOCKED_STATION_KEY } from '../constants/storage';
+import { PLAYER_KEY, UNLOCKED_STATION_KEY } from '../constants/storage';
 import { readLeaderboard, upsertLeaderboard } from '../lib/leaderboard';
-import { applyDeath, clampLevelIndex, makeInitialState, normalizePlayerName } from '../lib/gameState';
+import {
+  applyCrystalCollect,
+  applyDeath,
+  applyEnterLevel,
+  applyRegisteredPlayer,
+  applyResetAdventure,
+  applyRestart,
+  applyStoredPlayer,
+  clampLevelIndex,
+  getWinState,
+  makeInitialState,
+  normalizePlayerName,
+} from '../lib/gameState';
 
 export function useGameState() {
   const [state, setState] = useState<GameState>(() => makeInitialState());
@@ -23,12 +34,7 @@ export function useGameState() {
     if (storedName) {
       const safeName = normalizePlayerName(storedName);
       const entry = entries.find((item) => item.name.toLowerCase() === safeName.toLowerCase());
-      setState((s) => ({
-        ...s,
-        playerName: safeName || null,
-        lifetimeCrystals: entry?.crystals ?? s.lifetimeCrystals,
-        score: Math.max(s.score, entry?.bestScore ?? 0),
-      }));
+      setState((s) => applyStoredPlayer(s, safeName, entry));
     }
   }, []);
 
@@ -39,12 +45,7 @@ export function useGameState() {
     const entries = upsertLeaderboard(safeName, 0, 0);
     const entry = entries.find((item) => item.name.toLowerCase() === safeName.toLowerCase());
     setLeaderboard(entries);
-    setState((s) => ({
-      ...s,
-      playerName: safeName,
-      lifetimeCrystals: entry?.crystals ?? 0,
-      score: Math.max(s.score, entry?.bestScore ?? 0),
-    }));
+    setState((s) => applyRegisteredPlayer(s, safeName, entry));
   }, []);
 
   const clearPlayer = useCallback(() => {
@@ -60,12 +61,7 @@ export function useGameState() {
     if (currentState.playerName) {
       setLeaderboard(upsertLeaderboard(currentState.playerName, 1, nextScore));
     }
-    setState(s => ({
-      ...s,
-      crystals: s.crystals + 1,
-      lifetimeCrystals: s.lifetimeCrystals + 1,
-      score: s.score + 100,
-    }));
+    setState(applyCrystalCollect);
   }, []);
 
   const dieFromFall = useCallback(() => {
@@ -83,64 +79,26 @@ export function useGameState() {
   const win = useCallback(() => {
     collectedRef.current.clear();
     setState(s => {
-      const nextStationIndex = Math.min(s.currentLevelIndex + 1, GAME_LEVELS.length);
-      const isComplete = s.currentLevelIndex >= GAME_LEVELS.length - 1;
-      const newUnlocked = Math.max(s.unlockedStationIndex, nextStationIndex);
+      const { newUnlocked, nextState } = getWinState(s);
 
-      // Persist so the main /mapa page can read it
       try { window.localStorage.setItem(UNLOCKED_STATION_KEY, String(newUnlocked)); } catch {}
-
-      return {
-        ...s,
-        status: isComplete ? 'complete' : 'map',
-        score: s.score + 500,
-        crystals: 0,
-        totalCrystals: GAME_LEVELS[Math.min(s.currentLevelIndex + 1, GAME_LEVELS.length - 1)]?.collectibles.length ?? s.totalCrystals,
-        unlockedStationIndex: newUnlocked,
-        currentLevelIndex: isComplete ? s.currentLevelIndex : s.currentLevelIndex + 1,
-      };
+      return nextState;
     });
   }, []);
 
   const restart = useCallback(() => {
     collectedRef.current.clear();
-    setState(s => ({
-      ...s,
-      lives: 3,
-      crystals: 0,
-      totalCrystals: GAME_LEVELS[s.currentLevelIndex]?.collectibles.length ?? s.totalCrystals,
-      status: 'playing',
-      restartKey: s.restartKey + 1,
-      deathCause: null,
-    }));
+    setState(applyRestart);
   }, []);
 
   const enterLevel = useCallback((levelIndex: number) => {
     collectedRef.current.clear();
-    setState(s => {
-      const clamped = clampLevelIndex(levelIndex);
-      const level = GAME_LEVELS[clamped];
-      const unlockedStationIndex = DEV_UNLOCK_ALL_LEVELS
-        ? GAME_LEVELS.length
-        : Math.max(s.unlockedStationIndex, clamped);
-
-      return {
-        ...s,
-        lives: 3,
-        crystals: 0,
-        totalCrystals: level.collectibles.length,
-        status: 'playing',
-        currentLevelIndex: clamped,
-        unlockedStationIndex,
-        restartKey: s.restartKey + 1,
-        deathCause: null,
-      };
-    });
+    setState(s => applyEnterLevel(s, levelIndex));
   }, []);
 
   const resetAdventure = useCallback(() => {
     collectedRef.current.clear();
-    setState(s => ({ ...makeInitialState(), playerName: s.playerName, restartKey: s.restartKey + 1 }));
+    setState(applyResetAdventure);
   }, []);
 
   const preSelectLevel = useCallback((levelIndex: number) => {

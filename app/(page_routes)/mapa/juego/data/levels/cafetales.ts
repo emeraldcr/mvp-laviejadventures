@@ -1,65 +1,107 @@
 import type { PlatformData, CollectibleData, EnemyData, PowerUpData } from '../../types';
 
 // ─────────────────────────────────────────────────────────────────────────
-//  LEVEL 2 – "Laberinto del Cafetal"  (Cafetales → Montañita)
-//  Shape: DOWN → deep valley → UP to ridge → big drop → canyon zigzag
-//  Secret: enclosed grove reached by jumping left from ridge top
+//  LEVEL 2 – "Laberinto del Cafetal"  (Versión Extendida)
+//  Duración estimada: 8-14 minutos en primera partida (explorando)
+//  Filosofía: Exploración > Velocidad. Muchos secretos y rutas alternativas.
 // ─────────────────────────────────────────────────────────────────────────
 
 export const platforms: PlatformData[] = [
-  // ── Main path ─────────────────────────────────────────────────────
-  { id: 'p1',  position: [2.5,  5.5,  0], size: [7.0, 1.0,  2.3], kind: 'mud'   },
-  { id: 'p2',  position: [8.5,  3.8,  0], size: [3.2, 0.85, 2.1], kind: 'root'  },
-  { id: 'p3',  position: [13.0, 1.8,  0], size: [3.0, 0.85, 2.0], kind: 'mud'   },
-  { id: 'p4',  position: [17.5, -0.2, 0], size: [3.0, 0.85, 2.0], kind: 'root'  },
-  // Valley floor – lowest point of level
-  { id: 'p5',  position: [21.5, -1.5, 0], size: [3.2, 0.85, 2.0], kind: 'trail' },
-  // Climb back UP toward the ridge
-  { id: 'p6',  position: [25.5, 0.5,  0], size: [3.0, 0.85, 2.0], kind: 'mud'   },
-  { id: 'p7',  position: [29.5, 2.5,  0], size: [3.0, 0.85, 2.0], kind: 'root'  },
-  { id: 'p8',  position: [33.5, 4.5,  0], size: [3.5, 0.9,  2.2], kind: 'trail' },  // RIDGE
-  // Big drop off the ridge into the canyon
-  { id: 'p9',  position: [37.5, 2.0,  0], size: [3.5, 0.85, 2.1], kind: 'mud'   },
-  { id: 'p10', position: [41.0, -0.5, 0], size: [3.0, 0.85, 2.0], kind: 'root'  },
-  { id: 'p11', position: [44.0, -2.5, 0], size: [3.0, 0.85, 2.0], kind: 'trail' },
-  { id: 'p12', position: [47.0, -4.15,0], size: [6.5, 1.0,  2.3], kind: 'trail' },
-  // ── Secret grove left of ridge (backtrack path) ───────────────────
-  { id: 'sec2-a',    position: [31.5, 6.2,  0], size: [2.0, 0.6,  1.5], kind: 'root'  },
-  { id: 'sec2-b',    position: [28.5, 7.8,  0], size: [2.5, 0.6,  1.5], kind: 'mud'   },
-  { id: 'sec2-c',    position: [25.0, 7.8,  0], size: [3.5, 0.6,  1.5], kind: 'trail' },
-  { id: 'sec2-wall', position: [23.3, 8.65, 0], size: [0.62,2.5,  1.5], kind: 'root'  },
-  { id: 'sec2-lid',  position: [26.8, 9.55, 0], size: [7.0, 0.45, 1.5], kind: 'root'  },
+  // ── SECCIÓN 1: Entrada al Cafetal (curvas entre matas de café) ─────
+  { id: 'p1',  position: [1.5,  6.2, 0], size: [5.5, 0.9, 2.4], kind: 'mud'   },
+  { id: 'p2',  position: [7.0,  5.1, 0], size: [3.8, 0.85, 2.2], kind: 'root'  },
+  { id: 'p3',  position: [11.2, 4.0, 0], size: [3.2, 0.85, 2.1], kind: 'mud'   },
+  { id: 'p4',  position: [15.0, 2.9, 0], size: [3.5, 0.85, 2.2], kind: 'root'  },
+  { id: 'p5',  position: [19.0, 1.7, 0], size: [3.0, 0.85, 2.0], kind: 'trail' },
+
+  // ── SECCIÓN 2: Primer descenso hacia el valle ─────────────────────
+  { id: 'p6',  position: [22.5, 0.4, 0], size: [3.2, 0.85, 2.1], kind: 'mud'   },
+  { id: 'p7',  position: [26.0, -0.9, 0], size: [3.0, 0.85, 2.0], kind: 'root'  },
+  { id: 'p8',  position: [29.5, -2.1, 0], size: [3.5, 0.9, 2.3], kind: 'trail' }, // fondo del valle
+
+  // ── SECCIÓN 3: Subida hacia la primera loma (con alternativa) ─────
+  { id: 'p9',  position: [33.5, -0.6, 0], size: [3.0, 0.85, 2.0], kind: 'mud'   },
+  { id: 'p10', position: [37.0, 1.1,  0], size: [3.2, 0.85, 2.1], kind: 'root'  },
+  { id: 'p11', position: [40.5, 2.9,  0], size: [3.0, 0.85, 2.0], kind: 'trail' },
+  { id: 'p12', position: [44.0, 4.6,  0], size: [3.8, 0.9, 2.3], kind: 'mud'   }, // Loma 1
+
+  // ── SECCIÓN 4: Cruce elevado + primer riesgo ──────────────────────
+  { id: 'p13', position: [48.5, 3.2, 0], size: [3.5, 0.85, 2.1], kind: 'root'  },
+  { id: 'p14', position: [52.5, 1.6, 0], size: [3.2, 0.85, 2.0], kind: 'trail' },
+
+  // ── SECCIÓN 5: Ridge principal (punto alto con vista) ─────────────
+  { id: 'p15', position: [56.5, 3.8, 0], size: [4.5, 1.0, 2.4], kind: 'mud'   }, // RIDGE ALTO
+  { id: 'p16', position: [61.5, 2.4, 0], size: [3.5, 0.85, 2.2], kind: 'root'  },
+
+  // ── SECCIÓN 6: Gran descenso al cañón (tensión) ───────────────────
+  { id: 'p17', position: [65.0, 0.6, 0], size: [3.0, 0.85, 2.0], kind: 'trail' },
+  { id: 'p18', position: [68.5, -1.2, 0], size: [3.2, 0.85, 2.1], kind: 'mud'   },
+  { id: 'p19', position: [72.0, -2.9, 0], size: [3.0, 0.85, 2.0], kind: 'root'  },
+  { id: 'p20', position: [75.5, -4.5, 0], size: [3.5, 0.9, 2.2], kind: 'trail' },
+
+  // ── SECCIÓN 7: Zigzag del cañón (más largo y técnico) ─────────────
+  { id: 'p21', position: [79.5, -3.1, 0], size: [3.0, 0.85, 2.0], kind: 'mud'   },
+  { id: 'p22', position: [83.0, -1.4, 0], size: [3.2, 0.85, 2.1], kind: 'root'  },
+  { id: 'p23', position: [86.5, -3.0, 0], size: [3.0, 0.85, 2.0], kind: 'trail' },
+  { id: 'p24', position: [90.0, -4.8, 0], size: [3.5, 0.9, 2.2], kind: 'mud'   },
+  { id: 'p25', position: [94.0, -3.2, 0], size: [3.8, 0.85, 2.3], kind: 'trail' }, // última plataforma antes del goal
+
+  // ── SECRETO 1: Bosquecillo escondido (izquierda del ridge) ────────
+  { id: 'sec1-a', position: [53.5, 6.8, 0], size: [2.2, 0.6, 1.6], kind: 'root'  },
+  { id: 'sec1-b', position: [50.5, 7.9, 0], size: [2.8, 0.6, 1.6], kind: 'mud'   },
+  { id: 'sec1-c', position: [47.0, 7.9, 0], size: [3.2, 0.6, 1.6], kind: 'trail' },
+  { id: 'sec1-wall', position: [44.8, 8.7, 0], size: [0.6, 2.2, 1.5], kind: 'root' },
+
+  // ── SECRETO 2: Plataforma alta detrás de la loma (requiere backtrack)
+  { id: 'sec2-a', position: [39.5, 6.4, 0], size: [2.0, 0.6, 1.5], kind: 'root'  },
+  { id: 'sec2-b', position: [36.5, 7.6, 0], size: [2.6, 0.6, 1.5], kind: 'mud'   },
 ];
 
+// ── COLECCIONABLES ───────────────────────────────────────────────────
 export const collectibles: CollectibleData[] = [
-  { id: 'c1',  position: [2.5,  7.15, 0] },
-  { id: 'c2',  position: [8.5,  5.5,  0] },
-  { id: 'c3',  position: [13.0, 3.5,  0] },
-  { id: 'c4',  position: [17.5, 1.5,  0] },
-  { id: 'c5',  position: [21.5, 0.3,  0] },  // valley – very low
-  { id: 'c6',  position: [25.5, 2.2,  0] },
-  { id: 'c7',  position: [29.5, 4.2,  0] },
-  { id: 'c8',  position: [33.5, 6.2,  0] },  // ridge – very high
-  { id: 'c9',  position: [37.5, 3.7,  0] },
-  { id: 'c10', position: [41.0, 1.2,  0] },
-  { id: 'c11', position: [44.0, -0.8, 0] },
-  { id: 'c12', position: [47.0, -2.4, 0] },
-  // Hidden emeralds inside the secret grove
-  { id: 'esm-c1a', position: [24.5, 8.65, 0], kind: 'emerald' },
-  { id: 'esm-c1b', position: [26.2, 8.65, 0], kind: 'emerald' },
+  // Ruta principal
+  { id: 'c1',  position: [3.5,  7.85, 0] },
+  { id: 'c2',  position: [9.0,  6.75, 0] },
+  { id: 'c3',  position: [13.5, 5.65, 0] },
+  { id: 'c4',  position: [17.5, 4.55, 0] },
+  { id: 'c5',  position: [23.5, 1.95, 0] },
+  { id: 'c6',  position: [27.5, 0.65, 0] },
+  { id: 'c7',  position: [31.5, -1.45, 0] }, // fondo del valle
+  { id: 'c8',  position: [35.5, 0.95, 0] },
+  { id: 'c9',  position: [42.0, 6.15, 0] },   // cima de la loma
+  { id: 'c10', position: [49.5, 4.85, 0] },
+  { id: 'c11', position: [58.5, 5.35, 0] },   // ridge alto
+  { id: 'c12', position: [66.5, 2.15, 0] },
+  { id: 'c13', position: [73.5, -2.25, 0] },
+  { id: 'c14', position: [81.5, -2.45, 0] },
+  { id: 'c15', position: [88.5, -3.55, 0] },
+  { id: 'c16', position: [95.0, -2.55, 0] },
+
+  // Secretos (más difíciles de encontrar)
+  { id: 'esm-s1a', position: [51.5, 8.45, 0], kind: 'emerald' },
+  { id: 'esm-s1b', position: [49.0, 8.45, 0], kind: 'emerald' },
+  { id: 'esm-s2a', position: [38.0, 8.2,  0], kind: 'emerald' },
 ];
 
+// ── ENEMIGOS ─────────────────────────────────────────────────────────
 export const enemies: EnemyData[] = [
-  { id: 'e1', position: [13.0, 2.75,  0], patrolRange: 1.1 },
-  { id: 'e2', position: [21.5, -0.65, 0], patrolRange: 1.2 },  // valley guardian
-  { id: 'e3', position: [29.5, 3.85,  0], patrolRange: 1.1 },
-  { id: 'e4', position: [33.5, 5.85,  0], patrolRange: 1.7 },  // ridge guardian
-  { id: 'e5', position: [37.5, 2.95,  0], patrolRange: 1.4 },
-  { id: 'e6', position: [41.0, 0.35,  0], patrolRange: 1.1 },
-  { id: 'e7', position: [44.0, -1.15, 0], patrolRange: 1.1 },
+  { id: 'e1',  position: [9.5,  6.65, 0], patrolRange: 1.3 },
+  { id: 'e2',  position: [15.5, 4.45, 0], patrolRange: 1.4 },
+  { id: 'e3',  position: [24.0, -0.35, 0], patrolRange: 1.6 }, // valle
+  { id: 'e4',  position: [31.0, -1.55, 0], patrolRange: 1.2 },
+  { id: 'e5',  position: [36.5, 2.45, 0], patrolRange: 1.5 },
+  { id: 'e6',  position: [43.5, 6.15, 0], patrolRange: 1.8 }, // loma
+  { id: 'e7',  position: [51.0, 3.0,  0], patrolRange: 1.3 },
+  { id: 'e8',  position: [59.5, 4.35, 0], patrolRange: 1.6 }, // ridge
+  { id: 'e9',  position: [67.5, 0.15, 0], patrolRange: 1.4 },
+  { id: 'e10', position: [76.5, -3.95, 0], patrolRange: 1.5 },
+  { id: 'e11', position: [84.5, -2.45, 0], patrolRange: 1.3 },
 ];
 
+// ── POWER-UPS ────────────────────────────────────────────────────────
 export const powerUps: PowerUpData[] = [
-  { id: 'pu-r2', position: [8.5,  4.85,  0], kind: 'ruby'     },
-  { id: 'pu-s2', position: [21.5, -0.35, 0], kind: 'sapphire' },  // valley floor help
+  { id: 'pu-r2', position: [11.5, 5.55, 0], kind: 'ruby'     }, // zona media
+  { id: 'pu-s2', position: [26.5, -1.35, 0], kind: 'sapphire' }, // fondo del valle (ayuda)
+  { id: 'pu-r3', position: [55.0, 5.35, 0], kind: 'ruby'     }, // antes del ridge
+  { id: 'pu-s3', position: [71.5, -2.35, 0], kind: 'sapphire' }, // cañón profundo
 ];
