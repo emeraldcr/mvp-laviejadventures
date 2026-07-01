@@ -1,68 +1,27 @@
 "use client";
 
-// components/reservation/ReservationDetails.tsx
-import Link from "next/link";
-import { TOUR_INFO } from "@/lib/tour-info";
-import type {
-  AvailabilityMap,
-  MainTourInfo,
-  TourPackageOption,
-  TourSummary,
-} from "@/lib/types/index";
-import { useState, useMemo, useCallback, useEffect, useRef, type KeyboardEvent, type RefObject } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef, type KeyboardEvent } from "react";
 import { format } from "date-fns";
 import { es, enUS } from "date-fns/locale";
 import { useLanguage } from "@/lib/LanguageContext";
 import { translations } from "@/lib/translations";
-import {
-  AlertCircle,
-  Check,
-  Clock3,
-  MapPin,
-  Minus,
-  Plus,
-  ShieldCheck,
-  Sparkles,
-  Users,
-} from "lucide-react";
+import { MapPin, ShieldCheck } from "lucide-react";
 import { trackAnalyticsEvent } from "@/lib/analytics/client";
-
-// ---------------------- SPLIT IMPORTS ----------------------
-import {
-  ADDON_OPTIONS,
-  formatDepartureLabel,
-  DEFAULT_DEPARTURE_TIMES,
-} from "@/lib/reservation/constants";
+import { TOUR_INFO } from "@/lib/tour-info";
+import { ADDON_OPTIONS, DEFAULT_DEPARTURE_TIMES } from "@/lib/reservation/constants";
 import type {
   TourTime,
   BookingStepId,
-  ReservationFormState,
-  ReservationOrderPayload,
   ReservationDetailsProps,
 } from "@/lib/reservation/types";
-import useReservationForm from "@/hooks/useReservationForm";
-import {
-  TravelerInputField,
-  TravelerPhoneInput,
-} from "@/components/reservation/ReservationFormFields";
+import useReservationForm from "../../hooks/useReservationForm";
 import { PHONE_COUNTRIES as ALL_PHONE_COUNTRIES } from "@/app/components/reservation/phoneCountries";
-
-// ---------------------- HELPER (kept here to avoid minification/TDZ issues) ----------------------
-const resolveSelectedTourSlug = (
-  tours: TourSummary[],
-  manualSelectedTourSlug: string | null,
-  initialSelectedTourSlug?: string
-): string => {
-  if (manualSelectedTourSlug && tours.some((tour) => tour.slug === manualSelectedTourSlug)) {
-    return manualSelectedTourSlug;
-  }
-
-  if (initialSelectedTourSlug && tours.some((tour) => tour.slug === initialSelectedTourSlug)) {
-    return initialSelectedTourSlug;
-  }
-
-  return tours[0]?.slug ?? "tour-ciudad-esmeralda";
-};
+import { resolveSelectedTourSlug, getDefaultMainTourInfo } from "./reservationDetails.helpers";
+import ReservationDetailsStepProgress from "./ReservationDetailsStepProgress";
+import ReservationDetailsStep1 from "./ReservationDetailsStep1";
+import ReservationDetailsStep2 from "./ReservationDetailsStep2";
+import ReservationDetailsStep3 from "./ReservationDetailsStep3";
+import type { MainTourInfo, TourPackageOption } from "@/lib/types/index";
 
 // ---------------------- MAIN COMPONENT ----------------------
 
@@ -143,10 +102,7 @@ export default function ReservationDetails({
       contact: TOUR_INFO.contact,
     };
   }, [selectedTour, selectedTourDescription, selectedTourName]);
-  const defaultMainTourInfo: MainTourInfo = {
-    ...TOUR_INFO,
-    cancellationPolicy: TOUR_INFO.cancellationPolicy ?? "",
-  };
+  const defaultMainTourInfo: MainTourInfo = getDefaultMainTourInfo();
   const apiSelectedTourInfo = selectedTourInfo?.slug === selectedTourSlug ? selectedTourInfo.tour : null;
   const resolvedTourInfo: MainTourInfo = apiSelectedTourInfo
     ? {
@@ -810,39 +766,7 @@ export default function ReservationDetails({
         {tr.titlePrefix} {formattedDate}
       </h2>
 
-      <div className="mb-8 border-y border-zinc-200 py-3 dark:border-zinc-800" aria-label={tr.flowTitle}>
-        <div className="flex items-center gap-2">
-          {steps.map((step) => {
-            const isCurrent = currentStep === step.id;
-            const isDone = currentStep > step.id;
-            return (
-              <div
-                key={step.id}
-                className="flex flex-1 items-center gap-2"
-                aria-current={isCurrent ? "step" : undefined}
-              >
-                <span
-                  className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-bold transition-colors ${
-                    isCurrent
-                      ? "border-emerald-400 bg-emerald-500 text-zinc-950"
-                      : isDone
-                      ? "border-teal-400 bg-teal-400/20 text-teal-300"
-                      : "border-zinc-700 bg-zinc-900 text-zinc-500"
-                  }`}
-                >
-                  {step.id}
-                </span>
-                <span className={`hidden min-w-0 truncate text-xs font-semibold sm:inline ${isCurrent ? "text-emerald-300" : isDone ? "text-teal-300" : "text-zinc-500"}`}>
-                  {step.label}
-                </span>
-                {step.id < steps.length && (
-                  <span className={`h-px flex-1 ${isDone ? "bg-teal-500/60" : "bg-zinc-800"}`} aria-hidden />
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      <ReservationDetailsStepProgress steps={steps} currentStep={currentStep} />
 
       <div className={`mb-5 flex items-center gap-3 rounded-xl border border-zinc-200 bg-white p-3 dark:border-zinc-700 dark:bg-zinc-900/60 ${!selectedTour ? "ring-2 ring-amber-300/70" : ""}`}>
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-300">
@@ -859,262 +783,30 @@ export default function ReservationDetails({
 
       {currentStep === 1 && (
         <>
-          <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.42fr)]">
-            <div className="space-y-4">
-            <section
-              ref={scheduleSectionRef}
-              className={`rounded-2xl border bg-white p-4 shadow-sm transition-all dark:bg-zinc-900/70 sm:p-5 ${
-                !tourTime
-                  ? "border-amber-300 ring-2 ring-amber-300/35 dark:border-amber-600"
-                  : "border-zinc-200 dark:border-zinc-700"
-              }`}
-            >
-              <div className="mb-4 flex items-start justify-between gap-3">
-                <div className="flex min-w-0 items-start gap-3">
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-300">
-                    <Clock3 className="h-5 w-5" aria-hidden />
-                  </span>
-                  <div className="min-w-0">
-                    <h3 className="text-lg font-black leading-tight text-zinc-900 dark:text-zinc-50 sm:text-xl">{tr.tourTimeTitle}</h3>
-                    {!tourTime && (
-                      <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-amber-700 dark:text-amber-400">
-                        <AlertCircle className="h-4 w-4 shrink-0" aria-hidden /> {tr.indicators.chooseTourTime}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                {availableTimeSlots.map((slot) => {
-                  const isSelected = tourTime === slot;
-                  return (
-                    <button
-                      key={slot}
-                      type="button"
-                      onClick={() => handleTourTimeSelect(slot)}
-                      className={`min-h-14 rounded-xl border-2 px-4 py-3 text-center text-base font-black transition-all ${
-                        isSelected
-                          ? "border-emerald-500 bg-emerald-500 text-white shadow-lg shadow-emerald-900/15 dark:bg-emerald-500 dark:text-zinc-950"
-                          : "border-zinc-200 bg-zinc-50 text-zinc-800 hover:-translate-y-0.5 hover:border-emerald-400 hover:bg-emerald-50 dark:border-zinc-700 dark:bg-zinc-950/40 dark:text-zinc-200 dark:hover:bg-emerald-950/30"
-                      }`}
-                    >
-                      {formatDepartureLabel(slot)}
-                    </button>
-                  );
-                })}
-              </div>
-            </section>
-
-            <section
-              className={`rounded-2xl border bg-white p-4 shadow-sm transition-all dark:bg-zinc-900/70 sm:p-5 ${
-                !isTicketsValid
-                  ? "border-amber-300 ring-2 ring-amber-300/35 dark:border-amber-600"
-                  : "border-zinc-200 dark:border-zinc-700"
-              }`}
-            >
-              <div className="mb-4 flex items-start justify-between gap-3">
-                <div className="flex min-w-0 items-start gap-3">
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-300">
-                    <Users className="h-5 w-5" aria-hidden />
-                  </span>
-                  <div className="min-w-0">
-                    <h3 className="text-lg font-black leading-tight text-zinc-900 dark:text-zinc-50 sm:text-xl">{tr.ticketsTitle}</h3>
-                    {!isTicketsValid && (
-                      <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-amber-700 dark:text-amber-400">
-                        <AlertCircle className="h-4 w-4 shrink-0" aria-hidden /> {tr.indicators.chooseTickets}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                <span className="shrink-0 rounded-full border border-teal-500/30 bg-teal-500/10 px-3 py-1 text-xs font-bold text-teal-700 dark:text-teal-300">
-                  {tr.availablePrefix} {slots}
-                </span>
-              </div>
-
-              <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-950/35">
-                <label htmlFor="tickets" className="mb-3 block text-sm font-bold text-zinc-700 dark:text-zinc-300">
-                  {tr.numPeople}
-                </label>
-                <div className="grid grid-cols-[44px_minmax(0,1fr)_44px] items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleTicketsChange(String(tickets - 1))}
-                    disabled={slots === 0 || tickets <= 1}
-                    className="flex h-11 w-11 items-center justify-center rounded-xl border border-zinc-300 bg-white text-zinc-700 transition hover:border-teal-500 hover:text-teal-700 disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
-                    aria-label={lang === "es" ? "Reducir personas" : "Decrease guests"}
-                  >
-                    <Minus className="h-4 w-4" aria-hidden />
-                  </button>
-                  <input
-                    ref={ticketsInputRef}
-                    id="tickets"
-                    type="number"
-                    min={1}
-                    max={Math.max(1, slots)}
-                    value={tickets}
-                    onChange={(e) => {
-                      handleTicketsChange(e.target.value);
-                    }}
-                    onKeyDown={handleStep1Enter}
-                    className="h-11 w-full rounded-xl border border-zinc-300 bg-white text-center text-lg font-black text-zinc-900 outline-none transition focus:border-teal-500 focus:ring-4 focus:ring-teal-500/15 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
-                    disabled={slots === 0}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleTicketsChange(String(tickets + 1))}
-                    disabled={slots === 0 || tickets >= slots}
-                    className="flex h-11 w-11 items-center justify-center rounded-xl border border-zinc-300 bg-white text-zinc-700 transition hover:border-teal-500 hover:text-teal-700 disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
-                    aria-label={lang === "es" ? "Aumentar personas" : "Increase guests"}
-                  >
-                    <Plus className="h-4 w-4" aria-hidden />
-                  </button>
-                </div>
-              </div>
-
-              {/* Base price display */}
-              <div className="mt-3 flex items-center justify-between rounded-xl border border-zinc-200 bg-white px-4 py-3 dark:border-zinc-700 dark:bg-zinc-900">
-                <span className="text-sm font-semibold text-zinc-600 dark:text-zinc-400">
-                  {lang === "es" ? "Entrada General" : "General Entry"}
-                </span>
-                <span className="font-black text-zinc-900 dark:text-zinc-50">${basePriceUSD} / {tr.perPerson}</span>
-              </div>
-            </section>
-
-            <section className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-700 dark:bg-zinc-900/70 sm:p-5">
-              <div className="mb-4 flex items-start justify-between gap-3">
-                <div className="flex min-w-0 items-start gap-3">
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-300">
-                    <Sparkles className="h-5 w-5" aria-hidden />
-                  </span>
-                  <div className="min-w-0">
-                    <h3 className="text-lg font-black leading-tight text-zinc-900 dark:text-zinc-50 sm:text-xl">
-                      {lang === "es" ? "Mejora tu experiencia" : "Upgrade your experience"}
-                    </h3>
-                    <p className="mt-1 text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                      {lang === "es" ? "Opcional. Se calcula por persona." : "Optional. Calculated per person."}
-                    </p>
-                  </div>
-                </div>
-                {selectedAddons.length > 0 && (
-                  <span className="shrink-0 rounded-full bg-emerald-500 px-2.5 py-1 text-xs font-black text-white">
-                    +{selectedAddons.length}
-                  </span>
-                )}
-              </div>
-
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                  {ADDON_OPTIONS.map((addon) => {
-                    const isSelected = selectedAddons.includes(addon.id);
-                    const Icon = addon.icon;
-                    const addonName = lang === "es" ? addon.nameEs : addon.nameEn;
-                    const addonDesc = lang === "es" ? addon.descriptionEs : addon.descriptionEn;
-
-                    return (
-                      <button
-                        key={addon.id}
-                        type="button"
-                        onClick={() => handleAddonToggle(addon.id)}
-                        aria-pressed={isSelected}
-                        className={`flex min-h-[104px] items-start gap-3 rounded-xl border p-3 text-left transition-all outline-none focus-visible:ring-4 focus-visible:ring-emerald-300/60 ${
-                          isSelected
-                            ? "border-emerald-500 bg-emerald-50/90 shadow-md shadow-emerald-500/15 dark:border-emerald-500 dark:bg-emerald-950/30"
-                            : "border-zinc-200 bg-zinc-50 hover:border-emerald-300 hover:bg-white dark:border-zinc-700 dark:bg-zinc-950/35 dark:hover:border-emerald-700"
-                        }`}
-                      >
-                        <span className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-colors ${
-                          isSelected
-                            ? "bg-emerald-500 text-white"
-                            : "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
-                        }`}>
-                          <Icon className="h-4 w-4" aria-hidden />
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center justify-between gap-2">
-                            <p className={`text-sm font-black leading-tight ${isSelected ? "text-emerald-800 dark:text-emerald-200" : "text-zinc-900 dark:text-zinc-100"}`}>
-                              {addonName}
-                            </p>
-                            <span className={`shrink-0 text-sm font-black ${isSelected ? "text-emerald-700 dark:text-emerald-300" : "text-zinc-800 dark:text-zinc-100"}`}>
-                              +${addon.price}
-                            </span>
-                          </div>
-                          <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">{addonDesc}</p>
-                        </div>
-                        {isSelected && (
-                          <span className="ml-1 mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white">
-                            <Check className="h-3.5 w-3.5" aria-hidden />
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {selectedAddons.length > 0 && (
-                  <div className="mt-3 flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 dark:border-emerald-800/50 dark:bg-emerald-950/20">
-                    <span className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
-                      {lang === "es" ? "Extra por persona" : "Extra per person"}
-                    </span>
-                    <span className="font-black text-emerald-800 dark:text-emerald-300">+${addonsPricePerPerson}</span>
-                  </div>
-                )}
-            </section>
-            </div>
-
-            <aside className="lg:sticky lg:top-24 lg:self-start">
-              <div className="overflow-hidden rounded-2xl border border-emerald-200 bg-white shadow-xl shadow-black/5 dark:border-emerald-900/60 dark:bg-zinc-900">
-                <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-5 text-white">
-                  <p className="text-[11px] font-black uppercase tracking-[0.22em] text-emerald-50/80">
-                    {lang === "es" ? "Total estimado" : "Estimated total"}
-                  </p>
-                  <p className="mt-2 text-4xl font-black tracking-tight">${totalWithTaxes.toFixed(2)}</p>
-                  <p className="mt-1 text-sm font-semibold text-emerald-50/85">
-                    {tickets} {lang === "es" ? "persona(s)" : "guest(s)"} | ${pricePerPerson} {tr.perPerson}
-                  </p>
-                </div>
-                <div className="space-y-3 p-5">
-                  <div className="flex justify-between gap-3 text-sm">
-                    <span className="text-zinc-500 dark:text-zinc-400">{lang === "es" ? "Tour" : "Tour"}</span>
-                    <span className="text-right font-bold text-zinc-900 dark:text-zinc-50">{selectedTourName}</span>
-                  </div>
-                  <div className="flex justify-between gap-3 text-sm">
-                    <span className="text-zinc-500 dark:text-zinc-400">{lang === "es" ? "Hora" : "Time"}</span>
-                    <span className="font-bold text-zinc-900 dark:text-zinc-50">{tourTime ? formatDepartureLabel(tourTime) : "—"}</span>
-                  </div>
-                  <div className="flex justify-between gap-3 text-sm">
-                    <span className="text-zinc-500 dark:text-zinc-400">{lang === "es" ? "Base" : "Base"}</span>
-                    <span className="font-bold text-zinc-900 dark:text-zinc-50">${basePriceUSD} / {tr.perPerson}</span>
-                  </div>
-                  <div className="flex justify-between gap-3 text-sm">
-                    <span className="text-zinc-500 dark:text-zinc-400">{lang === "es" ? "Extras" : "Add-ons"}</span>
-                    <span className="font-bold text-zinc-900 dark:text-zinc-50">+${addonsPricePerPerson} / {tr.perPerson}</span>
-                  </div>
-                  <div className="border-t border-zinc-200 pt-3 dark:border-zinc-800">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-zinc-500 dark:text-zinc-400">{tr.subtotalLabel}</span>
-                      <span className="font-bold text-zinc-900 dark:text-zinc-50">${subtotal.toFixed(2)}</span>
-                    </div>
-                    <div className="mt-2 flex justify-between text-sm">
-                      <span className="text-zinc-500 dark:text-zinc-400">{tr.taxes} ({ivaRatePercent}%)</span>
-                      <span className="font-bold text-zinc-900 dark:text-zinc-50">${taxes.toFixed(2)}</span>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={goToNextStep}
-                    aria-disabled={!isStep1Valid}
-                    className={`inline-flex min-h-12 w-full items-center justify-center rounded-xl px-5 py-3 font-black text-white transition ${
-                      !isStep1Valid
-                        ? "cursor-not-allowed bg-zinc-400 opacity-70"
-                        : "bg-zinc-950 hover:-translate-y-0.5 hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-500"
-                    }`}
-                  >
-                    {lang === "es" ? "Continuar a mis datos" : "Continue to details"}
-                  </button>
-                </div>
-              </div>
-            </aside>
-          </div>
+          <ReservationDetailsStep1
+            scheduleSectionRef={scheduleSectionRef}
+            ticketsInputRef={ticketsInputRef}
+            tourTime={tourTime}
+            availableTimeSlots={availableTimeSlots}
+            isTicketsValid={isTicketsValid}
+            tickets={tickets}
+            slots={slots}
+            selectedAddons={selectedAddons}
+            addonsPricePerPerson={addonsPricePerPerson}
+            basePriceUSD={basePriceUSD}
+            pricePerPerson={pricePerPerson}
+            totalWithTaxes={totalWithTaxes}
+            subtotal={subtotal}
+            taxes={taxes}
+            ivaRatePercent={ivaRatePercent}
+            missingStep1Items={missingStep1Items}
+            onTourTimeSelect={handleTourTimeSelect}
+            onTicketsChange={handleTicketsChange}
+            onStep1Enter={handleStep1Enter}
+            onAddonToggle={handleAddonToggle}
+            tr={tr}
+            lang={lang}
+          />
 
           {!isStep1Valid && (
             <div className="mb-6 rounded-xl border border-amber-300 bg-amber-50 p-4 dark:border-amber-700 dark:bg-amber-900/20">
@@ -1130,175 +822,64 @@ export default function ReservationDetails({
       )}
 
       {currentStep === 2 && (
-        <>
-          <div ref={travelerSectionRef} className={`mb-6 rounded-xl ${!isStep2Valid ? "ring-2 ring-amber-300/70 p-3" : ""}`}>
-            <h3 className="text-xl font-semibold mb-4">{tr.travelerTitle}</h3>
-            {!isStep2Valid && <p className="mb-3 flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-400"><AlertCircle className="h-4 w-4" aria-hidden /> {tr.indicators.completeTravelerData}</p>}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <TravelerInputField 
-                id="name" 
-                label={tr.fullName} 
-                value={formState.name} 
-                onChange={(v) => handleChange("name", v)} 
-                onBlur={() => trackFieldBlur("name")} 
-                onKeyDown={handleNameEnter} 
-                inputRef={nameInputRef} 
-                placeholder={tr.namePlaceholder} 
-                isValid={validation.isNameValid} 
-                validationMessage={tr.nameRequired} 
-                required 
-              />
-              <TravelerInputField 
-                id="email" 
-                label={tr.emailLabel} 
-                type="email" 
-                value={formState.email} 
-                onChange={(v) => handleChange("email", v)} 
-                onBlur={() => trackFieldBlur("email")} 
-                onKeyDown={handleEmailEnter} 
-                inputRef={emailInputRef} 
-                placeholder={tr.emailPlaceholder} 
-                isValid={validation.isEmailValid} 
-                validationMessage={tr.emailInvalid} 
-                required 
-              />
-              <TravelerPhoneInput 
-                phoneCode={formState.phoneCode} 
-                phoneNumber={formState.phoneNumber} 
-                setPhoneCode={(v) => handleChange("phoneCode", v)} 
-                setPhoneNumber={(v) => handleChange("phoneNumber", v)} 
-                onBlur={() => trackFieldBlur("phone")} 
-                onKeyDown={handlePhoneEnter} 
-                inputRef={phoneInputRef} 
-                isValid={validation.isPhoneNumberValid} 
-                label={tr.phoneLabel} 
-                placeholder={tr.phonePlaceholder} 
-                validationMessage={tr.phoneInvalid} 
-              />
-              <div className="md:col-span-2">
-                <label htmlFor="specialRequests" className="mb-2 block text-lg font-semibold">
-                  {lang === "es" ? "¿Necesitas algo extra?" : "Need anything extra?"}
-                  <span className="ml-2 text-sm font-normal text-zinc-500">
-                    {lang === "es" ? "opcional" : "optional"}
-                  </span>
-                </label>
-                <textarea
-                  id="specialRequests"
-                  value={formState.specialRequests}
-                  onChange={(event) => handleChange("specialRequests", event.target.value)}
-                  onBlur={() => trackFieldBlur("specialRequests")}
-                  rows={3}
-                  className="w-full rounded-xl border border-zinc-300 bg-white p-3 text-zinc-900 outline-none transition focus:border-teal-500 focus:ring-4 focus:ring-teal-500/15 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
-                  placeholder={
-                    lang === "es"
-                      ? "Ej: transporte desde hotel, comida vegetariana, cumpleaños, guia privado, fotos..."
-                      : "Ex: hotel pickup, vegetarian meal, birthday, private guide, photos..."
-                  }
-                />
-                <p className="mt-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">
-                  {lang === "es"
-                    ? "Lo revisamos antes de confirmar si requiere costo adicional."
-                    : "We review it before confirmation if it requires an extra cost."}
-                </p>
-              </div>
-            </div>
-          </div>
-          {!isStep2Valid && (
-            <div className="mb-6 rounded-xl border border-amber-300 bg-amber-50 p-4 dark:border-amber-700 dark:bg-amber-900/20">
-              <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">{tr.completeStepTwoHint}</p>
-              <ul className="mt-2 space-y-1 text-sm text-amber-700 dark:text-amber-300">
-                {missingStep2Items.map((item) => (
-                  <li key={item}>• {item}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </>
+        <ReservationDetailsStep2
+          travelerSectionRef={travelerSectionRef}
+          nameInputRef={nameInputRef}
+          emailInputRef={emailInputRef}
+          phoneInputRef={phoneInputRef}
+          isStep2Valid={isStep2Valid}
+          formState={formState}
+          validation={validation}
+          missingStep2Items={missingStep2Items}
+          onNameChange={(value) => handleChange("name", value)}
+          onEmailChange={(value) => handleChange("email", value)}
+          onPhoneCodeChange={(value) => handleChange("phoneCode", value)}
+          onPhoneNumberChange={(value) => handleChange("phoneNumber", value)}
+          onSpecialRequestsChange={(value) => handleChange("specialRequests", value)}
+          onNameEnter={handleNameEnter}
+          onEmailEnter={handleEmailEnter}
+          onPhoneEnter={handlePhoneEnter}
+          onFieldBlur={trackFieldBlur}
+          tr={tr}
+          lang={lang}
+        />
       )}
 
       {currentStep === 3 && (
-        <>
-          <div ref={reviewSectionRef} className="mb-6 bg-zinc-100 dark:bg-zinc-800 p-4 rounded-xl">
-            <div className="flex justify-between mb-2"><span>{tr.tourLabel}</span><span className="font-medium">{selectedTourName}</span></div>
-            <div className="flex justify-between mb-2">
-              <span>{lang === "es" ? "Entrada General" : "General Entry"}</span>
-              <span className="font-medium">${basePriceUSD} / {tr.perPerson}</span>
-            </div>
-            <div className="flex justify-between mb-2"><span>{tr.tourTimeTitle}</span><span>{tourTime ?? "—"}</span></div>
-            <div className="flex justify-between mb-2">
-              <span>{lang === "es" ? "Personas" : "People"}</span>
-              <span>{tickets}</span>
-            </div>
-            {selectedAddons.length > 0 && (
-              <div className="mb-2 border-t border-zinc-300 dark:border-zinc-600 pt-2 mt-2">
-                <p className="text-sm font-semibold text-zinc-600 dark:text-zinc-400 mb-1">
-                  {lang === "es" ? "Servicios extra:" : "Extra services:"}
-                </p>
-                {ADDON_OPTIONS.filter((a) => selectedAddons.includes(a.id)).map((addon) => (
-                  <div key={addon.id} className="flex justify-between text-sm mb-1">
-                    <span className="text-zinc-700 dark:text-zinc-300">{lang === "es" ? addon.nameEs : addon.nameEn}</span>
-                    <span>+${addon.price} / {tr.perPerson}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-            <div className="flex justify-between mb-2"><span>{tr.subtotalLabel}</span><span>${subtotal.toFixed(2)}</span></div>
-            <div className="flex justify-between mb-2"><span>{tr.taxes} ({ivaRatePercent}%)</span><span>${taxes.toFixed(2)}</span></div>
-            <div className="flex justify-between font-bold text-lg border-t pt-2 border-zinc-300 dark:border-zinc-700"><span>{tr.total}</span><span>${totalWithTaxes.toFixed(2)}</span></div>
-          </div>
-
-          <div className="mb-6">
-            <h3 className="text-xl font-semibold mb-4">{tr.policiesTitle}</h3>
-            <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-xl mb-4 text-zinc-800 dark:text-zinc-300">
-              <strong className="block mb-1 text-yellow-900 dark:text-yellow-300">{tr.cancellationLabel}</strong>
-              <p className="text-sm">{localizedCancellationPolicy}</p>
-            </div>
-            <label htmlFor="agreeTerms" className={`flex items-start gap-3 p-4 rounded-xl border transition-all cursor-pointer ${formState.agreeTerms ? "border-teal-500 bg-teal-50 dark:bg-teal-900/20" : "border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800"}`}>
-              <input
-                ref={termsCheckboxRef}
-                id="agreeTerms"
-                type="checkbox"
-                checked={formState.agreeTerms}
-                onChange={(e) => {
-                  const accepted = e.target.checked;
-                  handleChange("agreeTerms", accepted);
-                  trackAnalyticsEvent("booking_field_blur", {
-                    metadata: {
-                      step: 3,
-                      stepLabel: stepLabels[3],
-                      field: "terms",
-                      isValid: accepted,
-                      isEmpty: !accepted,
-                      valueLength: accepted ? 1 : 0,
-                      termsAccepted: accepted,
-                      booking: getAnalyticsBookingSnapshot(),
-                    },
-                  });
-                }}
-                onKeyDown={handleTermsEnter}
-                className="h-5 w-5 text-teal-600 rounded border-zinc-400 focus:ring-teal-500 dark:bg-zinc-700 dark:border-zinc-600 mt-0.5"
-              />
-              <span className="text-zinc-700 dark:text-zinc-400 text-base">
-                {tr.agreeText}
-                <Link href="/terminos-y-condiciones" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-teal-600 underline ml-1">{tr.termsLink}</Link>{" "}{tr.andThe}{" "}
-                <Link href="/politica-de-privacidad" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-teal-600 underline ml-1">{tr.privacyLink}</Link>.
-              </span>
-            </label>
-          </div>
-        </>
+        <ReservationDetailsStep3
+          reviewSectionRef={reviewSectionRef}
+          termsCheckboxRef={termsCheckboxRef}
+          formState={formState}
+          selectedTourName={selectedTourName}
+          basePriceUSD={basePriceUSD}
+          tourTime={tourTime}
+          tickets={tickets}
+          selectedAddons={selectedAddons}
+          subtotal={subtotal}
+          taxes={taxes}
+          totalWithTaxes={totalWithTaxes}
+          ivaRatePercent={ivaRatePercent}
+          localizedCancellationPolicy={localizedCancellationPolicy}
+          onTermsChange={(accepted) => {
+            handleChange("agreeTerms", accepted);
+            trackAnalyticsEvent("booking_field_blur", {
+              metadata: {
+                step: 3,
+                stepLabel: stepLabels[3],
+                field: "terms",
+                isValid: accepted,
+                isEmpty: !accepted,
+                valueLength: accepted ? 1 : 0,
+                termsAccepted: accepted,
+                booking: getAnalyticsBookingSnapshot(),
+              },
+            });
+          }}
+          onTermsEnter={handleTermsEnter}
+          tr={tr}
+          lang={lang}
+        />
       )}
-
-      {/* Trust signals */}
-      <div className="flex flex-wrap justify-center gap-x-5 gap-y-1.5 border-t border-zinc-200 pt-4 pb-1 dark:border-zinc-800">
-        <span className="flex items-center gap-1.5 text-xs font-medium text-zinc-500 dark:text-zinc-400">
-          <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" aria-hidden />
-          {lang === "es" ? "Cancelación gratuita hasta 24h antes" : "Free cancellation up to 24h before"}
-        </span>
-        <span className="flex items-center gap-1.5 text-xs font-medium text-zinc-500 dark:text-zinc-400">
-          <Check className="h-3.5 w-3.5 text-emerald-500" aria-hidden />
-          {lang === "es" ? "Confirmación inmediata" : "Instant confirmation"}
-        </span>
-      </div>
 
       <div className="flex flex-col-reverse gap-3 pt-4 sm:flex-row sm:justify-end">
         {currentStep > 1 && (

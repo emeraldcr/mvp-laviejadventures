@@ -3,6 +3,13 @@
 
 export type LiveGameListener = (gameId: string) => void;
 
+type ViewerCountDoc = {
+  _id: string;
+  viewerCount?: number;
+  version?: number;
+  updatedAt?: Date;
+};
+
 const gameListeners = new Set<LiveGameListener>();
 
 export function subscribeLiveGameChanges(listener: LiveGameListener): () => void {
@@ -16,7 +23,6 @@ export function notifyLiveGameChanged(gameId: string) {
       listener(gameId);
     } catch (err) {
       // swallow listener errors to avoid breaking the notifier
-      // eslint-disable-next-line no-console
       if (console && console.error) console.error(err);
     }
   }
@@ -53,19 +59,19 @@ export function resetViewerCount(gameId: string): void {
 // `db` should be a connected MongoDB `Db` instance. These functions atomically
 // increment/decrement the `viewerCount` field on the game's document.
 export async function incViewerCountDb(db: import("mongodb").Db, gameId: string): Promise<number> {
-  const col = db.collection("ghost_game_state");
-  const res = await col.findOneAndUpdate({ _id: gameId } as any, { $inc: { viewerCount: 1 }, $set: { updatedAt: new Date() }, $inc: { version: 1 } }, { returnDocument: "after" } as any);
-  const vc = res.value?.viewerCount ?? 0;
+  const col = db.collection<ViewerCountDoc>("ghost_game_state");
+  const updated = await col.findOneAndUpdate({ _id: gameId }, { $inc: { viewerCount: 1, version: 1 }, $set: { updatedAt: new Date() } }, { returnDocument: "after" });
+  const vc = updated?.viewerCount ?? 0;
   viewerCounts.set(gameId, vc);
   return vc;
 }
 
 export async function decViewerCountDb(db: import("mongodb").Db, gameId: string): Promise<number> {
-  const col = db.collection("ghost_game_state");
-  const res = await col.findOneAndUpdate({ _id: gameId } as any, { $inc: { viewerCount: -1 }, $set: { updatedAt: new Date() }, $inc: { version: 1 } }, { returnDocument: "after" } as any);
-  const vc = Math.max(0, res.value?.viewerCount ?? 0);
+  const col = db.collection<ViewerCountDoc>("ghost_game_state");
+  const updated = await col.findOneAndUpdate({ _id: gameId }, { $inc: { viewerCount: -1, version: 1 }, $set: { updatedAt: new Date() } }, { returnDocument: "after" });
+  const vc = Math.max(0, updated?.viewerCount ?? 0);
   // ensure non-negative
-  if (vc === 0) await col.updateOne({ _id: gameId } as any, { $set: { viewerCount: 0 } } as any);
+  if (vc === 0) await col.updateOne({ _id: gameId }, { $set: { viewerCount: 0 } });
   viewerCounts.set(gameId, vc);
   return vc;
 }

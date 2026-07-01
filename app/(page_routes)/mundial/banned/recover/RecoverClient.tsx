@@ -572,7 +572,6 @@ export default function RecoverClient() {
           <CodeVerifyStep
             title="Verificación de correo electrónico"
             icon={<Mail className="h-5 w-5" />}
-            accentColor="#d5ff3f"
             destination={maskEmail(fEmail) || "tu correo"}
             value={emailCode} onChange={setEmailCode}
             onSubmit={() => void handleVerifyEmail()} onResend={() => void handleSendEmailCode()}
@@ -584,7 +583,6 @@ export default function RecoverClient() {
           <CodeVerifyStep
             title="Verificación de número de teléfono"
             icon={<Phone className="h-5 w-5" />}
-            accentColor="#34d5ff"
             destination={maskEmail(fEmail) || "tu correo"}
             value={phoneCode} onChange={setPhoneCode}
             onSubmit={() => void handleVerifyPhone()} onResend={() => void handleSendPhoneCode()}
@@ -1226,7 +1224,7 @@ function TotpSetupStep({ secret, copied, onCopy, onContinue, onBroken }: {
         <ol className="flex-1 space-y-3 text-xs text-white/50">
           {[
             <><strong className="text-white/75">Descarga</strong> Google Authenticator en iOS o Android.</>,
-            <>Toca <strong className="text-white/75">"+"</strong> → <em className="text-white/70">"Ingresar clave de configuración"</em>.</>,
+            <>Toca <strong className="text-white/75">&quot;+&quot;</strong> → <em className="text-white/70">&quot;Ingresar clave de configuración&quot;</em>.</>,
             <>Escanea el código QR <strong className="text-white/75">o copia la clave</strong> de abajo.</>,
             <>La app generará códigos nuevos <strong className="text-white/75">cada 30 segundos</strong>.</>,
           ].map((text, i) => (

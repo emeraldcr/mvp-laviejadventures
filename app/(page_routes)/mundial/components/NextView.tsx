@@ -65,7 +65,7 @@ export function NextView({
           <FeaturedMatch
             match={featuredMatch}
             draft={drafts[featuredMatch.id] ?? emptyDraft()}
-            predictions={predictions}
+            _predictions={predictions}
             nowMs={nowMs}
             activeCountdown={featuredMatch.id === activeMatch?.id ? activeCountdown : undefined}
             playerName={playerName}

@@ -1,0 +1,117 @@
+import Link from "next/link";
+import type { KeyboardEvent, RefObject } from "react";
+import { Check, ShieldCheck } from "lucide-react";
+import type { TourTime } from "@/lib/reservation/types";
+import { ADDON_OPTIONS } from "@/lib/reservation/constants";
+
+type ReservationTranslations = typeof import("@/lib/translations").translations["es"]["reservation"];
+
+interface ReservationDetailsStep3Props {
+  reviewSectionRef: RefObject<HTMLDivElement | null>;
+  termsCheckboxRef: RefObject<HTMLInputElement | null>;
+  formState: {
+    agreeTerms: boolean;
+  };
+  selectedTourName: string;
+  basePriceUSD: number;
+  tourTime: TourTime | null;
+  tickets: number;
+  selectedAddons: string[];
+  subtotal: number;
+  taxes: number;
+  totalWithTaxes: number;
+  ivaRatePercent: number;
+  localizedCancellationPolicy: string;
+  onTermsChange: (accepted: boolean) => void;
+  onTermsEnter: (event: KeyboardEvent<HTMLInputElement>) => void;
+  tr: ReservationTranslations;
+  lang: "es" | "en";
+}
+
+export default function ReservationDetailsStep3({
+  reviewSectionRef,
+  termsCheckboxRef,
+  formState,
+  selectedTourName,
+  basePriceUSD,
+  tourTime,
+  tickets,
+  selectedAddons,
+  subtotal,
+  taxes,
+  totalWithTaxes,
+  ivaRatePercent,
+  localizedCancellationPolicy,
+  onTermsChange,
+  onTermsEnter,
+  tr,
+  lang,
+}: ReservationDetailsStep3Props) {
+  return (
+    <>
+      <div ref={reviewSectionRef} className="mb-6 rounded-xl bg-zinc-100 p-4 dark:bg-zinc-800">
+        <div className="mb-2 flex justify-between"><span>{tr.tourLabel}</span><span className="font-medium">{selectedTourName}</span></div>
+        <div className="mb-2 flex justify-between">
+          <span>{lang === "es" ? "Entrada General" : "General Entry"}</span>
+          <span className="font-medium">${basePriceUSD} / {tr.perPerson}</span>
+        </div>
+        <div className="mb-2 flex justify-between"><span>{tr.tourTimeTitle}</span><span>{tourTime ?? "—"}</span></div>
+        <div className="mb-2 flex justify-between">
+          <span>{lang === "es" ? "Personas" : "People"}</span>
+          <span>{tickets}</span>
+        </div>
+        {selectedAddons.length > 0 && (
+          <div className="mt-2 mb-2 border-t border-zinc-300 pt-2 dark:border-zinc-600">
+            <p className="mb-1 text-sm font-semibold text-zinc-600 dark:text-zinc-400">
+              {lang === "es" ? "Servicios extra:" : "Extra services:"}
+            </p>
+            {ADDON_OPTIONS.filter((a) => selectedAddons.includes(a.id)).map((addon) => (
+              <div key={addon.id} className="mb-1 flex justify-between text-sm">
+                <span className="text-zinc-700 dark:text-zinc-300">{lang === "es" ? addon.nameEs : addon.nameEn}</span>
+                <span>+${addon.price} / {tr.perPerson}</span>
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="mb-2 flex justify-between"><span>{tr.subtotalLabel}</span><span>${subtotal.toFixed(2)}</span></div>
+        <div className="mb-2 flex justify-between"><span>{tr.taxes} ({ivaRatePercent}%)</span><span>${taxes.toFixed(2)}</span></div>
+        <div className="flex justify-between border-t border-zinc-300 pt-2 text-lg font-bold dark:border-zinc-700"><span>{tr.total}</span><span>${totalWithTaxes.toFixed(2)}</span></div>
+      </div>
+
+      <div className="mb-6">
+        <h3 className="mb-4 text-xl font-semibold">{tr.policiesTitle}</h3>
+        <div className="mb-4 rounded-xl bg-yellow-50 p-4 text-zinc-800 dark:bg-yellow-900/20 dark:text-zinc-300">
+          <strong className="mb-1 block text-yellow-900 dark:text-yellow-300">{tr.cancellationLabel}</strong>
+          <p className="text-sm">{localizedCancellationPolicy}</p>
+        </div>
+        <label htmlFor="agreeTerms" className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-all ${formState.agreeTerms ? "border-teal-500 bg-teal-50 dark:bg-teal-900/20" : "border-zinc-300 hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800"}`}>
+          <input
+            ref={termsCheckboxRef}
+            id="agreeTerms"
+            type="checkbox"
+            checked={formState.agreeTerms}
+            onChange={(e) => onTermsChange(e.target.checked)}
+            onKeyDown={onTermsEnter}
+            className="mt-0.5 h-5 w-5 rounded border-zinc-400 text-teal-600 focus:ring-teal-500 dark:border-zinc-600 dark:bg-zinc-700"
+          />
+          <span className="text-base text-zinc-700 dark:text-zinc-400">
+            {tr.agreeText}
+            <Link href="/terminos-y-condiciones" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="ml-1 text-teal-600 underline">{tr.termsLink}</Link>{" "}{tr.andThe}{" "}
+            <Link href="/politica-de-privacidad" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="ml-1 text-teal-600 underline">{tr.privacyLink}</Link>.
+          </span>
+        </label>
+      </div>
+
+      <div className="flex flex-wrap justify-center gap-x-5 gap-y-1.5 border-t border-zinc-200 pb-1 pt-4 dark:border-zinc-800">
+        <span className="flex items-center gap-1.5 text-xs font-medium text-zinc-500 dark:text-zinc-400">
+          <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" aria-hidden />
+          {lang === "es" ? "Cancelación gratuita hasta 24h antes" : "Free cancellation up to 24h before"}
+        </span>
+        <span className="flex items-center gap-1.5 text-xs font-medium text-zinc-500 dark:text-zinc-400">
+          <Check className="h-3.5 w-3.5 text-emerald-500" aria-hidden />
+          {lang === "es" ? "Confirmación inmediata" : "Instant confirmation"}
+        </span>
+      </div>
+    </>
+  );
+}

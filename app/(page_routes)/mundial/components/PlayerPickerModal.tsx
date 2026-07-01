@@ -18,7 +18,8 @@ export function PlayerPickerModal({ players, onSelect, onClose, allowClose }: Pr
 
   useEffect(() => {
     if (!allowClose || !onClose) return;
-    function onKey(e: KeyboardEvent) { if (e.key === "Escape") onClose(); }
+    const close = onClose;
+    function onKey(e: KeyboardEvent) { if (e.key === "Escape") close(); }
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [allowClose, onClose]);

@@ -1,4 +1,4 @@
-import type { Db, CreateIndexesOptions } from "mongodb";
+import type { Collection, CreateIndexesOptions, Db, Document } from "mongodb";
 
 import { MUNDIAL_MATCHES, MUNDIAL_TOTAL_MATCHES, type MundialMatch } from "./fixtures";
 
@@ -13,8 +13,8 @@ type StoredMundialMatch = MundialMatch & {
   updatedAt?: Date;
 };
 
-async function safeCreateIndex(
-  collection: ReturnType<Db["collection"]>,
+async function safeCreateIndex<TSchema extends Document>(
+  collection: Collection<TSchema>,
   keys: Record<string, 1 | -1>,
   options?: CreateIndexesOptions
 ) {
