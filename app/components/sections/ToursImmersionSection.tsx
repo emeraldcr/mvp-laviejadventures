@@ -68,7 +68,7 @@ export default function ToursImmersionSection({ onSelectTour, selectedTourSlug }
     const firstCard = carousel.querySelector<HTMLElement>("[data-carousel-card]");
     if (!firstCard) return;
     const cardWidth = firstCard.offsetWidth;
-    const gap = 20;
+    const gap = 16;
     const index = Math.round(currentScrollLeft / (cardWidth + gap));
     setActiveIndex(Math.min(Math.max(index, 0), tours.length - 1));
   };
@@ -78,7 +78,7 @@ export default function ToursImmersionSection({ onSelectTour, selectedTourSlug }
     if (!carousel) return;
     const firstCard = carousel.querySelector<HTMLElement>("[data-carousel-card]");
     const cardWidth = firstCard?.offsetWidth ?? carousel.clientWidth * 0.85;
-    const gap = 20;
+    const gap = 16;
     carousel.scrollBy({ left: direction === "left" ? -(cardWidth + gap) : cardWidth + gap, behavior: "smooth" });
   };
 
@@ -87,7 +87,7 @@ export default function ToursImmersionSection({ onSelectTour, selectedTourSlug }
     if (!carousel) return;
     const firstCard = carousel.querySelector<HTMLElement>("[data-carousel-card]");
     const cardWidth = firstCard?.offsetWidth ?? carousel.clientWidth * 0.85;
-    const gap = 20;
+    const gap = 16;
     carousel.scrollTo({ left: index * (cardWidth + gap), behavior: "smooth" });
   };
 
@@ -132,33 +132,31 @@ export default function ToursImmersionSection({ onSelectTour, selectedTourSlug }
         </div>
 
         {/* ── Carousel ── */}
-        <div className="relative">
+        <div className="relative -mx-4 md:-mx-8">
+          {/* Nav arrows — visible on md+ */}
           <button
             type="button"
             aria-label="Ver experiencias anteriores"
             onClick={() => scrollCarousel("left")}
             disabled={!canScrollLeft}
-            className="absolute left-2 top-1/2 z-30 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/75 text-white shadow-2xl backdrop-blur-md transition hover:border-emerald-300 hover:bg-emerald-300 hover:text-black disabled:pointer-events-none disabled:opacity-20 lg:flex xl:-left-2"
+            className="absolute left-3 top-1/2 z-30 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/80 text-white shadow-2xl backdrop-blur-md transition hover:border-emerald-300 hover:bg-emerald-300 hover:text-black disabled:pointer-events-none disabled:opacity-0 md:flex"
           >
-            <ChevronLeft className="h-6 w-6" />
+            <ChevronLeft className="h-5 w-5" />
           </button>
-
-          <div className="pointer-events-none absolute bottom-5 left-0 top-0 z-20 hidden w-20 bg-gradient-to-r from-[#020807] via-[#020807]/80 to-transparent lg:block" />
-          <div className="pointer-events-none absolute bottom-5 right-0 top-0 z-20 hidden w-20 bg-gradient-to-l from-[#020807] via-[#020807]/80 to-transparent lg:block" />
 
           <div
             ref={carouselRef}
             className="
-              overflow-x-auto scroll-smooth pb-5
+              overflow-x-auto scroll-smooth pb-6
               [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden
-              [&>div]:!flex [&>div]:!grid-cols-none [&>div]:!gap-5 [&>div]:!overflow-visible [&>div]:!pr-4
+              px-4 md:px-8
+              [&>div]:!flex [&>div]:!grid-cols-none [&>div]:!gap-4 [&>div]:!overflow-visible
               [&>div]:!snap-x [&>div]:!snap-mandatory
-              [&>div>*]:!min-w-[84vw] [&>div>*]:!max-w-[84vw] [&>div>*]:!shrink-0 [&>div>*]:!snap-center
-              sm:[&>div>*]:!min-w-[420px] sm:[&>div>*]:!max-w-[420px]
-              md:[&>div>*]:!min-w-[455px] md:[&>div>*]:!max-w-[455px]
-              lg:[&>div>*]:!min-w-[465px] lg:[&>div>*]:!max-w-[465px]
-              xl:[&>div>*]:!min-w-[31.8%] xl:[&>div>*]:!max-w-[31.8%]
-              2xl:[&>div>*]:!min-w-[31.9%] 2xl:[&>div>*]:!max-w-[31.9%]
+              [&>div>*]:!min-w-[78vw] [&>div>*]:!max-w-[78vw] [&>div>*]:!shrink-0 [&>div>*]:!snap-start
+              sm:[&>div>*]:!min-w-[360px] sm:[&>div>*]:!max-w-[360px]
+              md:[&>div>*]:!min-w-[400px] md:[&>div>*]:!max-w-[400px]
+              lg:[&>div>*]:!min-w-[420px] lg:[&>div>*]:!max-w-[420px]
+              xl:[&>div>*]:!min-w-[30%] xl:[&>div>*]:!max-w-[30%]
             "
           >
             <TourSelectionCards
@@ -173,9 +171,9 @@ export default function ToursImmersionSection({ onSelectTour, selectedTourSlug }
             aria-label="Ver más experiencias"
             onClick={() => scrollCarousel("right")}
             disabled={!canScrollRight}
-            className="absolute right-2 top-1/2 z-30 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/75 text-white shadow-2xl backdrop-blur-md transition hover:border-emerald-300 hover:bg-emerald-300 hover:text-black disabled:pointer-events-none disabled:opacity-20 lg:flex xl:-right-2"
+            className="absolute right-3 top-1/2 z-30 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/80 text-white shadow-2xl backdrop-blur-md transition hover:border-emerald-300 hover:bg-emerald-300 hover:text-black disabled:pointer-events-none disabled:opacity-0 md:flex"
           >
-            <ChevronRight className="h-6 w-6" />
+            <ChevronRight className="h-5 w-5" />
           </button>
         </div>
 
@@ -208,7 +206,7 @@ export default function ToursImmersionSection({ onSelectTour, selectedTourSlug }
       </div>
 
       {/* ── Photo mosaic strip ── */}
-      <div className="relative mt-20 mb-0 overflow-hidden md:mt-28">
+      <div className="hidden">
         {/* Top + bottom fades */}
         <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-16 bg-gradient-to-b from-[#020807] to-transparent" />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-16 bg-gradient-to-t from-[#020807] to-transparent" />

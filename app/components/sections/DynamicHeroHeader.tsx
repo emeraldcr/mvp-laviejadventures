@@ -56,6 +56,18 @@ interface NavGroup {
 // ─── Constants ────────────────────────────────────────────────────────────────
 const SCROLL_THRESHOLD = 60;
 const SLIDE_DURATION = 5000;
+const GALLERY_STRIP = [
+  "/image/IMG_6810.jpg", "/image/IMG_6812.jpg", "/image/IMG_4671.jpg",
+  "/image/IMG_4257.jpg", "/image/IMG_6813.jpg", "/image/IMG_4197.jpg",
+  "/image/IMG_3698.jpg", "/image/IMG_4943.jpg", "/image/IMG_5585.jpg",
+  "/image/IMG_4522.jpg", "/image/IMG_6814.jpg", "/image/IMG_4200.jpg",
+  "/image/IMG_3705.jpg", "/image/IMG_4917.jpg", "/image/IMG_4672.jpg",
+  "/image/IMG_6809.jpg", "/image/IMG_6806.jpg", "/image/IMG_6811.jpg",
+  "/image/IMG_4523.jpg", "/image/IMG_4210.jpg", "/image/IMG_3751.jpg",
+  "/image/IMG_2439.jpg", "/image/IMG_2443.jpg", "/image/IMG_4514.jpg",
+  "/image/IMG_6805.jpg", "/image/IMG_4376.jpg", "/image/IMG_4389.jpg",
+  "/image/IMG_4575.jpg", "/image/IMG_3920.jpg", "/image/IMG_5592.jpg",
+];
 
 // ─── Scroll hook ──────────────────────────────────────────────────────────────
 const useScrollY = () => {
@@ -738,11 +750,11 @@ const HeroCommandCenter: React.FC<Pick<HeroCarouselProps, "height" | "onSelectTo
       <div className="absolute inset-0 bg-[linear-gradient(105deg,rgba(2,8,7,0.98),rgba(2,8,7,0.80)_43%,rgba(2,8,7,0.35)),linear-gradient(180deg,rgba(2,8,7,0.70),rgba(2,8,7,0.18)_42%,rgba(2,8,7,0.98))]" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_68%_28%,rgba(16,185,129,0.28),transparent_34%),linear-gradient(rgba(94,234,212,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(94,234,212,0.04)_1px,transparent_1px)] bg-[size:auto,72px_72px,72px_72px]" />
 
-      <div className="relative z-10 mx-auto min-h-screen max-w-7xl px-4 pb-28 pt-24 md:px-8 md:pb-8 md:pt-24 lg:grid lg:h-full lg:min-h-0 lg:grid-cols-[minmax(0,0.9fr)_minmax(430px,1.1fr)] lg:items-stretch lg:gap-8">
+      <div className="relative z-10 mx-auto min-h-screen max-w-[96rem] px-4 pb-28 pt-24 md:px-8 md:pb-8 md:pt-24 lg:grid lg:h-full lg:min-h-0 lg:grid-cols-[minmax(0,0.98fr)_minmax(430px,1.02fr)] lg:items-start lg:gap-7">
 
         {/* LEFT: Compact title + Tour catalog */}
         <div className="flex flex-col">
-          <div className="mb-4 flex flex-wrap items-center gap-2">
+          <div className="mb-3 flex flex-wrap items-center gap-2">
             <div className="inline-flex items-center gap-2 rounded-full border border-teal-100/25 bg-black/32 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.24em] text-teal-50 backdrop-blur-xl">
               <Sparkles size={13} className="text-amber-300" />
               {isEs ? "Tours reales · San Carlos" : "Real tours · San Carlos"}
@@ -753,16 +765,16 @@ const HeroCommandCenter: React.FC<Pick<HeroCarouselProps, "height" | "onSelectTo
             </div>
           </div>
 
-          <h1 className="mb-3 max-w-2xl text-balance font-black leading-[0.9] text-white text-[clamp(2rem,12vw,3.65rem)] md:text-[clamp(2.35rem,5vw,4.7rem)]">
+          <h1 className="mb-2 max-w-3xl text-balance font-black leading-[0.9] text-white text-[clamp(2rem,12vw,3.45rem)] md:text-[clamp(2.25rem,3.6vw,3.45rem)]">
             {isEs ? "Baje al canon. Elija la aventura." : "Step into the canyon. Choose the adventure."}
           </h1>
-          <p className="mb-5 max-w-xl text-sm font-semibold leading-relaxed text-white/68 sm:text-base lg:mb-6">
+          <p className="mb-3 max-w-2xl text-sm font-semibold leading-relaxed text-white/68 sm:text-base lg:mb-4">
             {isEs
               ? "Fotos grandes, agua esmeralda y rutas reales de San Carlos. Toque una experiencia y vea cual le hace ojitos, mae."
               : "Large photos, emerald water, and real San Carlos routes. Tap an experience and find the one that calls you."}
           </p>
 
-          <div className="space-y-3 pb-2 pr-1 [scrollbar-color:rgba(94,234,212,0.35)_rgba(15,23,42,0.5)] [scrollbar-width:thin] lg:flex-1 lg:overflow-y-auto">
+          <div className="grid gap-2 pb-2 pr-1 [scrollbar-color:rgba(94,234,212,0.35)_rgba(15,23,42,0.5)] [scrollbar-width:thin] sm:grid-cols-2 lg:max-h-[42vh] lg:overflow-y-auto xl:max-h-none">
             {tours.map((tour, index) => {
               const active = tour.slug === activeTour.slug;
               const price = getPriceLabel(tour, isEs);
@@ -773,13 +785,13 @@ const HeroCommandCenter: React.FC<Pick<HeroCarouselProps, "height" | "onSelectTo
                   onClick={() => setActiveSlug(tour.slug)}
                   onDoubleClick={() => handleBook(tour.slug)}
                   className={[
-                    "group grid w-full grid-cols-[64px_minmax(0,1fr)] items-center gap-3 rounded-[12px] border p-2.5 text-left shadow-[0_18px_46px_rgba(0,0,0,0.26)] transition-all duration-300 hover:-translate-y-0.5 sm:grid-cols-[76px_minmax(0,1fr)_auto] sm:p-3",
+                    "group grid min-h-[70px] w-full grid-cols-[50px_minmax(0,1fr)] items-center gap-2 rounded-[10px] border p-2 text-left shadow-[0_16px_42px_rgba(0,0,0,0.24)] transition-all duration-300 hover:-translate-y-0.5",
                     active
                       ? "border-emerald-100/70 bg-emerald-300/14 shadow-[0_0_34px_rgba(16,185,129,0.18)]"
                       : "border-white/10 bg-black/28 hover:border-emerald-200/45 hover:bg-white/[0.08]",
                   ].join(" ")}
                 >
-                  <span className="relative h-16 w-16 overflow-hidden rounded-[10px] border border-white/12 bg-black/30 sm:h-20 sm:w-20">
+                  <span className="relative h-12 w-12 overflow-hidden rounded-[8px] border border-white/12 bg-black/30">
                     <Image
                       src={getTourImage(tour.slug)}
                       alt={getTourTitle(tour, isEs)}
@@ -792,10 +804,10 @@ const HeroCommandCenter: React.FC<Pick<HeroCarouselProps, "height" | "onSelectTo
                     </span>
                   </span>
                   <span className="min-w-0">
-                    <span className="block truncate text-sm font-black leading-tight text-white sm:text-base">
+                    <span className="block truncate text-sm font-black leading-tight text-white">
                       {getTourTitle(tour, isEs)}
                     </span>
-                    <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0 text-[10px] text-white/55 sm:text-[11px]">
+                    <span className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0 text-[10px] leading-tight text-white/55">
                       {tour.duration && (
                         <span className="inline-flex items-center gap-1">
                           <Clock3 size={11} />
@@ -809,18 +821,15 @@ const HeroCommandCenter: React.FC<Pick<HeroCarouselProps, "height" | "onSelectTo
                         </span>
                       )}
                       {tour.location && (
-                        <span className="inline-flex items-center gap-1 truncate">
+                        <span className="hidden items-center gap-1 truncate">
                           <MapPin size={11} />
                           {tour.location.split("-")[0].trim()}
                         </span>
                       )}
                     </span>
-                  </span>
-                  <span className="hidden shrink-0 rounded-[8px] border border-amber-200/20 bg-black/22 px-2.5 py-2 text-right sm:block">
-                    <span className="block text-[9px] font-black uppercase tracking-[0.1em] text-amber-100/55">
-                      {price.prefix}
+                    <span className="mt-0.5 inline-flex rounded-full border border-amber-200/20 bg-black/28 px-2 py-0.5 text-[10px] font-black text-amber-100">
+                      {price.prefix} {price.value}
                     </span>
-                    <span className="block text-sm font-black text-amber-100">{price.value}</span>
                   </span>
                 </button>
               );
@@ -829,9 +838,9 @@ const HeroCommandCenter: React.FC<Pick<HeroCarouselProps, "height" | "onSelectTo
         </div>
 
         {/* RIGHT: Selected tour detail card (desktop only) */}
-        <div className="hidden lg:flex lg:flex-col lg:justify-center">
-          <div className="flex max-h-[calc(100vh-8rem)] flex-col overflow-hidden rounded-[14px] border border-emerald-100/20 bg-black/50 shadow-[0_36px_100px_rgba(0,0,0,0.62)] backdrop-blur-2xl">
-            <div className="relative h-[48vh] min-h-[330px] w-full overflow-hidden">
+        <div className="hidden lg:flex lg:flex-col lg:justify-start">
+          <div className="flex max-h-[calc(100vh-7rem)] flex-col overflow-hidden rounded-[14px] border border-emerald-100/20 bg-black/50 shadow-[0_36px_100px_rgba(0,0,0,0.62)] backdrop-blur-2xl">
+            <div className="relative h-[42vh] min-h-[300px] w-full overflow-hidden">
               <Image
                 key={activeImage}
                 src={activeImage}
@@ -847,13 +856,13 @@ const HeroCommandCenter: React.FC<Pick<HeroCarouselProps, "height" | "onSelectTo
                 </span>
               )}
               <div className="absolute bottom-0 left-0 right-0 px-6 pb-5">
-                <h2 className="max-w-lg text-4xl font-black leading-[0.95] text-white drop-shadow-2xl">
+                <h2 className="max-w-lg text-3xl font-black leading-[0.95] text-white drop-shadow-2xl xl:text-4xl">
                   {getTourTitle(activeTour, isEs)}
                 </h2>
               </div>
             </div>
 
-            <div className="flex flex-col gap-4 overflow-y-auto p-5 [scrollbar-width:thin]">
+            <div className="flex flex-col gap-3 overflow-y-auto p-4 [scrollbar-width:thin] xl:p-5">
               <div className="grid grid-cols-3 gap-2">
                 {[
                   { Icon: Clock3, label: isEs ? "Duración" : "Duration", value: activeTour.duration || "3-4h" },
@@ -868,7 +877,7 @@ const HeroCommandCenter: React.FC<Pick<HeroCarouselProps, "height" | "onSelectTo
                 ))}
               </div>
 
-              <p className="text-base font-medium leading-relaxed text-white/68">
+              <p className="line-clamp-3 text-sm font-medium leading-relaxed text-white/68 xl:text-base">
                 {(isEs ? activeTour.descriptionEs : activeTour.descriptionEn) ||
                   (isEs
                     ? "Aventura guiada con naturaleza real, agua cristalina y rutas locales certificadas."
@@ -880,8 +889,8 @@ const HeroCommandCenter: React.FC<Pick<HeroCarouselProps, "height" | "onSelectTo
                   <p className="mb-2 text-[10px] font-black uppercase tracking-wider text-teal-300">
                     {isEs ? "¿Qué incluye?" : "What's included?"}
                   </p>
-                  <ul className="space-y-1.5">
-                    {activeTour.inclusions.slice(0, 5).map((inc) => (
+                  <ul className="grid grid-cols-2 gap-1.5">
+                    {activeTour.inclusions.slice(0, 4).map((inc) => (
                       <li key={inc} className="flex items-start gap-2 text-xs text-white/65">
                         <Check size={12} className="mt-0.5 shrink-0 text-teal-400" />
                         {inc}
@@ -896,10 +905,10 @@ const HeroCommandCenter: React.FC<Pick<HeroCarouselProps, "height" | "onSelectTo
                   <p className="mb-2 text-[10px] font-black uppercase tracking-wider text-teal-300">
                     {isEs ? "Opciones disponibles" : "Available options"}
                   </p>
-                  <div className="space-y-1.5">
+                  <div className="grid gap-1.5 xl:grid-cols-3">
                     {activeTour.packages.slice(0, 3).map((pkg) => (
-                      <div key={pkg.id ?? pkg.name} className="flex items-center justify-between rounded-[8px] border border-white/10 bg-white/[0.04] px-3 py-2">
-                        <p className="text-xs font-semibold text-white/75">
+                      <div key={pkg.id ?? pkg.name} className="flex items-center justify-between gap-2 rounded-[8px] border border-white/10 bg-white/[0.04] px-3 py-2">
+                        <p className="truncate text-xs font-semibold text-white/75">
                           {isEs ? (pkg.nameEs ?? pkg.name) : pkg.name}
                         </p>
                         <span className="shrink-0 text-xs font-black text-teal-300">${pkg.price}</span>
@@ -986,6 +995,88 @@ const HeroCommandCenter: React.FC<Pick<HeroCarouselProps, "height" | "onSelectTo
   );
 };
 
+const MainMosaicHero: React.FC = () => {
+  const { lang } = useLanguage();
+  const isEs = lang === "es";
+
+  return (
+    <section className="relative min-h-[92svh] overflow-hidden bg-[#020807] text-white md:min-h-screen">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(16,185,129,0.16),transparent_42%),linear-gradient(180deg,#020807_0%,rgba(2,8,7,0.42)_36%,#020807_100%)]" />
+      <div className="absolute inset-0 opacity-30 [background-image:linear-gradient(90deg,rgba(110,231,183,0.05)_1px,transparent_1px),linear-gradient(0deg,rgba(255,255,255,0.04)_1px,transparent_1px)] [background-size:92px_92px]" />
+
+      <div className="relative h-[92svh] min-h-[680px] pt-24 md:h-screen md:min-h-[720px]">
+        <div className="absolute inset-x-0 top-20 flex gap-2 px-3 md:top-24 md:gap-3 md:px-8" style={{ animation: "lva-main-marquee-left 72s linear infinite" }}>
+          {[...GALLERY_STRIP, ...GALLERY_STRIP].map((src, index) => (
+            <div
+              key={`top-${src}-${index}`}
+              className="relative h-36 w-48 shrink-0 overflow-hidden rounded-[10px] border border-white/5 bg-emerald-950/30 shadow-[0_18px_60px_rgba(0,0,0,0.35)] md:h-56 md:w-72"
+            >
+              <Image src={src} alt="" fill sizes="288px" className="object-cover opacity-62" priority={index < 8} />
+            </div>
+          ))}
+        </div>
+
+        <div className="absolute inset-x-0 top-[17rem] flex gap-2 px-3 md:top-[21rem] md:gap-3 md:px-8" style={{ animation: "lva-main-marquee-right 64s linear infinite" }}>
+          {[...GALLERY_STRIP.slice(10), ...GALLERY_STRIP, ...GALLERY_STRIP.slice(0, 10)].map((src, index) => (
+            <div
+              key={`bottom-${src}-${index}`}
+              className="relative h-40 w-56 shrink-0 overflow-hidden rounded-[10px] border border-white/5 bg-emerald-950/30 shadow-[0_18px_60px_rgba(0,0,0,0.35)] md:h-60 md:w-80"
+            >
+              <Image src={src} alt="" fill sizes="320px" className="object-cover opacity-55" priority={index < 6} />
+            </div>
+          ))}
+        </div>
+
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(2,8,7,0.86),rgba(2,8,7,0.22)_26%,rgba(2,8,7,0.28)_62%,#020807_100%),linear-gradient(90deg,#020807_0%,rgba(2,8,7,0.10)_20%,rgba(2,8,7,0.10)_80%,#020807_100%)]" />
+        <div className="pointer-events-none absolute inset-x-0 top-[42%] h-48 -translate-y-1/2 bg-[radial-gradient(ellipse_at_center,rgba(2,8,7,0.62),transparent_70%)] blur-sm" />
+
+        <div className="relative z-10 flex h-full items-center justify-center px-4 text-center">
+          <div className="mx-auto max-w-6xl">
+            <p className="mb-4 text-[11px] font-black uppercase tracking-[0.55em] text-emerald-300/90 md:text-sm">
+              San Carlos · Costa Rica
+            </p>
+            <h1 className="text-balance text-[clamp(3rem,9vw,7.6rem)] font-black leading-[0.88] text-white drop-shadow-[0_12px_40px_rgba(0,0,0,0.75)]">
+              {isEs ? "Donde el cañón se vuelve esmeralda." : "Where the canyon turns emerald."}
+            </h1>
+            <p className="mx-auto mt-5 max-w-2xl text-base font-semibold leading-relaxed text-white/74 md:text-xl">
+              {isEs
+                ? "Aventura local, pozas cristalinas y paredes verdes del Rio La Vieja. Reserve con seguridad, sin enredos, pura vida."
+                : "Local adventure, crystal pools, and green canyon walls on the La Vieja River. Book clearly and safely."}
+            </p>
+            <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <Link
+                href="/reservar?tour=tour-ciudad-esmeralda"
+                className="emerald-wave-button inline-flex min-h-14 items-center gap-3 rounded-full bg-emerald-400 px-8 py-4 text-sm font-black uppercase tracking-[0.22em] text-emerald-950 shadow-[0_18px_50px_rgba(16,185,129,0.42)] transition hover:-translate-y-0.5 hover:bg-amber-300"
+              >
+                {isEs ? "Reservar ahora" : "Book now"}
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link
+                href="#tours"
+                className="inline-flex min-h-14 items-center gap-3 rounded-full border border-white/20 bg-black/35 px-7 py-4 text-sm font-black uppercase tracking-[0.18em] text-white backdrop-blur-xl transition hover:border-emerald-200/60 hover:bg-white/10"
+              >
+                {isEs ? "Ver tours" : "View tours"}
+                <ChevronDown className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <style jsx>{`
+        @keyframes lva-main-marquee-left {
+          from { transform: translateX(0); }
+          to { transform: translateX(-50%); }
+        }
+        @keyframes lva-main-marquee-right {
+          from { transform: translateX(-50%); }
+          to { transform: translateX(0); }
+        }
+      `}</style>
+    </section>
+  );
+};
+
 interface DynamicHeroHeaderProps {
   children?: ReactNode;
   showHeroSlider?: boolean;
@@ -1000,8 +1091,8 @@ export default function DynamicHeroHeader({ children, showHeroSlider = true, onS
     <>
       <Header isScrolled={isScrolled} />
       {showHeroSlider && (
-        <section className="relative min-h-screen overflow-visible md:h-screen md:min-h-[680px] md:overflow-hidden">
-          <HeroCommandCenter height="100%" onSelectTour={onSelectTour} />
+        <section className="relative overflow-hidden">
+          <MainMosaicHero />
           {children}
         </section>
       )}

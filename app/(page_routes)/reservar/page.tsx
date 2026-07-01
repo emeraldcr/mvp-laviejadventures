@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, CalendarCheck, Compass, ShieldCheck } from "lucide-react";
+import { ArrowLeft, CalendarCheck, CheckCircle2, Compass, ShieldCheck } from "lucide-react";
 import { CalendarProvider } from "@/lib/CalendarContext";
 import { useLanguage } from "@/lib/LanguageContext";
 import { useReservationData } from "@/lib/hooks/useReservationData";
@@ -18,13 +18,19 @@ function getInitialTourSlug() {
 export default function ReservarPage() {
   const { lang, toggle } = useLanguage();
   const { tours } = useReservationData();
+  const [urlTourSlug] = useState(getInitialTourSlug);
   const [selectedTourSlug, setSelectedTourSlug] = useState(getInitialTourSlug);
   const isEs = lang === "es";
+  const hasTourFromUrl = urlTourSlug.length > 0;
 
   const activeTour = useMemo(
-    () => tours.find((tour) => tour.slug === selectedTourSlug) ?? tours[0],
+    () => selectedTourSlug ? tours.find((tour) => tour.slug === selectedTourSlug) ?? null : tours[0] ?? null,
     [selectedTourSlug, tours],
   );
+  const bookingTourSlug = selectedTourSlug || activeTour?.slug || null;
+  const displayTourTitle = activeTour
+    ? (isEs ? activeTour.titleEs : activeTour.titleEn)
+    : selectedTourSlug.replace(/-/g, " ");
 
   useEffect(() => {
     if (!selectedTourSlug && tours[0]?.slug) {
@@ -39,8 +45,16 @@ export default function ReservarPage() {
     window.history.replaceState({}, "", `${url.pathname}${url.search}`);
   }, [selectedTourSlug]);
 
+  useEffect(() => {
+    if (!hasTourFromUrl) return;
+    const frameId = window.requestAnimationFrame(() => {
+      document.getElementById("booking")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    return () => window.cancelAnimationFrame(frameId);
+  }, [hasTourFromUrl]);
+
   return (
-    <CalendarProvider selectedTourSlug={selectedTourSlug || activeTour?.slug || null}>
+    <CalendarProvider selectedTourSlug={bookingTourSlug}>
       <main className="min-h-screen bg-[#030807] text-white">
         <header className="sticky top-0 z-40 border-b border-emerald-100/15 bg-emerald-950/86 shadow-[0_14px_44px_rgba(0,0,0,0.44)] backdrop-blur-2xl">
           <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-8">
@@ -76,10 +90,10 @@ export default function ReservarPage() {
         </header>
 
         <section className="relative overflow-hidden border-b border-white/10">
-          {activeTour && (
+          {(activeTour || selectedTourSlug) && (
             <Image
-              src={getTourImage(activeTour.slug)}
-              alt={isEs ? activeTour.titleEs : activeTour.titleEn}
+              src={getTourImage(activeTour?.slug ?? selectedTourSlug)}
+              alt={displayTourTitle}
               fill
               sizes="100vw"
               className="object-cover opacity-30"
@@ -100,7 +114,9 @@ export default function ReservarPage() {
                 </span>
               </div>
               <h1 className="max-w-3xl text-balance text-[clamp(2.3rem,6vw,5.5rem)] font-black leading-[0.92]">
-                {isEs ? "Reservemos la aventura, paso a paso." : "Book your adventure, step by step."}
+                {hasTourFromUrl
+                  ? isEs ? "Elegí la fecha y reservamos." : "Pick your date and book."
+                  : isEs ? "Reservemos la aventura, paso a paso." : "Book your adventure, step by step."}
               </h1>
               <p className="mt-5 max-w-2xl text-base font-semibold leading-relaxed text-white/68 md:text-lg">
                 {isEs
@@ -111,20 +127,29 @@ export default function ReservarPage() {
 
             <div className="rounded-[10px] border border-emerald-100/20 bg-black/42 p-4 shadow-[0_24px_70px_rgba(0,0,0,0.45)] backdrop-blur-xl">
               <label className="mb-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-emerald-200">
-                <Compass className="h-3.5 w-3.5" />
+                {hasTourFromUrl ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Compass className="h-3.5 w-3.5" />}
                 {isEs ? "Tour seleccionado" : "Selected tour"}
               </label>
-              <select
-                value={activeTour?.slug ?? ""}
-                onChange={(event) => setSelectedTourSlug(event.target.value)}
-                className="w-full rounded-[8px] border border-white/15 bg-white/10 px-3 py-3 text-sm font-black text-white outline-none transition focus:border-emerald-200/60"
-              >
-                {tours.map((tour) => (
-                  <option key={tour.slug} value={tour.slug} className="bg-zinc-950 text-white">
-                    {isEs ? tour.titleEs : tour.titleEn}
-                  </option>
-                ))}
-              </select>
+              {hasTourFromUrl ? (
+                <div className="rounded-[8px] border border-emerald-200/25 bg-emerald-300/10 px-3 py-3">
+                  <p className="text-sm font-black text-white">{displayTourTitle}</p>
+                  <Link href="/reservar" className="mt-2 inline-flex text-xs font-bold text-emerald-200 underline underline-offset-4 hover:text-white">
+                    {isEs ? "Cambiar tour" : "Change tour"}
+                  </Link>
+                </div>
+              ) : (
+                <select
+                  value={activeTour?.slug ?? ""}
+                  onChange={(event) => setSelectedTourSlug(event.target.value)}
+                  className="w-full rounded-[8px] border border-white/15 bg-white/10 px-3 py-3 text-sm font-black text-white outline-none transition focus:border-emerald-200/60"
+                >
+                  {tours.map((tour) => (
+                    <option key={tour.slug} value={tour.slug} className="bg-zinc-950 text-white">
+                      {isEs ? tour.titleEs : tour.titleEn}
+                    </option>
+                  ))}
+                </select>
+              )}
               {activeTour?.descriptionEs && (
                 <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-white/60">
                   {isEs ? activeTour.descriptionEs : activeTour.descriptionEn}
@@ -134,7 +159,7 @@ export default function ReservarPage() {
           </div>
         </section>
 
-        <BookingSection selectedTourSlug={activeTour?.slug ?? selectedTourSlug} />
+        <BookingSection selectedTourSlug={bookingTourSlug} />
       </main>
     </CalendarProvider>
   );
