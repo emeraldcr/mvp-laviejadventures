@@ -370,7 +370,7 @@ function getFaqAnswer(input: string): string | null {
   const normalized = normalizeText(input);
   const compact = normalized.trim();
   if (/^(hola|buenas|pura\s+vida|hey|hello|hi)\b/.test(compact)) {
-    return "Â¡Hola! Te ayudo con la reserva o con cualquier duda del canyon tour.";
+    return "¡Hola! Te ayudo con la reserva o con cualquier duda del canyon tour.";
   }
   if (/^(gracias|ok|listo|perfecto|dale)\b/.test(compact)) {
     return "Con gusto.";

@@ -405,7 +405,7 @@ async function getRemainingCapacityForTourDate({
 }
 
 function createCustomId(data: Record<string, any>): string {
-  let payload = JSON.stringify(data);
+  const payload = JSON.stringify(data);
   if (payload.length <= PAYPAL_CUSTOM_ID_MAX_LENGTH) return payload;
 
   // Fallback - shorter version
