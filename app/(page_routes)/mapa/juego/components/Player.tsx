@@ -5,17 +5,12 @@ import * as THREE from 'three';
 import { useGameRuntimeContext } from '../context/GameContext';
 import {
   SPEED, JUMP_VEL, JUMP2_VEL, GRAVITY, GLIDE_FALL, MAX_JUMPS,
-  P_HALF_W, P_HALF_H, MAX_FRAME_DT, PHYSICS_STEP, COLLISION_EPS,
-  RUBY_DURATION, SAPPH_DURATION, FIRE_COOLDOWN,
+  MAX_FRAME_DT, PHYSICS_STEP, RUBY_DURATION, SAPPH_DURATION, FIRE_COOLDOWN,
 } from '../constants/physics';
 import { DEATH_Y } from '../constants/world';
+import { buildPlatformBounds, resolveHorizontalCollisions, resolveVerticalCollisions } from '../lib/playerPhysics';
+import { PlayerVisual } from './PlayerVisual';
 import type { GameState, LevelData } from '../types';
-
-type PlatformBounds = {
-  minX: number; maxX: number;
-  minY: number; maxY: number;
-  centerX: number;
-};
 
 export function Player({
   level,
@@ -52,18 +47,7 @@ export function Player({
   const eyeR = useRef<THREE.Mesh>(null);
   const blinkT = useRef(0);
 
-  const platformBounds = useMemo<PlatformBounds[]>(
-    () => platforms.map((p) => {
-      const [px, py] = p.position;
-      const [pw, ph] = p.size;
-      return {
-        minX: px - pw * 0.5, maxX: px + pw * 0.5,
-        minY: py - ph * 0.5, maxY: py + ph * 0.5,
-        centerX: px,
-      };
-    }),
-    [platforms]
-  );
+  const platformBounds = useMemo(() => buildPlatformBounds(platforms), [platforms]);
 
   useEffect(() => {
     if (gameStatus === 'playing') {
@@ -172,34 +156,13 @@ export function Player({
       }
 
       pos.x += vel.current.x * dt;
-      for (const p of platformBounds) {
-        const overlapsX = pos.x + P_HALF_W > p.minX && pos.x - P_HALF_W < p.maxX;
-        const overlapsY = pos.y + P_HALF_H > p.minY && pos.y - P_HALF_H < p.maxY;
-        const standingOnTop = pos.y - P_HALF_H >= p.maxY - COLLISION_EPS;
-        if (overlapsX && overlapsY && !standingOnTop) {
-          const pushLeft = p.minX - P_HALF_W;
-          const pushRight = p.maxX + P_HALF_W;
-          pos.x = pos.x < p.centerX ? pushLeft : pushRight;
-          vel.current.x = 0;
-        }
-      }
+      resolveHorizontalCollisions(pos, vel.current, platformBounds);
 
       const prevY = pos.y;
       pos.y += vel.current.y * dt;
-      for (const p of platformBounds) {
-        const overlapsX = pos.x + P_HALF_W > p.minX && pos.x - P_HALF_W < p.maxX;
-        const overlapsY = pos.y + P_HALF_H > p.minY && pos.y - P_HALF_H < p.maxY;
-        if (overlapsX && overlapsY) {
-          if (prevY - P_HALF_H >= p.maxY - COLLISION_EPS && vel.current.y <= 0) {
-            pos.y = p.maxY + P_HALF_H;
-            vel.current.y = 0;
-            grounded.current = true;
-            jumpCount.current = 0;
-          } else if (prevY + P_HALF_H <= p.minY + COLLISION_EPS && vel.current.y > 0) {
-            pos.y = p.minY - P_HALF_H;
-            vel.current.y = 0;
-          }
-        }
+      if (resolveVerticalCollisions(pos, vel.current, platformBounds, prevY)) {
+        grounded.current = true;
+        jumpCount.current = 0;
       }
     }
 
@@ -233,55 +196,7 @@ export function Player({
 
   return (
     <group ref={groupRef} position={spawnPos}>
-      <group ref={visualRef}>
-        <mesh>
-          <sphereGeometry args={[0.34, 18, 18]} />
-          <meshStandardMaterial
-            ref={bodyMatRef}
-            color="#d4f0ff"
-            emissive="#4fc3f7"
-            emissiveIntensity={0.65}
-            transparent
-            opacity={0.87}
-          />
-        </mesh>
-
-        <mesh position={[0, -0.27, 0]}>
-          <coneGeometry args={[0.34, 0.44, 8, 1, true]} />
-          <meshStandardMaterial
-            color="#c4e8ff"
-            emissive="#4fc3f7"
-            emissiveIntensity={0.5}
-            transparent
-            opacity={0.7}
-            side={THREE.DoubleSide}
-          />
-        </mesh>
-
-        {[-0.14, 0, 0.14].map((xoff, i) => (
-          <mesh key={i} position={[xoff, -0.48, 0]}>
-            <sphereGeometry args={[0.087, 8, 8]} />
-            <meshStandardMaterial
-              color="#c4e8ff"
-              emissive="#4fc3f7"
-              emissiveIntensity={0.4}
-              transparent
-              opacity={0.62}
-            />
-          </mesh>
-        ))}
-
-        <mesh ref={eyeL} position={[0.12, 0.08, 0.29]}>
-          <sphereGeometry args={[0.062, 8, 8]} />
-          <meshStandardMaterial color="#001e3c" emissive="#1565c0" emissiveIntensity={1.8} />
-        </mesh>
-        <mesh ref={eyeR} position={[-0.12, 0.08, 0.29]}>
-          <sphereGeometry args={[0.062, 8, 8]} />
-          <meshStandardMaterial color="#001e3c" emissive="#1565c0" emissiveIntensity={1.8} />
-        </mesh>
-
-        <pointLight color="#4fc3f7" intensity={2.2} distance={3.8} decay={2} />
-      </group>
+      <PlayerVisual visualRef={visualRef} bodyMatRef={bodyMatRef} eyeL={eyeL} eyeR={eyeR} />
     </group>
   );
 }

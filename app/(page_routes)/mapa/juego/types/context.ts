@@ -1,0 +1,58 @@
+import type React from 'react';
+import type * as THREE from 'three';
+import type { KeyState } from '../hooks/useKeyboard';
+import type { BulletState, PowerUpKind } from './entities';
+import type { GameState, LeaderboardEntry } from './game';
+import type { LevelData } from './level';
+
+export interface GameProviderProps {
+  children: React.ReactNode;
+  sharedPosRef?: React.MutableRefObject<THREE.Vector3>;
+  onRaceWin?: () => void;
+  raceLevelIndex?: number;
+  racePlayerName?: string;
+  startLevel?: number;
+}
+
+export interface ActivePowerUps {
+  ruby: boolean;
+  sapphire: boolean;
+}
+
+export interface GameContextValue {
+  state: GameState;
+  leaderboard: LeaderboardEntry[];
+  level: LevelData;
+  levelKey: number;
+  keys: React.MutableRefObject<KeyState>;
+  playerPosRef: React.MutableRefObject<THREE.Vector3>;
+  bulletsRef: React.MutableRefObject<BulletState[]>;
+  pendingPowerUpRef: React.MutableRefObject<PowerUpKind | null>;
+  playerImmuneRef: React.MutableRefObject<boolean>;
+  activePowerUps: ActivePowerUps;
+  handlePowerUpChange: (ruby: boolean, sapphire: boolean) => void;
+  handlePlayerHit: () => void;
+  handleDie: () => void;
+  handleWin: () => void;
+  registerPlayer: (name: string) => void;
+  clearPlayer: () => void;
+  collectCrystal: (id: string) => void;
+  respawn: () => void;
+  restart: () => void;
+  enterLevel: (levelIndex: number) => void;
+  resetAdventure: () => void;
+}
+
+export type GameRuntimeContextValue = Pick<
+  GameContextValue,
+  | 'keys'
+  | 'playerPosRef'
+  | 'bulletsRef'
+  | 'pendingPowerUpRef'
+  | 'playerImmuneRef'
+  | 'handlePowerUpChange'
+  | 'handlePlayerHit'
+  | 'handleDie'
+  | 'handleWin'
+  | 'collectCrystal'
+>;

@@ -1,57 +1,10 @@
 'use client';
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
-import type { GameState, LeaderboardEntry, LevelData, BulletState, PowerUpKind } from '../types';
-import type { KeyState } from '../hooks/useKeyboard';
+import type { BulletState, GameContextValue, GameProviderProps, GameRuntimeContextValue, PowerUpKind } from '../types';
 import { useGameState } from '../hooks/useGameState';
 import { useKeyboard } from '../hooks/useKeyboard';
 import { GAME_LEVELS } from '../data/levelData';
-
-interface GameProviderProps {
-  children: ReactNode;
-  sharedPosRef?: React.MutableRefObject<THREE.Vector3>;
-  onRaceWin?: () => void;
-  raceLevelIndex?: number;
-  racePlayerName?: string;
-  startLevel?: number;
-}
-
-interface GameContextValue {
-  state: GameState;
-  leaderboard: LeaderboardEntry[];
-  level: LevelData;
-  levelKey: number;
-  keys: React.MutableRefObject<KeyState>;
-  playerPosRef: React.MutableRefObject<THREE.Vector3>;
-  bulletsRef: React.MutableRefObject<BulletState[]>;
-  pendingPowerUpRef: React.MutableRefObject<PowerUpKind | null>;
-  playerImmuneRef: React.MutableRefObject<boolean>;
-  activePowerUps: { ruby: boolean; sapphire: boolean };
-  handlePowerUpChange: (ruby: boolean, sapphire: boolean) => void;
-  handlePlayerHit: () => void;
-  handleDie: () => void;
-  handleWin: () => void;
-  registerPlayer: (name: string) => void;
-  clearPlayer: () => void;
-  collectCrystal: (id: string) => void;
-  respawn: () => void;
-  restart: () => void;
-  enterLevel: (levelIndex: number) => void;
-  resetAdventure: () => void;
-}
-
-interface GameRuntimeContextValue {
-  keys: React.MutableRefObject<KeyState>;
-  playerPosRef: React.MutableRefObject<THREE.Vector3>;
-  bulletsRef: React.MutableRefObject<BulletState[]>;
-  pendingPowerUpRef: React.MutableRefObject<PowerUpKind | null>;
-  playerImmuneRef: React.MutableRefObject<boolean>;
-  handlePowerUpChange: (ruby: boolean, sapphire: boolean) => void;
-  handlePlayerHit: () => void;
-  handleDie: () => void;
-  handleWin: () => void;
-  collectCrystal: (id: string) => void;
-}
 
 const GameContext = createContext<GameContextValue | null>(null);
 const GameRuntimeContext = createContext<GameRuntimeContextValue | null>(null);

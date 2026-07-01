@@ -1,24 +1,10 @@
 'use client';
 import { useState, useCallback, useEffect, useRef } from 'react';
-import type { GameState, LeaderboardEntry, DeathCause } from '../types';
+import type { GameState, LeaderboardEntry } from '../types';
 import { GAME_LEVELS } from '../data/levelData';
 import { DEV_UNLOCK_ALL_LEVELS, PLAYER_KEY, UNLOCKED_STATION_KEY } from '../constants/storage';
 import { readLeaderboard, upsertLeaderboard } from '../lib/leaderboard';
-
-const makeInitialState = (levelIndex = 0): GameState => ({
-  lives: 3,
-  score: 0,
-  crystals: 0,
-  lifetimeCrystals: 0,
-  totalCrystals: GAME_LEVELS[levelIndex]?.collectibles.length ?? 0,
-  status: 'map',
-  currentLevelIndex: levelIndex,
-  unlockedStationIndex: DEV_UNLOCK_ALL_LEVELS ? GAME_LEVELS.length : 0,
-  restartKey: 0,
-  playerName: null,
-  deathCause: null,
-  deathMessageIdx: 0,
-});
+import { applyDeath, clampLevelIndex, makeInitialState, normalizePlayerName } from '../lib/gameState';
 
 export function useGameState() {
   const [state, setState] = useState<GameState>(() => makeInitialState());
@@ -35,7 +21,7 @@ export function useGameState() {
     const entries = readLeaderboard();
     setLeaderboard(entries);
     if (storedName) {
-      const safeName = storedName.trim().slice(0, 24);
+      const safeName = normalizePlayerName(storedName);
       const entry = entries.find((item) => item.name.toLowerCase() === safeName.toLowerCase());
       setState((s) => ({
         ...s,
@@ -47,7 +33,7 @@ export function useGameState() {
   }, []);
 
   const registerPlayer = useCallback((name: string) => {
-    const safeName = name.trim().slice(0, 24);
+    const safeName = normalizePlayerName(name);
     if (!safeName) return;
     window.localStorage.setItem(PLAYER_KEY, safeName);
     const entries = upsertLeaderboard(safeName, 0, 0);
@@ -83,29 +69,11 @@ export function useGameState() {
   }, []);
 
   const dieFromFall = useCallback(() => {
-    setState(s => {
-      const lives = s.lives - 1;
-      return {
-        ...s,
-        lives,
-        status: lives <= 0 ? 'gameover' : 'dead',
-        deathCause: 'fall' as DeathCause,
-        deathMessageIdx: Math.floor(Math.random() * 4),
-      };
-    });
+    setState(s => applyDeath(s, 'fall'));
   }, []);
 
   const dieFromEnemy = useCallback(() => {
-    setState(s => {
-      const lives = s.lives - 1;
-      return {
-        ...s,
-        lives,
-        status: lives <= 0 ? 'gameover' : 'dead',
-        deathCause: 'enemy' as DeathCause,
-        deathMessageIdx: Math.floor(Math.random() * 4),
-      };
-    });
+    setState(s => applyDeath(s, 'enemy'));
   }, []);
 
   const respawn = useCallback(() => {
@@ -150,7 +118,7 @@ export function useGameState() {
   const enterLevel = useCallback((levelIndex: number) => {
     collectedRef.current.clear();
     setState(s => {
-      const clamped = Math.max(0, Math.min(levelIndex, GAME_LEVELS.length - 1));
+      const clamped = clampLevelIndex(levelIndex);
       const level = GAME_LEVELS[clamped];
       const unlockedStationIndex = DEV_UNLOCK_ALL_LEVELS
         ? GAME_LEVELS.length
@@ -176,7 +144,7 @@ export function useGameState() {
   }, []);
 
   const preSelectLevel = useCallback((levelIndex: number) => {
-    const clamped = Math.max(0, Math.min(levelIndex, GAME_LEVELS.length - 1));
+    const clamped = clampLevelIndex(levelIndex);
     setState(s => ({ ...s, currentLevelIndex: clamped }));
   }, []);
 
