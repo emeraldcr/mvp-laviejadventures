@@ -1,4 +1,5 @@
 'use client';
+import { memo } from 'react';
 import type { ActivePowerUps, GameState } from '../../types';
 import { helpStyle, hudStyle, titleStyle } from './styles';
 
@@ -8,7 +9,7 @@ interface HudProps {
   state: GameState;
 }
 
-export function Hud({ activePowerUps, levelTitle, state }: HudProps) {
+export const Hud = memo(function Hud({ activePowerUps, levelTitle, state }: HudProps) {
   const { crystals, lifetimeCrystals, lives, playerName, score, status, totalCrystals } = state;
 
   return (
@@ -57,4 +58,4 @@ export function Hud({ activePowerUps, levelTitle, state }: HudProps) {
       ) : null}
     </>
   );
-}
+});

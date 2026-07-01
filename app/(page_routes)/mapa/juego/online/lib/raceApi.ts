@@ -7,14 +7,45 @@ type RaceApiResponse = {
   error?: string;
 };
 
-const postRace = async (url: string, body: Record<string, unknown>): Promise<RaceApiResponse> => {
-  const res = await fetch(url, {
+const parseRaceResponse = async (res: Response): Promise<RaceApiResponse> => {
+  const text = await res.text();
+
+  try {
+    const json = JSON.parse(text) as RaceApiResponse;
+    return json.ok !== undefined || json.error ? json : { ...json, ok: res.ok };
+  } catch {
+    return {
+      ok: false,
+      error: res.ok ? "invalid_response" : "race_server_error",
+    };
+  }
+};
+
+const requestRace = async (url: string, init?: RequestInit): Promise<RaceApiResponse> => {
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 8000);
+
+  try {
+    const res = await fetch(url, {
+      ...init,
+      signal: controller.signal,
+    });
+
+    return parseRaceResponse(res);
+  } catch {
+    return { ok: false, error: "network_unavailable" };
+  } finally {
+    window.clearTimeout(timeout);
+  }
+};
+
+const postRace = async (url: string, body: Record<string, unknown>): Promise<RaceApiResponse> => (
+  requestRace(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
-  });
-  return res.json();
-};
+  })
+);
 
 export const createRaceRoom = (hostId: string, name: string) => (
   postRace("/api/race/create", { hostId, name })
@@ -38,4 +69,8 @@ export const updateRaceProgress = (code: string, playerId: string, pct: number) 
 
 export const finishRaceRoom = (code: string, playerId: string) => (
   postRace("/api/race/finish", { code, playerId })
+);
+
+export const getRaceRoom = (code: string) => (
+  requestRace(`/api/race/room?code=${encodeURIComponent(code)}`)
 );

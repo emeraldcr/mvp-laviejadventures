@@ -1,4 +1,5 @@
 'use client';
+import { memo } from 'react';
 import { TRAIL_STATIONS } from '../../data/stations';
 
 interface TrailMapStationsProps {
@@ -10,7 +11,7 @@ interface TrailMapStationsProps {
   unlockedStationIndex: number;
 }
 
-export function TrailMapStations({
+export const TrailMapStations = memo(function TrailMapStations({
   activeStationIndex,
   hoveredIdx,
   isFull,
@@ -113,4 +114,4 @@ export function TrailMapStations({
       })}
     </>
   );
-}
+});

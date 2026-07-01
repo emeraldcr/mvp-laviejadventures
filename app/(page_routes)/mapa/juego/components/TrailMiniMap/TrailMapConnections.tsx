@@ -1,9 +1,10 @@
 'use client';
+import { memo } from 'react';
 import { TRAIL_CONNECTIONS } from '../../data/stations';
 import { TRAIL_PATH } from '../../constants/trailMap';
 import { getStation, stationIndex } from '../../lib/trail';
 
-export function TrailMapConnections({ unlockedStationIndex }: { unlockedStationIndex: number }) {
+export const TrailMapConnections = memo(function TrailMapConnections({ unlockedStationIndex }: { unlockedStationIndex: number }) {
   return (
     <>
       {TRAIL_CONNECTIONS.map((conn) => {
@@ -36,4 +37,4 @@ export function TrailMapConnections({ unlockedStationIndex }: { unlockedStationI
       />
     </>
   );
-}
+});

@@ -16,11 +16,33 @@ export const Level = memo(function Level({
 }) {
   return (
     <>
+      <StaticLevelItems level={level} />
+      <LevelEnemies level={level} gameStatus={gameStatus} />
+      <Goal position={level.goalPosition} gameStatus={gameStatus} />
+    </>
+  );
+});
+
+const StaticLevelItems = memo(function StaticLevelItems({ level }: { level: LevelData }) {
+  return (
+    <>
       {level.platforms.map(p => <Platform key={p.id} data={p} />)}
       {level.collectibles.map(c => <Collectible key={c.id} data={c} />)}
       {level.powerUps.map(pu => <PowerUp key={pu.id} data={pu} />)}
+    </>
+  );
+});
+
+const LevelEnemies = memo(function LevelEnemies({
+  level,
+  gameStatus,
+}: {
+  level: LevelData;
+  gameStatus: GameState['status'];
+}) {
+  return (
+    <>
       {level.enemies.map(e => <Enemy key={e.id} data={e} gameStatus={gameStatus} />)}
-      <Goal position={level.goalPosition} gameStatus={gameStatus} />
     </>
   );
 });

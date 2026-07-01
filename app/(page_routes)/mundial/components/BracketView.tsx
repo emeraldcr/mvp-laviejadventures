@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Calendar, MapPin, Trophy, X } from "lucide-react";
 import type { LeaderboardEntry, MundialMatch, Prediction } from "../types";
 import { cn, teamCode, formatKickoff } from "../utils";
+import { resolveTeamFlag } from "../flags";
 import { Flag } from "./Flag";
 
 // ─── Bracket layout ───────────────────────────────────────────────────────────
@@ -83,6 +84,10 @@ function winnerTeam(m: MundialMatch | undefined): string | null {
 
 function isReal(name: string) {
   return !!name && !/^(Ganador|Perdedor|1ro|2do|3ro|TBD|$)/.test(name.trim());
+}
+
+function teamFlagEmoji(team: string) {
+  return isReal(team) ? resolveTeamFlag(team).emoji : "";
 }
 
 function accuracyPct(e: LeaderboardEntry) {
@@ -334,7 +339,8 @@ function OuterSlot({
 }) {
   const real = isReal(team);
   const [dx, dy] = pt(RA.outer, angle);
-  const [lx, ly] = pt(RA.label, angle);
+  const [fx, fy] = pt(RA.label - 8, angle);
+  const [lx, ly] = pt(RA.label + 13, angle);
 
   const dotR = real ? 5 : 3.5;
   const dotFill = !real ? "rgba(255,255,255,0.1)"
@@ -352,6 +358,8 @@ function OuterSlot({
     : lost ? "rgba(255,255,255,0.3)"
     : "rgba(255,255,255,0.72)";
 
+  const flag = teamFlagEmoji(team);
+
   return (
     <g onClick={onClick} style={{ cursor: "pointer" }} role="button" aria-label={team}>
       {/* larger hit area */}
@@ -364,12 +372,35 @@ function OuterSlot({
         strokeWidth={1.5}
         filter={won ? "url(#sglow)" : undefined} />
 
+      {real && (
+        <g>
+          <circle
+            cx={fx}
+            cy={fy}
+            r={won || isSelected ? 9.5 : 8.5}
+            fill={won ? "rgba(240,180,41,0.16)" : isSelected ? "rgba(213,255,63,0.12)" : "rgba(0,0,0,0.42)"}
+            stroke={won ? "rgba(240,180,41,0.5)" : isSelected ? "rgba(213,255,63,0.42)" : "rgba(255,255,255,0.12)"}
+            strokeWidth={0.8}
+          />
+          <text
+            x={fx}
+            y={fy + 0.2}
+            textAnchor="middle"
+            dominantBaseline="middle"
+            fontSize={11}
+            style={{ userSelect: "none", pointerEvents: "none" }}
+          >
+            {flag}
+          </text>
+        </g>
+      )}
+
       {/* team abbreviation */}
       {real && (
         <text
           x={lx} y={ly}
           textAnchor="middle" dominantBaseline="middle"
-          fontSize={8.5} fontWeight="700" fontFamily="Arial, Helvetica, sans-serif"
+          fontSize={8.2} fontWeight={won ? "900" : "750"} fontFamily="Arial, Helvetica, sans-serif"
           fill={textFill}
           transform={`rotate(${textRot}, ${lx}, ${ly})`}
           style={{ userSelect: "none", pointerEvents: "none" }}
@@ -409,6 +440,7 @@ function InnerDot({
   const anchor = isLeft ? "end" : "start";
 
   const labelText = label ?? (wt && isReal(wt) ? teamCode(wt) : null);
+  const flag = wt && isReal(wt) ? teamFlagEmoji(wt) : "";
 
   return (
     <g onClick={onClick} style={{ cursor: "pointer" }}>
@@ -418,13 +450,27 @@ function InnerDot({
         filter={(hasResult && wt) ? "url(#sglow)" : undefined} />
 
       {labelText && (
-        <text x={lx} y={ly}
-          textAnchor={anchor} dominantBaseline="middle"
-          fontSize={7.5} fontWeight="700" fontFamily="Arial, Helvetica, sans-serif"
-          fill={hasResult && wt ? "rgba(240,180,41,0.9)" : "rgba(255,255,255,0.5)"}
-          style={{ userSelect: "none", pointerEvents: "none" }}>
-          {labelText}
-        </text>
+        <g>
+          {flag ? (
+            <text
+              x={isLeft ? lx - 15 : lx}
+              y={ly}
+              textAnchor={anchor}
+              dominantBaseline="middle"
+              fontSize={10}
+              style={{ userSelect: "none", pointerEvents: "none" }}
+            >
+              {flag}
+            </text>
+          ) : null}
+          <text x={isLeft ? lx - 18 : lx + 14} y={ly}
+            textAnchor={anchor} dominantBaseline="middle"
+            fontSize={7.5} fontWeight="800" fontFamily="Arial, Helvetica, sans-serif"
+            fill={hasResult && wt ? "rgba(240,180,41,0.95)" : "rgba(255,255,255,0.58)"}
+            style={{ userSelect: "none", pointerEvents: "none" }}>
+            {labelText}
+          </text>
+        </g>
       )}
     </g>
   );
@@ -468,12 +514,20 @@ function FinalCenter({
 
       {/* Winner label below trophy */}
       {wt && isReal(wt) && (
-        <text x={CX} y={CY + 22}
-          textAnchor="middle" dominantBaseline="middle"
-          fontSize={8} fontWeight="800" fontFamily="Arial, Helvetica, sans-serif"
-          fill="#f0b429" style={{ userSelect: "none", pointerEvents: "none" }}>
-          {teamCode(wt)}
-        </text>
+        <>
+          <text x={CX} y={CY + 19}
+            textAnchor="middle" dominantBaseline="middle"
+            fontSize={12}
+            style={{ userSelect: "none", pointerEvents: "none" }}>
+            {teamFlagEmoji(wt)}
+          </text>
+          <text x={CX} y={CY + 31}
+            textAnchor="middle" dominantBaseline="middle"
+            fontSize={7.2} fontWeight="900" fontFamily="Arial, Helvetica, sans-serif"
+            fill="#f0b429" style={{ userSelect: "none", pointerEvents: "none" }}>
+            {teamCode(wt)}
+          </text>
+        </>
       )}
 
       {/* "FINAL" label if no result yet */}

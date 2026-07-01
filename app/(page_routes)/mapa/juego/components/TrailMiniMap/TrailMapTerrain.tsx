@@ -1,6 +1,7 @@
 'use client';
+import { memo } from 'react';
 
-export function TrailMapTerrain() {
+export const TrailMapTerrain = memo(function TrailMapTerrain() {
   return (
     <>
       <rect x="0" y="0" width="100" height="100" rx="5" fill="#071510" />
@@ -28,4 +29,4 @@ export function TrailMapTerrain() {
       <circle cx="60" cy="72" r="2.5" fill="#0f3020" opacity="0.4" />
     </>
   );
-}
+});

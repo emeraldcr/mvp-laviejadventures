@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { useGameContext } from '../../context/GameContext';
 import { TrailMiniMap } from '../TrailMiniMap/TrailMiniMap';
 import { Hud } from './Hud';
@@ -8,7 +8,7 @@ import { PowerUpBadges } from './PowerUpBadges';
 import { StatusOverlays } from './StatusOverlays';
 import { rootStyle } from './styles';
 
-export function GameUI() {
+export const GameUI = memo(function GameUI() {
   const {
     state, level, leaderboard, activePowerUps,
     registerPlayer, clearPlayer, restart, enterLevel, resetAdventure,
@@ -42,4 +42,4 @@ export function GameUI() {
       <StatusOverlays restart={restart} state={state} />
     </div>
   );
-}
+});

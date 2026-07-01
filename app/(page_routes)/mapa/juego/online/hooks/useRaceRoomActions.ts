@@ -46,13 +46,13 @@ export function useRaceRoomActions({
     try {
       const json = await createRaceRoom(playerId, name);
       if (!json.ok || !json.room || !json.code) {
-        setError(json.error ?? 'Error al crear');
+        setError(getRaceError(json.error ?? 'Error al crear'));
         return;
       }
       applyRoom(json.room);
       subscribeWs(json.code);
-    } catch {
-      setError('Error de red');
+    } catch (error) {
+      setError(getRaceError(error instanceof Error ? error.message : 'network_unavailable'));
     } finally {
       setLoading(false);
     }
@@ -76,8 +76,8 @@ export function useRaceRoomActions({
       }
       applyRoom(json.room);
       subscribeWs(code);
-    } catch {
-      setError('Error de red');
+    } catch (error) {
+      setError(getRaceError(error instanceof Error ? error.message : 'network_unavailable'));
     } finally {
       setLoading(false);
     }
@@ -91,9 +91,13 @@ export function useRaceRoomActions({
     setLoading(true);
     try {
       const json = await setRaceReady(room.code, playerId, ready);
-      if (json.ok && json.room) applyRoom(json.room);
-    } catch {
-      setError('Error');
+      if (!json.ok || !json.room) {
+        setError(getRaceError(json.error));
+        return;
+      }
+      applyRoom(json.room);
+    } catch (error) {
+      setError(getRaceError(error instanceof Error ? error.message : 'network_unavailable'));
     } finally {
       setLoading(false);
     }
@@ -111,8 +115,8 @@ export function useRaceRoomActions({
         return;
       }
       applyRoom(json.room);
-    } catch {
-      setError('Error');
+    } catch (error) {
+      setError(getRaceError(error instanceof Error ? error.message : 'network_unavailable'));
     } finally {
       setLoading(false);
     }

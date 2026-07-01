@@ -1,7 +1,8 @@
 'use client';
+import { memo } from 'react';
 import type { ActivePowerUps } from '../../types';
 
-export function PowerUpBadges({ activePowerUps }: { activePowerUps: ActivePowerUps }) {
+export const PowerUpBadges = memo(function PowerUpBadges({ activePowerUps }: { activePowerUps: ActivePowerUps }) {
   if (!activePowerUps.ruby && !activePowerUps.sapphire) return null;
 
   return (
@@ -24,4 +25,4 @@ export function PowerUpBadges({ activePowerUps }: { activePowerUps: ActivePowerU
       )}
     </div>
   );
-}
+});

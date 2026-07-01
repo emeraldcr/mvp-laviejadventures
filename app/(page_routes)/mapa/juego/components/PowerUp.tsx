@@ -1,5 +1,5 @@
 'use client';
-import { useRef } from 'react';
+import { memo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { PowerUpData } from '../types';
@@ -17,7 +17,7 @@ const RUBY_EMISSIVE = '#b71c1c';
 const SAPPH_COLOR    = '#1e88e5';
 const SAPPH_EMISSIVE = '#0d47a1';
 
-export function PowerUp({ data }: Props) {
+export const PowerUp = memo(function PowerUp({ data }: Props) {
   const { playerPosRef, pendingPowerUpRef } = useGameRuntimeContext();
   const groupRef = useRef<THREE.Group>(null);
   const ringMatRef = useRef<THREE.MeshStandardMaterial>(null);
@@ -119,4 +119,4 @@ export function PowerUp({ data }: Props) {
       <pointLight ref={lightRef} color={lightColor} intensity={1.8} distance={2.5} decay={2} />
     </group>
   );
-}
+});

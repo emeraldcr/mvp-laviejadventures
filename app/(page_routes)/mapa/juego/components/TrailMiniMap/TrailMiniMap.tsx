@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useGameContext } from '../../context/GameContext';
 import { GAME_LEVELS } from '../../data/levelData';
 import { TRAIL_STATIONS } from '../../data/stations';
@@ -18,7 +18,7 @@ interface Props {
   onEnterLevel?: (levelIndex: number) => void;
 }
 
-export function TrailMiniMap({ variant = 'mini', onEnterLevel }: Props) {
+export const TrailMiniMap = memo(function TrailMiniMap({ variant = 'mini', onEnterLevel }: Props) {
   const { state, level, playerPosRef, enterLevel } = useGameContext();
   const ghostRef = useRef<SVGCircleElement>(null);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
@@ -71,10 +71,10 @@ export function TrailMiniMap({ variant = 'mini', onEnterLevel }: Props) {
     return () => cancelAnimationFrame(frame);
   }, [activeStation, level.goalPosition, level.spawnPosition, nextStation, playerPosRef, state.status]);
 
-  const handleStationClick = (index: number) => {
+  const handleStationClick = useCallback((index: number) => {
     if (!isFull) return;
     if (index <= unlockedStationIndex) handleEnterLevel(index);
-  };
+  }, [handleEnterLevel, isFull, unlockedStationIndex]);
 
   return (
     <div style={isFull ? fullWrapStyle : miniWrapStyle}>
@@ -128,4 +128,4 @@ export function TrailMiniMap({ variant = 'mini', onEnterLevel }: Props) {
       />
     </div>
   );
-}
+});

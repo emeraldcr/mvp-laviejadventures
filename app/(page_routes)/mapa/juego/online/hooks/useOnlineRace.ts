@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { getOrCreateId, getSavedName } from "../../lib/onlineId";
+import { getRaceRoom } from "../lib/raceApi";
 import { useRaceProgress } from "./useRaceProgress";
 import { useRaceRoomActions } from "./useRaceRoomActions";
 import { useRaceSocket } from "./useRaceSocket";
@@ -50,6 +51,26 @@ export function useOnlineRace(inviteCode: string) {
 
     stopProgressPolling();
   }, [room?.status, room?.code, room?.levelIndex, startProgressPolling, stopProgressPolling]);
+
+  useEffect(() => {
+    if (!room?.code) return;
+
+    let cancelled = false;
+    const pollRoom = async () => {
+      const json = await getRaceRoom(room.code);
+      if (cancelled || !json.ok || !json.room) return;
+      applyRoom(json.room);
+    };
+
+    const interval = window.setInterval(() => {
+      void pollRoom();
+    }, room.status === "racing" ? 700 : 1200);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, [applyRoom, room?.code, room?.status]);
 
   const submitName = useCallback((nextName: string) => {
     const safeName = nextName.trim();

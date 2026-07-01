@@ -1,5 +1,5 @@
 'use client';
-import { useRef, useState } from 'react';
+import { memo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { CollectibleData } from '../types';
@@ -13,14 +13,15 @@ const COLLECT_DIST = 0.75;
 const COLLECT_DIST_SQ = COLLECT_DIST * COLLECT_DIST;
 const _vec = new THREE.Vector3();
 
-export function Collectible({ data }: Props) {
+export const Collectible = memo(function Collectible({ data }: Props) {
   const { playerPosRef, collectCrystal } = useGameRuntimeContext();
-  const [collected, setCollected] = useState(false);
+  const collected = useRef(false);
   const groupRef = useRef<THREE.Group>(null);
   const phase = useRef((data.id.charCodeAt(1) || 1) * 0.9);
+  const gem = data.kind === 'emerald';
 
   useFrame((_, delta) => {
-    if (collected || !groupRef.current) return;
+    if (collected.current || !groupRef.current) return;
     phase.current += delta;
 
     groupRef.current.rotation.y += delta * 1.25;
@@ -28,14 +29,11 @@ export function Collectible({ data }: Props) {
 
     _vec.set(data.position[0], groupRef.current.position.y, data.position[2]);
     if (playerPosRef.current.distanceToSquared(_vec) < COLLECT_DIST_SQ) {
-      setCollected(true);
+      collected.current = true;
+      groupRef.current.visible = false;
       collectCrystal(data.id);
     }
   });
-
-  if (collected) return null;
-
-  const gem = data.kind === 'emerald';
 
   return (
     <group ref={groupRef} position={data.position}>
@@ -61,4 +59,4 @@ export function Collectible({ data }: Props) {
       </mesh>
     </group>
   );
-}
+});

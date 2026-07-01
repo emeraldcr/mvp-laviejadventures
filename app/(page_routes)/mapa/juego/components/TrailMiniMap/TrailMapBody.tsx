@@ -1,4 +1,5 @@
 'use client';
+import { memo } from 'react';
 import { GAME_LEVELS } from '../../data/levelData';
 import { TRAIL_STATIONS } from '../../data/stations';
 import { DEV_UNLOCK_ALL_LEVELS } from '../../constants/storage';
@@ -18,7 +19,7 @@ interface TrailMapBodyProps {
   unlockedStationIndex: number;
 }
 
-export function TrailMapBody({
+export const TrailMapBody = memo(function TrailMapBody({
   activeStation,
   activeStationIndex,
   handleEnterLevel,
@@ -69,4 +70,4 @@ export function TrailMapBody({
       )}
     </div>
   );
-}
+});
