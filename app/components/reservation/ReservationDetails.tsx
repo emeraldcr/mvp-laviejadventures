@@ -1,121 +1,53 @@
-// components/ReservationDetails.tsx
+"use client";
+
+// components/reservation/ReservationDetails.tsx
 import Link from "next/link";
 import { TOUR_INFO } from "@/lib/tour-info";
-import { AvailabilityMap, MainTourInfo, TourPackageOption, TourSummary } from "@/lib/types/index";
+import type {
+  AvailabilityMap,
+  MainTourInfo,
+  TourPackageOption,
+  TourSummary,
+} from "@/lib/types/index";
 import { useState, useMemo, useCallback, useEffect, useRef, type KeyboardEvent, type RefObject } from "react";
 import { format } from "date-fns";
 import { es, enUS } from "date-fns/locale";
 import { useLanguage } from "@/lib/LanguageContext";
 import { translations } from "@/lib/translations";
-import { AlertCircle, Check, ChevronDown, Clock3, MapPin, Minus, Plus, Route, Search, ShieldCheck, Sparkles, TreePalm, Users, UtensilsCrossed } from "lucide-react";
+import {
+  AlertCircle,
+  Check,
+  Clock3,
+  MapPin,
+  Minus,
+  Plus,
+  ShieldCheck,
+  Sparkles,
+  Users,
+} from "lucide-react";
 import { trackAnalyticsEvent } from "@/lib/analytics/client";
+
+// ---------------------- SPLIT IMPORTS ----------------------
+import {
+  ADDON_OPTIONS,
+  formatDepartureLabel,
+  DEFAULT_DEPARTURE_TIMES,
+} from "@/lib/reservation/constants";
+import type {
+  TourTime,
+  BookingStepId,
+  ReservationFormState,
+  ReservationOrderPayload,
+  ReservationDetailsProps,
+} from "@/lib/reservation/types";
+import useReservationForm from "./hooks/useReservationForm";
+import {
+  TravelerInputField,
+  TravelerPhoneInput,
+} from "@/components/reservation/ReservationFormFields";
 import { PHONE_COUNTRIES as ALL_PHONE_COUNTRIES } from "@/app/components/reservation/phoneCountries";
 
-// ---------------------- CONSTANTS ----------------------
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PHONE_NUMBER_REGEX = /^[\d\s().-]{6,20}$/;
-
-const DEFAULT_DEPARTURE_TIMES = ["08:00", "09:00", "10:00"];
-
-export type TourTime = string;
-type BookingStepId = 1 | 2 | 3;
-
-// ---------------------- ADD-ONS ----------------------
-interface AddOnOption {
-  id: string;
-  nameEs: string;
-  nameEn: string;
-  descriptionEs: string;
-  descriptionEn: string;
-  price: number;
-  icon: typeof TreePalm;
-}
-
-const ADDON_OPTIONS: AddOnOption[] = [
-  {
-    id: "almuerzo",
-    nameEs: "Almuerzo Típico",
-    nameEn: "Traditional Lunch",
-    descriptionEs: "Casado costarricense (pollo, res o vegetariano) con bebida natural y postre.",
-    descriptionEn: "Costa Rican casado (chicken, beef or vegetarian) with natural drink and dessert.",
-    price: 15,
-    icon: UtensilsCrossed,
-  },
-  {
-    id: "guia-privado",
-    nameEs: "Guía Privado",
-    nameEn: "Private Guide",
-    descriptionEs: "Guía exclusivo para tu grupo con atención personalizada y ritmo flexible.",
-    descriptionEn: "Exclusive guide for your group with personalized attention and flexible pace.",
-    price: 25,
-    icon: Users,
-  },
-  {
-    id: "alojamiento",
-    nameEs: "Alojamiento",
-    nameEn: "Lodging",
-    descriptionEs: "Noche de hospedaje en alojamiento local cerca de la experiencia.",
-    descriptionEn: "One night stay at local lodging near the experience.",
-    price: 40,
-    icon: TreePalm,
-  },
-  {
-    id: "transporte",
-    nameEs: "Transporte",
-    nameEn: "Transport",
-    descriptionEs: "Traslado de ida y vuelta desde puntos de encuentro designados.",
-    descriptionEn: "Round-trip transfer from designated meeting points.",
-    price: 15,
-    icon: Route,
-  },
-];
-
-const formatDepartureLabel = (value: string) => {
-  const normalized = value.trim();
-  const match = normalized.match(/^(\d{1,2}):(\d{2})$/);
-  if (!match) return normalized;
-
-  const hour24 = Number(match[1]);
-  const minute = match[2];
-  const period = hour24 >= 12 ? "PM" : "AM";
-  const hour12 = hour24 % 12 || 12;
-  return `${hour12}:${minute} ${period}`;
-};
-
-// ---------------------- TYPES ----------------------
-export type TourPackage = string;
-export type { TourSummary };
-
-interface ReservationFormState {
-  name: string;
-  email: string;
-  phoneCode: string;
-  phoneNumber: string;
-  specialRequests: string;
-  agreeTerms: boolean;
-}
-
-interface ReservationOrderPayload {
-  name: string;
-  email: string;
-  phone: string;
-  tickets: number;
-  total: number;
-  date: string;
-  dateIso: string;
-  tourTime: TourTime;
-  packageId: string;
-  tourPackage: TourPackage;
-  tourSlug: string;
-  tourName: string;
-  packagePrice: number;
-  specialRequests: string;
-  addons: string[];
-  addonsPrice: number;
-}
-
-// Keep tour selection as a plain helper so production minification does not wrap
-// dependent tour lookups in hook closures that can hit temporal dead zone errors.
+// ---------------------- HELPER (kept here to avoid minification/TDZ issues) ----------------------
 const resolveSelectedTourSlug = (
   tours: TourSummary[],
   manualSelectedTourSlug: string | null,
@@ -132,276 +64,7 @@ const resolveSelectedTourSlug = (
   return tours[0]?.slug ?? "tour-ciudad-esmeralda";
 };
 
-// ---------------------- CUSTOM HOOK ----------------------
-const useReservationForm = (initialState: ReservationFormState) => {
-  const [formState, setFormState] = useState(initialState);
-
-  const handleChange = useCallback(
-    (key: keyof ReservationFormState, value: string | boolean) => {
-      setFormState((prev) => ({ ...prev, [key]: value }));
-    },
-    []
-  );
-
-  const validation = useMemo(() => {
-    const isNameValid = formState.name.trim() !== "";
-    const isEmailValid =
-      formState.email.trim() !== "" && EMAIL_REGEX.test(formState.email.trim());
-    const isPhoneNumberValid =
-      formState.phoneNumber.trim() !== "" &&
-      PHONE_NUMBER_REGEX.test(formState.phoneNumber.trim()) &&
-      formState.phoneNumber.replace(/\D/g, "").length >= 6;
-
-    return {
-      isNameValid,
-      isEmailValid,
-      isPhoneNumberValid,
-      isAgreeTermsValid: formState.agreeTerms,
-    };
-  }, [formState]);
-
-  return { formState, handleChange, validation };
-};
-
-// ---------------------- CHILD COMPONENTS ----------------------
-
-const FormError = ({ message }: { message: string }) => (
-  <p className="text-red-500 text-sm mt-1">{message}</p>
-);
-
-const TravelerInputField = ({
-  label,
-  id,
-  type = "text",
-  value,
-  onChange,
-  onBlur,
-  onKeyDown,
-  inputRef,
-  placeholder,
-  isValid,
-  validationMessage,
-  required = false,
-  className = "",
-}: {
-  label: string;
-  id: keyof ReservationFormState;
-  type?: string;
-  value: string;
-  onChange: (value: string) => void;
-  onBlur?: () => void;
-  onKeyDown?: (event: KeyboardEvent<HTMLInputElement>) => void;
-  inputRef?: RefObject<HTMLInputElement | null>;
-  placeholder: string;
-  isValid: boolean;
-  validationMessage: string;
-  required?: boolean;
-  className?: string;
-}) => {
-  const isTouched = value.trim() !== "";
-  const showError = isTouched && !isValid;
-
-  return (
-    <div className={className}>
-      <label htmlFor={id} className="block font-semibold text-lg mb-1">
-        {label}
-      </label>
-      <input
-        id={id}
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        onBlur={onBlur}
-        onKeyDown={onKeyDown}
-        ref={inputRef}
-        className={`w-full p-3 rounded-lg border focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-zinc-800 ${
-          showError
-            ? "border-red-500"
-            : "border-zinc-300 dark:border-zinc-700"
-        }`}
-        placeholder={placeholder}
-        required={required}
-      />
-      {showError && <FormError message={validationMessage} />}
-    </div>
-  );
-};
-
-const TravelerPhoneInput = ({
-  phoneCode,
-  phoneNumber,
-  setPhoneCode,
-  setPhoneNumber,
-  onBlur,
-  onKeyDown,
-  inputRef,
-  isValid,
-  label,
-  placeholder,
-  validationMessage,
-}: {
-  phoneCode: string;
-  phoneNumber: string;
-  setPhoneCode: (code: string) => void;
-  setPhoneNumber: (number: string) => void;
-  onBlur?: () => void;
-  onKeyDown?: (event: KeyboardEvent<HTMLInputElement>) => void;
-  inputRef?: RefObject<HTMLInputElement | null>;
-  isValid: boolean;
-  label: string;
-  placeholder: string;
-  validationMessage: string;
-}) => {
-  const isTouched = phoneNumber.trim() !== "";
-  const showError = isTouched && !isValid;
-  const [isCountryOpen, setIsCountryOpen] = useState(false);
-  const [countrySearch, setCountrySearch] = useState("");
-  const countryPickerRef = useRef<HTMLDivElement | null>(null);
-  const selectedCountry = ALL_PHONE_COUNTRIES.find((country) => country.code === phoneCode) ?? ALL_PHONE_COUNTRIES[0];
-  const normalizedCountrySearch = countrySearch.trim().toLowerCase();
-  const filteredCountries = ALL_PHONE_COUNTRIES.filter((country) => {
-    if (!normalizedCountrySearch) return true;
-
-    return [country.name, country.code, country.flag]
-      .some((value) => value.toLowerCase().includes(normalizedCountrySearch));
-  });
-
-  useEffect(() => {
-    if (!isCountryOpen) return;
-
-    const handlePointerDown = (event: MouseEvent) => {
-      if (!countryPickerRef.current?.contains(event.target as Node)) {
-        setIsCountryOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handlePointerDown);
-    return () => document.removeEventListener("mousedown", handlePointerDown);
-  }, [isCountryOpen]);
-
-  const handleCountrySelect = (countryCode: string) => {
-    setPhoneCode(countryCode);
-    setCountrySearch("");
-    setIsCountryOpen(false);
-    window.setTimeout(() => inputRef?.current?.focus({ preventScroll: true }), 80);
-  };
-
-  return (
-    <div className="md:col-span-2">
-      <label htmlFor="phoneNumber" className="block font-semibold text-lg mb-1">
-        {label}
-      </label>
-      <div className="grid gap-2 sm:grid-cols-[minmax(210px,0.85fr)_minmax(0,1fr)]">
-        <div ref={countryPickerRef} className="relative">
-          <button
-            id="phoneCode"
-            type="button"
-            onClick={() => setIsCountryOpen((prev) => !prev)}
-            className="flex h-12 w-full items-center justify-between gap-2 rounded-lg border border-zinc-300 bg-white px-3 text-left text-sm font-semibold text-zinc-900 transition hover:border-teal-500 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/25 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-            aria-haspopup="listbox"
-            aria-expanded={isCountryOpen}
-          >
-            <span className="flex min-w-0 items-center gap-2">
-              <span className="shrink-0 rounded-md bg-zinc-100 px-2 py-1 text-xs font-black text-zinc-700 dark:bg-zinc-700 dark:text-zinc-100">
-                {selectedCountry.flag}
-              </span>
-              <span className="min-w-0 truncate">{selectedCountry.name}</span>
-            </span>
-            <span className="flex shrink-0 items-center gap-1 text-zinc-500">
-              {selectedCountry.code}
-              <ChevronDown className={`h-4 w-4 transition-transform ${isCountryOpen ? "rotate-180" : ""}`} aria-hidden />
-            </span>
-          </button>
-
-          {isCountryOpen && (
-            <div className="absolute left-0 right-0 top-full z-30 mt-2 overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-2xl shadow-black/20 dark:border-zinc-700 dark:bg-zinc-900">
-              <div className="border-b border-zinc-200 p-2 dark:border-zinc-700">
-                <div className="flex items-center gap-2 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-800">
-                  <Search className="h-4 w-4 shrink-0 text-zinc-400" aria-hidden />
-                  <input
-                    type="search"
-                    value={countrySearch}
-                    onChange={(event) => setCountrySearch(event.target.value)}
-                    placeholder="Search country or code"
-                    className="w-full bg-transparent text-sm text-zinc-900 outline-none placeholder:text-zinc-400 dark:text-zinc-100"
-                    autoFocus
-                  />
-                </div>
-              </div>
-              <div className="max-h-64 overflow-y-auto p-1" role="listbox" aria-labelledby="phoneCode">
-                {filteredCountries.map((country) => {
-                  const isSelected = country.code === phoneCode;
-                  return (
-                    <button
-                      key={`${country.code}-${country.flag}`}
-                      type="button"
-                      onClick={() => handleCountrySelect(country.code)}
-                      className={`flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-left text-sm transition ${
-                        isSelected
-                          ? "bg-teal-500/10 text-teal-700 dark:text-teal-300"
-                          : "text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
-                      }`}
-                      role="option"
-                      aria-selected={isSelected}
-                    >
-                      <span className="flex min-w-0 items-center gap-2">
-                        <span className="shrink-0 rounded bg-zinc-100 px-2 py-1 text-xs font-black text-zinc-600 dark:bg-zinc-800 dark:text-zinc-200">
-                          {country.flag}
-                        </span>
-                        <span className="min-w-0 truncate">{country.name}</span>
-                      </span>
-                      <span className="flex shrink-0 items-center gap-2 font-bold">
-                        {country.code}
-                        {isSelected && <Check className="h-4 w-4" aria-hidden />}
-                      </span>
-                    </button>
-                  );
-                })}
-                {filteredCountries.length === 0 && (
-                  <p className="px-3 py-4 text-center text-sm text-zinc-500">No country found</p>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-        <input
-          id="phoneNumber"
-          type="tel"
-          value={phoneNumber}
-          onChange={(e) => setPhoneNumber(e.target.value)}
-          onBlur={onBlur}
-          onKeyDown={onKeyDown}
-          ref={inputRef}
-          className={`w-full p-3 rounded-lg border focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-zinc-800 ${
-            showError ? "border-red-500" : "border-zinc-300 dark:border-zinc-700"
-          }`}
-          placeholder={placeholder}
-          required
-        />
-      </div>
-      {showError && <FormError message={validationMessage} />}
-    </div>
-  );
-};
-
 // ---------------------- MAIN COMPONENT ----------------------
-
-type Props = {
-  selectedDate: number;
-  currentMonth: number;
-  monthName: string;
-  tickets: number;
-  setTickets: (n: number) => void;
-  onReserve: (data: ReservationOrderPayload) => void;
-  availability: AvailabilityMap;
-  currentYear: number;
-  tourInfo?: MainTourInfo | null;
-  tours: TourSummary[];
-  initialSelectedTourSlug?: string;
-  initialSelectedPackageId?: string;
-  hasPreselectedTour?: boolean;
-  ivaRatePercent?: number;
-};
 
 export default function ReservationDetails({
   selectedDate,
@@ -416,7 +79,7 @@ export default function ReservationDetails({
   initialSelectedTourSlug,
   hasPreselectedTour = false,
   ivaRatePercent = 13,
-}: Props) {
+}: ReservationDetailsProps) {
   const { lang } = useLanguage();
   const tr = translations[lang].reservation;
   const dateLocale = lang === "es" ? es : enUS;
@@ -580,7 +243,7 @@ export default function ReservationDetails({
   const { formState, handleChange, validation } = useReservationForm({
     name: "",
     email: "",
-    phoneCode: ALL_PHONE_COUNTRIES[0].code,
+    phoneCode: ALL_PHONE_COUNTRIES[0]?.code ?? "+506",
     phoneNumber: "",
     specialRequests: "",
     agreeTerms: false,
@@ -1472,9 +1135,46 @@ export default function ReservationDetails({
             <h3 className="text-xl font-semibold mb-4">{tr.travelerTitle}</h3>
             {!isStep2Valid && <p className="mb-3 flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-400"><AlertCircle className="h-4 w-4" aria-hidden /> {tr.indicators.completeTravelerData}</p>}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <TravelerInputField id="name" label={tr.fullName} value={formState.name} onChange={(v) => handleChange("name", v)} onBlur={() => trackFieldBlur("name")} onKeyDown={handleNameEnter} inputRef={nameInputRef} placeholder={tr.namePlaceholder} isValid={validation.isNameValid} validationMessage={tr.nameRequired} required />
-              <TravelerInputField id="email" label={tr.emailLabel} type="email" value={formState.email} onChange={(v) => handleChange("email", v)} onBlur={() => trackFieldBlur("email")} onKeyDown={handleEmailEnter} inputRef={emailInputRef} placeholder={tr.emailPlaceholder} isValid={validation.isEmailValid} validationMessage={tr.emailInvalid} required />
-              <TravelerPhoneInput phoneCode={formState.phoneCode} phoneNumber={formState.phoneNumber} setPhoneCode={(v) => handleChange("phoneCode", v)} setPhoneNumber={(v) => handleChange("phoneNumber", v)} onBlur={() => trackFieldBlur("phone")} onKeyDown={handlePhoneEnter} inputRef={phoneInputRef} isValid={validation.isPhoneNumberValid} label={tr.phoneLabel} placeholder={tr.phonePlaceholder} validationMessage={tr.phoneInvalid} />
+              <TravelerInputField 
+                id="name" 
+                label={tr.fullName} 
+                value={formState.name} 
+                onChange={(v) => handleChange("name", v)} 
+                onBlur={() => trackFieldBlur("name")} 
+                onKeyDown={handleNameEnter} 
+                inputRef={nameInputRef} 
+                placeholder={tr.namePlaceholder} 
+                isValid={validation.isNameValid} 
+                validationMessage={tr.nameRequired} 
+                required 
+              />
+              <TravelerInputField 
+                id="email" 
+                label={tr.emailLabel} 
+                type="email" 
+                value={formState.email} 
+                onChange={(v) => handleChange("email", v)} 
+                onBlur={() => trackFieldBlur("email")} 
+                onKeyDown={handleEmailEnter} 
+                inputRef={emailInputRef} 
+                placeholder={tr.emailPlaceholder} 
+                isValid={validation.isEmailValid} 
+                validationMessage={tr.emailInvalid} 
+                required 
+              />
+              <TravelerPhoneInput 
+                phoneCode={formState.phoneCode} 
+                phoneNumber={formState.phoneNumber} 
+                setPhoneCode={(v) => handleChange("phoneCode", v)} 
+                setPhoneNumber={(v) => handleChange("phoneNumber", v)} 
+                onBlur={() => trackFieldBlur("phone")} 
+                onKeyDown={handlePhoneEnter} 
+                inputRef={phoneInputRef} 
+                isValid={validation.isPhoneNumberValid} 
+                label={tr.phoneLabel} 
+                placeholder={tr.phonePlaceholder} 
+                validationMessage={tr.phoneInvalid} 
+              />
               <div className="md:col-span-2">
                 <label htmlFor="specialRequests" className="mb-2 block text-lg font-semibold">
                   {lang === "es" ? "¿Necesitas algo extra?" : "Need anything extra?"}
