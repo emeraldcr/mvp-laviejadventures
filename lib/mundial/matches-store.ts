@@ -4,7 +4,7 @@ import { MUNDIAL_MATCHES, MUNDIAL_TOTAL_MATCHES, type MundialMatch } from "./fix
 
 export const MUNDIAL_MATCHES_COLLECTION = "mundial_matches";
 export const MUNDIAL_PREDICTIONS_COLLECTION = "mundial_predictions";
-export const MUNDIAL_FIXTURE_VERSION = "2026-07-01-round32-results";
+export const MUNDIAL_FIXTURE_VERSION = "2026-07-02-group-stage-results";
 
 type StoredMundialMatch = MundialMatch & {
   source?: string;
