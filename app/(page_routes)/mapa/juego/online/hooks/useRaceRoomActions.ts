@@ -109,7 +109,7 @@ export function useRaceRoomActions({
     setLoading(true);
     setError('');
     try {
-      const json = await startRaceRoom(room.code, playerId);
+      const json = await startRaceRoom(room.code, room.hostId);
       if (!json.ok || !json.room) {
         setError(getRaceError(json.error));
         return;

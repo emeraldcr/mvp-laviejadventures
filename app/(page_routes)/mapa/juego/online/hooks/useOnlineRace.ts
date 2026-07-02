@@ -64,7 +64,7 @@ export function useOnlineRace(inviteCode: string) {
 
     const interval = window.setInterval(() => {
       void pollRoom();
-    }, room.status === "racing" ? 700 : 1200);
+    }, room.status === "racing" ? 350 : 1200);
 
     return () => {
       cancelled = true;

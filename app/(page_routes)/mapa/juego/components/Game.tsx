@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 import { GameProvider } from '../context/GameContext';
 import { GameCanvas } from './GameCanvas';
+import type { OtherPlayerView } from '../types';
 
 export default function Game({
   sharedPosRef,
@@ -9,12 +10,14 @@ export default function Game({
   raceLevelIndex,
   racePlayerName,
   startLevel,
+  otherPlayers,
 }: {
   sharedPosRef?:    React.MutableRefObject<THREE.Vector3>;
   onRaceWin?:       () => void;
   raceLevelIndex?:  number;
   racePlayerName?:  string;
   startLevel?:      number;
+  otherPlayers?:    OtherPlayerView[];
 } = {}) {
   return (
     <GameProvider
@@ -23,6 +26,7 @@ export default function Game({
       raceLevelIndex={raceLevelIndex}
       racePlayerName={racePlayerName}
       startLevel={startLevel}
+      otherPlayers={otherPlayers}
     >
       <GameCanvas />
     </GameProvider>

@@ -63,7 +63,9 @@ export function LobbyView({
               {player.id === room.hostId && <span style={{ color: "#ffd700", fontSize: 10, marginLeft: 6 }}>HOST</span>}
               {player.id === playerId && <span style={{ color: "#4fc3f7", fontSize: 10, marginLeft: 6 }}>TU</span>}
             </span>
-            <div style={S.badge(player.ready)}>{player.ready ? "LISTO" : "ESPERANDO"}</div>
+            <div style={S.badge(player.ready)}>
+              {player.ready ? "LISTO" : "ESPERANDO"}
+            </div>
           </div>
         ))}
 
@@ -75,11 +77,9 @@ export function LobbyView({
 
         <div style={{ height: 20 }} />
 
-        {!isHost && (
-          <button style={S.btn(!me?.ready)} onClick={onToggleReady} disabled={loading}>
-            {loading ? "..." : me?.ready ? "LISTO - click para cancelar" : "MARCAR COMO LISTO"}
-          </button>
-        )}
+        <button style={S.btn(!me?.ready)} onClick={onToggleReady} disabled={loading}>
+          {loading ? "..." : me?.ready ? "LISTO - click para cancelar" : "MARCAR COMO LISTO"}
+        </button>
 
         {isHost && (
           <button

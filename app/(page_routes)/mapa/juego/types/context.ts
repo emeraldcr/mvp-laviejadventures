@@ -1,7 +1,7 @@
 import type React from 'react';
 import type * as THREE from 'three';
 import type { KeyState } from '../hooks/useKeyboard';
-import type { BulletState, PowerUpKind } from './entities';
+import type { BulletState, OtherPlayerView, PowerUpKind } from './entities';
 import type { GameState, LeaderboardEntry } from './game';
 import type { LevelData } from './level';
 
@@ -12,11 +12,16 @@ export interface GameProviderProps {
   raceLevelIndex?: number;
   racePlayerName?: string;
   startLevel?: number;
+  otherPlayers?: OtherPlayerView[];
 }
 
 export interface ActivePowerUps {
   ruby: boolean;
   sapphire: boolean;
+  rubyRemaining: number;
+  sapphireRemaining: number;
+  rubyDuration: number;
+  sapphireDuration: number;
 }
 
 export interface GameContextValue {
@@ -30,7 +35,7 @@ export interface GameContextValue {
   pendingPowerUpRef: React.MutableRefObject<PowerUpKind | null>;
   playerImmuneRef: React.MutableRefObject<boolean>;
   activePowerUps: ActivePowerUps;
-  handlePowerUpChange: (ruby: boolean, sapphire: boolean) => void;
+  handlePowerUpChange: (ruby: boolean, sapphire: boolean, rubyRemaining?: number, sapphireRemaining?: number) => void;
   handlePlayerHit: () => void;
   handleDie: () => void;
   handleWin: () => void;
@@ -63,4 +68,5 @@ export interface GameSceneContextValue {
   levelKey: number;
   playerPosRef: React.MutableRefObject<THREE.Vector3>;
   runtimeValue: GameRuntimeContextValue;
+  otherPlayers: OtherPlayerView[];
 }

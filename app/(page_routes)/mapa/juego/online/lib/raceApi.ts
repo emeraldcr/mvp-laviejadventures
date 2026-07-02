@@ -63,8 +63,8 @@ export const startRaceRoom = (code: string, hostId: string) => (
   postRace("/api/race/start", { code, hostId })
 );
 
-export const updateRaceProgress = (code: string, playerId: string, pct: number) => (
-  postRace("/api/race/progress", { code, playerId, pct })
+export const updateRaceProgress = (code: string, playerId: string, pct: number, x: number, y: number) => (
+  postRace("/api/race/progress", { code, playerId, pct, x, y })
 );
 
 export const finishRaceRoom = (code: string, playerId: string) => (

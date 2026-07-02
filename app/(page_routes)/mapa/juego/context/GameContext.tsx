@@ -17,15 +17,19 @@ import type {
   GameProviderProps,
   GameRuntimeContextValue,
   GameSceneContextValue,
+  OtherPlayerView,
   PowerUpKind,
 } from '../types';
 import { useGameState } from '../hooks/useGameState';
 import { useKeyboard } from '../hooks/useKeyboard';
 import { GAME_LEVELS } from '../data/levelData';
+import { RUBY_DURATION, SAPPH_DURATION } from '../constants/physics';
 
 const GameContext = createContext<GameContextValue | null>(null);
 const GameRuntimeContext = createContext<GameRuntimeContextValue | null>(null);
 const GameSceneContext = createContext<GameSceneContextValue | null>(null);
+
+const NO_OTHER_PLAYERS: OtherPlayerView[] = [];
 
 export function GameProvider({
   children,
@@ -34,6 +38,7 @@ export function GameProvider({
   raceLevelIndex,
   racePlayerName,
   startLevel,
+  otherPlayers = NO_OTHER_PLAYERS,
 }: GameProviderProps) {
   const {
     state,
@@ -61,12 +66,41 @@ export function GameProvider({
   const pendingPowerUpRef = useRef<PowerUpKind | null>(null);
   const playerImmuneRef = useRef(false);
 
-  const [activePowerUps, setActivePowerUps] = useState({ ruby: false, sapphire: false });
+  const [activePowerUps, setActivePowerUps] = useState({
+    ruby: false,
+    sapphire: false,
+    rubyRemaining: 0,
+    sapphireRemaining: 0,
+    rubyDuration: RUBY_DURATION,
+    sapphireDuration: SAPPH_DURATION,
+  });
 
-  const handlePowerUpChange = useCallback((ruby: boolean, sapphire: boolean) => {
+  const handlePowerUpChange = useCallback((
+    ruby: boolean,
+    sapphire: boolean,
+    rubyRemaining = 0,
+    sapphireRemaining = 0,
+  ) => {
+    const nextRubyRemaining = ruby ? Math.max(0, rubyRemaining) : 0;
+    const nextSapphireRemaining = sapphire ? Math.max(0, sapphireRemaining) : 0;
+    const roundedRuby = Math.ceil(nextRubyRemaining * 10) / 10;
+    const roundedSapphire = Math.ceil(nextSapphireRemaining * 10) / 10;
+
     startTransition(() => {
       setActivePowerUps((current) => (
-        current.ruby === ruby && current.sapphire === sapphire ? current : { ruby, sapphire }
+        current.ruby === ruby &&
+        current.sapphire === sapphire &&
+        current.rubyRemaining === roundedRuby &&
+        current.sapphireRemaining === roundedSapphire
+          ? current
+          : {
+              ruby,
+              sapphire,
+              rubyRemaining: roundedRuby,
+              sapphireRemaining: roundedSapphire,
+              rubyDuration: RUBY_DURATION,
+              sapphireDuration: SAPPH_DURATION,
+            }
       ));
     });
   }, []);
@@ -167,12 +201,14 @@ export function GameProvider({
     levelKey: state.restartKey,
     playerPosRef,
     runtimeValue,
+    otherPlayers,
   }), [
     level,
     playerPosRef,
     runtimeValue,
     state.restartKey,
     state.status,
+    otherPlayers,
   ]);
 
   return (

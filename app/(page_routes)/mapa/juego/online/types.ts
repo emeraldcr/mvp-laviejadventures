@@ -4,6 +4,8 @@ export type RacePlayerView = {
   name: string;
   ready: boolean;
   pct: number;
+  x: number | null;
+  y: number | null;
   finished: boolean;
   rank: number | null;
   finishedAt: number | null;

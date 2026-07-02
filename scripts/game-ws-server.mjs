@@ -4,7 +4,7 @@ import WebSocket, { WebSocketServer } from "ws";
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/lva";
 const MONGODB_DB = process.env.MONGODB_DB || "lva";
 const PORT = process.env.GAME_WS_PORT ? Number(process.env.GAME_WS_PORT) : 3001;
-const POLL_MS = 500;
+const POLL_MS = 250;
 
 async function main() {
   const client = new MongoClient(MONGODB_URI, {});

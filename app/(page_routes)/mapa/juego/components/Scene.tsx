@@ -7,7 +7,8 @@ import { Player } from './Player';
 import { Level } from './Level';
 import { Environment } from './Environment';
 import { Bullets } from './Bullets';
-import type { GameState, LevelData } from '../types';
+import { OtherPlayers } from './OtherPlayers';
+import type { GameState, LevelData, OtherPlayerView } from '../types';
 
 function CameraRig({ targetRef }: { targetRef: React.MutableRefObject<THREE.Vector3> }) {
   const { camera } = useThree();
@@ -28,11 +29,13 @@ export const Scene = memo(function Scene({
   levelKey,
   playerPosRef,
   gameStatus,
+  otherPlayers,
 }: {
   level: LevelData;
   levelKey: number;
   playerPosRef: React.MutableRefObject<THREE.Vector3>;
   gameStatus: GameState['status'];
+  otherPlayers?: OtherPlayerView[];
 }) {
   return (
     <>
@@ -40,6 +43,7 @@ export const Scene = memo(function Scene({
       <Environment level={level} />
       <Player level={level} gameStatus={gameStatus} />
       <Bullets />
+      {otherPlayers && otherPlayers.length > 0 && <OtherPlayers players={otherPlayers} />}
       {/* key forces a full remount of Level (and children) on restart */}
       <Level key={levelKey} level={level} gameStatus={gameStatus} />
     </>

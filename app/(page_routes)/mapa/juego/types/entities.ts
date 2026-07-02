@@ -31,3 +31,12 @@ export interface EnemyData {
   position: [number, number, number];
   patrolRange: number;
 }
+
+export interface OtherPlayerView {
+  id: string;
+  name: string;
+  color: string;
+  x: number;
+  y: number;
+  finished: boolean;
+}

@@ -15,6 +15,8 @@ export type RacePlayer = {
   name: string;
   ready: boolean;
   pct: number;       // 0-100 progress through the level
+  x?: number;        // live world position, for rendering other players
+  y?: number;
   finished: boolean;
   rank?: number;
   finishedAt?: number; // ms timestamp
@@ -140,12 +142,21 @@ export async function updateProgress(
   db: Db,
   code: string,
   playerId: string,
-  pct: number
+  pct: number,
+  x?: number,
+  y?: number
 ): Promise<void> {
   const now = new Date();
+  const set: Record<string, unknown> = {
+    "players.$.pct": Math.min(100, Math.max(0, pct)),
+    updatedAt: now,
+  };
+  if (typeof x === "number") set["players.$.x"] = x;
+  if (typeof y === "number") set["players.$.y"] = y;
+
   await col(db).updateOne(
     { _id: code, "players.id": playerId, status: "racing" } as any,
-    { $set: { "players.$.pct": Math.min(100, Math.max(0, pct)), updatedAt: now }, $inc: { version: 1 } } as any
+    { $set: set, $inc: { version: 1 } } as any
   );
 }
 
@@ -212,6 +223,8 @@ export function serializeRoom(room: RaceRoomDoc | null) {
       name: p.name,
       ready: p.ready,
       pct: p.pct,
+      x: p.x ?? null,
+      y: p.y ?? null,
       finished: p.finished,
       rank: p.rank ?? null,
       finishedAt: p.finishedAt ?? null,

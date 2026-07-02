@@ -25,15 +25,16 @@ export function useRaceProgress(playerId: string) {
 
     progressIntervalRef.current = setInterval(async () => {
       const px = sharedPosRef.current.x;
+      const py = sharedPosRef.current.y;
       const pct = Math.min(100, Math.max(0, ((px - spawnX) / span) * 100));
       setMyPct(Math.round(pct));
 
       if (pct >= 100) return;
 
       try {
-        await updateRaceProgress(code, playerId, pct);
+        await updateRaceProgress(code, playerId, pct, px, py);
       } catch {}
-    }, 400);
+    }, 250);
   }, [playerId, stopProgressPolling]);
 
   const resetProgress = useCallback(() => {

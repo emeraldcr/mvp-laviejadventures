@@ -8,10 +8,17 @@ interface PowerUpTimerRefs {
   sapphTimer: MutableRefObject<number>;
 }
 
+type HandlePowerUpChange = (
+  ruby: boolean,
+  sapphire: boolean,
+  rubyRemaining?: number,
+  sapphireRemaining?: number,
+) => void;
+
 export const consumePendingPowerUp = (
   pendingPowerUpRef: MutableRefObject<PowerUpKind | null>,
   timers: PowerUpTimerRefs,
-  handlePowerUpChange: (ruby: boolean, sapphire: boolean) => void,
+  handlePowerUpChange: HandlePowerUpChange,
 ) => {
   const pending = pendingPowerUpRef.current;
   if (!pending) return;
@@ -19,24 +26,26 @@ export const consumePendingPowerUp = (
   pendingPowerUpRef.current = null;
   if (pending === 'ruby') timers.rubyTimer.current = RUBY_DURATION;
   else timers.sapphTimer.current = SAPPH_DURATION;
-  handlePowerUpChange(timers.rubyTimer.current > 0, timers.sapphTimer.current > 0);
+  handlePowerUpChange(
+    timers.rubyTimer.current > 0,
+    timers.sapphTimer.current > 0,
+    timers.rubyTimer.current,
+    timers.sapphTimer.current,
+  );
 };
 
 export const tickPowerUps = (
   delta: number,
   timers: PowerUpTimerRefs,
   playerImmuneRef: MutableRefObject<boolean>,
-  handlePowerUpChange: (ruby: boolean, sapphire: boolean) => void,
+  handlePowerUpChange: HandlePowerUpChange,
 ) => {
-  const hadRuby = timers.rubyTimer.current > 0;
-  const hadSapph = timers.sapphTimer.current > 0;
-
   if (timers.rubyTimer.current > 0) timers.rubyTimer.current -= delta;
   if (timers.sapphTimer.current > 0) timers.sapphTimer.current -= delta;
 
   const hasRuby = timers.rubyTimer.current > 0;
   const hasSapph = timers.sapphTimer.current > 0;
-  if (hadRuby !== hasRuby || hadSapph !== hasSapph) handlePowerUpChange(hasRuby, hasSapph);
+  handlePowerUpChange(hasRuby, hasSapph, timers.rubyTimer.current, timers.sapphTimer.current);
   playerImmuneRef.current = hasRuby;
 
   return { hasRuby, hasSapph };

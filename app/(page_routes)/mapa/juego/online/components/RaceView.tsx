@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import type * as THREE from "three";
 import { PLAYER_COLORS } from "../../constants/online";
+import { GAME_LEVELS } from "../../data/levelData";
 import { S } from "../styles";
 import type { RaceRoomView } from "../types";
 
@@ -20,6 +21,18 @@ type RaceViewProps = {
 export function RaceView({ room, playerId, name, myPct, sharedPosRef, onFinish }: RaceViewProps) {
   const me = room.players.find((player) => player.id === playerId);
   const myFinished = me?.finished ?? false;
+  const level = GAME_LEVELS[room.levelIndex] ?? GAME_LEVELS[0];
+
+  const otherPlayers = room.players
+    .filter((player) => player.id !== playerId)
+    .map((player) => ({
+      id: player.id,
+      name: player.name,
+      color: PLAYER_COLORS[room.players.indexOf(player) % PLAYER_COLORS.length],
+      x: player.x ?? level.spawnPosition[0],
+      y: player.y ?? level.spawnPosition[1],
+      finished: player.finished,
+    }));
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "#060c10" }}>
@@ -28,6 +41,7 @@ export function RaceView({ room, playerId, name, myPct, sharedPosRef, onFinish }
         onRaceWin={onFinish}
         raceLevelIndex={room.levelIndex}
         racePlayerName={name}
+        otherPlayers={otherPlayers}
       />
 
       <div style={S.raceOverlay}>

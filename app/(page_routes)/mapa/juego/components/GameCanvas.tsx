@@ -12,6 +12,7 @@ export const GameCanvas = memo(function GameCanvas() {
     levelKey,
     playerPosRef,
     runtimeValue,
+    otherPlayers,
   } = useGameSceneContext();
 
   return (
@@ -41,6 +42,7 @@ export const GameCanvas = memo(function GameCanvas() {
               levelKey={levelKey}
               playerPosRef={playerPosRef}
               gameStatus={gameStatus}
+              otherPlayers={otherPlayers}
             />
           </GameRuntimeProvider>
         </Suspense>
