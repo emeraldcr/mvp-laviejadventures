@@ -120,7 +120,7 @@ function accuracyPct(e: LeaderboardEntry) {
 }
 
 // Radii
-const RA = { outer: 265, label: 293, r16: 207, qf: 149, sf: 91, finalPt: 40 };
+const RA = { outer: 268, label: 300, r32: 238, r16: 198, qf: 140, sf: 82, finalPt: 46 };
 
 // ─── Main export ──────────────────────────────────────────────────────────────
 
@@ -328,8 +328,8 @@ function BracketSVG({
   const gm = (n: number) => byNum.get(n);
   const hasRes = (n: number) => gm(n)?.homeFinalScore != null;
   const lineC = (n: number) =>
-    hasRes(n) ? "rgba(240,180,41,0.5)" : "rgba(255,255,255,0.07)";
-  const lineW = (n: number) => (hasRes(n) ? 1.2 : 0.8);
+    hasRes(n) ? "rgba(240,180,41,0.72)" : "rgba(255,255,255,0.08)";
+  const lineW = (n: number) => (hasRes(n) ? 1.5 : 0.8);
 
   function connLine(r1: number, a1: number, r2: number, a2: number, matchNum: number) {
     const [x1, y1] = pt(r1, a1);
@@ -339,14 +339,34 @@ function BracketSVG({
         key={`${r1}-${a1}-${r2}-${a2}`}
         x1={x1} y1={y1} x2={x2} y2={y2}
         stroke={lineC(matchNum)} strokeWidth={lineW(matchNum)}
+        strokeLinecap="round"
       />
     );
   }
 
   // Lines light up when the SOURCE match is decided (the winner's path forward)
+  const r32EntryLines = R32_SLOTS.map(([matchNum], i) => {
+    const angle = slotDeg(i);
+    const [x1, y1] = pt(RA.outer - 5, angle);
+    const [x2, y2] = pt(RA.r32, R32_A[matchNum]);
+    const match = gm(matchNum);
+    const side = R32_SLOTS[i][1];
+    const won = mwinner(match) === side;
+
+    return (
+      <line
+        key={`entry-${matchNum}-${side}`}
+        x1={x1} y1={y1} x2={x2} y2={y2}
+        stroke={won ? "rgba(240,180,41,0.75)" : "rgba(255,255,255,0.1)"}
+        strokeWidth={won ? 1.25 : 0.65}
+        strokeLinecap="round"
+      />
+    );
+  });
+
   const r32r16Lines = R16_DEF.flatMap(([n, a, b]) => [
-    connLine(RA.outer, R32_A[a], RA.r16, R16_A[n], a),
-    connLine(RA.outer, R32_A[b], RA.r16, R16_A[n], b),
+    connLine(RA.r32, R32_A[a], RA.r16, R16_A[n], a),
+    connLine(RA.r32, R32_A[b], RA.r16, R16_A[n], b),
   ]);
 
   const r16qfLines = QF_DEF.flatMap(([n, a, b]) => [
@@ -398,18 +418,34 @@ function BracketSVG({
       <circle cx={CX} cy={CY} r={92} fill="url(#cg)" />
 
       {/* guide rings */}
-      {[RA.r16, RA.qf, RA.sf].map((r) => (
+      {[RA.r32, RA.r16, RA.qf, RA.sf].map((r) => (
         <circle key={r} cx={CX} cy={CY} r={r}
           fill="none" stroke="rgba(255,255,255,0.05)"
           strokeWidth={1} strokeDasharray="2 7" />
       ))}
 
       {/* connectors */}
+      {r32EntryLines}
       {r32r16Lines}
       {r16qfLines}
       {qfsfLines}
       {sfFinalLines}
       {thirdLines}
+
+      {/* R32 match nodes: keep the outer lines visually anchored */}
+      {Object.keys(R32_A).map((n) => {
+        const matchNum = Number(n);
+        return (
+          <MatchKnot
+            key={matchNum}
+            r={RA.r32}
+            angle={R32_A[matchNum]}
+            match={gm(matchNum)}
+            isSelected={selected === matchNum}
+            onClick={() => onSelect(matchNum)}
+          />
+        );
+      })}
 
       {/* separator arcs between each pair of R32 teams (show match groupings) */}
       {Array.from({ length: 16 }, (_, i) => {
@@ -470,6 +506,42 @@ function BracketSVG({
 }
 
 // ─── OuterSlot: team dot + abbreviation at outer ring ────────────────────────
+
+function MatchKnot({
+  r,
+  angle,
+  match,
+  isSelected,
+  onClick,
+}: {
+  r: number;
+  angle: number;
+  match: MundialMatch | undefined;
+  isSelected: boolean;
+  onClick: () => void;
+}) {
+  const [x, y] = pt(r, angle);
+  const hasResult = match?.homeFinalScore != null;
+  const hasTeams = match && isReal(match.homeTeam) && isReal(match.awayTeam);
+
+  return (
+    <g onClick={onClick} style={{ cursor: "pointer" }} role="button" aria-label={`Partido ${match?.number ?? ""}`}>
+      <circle cx={x} cy={y} r={12} fill="transparent" />
+      <circle
+        cx={x}
+        cy={y}
+        r={hasResult ? 5.5 : 4.5}
+        fill={hasResult ? "#f0b429" : hasTeams ? "rgba(255,255,255,0.38)" : "rgba(255,255,255,0.16)"}
+        stroke={isSelected ? "#d5ff3f" : hasResult ? "rgba(240,180,41,0.65)" : "rgba(255,255,255,0.14)"}
+        strokeWidth={isSelected ? 2 : 1}
+        filter={hasResult ? "url(#sglow)" : undefined}
+      />
+      {isSelected && (
+        <circle cx={x} cy={y} r={8.5} fill="none" stroke="rgba(213,255,63,0.5)" strokeWidth={1} />
+      )}
+    </g>
+  );
+}
 
 function OuterSlot({
   angle, team, won, lost, isSelected, onClick,
