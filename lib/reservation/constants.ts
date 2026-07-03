@@ -1,4 +1,4 @@
-import { UtensilsCrossed, Users, TreePalm, Route, type LucideIcon } from "lucide-react";
+import { Camera, Home, Route, UtensilsCrossed, Users, type LucideIcon } from "lucide-react";
 import type { AddOnOption } from "./types";
 import { ADDON_DATA } from "./addons";
 
@@ -10,8 +10,9 @@ export const DEFAULT_DEPARTURE_TIMES = ["08:00", "09:00", "10:00"];
 const ADDON_ICONS: Record<string, LucideIcon> = {
   almuerzo: UtensilsCrossed,
   "guia-privado": Users,
-  alojamiento: TreePalm,
+  alojamiento: Home,
   transporte: Route,
+  fotos: Camera,
 };
 
 export const ADDON_OPTIONS: AddOnOption[] = ADDON_DATA.map((addon) => ({

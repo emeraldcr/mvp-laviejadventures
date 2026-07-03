@@ -506,6 +506,7 @@ export type OrderDetails = {
   addons?: string[];
   addonIds?: string[];
   addonsPrice?: number;
+  addonDetails?: import("@/lib/reservation/types").ReservationAddonDetails;
 };
 
 export type PaymentModalProps = {

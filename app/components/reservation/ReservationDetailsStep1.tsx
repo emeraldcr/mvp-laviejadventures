@@ -1,16 +1,14 @@
 import type { KeyboardEvent, RefObject } from "react";
 import {
   AlertCircle,
-  Check,
   Clock3,
-  Sparkles,
   Users,
   Minus,
   Plus,
 } from "lucide-react";
 import { formatDepartureLabel } from "@/lib/reservation/constants";
-import { ADDON_OPTIONS } from "@/lib/reservation/constants";
-import type { TourTime } from "@/lib/reservation/types";
+import AddOnsExperience from "@/app/components/reservation/AddOnsExperience";
+import type { ReservationAddonDetails, TourTime } from "@/lib/reservation/types";
 
 type ReservationTranslations = typeof import("@/lib/translations").translations["es"]["reservation"];
 
@@ -23,6 +21,7 @@ interface ReservationDetailsStep1Props {
   tickets: number;
   slots: number;
   selectedAddons: string[];
+  addonDetails: ReservationAddonDetails;
   addonsPricePerPerson: number;
   basePriceUSD: number;
   pricePerPerson: number;
@@ -35,6 +34,7 @@ interface ReservationDetailsStep1Props {
   onTicketsChange: (rawValue: string) => void;
   onStep1Enter: (event: KeyboardEvent<HTMLInputElement>) => void;
   onAddonToggle: (addonId: string) => void;
+  onAddonDetailsChange: (details: ReservationAddonDetails) => void;
   tr: ReservationTranslations;
   lang: "es" | "en";
 }
@@ -48,6 +48,7 @@ export default function ReservationDetailsStep1({
   tickets,
   slots,
   selectedAddons,
+  addonDetails,
   addonsPricePerPerson,
   basePriceUSD,
   pricePerPerson,
@@ -60,6 +61,7 @@ export default function ReservationDetailsStep1({
   onTicketsChange,
   onStep1Enter,
   onAddonToggle,
+  onAddonDetailsChange,
   tr,
   lang,
 }: ReservationDetailsStep1Props) {
@@ -184,84 +186,24 @@ export default function ReservationDetailsStep1({
             </div>
           </section>
 
-          <section className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-700 dark:bg-zinc-900/70 sm:p-5">
-            <div className="mb-4 flex items-start justify-between gap-3">
-              <div className="flex min-w-0 items-start gap-3">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-300">
-                  <Sparkles className="h-5 w-5" aria-hidden />
-                </span>
-                <div className="min-w-0">
-                  <h3 className="text-lg font-black leading-tight text-zinc-900 dark:text-zinc-50 sm:text-xl">
-                    {lang === "es" ? "Mejora tu experiencia" : "Upgrade your experience"}
-                  </h3>
-                  <p className="mt-1 text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                    {lang === "es" ? "Opcional. Se calcula por persona." : "Optional. Calculated per person."}
-                  </p>
-                </div>
-              </div>
-              {selectedAddons.length > 0 && (
-                <span className="shrink-0 rounded-full bg-emerald-500 px-2.5 py-1 text-xs font-black text-white">
-                  +{selectedAddons.length}
-                </span>
-              )}
-            </div>
+          <AddOnsExperience
+            lang={lang}
+            selectedAddons={selectedAddons}
+            addonDetails={addonDetails}
+            onAddonToggle={onAddonToggle}
+            onAddonDetailsChange={onAddonDetailsChange}
+          />
 
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              {ADDON_OPTIONS.map((addon) => {
-                const isSelected = selectedAddons.includes(addon.id);
-                const Icon = addon.icon;
-                const addonName = lang === "es" ? addon.nameEs : addon.nameEn;
-                const addonDesc = lang === "es" ? addon.descriptionEs : addon.descriptionEn;
-
-                return (
-                  <button
-                    key={addon.id}
-                    type="button"
-                    onClick={() => onAddonToggle(addon.id)}
-                    aria-pressed={isSelected}
-                    className={`flex min-h-[104px] items-start gap-3 rounded-xl border p-3 text-left transition-all outline-none focus-visible:ring-4 focus-visible:ring-emerald-300/60 ${
-                      isSelected
-                        ? "border-emerald-500 bg-emerald-50/90 shadow-md shadow-emerald-500/15 dark:border-emerald-500 dark:bg-emerald-950/30"
-                        : "border-zinc-200 bg-zinc-50 hover:border-emerald-300 hover:bg-white dark:border-zinc-700 dark:bg-zinc-950/35 dark:hover:border-emerald-700"
-                    }`}
-                  >
-                    <span className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-colors ${
-                      isSelected
-                        ? "bg-emerald-500 text-white"
-                        : "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
-                    }`}>
-                      <Icon className="h-4 w-4" aria-hidden />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className={`text-sm font-black leading-tight ${isSelected ? "text-emerald-800 dark:text-emerald-200" : "text-zinc-900 dark:text-zinc-100"}`}>
-                          {addonName}
-                        </p>
-                        <span className={`shrink-0 text-sm font-black ${isSelected ? "text-emerald-700 dark:text-emerald-300" : "text-zinc-800 dark:text-zinc-100"}`}>
-                          +${addon.price}
-                        </span>
-                      </div>
-                      <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">{addonDesc}</p>
-                    </div>
-                    {isSelected && (
-                      <span className="ml-1 mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white">
-                        <Check className="h-3.5 w-3.5" aria-hidden />
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-
-            {selectedAddons.length > 0 && (
-              <div className="mt-3 flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 dark:border-emerald-800/50 dark:bg-emerald-950/20">
+          {selectedAddons.length > 0 && (
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 dark:border-emerald-800/50 dark:bg-emerald-950/20">
+              <div className="flex items-center justify-between gap-3">
                 <span className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
-                  {lang === "es" ? "Extra por persona" : "Extra per person"}
+                  {lang === "es" ? "Extras seleccionados por persona" : "Selected add-ons per person"}
                 </span>
                 <span className="font-black text-emerald-800 dark:text-emerald-300">+${addonsPricePerPerson}</span>
               </div>
-            )}
-          </section>
+            </div>
+          )}
         </div>
 
         <div className="lg:sticky lg:top-24 lg:self-start">

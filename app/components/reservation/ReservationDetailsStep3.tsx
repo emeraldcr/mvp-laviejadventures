@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { KeyboardEvent, RefObject } from "react";
 import { Check, ShieldCheck } from "lucide-react";
-import type { TourTime } from "@/lib/reservation/types";
+import type { ReservationAddonDetails, TourTime } from "@/lib/reservation/types";
 import { ADDON_OPTIONS } from "@/lib/reservation/constants";
 
 type ReservationTranslations = typeof import("@/lib/translations").translations["es"]["reservation"];
@@ -17,6 +17,7 @@ interface ReservationDetailsStep3Props {
   tourTime: TourTime | null;
   tickets: number;
   selectedAddons: string[];
+  addonDetails: ReservationAddonDetails;
   subtotal: number;
   taxes: number;
   totalWithTaxes: number;
@@ -37,6 +38,7 @@ export default function ReservationDetailsStep3({
   tourTime,
   tickets,
   selectedAddons,
+  addonDetails,
   subtotal,
   taxes,
   totalWithTaxes,
@@ -65,12 +67,25 @@ export default function ReservationDetailsStep3({
             <p className="mb-1 text-sm font-semibold text-zinc-600 dark:text-zinc-400">
               {lang === "es" ? "Servicios extra:" : "Extra services:"}
             </p>
-            {ADDON_OPTIONS.filter((a) => selectedAddons.includes(a.id)).map((addon) => (
-              <div key={addon.id} className="mb-1 flex justify-between text-sm">
-                <span className="text-zinc-700 dark:text-zinc-300">{lang === "es" ? addon.nameEs : addon.nameEn}</span>
-                <span>+${addon.price} / {tr.perPerson}</span>
-              </div>
-            ))}
+            {ADDON_OPTIONS.filter((a) => selectedAddons.includes(a.id)).map((addon) => {
+              const detailLines = getAddonDetailLines(addon.id, addonDetails, lang);
+
+              return (
+                <div key={addon.id} className="mb-3 rounded-xl border border-zinc-200 bg-white p-3 text-sm dark:border-zinc-700 dark:bg-zinc-900">
+                  <div className="flex justify-between gap-3">
+                    <span className="font-bold text-zinc-800 dark:text-zinc-100">{lang === "es" ? addon.nameEs : addon.nameEn}</span>
+                    <span className="shrink-0 font-bold">+${addon.price} / {tr.perPerson}</span>
+                  </div>
+                  {detailLines.length > 0 && (
+                    <ul className="mt-2 space-y-1 text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                      {detailLines.map((line) => (
+                        <li key={line}>{line}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
         <div className="mb-2 flex justify-between"><span>{tr.subtotalLabel}</span><span>${subtotal.toFixed(2)}</span></div>
@@ -114,4 +129,39 @@ export default function ReservationDetailsStep3({
       </div>
     </>
   );
+}
+
+function getAddonDetailLines(addonId: string, details: ReservationAddonDetails, lang: "es" | "en") {
+  if (addonId === "alojamiento") {
+    return [
+      details.lodgingType ? `${lang === "es" ? "Tipo" : "Type"}: ${formatLodgingType(details.lodgingType, lang)}` : null,
+      details.lodgingNights ? `${lang === "es" ? "Noches" : "Nights"}: ${details.lodgingNights}` : null,
+      details.lodgingRoom ? `${lang === "es" ? "Cuarto" : "Room"}: ${details.lodgingRoom}` : null,
+    ].filter(Boolean) as string[];
+  }
+
+  if (addonId === "almuerzo") {
+    return [
+      details.restaurantMeal ? `${lang === "es" ? "Comida" : "Meal"}: ${details.restaurantMeal}` : null,
+      details.restaurantProtein ? `${lang === "es" ? "Proteína" : "Protein"}: ${details.restaurantProtein}` : null,
+      details.restaurantNotes ? `${lang === "es" ? "Notas" : "Notes"}: ${details.restaurantNotes}` : null,
+    ].filter(Boolean) as string[];
+  }
+
+  if (addonId === "transporte") {
+    return [
+      details.transportType ? `${lang === "es" ? "Tipo" : "Type"}: ${details.transportType === "private" ? "Private 4x4" : "Shared shuttle"}` : null,
+      details.pickupLocation ? `Pickup: ${details.pickupLocation}` : null,
+      details.dropoffLocation ? `Drop-off: ${details.dropoffLocation}` : null,
+      details.transportNotes ? `${lang === "es" ? "Notas" : "Notes"}: ${details.transportNotes}` : null,
+    ].filter(Boolean) as string[];
+  }
+
+  return [];
+}
+
+function formatLodgingType(type: NonNullable<ReservationAddonDetails["lodgingType"]>, lang: "es" | "en") {
+  if (type === "hostel") return lang === "es" ? "Hostal" : "Hostel";
+  if (type === "hotel") return "Hotel";
+  return lang === "es" ? "Cabina" : "Cabin";
 }

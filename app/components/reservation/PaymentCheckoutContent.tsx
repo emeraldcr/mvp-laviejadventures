@@ -78,7 +78,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
   const { lang } = useLanguage();
   const tr = translations[lang].payment;
 
-  const { name, email, phone, tickets, total, date, dateIso, tourTime, packageId, tourPackage, tourSlug, tourName, packagePrice, addons, addonIds } = orderDetails;
+  const { name, email, phone, tickets, total, date, dateIso, tourTime, packageId, tourPackage, tourSlug, tourName, packagePrice, addons, addonIds, addonDetails, specialRequests } = orderDetails;
 
   const checkoutKey = useMemo(
     () => [
@@ -95,9 +95,11 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
       tourName,
       packagePrice,
       (addonIds ?? []).join(","),
+      JSON.stringify(addonDetails ?? {}),
+      specialRequests ?? "",
       lang,
     ].join("|"),
-    [addonIds, date, dateIso, email, lang, name, packageId, packagePrice, phone, tickets, total, tourName, tourPackage, tourSlug, tourTime],
+    [addonDetails, addonIds, date, dateIso, email, lang, name, packageId, packagePrice, phone, specialRequests, tickets, total, tourName, tourPackage, tourSlug, tourTime],
   );
 
   const bookingAnalyticsMetadata = useMemo(
@@ -110,11 +112,15 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
       tourSlug,
       tourName,
       packagePrice,
+      addons,
+      addonIds,
+      addonDetails,
+      specialRequests,
       amount: total,
       currency: "USD",
       language: lang,
     }),
-    [date, dateIso, lang, packageId, packagePrice, tickets, total, tourName, tourPackage, tourSlug, tourTime],
+    [addonDetails, addonIds, addons, date, dateIso, lang, packageId, packagePrice, specialRequests, tickets, total, tourName, tourPackage, tourSlug, tourTime],
   );
 
   const paypalLoadError = paypalLoadFailure?.checkoutKey === checkoutKey ? paypalLoadFailure.message : null;
@@ -210,6 +216,8 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
                 tourName,
                 addons,
                 addonIds,
+                addonDetails,
+                specialRequests,
                 language: lang,
                 countryCode: buyerCountryCode,
               }),

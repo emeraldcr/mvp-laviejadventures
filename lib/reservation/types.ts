@@ -15,12 +15,29 @@ export type TourPackage = string;
 
 export interface AddOnOption {
   id: string;
+  category: "food" | "lodging" | "transport" | "service" | "media";
   nameEs: string;
   nameEn: string;
   descriptionEs: string;
   descriptionEn: string;
   price: number;
+  priceNoteEs: string;
+  priceNoteEn: string;
+  configurable?: boolean;
   icon: LucideIcon;
+}
+
+export interface ReservationAddonDetails {
+  lodgingType?: "hostel" | "hotel" | "cabin";
+  lodgingNights?: number;
+  lodgingRoom?: string;
+  restaurantMeal?: string;
+  restaurantProtein?: string;
+  restaurantNotes?: string;
+  transportType?: "shared" | "private";
+  pickupLocation?: string;
+  dropoffLocation?: string;
+  transportNotes?: string;
 }
 
 export interface ReservationFormState {
@@ -50,6 +67,7 @@ export interface ReservationOrderPayload {
   addons: string[];
   addonIds: string[];
   addonsPrice: number;
+  addonDetails?: ReservationAddonDetails;
 }
 
 export interface ReservationDetailsProps {

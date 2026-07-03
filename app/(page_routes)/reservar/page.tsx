@@ -8,6 +8,7 @@ import { CalendarProvider } from "@/lib/CalendarContext";
 import { useLanguage } from "@/lib/LanguageContext";
 import { useReservationData } from "@/lib/hooks/useReservationData";
 import BookingSection from "@/app/components/sections/BookingSection";
+import { MobileBottomNav } from "@/app/components/navigation/SiteNavigation";
 import { getTourImage } from "@/lib/tour-display";
 
 function getInitialTourSlug() {
@@ -160,6 +161,7 @@ export default function ReservarPage() {
         </section>
 
         <BookingSection selectedTourSlug={bookingTourSlug} />
+        <MobileBottomNav />
       </main>
     </CalendarProvider>
   );

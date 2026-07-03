@@ -13,6 +13,7 @@ import type {
   TourTime,
   BookingStepId,
   ReservationDetailsProps,
+  ReservationAddonDetails,
 } from "@/lib/reservation/types";
 import useReservationForm from "../../hooks/useReservationForm";
 import { PHONE_COUNTRIES as ALL_PHONE_COUNTRIES } from "@/app/components/reservation/phoneCountries";
@@ -56,6 +57,7 @@ export default function ReservationDetails({
 
   const [tourTime, setTourTime] = useState<TourTime | null>(null);
   const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
+  const [addonDetails, setAddonDetails] = useState<ReservationAddonDetails>({});
   const [currentStep, setCurrentStep] = useState<BookingStepId>(1);
   const currentStepRef = useRef<BookingStepId>(1);
   const stepEnteredAtRef = useRef(0);
@@ -180,6 +182,40 @@ export default function ReservationDetails({
     [selectedAddons]
   );
 
+  const addonDetailsSummary = useMemo(() => {
+    const lines: string[] = [];
+
+    if (selectedAddons.includes("alojamiento")) {
+      lines.push([
+        lang === "es" ? "Hospedaje" : "Lodging",
+        addonDetails.lodgingType,
+        addonDetails.lodgingNights ? `${addonDetails.lodgingNights} night(s)` : null,
+        addonDetails.lodgingRoom,
+      ].filter(Boolean).join(": "));
+    }
+
+    if (selectedAddons.includes("almuerzo")) {
+      lines.push([
+        lang === "es" ? "Restaurante" : "Restaurant",
+        addonDetails.restaurantMeal,
+        addonDetails.restaurantProtein,
+        addonDetails.restaurantNotes,
+      ].filter(Boolean).join(": "));
+    }
+
+    if (selectedAddons.includes("transporte")) {
+      lines.push([
+        lang === "es" ? "Transporte" : "Transport",
+        addonDetails.transportType,
+        addonDetails.pickupLocation ? `Pickup ${addonDetails.pickupLocation}` : null,
+        addonDetails.dropoffLocation ? `Drop-off ${addonDetails.dropoffLocation}` : null,
+        addonDetails.transportNotes,
+      ].filter(Boolean).join(": "));
+    }
+
+    return lines.filter((line) => line.includes(":")).join(" | ");
+  }, [addonDetails, lang, selectedAddons]);
+
   const pricePerPerson = basePriceUSD + addonsPricePerPerson;
 
   const { subtotalRaw, taxesRaw, totalWithTaxesRaw } = useMemo(() => {
@@ -290,6 +326,8 @@ export default function ReservationDetails({
     hasSelectedTime: Boolean(tourTime),
     selectedTime: tourTime,
     selectedAddons,
+    addonDetails,
+    addonDetailsSummary,
     addonsPricePerPerson,
     pricePerPerson,
     subtotal: subtotalRaw,
@@ -306,6 +344,8 @@ export default function ReservationDetails({
     slots,
     tourTime,
     selectedAddons,
+    addonDetails,
+    addonDetailsSummary,
     addonsPricePerPerson,
     pricePerPerson,
     subtotalRaw,
@@ -546,6 +586,9 @@ export default function ReservationDetails({
     });
 
     const selectedAddonObjects = ADDON_OPTIONS.filter((a) => selectedAddons.includes(a.id));
+    const mergedSpecialRequests = [formState.specialRequests.trim(), addonDetailsSummary]
+      .filter(Boolean)
+      .join("\n\nAdd-ons: ");
 
     onReserve({
       tickets,
@@ -555,7 +598,7 @@ export default function ReservationDetails({
       name: formState.name,
       email: formState.email,
       phone: `${formState.phoneCode} ${formState.phoneNumber}`,
-      specialRequests: formState.specialRequests,
+      specialRequests: mergedSpecialRequests,
       tourTime,
       packageId: "entrada-general",
       tourPackage: lang === "es" ? "Entrada General" : "General Entry",
@@ -565,6 +608,7 @@ export default function ReservationDetails({
       addons: selectedAddonObjects.map((a) => (lang === "es" ? a.nameEs : a.nameEn)),
       addonIds: selectedAddonObjects.map((a) => a.id),
       addonsPrice: addonsPricePerPerson * tickets,
+      addonDetails,
     });
   }, [
     isFormValid,
@@ -579,6 +623,8 @@ export default function ReservationDetails({
     selectedTourName,
     basePriceUSD,
     selectedAddons,
+    addonDetails,
+    addonDetailsSummary,
     addonsPricePerPerson,
     lang,
     trackBlockedStep,
@@ -793,6 +839,7 @@ export default function ReservationDetails({
             tickets={tickets}
             slots={slots}
             selectedAddons={selectedAddons}
+            addonDetails={addonDetails}
             addonsPricePerPerson={addonsPricePerPerson}
             basePriceUSD={basePriceUSD}
             pricePerPerson={pricePerPerson}
@@ -805,6 +852,7 @@ export default function ReservationDetails({
             onTicketsChange={handleTicketsChange}
             onStep1Enter={handleStep1Enter}
             onAddonToggle={handleAddonToggle}
+            onAddonDetailsChange={setAddonDetails}
             tr={tr}
             lang={lang}
           />
@@ -856,6 +904,7 @@ export default function ReservationDetails({
           tourTime={tourTime}
           tickets={tickets}
           selectedAddons={selectedAddons}
+          addonDetails={addonDetails}
           subtotal={subtotal}
           taxes={taxes}
           totalWithTaxes={totalWithTaxes}

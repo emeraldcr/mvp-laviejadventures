@@ -237,6 +237,17 @@ const es = {
       "Vive Ciudad Esmeralda como una travesía inolvidable: recorremos senderos de bosque nuboso en un corredor biológico entre Monteverde y la montaña sagrada del Parque Nacional del Agua Juan Castro Blanco, donde naturaleza, historia y crecimiento personal se unen en cada paso.",
     bookWhatsApp: "Reservar por WhatsApp",
     callNow: "Llamar ahora",
+    quickBookingTitle: "¿Listo para reservar?",
+    quickBookingDescription:
+      "Te guiamos paso a paso para confirmar tu tour, revisar disponibilidad y preparar tu experiencia con seguridad.",
+    quickBookingPrimary: "Reservar ahora",
+    quickBookingSecondary: "Hablar por WhatsApp",
+    bookingStepsTitle: "Reserva en 3 pasos",
+    bookingSteps: [
+      "Elige tu tour y fecha ideal para tu viaje.",
+      "Confirma disponibilidad y detalles por WhatsApp.",
+      "Recibe recomendaciones y disfruta la aventura con tranquilidad.",
+    ],
     mainToursTitle: "Tours Principales",
     ratesTitle: "Tarifas y condiciones",
     ratesText1:
@@ -565,6 +576,17 @@ const en = {
       "Experience Ciudad Esmeralda as an unforgettable journey: we explore cloud-forest trails in a biological corridor between Monteverde and the sacred mountain of Juan Castro Blanco National Water Park, where nature, history, and personal growth come together.",
     bookWhatsApp: "Book via WhatsApp",
     callNow: "Call now",
+    quickBookingTitle: "Ready to book?",
+    quickBookingDescription:
+      "We guide you step by step to confirm your tour, check availability, and prepare your experience safely.",
+    quickBookingPrimary: "Book now",
+    quickBookingSecondary: "Chat on WhatsApp",
+    bookingStepsTitle: "Book in 3 steps",
+    bookingSteps: [
+      "Pick the tour and date that fits your trip.",
+      "Confirm availability and details through WhatsApp.",
+      "Receive recommendations and enjoy the adventure with peace of mind.",
+    ],
     mainToursTitle: "Main Tours",
     ratesTitle: "Rates & Conditions",
     ratesText1:

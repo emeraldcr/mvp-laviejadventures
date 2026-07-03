@@ -25,6 +25,7 @@ type OrderPayload = {
   addons?: string[];
   addonIds?: string[];
   addonsPrice?: number;
+  addonDetails?: import("@/lib/reservation/types").ReservationAddonDetails;
 };
 
 type Props = {

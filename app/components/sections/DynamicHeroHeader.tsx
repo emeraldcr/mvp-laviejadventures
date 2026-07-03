@@ -12,52 +12,30 @@ import {
 import Image from "next/image";
 import {
   ArrowRight,
-  CalendarCheck,
   Check,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
   Clock3,
-  Compass,
-  GalleryHorizontal,
-  Globe,
-  Home,
-  Info as InfoIcon,
   MapPin,
-  MessageCircle,
   ShieldCheck,
   Sparkles,
   Zap,
 } from "lucide-react";
-import { usePathname } from "next/navigation";
 import Link from "next/link";
 import useSWR from "swr";
 import { fetcher } from "@/lib/helpers/fetcher";
 import { useInterval } from "@/lib/hooks/useInterval";
 import { useLanguage } from "@/lib/LanguageContext";
-import { translations } from "@/lib/translations";
 import { principalContent } from "@/lib/constants/principal";
+import { MobileBottomNav, SiteHeader } from "@/app/components/navigation/SiteNavigation";
 import { useReservationData } from "@/lib/hooks/useReservationData";
 import { getTourImage } from "@/lib/tour-display";
 import type { TourSummary } from "@/lib/types/index";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-interface NavLinkItem {
-  href: string;
-  label: string;
-  variant?: "default" | "primary";
-  external?: boolean;
-}
-
-interface NavGroup {
-  label: string;
-  links: NavLinkItem[];
-}
-
 // ─── Constants ────────────────────────────────────────────────────────────────
 const SCROLL_THRESHOLD = 60;
 const SLIDE_DURATION = 5000;
-const WHATSAPP_RESERVAS_HREF = "https://wa.me/50662332535";
 const GALLERY_STRIP = [
   "/image/IMG_6810.jpg", "/image/IMG_6812.jpg", "/image/IMG_4671.jpg",
   "/image/IMG_4257.jpg", "/image/IMG_6813.jpg", "/image/IMG_4197.jpg",
@@ -87,179 +65,6 @@ const useScrollY = () => {
   }, []);
   return scrollY;
 };
-
-// ─── NavLink (desktop only) ───────────────────────────────────────────────────
-const NavLink = memo<NavLinkItem & { onClick?: () => void; className?: string }>(
-  ({ href, label, variant = "default", external, onClick, className = "" }) => {
-    const pathname = usePathname();
-    const isAnchor = href.startsWith("/#");
-    const isActive = !isAnchor && pathname === href;
-    const base = "relative overflow-hidden transition-all duration-300";
-    const style =
-      variant === "primary"
-        ? "emerald-wave-button px-5 py-2 rounded-full font-semibold border border-emerald-200/[0.45] bg-emerald-300/[0.15] text-white backdrop-blur-xl shadow-[0_8px_26px_rgba(6,78,59,0.28),inset_0_1px_0_rgba(255,255,255,0.28)] hover:-translate-y-0.5 hover:border-emerald-100/80 hover:bg-emerald-200/25 hover:text-white hover:shadow-[0_12px_34px_rgba(16,185,129,0.28),inset_0_1px_0_rgba(255,255,255,0.42)]"
-        : `rounded-full px-3 py-1.5 hover:bg-emerald-300/10 hover:text-emerald-100 ${isActive ? "bg-emerald-300/10 text-emerald-100" : "text-white"}`;
-    const linkProps = external ? { target: "_blank", rel: "noopener noreferrer" } : {};
-    return (
-      <Link href={href} {...linkProps} className={`${base} ${style} ${className}`} onClick={onClick}>
-        {label}
-      </Link>
-    );
-  }
-);
-NavLink.displayName = "NavLink";
-
-const DesktopNavGroup = memo<{ item: NavGroup }>(({ item }) => {
-  const [open, setOpen] = useState(false);
-  const groupRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const handlePointerDown = (event: MouseEvent) => {
-      if (!groupRef.current?.contains(event.target as Node)) setOpen(false);
-    };
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
-    };
-    document.addEventListener("mousedown", handlePointerDown);
-    document.addEventListener("keydown", handleEscape);
-    return () => {
-      document.removeEventListener("mousedown", handlePointerDown);
-      document.removeEventListener("keydown", handleEscape);
-    };
-  }, [open]);
-
-  return (
-    <div ref={groupRef} className="relative" onMouseEnter={() => setOpen(true)}>
-      <button
-        type="button"
-        onClick={() => setOpen((prev) => !prev)}
-        className="emerald-wave-button inline-flex items-center gap-1.5 rounded-full border border-emerald-100/20 bg-white/[0.08] px-3 py-1.5 text-sm font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-100/[0.45] hover:bg-emerald-300/[0.15] hover:text-emerald-50"
-        aria-expanded={open}
-      >
-        {item.label}
-        <ChevronDown size={14} className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
-      </button>
-      {open && (
-        <div className="absolute left-0 top-full z-50 min-w-52 pt-2">
-          <div className="rounded-2xl border border-emerald-100/20 bg-teal-950/[0.88] p-2 shadow-[0_24px_70px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-2xl">
-            {item.links.map((link) => (
-              <NavLink
-                key={link.href}
-                {...link}
-                className="block rounded-xl px-3 py-2 text-sm font-medium hover:bg-white/10"
-                onClick={() => setOpen(false)}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-});
-DesktopNavGroup.displayName = "DesktopNavGroup";
-
-// ─── LangToggle ───────────────────────────────────────────────────────────────
-const LangToggle = memo<{ onClick: () => void; currentLang: string; compact?: boolean }>(
-  ({ onClick, currentLang, compact }) => (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={currentLang === "es" ? "Switch to English" : "Cambiar a Español"}
-      className={[
-        "emerald-wave-button rounded-full border border-emerald-100/35 bg-white/10 font-bold text-white",
-        "shadow-[0_8px_24px_rgba(6,78,59,0.22),inset_0_1px_0_rgba(255,255,255,0.2)] backdrop-blur-xl",
-        "transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-100/70 hover:bg-emerald-100/20",
-        compact
-          ? "flex items-center gap-1 px-2.5 py-1.5 text-xs"
-          : "min-w-[40px] px-3 py-1.5 text-center text-sm",
-      ].join(" ")}
-    >
-      {compact && <Globe size={12} />}
-      {currentLang === "es" ? "EN" : "ES"}
-    </button>
-  )
-);
-LangToggle.displayName = "LangToggle";
-
-// ─── Mobile Bottom Tab Bar ────────────────────────────────────────────────────
-const MobileBottomNav = memo(() => {
-  const pathname = usePathname() ?? "";
-  const { lang } = useLanguage();
-  const tr = translations[lang].nav;
-
-  const tabs = [
-    { href: "/",         label: lang === "es" ? "Inicio" : "Home",   Icon: Home },
-    { href: "/tours",    label: tr.tours,                              Icon: Compass },
-    { href: "/reservar", label: lang === "es" ? "Reservar" : "Book", Icon: CalendarCheck, isPrimary: true },
-    { href: "/galeria",  label: tr.gallery,                            Icon: GalleryHorizontal },
-    { href: "/info",     label: "Info",                                Icon: InfoIcon },
-  ];
-
-  return (
-    <nav className="fixed inset-x-0 bottom-0 z-50 md:hidden">
-      <div className="absolute inset-0 border-t border-emerald-100/20 bg-teal-950/95 shadow-[0_-6px_32px_rgba(0,0,0,0.55)] backdrop-blur-2xl" />
-
-      <div
-        className="relative flex items-stretch"
-        style={{ height: "calc(4rem + env(safe-area-inset-bottom, 0px))", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
-      >
-        {tabs.map(({ href, label, Icon, isPrimary }) => {
-          const isActive =
-            href === "/"
-              ? pathname === "/"
-              : href.startsWith("/#")
-              ? false
-              : pathname.startsWith(href);
-
-          if (isPrimary) {
-            return (
-              <Link
-                key={href}
-                href={href}
-                className="flex flex-1 flex-col items-center justify-end pb-2"
-              >
-                <span className="mb-1 flex h-12 w-12 -translate-y-3 items-center justify-center rounded-full bg-teal-500 shadow-[0_4px_24px_rgba(20,184,166,0.65),0_0_0_3px_rgba(2,44,34,0.95),0_0_0_5px_rgba(20,184,166,0.22)]">
-                  <Icon size={22} className="text-white" strokeWidth={2.5} />
-                </span>
-                <span className="text-[10px] font-bold leading-none text-teal-400 -mt-1">
-                  {label}
-                </span>
-              </Link>
-            );
-          }
-
-          return (
-            <Link
-              key={href}
-              href={href}
-              className="relative flex flex-1 flex-col items-center justify-center gap-1 py-2"
-            >
-              {isActive && (
-                <span className="absolute inset-x-1.5 top-1 h-8 rounded-xl bg-teal-500/[0.13]" />
-              )}
-              <Icon
-                size={22}
-                strokeWidth={isActive ? 2.5 : 1.75}
-                className={`relative transition-all duration-150 ${
-                  isActive ? "text-teal-400 drop-shadow-[0_0_6px_rgba(45,212,191,0.55)]" : "text-white/35"
-                }`}
-              />
-              <span
-                className={`relative text-[10px] font-medium leading-none transition-colors duration-150 ${
-                  isActive ? "text-teal-400 font-bold" : "text-white/35"
-                }`}
-              >
-                {label}
-              </span>
-            </Link>
-          );
-        })}
-      </div>
-    </nav>
-  );
-});
-MobileBottomNav.displayName = "MobileBottomNav";
 
 // ─── HeroBookingWidget ────────────────────────────────────────────────────────
 const HeroBookingWidget = memo<{ onSelectTour?: (slug: string) => void }>(
@@ -393,116 +198,6 @@ const getPriceLabel = (tour: TourSummary | undefined, isEs: boolean) => ({
 });
 
 const getTourTitle = (tour: TourSummary, isEs: boolean) => (isEs ? tour.titleEs : tour.titleEn);
-
-// ─── Header ───────────────────────────────────────────────────────────────────
-const Header = memo<{ isScrolled: boolean }>(({ isScrolled }) => {
-  const { lang, toggle } = useLanguage();
-  const tr = translations[lang].nav;
-  const copy = principalContent[lang].header;
-  const pathname = usePathname();
-
-  const navLinks: NavLinkItem[] = [
-    { href: "/info",    label: tr.info },
-    { href: "/tours",   label: tr.tours },
-    { href: "/galeria", label: tr.gallery },
-    { href: "/tiempo",  label: copy.forecast },
-  ];
-
-  return (
-    <header
-      className={[
-        "fixed inset-x-0 top-0 z-50",
-        "border-b border-emerald-100/15 backdrop-blur-2xl",
-        "transition-all duration-300",
-        isScrolled
-          ? "bg-[linear-gradient(120deg,rgba(6,78,59,0.92),rgba(4,47,46,0.85)_48%,rgba(5,150,105,0.40))] shadow-[0_14px_48px_rgba(0,0,0,0.48),inset_0_1px_0_rgba(255,255,255,0.12)]"
-          : "bg-[linear-gradient(120deg,rgba(6,78,59,0.48),rgba(4,47,46,0.34)_50%,rgba(16,185,129,0.18))] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]",
-      ].join(" ")}
-    >
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-emerald-200/45 to-transparent" />
-
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 md:px-8 h-14 md:h-20">
-
-        {/* Logo */}
-        <Link href="/" className="group/logo flex items-center gap-2.5">
-          <span className="emerald-logo-shell relative grid place-items-center rounded-xl md:rounded-2xl border border-emerald-100/25 bg-white/10 p-1 md:p-1.5 shadow-[0_12px_34px_rgba(0,0,0,0.32),inset_0_1px_0_rgba(255,255,255,0.24)] backdrop-blur-xl transition-all duration-500 group-hover/logo:-translate-y-0.5 group-hover/logo:border-emerald-100/[0.55] group-hover/logo:bg-emerald-100/[0.16]">
-            <Image
-              src="/logo2.jpg"
-              alt="La Vieja Adventures"
-              width={52}
-              height={52}
-              className="w-9 h-9 md:w-[52px] md:h-[52px] rounded-lg md:rounded-xl object-cover transition-all duration-500 group-hover/logo:scale-[1.03]"
-              priority
-            />
-          </span>
-          <span className="font-black tracking-tight text-white leading-tight">
-            <span className="block text-lg md:hidden">La Vieja</span>
-            <span className="hidden md:block text-2xl brand-glow-text">La Vieja Adventures</span>
-          </span>
-        </Link>
-
-        {/* Desktop nav — direct links, no hidden dropdown */}
-        <nav className="hidden md:flex items-center gap-1 text-sm font-medium">
-          {navLinks.map((link) => {
-            const isActive = pathname === link.href;
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={[
-                  "group/nl relative flex flex-col items-center rounded-full px-3.5 py-2 transition-all duration-200",
-                  isActive
-                    ? "bg-emerald-300/10 text-emerald-100"
-                    : "text-white/75 hover:bg-emerald-300/[0.08] hover:text-white",
-                ].join(" ")}
-              >
-                {link.label}
-                <span
-                  className={[
-                    "absolute bottom-1.5 left-1/2 -translate-x-1/2 h-0.5 rounded-full bg-teal-400 transition-all duration-200",
-                    isActive
-                      ? "w-4 opacity-100"
-                      : "w-0 opacity-0 group-hover/nl:w-3 group-hover/nl:opacity-50",
-                  ].join(" ")}
-                />
-              </Link>
-            );
-          })}
-
-          <div className="mx-2 h-5 w-px bg-white/15" />
-
-          <a
-            href={WHATSAPP_RESERVAS_HREF}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={lang === "es" ? "Hablar por WhatsApp" : "Chat on WhatsApp"}
-            className="emerald-wave-button inline-flex items-center gap-2 rounded-full border border-emerald-100/25 bg-white/[0.08] px-3.5 py-2 text-sm font-black text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-100/60 hover:bg-emerald-300/15 hover:text-emerald-50"
-          >
-            <MessageCircle size={16} className="text-emerald-200" />
-            WhatsApp
-          </a>
-          <NavLink href="/reservar" label={tr.reserve} variant="primary" />
-          <LangToggle onClick={toggle} currentLang={lang} />
-        </nav>
-
-        {/* Mobile: language toggle only (nav is at bottom) */}
-        <div className="flex items-center gap-2 md:hidden">
-          <a
-            href={WHATSAPP_RESERVAS_HREF}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={lang === "es" ? "Hablar por WhatsApp" : "Chat on WhatsApp"}
-            className="emerald-wave-button flex h-9 w-9 items-center justify-center rounded-full border border-emerald-100/30 bg-white/10 text-emerald-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.16)] backdrop-blur-xl transition hover:border-emerald-100/60 hover:bg-emerald-300/15"
-          >
-            <MessageCircle size={17} />
-          </a>
-          <LangToggle onClick={toggle} currentLang={lang} compact />
-        </div>
-      </div>
-    </header>
-  );
-});
-Header.displayName = "Header";
 
 // ─── HeroCarousel ─────────────────────────────────────────────────────────────
 interface HeroCarouselProps {
@@ -1110,7 +805,7 @@ export default function DynamicHeroHeader({ children, showHeroSlider = true, onS
 
   return (
     <>
-      <Header isScrolled={isScrolled} />
+      <SiteHeader isScrolled={isScrolled} />
       {showHeroSlider && (
         <section className="relative overflow-hidden">
           <MainMosaicHero />

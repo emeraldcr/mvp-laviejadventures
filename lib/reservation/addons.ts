@@ -4,45 +4,75 @@
 
 export interface AddOnData {
   id: string;
+  category: "food" | "lodging" | "transport" | "service" | "media";
   nameEs: string;
   nameEn: string;
   descriptionEs: string;
   descriptionEn: string;
   price: number;
+  priceNoteEs: string;
+  priceNoteEn: string;
+  configurable?: boolean;
 }
 
 export const ADDON_DATA: AddOnData[] = [
   {
     id: "almuerzo",
-    nameEs: "Almuerzo Típico",
-    nameEn: "Traditional Lunch",
-    descriptionEs: "Casado costarricense (pollo, res o vegetariano) con bebida natural y postre.",
-    descriptionEn: "Costa Rican casado (chicken, beef or vegetarian) with natural drink and dessert.",
-    price: 15,
+    category: "food",
+    nameEs: "Restaurante La Vieja",
+    nameEn: "La Vieja Restaurant",
+    descriptionEs: "Menú local con casado, opción vegetariana, bebida natural y selección de comida para el grupo.",
+    descriptionEn: "Local menu with casado, vegetarian option, natural drink, and group food selection.",
+    price: 18,
+    priceNoteEs: "por persona, desde",
+    priceNoteEn: "per person, from",
+    configurable: true,
   },
   {
     id: "guia-privado",
+    category: "service",
     nameEs: "Guía Privado",
     nameEn: "Private Guide",
-    descriptionEs: "Guía exclusivo para tu grupo con atención personalizada y ritmo flexible.",
+    descriptionEs: "Guía exclusivo para tu grupo con atención personalizada, ritmo flexible y paradas a gusto.",
     descriptionEn: "Exclusive guide for your group with personalized attention and flexible pace.",
-    price: 25,
+    price: 35,
+    priceNoteEs: "por persona",
+    priceNoteEn: "per person",
   },
   {
     id: "alojamiento",
-    nameEs: "Alojamiento",
+    category: "lodging",
+    nameEs: "Hospedaje",
     nameEn: "Lodging",
-    descriptionEs: "Noche de hospedaje en alojamiento local cerca de la experiencia.",
-    descriptionEn: "One night stay at local lodging near the experience.",
-    price: 40,
+    descriptionEs: "Solicitud de hostal, hotel o cabina cerca de San Vicente para dormir cerquita de la aventura.",
+    descriptionEn: "Hostel, hotel, or cabin request near San Vicente so you can stay close to the adventure.",
+    price: 55,
+    priceNoteEs: "por persona/noche, desde",
+    priceNoteEn: "per person/night, from",
+    configurable: true,
   },
   {
     id: "transporte",
+    category: "transport",
     nameEs: "Transporte",
     nameEn: "Transport",
-    descriptionEs: "Traslado de ida y vuelta desde puntos de encuentro designados.",
-    descriptionEn: "Round-trip transfer from designated meeting points.",
-    price: 15,
+    descriptionEs: "Traslado en Costa Rica con selección de pickup y drop-off para coordinar la ruta segura.",
+    descriptionEn: "Costa Rica transfer with pickup and drop-off selection for safer route coordination.",
+    price: 30,
+    priceNoteEs: "por persona, desde",
+    priceNoteEn: "per person, from",
+    configurable: true,
+  },
+  {
+    id: "fotos",
+    category: "media",
+    nameEs: "Fotos de Aventura",
+    nameEn: "Adventure Photos",
+    descriptionEs: "Paquete digital con momentos clave de la experiencia para que usted disfrute sin andar pendiente.",
+    descriptionEn: "Digital photo package with key moments from the experience so you can stay present.",
+    price: 20,
+    priceNoteEs: "por persona",
+    priceNoteEn: "per person",
   },
 ];
 

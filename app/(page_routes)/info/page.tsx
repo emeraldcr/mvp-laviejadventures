@@ -5,19 +5,21 @@ import {
   ArrowRight,
   Bird,
   CalendarClock,
+  CheckCircle2,
   Compass,
   ExternalLink,
   Mail,
   MapPin,
+  MessageCircle,
   Mountain,
   Phone,
   ShieldCheck,
   Sparkles,
   TreePine,
-  CheckCircle2,
 } from "lucide-react";
 import React from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useLanguage } from "@/lib/LanguageContext";
 import { translations } from "@/lib/translations";
 
@@ -118,6 +120,7 @@ const whyColors = [
   "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300",
   "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
 ];
+const whatsappHref = "https://wa.me/50662332535?text=Hola%2C%20quiero%20reservar%20un%20tour%20en%20La%20Vieja%20Adventures.%20Me%20pueden%20ayudar%20con%20la%20disponibilidad%20y%20los%20detalles%3F";
 
 export default function InfoPage() {
   const { lang } = useLanguage();
@@ -163,22 +166,24 @@ export default function InfoPage() {
               </p>
             </div>
 
-            <div className="flex shrink-0 flex-col gap-3 md:min-w-[220px]">
+            <div className="flex shrink-0 flex-col gap-3 rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur-sm md:min-w-[260px]">
+              <p className="text-sm font-semibold text-white">{tr.quickBookingTitle}</p>
+              <p className="text-sm leading-relaxed text-emerald-50">{tr.quickBookingDescription}</p>
+              <Link
+                href="/reservar"
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-6 py-3 text-sm font-bold text-emerald-700 shadow-lg shadow-black/20 transition hover:bg-emerald-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              >
+                {tr.quickBookingPrimary}
+                <ArrowRight size={16} />
+              </Link>
               <a
-                href="https://wa.me/50662332535"
+                href={whatsappHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-6 py-4 text-sm font-bold text-emerald-700 shadow-lg shadow-black/20 transition hover:bg-emerald-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/30 bg-white/10 px-6 py-3 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
               >
-                {tr.bookWhatsApp}
-                <ArrowRight size={16} />
-              </a>
-              <a
-                href="tel:+50686430807"
-                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/30 bg-white/10 px-6 py-4 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-              >
-                <Phone size={16} />
-                {tr.callNow}
+                <MessageCircle size={16} />
+                {tr.quickBookingSecondary}
               </a>
             </div>
           </div>
@@ -222,6 +227,50 @@ export default function InfoPage() {
               <p>{tr.ratesText3}</p>
             </div>
           </article>
+        </section>
+
+        <section className="rounded-3xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-amber-50 p-6 shadow-sm dark:border-emerald-900/40 dark:from-emerald-950/50 dark:via-zinc-950 dark:to-amber-950/20 md:p-8">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-2xl space-y-2">
+              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-emerald-700 dark:text-emerald-300">
+                {tr.bookingStepsTitle}
+              </p>
+              <h2 className="text-2xl font-bold text-zinc-900 dark:text-white">
+                {tr.quickBookingTitle}
+              </h2>
+              <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
+                {tr.quickBookingDescription}
+              </p>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Link
+                href="/reservar"
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700"
+              >
+                {tr.quickBookingPrimary}
+                <ArrowRight size={16} />
+              </Link>
+              <a
+                href={whatsappHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-emerald-200 bg-white px-5 py-3 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-50 dark:border-emerald-900/40 dark:bg-zinc-950 dark:text-emerald-300"
+              >
+                <MessageCircle size={16} />
+                {tr.quickBookingSecondary}
+              </a>
+            </div>
+          </div>
+          <div className="mt-6 grid gap-3 md:grid-cols-3">
+            {tr.bookingSteps.map((step, index) => (
+              <div key={step} className="rounded-2xl border border-white/70 bg-white/80 p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/70">
+                <div className="mb-3 inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-600 text-sm font-bold text-white">
+                  {index + 1}
+                </div>
+                <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">{step}</p>
+              </div>
+            ))}
+          </div>
         </section>
 
         {/* Story Section */}
@@ -297,6 +346,13 @@ export default function InfoPage() {
             <h2 className="mb-4 text-xl font-bold text-zinc-900 dark:text-white">
               {tr.contactTitle}
             </h2>
+            <Link
+              href="/reservar"
+              className="mb-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700"
+            >
+              {tr.quickBookingPrimary}
+              <ArrowRight size={16} />
+            </Link>
             <ul className="mb-6 space-y-3 text-sm text-zinc-700 dark:text-zinc-300">
               <li className="flex items-start gap-3">
                 <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">

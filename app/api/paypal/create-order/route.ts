@@ -18,6 +18,7 @@ import {
 
 import { fallbackPackagesForTour, getPackageSchedule, isPackageAvailableOnDate, normalizeTourPackages } from "@/lib/tour-packages";
 import { getAddonsPricePerPerson } from "@/lib/reservation/addons";
+import type { ReservationAddonDetails } from "@/lib/reservation/types";
 import { getB2BSettings } from "@/lib/models/b2b-settings";
 
 interface CreateOrderRequest {
@@ -35,6 +36,8 @@ interface CreateOrderRequest {
   tourName?: string;
   addons?: string[];
   addonIds?: string[];
+  addonDetails?: ReservationAddonDetails;
+  specialRequests?: string;
   language?: string;
   countryCode?: string;
 }
@@ -63,6 +66,8 @@ export async function POST(req: Request) {
       tourName,
       addons,
       addonIds,
+      addonDetails,
+      specialRequests,
       language = "es",
       countryCode,
     } = body;
@@ -270,6 +275,8 @@ export async function POST(req: Request) {
       packagePrice,
       addons: Array.isArray(addons) ? addons : [],
       addonIds: Array.isArray(addonIds) ? addonIds : [],
+      addonDetails: addonDetails ?? {},
+      specialRequests: typeof specialRequests === "string" ? specialRequests : "",
       addonsPrice: addonsPricePerPerson * safeTickets,
       tourSlug,
       tourName,
