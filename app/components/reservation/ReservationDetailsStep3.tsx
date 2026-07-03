@@ -18,6 +18,9 @@ interface ReservationDetailsStep3Props {
   tickets: number;
   selectedAddons: string[];
   addonDetails: ReservationAddonDetails;
+  transportQuote?: any | null;
+  transportLoading?: boolean;
+  transportError?: string | null;
   subtotal: number;
   taxes: number;
   totalWithTaxes: number;
@@ -48,6 +51,9 @@ export default function ReservationDetailsStep3({
   onTermsEnter,
   tr,
   lang,
+  transportQuote,
+  transportLoading,
+  transportError,
 }: ReservationDetailsStep3Props) {
   return (
     <>
@@ -69,13 +75,27 @@ export default function ReservationDetailsStep3({
             </p>
             {ADDON_OPTIONS.filter((a) => selectedAddons.includes(a.id)).map((addon) => {
               const detailLines = getAddonDetailLines(addon.id, addonDetails, lang);
+              const isTransport = addon.id === "transporte";
+              let displayPrice = addon.price;
+              if (isTransport && transportQuote) {
+                displayPrice = transportQuote.perPerson ?? transportQuote.basePrice ?? addon.price;
+              }
 
               return (
                 <div key={addon.id} className="mb-3 rounded-xl border border-zinc-200 bg-white p-3 text-sm dark:border-zinc-700 dark:bg-zinc-900">
                   <div className="flex justify-between gap-3">
                     <span className="font-bold text-zinc-800 dark:text-zinc-100">{lang === "es" ? addon.nameEs : addon.nameEn}</span>
-                    <span className="shrink-0 font-bold">+${addon.price} / {tr.perPerson}</span>
+                    <span className="shrink-0 font-bold">+${displayPrice}{isTransport ? ` / ${tr.perPerson}` : ` / ${tr.perPerson}`}</span>
                   </div>
+                  {isTransport && transportLoading && (
+                    <p className="mt-2 text-xs text-zinc-500">Calculando precio de transporte…</p>
+                  )}
+                  {isTransport && transportError && (
+                    <p className="mt-2 text-xs text-red-600">{transportError}</p>
+                  )}
+                  {isTransport && transportQuote && transportQuote.type === "private" && (
+                    <p className="mt-2 text-xs text-zinc-600">Total vehículo: ${transportQuote.total}</p>
+                  )}
                   {detailLines.length > 0 && (
                     <ul className="mt-2 space-y-1 text-xs font-medium text-zinc-500 dark:text-zinc-400">
                       {detailLines.map((line) => (

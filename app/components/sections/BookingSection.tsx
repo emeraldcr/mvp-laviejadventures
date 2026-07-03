@@ -1,13 +1,10 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { motion } from "framer-motion";
-import { ArrowLeft, CalendarDays, ClipboardList } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
 import { useCalendarContext } from "@/lib/CalendarContext";
 import CalendarSection from "@/app/components/sections/CalendarSection";
 import ReservationSection from "@/app/components/sections/ReservationSection";
-import { principalContent } from "@/lib/constants/principal";
 
 type Props = {
   selectedTourSlug: string | null;
@@ -15,110 +12,26 @@ type Props = {
 
 export default function BookingSection({ selectedTourSlug }: Props) {
   const { lang } = useLanguage();
-  const { selectedDay, selectDay } = useCalendarContext();
-  const copy = principalContent[lang].booking;
-  const isDateStep = !selectedDay;
+  const { selectDay } = useCalendarContext();
 
   useEffect(() => {
     selectDay(null);
   }, [selectedTourSlug, selectDay]);
 
-  const changeDateLabel = lang === "es" ? "Cambiar fecha" : "Change date";
-
   return (
     <section id="booking" className="relative overflow-hidden bg-zinc-950">
-      <div className="pointer-events-none absolute left-1/2 top-0 h-[500px] w-[900px] -translate-x-1/2 bg-teal-900/15 blur-[140px]" />
-      <div className="pointer-events-none absolute left-0 top-40 h-[350px] w-[350px] bg-teal-800/8 blur-[120px]" />
-      <div className="pointer-events-none absolute right-0 top-40 h-[350px] w-[350px] bg-cyan-900/8 blur-[120px]" />
+      <div className="pointer-events-none absolute left-1/2 top-0 h-[400px] w-[900px] -translate-x-1/2 bg-teal-900/15 blur-[140px]" />
 
-      <div className="relative z-10 container mx-auto px-4 py-16 md:px-8 md:py-28">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.55 }}
-          className="mb-12 text-center"
-        >
-          <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.28em] text-teal-400">
-            {copy.eyebrow}
-          </p>
-          <h2 className="mb-4 text-3xl font-black leading-tight text-white sm:text-4xl md:text-5xl">
-            {copy.title}
-          </h2>
-          <p className="mx-auto max-w-xl text-base leading-relaxed text-zinc-400 md:text-lg">
-            {copy.description}
-          </p>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.45, delay: 0.1 }}
-          className="mb-12 flex items-center justify-center gap-3"
-        >
-          <div className={`flex items-center gap-2 rounded-full border px-4 py-2 transition-colors ${
-            isDateStep
-              ? "border-teal-500/25 bg-teal-500/12 shadow-[0_0_18px_rgba(20,184,166,0.12)]"
-              : "border-teal-400/35 bg-teal-400/10"
-          }`}>
-            <CalendarDays size={13} className={isDateStep ? "text-teal-400" : "text-teal-300"} />
-            <span className={`text-[11px] font-bold uppercase tracking-widest ${isDateStep ? "text-teal-300" : "text-teal-200"}`}>
-              {copy.steps.date}
-            </span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className={`h-px w-3 ${isDateStep ? "bg-zinc-700" : "bg-teal-500/60"}`} />
-            <div className={`h-1.5 w-1.5 rounded-full ${isDateStep ? "bg-zinc-700" : "bg-teal-400"}`} />
-            <div className={`h-px w-3 ${isDateStep ? "bg-zinc-700" : "bg-teal-500/60"}`} />
-          </div>
-          <div className={`flex items-center gap-2 rounded-full border px-4 py-2 transition-colors ${
-            isDateStep
-              ? "border-zinc-700/60 bg-zinc-800/50"
-              : "border-teal-500/25 bg-teal-500/12 shadow-[0_0_18px_rgba(20,184,166,0.12)]"
-          }`}>
-            <ClipboardList size={13} className={isDateStep ? "text-zinc-500" : "text-teal-400"} />
-            <span className={`text-[11px] font-bold uppercase tracking-widest ${isDateStep ? "text-zinc-500" : "text-teal-300"}`}>
-              {copy.steps.details}
-            </span>
-          </div>
-        </motion.div>
-
+      <div className="relative z-10 container mx-auto px-3 py-5 md:px-8 md:py-8">
         {selectedTourSlug ? (
-          isDateStep ? (
-            <motion.div
-              key="booking-calendar"
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-80px" }}
-              transition={{ duration: 0.6, delay: 0.15 }}
-              className="mx-auto max-w-7xl rounded-3xl border border-white/[0.07] bg-white/[0.025] shadow-[0_20px_60px_rgba(0,0,0,0.45)] backdrop-blur-sm"
-            >
+          <div className="mx-auto grid max-w-7xl items-start gap-4 lg:grid-cols-[minmax(0,0.44fr)_minmax(0,0.56fr)]">
+            <div className="rounded-3xl border border-white/[0.07] bg-white/[0.025] pb-4 shadow-[0_20px_60px_rgba(0,0,0,0.45)] backdrop-blur-sm lg:sticky lg:top-20">
               <CalendarSection />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="booking-details"
-              initial={{ opacity: 0, y: 28 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45 }}
-              className="mx-auto max-w-7xl"
-            >
-              <div className="mb-4 flex justify-start">
-                <button
-                  type="button"
-                  onClick={() => selectDay(null)}
-                  className="inline-flex items-center gap-2 rounded-full border border-teal-500/30 bg-teal-500/10 px-4 py-2 text-xs font-bold uppercase tracking-widest text-teal-300 transition hover:bg-teal-500/15"
-                >
-                  <ArrowLeft className="h-4 w-4" aria-hidden />
-                  {changeDateLabel}
-                </button>
-              </div>
-              <div className="rounded-3xl border border-white/[0.07] bg-white/[0.025] shadow-[0_20px_60px_rgba(0,0,0,0.45)] backdrop-blur-sm">
-                <ReservationSection preselectedTourSlug={selectedTourSlug} />
-              </div>
-            </motion.div>
-          )
+            </div>
+            <div className="rounded-3xl border border-white/[0.07] bg-white/[0.025] p-3 shadow-[0_20px_60px_rgba(0,0,0,0.45)] backdrop-blur-sm sm:p-4">
+              <ReservationSection preselectedTourSlug={selectedTourSlug} />
+            </div>
+          </div>
         ) : (
           <div className="mx-auto max-w-2xl rounded-3xl border border-teal-500/20 bg-teal-500/8 px-6 py-8 text-center shadow-[0_20px_60px_rgba(0,0,0,0.32)]">
             <p className="text-sm font-semibold text-teal-300">
@@ -130,7 +43,7 @@ export default function BookingSection({ selectedTourSlug }: Props) {
         )}
       </div>
 
-      <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black to-transparent" />
+      <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black to-transparent" />
     </section>
   );
 }

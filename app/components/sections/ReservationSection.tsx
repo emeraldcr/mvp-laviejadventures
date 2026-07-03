@@ -69,7 +69,7 @@ export default function ReservationSection({ className, preselectedTourSlug }: P
   if (!selectedDay) {
     return (
       <div className={className}>
-        <div className="p-8 md:p-10 flex flex-col items-center justify-center text-center gap-5 min-h-[280px]">
+        <div className="p-6 flex flex-col items-center justify-center text-center gap-4 min-h-[220px]">
           {/* Animated calendar icon */}
           <div className="relative flex items-center justify-center w-16 h-16">
             <div className="absolute inset-0 rounded-2xl bg-teal-500/15 animate-ping opacity-60" style={{ animationDuration: "2.5s" }} />

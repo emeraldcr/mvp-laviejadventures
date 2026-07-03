@@ -42,31 +42,17 @@ export default function CalendarSection({ className }: Props) {
   }, []);
 
   return (
-    <section className={cn("flex items-start mt-6 px-2", className)}>
+    <section className={cn("flex items-start px-2", className)}>
       <div className="w-full">
-        <header className="flex flex-col gap-1">
-          <p className="text-[11px] uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-            {tr.step}
-          </p>
-          <h1 className="text-xl sm:text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-            {tr.title}
-          </h1>
-        </header>
-
-        <div className="space-y-4 pb-20 sm:pb-0">
+        <div className="space-y-3">
           <div className="w-full">
             <Calendar />
           </div>
 
-          <div className="rounded-2xl border bg-zinc-50 dark:bg-zinc-900/40 px-3 py-3 sm:px-4 sm:py-3 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div className="space-y-1">
-              <p className="text-[11px] sm:text-xs font-medium text-zinc-700 dark:text-zinc-200">
-                {tr.selectionLabel}
-              </p>
-              <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-300">
-                {summaryText}
-              </p>
-            </div>
+          <div className="mx-4 rounded-2xl border bg-zinc-50 dark:bg-zinc-900/40 px-3 py-2.5 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+            <p className="text-xs text-zinc-600 dark:text-zinc-300">
+              {summaryText}
+            </p>
 
             <div className="flex w-full sm:w-auto gap-2">
               <button
@@ -80,24 +66,12 @@ export default function CalendarSection({ className }: Props) {
                 type="button"
                 onClick={scrollToDetails}
                 disabled={!selectedDate}
-                className="flex-1 sm:hidden rounded-full border border-teal-500/50 px-3 py-1.5 text-[11px] font-semibold text-teal-300 enabled:hover:bg-teal-500/10 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                className="flex-1 lg:hidden rounded-full border border-teal-500/50 px-3 py-1.5 text-[11px] font-semibold text-teal-300 enabled:hover:bg-teal-500/10 disabled:opacity-40 disabled:cursor-not-allowed transition"
               >
                 {tr.continueToDetails}
               </button>
             </div>
           </div>
-        </div>
-
-        <div className="sm:hidden fixed inset-x-3 bottom-3 z-20 rounded-2xl border border-teal-500/30 bg-zinc-950/95 p-3 shadow-2xl backdrop-blur">
-          <p className="text-[11px] text-zinc-400 mb-1">{tr.mobileFlowHint}</p>
-          <button
-            type="button"
-            onClick={scrollToDetails}
-            disabled={!selectedDate}
-            className="w-full rounded-xl bg-teal-500 px-4 py-2 text-xs font-semibold text-zinc-950 disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            {selectedDate ? tr.continueToDetails : tr.selectDateFirst}
-          </button>
         </div>
       </div>
     </section>

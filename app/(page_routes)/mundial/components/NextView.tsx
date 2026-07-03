@@ -49,7 +49,7 @@ export function NextView({
   }
 
   return (
-    <div className="grid min-w-0 gap-4">
+    <div className="grid min-w-0 gap-3">
       {/* Match selector */}
       <MatchSelector
         matches={matches}
@@ -61,23 +61,27 @@ export function NextView({
 
       {/* Selected match detail */}
       {featuredMatch ? (
-        <div ref={detailRef} className="grid min-w-0 scroll-mt-20 gap-4">
-          <FeaturedMatch
-            match={featuredMatch}
-            draft={drafts[featuredMatch.id] ?? emptyDraft()}
-            _predictions={predictions}
-            nowMs={nowMs}
-            activeCountdown={featuredMatch.id === activeMatch?.id ? activeCountdown : undefined}
-            playerName={playerName}
-            canPredict={todayEditableMatchIds.has(featuredMatch.id)}
-            onGoToMine={onGoToMine}
-            onOpenPlayerPicker={onOpenPlayerPicker}
-          />
-          <OtherPicksPanel
-            match={featuredMatch}
-            predictions={predictions}
-            playerName={playerName}
-          />
+        <div ref={detailRef} className="grid min-w-0 scroll-mt-20 gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(340px,0.46fr)] xl:items-start">
+          <div className="min-w-0">
+            <FeaturedMatch
+              match={featuredMatch}
+              draft={drafts[featuredMatch.id] ?? emptyDraft()}
+              _predictions={predictions}
+              nowMs={nowMs}
+              activeCountdown={featuredMatch.id === activeMatch?.id ? activeCountdown : undefined}
+              playerName={playerName}
+              canPredict={todayEditableMatchIds.has(featuredMatch.id)}
+              onGoToMine={onGoToMine}
+              onOpenPlayerPicker={onOpenPlayerPicker}
+            />
+          </div>
+          <div className="min-w-0 xl:sticky xl:top-20">
+            <OtherPicksPanel
+              match={featuredMatch}
+              predictions={predictions}
+              playerName={playerName}
+            />
+          </div>
         </div>
       ) : (
         <section className="grid min-h-72 place-items-center rounded-lg border border-dashed border-white/20 bg-black/35 p-8 text-center">
