@@ -6,6 +6,7 @@ import { isBanned } from "@/lib/mundial/bans";
 import { recordMundialAnalyticsEvent } from "@/lib/mundial/analytics";
 import type { MundialMatch } from "@/lib/mundial/fixtures";
 import { serializeLiveMatchStats, type LiveMatchStats } from "@/lib/mundial/live-stats";
+import { computePredictionPoints } from "@/lib/mundial/prediction-scoring";
 import {
   MUNDIAL_FIXTURE_VERSION,
   MUNDIAL_PREDICTIONS_COLLECTION,
@@ -157,6 +158,7 @@ function serializeMatch(doc: MundialMatchDoc, now = new Date()) {
     awaySeed: doc.awaySeed ?? null,
     homeFinalScore: typeof doc.homeFinalScore === "number" ? doc.homeFinalScore : null,
     awayFinalScore: typeof doc.awayFinalScore === "number" ? doc.awayFinalScore : null,
+    actualWinner: doc.actualWinner ?? null,
     liveStatus:
       doc.liveStatus === "live" || doc.liveStatus === "halftime" || doc.liveStatus === "fulltime"
         ? doc.liveStatus
@@ -213,12 +215,6 @@ function serializePrediction(
   };
 }
 
-function predictionOutcome(homeScore: number, awayScore: number) {
-  if (homeScore > awayScore) return "home";
-  if (awayScore > homeScore) return "away";
-  return "draw";
-}
-
 function buildLeaderboard(
   predictionDocs: PredictionDoc[],
   matchesById: Map<string, MundialMatchDoc | MundialMatch>
@@ -249,18 +245,20 @@ function buildLeaderboard(
       typeof match.awayFinalScore === "number"
     ) {
       const scores = predictionScores(prediction);
-      const isExact =
-        scores.homeScore === match.homeFinalScore &&
-        scores.awayScore === match.awayFinalScore;
-      const correctOutcome =
-        predictionOutcome(scores.homeScore, scores.awayScore) ===
-        predictionOutcome(match.homeFinalScore, match.awayFinalScore);
-      const points = isExact ? 3 : correctOutcome ? 1 : 0;
+      const points = computePredictionPoints(
+        {
+          stage: match.stage,
+          homeFinalScore: match.homeFinalScore,
+          awayFinalScore: match.awayFinalScore,
+          actualWinner: match.actualWinner ?? null,
+        },
+        { homeScore: scores.homeScore, awayScore: scores.awayScore, winnerPick: prediction.winnerPick ?? null },
+      );
 
       entry.scoredPredictions++;
       entry.totalPoints += points;
-      if (isExact) entry.exactScores++;
-      if (correctOutcome) entry.correctOutcomes++;
+      if (points >= 3) entry.exactScores++;
+      if (points >= 1) entry.correctOutcomes++;
     }
   }
 

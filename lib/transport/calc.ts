@@ -1,5 +1,6 @@
 import { getDb as getDbHelper } from "@/lib/helpers/mongodb";
 import { COLLECTIONS } from "@/lib/constants/db";
+import referencePoints from "@/lib/transport/reference-points.json";
 
 export type PointRef =
   | { type: "coords"; lat: number; lng: number }
@@ -10,22 +11,20 @@ export async function resolvePoint(ref: PointRef) {
 
   // lookup by id in a `reference_points` collection (user will seed later)
   try {
-    // quick name -> coords map for common labels used in the UI
-    const DEFAULT_REFERENCE_COORDS: Record<string, { lat: number; lng: number }> = {
-      "La Vieja Adventures": { lat: 10.586, lng: -84.532 },
-      "San Vicente": { lat: 10.578, lng: -84.528 },
-      "La Fortuna": { lat: 10.471, lng: -84.645 },
-      "Ciudad Quesada": { lat: 10.371, lng: -84.421 },
-      "San Jose": { lat: 9.9281, lng: -84.0907 },
-      "San Carlos": { lat: 10.331, lng: -84.428 },
-      "Hotel / Airbnb": { lat: 10.331, lng: -84.428 },
-    };
+    // quick name / ID -> coords map for common labels used in the UI
+    const DEFAULT_REFERENCE_COORDS: Record<string, { lat: number; lng: number; name: string }> =
+      Object.fromEntries(
+        referencePoints.flatMap((point) => [
+          [point.id, { lat: point.lat, lng: point.lng, name: point.name }],
+          [point.name, { lat: point.lat, lng: point.lng, name: point.name }],
+        ]),
+      );
 
     if (ref.id && typeof ref.id === "string") {
       const normalized = ref.id.trim();
       if (DEFAULT_REFERENCE_COORDS[normalized]) {
         const c = DEFAULT_REFERENCE_COORDS[normalized];
-        return { lat: c.lat, lng: c.lng, source: "defaults", raw: { id: ref.id } };
+        return { lat: c.lat, lng: c.lng, source: "defaults", raw: { id: ref.id, name: c.name } };
       }
     }
     const db = await getDbHelper();
@@ -37,7 +36,12 @@ export async function resolvePoint(ref: PointRef) {
       // existence check
       const exists = await db.listCollections({ name }).hasNext();
       if (!exists) continue;
-      const doc = await db.collection(name).findOne({ id: ref.id }) || await db.collection(name).findOne({ _id: ref.id });
+      const doc = await db.collection(name).findOne({
+        $or: [
+          { id: ref.id },
+          { name: ref.id },
+        ],
+      });
       if (doc && typeof doc.lat === "number" && typeof doc.lng === "number") {
         return { lat: doc.lat, lng: doc.lng, source: name, raw: doc };
       }
@@ -119,4 +123,6 @@ export function calculateTransportCost(params: {
   };
 }
 
-export default {};
+const transportCalc = {};
+
+export default transportCalc;

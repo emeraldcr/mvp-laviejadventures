@@ -2,9 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react";
+import { ArrowRight, BadgeCheck, Clock3, MessageCircle, Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react";
 import type { Lang } from "@/lib/LanguageContext";
-import { currency, type Product } from "./store-data";
+import type { StoreCatalogSettings } from "@/lib/hooks/useStoreProducts";
+import { currency, formatProductPrice, type Product } from "./store-data";
+import { StoreCartUpsell, StoreFreeShippingBar } from "./StoreConversionBlocks";
+import { buildSingleProductWhatsAppHref, trackStoreAction } from "./store-conversion";
 
 export type CartLine = Product & {
   quantity: number;
@@ -18,9 +21,14 @@ type StoreCartProps = {
   shipping: number;
   total: number;
   whatsappHref: string;
+  settings: StoreCatalogSettings;
+  upsellProduct?: Product | null;
+  featuredProduct?: Product | null;
   onClose?: () => void;
-  onChangeQuantity: (productId: number, delta: number) => void;
-  onRemove: (productId: number) => void;
+  onChangeQuantity: (productId: string, delta: number) => void;
+  onRemove: (productId: string) => void;
+  onUpsellAdd?: (productId: string) => void;
+  formatPrice: (product: Pick<Product, "price" | "priceCRC" | "currency">) => string;
   variant: "sidebar" | "overlay";
 };
 
@@ -31,13 +39,19 @@ export function StoreCart({
   shipping,
   total,
   whatsappHref,
+  settings,
+  upsellProduct,
+  featuredProduct,
   onClose,
   onChangeQuantity,
   onRemove,
+  onUpsellAdd,
+  formatPrice,
   variant,
 }: StoreCartProps) {
   const isEs = lang === "es";
   const isOverlay = variant === "overlay";
+  const hasItems = cartDetails.length > 0;
 
   const shellClass = isOverlay
     ? "flex max-h-[min(88vh,720px)] w-full flex-col overflow-hidden rounded-t-[1.35rem] border border-emerald-100/15 bg-[linear-gradient(180deg,#041612,#020807)] p-5 shadow-2xl sm:p-6 md:h-full md:max-h-none md:rounded-none md:border-l md:border-t-0"
@@ -45,19 +59,22 @@ export function StoreCart({
 
   return (
     <div className={shellClass}>
-      <div className="mb-5 flex items-start justify-between gap-3">
+      <div className="mb-4 flex items-start justify-between gap-3">
         <div>
           <p className="text-[10px] font-black uppercase tracking-[0.28em] text-teal-300/80">
-            {isEs ? "Tu pedido" : "Your order"}
+            {isEs ? "Checkout rápido" : "Fast checkout"}
           </p>
           <h2 className="text-xl font-black text-white sm:text-2xl">
-            {isEs ? "Carrito" : "Cart"}
-            {cartDetails.length > 0 && (
+            {isEs ? "Tu pedido" : "Your order"}
+            {hasItems && (
               <span className="ml-2 text-base font-bold text-white/40">
                 ({cartDetails.reduce((sum, item) => sum + item.quantity, 0)})
               </span>
             )}
           </h2>
+          <p className="mt-1 text-xs text-white/45">
+            {isEs ? "Confirmación humana por WhatsApp en minutos" : "Human WhatsApp confirmation in minutes"}
+          </p>
         </div>
         {onClose && (
           <button
@@ -71,18 +88,42 @@ export function StoreCart({
         )}
       </div>
 
+      {hasItems && <StoreFreeShippingBar lang={lang} subtotal={subtotal} settings={settings} />}
+
+      {upsellProduct && onUpsellAdd && (
+        <StoreCartUpsell lang={lang} product={upsellProduct} onAdd={onUpsellAdd} />
+      )}
+
       <div className={`space-y-3 ${isOverlay ? "flex-1 overflow-y-auto pr-1" : ""}`}>
-        {cartDetails.length === 0 ? (
+        {!hasItems ? (
           <div className="rounded-2xl border border-dashed border-white/12 bg-white/[0.03] px-5 py-10 text-center">
             <ShoppingBag size={22} className="mx-auto mb-3 text-teal-300/80" />
-            <p className="font-bold text-white">
-              {isEs ? "Todavía vacío, mae" : "Still empty"}
-            </p>
+            <p className="font-bold text-white">{isEs ? "Empezá con un favorito" : "Start with a favorite"}</p>
             <p className="mt-2 text-sm text-white/45">
               {isEs
-                ? "Elegí gear para el río y lo armamos por WhatsApp."
-                : "Pick your river gear and we'll sort it on WhatsApp."}
+                ? "Elegí gear para el río y cerramos por WhatsApp sin vueltas."
+                : "Pick river gear and we'll close your order on WhatsApp."}
             </p>
+            <div className="mt-4 flex flex-col items-center gap-2">
+              {featuredProduct?.inStock && (
+                <a
+                  href={buildSingleProductWhatsAppHref(featuredProduct, lang, settings.whatsappPhone)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#25D366] px-4 text-sm font-black text-white transition hover:bg-[#1ebe5d]"
+                >
+                  <MessageCircle size={15} />
+                  {isEs ? "Pedir favorito por WhatsApp" : "Order favorite on WhatsApp"}
+                </a>
+              )}
+              <a
+                href="#catalogo"
+                className="inline-flex items-center gap-2 text-sm font-bold text-teal-300 hover:text-teal-200"
+              >
+                {isEs ? "Ver catálogo" : "Browse catalog"}
+                <ArrowRight size={14} />
+              </a>
+            </div>
           </div>
         ) : (
           cartDetails.map((item) => (
@@ -97,7 +138,7 @@ export function StoreCart({
                 <div className="mb-2 flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <h3 className="truncate text-sm font-black text-white">{item.name[lang]}</h3>
-                    <p className="text-xs text-white/45">{currency.format(item.price)}</p>
+                    <p className="text-xs text-white/45">{formatPrice(item)}</p>
                   </div>
                   <button
                     type="button"
@@ -141,7 +182,13 @@ export function StoreCart({
         </div>
         <div className="flex items-center justify-between text-sm text-white/55">
           <span>{isEs ? "Envío estimado" : "Est. shipping"}</span>
-          <span>{currency.format(shipping)}</span>
+          <span className={shipping === 0 && subtotal > 0 ? "font-bold text-teal-300" : ""}>
+            {shipping === 0 && subtotal > 0
+              ? isEs
+                ? "Gratis"
+                : "Free"
+              : currency.format(shipping)}
+          </span>
         </div>
         <div className="flex items-center justify-between border-t border-white/10 pt-3 text-base font-black text-white">
           <span>Total</span>
@@ -149,21 +196,39 @@ export function StoreCart({
         </div>
       </div>
 
+      <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-semibold text-white/45">
+        <span className="inline-flex items-center gap-1 rounded-full border border-white/10 px-2 py-1">
+          <Clock3 size={11} className="text-teal-300" />
+          {isEs ? "Respuesta rápida" : "Fast reply"}
+        </span>
+        <span className="inline-flex items-center gap-1 rounded-full border border-white/10 px-2 py-1">
+          <BadgeCheck size={11} className="text-teal-300" />
+          {isEs ? "Stock confirmado" : "Stock confirmed"}
+        </span>
+      </div>
+
       <div className="mt-4 grid gap-2.5">
         <a
-          href={cartDetails.length > 0 ? whatsappHref : "#catalogo"}
-          target={cartDetails.length > 0 ? "_blank" : undefined}
-          rel={cartDetails.length > 0 ? "noopener noreferrer" : undefined}
-          className="emerald-wave-button inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-emerald-400 px-4 py-3 text-sm font-black uppercase tracking-[0.12em] text-emerald-950 transition hover:bg-amber-300"
+          href={hasItems ? whatsappHref : "#catalogo"}
+          target={hasItems ? "_blank" : undefined}
+          rel={hasItems ? "noopener noreferrer" : undefined}
+          onClick={() => hasItems && trackStoreAction("cart_whatsapp_click", { items: cartDetails.length, total })}
+          className={[
+            "inline-flex min-h-12 items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-black uppercase tracking-[0.1em] transition",
+            hasItems
+              ? "bg-[#25D366] text-white shadow-[0_12px_32px_rgba(37,211,102,0.28)] hover:bg-[#1ebe5d]"
+              : "bg-white/10 text-white/50",
+          ].join(" ")}
         >
-          {isEs ? "Pedir por WhatsApp" : "Order on WhatsApp"}
+          <MessageCircle size={16} />
+          {isEs ? "Confirmar por WhatsApp" : "Confirm on WhatsApp"}
           <ArrowRight size={15} />
         </a>
         <Link
           href="/reservar"
           className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/12 px-4 py-2.5 text-sm font-bold text-white/75 transition hover:border-emerald-200/40 hover:bg-white/6 hover:text-white"
         >
-          {isEs ? "Reservar tour primero" : "Book a tour first"}
+          {isEs ? "¿Primero el tour? Reservar aventura" : "Tour first? Book adventure"}
         </Link>
       </div>
     </div>

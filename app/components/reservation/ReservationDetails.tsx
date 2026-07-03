@@ -748,7 +748,7 @@ export default function ReservationDetails({
 
       const pickup = addonDetails.pickupLocation ? { type: "ref", id: addonDetails.pickupLocation } : null;
       let dropoff = addonDetails.dropoffLocation ? { type: "ref", id: addonDetails.dropoffLocation } : null;
-      if (dropoff && dropoff.id === "Mismo pickup") {
+      if (dropoff && dropoff.id === "same-pickup") {
         dropoff = pickup;
       }
 

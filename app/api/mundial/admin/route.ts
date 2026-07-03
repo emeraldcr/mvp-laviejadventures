@@ -6,6 +6,7 @@ import { COLLECTIONS } from "@/lib/constants/db";
 import type { MundialMatch, MundialStage } from "@/lib/mundial/fixtures";
 import { serializeLiveMatchStats, type LiveMatchStats } from "@/lib/mundial/live-stats";
 import { readMundialMatches } from "@/lib/mundial/matches-store";
+import { computePredictionPoints } from "@/lib/mundial/prediction-scoring";
 
 export const dynamic = "force-dynamic";
 
@@ -274,23 +275,7 @@ function computePoints(
   match: { stage: MundialStage; homeFinalScore: number; awayFinalScore: number; actualWinner?: WinnerPick },
   prediction: { homeScore: number; awayScore: number; winnerPick?: WinnerPick }
 ): number {
-  const { homeFinalScore, awayFinalScore, actualWinner, stage } = match;
-  const { homeScore, awayScore, winnerPick } = prediction;
-
-  const isExact = homeScore === homeFinalScore && awayScore === awayFinalScore;
-  const actualOutcome =
-    homeFinalScore > awayFinalScore ? "home" : awayFinalScore > homeFinalScore ? "away" : "draw";
-  const predictedOutcome =
-    homeScore > awayScore ? "home" : awayScore > homeScore ? "away" : "draw";
-  const correctOutcome = actualOutcome === predictedOutcome;
-  const isDrawInKnockout = actualOutcome === "draw" && stage !== "group";
-  const correctWinner = isDrawInKnockout && actualWinner != null && winnerPick === actualWinner;
-
-  if (isExact && correctWinner) return 4;
-  if (isExact) return 3;
-  if (correctOutcome && correctWinner) return 2;
-  if (correctOutcome) return 1;
-  return 0;
+  return computePredictionPoints(match, prediction);
 }
 
 export async function GET() {

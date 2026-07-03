@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { KeyboardEvent, RefObject } from "react";
 import { Check, ShieldCheck } from "lucide-react";
 import type { ReservationAddonDetails, TourTime } from "@/lib/reservation/types";
-import { ADDON_OPTIONS } from "@/lib/reservation/constants";
+import { ADDON_OPTIONS, getTransportLocationLabel } from "@/lib/reservation/constants";
 
 type ReservationTranslations = typeof import("@/lib/translations").translations["es"]["reservation"];
 
@@ -170,9 +170,9 @@ function getAddonDetailLines(addonId: string, details: ReservationAddonDetails, 
 
   if (addonId === "transporte") {
     return [
-      details.transportType ? `${lang === "es" ? "Tipo" : "Type"}: ${details.transportType === "private" ? "Private 4x4" : "Shared shuttle"}` : null,
-      details.pickupLocation ? `Pickup: ${details.pickupLocation}` : null,
-      details.dropoffLocation ? `Drop-off: ${details.dropoffLocation}` : null,
+      details.transportType ? `${lang === "es" ? "Tipo" : "Type"}: ${details.transportType === "private" ? (lang === "es" ? "Privado 4x4" : "Private 4x4") : (lang === "es" ? "Compartido" : "Shared shuttle")}` : null,
+      details.pickupLocation ? `${lang === "es" ? "Pickup" : "Pickup"}: ${getTransportLocationLabel(details.pickupLocation, lang)}` : null,
+      details.dropoffLocation ? `${lang === "es" ? "Drop-off" : "Drop-off"}: ${getTransportLocationLabel(details.dropoffLocation, lang)}` : null,
       details.transportNotes ? `${lang === "es" ? "Notas" : "Notes"}: ${details.transportNotes}` : null,
     ].filter(Boolean) as string[];
   }

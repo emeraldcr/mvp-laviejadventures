@@ -13,7 +13,9 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/)",
       "Bash(curl -s http://localhost:3000/)",
       "PowerShell(Test-NetConnection -ComputerName localhost -Port 3000 -InformationLevel Quiet -WarningAction SilentlyContinue)",
-      "PowerShell($r = Invoke-WebRequest -Uri \"http://localhost:3000/reservar\" -UseBasicParsing -TimeoutSec 60; $r.StatusCode; if \\($r.Content -match 'Tour seleccionado|Selected tour'\\) { 'hero-selector OK' }; if \\($r.Content -match 'booking'\\) { 'booking section OK' })"
+      "PowerShell($r = Invoke-WebRequest -Uri \"http://localhost:3000/reservar\" -UseBasicParsing -TimeoutSec 60; $r.StatusCode; if \\($r.Content -match 'Tour seleccionado|Selected tour'\\) { 'hero-selector OK' }; if \\($r.Content -match 'booking'\\) { 'booking section OK' })",
+      "PowerShell($r = Invoke-WebRequest -Uri \"http://localhost:3000/galeria\" -UseBasicParsing -TimeoutSec 90; $r.StatusCode; \\([regex]::Matches\\($r.Content, '/image/IMG_'\\)\\).Count; if \\($r.Content -match 'PNG|\\\\.JPG'\\) { 'uppercase/png images included' })",
+      "PowerShell($r = Invoke-WebRequest -Uri \"http://localhost:3000/store\" -UseBasicParsing -TimeoutSec 90; $r.StatusCode; $r2 = Invoke-WebRequest -Uri \"http://localhost:3000/galeria\" -UseBasicParsing -TimeoutSec 60; $r2.StatusCode; if \\($r2.Content -match '/store'\\) { 'gallery->store link OK' })"
     ]
   }
 }

@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Calendar, MapPin, Trophy, X } from "lucide-react";
 import type { LeaderboardEntry, MundialMatch, Prediction } from "../types";
 import { cn, teamCode, formatKickoff } from "../utils";
+import { computePredictionPoints, predictionScoreKind } from "@/lib/mundial/prediction-scoring";
 import { Flag } from "./Flag";
 
 // ─── Bracket layout ───────────────────────────────────────────────────────────
@@ -335,12 +336,14 @@ function BracketSVG({
   function connLine(r1: number, a1: number, r2: number, a2: number, matchNum: number) {
     const [x1, y1] = pt(r1, a1);
     const [x2, y2] = pt(r2, a2);
+    const pending = !hasRes(matchNum);
     return (
       <line
         key={`${r1}-${a1}-${r2}-${a2}`}
         x1={x1} y1={y1} x2={x2} y2={y2}
         stroke={lineC(matchNum)} strokeWidth={lineW(matchNum)}
         strokeLinecap="round"
+        strokeDasharray={pending ? "3 4" : undefined}
       />
     );
   }
@@ -384,7 +387,8 @@ function BracketSVG({
     const [x1, y1] = pt(RA.sf, SF_A[sfN]);
     return (
       <line key={sfN} x1={x1} y1={y1} x2={CX} y2={CY}
-        stroke={lineC(sfN)} strokeWidth={lineW(sfN) + 0.4} />
+        stroke={lineC(sfN)} strokeWidth={lineW(sfN) + 0.4}
+        strokeLinecap="round" strokeDasharray={!hasRes(sfN) ? "3 4" : undefined} />
     );
   });
 
@@ -394,7 +398,8 @@ function BracketSVG({
     const [x1, y1] = pt(RA.sf, SF_A[sfN]);
     return (
       <line key={`3p-${sfN}`} x1={x1} y1={y1} x2={x3p} y2={y3p}
-        stroke={lineC(sfN)} strokeWidth={0.8} strokeDasharray="3 3" />
+        stroke={lineC(sfN)} strokeWidth={0.8} strokeDasharray="3 3"
+        strokeLinecap="round" />
     );
   });
 
@@ -417,12 +422,13 @@ function BracketSVG({
 
       {/* center ambient */}
       <circle cx={CX} cy={CY} r={92} fill="url(#cg)" />
+      <circle cx={CX} cy={CY} r={48} fill="none" stroke="rgba(240,180,41,0.16)" strokeWidth={1} />
 
       {/* guide rings */}
-      {[RA.r32, RA.r16, RA.qf, RA.sf].map((r) => (
+      {[RA.outer, RA.r32, RA.r16, RA.qf, RA.sf].map((r) => (
         <circle key={r} cx={CX} cy={CY} r={r}
-          fill="none" stroke="rgba(255,255,255,0.05)"
-          strokeWidth={1} strokeDasharray="2 7" />
+          fill="none" stroke="rgba(255,255,255,0.06)"
+          strokeWidth={r === RA.outer ? 1 : 1} strokeDasharray={r === RA.outer ? "" : "2 7"} />
       ))}
 
       {/* connectors */}
@@ -726,16 +732,28 @@ function OuterSlot({
 
       {/* team abbreviation */}
       {real && (
-        <text
-          x={lx} y={ly}
-          textAnchor="middle" dominantBaseline="middle"
-          fontSize={8.6} fontWeight={won ? "900" : "750"} fontFamily="Arial, Helvetica, sans-serif"
-          fill={textFill}
-          transform={`rotate(${textRot}, ${lx}, ${ly})`}
-          style={{ userSelect: "none", pointerEvents: "none" }}
-        >
-          {teamCode(team)}
-        </text>
+        <g transform={`rotate(${textRot}, ${lx}, ${ly})`} opacity={lost ? 0.55 : 1}>
+          <rect
+            x={lx - 18}
+            y={ly - 7}
+            width={36}
+            height={14}
+            rx={7}
+            fill={won ? "rgba(240,180,41,0.18)" : "rgba(0,0,0,0.42)"}
+            stroke={won ? "rgba(240,180,41,0.45)" : "rgba(255,255,255,0.14)"}
+            strokeWidth={0.75}
+          />
+          <text
+            x={lx}
+            y={ly}
+            textAnchor="middle" dominantBaseline="middle"
+            fontSize={8.6} fontWeight={won ? "900" : "750"} fontFamily="Arial, Helvetica, sans-serif"
+            fill={textFill}
+            style={{ userSelect: "none", pointerEvents: "none" }}
+          >
+            {teamCode(team)}
+          </text>
+        </g>
       )}
     </g>
   );
@@ -878,6 +896,7 @@ function FinalCenter({
         stroke={isSelected ? "#d5ff3f" : hasResult ? "#f0b429" : "rgba(240,180,41,0.35)"}
         strokeWidth={isSelected ? 2.5 : 1.5}
         filter={hasResult ? "url(#glow)" : undefined} />
+      <circle cx={CX} cy={CY} r={42} fill="none" stroke="rgba(240,180,41,0.14)" strokeWidth={1} />
 
       {/* Trophy SVG (scaled inline) */}
       <g transform={`translate(${CX - 11}, ${CY - 15})`}>
@@ -927,6 +946,12 @@ function StageRingLabels({ showThirdCaption }: { showThirdCaption: boolean }) {
     [RA.qf, "Cuartos"],
     [RA.sf, "Semis"],
   ];
+  const tagLabels = [
+    { r: RA.r32 + 18, angle: 46, label: "Octavos" },
+    { r: RA.qf + 18, angle: -8, label: "Cuartos" },
+    { r: RA.sf + 18, angle: 94, label: "Semis" },
+  ];
+
   return (
     <>
       {labels.map(([r, label]) => (
@@ -939,6 +964,19 @@ function StageRingLabels({ showThirdCaption }: { showThirdCaption: boolean }) {
           {label}
         </text>
       ))}
+      {tagLabels.map(({ r, angle, label }) => {
+        const [x, y] = pt(r, angle);
+        return (
+          <text key={label}
+            x={x} y={y}
+            textAnchor="middle" dominantBaseline="middle"
+            fontSize={6.2} fontWeight="700" fontFamily="Arial, Helvetica, sans-serif"
+            fill="rgba(255,255,255,0.18)" letterSpacing="0.08em"
+            style={{ userSelect: "none", pointerEvents: "none", textTransform: "uppercase" }}>
+            {label}
+          </text>
+        );
+      })}
       {/* 3rd place caption (hidden once a winner flag+code takes its place) */}
       {showThirdCaption && (
         <text x={CX} y={CY + RA.finalPt + 16}
@@ -1103,11 +1141,18 @@ function MatchCard({
   const predScore = hasPred ? `${pred.homeScore}-${pred.awayScore}` : null;
 
   let predKind: "exact" | "outcome" | "miss" | "pending" = "pending";
+  let predPoints: number | null = null;
   if (hasPred && hasResult) {
-    const exact = pred.homeScore === match.homeFinalScore && pred.awayScore === match.awayFinalScore;
-    const outcome = (match.homeFinalScore! > match.awayFinalScore! ? "home" : match.awayFinalScore! > match.homeFinalScore! ? "away" : "draw")
-      === (pred.homeScore > pred.awayScore ? "home" : pred.awayScore > pred.homeScore ? "away" : "draw");
-    predKind = exact ? "exact" : outcome ? "outcome" : "miss";
+    predPoints = computePredictionPoints(
+      {
+        stage: match.stage,
+        homeFinalScore: match.homeFinalScore!,
+        awayFinalScore: match.awayFinalScore!,
+        actualWinner: match.actualWinner,
+      },
+      { homeScore: pred.homeScore, awayScore: pred.awayScore, winnerPick: pred.winnerPick },
+    );
+    predKind = predictionScoreKind(predPoints);
   }
 
   const kindStyle = {
@@ -1117,7 +1162,12 @@ function MatchCard({
     pending: "border-white/15 bg-white/5 text-white/45",
   }[predKind];
 
-  const kindLabel = { exact: "Exacto +3", outcome: "Resultado +1", miss: "Fallo", pending: "Pendiente" }[predKind];
+  const kindLabel =
+    predPoints === null
+      ? "Pendiente"
+      : predPoints > 0
+        ? `${predKind === "exact" ? "Exacto" : "Resultado"} +${predPoints}`
+        : "Fallo";
 
   return (
     <div className="overflow-hidden rounded-xl border border-[#f0b429]/30 bg-[#06140f] shadow-[0_24px_70px_rgba(0,0,0,0.50)]">

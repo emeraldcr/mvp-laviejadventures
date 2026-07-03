@@ -16,6 +16,7 @@ import {
   normalizeKey,
   normalizeName,
 } from "./utils";
+import { computePredictionPoints } from "@/lib/mundial/prediction-scoring";
 
 const LIVE_REFRESH_MS = 12_000;        // SSE handles real-time scores; polling only detects state changes
 const LIVE_ACTIVE_REFRESH_MS = 8_000;  // idem during active match
@@ -197,13 +198,15 @@ export function useMundial() {
 
       const match = matchById.get(pred.matchId);
       if (match && match.homeFinalScore !== null && match.awayFinalScore !== null) {
-        const isExact = pred.homeScore === match.homeFinalScore && pred.awayScore === match.awayFinalScore;
-        const actualOutcome =
-          match.homeFinalScore > match.awayFinalScore ? "home" : match.awayFinalScore > match.homeFinalScore ? "away" : "draw";
-        const predictedOutcome =
-          pred.homeScore > pred.awayScore ? "home" : pred.awayScore > pred.homeScore ? "away" : "draw";
-        const correctOutcome = actualOutcome === predictedOutcome;
-        const pts = isExact ? 3 : correctOutcome ? 1 : 0;
+        const pts = computePredictionPoints(
+          {
+            stage: match.stage,
+            homeFinalScore: match.homeFinalScore,
+            awayFinalScore: match.awayFinalScore,
+            actualWinner: match.actualWinner,
+          },
+          { homeScore: pred.homeScore, awayScore: pred.awayScore, winnerPick: pred.winnerPick },
+        );
         entry.scoredPredictions++;
         entry.totalPoints += pts;
         if (pts >= 3) entry.exactScores++;

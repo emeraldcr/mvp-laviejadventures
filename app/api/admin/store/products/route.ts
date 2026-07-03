@@ -38,6 +38,7 @@ export async function POST(req: NextRequest) {
     if (body?.type === "settings") {
       const settings = await upsertStoreSettings({
         shippingFeeUSD: body.shippingFeeUSD,
+        freeShippingThresholdUSD: body.freeShippingThresholdUSD,
         currency: body.currency,
         whatsappPhone: body.whatsappPhone,
       });
@@ -46,8 +47,9 @@ export async function POST(req: NextRequest) {
 
     const result = await createStoreProduct(body);
     if ("error" in result) {
-      const status = result.error.includes("already exists") ? 409 : 400;
-      return NextResponse.json({ error: result.error }, { status });
+      const message = result.error ?? "Invalid product payload";
+      const status = message.includes("already exists") ? 409 : 400;
+      return NextResponse.json({ error: message }, { status });
     }
 
     return NextResponse.json({ message: "Product created." });

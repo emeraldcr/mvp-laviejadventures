@@ -5,12 +5,14 @@ import type { StoreProduct } from "@/lib/store/products";
 
 export type StoreCatalogSettings = {
   shippingFeeUSD: number;
+  freeShippingThresholdUSD: number;
   currency: "USD" | "CRC";
   whatsappPhone: string;
 };
 
 const DEFAULT_SETTINGS: StoreCatalogSettings = {
   shippingFeeUSD: 12,
+  freeShippingThresholdUSD: 75,
   currency: "USD",
   whatsappPhone: "50662332535",
 };
@@ -34,6 +36,8 @@ export function useStoreProducts() {
         setProducts(Array.isArray(data?.products) ? data.products : []);
         setSettings({
           shippingFeeUSD: Number(data?.settings?.shippingFeeUSD) || DEFAULT_SETTINGS.shippingFeeUSD,
+          freeShippingThresholdUSD:
+            Number(data?.settings?.freeShippingThresholdUSD) || DEFAULT_SETTINGS.freeShippingThresholdUSD,
           currency: data?.settings?.currency === "CRC" ? "CRC" : "USD",
           whatsappPhone: String(data?.settings?.whatsappPhone || DEFAULT_SETTINGS.whatsappPhone),
         });

@@ -2,6 +2,7 @@ import { CalendarDays, Check, Star, TrendingUp, Users, X as XIcon } from "lucide
 import { useMemo } from "react";
 import type { MundialMatch, Prediction } from "../types";
 import { cn, formatKickoff, normalizeKey, teamCode } from "../utils";
+import { computePredictionPoints, predictionScoreKind } from "@/lib/mundial/prediction-scoring";
 import { Flag } from "./Flag";
 
 type Outcome = "home" | "draw" | "away";
@@ -32,6 +33,24 @@ function pickStatus(match: MundialMatch, prediction: Prediction): PickStatus {
 
   if (!hasRef) {
     return { showIndicator: false, isWinning: false, isExact: false };
+  }
+
+  if (hasFinalScore) {
+    const points = computePredictionPoints(
+      {
+        stage: match.stage,
+        homeFinalScore: refHome,
+        awayFinalScore: refAway,
+        actualWinner: match.actualWinner,
+      },
+      { homeScore: prediction.homeScore, awayScore: prediction.awayScore, winnerPick: prediction.winnerPick },
+    );
+
+    return {
+      showIndicator,
+      isWinning: points >= 1,
+      isExact: predictionScoreKind(points) === "exact",
+    };
   }
 
   const isWinning = getOutcome(prediction.homeScore, prediction.awayScore) === getOutcome(refHome, refAway);

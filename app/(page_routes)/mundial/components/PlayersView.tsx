@@ -4,6 +4,7 @@ import { CalendarDays, Camera, ChevronRight, Crown, Lock, MinusCircle, Target, T
 import { useEffect, useMemo, useState } from "react";
 import type { LeaderboardEntry, MundialMatch, Prediction } from "../types";
 import { cn, finalScoreText, formatKickoff, normalizeKey, teamCode } from "../utils";
+import { computePredictionPoints, predictionScoreKind } from "@/lib/mundial/prediction-scoring";
 import { Flag } from "./Flag";
 
 type PlayersViewProps = {
@@ -825,18 +826,15 @@ function computePredictionScore(match: MundialMatch | undefined, prediction: Pre
     return { points: null, kind: "pending" };
   }
 
-  const isExact = prediction.homeScore === match.homeFinalScore && prediction.awayScore === match.awayFinalScore;
-  const actualOutcome = getOutcome(match.homeFinalScore, match.awayFinalScore);
-  const predictedOutcome = getOutcome(prediction.homeScore, prediction.awayScore);
-  const correctOutcome = actualOutcome === predictedOutcome;
+  const points = computePredictionPoints(
+    {
+      stage: match.stage,
+      homeFinalScore: match.homeFinalScore,
+      awayFinalScore: match.awayFinalScore,
+      actualWinner: match.actualWinner,
+    },
+    { homeScore: prediction.homeScore, awayScore: prediction.awayScore, winnerPick: prediction.winnerPick },
+  );
 
-  if (isExact) return { points: 3, kind: "exact" };
-  if (correctOutcome) return { points: 1, kind: "outcome" };
-  return { points: 0, kind: "miss" };
-}
-
-function getOutcome(home: number, away: number) {
-  if (home > away) return "home";
-  if (away > home) return "away";
-  return "draw";
+  return { points, kind: predictionScoreKind(points) };
 }

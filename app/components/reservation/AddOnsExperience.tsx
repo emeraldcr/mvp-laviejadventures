@@ -27,8 +27,25 @@ const CATEGORY_LABELS: Record<AddOnOption["category"], { es: string; en: string 
 
 const FOOD_OPTIONS = ["Casado con pollo", "Casado con res", "Vegetariano", "Menú infantil"];
 const PROTEIN_OPTIONS = ["Pollo", "Res", "Vegetariano", "Sin preferencia"];
-const PICKUP_OPTIONS = ["San Carlos", "La Fortuna", "Ciudad Quesada", "San Jose", "Hotel / Airbnb"];
-const DROPOFF_OPTIONS = ["La Vieja Adventures", "San Vicente", "La Fortuna", "San Jose", "Mismo pickup"];
+const PICKUP_OPTIONS = [
+  { id: "san-carlos", label: "San Carlos" },
+  { id: "la-fortuna", label: "La Fortuna" },
+  { id: "ciudad-quesada", label: "Ciudad Quesada" },
+  { id: "san-jose", label: "San Jose" },
+  { id: "hotel-airbnb", label: "Hotel / Airbnb" },
+  { id: "hotel-la-fortuna-central", label: "Hotel - La Fortuna central" },
+  { id: "hotel-arenal-area", label: "Hotel - Arenal area" },
+  { id: "hotel-san-vicente", label: "Hotel - San Vicente" },
+  { id: "hotel-ciudad-quesada", label: "Hotel - Ciudad Quesada" },
+  { id: "hotel-san-jose-airport", label: "Hotel - SJO airport area" },
+];
+const DROPOFF_OPTIONS = [
+  { id: "la-vieja-adventures", label: "La Vieja Adventures" },
+  { id: "san-vicente", label: "San Vicente" },
+  { id: "la-fortuna", label: "La Fortuna" },
+  { id: "san-jose", label: "San José" },
+  { id: "same-pickup", label: "Mismo pickup" },
+];
 
 export default function AddOnsExperience({
   lang,
@@ -305,15 +322,15 @@ function AddonModal({
             </div>
             <OptionSelect
               label={lang === "es" ? "Pickup" : "Pickup"}
-              value={details.pickupLocation ?? PICKUP_OPTIONS[0]}
+              value={details.pickupLocation ?? PICKUP_OPTIONS[0].id}
               onChange={(value) => updateDetails({ pickupLocation: value })}
-              options={PICKUP_OPTIONS.map((option) => [option, option])}
+              options={PICKUP_OPTIONS.map((option) => [option.id, option.label])}
             />
             <OptionSelect
               label={lang === "es" ? "Drop-off" : "Drop-off"}
-              value={details.dropoffLocation ?? DROPOFF_OPTIONS[0]}
+              value={details.dropoffLocation ?? DROPOFF_OPTIONS[0].id}
               onChange={(value) => updateDetails({ dropoffLocation: value })}
-              options={DROPOFF_OPTIONS.map((option) => [option, option])}
+              options={DROPOFF_OPTIONS.map((option) => [option.id, option.label])}
             />
             <TextInput
               className="sm:col-span-2"

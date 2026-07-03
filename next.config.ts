@@ -22,6 +22,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "lh3.googleusercontent.com" }, // Google profile pictures
       { protocol: "https", hostname: "avatars.githubusercontent.com" }, // GitHub profile pictures
       { protocol: "https", hostname: "*.googleusercontent.com" },
+      { protocol: "https", hostname: "images.unsplash.com" }, // Store product reference photos
     ],
   },
 
