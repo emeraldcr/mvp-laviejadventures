@@ -504,6 +504,7 @@ export type OrderDetails = {
   packagePrice: number;
   specialRequests?: string;
   addons?: string[];
+  addonIds?: string[];
   addonsPrice?: number;
 };
 

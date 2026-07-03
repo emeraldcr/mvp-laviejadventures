@@ -48,6 +48,7 @@ export interface ReservationOrderPayload {
   packagePrice: number;
   specialRequests: string;
   addons: string[];
+  addonIds: string[];
   addonsPrice: number;
 }
 

@@ -1,49 +1,23 @@
-import { UtensilsCrossed, Users, TreePalm, Route } from "lucide-react";
+import { UtensilsCrossed, Users, TreePalm, Route, type LucideIcon } from "lucide-react";
 import type { AddOnOption } from "./types";
+import { ADDON_DATA } from "./addons";
 
 export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const PHONE_NUMBER_REGEX = /^[\d\s().-]{6,20}$/;
 
 export const DEFAULT_DEPARTURE_TIMES = ["08:00", "09:00", "10:00"];
 
-export const ADDON_OPTIONS: AddOnOption[] = [
-  {
-    id: "almuerzo",
-    nameEs: "Almuerzo Típico",
-    nameEn: "Traditional Lunch",
-    descriptionEs: "Casado costarricense (pollo, res o vegetariano) con bebida natural y postre.",
-    descriptionEn: "Costa Rican casado (chicken, beef or vegetarian) with natural drink and dessert.",
-    price: 15,
-    icon: UtensilsCrossed,
-  },
-  {
-    id: "guia-privado",
-    nameEs: "Guía Privado",
-    nameEn: "Private Guide",
-    descriptionEs: "Guía exclusivo para tu grupo con atención personalizada y ritmo flexible.",
-    descriptionEn: "Exclusive guide for your group with personalized attention and flexible pace.",
-    price: 25,
-    icon: Users,
-  },
-  {
-    id: "alojamiento",
-    nameEs: "Alojamiento",
-    nameEn: "Lodging",
-    descriptionEs: "Noche de hospedaje en alojamiento local cerca de la experiencia.",
-    descriptionEn: "One night stay at local lodging near the experience.",
-    price: 40,
-    icon: TreePalm,
-  },
-  {
-    id: "transporte",
-    nameEs: "Transporte",
-    nameEn: "Transport",
-    descriptionEs: "Traslado de ida y vuelta desde puntos de encuentro designados.",
-    descriptionEn: "Round-trip transfer from designated meeting points.",
-    price: 15,
-    icon: Route,
-  },
-];
+const ADDON_ICONS: Record<string, LucideIcon> = {
+  almuerzo: UtensilsCrossed,
+  "guia-privado": Users,
+  alojamiento: TreePalm,
+  transporte: Route,
+};
+
+export const ADDON_OPTIONS: AddOnOption[] = ADDON_DATA.map((addon) => ({
+  ...addon,
+  icon: ADDON_ICONS[addon.id] ?? Route,
+}));
 
 export const formatDepartureLabel = (value: string): string => {
   const normalized = value.trim();

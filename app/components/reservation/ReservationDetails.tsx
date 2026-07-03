@@ -563,6 +563,7 @@ export default function ReservationDetails({
       tourName: selectedTourName,
       packagePrice: basePriceUSD,
       addons: selectedAddonObjects.map((a) => (lang === "es" ? a.nameEs : a.nameEn)),
+      addonIds: selectedAddonObjects.map((a) => a.id),
       addonsPrice: addonsPricePerPerson * tickets,
     });
   }, [

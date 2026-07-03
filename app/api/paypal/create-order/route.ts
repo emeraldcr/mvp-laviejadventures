@@ -17,6 +17,7 @@ import {
 } from "@/lib/helpers/costa-rica-time";
 
 import { fallbackPackagesForTour, getPackageSchedule, isPackageAvailableOnDate, normalizeTourPackages } from "@/lib/tour-packages";
+import { getAddonsPricePerPerson } from "@/lib/reservation/addons";
 import { getB2BSettings } from "@/lib/models/b2b-settings";
 
 interface CreateOrderRequest {
@@ -32,6 +33,8 @@ interface CreateOrderRequest {
   tourPackage?: string;
   tourSlug?: string;
   tourName?: string;
+  addons?: string[];
+  addonIds?: string[];
   language?: string;
   countryCode?: string;
 }
@@ -58,6 +61,8 @@ export async function POST(req: Request) {
       tourPackage,
       tourSlug,
       tourName,
+      addons,
+      addonIds,
       language = "es",
       countryCode,
     } = body;
@@ -116,8 +121,12 @@ export async function POST(req: Request) {
     const dbPackages = normalizeTourPackages(tour?.packages);
     const availablePackages = dbPackages.length > 0 ? dbPackages : fallbackPackagesForTour(tourSlug);
 
-    // === Improved Package Lookup ===
-    const selectedPackage = findPackageByLegacyOrCurrentId(availablePackages, packageId || tourPackage);
+    // === Package Lookup ===
+    // The booking form now sells a single "General Entry" ticket plus optional
+    // add-ons; it is not part of the per-tour package list, so resolve it first.
+    const selectedPackage = isGeneralEntrySelection(packageId || tourPackage)
+      ? buildGeneralEntryPackage(tour, tourSlug)
+      : findPackageByLegacyOrCurrentId(availablePackages, packageId || tourPackage);
 
     if (!selectedPackage) {
       console.error("Package lookup failed - Selected package is no longer available", {
@@ -188,7 +197,8 @@ export async function POST(req: Request) {
     const ivaRate = Number(settings?.ivaRate ?? 13) / 100;
 
     const packagePrice = Number(selectedPackage.price);
-    const subtotal = safeTickets * packagePrice;
+    const addonsPricePerPerson = getAddonsPricePerPerson(addonIds);
+    const subtotal = safeTickets * (packagePrice + addonsPricePerPerson);
     const totalWithTax = subtotal * (1 + ivaRate);
     const formattedTotal = totalWithTax.toFixed(2);
 
@@ -202,6 +212,9 @@ export async function POST(req: Request) {
       pkg: packageLabel,
       packageId: selectedPackage.id ?? null,
       ppUSD: packagePrice,
+      ...(Array.isArray(addonIds) && addonIds.length > 0
+        ? { add: addonIds, addUSD: addonsPricePerPerson }
+        : {}),
       tourSlug: tourSlug ?? null,
       tourName: tourName ?? null,
       date: normalizedDate,
@@ -255,6 +268,9 @@ export async function POST(req: Request) {
       packageId: selectedPackage.id,
       tourPackage: packageLabel,
       packagePrice,
+      addons: Array.isArray(addons) ? addons : [],
+      addonIds: Array.isArray(addonIds) ? addonIds : [],
+      addonsPrice: addonsPricePerPerson * safeTickets,
       tourSlug,
       tourName,
       clientTotal: total ? Number(total) : null,
@@ -308,12 +324,16 @@ function normalizeOrderDate(date: unknown, dateIso: unknown): string | null {
   return tryParse(dateIso) ?? tryParse(date);
 }
 
+// Slugify so ids ("paquete-esencial"), display names ("Essential Package"),
+// and legacy values all compare on the same footing.
 function normalizePackageLookup(value: unknown): string {
   return String(value ?? "")
     .trim()
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
 function resolveLegacyPackageId(value: unknown): string {
@@ -329,6 +349,42 @@ function resolveLegacyPackageId(value: unknown): string {
   };
 
   return legacyMap[normalized] || normalized;
+}
+
+const GENERAL_ENTRY_KEYS = new Set([
+  "entrada-general",
+  "entrada general",
+  "general-entry",
+  "general entry",
+]);
+
+// USD conversion used by the booking form (see basePriceUSD in ReservationDetails)
+const CRC_PER_USD = 525;
+const DEFAULT_GENERAL_ENTRY_USD = 30;
+const DEFAULT_MAIN_TOUR_SLUG = "tour-ciudad-esmeralda";
+const DEFAULT_MAIN_TOUR_PRICE_CRC = 21000;
+
+function isGeneralEntrySelection(value: unknown): boolean {
+  return GENERAL_ENTRY_KEYS.has(normalizePackageLookup(value));
+}
+
+function buildGeneralEntryPackage(
+  tour: Record<string, unknown> | null,
+  tourSlug?: string
+) {
+  const dbPriceCRC = Number(tour?.priceCRC);
+  const priceCRC = Number.isFinite(dbPriceCRC) && dbPriceCRC > 0
+    ? dbPriceCRC
+    : tourSlug === DEFAULT_MAIN_TOUR_SLUG
+      ? DEFAULT_MAIN_TOUR_PRICE_CRC
+      : null;
+
+  return {
+    id: "entrada-general",
+    name: "General Entry",
+    nameEs: "Entrada General",
+    price: priceCRC ? Math.round(priceCRC / CRC_PER_USD) : DEFAULT_GENERAL_ENTRY_USD,
+  };
 }
 
 function findPackageByLegacyOrCurrentId(

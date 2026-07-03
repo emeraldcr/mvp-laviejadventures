@@ -1,7 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "Bash(node --env-file=.env scripts/seed-mundial-sweden-tunisia.mjs)"
+      "Bash(node --env-file=.env scripts/seed-mundial-sweden-tunisia.mjs)",
+      "Bash(npm run *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3777/api/tours)",
+      "Bash(curl -s -X POST http://localhost:3777/api/paypal/create-order -H \"Content-Type: application/json\" -d '{\"name\":\"Test User\",\"email\":\"test@example.com\",\"phone\":\"+506 88888888\",\"tickets\":1,\"date\":\"2026-07-11\",\"dateIso\":\"2026-07-11\",\"tourTime\":\"09:00\",\"tourPackage\":\"basic\",\"tourSlug\":\"tour-ciudad-esmeralda\",\"tourName\":\"Tour Ciudad Esmeralda\",\"packagePrice\":40,\"language\":\"es\"}')",
+      "Bash(curl -s -X POST http://localhost:3777/api/paypal/create-order -H \"Content-Type: application/json\" -d '{\"name\":\"Test User\",\"email\":\"test@example.com\",\"phone\":\"+506 88888888\",\"tickets\":1,\"date\":\"2026-07-11\",\"dateIso\":\"2026-07-11\",\"tourTime\":\"09:00\",\"packageId\":\"does-not-exist\",\"tourPackage\":\"does-not-exist\",\"tourSlug\":\"tour-ciudad-esmeralda\",\"tourName\":\"Tour\",\"packagePrice\":40,\"language\":\"es\"}')",
+      "Bash(curl -s -X POST http://localhost:3777/api/paypal/create-order -H \"Content-Type: application/json\" -d '{\"name\":\"Test User\",\"email\":\"test@example.com\",\"phone\":\"+506 88888888\",\"tickets\":2,\"total\":124.3,\"date\":\"2026-07-15\",\"dateIso\":\"2026-07-15\",\"tourTime\":\"09:00\",\"packageId\":\"entrada-general\",\"tourPackage\":\"Entrada General\",\"tourSlug\":\"tour-ciudad-esmeralda\",\"tourName\":\"Tour Ciudad Esmeralda\",\"packagePrice\":40,\"addons\":[\"Almuerzo Típico\"],\"addonIds\":[\"almuerzo\"],\"language\":\"es\"}')"
     ]
   }
 }

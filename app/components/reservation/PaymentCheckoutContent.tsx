@@ -78,7 +78,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
   const { lang } = useLanguage();
   const tr = translations[lang].payment;
 
-  const { name, email, phone, tickets, total, date, dateIso, tourTime, packageId, tourPackage, tourSlug, tourName, packagePrice } = orderDetails;
+  const { name, email, phone, tickets, total, date, dateIso, tourTime, packageId, tourPackage, tourSlug, tourName, packagePrice, addons, addonIds } = orderDetails;
 
   const checkoutKey = useMemo(
     () => [
@@ -94,9 +94,10 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
       tourSlug,
       tourName,
       packagePrice,
+      (addonIds ?? []).join(","),
       lang,
     ].join("|"),
-    [date, dateIso, email, lang, name, packageId, packagePrice, phone, tickets, total, tourName, tourPackage, tourSlug, tourTime],
+    [addonIds, date, dateIso, email, lang, name, packageId, packagePrice, phone, tickets, total, tourName, tourPackage, tourSlug, tourTime],
   );
 
   const bookingAnalyticsMetadata = useMemo(
@@ -207,6 +208,8 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
                 packagePrice,
                 tourSlug,
                 tourName,
+                addons,
+                addonIds,
                 language: lang,
                 countryCode: buyerCountryCode,
               }),
