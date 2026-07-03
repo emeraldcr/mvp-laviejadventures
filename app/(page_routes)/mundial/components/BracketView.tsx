@@ -180,6 +180,7 @@ export function BracketView({
             <BracketSVG
               byNum={byNum}
               selected={selected}
+              selectedPrediction={selMatch ? myPred.get(selMatch.id) ?? null : null}
               onSelect={(n) => setSelected((prev) => (prev === n ? null : n))}
             />
           </div>
@@ -193,13 +194,10 @@ export function BracketView({
         </div>
       </div>
 
-      {selMatch && (
-        <MatchCard
-          match={selMatch}
-          pred={myPred.get(selMatch.id) ?? null}
-          onClose={() => setSelected(null)}
-        />
-      )}
+      <div className="sr-only" aria-live="polite">
+        {selMatch ? `Partido seleccionado ${selMatch.number}` : "Ningun partido seleccionado"}
+        {myPred.size > 0 ? " con predicciones disponibles." : ""}
+      </div>
     </section>
   );
 }
@@ -319,13 +317,16 @@ function RailTeam({
 function BracketSVG({
   byNum,
   selected,
+  selectedPrediction,
   onSelect,
 }: {
   byNum: Map<number, MundialMatch>;
   selected: number | null;
+  selectedPrediction: Prediction | null;
   onSelect: (n: number) => void;
 }) {
   const gm = (n: number) => byNum.get(n);
+  const selectedMatch = selected != null ? gm(selected) : undefined;
   const hasRes = (n: number) => gm(n)?.homeFinalScore != null;
   const lineC = (n: number) =>
     hasRes(n) ? "rgba(240,180,41,0.72)" : "rgba(255,255,255,0.08)";
@@ -477,27 +478,35 @@ function BracketSVG({
       {/* R16 dots */}
       {R16_DEF.map(([n]) => (
         <InnerDot key={n} r={RA.r16} angle={R16_A[n]} match={gm(n)}
-          isSelected={selected === n} size={8} onClick={() => onSelect(n)} />
+          isSelected={selected === n} size={10} onClick={() => onSelect(n)} />
       ))}
 
       {/* QF dots */}
       {QF_DEF.map(([n]) => (
         <InnerDot key={n} r={RA.qf} angle={QF_A[n]} match={gm(n)}
-          isSelected={selected === n} size={9} onClick={() => onSelect(n)} />
+          isSelected={selected === n} size={12} onClick={() => onSelect(n)} />
       ))}
 
       {/* SF dots */}
       {SF_DEF.map(([n]) => (
         <InnerDot key={n} r={RA.sf} angle={SF_A[n]} match={gm(n)}
-          isSelected={selected === n} size={10} onClick={() => onSelect(n)} />
+          isSelected={selected === n} size={14} onClick={() => onSelect(n)} />
       ))}
 
       {/* 3rd place dot at bottom */}
       <InnerDot r={RA.finalPt} angle={180} match={gm(103)}
-        isSelected={selected === 103} size={7} onClick={() => onSelect(103)} />
+        isSelected={selected === 103} size={9} onClick={() => onSelect(103)} />
 
       {/* Final / trophy center */}
       <FinalCenter match={gm(104)} isSelected={selected === 104} onClick={() => onSelect(104)} />
+
+      {selectedMatch && (
+        <SelectedMatchCallout
+          match={selectedMatch}
+          prediction={selectedPrediction}
+          onClose={() => onSelect(selectedMatch.number)}
+        />
+      )}
 
       {/* Stage ring labels */}
       <StageRingLabels showThirdCaption={!winnerTeam(gm(103))} />
@@ -506,6 +515,77 @@ function BracketSVG({
 }
 
 // ─── OuterSlot: team dot + abbreviation at outer ring ────────────────────────
+
+function SelectedMatchCallout({
+  match,
+  prediction,
+  onClose,
+}: {
+  match: MundialMatch;
+  prediction: Prediction | null;
+  onClose: () => void;
+}) {
+  const winner = mwinner(match);
+  const hasResult = match.homeFinalScore != null && match.awayFinalScore != null;
+  const status = hasResult ? "Resultado" : formatKickoff(match.kickoffAt);
+  const predText = prediction ? `${prediction.homeScore}-${prediction.awayScore}` : "Sin pick";
+
+  return (
+    <foreignObject x={224} y={292} width={252} height={92} style={{ overflow: "visible" }}>
+      <div className="pointer-events-auto h-full rounded-xl border border-[#f0b429]/45 bg-[#030806]/92 p-2.5 text-white shadow-[0_18px_46px_rgba(0,0,0,0.65),0_0_26px_rgba(240,180,41,0.12)] backdrop-blur-md">
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <p className="text-[8px] font-black uppercase tracking-[0.18em] text-[#d5ff3f]">
+              {match.stageLabel} #{match.number}
+            </p>
+            <p className="truncate text-[10px] font-bold text-white/45">{status}</p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="grid h-6 w-6 shrink-0 place-items-center rounded-md border border-white/15 bg-white/5 text-xs font-black text-white/55 transition hover:border-[#f0b429]/50 hover:text-white"
+            aria-label="Cerrar detalle"
+          >
+            X
+          </button>
+        </div>
+
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+          <CalloutTeam team={match.homeTeam} score={match.homeFinalScore} active={winner === "home"} align="right" />
+          <div className="rounded-lg border border-white/10 bg-black/40 px-2 py-1 text-center">
+            <p className="text-[8px] font-bold uppercase text-white/35">pick</p>
+            <p className="text-xs font-black tabular-nums text-[#62ffe6]">{predText}</p>
+          </div>
+          <CalloutTeam team={match.awayTeam} score={match.awayFinalScore} active={winner === "away"} align="left" />
+        </div>
+      </div>
+    </foreignObject>
+  );
+}
+
+function CalloutTeam({
+  team,
+  score,
+  active,
+  align,
+}: {
+  team: string;
+  score: number | null;
+  active: boolean;
+  align: "left" | "right";
+}) {
+  return (
+    <div className={cn("flex min-w-0 items-center gap-1.5", align === "right" && "flex-row-reverse text-right")}>
+      <Flag team={team} size="sm" className={cn("shrink-0 rounded-[2px]", active && "ring-1 ring-[#f0b429]")} />
+      <div className="min-w-0">
+        <p className={cn("truncate text-[10px] font-black", active ? "text-[#f0b429]" : "text-white/75")}>
+          {teamCode(team)}
+        </p>
+        <p className="text-[11px] font-black tabular-nums text-white/70">{score ?? "-"}</p>
+      </div>
+    </div>
+  );
+}
 
 function MatchKnot({
   r,
@@ -521,23 +601,70 @@ function MatchKnot({
   onClick: () => void;
 }) {
   const [x, y] = pt(r, angle);
+  const winner = winnerTeam(match);
   const hasResult = match?.homeFinalScore != null;
   const hasTeams = match && isReal(match.homeTeam) && isReal(match.awayTeam);
+  const score = hasResult && match ? `${match.homeFinalScore}-${match.awayFinalScore}` : "";
+  const clipId = `knotclip-${match?.number ?? `${Math.round(r)}-${Math.round(angle)}`}`;
+  const nodeR = hasResult ? 8.2 : hasTeams ? 6.2 : 4.6;
 
   return (
     <g onClick={onClick} style={{ cursor: "pointer" }} role="button" aria-label={`Partido ${match?.number ?? ""}`}>
-      <circle cx={x} cy={y} r={12} fill="transparent" />
+      <circle cx={x} cy={y} r={15} fill="transparent" />
       <circle
         cx={x}
         cy={y}
-        r={hasResult ? 5.5 : 4.5}
-        fill={hasResult ? "#f0b429" : hasTeams ? "rgba(255,255,255,0.38)" : "rgba(255,255,255,0.16)"}
+        r={nodeR}
+        fill={hasResult ? "rgba(240,180,41,0.22)" : hasTeams ? "rgba(255,255,255,0.38)" : "rgba(255,255,255,0.16)"}
         stroke={isSelected ? "#d5ff3f" : hasResult ? "rgba(240,180,41,0.65)" : "rgba(255,255,255,0.14)"}
         strokeWidth={isSelected ? 2 : 1}
         filter={hasResult ? "url(#sglow)" : undefined}
       />
+      {!hasResult && hasTeams && match && (
+        <>
+          <clipPath id={clipId}>
+            <circle cx={x} cy={y} r={nodeR - 0.8} />
+          </clipPath>
+          <g clipPath={`url(#${clipId})`} opacity={0.72}>
+            <SvgFlag team={match.homeTeam} x={x - 4.2} y={y} size="xs" />
+            <SvgFlag team={match.awayTeam} x={x + 4.2} y={y} size="xs" />
+          </g>
+          <line
+            x1={x}
+            y1={y - nodeR + 1}
+            x2={x}
+            y2={y + nodeR - 1}
+            stroke="rgba(0,0,0,0.45)"
+            strokeWidth={0.8}
+          />
+        </>
+      )}
+      {hasResult && winner && isReal(winner) && (
+        <>
+          <clipPath id={clipId}>
+            <circle cx={x} cy={y} r={nodeR - 1.1} />
+          </clipPath>
+          <g clipPath={`url(#${clipId})`}>
+            <SvgFlag team={winner} x={x} y={y} size="xs" />
+          </g>
+          <circle cx={x} cy={y} r={nodeR} fill="none" stroke="rgba(240,180,41,0.9)" strokeWidth={1.1} />
+          <text
+            x={x}
+            y={y + nodeR + 8}
+            textAnchor="middle"
+            dominantBaseline="middle"
+            fontSize={6.5}
+            fontWeight="900"
+            fontFamily="Arial, Helvetica, sans-serif"
+            fill="rgba(240,180,41,0.95)"
+            style={{ userSelect: "none", pointerEvents: "none" }}
+          >
+            {score}
+          </text>
+        </>
+      )}
       {isSelected && (
-        <circle cx={x} cy={y} r={8.5} fill="none" stroke="rgba(213,255,63,0.5)" strokeWidth={1} />
+        <circle cx={x} cy={y} r={nodeR + 4} fill="none" stroke="rgba(213,255,63,0.7)" strokeWidth={1.2} />
       )}
     </g>
   );
@@ -661,6 +788,27 @@ function InnerDot({
         fill={fill} stroke={stroke} strokeWidth={isSelected ? 2 : 1}
         filter={decided ? "url(#sglow)" : undefined} />
 
+      {!decided && hasTeams && match && (
+        <>
+          <clipPath id={clipId}>
+            <circle cx={x} cy={y} r={size - 1.1} />
+          </clipPath>
+          <g clipPath={`url(#${clipId})`} opacity={0.74}>
+            <SvgFlag team={match.homeTeam} x={x - size * 0.38} y={y} size={size > 10 ? "sm" : "xs"} />
+            <SvgFlag team={match.awayTeam} x={x + size * 0.38} y={y} size={size > 10 ? "sm" : "xs"} />
+          </g>
+          <line
+            x1={x}
+            y1={y - size + 1.5}
+            x2={x}
+            y2={y + size - 1.5}
+            stroke="rgba(0,0,0,0.52)"
+            strokeWidth={0.9}
+          />
+          <circle cx={x} cy={y} r={size} fill="none" stroke={stroke} strokeWidth={isSelected ? 2 : 1} />
+        </>
+      )}
+
       {/* winner flag clipped inside the node */}
       {decided && wt && (
         <>
@@ -677,8 +825,7 @@ function InnerDot({
 
       {showLabel && wt && (isBottom ? (
         <g>
-          <SvgFlag team={wt} x={x} y={y + size + 13} />
-          <text x={x} y={y + size + 27}
+          <text x={x} y={y + size + 15}
             textAnchor="middle" dominantBaseline="middle"
             fontSize={7.5} fontWeight="800" fontFamily="Arial, Helvetica, sans-serif"
             fill="rgba(240,180,41,0.95)"
@@ -688,8 +835,7 @@ function InnerDot({
         </g>
       ) : (
         <g>
-          <SvgFlag team={wt} x={isLeft ? lx - 12 : lx + 2} y={ly} />
-          <text x={isLeft ? lx - 18 : lx + 14} y={ly}
+          <text x={isLeft ? lx - 4 : lx + 4} y={ly}
             textAnchor={anchor} dominantBaseline="middle"
             fontSize={7.5} fontWeight="800" fontFamily="Arial, Helvetica, sans-serif"
             fill={decided ? "rgba(240,180,41,0.95)" : "rgba(255,255,255,0.58)"}
@@ -697,7 +843,7 @@ function InnerDot({
             {teamCode(wt)}
           </text>
           {score && (
-            <text x={isLeft ? lx - 18 : lx + 14} y={ly + 9}
+            <text x={isLeft ? lx - 4 : lx + 4} y={ly + 9}
               textAnchor={anchor} dominantBaseline="middle"
               fontSize={6.4} fontWeight="700" fontFamily="Arial, Helvetica, sans-serif"
               fill="rgba(255,255,255,0.5)"
