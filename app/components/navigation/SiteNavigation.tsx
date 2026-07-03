@@ -365,7 +365,22 @@ export const MobileBottomNav = memo(() => {
 
   const closeMore = useCallback(() => setMoreOpen(false), []);
 
-  const tabs = [
+  type MobileTab =
+    | {
+        id: string;
+        href: string;
+        label: string;
+        Icon: ComponentType<{ size?: number; className?: string; strokeWidth?: number }>;
+        isPrimary?: boolean;
+      }
+    | {
+        id: string;
+        label: string;
+        Icon: ComponentType<{ size?: number; className?: string; strokeWidth?: number }>;
+        isMore: true;
+      };
+
+  const tabs: MobileTab[] = [
     { id: "home", href: "/", label: lang === "es" ? "Inicio" : "Home", Icon: Home },
     { id: "tours", href: "/tours", label: tr.tours, Icon: Compass },
     {
@@ -377,7 +392,7 @@ export const MobileBottomNav = memo(() => {
     },
     { id: "gallery", href: "/galeria", label: tr.gallery, Icon: GalleryHorizontal },
     { id: "more", label: lang === "es" ? "Más" : "More", Icon: LayoutGrid, isMore: true },
-  ] as const;
+  ];
 
   const isMoreActive = MORE_PATH_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 
@@ -400,13 +415,9 @@ export const MobileBottomNav = memo(() => {
         >
           {tabs.map((tab) => {
             const { label, Icon } = tab;
-            const isPrimary = "isPrimary" in tab && tab.isPrimary;
-            const isMore = "isMore" in tab && tab.isMore;
-            const isActive = isMore
-              ? isMoreActive
-              : isPathActive(pathname, tab.href);
 
-            if (isMore) {
+            if (!("href" in tab)) {
+              const isActive = isMoreActive;
               return (
                 <button
                   key={tab.id}
@@ -440,11 +451,14 @@ export const MobileBottomNav = memo(() => {
               );
             }
 
-            if (isPrimary) {
+            const { href } = tab;
+            const isActive = isPathActive(pathname, href);
+
+            if (tab.isPrimary) {
               return (
                 <Link
                   key={tab.id}
-                  href={tab.href}
+                  href={href}
                   aria-current={isActive ? "page" : undefined}
                   className="relative flex min-h-[52px] flex-col items-center justify-end pb-2 transition-transform active:scale-95"
                 >
@@ -473,7 +487,7 @@ export const MobileBottomNav = memo(() => {
             return (
               <Link
                 key={tab.id}
-                href={tab.href}
+                href={href}
                 aria-current={isActive ? "page" : undefined}
                 className="relative flex min-h-[52px] flex-col items-center justify-center gap-1 py-2 transition-transform active:scale-95"
               >

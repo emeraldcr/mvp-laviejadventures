@@ -12,13 +12,13 @@ import {
   type SerializedPenalitosState,
 } from "@/lib/mundial/penalitos";
 import { subscribePenalitosChanges } from "@/lib/mundial/penalitos-events";
+import { readLiveMundialMatch } from "@/lib/mundial/matches-store";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 55; // Vercel streaming limit
 
 const POLL_MS = 1_000;
 const HEARTBEAT_MS = 15_000;
-const MATCHES_COLLECTION = "mundial_matches";
 
 // Per-process connection counter: approximate on multi-instance deployments.
 let activeConnections = 0;
@@ -49,22 +49,7 @@ type LiveClient = {
 const clients = new Set<LiveClient>();
 
 async function fetchLiveMatch(db: Db): Promise<SerializedLiveMatch | null> {
-  const doc = await db.collection<MatchDoc>(MATCHES_COLLECTION).findOne(
-    { liveStatus: { $in: ["live", "halftime"] } },
-    {
-      projection: {
-        _id: 0,
-        id: 1,
-        homeTeam: 1,
-        awayTeam: 1,
-        homeLiveScore: 1,
-        awayLiveScore: 1,
-        liveMinute: 1,
-        liveStatus: 1,
-        liveNote: 1,
-      },
-    }
-  );
+  const doc = await readLiveMundialMatch(db) as MatchDoc | null;
   if (!doc) return null;
   const status = doc.liveStatus;
   return {

@@ -4,10 +4,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/helpers/mongodb";
 import { ensureState, forceResolve, getState, openRound } from "@/lib/mundial/scorer";
 import { notifyScorerChanged } from "@/lib/mundial/scorer-events";
+import { readLiveMundialMatch } from "@/lib/mundial/matches-store";
 
 export const dynamic = "force-dynamic";
 
-const MATCHES_COLLECTION = "mundial_matches";
 const ROSTERS_COLLECTION = "mundial_rosters";
 
 type RosterPlayer = {
@@ -42,17 +42,7 @@ export async function POST(_req: NextRequest) {
     const db = await getDb();
     await ensureState(db);
 
-    const match = await db.collection<MatchDoc>(MATCHES_COLLECTION).findOne(
-      { liveStatus: { $in: ["live", "halftime"] } },
-      {
-        projection: {
-          _id: 0,
-          id: 1,
-          homeTeam: 1,
-          awayTeam: 1,
-        },
-      }
-    );
+    const match = await readLiveMundialMatch(db) as MatchDoc | null;
 
     if (!match) {
       return NextResponse.json({ error: "No hay partido en vivo" }, { status: 404 });

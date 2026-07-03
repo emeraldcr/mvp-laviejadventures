@@ -2,10 +2,10 @@ import { NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 
 import { getDb } from "@/lib/helpers/mongodb";
+import { readMundialMatches } from "@/lib/mundial/matches-store";
 
 export const dynamic = "force-dynamic";
 
-const MATCHES_COLLECTION = "mundial_matches";
 const POSTS_COLLECTION = "mundial_x_posts";
 const MAX_POST_LENGTH = 280;
 
@@ -60,10 +60,8 @@ function serializePost(doc: XPostDoc) {
 
 async function findMatch(matchId: string) {
   const db = await getDb();
-  return db.collection<MatchDoc>(MATCHES_COLLECTION).findOne(
-    { id: matchId },
-    { projection: { id: 1, homeTeam: 1, awayTeam: 1 } },
-  );
+  const matches = await readMundialMatches<MatchDoc>(db);
+  return matches.find((match) => match.id === matchId) ?? null;
 }
 
 function payloadFor(match: MatchDoc, posts: XPostDoc[]) {

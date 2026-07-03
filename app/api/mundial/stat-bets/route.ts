@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/helpers/mongodb";
 import { recordMundialAnalyticsEvent } from "@/lib/mundial/analytics";
-import { MUNDIAL_MATCHES } from "@/lib/mundial/fixtures";
+import { readMundialMatches } from "@/lib/mundial/matches-store";
 
 export const dynamic = "force-dynamic";
 
@@ -133,12 +133,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Faltan datos." }, { status: 400 });
     }
 
-    const match = MUNDIAL_MATCHES.find((m) => m.id === matchId);
+    const db = await getDb();
+    const matches = await readMundialMatches(db);
+    const match = matches.find((m) => m.id === matchId);
     if (!match) {
       return NextResponse.json({ error: "Partido no encontrado." }, { status: 404 });
     }
 
-    const db = await getDb();
     const question = await db.collection(STAT_QUESTIONS_COLLECTION).findOne({ id: questionId, matchId });
 
     if (!question) {

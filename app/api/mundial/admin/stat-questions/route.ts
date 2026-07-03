@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 import { getDb } from "@/lib/helpers/mongodb";
-import { MUNDIAL_MATCHES } from "@/lib/mundial/fixtures";
+import { readMundialMatches } from "@/lib/mundial/matches-store";
 
 export const dynamic = "force-dynamic";
 
@@ -77,12 +77,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Todas las opciones necesitan etiqueta." }, { status: 400 });
     }
 
-    const match = MUNDIAL_MATCHES.find((m) => m.id === matchId);
+    const db = await getDb();
+    const matches = await readMundialMatches(db);
+    const match = matches.find((m) => m.id === matchId);
     if (!match) {
       return NextResponse.json({ error: "Partido no encontrado." }, { status: 404 });
     }
 
-    const db = await getDb();
     await ensureIndexes();
 
     const id = new ObjectId().toString();

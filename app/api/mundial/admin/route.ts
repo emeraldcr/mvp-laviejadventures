@@ -5,11 +5,10 @@ import { getDb } from "@/lib/helpers/mongodb";
 import { COLLECTIONS } from "@/lib/constants/db";
 import type { MundialMatch, MundialStage } from "@/lib/mundial/fixtures";
 import { serializeLiveMatchStats, type LiveMatchStats } from "@/lib/mundial/live-stats";
-import { ensureMundialData } from "@/lib/mundial/matches-store";
+import { readMundialMatches } from "@/lib/mundial/matches-store";
 
 export const dynamic = "force-dynamic";
 
-const MATCHES_COLLECTION = "mundial_matches";
 const PREDICTIONS_COLLECTION = "mundial_predictions";
 const STAT_QUESTIONS_COLLECTION = "mundial_stat_questions";
 const STAT_BETS_COLLECTION = "mundial_stat_bets";
@@ -298,7 +297,6 @@ export async function GET() {
   try {
     const db = await getDb();
     const now = new Date();
-    await ensureMundialData(db);
 
     const analyticsCollection = db.collection<MundialAnalyticsDoc>(COLLECTIONS.MUNDIAL_ANALYTICS);
     const [
@@ -313,7 +311,7 @@ export async function GET() {
       premiumPlayers,
       premiumPredictions,
     ] = await Promise.all([
-      db.collection<MundialMatchDoc>(MATCHES_COLLECTION).find({}).sort({ sortOrder: 1 }).toArray(),
+      readMundialMatches<MundialMatchDoc>(db),
       db.collection<PredictionDoc>(PREDICTIONS_COLLECTION).find({}).toArray(),
       db.collection<StatQuestionDoc>(STAT_QUESTIONS_COLLECTION).find({}).sort({ createdAt: 1 }).toArray(),
       db.collection<StatBetDoc>(STAT_BETS_COLLECTION).find({}).toArray(),

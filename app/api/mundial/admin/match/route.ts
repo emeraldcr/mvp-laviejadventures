@@ -4,10 +4,10 @@ import { serializeLiveMatchStats } from "@/lib/mundial/live-stats";
 import { notifyLiveMatchChanged } from "@/lib/mundial/live-match-events";
 import { notifyPenalitosChanged } from "@/lib/mundial/penalitos-events";
 import { notifyScorerChanged } from "@/lib/mundial/scorer-events";
+import { getMundialMatchCollectionForWrite } from "@/lib/mundial/matches-store";
 
 export const dynamic = "force-dynamic";
 
-const MATCHES_COLLECTION = "mundial_matches";
 const MAX_SCORE = 30;
 const MAX_LIVE_MINUTE = 130;
 
@@ -225,14 +225,14 @@ export async function PATCH(req: NextRequest) {
     }
 
     if (touchedFinalScore) {
-      const existingMatch = await db
-        .collection<{
+      const writeCollection = await getMundialMatchCollectionForWrite(db, matchId);
+      const existingMatch = await writeCollection
+        .findOne<{
           homeFinalScore?: number | null;
           awayFinalScore?: number | null;
           stage?: string;
           actualWinner?: "home" | "away" | null;
-        }>(MATCHES_COLLECTION)
-        .findOne({ id: matchId }, { projection: { homeFinalScore: 1, awayFinalScore: 1, stage: 1, actualWinner: 1 } });
+        }>({ id: matchId }, { projection: { homeFinalScore: 1, awayFinalScore: 1, stage: 1, actualWinner: 1 } });
 
       if (!existingMatch) {
         return NextResponse.json({ error: "Partido no encontrado." }, { status: 404 });
@@ -267,9 +267,8 @@ export async function PATCH(req: NextRequest) {
       }
     }
 
-    const result = await db
-      .collection(MATCHES_COLLECTION)
-      .updateOne({ id: matchId }, { $set });
+    const writeCollection = await getMundialMatchCollectionForWrite(db, matchId);
+    const result = await writeCollection.updateOne({ id: matchId }, { $set });
 
     if (!result.matchedCount) {
       return NextResponse.json({ error: "Partido no encontrado." }, { status: 404 });

@@ -8,13 +8,13 @@ import {
   type LiveMatchStats,
 } from "@/lib/mundial/live-stats";
 import { subscribeLiveMatchChanges } from "@/lib/mundial/live-match-events";
+import { readLiveMundialMatch } from "@/lib/mundial/matches-store";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 55;
 
 const POLL_MS = 1_000;
 const HEARTBEAT_MS = 15_000;
-const FULLTIME_BROADCAST_MS = 2 * 60_000;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -93,32 +93,7 @@ function emptyPayload(viewerCount: number): LiveMatchPayload {
 
 async function buildPayload(): Promise<LiveMatchPayload> {
   const db = await getDb();
-  const projection = {
-        _id: 0,
-        id: 1,
-        sortOrder: 1,
-        homeTeam: 1,
-        awayTeam: 1,
-        homeFinalScore: 1,
-        awayFinalScore: 1,
-        homeLiveScore: 1,
-        awayLiveScore: 1,
-        liveMinute: 1,
-        liveMinuteUpdatedAt: 1,
-        liveStatus: 1,
-        liveNote: 1,
-        liveEvents: 1,
-        liveStats: 1,
-        liveUpdatedAt: 1,
-      };
-  const collection = db.collection<MatchDoc>("mundial_matches");
-  const doc = await collection.findOne(
-    { liveStatus: { $in: ["live", "halftime"] } },
-    { sort: { liveUpdatedAt: -1, sortOrder: -1 }, projection }
-  ) ?? await collection.findOne(
-    { liveStatus: "fulltime", liveUpdatedAt: { $gte: new Date(Date.now() - FULLTIME_BROADCAST_MS) } },
-    { sort: { liveUpdatedAt: -1, sortOrder: -1 }, projection }
-  );
+  const doc = await readLiveMundialMatch(db) as MatchDoc | null;
 
   if (!doc) return emptyPayload(activeConnections);
 

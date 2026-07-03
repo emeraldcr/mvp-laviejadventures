@@ -10,13 +10,13 @@ import {
   type SerializedScorerLiveMatch,
 } from "@/lib/mundial/scorer";
 import { subscribeScorerChanges } from "@/lib/mundial/scorer-events";
+import { readLiveMundialMatch } from "@/lib/mundial/matches-store";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 55;
 
 const POLL_MS = 1_500;
 const HEARTBEAT_MS = 15_000;
-const MATCHES_COLLECTION = "mundial_matches";
 
 let activeConnections = 0;
 let pollTimerId: ReturnType<typeof setInterval> | null = null;
@@ -32,7 +32,7 @@ type MatchDoc = {
   homeLiveScore?: number | null;
   awayLiveScore?: number | null;
   liveMinute?: number | null;
-  liveUpdatedAt?: string | null;
+  liveUpdatedAt?: Date | string | null;
   liveStatus?: string;
   liveEvents?: GoalEvent[];
 };
@@ -47,23 +47,7 @@ const clients = new Set<LiveClient>();
 async function fetchLiveMatch(
   db: Db
 ): Promise<{ match: SerializedScorerLiveMatch | null; doc: MatchDoc | null }> {
-  const doc = await db.collection<MatchDoc>(MATCHES_COLLECTION).findOne(
-    { liveStatus: { $in: ["live", "halftime"] } },
-    {
-      projection: {
-        _id: 0,
-        id: 1,
-        homeTeam: 1,
-        awayTeam: 1,
-        homeLiveScore: 1,
-        awayLiveScore: 1,
-        liveMinute: 1,
-        liveUpdatedAt: 1,
-        liveStatus: 1,
-        liveEvents: 1,
-      },
-    }
-  );
+  const doc = await readLiveMundialMatch(db) as MatchDoc | null;
   if (!doc) return { match: null, doc: null };
   return {
     doc,
@@ -74,7 +58,7 @@ async function fetchLiveMatch(
       homeLiveScore: typeof doc.homeLiveScore === "number" ? doc.homeLiveScore : null,
       awayLiveScore: typeof doc.awayLiveScore === "number" ? doc.awayLiveScore : null,
       liveMinute: typeof doc.liveMinute === "number" ? doc.liveMinute : null,
-      liveUpdatedAt: doc.liveUpdatedAt ?? null,
+      liveUpdatedAt: doc.liveUpdatedAt ? new Date(doc.liveUpdatedAt).toISOString() : null,
       liveStatus: doc.liveStatus ?? "scheduled",
     },
   };

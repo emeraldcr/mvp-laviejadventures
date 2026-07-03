@@ -13,6 +13,23 @@ import { PlayerDetailModal } from "./components/PlayerDetailModal";
 import { AdminPremiumPredictionsPanel } from "./components/AdminPremiumPredictionsPanel";
 import { buildTeamResolver } from "../utils";
 
+const HALF_REAL_DURATION_MINUTES = 51;
+const STANDARD_HALFTIME_MINUTES = 15;
+const FINAL_HALFTIME_MINUTES = 27;
+
+function autoLiveMaxMinutes(match: AdminMatch) {
+  return (HALF_REAL_DURATION_MINUTES * 2) + (match.stage === "final" ? FINAL_HALFTIME_MINUTES : STANDARD_HALFTIME_MINUTES);
+}
+
+function isAutoLiveWindow(match: AdminMatch, nowMs: number) {
+  if (!nowMs || match.liveStatus !== "scheduled" || match.forceClosed) return false;
+  if (match.homeFinalScore !== null && match.awayFinalScore !== null) return false;
+  const kickoff = new Date(match.kickoffAt).getTime();
+  if (!Number.isFinite(kickoff)) return false;
+  const elapsed = nowMs - kickoff;
+  return elapsed >= 0 && elapsed < autoLiveMaxMinutes(match) * 60_000;
+}
+
 function sortByProximity(matches: AdminMatch[], nowMs: number): AdminMatch[] {
   return [...matches].sort((a, b) => {
     // Tier 0: explicitly live or halftime
@@ -24,8 +41,8 @@ function sortByProximity(matches: AdminMatch[], nowMs: number): AdminMatch[] {
     const bTime = new Date(b.kickoffAt).getTime();
 
     // Tier 1: kicked off but not yet closed (in progress, not yet marked live)
-    const aInProgress = !a.closed && nowMs > 0 && aTime <= nowMs ? 0 : 1;
-    const bInProgress = !b.closed && nowMs > 0 && bTime <= nowMs ? 0 : 1;
+    const aInProgress = isAutoLiveWindow(a, nowMs) ? 0 : 1;
+    const bInProgress = isAutoLiveWindow(b, nowMs) ? 0 : 1;
     if (aInProgress !== bInProgress) return aInProgress - bInProgress;
 
     // Tier 2: upcoming vs past
@@ -190,20 +207,20 @@ export default function AdminClient() {
   const isLive = (m: AdminMatch) => m.liveStatus === "live" || m.liveStatus === "halftime";
 
   const filteredMatches = useMemo(() => {
-    if (matchFilter === "upcoming") return allMatchesSorted.filter((m) => !m.closed || isLive(m) || (m.homeFinalScore === null && m.awayFinalScore === null));
+    if (matchFilter === "upcoming") return allMatchesSorted.filter((m) => isLive(m) || isAutoLiveWindow(m, nowMs) || nowMs === 0 || new Date(m.kickoffAt).getTime() > nowMs);
     if (matchFilter === "live")     return allMatchesSorted.filter(isLive);
     if (matchFilter === "recent")   return allMatchesSorted.filter((m) => m.closed).slice(0, 8);
     if (matchFilter === "open")     return allMatchesSorted.filter((m) => !m.closed);
     if (matchFilter === "scored")   return allMatchesSorted.filter((m) => m.homeFinalScore !== null && m.awayFinalScore !== null);
     return allMatchesSorted;
-  }, [allMatchesSorted, matchFilter]);
+  }, [allMatchesSorted, matchFilter, nowMs]);
 
   // For "upcoming" and "all" modes, split into labelled sections
   const matchSections = useMemo(() => {
     if (matchFilter !== "upcoming" && matchFilter !== "all") return null;
     if (matchFilter === "upcoming") {
       return {
-        live:     filteredMatches.filter((m) => isLive(m) || (nowMs > 0 && new Date(m.kickoffAt).getTime() <= nowMs)),
+        live:     filteredMatches.filter((m) => isLive(m) || isAutoLiveWindow(m, nowMs)),
         upcoming: filteredMatches.filter((m) => nowMs === 0 || new Date(m.kickoffAt).getTime() > nowMs),
         past:     [] as AdminMatch[],
       };

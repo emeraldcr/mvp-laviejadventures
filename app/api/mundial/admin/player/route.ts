@@ -3,10 +3,10 @@ import { ObjectId } from "mongodb";
 
 import { getDb } from "@/lib/helpers/mongodb";
 import type { MundialMatch, MundialStage } from "@/lib/mundial/fixtures";
+import { readMundialMatches } from "@/lib/mundial/matches-store";
 
 export const dynamic = "force-dynamic";
 
-const MATCHES_COLLECTION = "mundial_matches";
 const PREDICTIONS_COLLECTION = "mundial_predictions";
 
 type WinnerPick = "home" | "away" | null;
@@ -85,7 +85,7 @@ export async function GET(req: NextRequest) {
     const now = new Date();
 
     const [matches, predictions] = await Promise.all([
-      db.collection<MundialMatchDoc>(MATCHES_COLLECTION).find({}).sort({ sortOrder: 1 }).toArray(),
+      readMundialMatches<MundialMatchDoc>(db),
       db.collection<PredictionDoc>(PREDICTIONS_COLLECTION).find({ normalizedName: name }).toArray(),
     ]);
 
