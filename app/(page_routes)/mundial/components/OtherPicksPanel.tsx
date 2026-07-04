@@ -10,12 +10,28 @@ type PickStatus = {
   showIndicator: boolean;
   isWinning: boolean;
   isExact: boolean;
+  points: number | null;
+  kind: "exact" | "outcome" | "miss" | "pending";
 };
 
 function getOutcome(home: number, away: number): Outcome {
   if (home > away) return "home";
   if (away > home) return "away";
   return "draw";
+}
+
+function formatWinnerPick(match: MundialMatch, prediction: Prediction) {
+  if (!prediction.winnerPick) return null;
+  const team = prediction.winnerPick === "home" ? match.homeTeam : match.awayTeam;
+  const methodLabel = prediction.winnerPickMethod === "extraTime"
+    ? "tiempos extra"
+    : prediction.winnerPickMethod === "penalties"
+      ? "penales"
+      : "";
+
+  return match.stage === "group"
+    ? null
+    : `Pasa ${team}${methodLabel ? ` (${methodLabel})` : ""}`;
 }
 
 function pickStatus(match: MundialMatch, prediction: Prediction): PickStatus {
@@ -32,7 +48,7 @@ function pickStatus(match: MundialMatch, prediction: Prediction): PickStatus {
   const showIndicator = hasRef && (hasFinalScore || match.closed || hasLiveScore);
 
   if (!hasRef) {
-    return { showIndicator: false, isWinning: false, isExact: false };
+    return { showIndicator: false, isWinning: false, isExact: false, points: null, kind: "pending" };
   }
 
   if (hasFinalScore) {
@@ -43,20 +59,27 @@ function pickStatus(match: MundialMatch, prediction: Prediction): PickStatus {
         awayFinalScore: refAway,
         actualWinner: match.actualWinner,
       },
-      { homeScore: prediction.homeScore, awayScore: prediction.awayScore, winnerPick: prediction.winnerPick },
+      {
+        homeScore: prediction.homeScore,
+        awayScore: prediction.awayScore,
+        winnerPick: prediction.winnerPick,
+        winnerPickMethod: prediction.winnerPickMethod,
+      },
     );
 
     return {
       showIndicator,
       isWinning: points >= 1,
       isExact: predictionScoreKind(points) === "exact",
+      points,
+      kind: predictionScoreKind(points),
     };
   }
 
   const isWinning = getOutcome(prediction.homeScore, prediction.awayScore) === getOutcome(refHome, refAway);
   const isExact = prediction.homeScore === refHome && prediction.awayScore === refAway;
 
-  return { showIndicator, isWinning, isExact };
+  return { showIndicator, isWinning, isExact, points: null, kind: "pending" };
 }
 
 type OtherPicksPanelProps = {
@@ -156,7 +179,15 @@ export function OtherPicksPanel({ match, predictions, playerName, showEmpty = fa
                 {sorted.map((p) => {
                   const isMe = normalizeKey(p.playerName) === myKey;
                   const outcome = getOutcome(p.homeScore, p.awayScore);
-                  const { showIndicator, isWinning, isExact } = pickStatus(match, p);
+                  const { showIndicator, isWinning, isExact, points, kind } = pickStatus(match, p);
+                  const winnerText = formatWinnerPick(match, p);
+                  const statusLabel = showIndicator
+                    ? kind === "exact"
+                      ? "Exacto"
+                      : kind === "outcome"
+                        ? "Resultado"
+                        : "Fallo"
+                    : "Pendiente";
 
                   return (
                     <div
@@ -172,14 +203,33 @@ export function OtherPicksPanel({ match, predictions, playerName, showEmpty = fa
                     >
                       <div className="flex min-w-0 items-center gap-2">
                         {isMe && <span className="h-2 w-2 shrink-0 rounded-full bg-[#d5ff3f] shadow-[0_0_10px_rgba(213,255,63,0.9)]" />}
-                        <span className={cn("min-w-0 truncate text-base font-black", isMe ? "text-[#d5ff3f]" : "text-white")}>
-                          {isMe ? "Vos" : p.playerName}
-                        </span>
-                        {isExact && (
-                          <span className="hidden shrink-0 rounded border border-[#f0b429]/55 bg-[#f0b429]/15 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.08em] text-[#f0b429] min-[460px]:inline">
-                            Exacto
-                          </span>
-                        )}
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className={cn("min-w-0 truncate text-base font-black", isMe ? "text-[#d5ff3f]" : "text-white")}>
+                              {isMe ? "Vos" : p.playerName}
+                            </span>
+                            {isExact && (
+                              <span className="hidden shrink-0 rounded border border-[#f0b429]/55 bg-[#f0b429]/15 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.08em] text-[#f0b429] min-[460px]:inline">
+                                Exacto
+                              </span>
+                            )}
+                            {winnerText && (
+                              <span className="hidden shrink-0 rounded border border-white/10 bg-white/5 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.08em] text-white/70 min-[460px]:inline">
+                                {winnerText}
+                              </span>
+                            )}
+                          </div>
+                          <div className="mt-1 flex flex-wrap items-center gap-1">
+                            <span className="rounded-md border border-white/10 bg-black/30 px-2 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-white/70">
+                              {statusLabel}
+                            </span>
+                            {points !== null && (
+                              <span className="rounded-md border border-[#62ffe6]/40 bg-[#071d2a]/90 px-2 py-1 text-[10px] font-black text-[#62ffe6]">
+                                +{points}
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       </div>
 
                       <div className="flex min-w-0 shrink-0 items-center justify-end gap-1.5">
@@ -197,11 +247,6 @@ export function OtherPicksPanel({ match, predictions, playerName, showEmpty = fa
                           {p.homeScore}-{p.awayScore}
                         </span>
                         <Flag team={match.awayTeam} size="xs" />
-                        {p.winnerPick && (
-                          <span className="hidden max-w-28 truncate text-xs font-black text-white/55 min-[560px]:inline">
-                            pen. {p.winnerPick === "home" ? match.homeTeam : match.awayTeam}
-                          </span>
-                        )}
                         {showIndicator && (
                           isExact ? (
                             <Star className="h-4 w-4 shrink-0 fill-[#f0b429] text-[#f0b429]" />

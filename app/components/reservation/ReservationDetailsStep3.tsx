@@ -13,6 +13,7 @@ interface ReservationDetailsStep3Props {
     agreeTerms: boolean;
   };
   selectedTourName: string;
+  packageLabel: string;
   basePriceUSD: number;
   tourTime: TourTime | null;
   tickets: number;
@@ -37,6 +38,7 @@ export default function ReservationDetailsStep3({
   termsCheckboxRef,
   formState,
   selectedTourName,
+  packageLabel,
   basePriceUSD,
   tourTime,
   tickets,
@@ -60,7 +62,7 @@ export default function ReservationDetailsStep3({
       <div ref={reviewSectionRef} className="mb-6 rounded-xl bg-zinc-100 p-4 dark:bg-zinc-800">
         <div className="mb-2 flex justify-between"><span>{tr.tourLabel}</span><span className="font-medium">{selectedTourName}</span></div>
         <div className="mb-2 flex justify-between">
-          <span>{lang === "es" ? "Entrada General" : "General Entry"}</span>
+          <span>{packageLabel}</span>
           <span className="font-medium">${basePriceUSD} / {tr.perPerson}</span>
         </div>
         <div className="mb-2 flex justify-between"><span>{tr.tourTimeTitle}</span><span>{tourTime ?? "—"}</span></div>

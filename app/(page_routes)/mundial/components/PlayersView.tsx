@@ -833,7 +833,12 @@ function computePredictionScore(match: MundialMatch | undefined, prediction: Pre
       awayFinalScore: match.awayFinalScore,
       actualWinner: match.actualWinner,
     },
-    { homeScore: prediction.homeScore, awayScore: prediction.awayScore, winnerPick: prediction.winnerPick },
+    {
+      homeScore: prediction.homeScore,
+      awayScore: prediction.awayScore,
+      winnerPick: prediction.winnerPick,
+      winnerPickMethod: prediction.winnerPickMethod,
+    },
   );
 
   return { points, kind: predictionScoreKind(points) };

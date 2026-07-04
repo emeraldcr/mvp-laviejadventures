@@ -24,7 +24,7 @@ export function ToursClient({ tours }: { tours: PublicTour[] }) {
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#FAF9F6] font-sans text-stone-900">
-      <HomeNav />
+      <HomeNav solid />
 
       <section className="border-b border-stone-200 bg-white pt-28 pb-10 md:pt-32 md:pb-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

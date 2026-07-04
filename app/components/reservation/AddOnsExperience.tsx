@@ -15,6 +15,8 @@ type AddOnsExperienceProps = {
   onAddonToggle?: (addonId: string) => void;
   onAddonDetailsChange?: (details: ReservationAddonDetails) => void;
   showReserveLink?: boolean;
+  excludedAddonIds?: string[];
+  defaultCollapsed?: boolean;
 };
 
 const CATEGORY_LABELS: Record<AddOnOption["category"], { es: string; en: string }> = {
@@ -54,9 +56,13 @@ export default function AddOnsExperience({
   onAddonToggle,
   onAddonDetailsChange,
   showReserveLink = false,
+  excludedAddonIds = [],
+  defaultCollapsed = true,
 }: AddOnsExperienceProps) {
   const canSelect = Boolean(onAddonToggle);
+  const [expanded, setExpanded] = useState(!defaultCollapsed);
   const [activeAddonId, setActiveAddonId] = useState<string | null>(null);
+  const visibleAddons = ADDON_OPTIONS.filter((addon) => !excludedAddonIds.includes(addon.id));
   const activeAddon = useMemo(
     () => ADDON_OPTIONS.find((addon) => addon.id === activeAddonId) ?? null,
     [activeAddonId],
@@ -73,46 +79,35 @@ export default function AddOnsExperience({
     }
   };
 
+  if (visibleAddons.length === 0) return null;
+
   return (
-    <section className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-700 dark:bg-zinc-900/70 sm:p-5">
-      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <section className="rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900/70">
+      <button
+        type="button"
+        onClick={() => setExpanded((value) => !value)}
+        className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left sm:px-5"
+      >
         <div>
           <p className="text-[11px] font-black uppercase tracking-[0.2em] text-emerald-500">
-            {lang === "es" ? "Extras premium" : "Premium add-ons"}
+            {lang === "es" ? "Extras opcionales" : "Optional extras"}
           </p>
-          <h3 className="mt-1 text-xl font-black leading-tight text-zinc-900 dark:text-zinc-50">
-            {lang === "es" ? "Arme el día completo" : "Build the full day"}
+          <h3 className="mt-0.5 text-sm font-black text-zinc-900 dark:text-zinc-50">
+            {lang === "es" ? "Transporte, hospedaje y más" : "Transport, lodging & more"}
+            {selectedAddons.length > 0 && (
+              <span className="ml-2 text-emerald-600">({selectedAddons.length})</span>
+            )}
           </h3>
-          <p className="mt-1 max-w-2xl text-sm font-medium leading-relaxed text-zinc-500 dark:text-zinc-400">
-            {lang === "es"
-              ? "Comida, hospedaje, transporte y detalles extra. Seleccione lo que ocupa y deje las preferencias listas para confirmar."
-              : "Food, lodging, transport, and extra details. Choose what you need and set preferences for confirmation."}
-          </p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          {!showReserveLink && (
-            <Link
-              href="/add-ons"
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-zinc-300 bg-white px-4 py-2 text-sm font-black text-zinc-800 transition hover:border-emerald-500 hover:text-emerald-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
-            >
-              {lang === "es" ? "Ver extras" : "View add-ons"}
-              <ChevronRight className="h-4 w-4" aria-hidden />
-            </Link>
-          )}
-          {showReserveLink && (
-            <Link
-              href="/reservar"
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-black text-white transition hover:bg-emerald-500"
-            >
-              {lang === "es" ? "Reservar ahora" : "Reserve now"}
-              <ChevronRight className="h-4 w-4" aria-hidden />
-            </Link>
-          )}
-        </div>
-      </div>
+        <span className="shrink-0 text-xs font-bold text-emerald-700">
+          {expanded ? (lang === "es" ? "Ocultar" : "Hide") : (lang === "es" ? "Agregar" : "Add")}
+        </span>
+      </button>
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-        {ADDON_OPTIONS.map((addon) => {
+      {expanded && (
+      <div className="border-t border-zinc-200 px-4 pb-4 pt-3 dark:border-zinc-700 sm:px-5 sm:pb-5">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+        {visibleAddons.map((addon) => {
           const selected = selectedAddons.includes(addon.id);
           const Icon = addon.icon;
           const name = lang === "es" ? addon.nameEs : addon.nameEn;
@@ -205,6 +200,8 @@ export default function AddOnsExperience({
             setActiveAddonId(null);
           }}
         />
+      )}
+      </div>
       )}
     </section>
   );

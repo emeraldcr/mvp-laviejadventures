@@ -8,7 +8,9 @@ import {
 } from "lucide-react";
 import { formatDepartureLabel } from "@/lib/reservation/constants";
 import AddOnsExperience from "@/app/components/reservation/AddOnsExperience";
+import PackagePicker from "@/app/components/reservation/PackagePicker";
 import type { ReservationAddonDetails, TourTime } from "@/lib/reservation/types";
+import type { TourPackageOption } from "@/lib/types/index";
 
 type ReservationTranslations = typeof import("@/lib/translations").translations["es"]["reservation"];
 
@@ -20,15 +22,24 @@ interface ReservationDetailsStep1Props {
   isTicketsValid: boolean;
   tickets: number;
   slots: number;
+  packages: TourPackageOption[];
+  selectedPackageId: string;
+  excludedAddonIds: string[];
   selectedAddons: string[];
   addonDetails: ReservationAddonDetails;
   addonsPricePerPerson: number;
-  basePriceUSD: number;
+  packagePriceUSD: number;
+  packageLabel: string;
+  reservationDateIso: string;
+  onPackageSelect: (packageId: string) => void;
+  isPackageDisabled?: (pkg: TourPackageOption) => boolean;
   onTourTimeSelect: (slot: TourTime) => void;
   onTicketsChange: (rawValue: string) => void;
   onStep1Enter: (event: KeyboardEvent<HTMLInputElement>) => void;
   onAddonToggle: (addonId: string) => void;
   onAddonDetailsChange: (details: ReservationAddonDetails) => void;
+  onContinue: () => void;
+  canContinue: boolean;
   tr: ReservationTranslations;
   lang: "es" | "en";
 }
@@ -41,20 +52,48 @@ export default function ReservationDetailsStep1({
   isTicketsValid,
   tickets,
   slots,
+  packages,
+  selectedPackageId,
+  excludedAddonIds,
   selectedAddons,
   addonDetails,
   addonsPricePerPerson,
-  basePriceUSD,
+  packagePriceUSD,
+  packageLabel,
+  reservationDateIso,
+  onPackageSelect,
+  isPackageDisabled,
   onTourTimeSelect,
   onTicketsChange,
   onStep1Enter,
   onAddonToggle,
   onAddonDetailsChange,
+  onContinue,
+  canContinue,
   tr,
   lang,
 }: ReservationDetailsStep1Props) {
+  const isEs = lang === "es";
+
   return (
     <div className="mb-3 space-y-3">
+      <section className="rounded-2xl border border-zinc-200 bg-white p-3 shadow-sm dark:border-zinc-700 dark:bg-zinc-900/70 sm:p-4">
+        <h3 className="mb-3 text-sm font-black text-zinc-900 dark:text-zinc-50">
+          {isEs ? "Elegí tu paquete" : "Choose your package"}
+        </h3>
+        <PackagePicker
+          packages={packages}
+          selectedPackageId={selectedPackageId}
+          onSelect={onPackageSelect}
+          lang={lang}
+          dateIso={reservationDateIso}
+          isPackageDisabled={isPackageDisabled}
+        />
+        <p className="mt-2 text-xs font-semibold text-zinc-500">
+          {packageLabel} · ${packagePriceUSD} / {tr.perPerson}
+        </p>
+      </section>
+
       <section
         ref={scheduleSectionRef}
         className={`rounded-2xl border bg-white p-3 shadow-sm transition-all dark:bg-zinc-900/70 sm:p-4 ${
@@ -108,7 +147,7 @@ export default function ReservationDetailsStep1({
               onClick={() => onTicketsChange(String(tickets - 1))}
               disabled={slots === 0 || tickets <= 1}
               className="flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-300 bg-white text-zinc-700 transition hover:border-teal-500 hover:text-teal-700 disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
-              aria-label={lang === "es" ? "Reducir personas" : "Decrease guests"}
+              aria-label={isEs ? "Reducir personas" : "Decrease guests"}
             >
               <Minus className="h-4 w-4" aria-hidden />
             </button>
@@ -129,7 +168,7 @@ export default function ReservationDetailsStep1({
               onClick={() => onTicketsChange(String(tickets + 1))}
               disabled={slots === 0 || tickets >= slots}
               className="flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-300 bg-white text-zinc-700 transition hover:border-teal-500 hover:text-teal-700 disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
-              aria-label={lang === "es" ? "Aumentar personas" : "Increase guests"}
+              aria-label={isEs ? "Aumentar personas" : "Increase guests"}
             >
               <Plus className="h-4 w-4" aria-hidden />
             </button>
@@ -137,13 +176,6 @@ export default function ReservationDetailsStep1({
               {tr.availablePrefix} {slots}
             </span>
           </div>
-        </div>
-
-        <div className="mt-2 flex items-center justify-between text-xs">
-          <span className="font-semibold text-zinc-500 dark:text-zinc-400">
-            {lang === "es" ? "Entrada General" : "General Entry"}
-          </span>
-          <span className="font-black text-zinc-900 dark:text-zinc-50">${basePriceUSD} / {tr.perPerson}</span>
         </div>
       </section>
 
@@ -153,16 +185,27 @@ export default function ReservationDetailsStep1({
         addonDetails={addonDetails}
         onAddonToggle={onAddonToggle}
         onAddonDetailsChange={onAddonDetailsChange}
+        excludedAddonIds={excludedAddonIds}
+        defaultCollapsed
       />
 
       {selectedAddons.length > 0 && (
         <div className="flex items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm dark:border-emerald-800/50 dark:bg-emerald-950/20">
           <span className="font-semibold text-emerald-800 dark:text-emerald-300">
-            {lang === "es" ? "Extras por persona" : "Add-ons per person"}
+            {isEs ? "Extras por persona" : "Add-ons per person"}
           </span>
           <span className="font-black text-emerald-800 dark:text-emerald-300">+${addonsPricePerPerson}</span>
         </div>
       )}
+
+      <button
+        type="button"
+        onClick={onContinue}
+        disabled={!canContinue}
+        className="hidden w-full rounded-full bg-emerald-600 px-6 py-3.5 text-sm font-black text-white shadow-lg transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50 md:inline-flex md:items-center md:justify-center"
+      >
+        {isEs ? "Continuar a tus datos" : "Continue to your details"}
+      </button>
     </div>
   );
 }

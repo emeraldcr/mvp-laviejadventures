@@ -29,6 +29,9 @@ interface ReservationDetailsStep2Props {
   onEmailEnter: (event: KeyboardEvent<HTMLInputElement>) => void;
   onPhoneEnter: (event: KeyboardEvent<HTMLInputElement>) => void;
   onFieldBlur: (field: "name" | "email" | "phone" | "specialRequests" | "terms") => void;
+  onBack?: () => void;
+  onContinue?: () => void;
+  canContinue?: boolean;
   tr: ReservationTranslations;
   lang: "es" | "en";
 }
@@ -50,6 +53,9 @@ export default function ReservationDetailsStep2({
   onEmailEnter,
   onPhoneEnter,
   onFieldBlur,
+  onBack,
+  onContinue,
+  canContinue,
   tr,
   lang,
 }: ReservationDetailsStep2Props) {
@@ -139,6 +145,28 @@ export default function ReservationDetailsStep2({
             </p>
           </div>
         </div>
+      </div>
+
+      <div className="mt-3 hidden gap-2 md:flex">
+        {onBack && (
+          <button
+            type="button"
+            onClick={onBack}
+            className="flex-1 rounded-full border border-zinc-300 px-6 py-3 text-sm font-bold text-zinc-700 transition hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-200"
+          >
+            {lang === "es" ? "Volver" : "Back"}
+          </button>
+        )}
+        {onContinue && (
+          <button
+            type="button"
+            onClick={onContinue}
+            disabled={!canContinue}
+            className="flex-[2] rounded-full bg-emerald-600 px-6 py-3 text-sm font-black text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {lang === "es" ? "Revisar y pagar" : "Review and pay"}
+          </button>
+        )}
       </div>
     </>
   );

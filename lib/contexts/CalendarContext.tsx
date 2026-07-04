@@ -48,9 +48,16 @@ export function useCalendarContext() {
 type Props = {
   children: ReactNode;
   selectedTourSlug?: string | null;
+  initialTickets?: number;
+  initialDateIso?: string | null;
 };
 
-export function CalendarProvider({ children, selectedTourSlug }: Props) {
+export function CalendarProvider({
+  children,
+  selectedTourSlug,
+  initialTickets = 1,
+  initialDateIso = null,
+}: Props) {
   const { lang } = useLanguage();
 
   const [currentMonth, setCurrentMonth] = useState(() => {
@@ -62,7 +69,7 @@ export function CalendarProvider({ children, selectedTourSlug }: Props) {
     return minBookable.year;
   });
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
-  const [tickets, setTicketsState] = useState<number>(1);
+  const [tickets, setTicketsState] = useState<number>(Math.max(1, initialTickets));
   const [availabilityOverrides, setAvailabilityOverrides] = useState<Partial<AvailabilityMap>>({});
 
   useEffect(() => {
@@ -154,7 +161,6 @@ export function CalendarProvider({ children, selectedTourSlug }: Props) {
 
   const selectDay = useCallback((day: number | null) => {
     setSelectedDay(day);
-    setTicketsState(1);
   }, []);
 
   const setSelectedDate = useCallback((date: Date | null) => {
@@ -220,8 +226,18 @@ export function CalendarProvider({ children, selectedTourSlug }: Props) {
 
     if (!candidates.length) return;
     setSelectedDay(candidates[0]);
-    setTicketsState(1);
   }, [availability, isPastDay]);
+
+  useEffect(() => {
+    if (!initialDateIso) return;
+    const match = initialDateIso.trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!match) return;
+
+    const [, yearRaw, monthRaw, dayRaw] = match;
+    const date = new Date(Number(yearRaw), Number(monthRaw) - 1, Number(dayRaw));
+    date.setHours(0, 0, 0, 0);
+    setSelectedDate(date);
+  }, [initialDateIso, setSelectedDate]);
 
   const value: CalendarContextValue = {
     currentYear,

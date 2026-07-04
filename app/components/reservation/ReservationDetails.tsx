@@ -9,6 +9,17 @@ import { MapPin, ShieldCheck } from "lucide-react";
 import { trackAnalyticsEvent } from "@/lib/analytics/client";
 import { TOUR_INFO } from "@/lib/tour-info";
 import { ADDON_OPTIONS, DEFAULT_DEPARTURE_TIMES } from "@/lib/reservation/constants";
+import {
+  getExcludedAddonIds,
+  getPackageDepartureTimes,
+  getPackageDisplayName,
+  getTourPackageOptions,
+  resolveInitialPackage,
+} from "@/lib/reservation/pricing";
+import { isPackageAvailableOnDate } from "@/lib/tour-packages";
+import ReservationDetailsStepProgress from "./ReservationDetailsStepProgress";
+import ReservationDetailsStep3 from "./ReservationDetailsStep3";
+import BookingStickyBar from "./BookingStickyBar";
 import type {
   TourTime,
   BookingStepId,
@@ -20,7 +31,6 @@ import { PHONE_COUNTRIES as ALL_PHONE_COUNTRIES } from "@/app/components/reserva
 import { resolveSelectedTourSlug, getDefaultMainTourInfo } from "./reservationDetails.helpers";
 import ReservationDetailsStep1 from "./ReservationDetailsStep1";
 import ReservationDetailsStep2 from "./ReservationDetailsStep2";
-import Link from "next/link";
 import type { MainTourInfo, TourPackageOption } from "@/lib/types/index";
 
 // ---------------------- MAIN COMPONENT ----------------------
@@ -36,6 +46,7 @@ export default function ReservationDetails({
   tourInfo,
   tours,
   initialSelectedTourSlug,
+  initialSelectedPackageId,
   hasPreselectedTour = false,
   ivaRatePercent = 13,
 }: ReservationDetailsProps) {
@@ -77,6 +88,20 @@ export default function ReservationDetails({
 
   const selectedTourSlug = resolveSelectedTourSlug(tours, null, initialSelectedTourSlug);
   const selectedTour = tours.find((tour) => tour.slug === selectedTourSlug) ?? tours[0] ?? null;
+  const packageOptions = useMemo(() => getTourPackageOptions(selectedTour), [selectedTour]);
+  const [selectedPackageId, setSelectedPackageId] = useState("");
+  const selectedPackage = useMemo(
+    () => packageOptions.find((pkg) => pkg.id === selectedPackageId) ?? packageOptions[0] ?? null,
+    [packageOptions, selectedPackageId],
+  );
+  const excludedAddonIds = useMemo(
+    () => getExcludedAddonIds(selectedPackage),
+    [selectedPackage],
+  );
+  const packageLabel = selectedPackage
+    ? getPackageDisplayName(selectedPackage, lang === "es")
+    : lang === "es" ? "Entrada General" : "General Entry";
+  const packagePriceUSD = selectedPackage?.price ?? 30;
   const selectedTourName = selectedTour ? (lang === "es" ? selectedTour.titleEs : selectedTour.titleEn) : (lang === "es" ? "Tour" : "Tour");
   const selectedTourDescription = selectedTour
     ? (lang === "es" ? selectedTour.descriptionEs : selectedTour.descriptionEn) ?? selectedTour.descriptionEs ?? selectedTour.descriptionEn ?? ""
@@ -124,21 +149,37 @@ export default function ReservationDetails({
       }
     : selectedTourFallbackInfo ?? (tourInfo ? { ...defaultMainTourInfo, ...tourInfo, cancellationPolicy: tourInfo.cancellationPolicy ?? defaultMainTourInfo.cancellationPolicy } : defaultMainTourInfo);
 
-  // Base price per person in USD (entry fee only, no packages)
-  const basePriceUSD = useMemo(() => {
-    if (selectedTour?.priceCRC) return Math.round(selectedTour.priceCRC / 525);
-    return 30;
-  }, [selectedTour]);
-
-  // Departure times from tour data or defaults
   const availableTimeSlots = useMemo(() => {
-    if (selectedTour?.packages && Array.isArray(selectedTour.packages) && selectedTour.packages.length > 0) {
-      const times = (selectedTour.packages as TourPackageOption[]).flatMap((p) => p.departureTimes ?? []);
-      const unique = Array.from(new Set(times.map((t) => t.trim()).filter(Boolean)));
-      if (unique.length > 0) return unique;
-    }
+    const fromPackage = getPackageDepartureTimes(selectedPackage);
+    if (fromPackage.length > 0) return fromPackage;
     return DEFAULT_DEPARTURE_TIMES;
-  }, [selectedTour]);
+  }, [selectedPackage]);
+
+  useEffect(() => {
+    const resolved = resolveInitialPackage(packageOptions, initialSelectedPackageId);
+    setSelectedPackageId(resolved.id ?? resolved.name);
+  }, [selectedTourSlug, packageOptions, initialSelectedPackageId]);
+
+  useEffect(() => {
+    setSelectedAddons((current) => current.filter((id) => !excludedAddonIds.includes(id)));
+  }, [excludedAddonIds]);
+
+  useEffect(() => {
+    if (tourTime && !availableTimeSlots.includes(tourTime)) {
+      setTourTime(null);
+    }
+  }, [availableTimeSlots, tourTime]);
+
+  useEffect(() => {
+    if (!tourTime && availableTimeSlots.length > 0) {
+      setTourTime(availableTimeSlots[0]);
+    }
+  }, [availableTimeSlots, tourTime]);
+
+  const isPackageDisabled = useCallback(
+    (pkg: TourPackageOption) => !isPackageAvailableOnDate(pkg, reservationDateIso),
+    [reservationDateIso],
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -223,7 +264,7 @@ export default function ReservationDetails({
     return lines.filter((line) => line.includes(":")).join(" | ");
   }, [addonDetails, lang, selectedAddons]);
 
-  const pricePerPerson = basePriceUSD + addonsPricePerPerson;
+  const pricePerPerson = packagePriceUSD + addonsPricePerPerson;
 
   const { subtotalRaw, taxesRaw, totalWithTaxesRaw } = useMemo(() => {
     const safeTickets = Number.isFinite(tickets) ? Math.max(0, tickets) : 0;
@@ -248,8 +289,12 @@ export default function ReservationDetails({
     agreeTerms: false,
   });
 
-  // Step 1 only requires time + tickets (no package selection)
-  const isStep1Valid = isTicketsValid && tourTime !== null && Boolean(selectedTour);
+  const isStep1Valid =
+    isTicketsValid &&
+    tourTime !== null &&
+    Boolean(selectedTour) &&
+    Boolean(selectedPackage) &&
+    !isPackageDisabled(selectedPackage);
   const isStep2Valid = validation.isNameValid && validation.isEmailValid && validation.isPhoneNumberValid;
 
   const missingStep1Items = useMemo(() => {
@@ -601,11 +646,11 @@ export default function ReservationDetails({
       phone: `${formState.phoneCode} ${formState.phoneNumber}`,
       specialRequests: mergedSpecialRequests,
       tourTime,
-      packageId: "entrada-general",
-      tourPackage: lang === "es" ? "Entrada General" : "General Entry",
+      packageId: selectedPackage?.id ?? "general-entry",
+      tourPackage: packageLabel,
       tourSlug: selectedTour.slug,
       tourName: selectedTourName,
-      packagePrice: basePriceUSD,
+      packagePrice: packagePriceUSD,
       addons: selectedAddonObjects.map((a) => (lang === "es" ? a.nameEs : a.nameEn)),
       addonIds: selectedAddonObjects.map((a) => a.id),
       addonsPrice: addonsPricePerPerson * tickets,
@@ -623,7 +668,9 @@ export default function ReservationDetails({
     formState,
     selectedTour,
     selectedTourName,
-    basePriceUSD,
+    packageLabel,
+    packagePriceUSD,
+    selectedPackage,
     selectedAddons,
     addonDetails,
     addonDetailsSummary,
@@ -868,10 +915,32 @@ export default function ReservationDetails({
     ...(validation.isAgreeTermsValid ? [] : [lang === "es" ? "Aceptar los términos." : "Accept the terms."]),
   ], [missingStep1Items, missingStep2Items, validation.isAgreeTermsValid, lang]);
 
-  const hasTransportAddon = selectedAddons.includes("transporte");
+  const wizardSteps = useMemo(
+    () => [
+      { id: 1 as BookingStepId, label: tr.steps.schedule },
+      { id: 2 as BookingStepId, label: tr.steps.traveler },
+      { id: 3 as BookingStepId, label: tr.steps.review },
+    ],
+    [tr.steps.schedule, tr.steps.traveler, tr.steps.review],
+  );
+
+  const stickySecondaryLabel = `${formattedDate} · ${tickets} ${lang === "es" ? "pax" : "pax"} · ${packageLabel}`;
+
+  const handlePackageSelect = useCallback((packageId: string) => {
+    setSelectedPackageId(packageId);
+    trackAnalyticsEvent("booking_selection_changed", {
+      metadata: {
+        step: 1,
+        stepLabel: stepLabels[1],
+        field: "package",
+        value: packageId,
+        booking: getAnalyticsBookingSnapshot(),
+      },
+    });
+  }, [getAnalyticsBookingSnapshot, stepLabels]);
 
   return (
-    <div>
+    <div className="pb-24 md:pb-4">
       <div className={`mb-3 flex items-center gap-2.5 rounded-xl border border-zinc-200 bg-white p-2.5 dark:border-zinc-700 dark:bg-zinc-900/60 ${!selectedTour ? "ring-2 ring-amber-300/70" : ""}`}>
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-300">
           <MapPin className="h-4 w-4" aria-hidden />
@@ -881,138 +950,152 @@ export default function ReservationDetails({
           <p className="truncate text-xs font-semibold capitalize text-zinc-500 dark:text-zinc-400">{formattedDate}</p>
         </div>
         <span className="shrink-0 rounded-full border border-teal-200 bg-teal-50 px-2.5 py-0.5 text-xs font-black text-teal-800 dark:border-teal-700 dark:bg-teal-950/30 dark:text-teal-300">
-          {lang === "es" ? "Desde" : "From"} ${basePriceUSD}
+          ${packagePriceUSD} / {tr.perPerson}
         </span>
       </div>
 
-      <ReservationDetailsStep1
-        scheduleSectionRef={scheduleSectionRef}
-        ticketsInputRef={ticketsInputRef}
-        tourTime={tourTime}
-        availableTimeSlots={availableTimeSlots}
-        isTicketsValid={isTicketsValid}
-        tickets={tickets}
-        slots={slots}
-        selectedAddons={selectedAddons}
-        addonDetails={addonDetails}
-        addonsPricePerPerson={addonsPricePerPerson}
-        basePriceUSD={basePriceUSD}
-        onTourTimeSelect={handleTourTimeSelect}
-        onTicketsChange={handleTicketsChange}
-        onStep1Enter={handleStep1Enter}
-        onAddonToggle={handleAddonToggle}
-        onAddonDetailsChange={setAddonDetails}
-        tr={tr}
-        lang={lang}
-      />
+      <ReservationDetailsStepProgress steps={wizardSteps} currentStep={currentStep} />
 
-      <ReservationDetailsStep2
-        travelerSectionRef={travelerSectionRef}
-        nameInputRef={nameInputRef}
-        emailInputRef={emailInputRef}
-        phoneInputRef={phoneInputRef}
-        isStep2Valid={isStep2Valid}
-        formState={formState}
-        validation={validation}
-        onNameChange={(value) => handleChange("name", value)}
-        onEmailChange={(value) => handleChange("email", value)}
-        onPhoneCodeChange={(value) => handleChange("phoneCode", value)}
-        onPhoneNumberChange={(value) => handleChange("phoneNumber", value)}
-        onSpecialRequestsChange={(value) => handleChange("specialRequests", value)}
-        onNameEnter={handleNameEnter}
-        onEmailEnter={handleEmailEnter}
-        onPhoneEnter={handlePhoneEnter}
-        onFieldBlur={trackFieldBlur}
-        tr={tr}
-        lang={lang}
-      />
+      {currentStep === 1 && (
+        <ReservationDetailsStep1
+          scheduleSectionRef={scheduleSectionRef}
+          ticketsInputRef={ticketsInputRef}
+          tourTime={tourTime}
+          availableTimeSlots={availableTimeSlots}
+          isTicketsValid={isTicketsValid}
+          tickets={tickets}
+          slots={slots}
+          packages={packageOptions}
+          selectedPackageId={selectedPackageId}
+          excludedAddonIds={excludedAddonIds}
+          selectedAddons={selectedAddons}
+          addonDetails={addonDetails}
+          addonsPricePerPerson={addonsPricePerPerson}
+          packagePriceUSD={packagePriceUSD}
+          packageLabel={packageLabel}
+          reservationDateIso={reservationDateIso}
+          onPackageSelect={handlePackageSelect}
+          isPackageDisabled={isPackageDisabled}
+          onTourTimeSelect={handleTourTimeSelect}
+          onTicketsChange={handleTicketsChange}
+          onStep1Enter={handleStep1Enter}
+          onAddonToggle={handleAddonToggle}
+          onAddonDetailsChange={setAddonDetails}
+          onContinue={() => goToStep(2, "continue_button")}
+          canContinue={isStep1Valid}
+          tr={tr}
+          lang={lang}
+        />
+      )}
 
-      <div ref={reviewSectionRef} className="rounded-2xl border border-emerald-200 bg-white p-3 shadow-sm dark:border-emerald-900/60 dark:bg-zinc-900 sm:p-4">
-        <div className="space-y-1 text-sm">
-          <div className="flex justify-between gap-4">
-            <span className="text-zinc-500 dark:text-zinc-400">{tr.subtotalLabel} · {tickets} × ${pricePerPerson}</span>
-            <span className="font-bold text-zinc-900 dark:text-zinc-50">${subtotal.toFixed(2)}</span>
+      {currentStep === 2 && (
+        <ReservationDetailsStep2
+          travelerSectionRef={travelerSectionRef}
+          nameInputRef={nameInputRef}
+          emailInputRef={emailInputRef}
+          phoneInputRef={phoneInputRef}
+          isStep2Valid={isStep2Valid}
+          formState={formState}
+          validation={validation}
+          onNameChange={(value) => handleChange("name", value)}
+          onEmailChange={(value) => handleChange("email", value)}
+          onPhoneCodeChange={(value) => handleChange("phoneCode", value)}
+          onPhoneNumberChange={(value) => handleChange("phoneNumber", value)}
+          onSpecialRequestsChange={(value) => handleChange("specialRequests", value)}
+          onNameEnter={handleNameEnter}
+          onEmailEnter={handleEmailEnter}
+          onPhoneEnter={handlePhoneEnter}
+          onFieldBlur={trackFieldBlur}
+          onBack={() => setCurrentStep(1)}
+          onContinue={() => goToStep(3, "continue_button")}
+          canContinue={isStep2Valid}
+          tr={tr}
+          lang={lang}
+        />
+      )}
+
+      {currentStep === 3 && (
+        <>
+          <ReservationDetailsStep3
+            reviewSectionRef={reviewSectionRef}
+            termsCheckboxRef={termsCheckboxRef}
+            formState={formState}
+            selectedTourName={selectedTourName}
+            packageLabel={packageLabel}
+            basePriceUSD={packagePriceUSD}
+            tourTime={tourTime}
+            tickets={tickets}
+            selectedAddons={selectedAddons}
+            addonDetails={addonDetails}
+            transportQuote={transportQuote}
+            transportLoading={transportLoading}
+            transportError={transportError}
+            subtotal={subtotal}
+            taxes={taxes}
+            totalWithTaxes={totalWithTaxes}
+            ivaRatePercent={ivaRatePercent}
+            localizedCancellationPolicy={localizedCancellationPolicy}
+            onTermsChange={(accepted) => handleChange("agreeTerms", accepted)}
+            onTermsEnter={handleTermsEnter}
+            tr={tr}
+            lang={lang}
+          />
+
+          <div className="mb-3 hidden gap-2 md:flex">
+            <button
+              type="button"
+              onClick={() => setCurrentStep(2)}
+              className="flex-1 rounded-full border border-zinc-300 px-6 py-3 text-sm font-bold text-zinc-700 transition hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-200"
+            >
+              {lang === "es" ? "Volver" : "Back"}
+            </button>
+            <button
+              type="button"
+              onClick={handleReserve}
+              disabled={!isFormValid}
+              className="inline-flex flex-[2] min-h-12 items-center justify-center gap-2 rounded-full bg-emerald-600 px-6 py-3 font-black text-white shadow-lg transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <ShieldCheck className="h-5 w-5" aria-hidden />
+              {tr.proceedBtn} · ${totalWithTaxes.toFixed(2)}
+            </button>
           </div>
-          <div className="flex justify-between gap-4">
-            <span className="text-zinc-500 dark:text-zinc-400">{tr.taxes} ({ivaRatePercent}%)</span>
-            <span className="font-bold text-zinc-900 dark:text-zinc-50">${taxes.toFixed(2)}</span>
-          </div>
-          {hasTransportAddon && transportLoading && (
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">{lang === "es" ? "Cotizando transporte..." : "Quoting transport..."}</p>
-          )}
-          {hasTransportAddon && transportError && (
-            <p className="text-xs text-red-600">{transportError}</p>
-          )}
-          {hasTransportAddon && transportQuote?.type === "private" && (
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">
-              {lang === "es" ? "Total vehículo" : "Vehicle total"}: ${transportQuote.total}
+
+          {!isFormValid && missingItems.length > 0 && (
+            <p className="mb-3 text-center text-xs font-semibold text-amber-600 dark:text-amber-400">
+              {missingItems.join(" ")}
             </p>
           )}
-          <div className="flex justify-between gap-4 border-t border-zinc-200 pt-1.5 text-base font-black text-zinc-900 dark:border-zinc-700 dark:text-zinc-50">
-            <span>{tr.total}</span>
-            <span>${totalWithTaxes.toFixed(2)}</span>
-          </div>
+        </>
+      )}
+
+      {currentStep < 3 && (
+        <BookingStickyBar
+          lang={lang}
+          label={
+            currentStep === 1
+              ? lang === "es" ? "Continuar" : "Continue"
+              : lang === "es" ? "Revisar" : "Review"
+          }
+          secondaryLabel={stickySecondaryLabel}
+          total={totalWithTaxes}
+          disabled={currentStep === 1 ? !isStep1Valid : !isStep2Valid}
+          onAction={() => goToStep((currentStep + 1) as BookingStepId, "sticky_bar")}
+        />
+      )}
+
+      {currentStep === 3 && (
+        <div className="md:hidden">
+          <button
+            type="button"
+            onClick={handleReserve}
+            disabled={!isFormValid}
+            className="fixed inset-x-3 bottom-[calc(4.25rem+env(safe-area-inset-bottom,0px))] z-40 inline-flex min-h-12 w-[calc(100%-1.5rem)] items-center justify-center gap-2 rounded-full bg-emerald-600 px-6 py-3 font-black text-white shadow-lg disabled:opacity-50"
+          >
+            <ShieldCheck className="h-5 w-5" aria-hidden />
+            {tr.proceedBtn} · ${totalWithTaxes.toFixed(2)}
+          </button>
         </div>
-
-        <label
-          htmlFor="agreeTerms"
-          className={`mt-3 flex cursor-pointer items-start gap-2.5 rounded-xl border p-2.5 text-sm transition-all ${formState.agreeTerms ? "border-teal-500 bg-teal-50 dark:bg-teal-900/20" : "border-zinc-300 hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800"}`}
-        >
-          <input
-            ref={termsCheckboxRef}
-            id="agreeTerms"
-            type="checkbox"
-            checked={formState.agreeTerms}
-            onChange={(e) => {
-              const accepted = e.target.checked;
-              handleChange("agreeTerms", accepted);
-              trackAnalyticsEvent("booking_field_blur", {
-                metadata: {
-                  step: 3,
-                  stepLabel: stepLabels[3],
-                  field: "terms",
-                  isValid: accepted,
-                  isEmpty: !accepted,
-                  valueLength: accepted ? 1 : 0,
-                  termsAccepted: accepted,
-                  booking: getAnalyticsBookingSnapshot(),
-                },
-              });
-            }}
-            onKeyDown={handleTermsEnter}
-            className="mt-0.5 h-4 w-4 rounded border-zinc-400 text-teal-600 focus:ring-teal-500 dark:border-zinc-600 dark:bg-zinc-700"
-          />
-          <span className="text-zinc-700 dark:text-zinc-400">
-            {tr.agreeText}
-            <Link href="/terminos-y-condiciones" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="ml-1 text-teal-600 underline">{tr.termsLink}</Link>{" "}{tr.andThe}{" "}
-            <Link href="/politica-de-privacidad" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="ml-1 text-teal-600 underline">{tr.privacyLink}</Link>.
-          </span>
-        </label>
-
-        <button
-          type="button"
-          onClick={handleReserve}
-          aria-disabled={!isFormValid}
-          className={`mt-3 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full px-6 py-3 font-bold text-white shadow-lg transition-all ${
-            !isFormValid
-              ? "cursor-not-allowed bg-zinc-400 opacity-70 shadow-none"
-              : "bg-emerald-600 shadow-emerald-900/25 hover:-translate-y-0.5 hover:bg-emerald-500 hover:shadow-xl hover:shadow-emerald-900/30"
-          }`}
-        >
-          <ShieldCheck className="h-5 w-5" aria-hidden />
-          {tr.proceedBtn} · ${totalWithTaxes.toFixed(2)}
-        </button>
-
-        {!isFormValid && missingItems.length > 0 && (
-          <p className="mt-2 text-center text-xs font-semibold text-amber-600 dark:text-amber-400">
-            {missingItems.join(" ")}
-          </p>
-        )}
-
-        <p className="mt-2 text-center text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
-          {localizedCancellationPolicy}
-        </p>
-      </div>
+      )}
     </div>
   );
 }

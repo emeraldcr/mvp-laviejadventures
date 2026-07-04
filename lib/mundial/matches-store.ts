@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import type { Collection, CreateIndexesOptions, Db, Document } from "mongodb";
 
 import { MUNDIAL_MATCHES, MUNDIAL_TOTAL_MATCHES, type MundialMatch, type MundialStage } from "./fixtures";
@@ -5,14 +6,46 @@ import { MUNDIAL_MATCHES, MUNDIAL_TOTAL_MATCHES, type MundialMatch, type Mundial
 export const MUNDIAL_MATCHES_COLLECTION = "mundial_matches";
 export const MUNDIAL_KNOCKOUT_MATCHES_COLLECTION = "mundial_knockout_matches";
 export const MUNDIAL_PREDICTIONS_COLLECTION = "mundial_predictions";
-export const MUNDIAL_FIXTURE_VERSION = "2026-07-02-group-stage-results";
-export const MUNDIAL_KNOCKOUT_FIXTURE_VERSION = "2026-07-03-centralized-knockouts-round32-round16-quarterfinal";
 
 export const CENTRALIZED_KNOCKOUT_STAGES = new Set<MundialStage>([
   "round32",
   "round16",
   "quarterfinal",
 ]);
+
+// Only the fields that define a fixture's identity/schedule/result. Live and
+// admin-only fields (liveStatus, liveScore, ...) are intentionally excluded so
+// editing them in Mongo does not trigger a re-seed, and re-seeding never wipes
+// them.
+function fixtureFingerprint(matches: readonly MundialMatch[]): string {
+  const stable = matches
+    .map((m) => [
+      m.number,
+      m.stage,
+      m.date,
+      m.kickoffAt,
+      m.venue,
+      m.homeTeam,
+      m.awayTeam,
+      m.homeSeed ?? "",
+      m.awaySeed ?? "",
+      m.homeFinalScore ?? "",
+      m.awayFinalScore ?? "",
+      m.actualWinner ?? "",
+    ].join("|"))
+    .sort()
+    .join("\n");
+  return createHash("sha1").update(stable).digest("hex").slice(0, 12);
+}
+
+// Versions are derived from the fixture content, so ANY edit to fixtures.ts
+// (teams, kickoff times, dates, scores) changes the hash and forces Mongo to
+// re-sync from the file on the next read. fixtures.ts is the single source of
+// truth — no manual version bump needed.
+export const MUNDIAL_FIXTURE_VERSION = `fixtures-${fixtureFingerprint(MUNDIAL_MATCHES)}`;
+export const MUNDIAL_KNOCKOUT_FIXTURE_VERSION = `knockouts-${fixtureFingerprint(
+  MUNDIAL_MATCHES.filter((match) => CENTRALIZED_KNOCKOUT_STAGES.has(match.stage))
+)}`;
 
 type StoredMundialMatch = MundialMatch & {
   source?: string;

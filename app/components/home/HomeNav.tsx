@@ -8,7 +8,7 @@ import { ArrowRight, Globe, Menu, MessageCircle, X } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
 import { WHATSAPP_HREF } from "./home-utils";
 
-export default function HomeNav() {
+export default function HomeNav({ solid = false }: { solid?: boolean }) {
   const { lang, toggle } = useLanguage();
   const isEs = lang === "es";
   const pathname = usePathname();
@@ -36,14 +36,14 @@ export default function HomeNav() {
     { href: "/tiempo", label: isEs ? "Clima" : "Weather" },
   ];
 
-  const onDark = !scrolled;
+  const onDark = !scrolled && !solid;
 
   return (
     <>
       <header
         className={[
           "fixed inset-x-0 top-0 z-50 transition-all duration-300",
-          scrolled
+          scrolled || solid
             ? "border-b border-stone-200/70 bg-white/88 shadow-[0_1px_24px_rgba(0,0,0,0.06)] backdrop-blur-xl"
             : "bg-transparent",
         ].join(" ")}
