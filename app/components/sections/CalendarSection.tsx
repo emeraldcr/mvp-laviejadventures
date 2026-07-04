@@ -42,14 +42,14 @@ export default function CalendarSection({ className }: Props) {
   }, []);
 
   return (
-    <section className={cn("flex items-start px-2", className)}>
+    <section className={cn("flex items-start px-1 sm:px-2", className)}>
       <div className="w-full">
-        <div className="space-y-3">
+        <div className="space-y-4">
           <div className="w-full">
             <Calendar />
           </div>
 
-          <div className="mx-4 rounded-2xl border bg-zinc-50 dark:bg-zinc-900/40 px-3 py-2.5 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+          <div className="mx-2 sm:mx-4 rounded-2xl border bg-zinc-50 dark:bg-zinc-900/40 px-3 py-2.5 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
             <p className="text-xs text-zinc-600 dark:text-zinc-300">
               {summaryText}
             </p>

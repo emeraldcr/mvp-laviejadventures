@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { ArrowRight, Check, ChevronDown, MapPin, Minus, Plus, Star } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, CalendarDays, Check, ChevronDown, MapPin, Minus, Plus, ShieldCheck, Star } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
 import type { TourSummary } from "@/lib/types/index";
-import { formatTourPrice, tourTitle } from "./home-utils";
+import { WHATSAPP_HREF, formatTourPrice, tourTitle } from "./home-utils";
 
 const SLIDE_DURATION = 6500;
 
@@ -16,14 +17,34 @@ const HERO_SLIDES = [
   { src: "/image/IMG_6810.jpg", es: "Río La Vieja", en: "La Vieja River" },
 ];
 
-function BookingBar({ tours }: { tours: TourSummary[] }) {
+function BookingCard({ tours }: { tours: TourSummary[] }) {
   const { lang } = useLanguage();
   const isEs = lang === "es";
   const [slug, setSlug] = useState("");
   const [people, setPeople] = useState(2);
+  const tourMenuRef = useRef<HTMLDetailsElement>(null);
 
   const resolvedSlug = slug || tours[0]?.slug || "";
   const selectedTour = tours.find((t) => t.slug === resolvedSlug) ?? tours[0];
+
+  useEffect(() => {
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!tourMenuRef.current?.contains(event.target as Node)) {
+        tourMenuRef.current?.removeAttribute("open");
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") tourMenuRef.current?.removeAttribute("open");
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
 
   const handleBook = () => {
     if (!resolvedSlug) return;
@@ -31,80 +52,148 @@ function BookingBar({ tours }: { tours: TourSummary[] }) {
   };
 
   return (
-    <div className="w-full max-w-3xl rounded-3xl bg-white p-2 shadow-[0_24px_80px_rgba(0,0,0,0.45)] sm:rounded-full">
-      <div className="flex flex-col sm:flex-row sm:items-center">
-        {/* Tour */}
-        <div className="min-w-0 flex-1 px-5 py-3">
-          <label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400">
-            {isEs ? "Experiencia" : "Experience"}
-          </label>
-          <div className="relative">
-            <select
-              value={resolvedSlug}
-              onChange={(e) => setSlug(e.target.value)}
-              className="w-full cursor-pointer appearance-none truncate bg-transparent pr-6 text-sm font-bold text-stone-900 focus:outline-none"
-            >
-              {tours.map((tour) => (
-                <option key={tour.slug} value={tour.slug}>
-                  {tourTitle(tour, isEs)} — {isEs ? "desde" : "from"} {formatTourPrice(tour, isEs)}
-                </option>
-              ))}
-            </select>
-            <ChevronDown
-              size={14}
-              className="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2 text-stone-400"
-            />
+    <aside className="w-full max-w-[430px] rounded-[2rem] border border-white/16 bg-black/28 p-4 shadow-[0_30px_90px_rgba(0,0,0,0.42)] backdrop-blur-2xl">
+      <div className="rounded-[1.45rem] border border-white/10 bg-white/[0.08] p-5">
+        <div className="mb-5 flex items-start justify-between gap-4">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-emerald-200/80">
+              {isEs ? "Reserva rápida" : "Quick booking"}
+            </p>
+            <h2 className="mt-2 font-display text-2xl font-black leading-none text-white">
+              {isEs ? "Armá tu salida" : "Plan your tour"}
+            </h2>
           </div>
+          <span className="rounded-full border border-emerald-300/25 bg-emerald-300/12 px-3 py-1.5 text-[10px] font-black uppercase tracking-wide text-emerald-200">
+            {isEs ? "Online" : "Online"}
+          </span>
         </div>
 
-        <span className="mx-4 h-px bg-stone-200 sm:mx-0 sm:h-10 sm:w-px" />
+        <div className="space-y-4">
+          <div className="relative">
+            <span className="block text-[10px] font-bold uppercase tracking-widest text-emerald-200/80">
+              {isEs ? "Experiencia" : "Experience"}
+            </span>
+          <details ref={tourMenuRef} className="group/tour">
+            <summary
+              className="mt-2 flex min-h-16 w-full cursor-pointer list-none items-center justify-between gap-3 rounded-2xl border border-white/12 bg-white/[0.08] px-4 py-3 text-left outline-none transition hover:border-emerald-300/45 hover:bg-white/[0.11] group-open/tour:border-emerald-300/70 group-open/tour:bg-emerald-300/10 group-open/tour:shadow-[0_0_0_4px_rgba(52,211,153,0.10)] [&::-webkit-details-marker]:hidden"
+            >
+              <span className="min-w-0">
+                <span className="block truncate text-sm font-black text-white">
+                  {selectedTour ? tourTitle(selectedTour, isEs) : isEs ? "Elegí un tour" : "Choose a tour"}
+                </span>
+                {selectedTour && (
+                  <span className="mt-0.5 block text-[11px] font-bold uppercase tracking-wide text-emerald-200/75">
+                    {isEs ? "Desde" : "From"} {formatTourPrice(selectedTour, isEs)}
+                    {selectedTour.duration ? ` · ${selectedTour.duration}` : ""}
+                  </span>
+                )}
+              </span>
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/12 bg-black/18 text-white/65 transition group-open/tour:rotate-180 group-open/tour:border-emerald-300/40 group-open/tour:text-emerald-200">
+                <ChevronDown size={15} />
+              </span>
+            </summary>
 
-        {/* People */}
-        <div className="px-5 py-3 sm:w-48">
-          <span className="block text-[10px] font-bold uppercase tracking-widest text-stone-400">
+            <div className="absolute left-0 right-0 top-[calc(100%+0.6rem)] z-30 overflow-hidden rounded-2xl border border-emerald-300/24 bg-[#101713]/96 p-1.5 shadow-[0_26px_70px_rgba(0,0,0,0.52)] backdrop-blur-2xl">
+              <div
+                role="listbox"
+                aria-label={isEs ? "Seleccionar experiencia" : "Select experience"}
+                className="max-h-72 overflow-y-auto pr-1 [scrollbar-color:rgba(110,231,183,0.45)_rgba(255,255,255,0.08)] [scrollbar-width:thin]"
+              >
+                {tours.map((tour) => {
+                  const isSelected = tour.slug === resolvedSlug;
+                  return (
+                    <button
+                      key={tour.slug}
+                      type="button"
+                      role="option"
+                      aria-selected={isSelected}
+                      onClick={() => {
+                        setSlug(tour.slug);
+                        tourMenuRef.current?.removeAttribute("open");
+                      }}
+                      className={[
+                        "group flex w-full items-center justify-between gap-3 rounded-xl px-3.5 py-3 text-left transition",
+                        isSelected
+                          ? "bg-emerald-300 text-emerald-950"
+                          : "text-white hover:bg-white/[0.08]",
+                      ].join(" ")}
+                    >
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-black">
+                          {tourTitle(tour, isEs)}
+                        </span>
+                        <span
+                          className={[
+                            "mt-0.5 block text-[10px] font-bold uppercase tracking-wide",
+                            isSelected ? "text-emerald-950/70" : "text-white/45 group-hover:text-emerald-200/80",
+                          ].join(" ")}
+                        >
+                          {tour.duration || (isEs ? "Experiencia local" : "Local experience")}
+                        </span>
+                      </span>
+                      <span
+                        className={[
+                          "shrink-0 rounded-full px-2.5 py-1 text-[11px] font-black",
+                          isSelected
+                            ? "bg-emerald-950/10 text-emerald-950"
+                            : "bg-white/[0.08] text-emerald-200",
+                        ].join(" ")}
+                      >
+                        {formatTourPrice(tour, isEs)}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </details>
+          </div>
+
+          <div>
+            <span className="block text-[10px] font-bold uppercase tracking-widest text-emerald-200/80">
             {isEs ? "Personas" : "Guests"}
-          </span>
-          <div className="mt-0.5 flex items-center gap-3">
+            </span>
+            <div className="mt-2 flex h-14 items-center justify-between rounded-2xl border border-white/12 bg-white/[0.08] px-3">
             <button
               type="button"
               onClick={() => setPeople((p) => Math.max(1, p - 1))}
               aria-label={isEs ? "Menos personas" : "Fewer guests"}
-              className="flex h-7 w-7 items-center justify-center rounded-full border border-stone-300 text-stone-600 transition hover:border-stone-500 hover:text-stone-900"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-white/20 text-white/75 transition hover:border-white/45 hover:text-white"
             >
               <Minus size={13} />
             </button>
-            <span className="min-w-[1.5rem] text-center text-sm font-bold tabular-nums text-stone-900">
+            <span className="min-w-[2rem] text-center text-xl font-black tabular-nums text-white">
               {people}
             </span>
             <button
               type="button"
               onClick={() => setPeople((p) => Math.min(30, p + 1))}
               aria-label={isEs ? "Más personas" : "More guests"}
-              className="flex h-7 w-7 items-center justify-center rounded-full border border-stone-300 text-stone-600 transition hover:border-stone-500 hover:text-stone-900"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-white/20 text-white/75 transition hover:border-white/45 hover:text-white"
             >
               <Plus size={13} />
             </button>
+            </div>
           </div>
         </div>
 
-        {/* CTA */}
         <button
           type="button"
           onClick={handleBook}
-          className="group m-2 flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-8 py-4 text-sm font-bold text-white transition-all hover:bg-emerald-500 sm:m-1.5 sm:rounded-full"
+          className="group mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-400 px-8 text-sm font-black uppercase tracking-wide text-emerald-950 shadow-[0_18px_45px_rgba(16,185,129,0.22)] transition-all hover:-translate-y-0.5 hover:bg-white"
         >
-          {isEs ? "Reservar" : "Book now"}
+          {isEs ? "Ver fechas" : "See dates"}
           <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
         </button>
-      </div>
 
-      {selectedTour?.duration && (
-        <p className="px-5 pb-2 text-[11px] text-stone-400 sm:hidden">
-          {selectedTour.duration}
-          {selectedTour.difficulty ? ` · ${selectedTour.difficulty}` : ""}
-        </p>
-      )}
-    </div>
+        {selectedTour?.duration && (
+          <p className="mt-4 text-center text-[11px] font-medium text-white/55">
+            {selectedTour.duration}
+            {selectedTour.difficulty ? ` - ${selectedTour.difficulty}` : ""}
+          </p>
+        )}
+      </div>
+    </aside>
   );
 }
 
@@ -121,12 +210,11 @@ export default function HomeHero({ tours }: { tours: TourSummary[] }) {
   }, [next]);
 
   const trustItems = isEs
-    ? ["Confirmación inmediata", "Cancelación gratis 24h", "Guías locales certificados"]
-    : ["Instant confirmation", "Free 24h cancellation", "Certified local guides"];
+    ? ["Seguridad primero", "Grupos pequeños", "Guías locales", "Río validado antes de salir"]
+    : ["Safety first", "Small groups", "Local guides", "River checked before departure"];
 
   return (
-    <section className="relative flex min-h-[100svh] flex-col justify-end overflow-hidden bg-stone-950">
-      {/* Slides */}
+    <section className="relative flex min-h-[92svh] flex-col overflow-hidden bg-stone-950">
       <div className="absolute inset-0">
         {HERO_SLIDES.map((slide, index) => (
           <div
@@ -145,62 +233,77 @@ export default function HomeHero({ tours }: { tours: TourSummary[] }) {
             />
           </div>
         ))}
-        {/* Editorial gradient: readable text, photo still breathes */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-black/40" />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/45 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/50" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_22%_48%,rgba(16,185,129,0.24),transparent_28%),linear-gradient(90deg,rgba(0,0,0,0.72),rgba(0,0,0,0.24)_48%,rgba(0,0,0,0.04))]" />
       </div>
 
-      {/* Content */}
-      <div className="relative mx-auto w-full max-w-7xl px-4 pb-16 pt-32 sm:px-6 md:pb-20 lg:px-8">
-        {/* Rating pill */}
-        <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 backdrop-blur-md ring-1 ring-white/20">
-          <span className="flex items-center gap-0.5 text-amber-400">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Star key={i} size={12} className="fill-current" />
-            ))}
-          </span>
-          <span className="text-xs font-semibold text-white/90">
-            4.9 · {isEs ? "+500 aventureros felices" : "+500 happy adventurers"}
-          </span>
-        </div>
-
-        <h1 className="font-display max-w-3xl text-balance text-[clamp(2.75rem,7vw,5.5rem)] font-bold leading-[0.95] tracking-tight text-white">
-          {isEs ? (
-            <>
-              El cañón esmeralda{" "}
-              <span className="text-emerald-300">te está esperando.</span>
-            </>
-          ) : (
-            <>
-              The emerald canyon <span className="text-emerald-300">is waiting for you.</span>
-            </>
-          )}
-        </h1>
-
-        <p className="mt-5 max-w-xl text-base leading-relaxed text-white/80 md:text-lg">
-          {isEs
-            ? "Canyoning, pozas cristalinas y cascadas escondidas en San Carlos, Costa Rica. Grupos pequeños, guías locales y reserva en línea en dos minutos."
-            : "Canyoning, crystal pools, and hidden waterfalls in San Carlos, Costa Rica. Small groups, local guides, and online booking in two minutes."}
-        </p>
-
-        {/* Booking bar */}
-        <div className="mt-8">
-          <BookingBar tours={tours} />
-        </div>
-
-        {/* Trust row */}
-        <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2">
-          {trustItems.map((item) => (
-            <span key={item} className="flex items-center gap-1.5 text-xs font-medium text-white/70">
-              <Check size={13} className="text-emerald-300" />
-              {item}
+      <div className="relative mx-auto flex w-full max-w-[1520px] flex-1 items-center px-4 pb-10 pt-24 sm:px-6 md:pb-12 md:pt-28 lg:px-8">
+        <div className="grid w-full items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(360px,430px)] xl:gap-16">
+        <div>
+          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 backdrop-blur-md">
+            <span className="flex items-center gap-0.5 text-amber-400">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Star key={i} size={12} className="fill-current" />
+              ))}
             </span>
-          ))}
+            <span className="text-xs font-semibold text-white/90">
+              4.9 - {isEs ? "+500 aventureros felices" : "+500 happy adventurers"}
+            </span>
+          </div>
+
+          <h1 className="font-display max-w-5xl text-balance text-[clamp(3rem,6.5vw,6.6rem)] font-black leading-[0.9] tracking-tight text-white">
+            {isEs ? (
+              <>
+                El cañón esmeralda <span className="text-emerald-300">te está esperando.</span>
+              </>
+            ) : (
+              <>
+                The emerald canyon <span className="text-emerald-300">is waiting for you.</span>
+              </>
+            )}
+          </h1>
+
+          <p className="mt-6 max-w-2xl text-base leading-relaxed text-white/82 md:text-xl">
+            {isEs
+              ? "Canyoning, pozas cristalinas y cascadas escondidas en San Carlos. Tours de grupos pequeños, guías locales y reserva clara antes de bajar al río."
+              : "Canyoning, crystal pools, and hidden waterfalls in San Carlos. Small-group tours, local guides, and clear booking before entering the river."}
+          </p>
+
+          <div className="mt-7 flex flex-wrap items-center gap-3">
+            <Link
+              href="/reservar"
+              className="group inline-flex min-h-14 items-center gap-2 rounded-full bg-emerald-400 px-7 py-4 text-sm font-black uppercase tracking-wide text-emerald-950 shadow-[0_20px_55px_rgba(52,211,153,0.28)] transition-all hover:-translate-y-0.5 hover:bg-white"
+            >
+              {isEs ? "Reservar aventura" : "Book adventure"}
+              <ArrowRight size={17} className="transition-transform group-hover:translate-x-1" />
+            </Link>
+            <a
+              href={WHATSAPP_HREF}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex min-h-14 items-center gap-2 rounded-full border border-white/25 bg-white/8 px-6 py-4 text-sm font-bold text-white backdrop-blur-md transition-all hover:border-white/50 hover:bg-white/14"
+            >
+              <ShieldCheck size={17} className="text-emerald-300" />
+              {isEs ? "Hablar con un guía" : "Talk to a guide"}
+            </a>
+          </div>
+
+          <div className="mt-5 hidden flex-wrap items-center gap-x-5 gap-y-2 sm:flex">
+            {trustItems.map((item) => (
+              <span key={item} className="flex items-center gap-1.5 text-xs font-medium text-white/70">
+                <Check size={13} className="text-emerald-300" />
+                {item}
+              </span>
+            ))}
+          </div>
+        </div>
+        <div className="hidden justify-self-end lg:block">
+          <BookingCard tours={tours} />
+        </div>
         </div>
       </div>
 
-      {/* Slide meta: location caption + dots */}
-      <div className="absolute bottom-6 right-4 z-10 hidden flex-col items-end gap-3 sm:right-8 md:flex">
+      <div className="absolute bottom-7 right-4 z-10 hidden flex-col items-end gap-3 sm:right-8 md:flex">
         <span className="flex items-center gap-1.5 rounded-full bg-black/35 px-3.5 py-1.5 text-[11px] font-semibold text-white/85 backdrop-blur-md">
           <MapPin size={11} className="text-emerald-300" />
           {isEs ? HERO_SLIDES[current].es : HERO_SLIDES[current].en}
@@ -218,6 +321,11 @@ export default function HomeHero({ tours }: { tours: TourSummary[] }) {
             />
           ))}
         </div>
+      </div>
+
+      <div className="absolute bottom-7 left-1/2 z-10 hidden -translate-x-1/2 items-center gap-2 rounded-full border border-white/12 bg-black/20 px-4 py-2 text-[11px] font-bold uppercase tracking-widest text-white/60 backdrop-blur-md lg:flex">
+        <CalendarDays size={13} className="text-emerald-300" />
+        {isEs ? "Cupos limitados por día" : "Limited daily spots"}
       </div>
     </section>
   );

@@ -1,210 +1,150 @@
 "use client";
 
-import {
-  Bike,
-  Waves,
-  UtensilsCrossed,
-  CloudRain,
-  Binoculars,
-  Moon,
-  MountainSnow,
-  Flame,
-  Clock,
-  ChevronRight,
-  Star,
-  type LucideIcon,
-} from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
+import { ArrowRight, ArrowUpRight, Clock3, MapPin, Zap } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
 import { translations } from "@/lib/translations";
-import DynamicHeroHeader from "@/app/components/sections/DynamicHeroHeader";
+import HomeNav from "@/app/components/home/HomeNav";
+import SiteFooter from "@/app/components/sections/SiteFooter";
+import { formatTourPrice, tourTitle } from "@/app/components/home/home-utils";
+import { getTourImage } from "@/lib/tour-display";
+import type { PublicTour } from "@/lib/tours/public-catalog";
 
-const ICON_MAP: Record<string, LucideIcon> = {
-  Bike,
-  Waves,
-  UtensilsCrossed,
-  CloudRain,
-  Binoculars,
-  Moon,
-  MountainSnow,
-  Flame,
-  Star,
-};
+export type TourData = PublicTour;
 
-const difficultyConfig: Record<string, { color: string }> = {
-  Facil: { color: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" },
-  "Fácil": { color: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" },
-  Intermedio: { color: "bg-amber-500/20 text-amber-300 border-amber-500/30" },
-  Moderado: { color: "bg-orange-500/20 text-orange-300 border-orange-500/30" },
-  "Intermedio a avanzado": { color: "bg-red-500/20 text-red-300 border-red-500/30" },
-};
-
-export type TourData = {
-  id: string;
-  slug: string;
-  iconName: string;
-  titleEs: string;
-  titleEn: string;
-  descriptionEs: string;
-  descriptionEn: string;
-  duration: string;
-  difficulty: string;
-  priceCRC: number;
-  tagEs: string;
-  tagEn: string;
-  accent: string;
-  border: string;
-  isFeatured: boolean;
-  isMain: boolean;
-};
-
-export function ToursClient({ tours }: { tours: TourData[] }) {
+export function ToursClient({ tours }: { tours: PublicTour[] }) {
   const { lang } = useLanguage();
+  const isEs = lang === "es";
   const tr = translations[lang].tours;
-  const featuredTour = tours.find((tour) => tour.isFeatured || tour.isMain) ?? tours[0] ?? null;
-  const gridTours = featuredTour ? tours.filter((tour) => tour.id !== featuredTour.id) : tours;
 
-  const formatPrice = (priceCRC: number) =>
-    priceCRC.toLocaleString("es-CR").replace(/,/g, ".");
+  const handleSelectTour = (slug: string) => {
+    window.location.href = `/reservar?tour=${encodeURIComponent(slug)}`;
+  };
 
   return (
-    <main className="min-h-screen bg-black text-white">
-      <DynamicHeroHeader showHeroSlider={false} />
+    <main className="min-h-screen overflow-x-hidden bg-[#FAF9F6] font-sans text-stone-900">
+      <HomeNav />
 
-      <section className="relative overflow-hidden px-4 pb-16 pt-24 text-center">
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-teal-950/30 to-black" />
-        <div className="relative z-10 mx-auto max-w-3xl">
-          <span className="mb-4 inline-block text-xs font-bold uppercase tracking-[0.25em] text-teal-400">
+      <section className="border-b border-stone-200 bg-white pt-28 pb-10 md:pt-32 md:pb-12">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em] text-emerald-700">
             {tr.badge}
-          </span>
-          <h1 className="mb-5 bg-gradient-to-br from-white via-white to-teal-200 bg-clip-text text-5xl font-black text-transparent sm:text-6xl">
-            {tr.title}
-          </h1>
-          <p className="mx-auto max-w-xl text-lg text-zinc-400">{tr.description}</p>
-        </div>
-      </section>
-
-      {featuredTour && (
-        <section className="mx-auto mb-16 max-w-6xl px-4">
-          <div className="relative overflow-hidden rounded-3xl border border-teal-500/30 bg-gradient-to-br from-teal-900/50 via-teal-950/80 to-black shadow-[0_0_80px_rgba(20,184,166,0.15)]">
-            <div className="pointer-events-none absolute right-0 top-0 h-64 w-64 rounded-full bg-teal-500/10 blur-3xl" />
-            <div className="pointer-events-none absolute bottom-0 left-0 h-48 w-48 rounded-full bg-emerald-500/10 blur-3xl" />
-
-            <div className="relative z-10 flex flex-col items-start gap-8 p-8 sm:flex-row sm:items-center sm:p-12">
-              <div className="flex-shrink-0">
-                <div className="flex h-20 w-20 items-center justify-center rounded-2xl border border-teal-400/30 bg-teal-500/20 shadow-lg shadow-teal-900/50">
-                  <Star className="h-10 w-10 text-teal-300" strokeWidth={1.5} />
-                </div>
-              </div>
-
-              <div className="flex-1">
-                <div className="mb-3 flex items-center gap-3">
-                  <span className="text-xs font-bold uppercase tracking-widest text-teal-400">
-                    {tr.featuredLabel}
-                  </span>
-                  <span className="rounded-full border border-teal-500/40 bg-teal-500/20 px-2 py-0.5 text-xs font-semibold text-teal-300">
-                    {tr.mostBooked}
-                  </span>
-                </div>
-                <h2 className="mb-3 text-3xl font-black text-white sm:text-4xl">
-                  {lang === "es" ? featuredTour.titleEs : featuredTour.titleEn}
-                </h2>
-                <p className="max-w-lg text-base text-zinc-300">
-                  {lang === "es" ? featuredTour.descriptionEs : featuredTour.descriptionEn}
-                </p>
-              </div>
-
-              <div className="flex-shrink-0 text-left sm:text-right">
-                <p className="mb-1 text-sm text-zinc-400">{tr.from}</p>
-                <p className="text-4xl font-black text-white">
-                  <span className="text-2xl text-teal-400">CRC</span> {formatPrice(featuredTour.priceCRC)}
-                </p>
-                <p className="mt-1 text-xs text-zinc-500">{tr.perPerson}</p>
-                <Link
-                  href={`/reservar?tour=${encodeURIComponent(featuredTour.slug)}`}
-                  className="mt-4 inline-flex items-center gap-2 rounded-full bg-teal-500 px-6 py-3 text-sm font-bold text-black shadow-lg shadow-teal-900/40 transition-all duration-200 hover:bg-teal-400"
-                >
-                  {tr.bookNow} <ChevronRight size={16} />
-                </Link>
-              </div>
+          </p>
+          <div className="flex flex-wrap items-end justify-between gap-6">
+            <div className="max-w-2xl">
+              <h1 className="font-display text-balance text-4xl font-black leading-[0.98] tracking-tight text-stone-950 md:text-5xl">
+                {tr.title}
+              </h1>
+              <p className="mt-4 text-base leading-relaxed text-stone-600 md:text-lg">
+                {tr.description}
+              </p>
             </div>
+            <p className="text-sm font-semibold text-stone-500">
+              {tours.length} {tr.experiences}
+            </p>
           </div>
-        </section>
-      )}
-
-      <section className="mx-auto max-w-6xl px-4 pb-24">
-        <div className="mb-10 flex items-center gap-4">
-          <h2 className="text-2xl font-bold text-white">{tr.alternativesTitle}</h2>
-          <div className="h-px flex-1 bg-gradient-to-r from-zinc-700 to-transparent" />
-          <span className="text-sm text-zinc-500">
-            {tours.length} {tr.experiences}
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {gridTours.map((tour) => {
-            const Icon = ICON_MAP[tour.iconName] ?? Star;
-            const diffLabel = tr.difficulty[tour.difficulty] ?? tour.difficulty;
-            const diff = difficultyConfig[tour.difficulty] ?? difficultyConfig.Facil;
-
-            return (
-              <article
-                key={tour.id}
-                className={[
-                  "group relative flex flex-col overflow-hidden rounded-2xl border transition-all duration-300",
-                  "bg-gradient-to-b",
-                  tour.accent,
-                  tour.border,
-                  "hover:-translate-y-1 hover:shadow-[0_8px_40px_rgba(0,0,0,0.6)]",
-                ].join(" ")}
-              >
-                <div className="flex items-start justify-between gap-3 px-5 pb-4 pt-6">
-                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/10 transition-colors group-hover:bg-white/15">
-                    <Icon className="h-6 w-6 text-white/80" strokeWidth={1.5} />
-                  </div>
-                  <span className="mt-1 rounded-full border border-white/10 bg-white/10 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-white/60">
-                    {lang === "es" ? tour.tagEs : tour.tagEn}
-                  </span>
-                </div>
-
-                <div className="flex-1 px-5">
-                  <h3 className="mb-2 text-lg font-bold leading-snug text-white">
-                    {lang === "es" ? tour.titleEs : tour.titleEn}
-                  </h3>
-                  <p className="mb-4 text-sm leading-relaxed text-zinc-400">
-                    {lang === "es" ? tour.descriptionEs : tour.descriptionEn}
-                  </p>
-                </div>
-
-                <div className="flex flex-wrap gap-2 px-5 pb-2">
-                  <span className="flex items-center gap-1.5 text-xs text-zinc-400">
-                    <Clock size={12} className="text-zinc-500" />
-                    {tour.duration}
-                  </span>
-                  <span className={`rounded-full border px-2 py-0.5 text-xs ${diff.color}`}>
-                    {diffLabel}
-                  </span>
-                </div>
-
-                <div className="mt-3 flex items-center justify-between gap-3 border-t border-white/10 px-5 pb-5 pt-4">
-                  <div>
-                    <p className="text-xs text-zinc-500">{tr.from}</p>
-                    <p className="text-xl font-black text-white">
-                      <span className="text-sm text-emerald-400">CRC</span> {formatPrice(tour.priceCRC)}
-                    </p>
-                  </div>
-                  <Link
-                    href={`/reservar?tour=${encodeURIComponent(tour.slug)}`}
-                    className="flex flex-shrink-0 items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition-all duration-200 hover:bg-white/20"
-                  >
-                    {tr.reserve} <ChevronRight size={14} />
-                  </Link>
-                </div>
-              </article>
-            );
-          })}
         </div>
       </section>
+
+      <section className="py-12 md:py-16">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid gap-x-7 gap-y-10 sm:grid-cols-2 xl:grid-cols-3">
+            {tours.map((tour) => {
+              const title = tourTitle(tour, isEs);
+              const location = tour.location?.split("-")[0]?.trim() || "San Carlos";
+              const isFeatured = tour.isFeatured || tour.isMain;
+
+              return (
+                <article key={tour.slug} className="group">
+                  <div className="relative aspect-[4/5] overflow-hidden rounded-[1.75rem] bg-stone-900 shadow-[0_26px_70px_rgba(30,24,16,0.16)] sm:aspect-[3/4]">
+                    <Image
+                      src={getTourImage(tour.slug)}
+                      alt={title}
+                      fill
+                      sizes="(min-width: 1280px) 33vw, (min-width: 640px) 50vw, 100vw"
+                      className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/78 via-black/10 to-black/12" />
+
+                    <div className="absolute left-4 top-4 flex flex-wrap gap-2">
+                      {isFeatured && (
+                        <span className="rounded-full bg-emerald-500 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-emerald-950">
+                          {tr.featuredLabel}
+                        </span>
+                      )}
+                      {tour.difficulty && (
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-[11px] font-bold text-stone-900 backdrop-blur-sm">
+                          <Zap size={11} className="text-emerald-600" />
+                          {tour.difficulty}
+                        </span>
+                      )}
+                    </div>
+
+                    <span className="absolute bottom-4 left-4 rounded-full bg-white px-4 py-2 text-sm font-black text-stone-900 shadow-lg">
+                      {tr.from} {formatTourPrice(tour, isEs)}
+                      <span className="ml-1 text-xs font-medium text-stone-500">
+                        / {tr.perPerson}
+                      </span>
+                    </span>
+                  </div>
+
+                  <div className="mt-4 px-1">
+                    <h2 className="font-display text-xl font-black tracking-tight text-stone-950">
+                      {title}
+                    </h2>
+                    {(tour.descriptionEs || tour.descriptionEn) && (
+                      <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-stone-500">
+                        {isEs ? tour.descriptionEs : tour.descriptionEn}
+                      </p>
+                    )}
+                    <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-stone-500">
+                      {tour.duration && (
+                        <span className="inline-flex items-center gap-1.5">
+                          <Clock3 size={14} />
+                          {tour.duration}
+                        </span>
+                      )}
+                      <span className="inline-flex items-center gap-1.5">
+                        <MapPin size={14} />
+                        {location}
+                      </span>
+                    </div>
+
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleSelectTour(tour.slug)}
+                        className="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-5 py-2.5 text-xs font-black uppercase tracking-wide text-white transition hover:bg-emerald-500"
+                      >
+                        {tr.reserve}
+                        <ArrowRight size={14} />
+                      </button>
+                      <Link
+                        href={`/tour/${encodeURIComponent(tour.slug)}`}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-stone-300 px-4 py-2.5 text-xs font-bold text-stone-700 transition hover:border-stone-400 hover:text-stone-900"
+                      >
+                        {isEs ? "Ver detalle" : "View details"}
+                        <ArrowUpRight size={14} />
+                      </Link>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+
+          {tours.length === 0 && (
+            <div className="rounded-3xl border border-dashed border-stone-300 bg-white px-6 py-16 text-center text-stone-500">
+              {isEs
+                ? "No hay tours disponibles en este momento."
+                : "No tours available at the moment."}
+            </div>
+          )}
+        </div>
+      </section>
+
+      <SiteFooter />
     </main>
   );
 }

@@ -51,7 +51,7 @@ function CalendarBase() {
   }, [currentMonth, currentYear]);
 
   return (
-    <section className="mt-4 w-full px-4 sm:px-6 lg:px-8 xl:px-10" id="calendar">
+    <section className="mt-4 w-full px-3 sm:px-5 lg:px-6 xl:px-8" id="calendar">
       {/* Header: month + nav */}
       <div className="mb-4 sm:mb-5 space-y-2">
         <div className="flex items-center justify-between gap-2">
@@ -87,7 +87,7 @@ function CalendarBase() {
       </div>
 
       {/* Weekday labels + grid */}
-      <div className="grid grid-cols-7 gap-y-1 gap-x-1 sm:gap-2 md:gap-3 xl:gap-4">
+      <div className="grid grid-cols-7 gap-x-1.5 gap-y-2 sm:gap-2.5 md:gap-3 xl:gap-3.5">
         {tr.weekdays.map((lbl) => (
           <div
             key={lbl}

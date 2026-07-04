@@ -49,7 +49,7 @@ function CalendarDayBase({ day }: Props) {
   } = useCalendarContext();
 
   if (day === null) {
-    return <div className="h-16 rounded-xl sm:h-24 lg:h-28 xl:h-32" aria-hidden="true" />;
+    return <div className="h-16 rounded-xl sm:h-24 lg:h-[104px] xl:h-28" aria-hidden="true" />;
   }
 
   const past = isPastDay(day);
@@ -115,7 +115,7 @@ function CalendarDayBase({ day }: Props) {
       }
       aria-pressed={selected}
       className={cn(
-        "flex h-16 flex-col overflow-hidden rounded-xl border p-1.5 text-left shadow-sm outline-none transition duration-150 ease-in-out select-none sm:h-24 sm:p-3 lg:h-28 xl:h-32 xl:p-4",
+        "flex h-16 flex-col overflow-hidden rounded-xl border p-1.5 text-left shadow-sm outline-none transition duration-150 ease-in-out select-none sm:h-24 sm:p-2.5 lg:h-[104px] lg:p-3 xl:h-28 xl:p-3",
         hasSlots
           ? "cursor-pointer hover:scale-105 hover:shadow-md active:scale-95"
           : "cursor-not-allowed opacity-60",
@@ -154,7 +154,7 @@ function CalendarDayBase({ day }: Props) {
       <div className="hidden sm:flex flex-1 items-center justify-center">
         <span
           className={cn(
-            "text-[11px] sm:text-xs font-semibold text-center",
+            "text-[11px] sm:text-xs font-semibold text-center leading-tight",
             STATUS_TEXT_CLASS[status]
           )}
         >

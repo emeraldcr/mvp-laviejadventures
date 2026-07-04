@@ -102,38 +102,46 @@ export default function ReservarPage() {
             />
           )}
           <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(3,8,7,0.96),rgba(3,8,7,0.80)_48%,rgba(3,8,7,0.42)),linear-gradient(180deg,rgba(3,8,7,0.65),rgba(3,8,7,0.96))]" />
-          <div className="relative mx-auto flex max-w-7xl flex-col gap-4 px-4 py-5 md:flex-row md:items-center md:justify-between md:px-8 md:py-6">
+          <div className="relative mx-auto flex max-w-7xl flex-col gap-3 px-4 py-5 md:flex-row md:items-center md:justify-between md:px-8 md:py-6">
             <h1 className="text-balance text-2xl font-black leading-tight md:text-3xl">
               {hasTourFromUrl
                 ? isEs ? "Elegí la fecha y reservamos." : "Pick your date and book."
                 : isEs ? "Reservá tu aventura." : "Book your adventure."}
             </h1>
 
-            <div className="w-full rounded-[10px] border border-emerald-100/20 bg-black/42 p-3 shadow-[0_24px_70px_rgba(0,0,0,0.45)] backdrop-blur-xl md:max-w-sm">
-              <label className="mb-1.5 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-emerald-200">
-                {hasTourFromUrl ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Compass className="h-3.5 w-3.5" />}
-                {isEs ? "Tour seleccionado" : "Selected tour"}
-              </label>
-              {hasTourFromUrl ? (
-                <div className="flex items-center justify-between gap-3 rounded-[8px] border border-emerald-200/25 bg-emerald-300/10 px-3 py-2">
-                  <p className="text-sm font-black text-white">{displayTourTitle}</p>
-                  <Link href="/reservar" className="shrink-0 text-xs font-bold text-emerald-200 underline underline-offset-4 hover:text-white">
-                    {isEs ? "Cambiar" : "Change"}
-                  </Link>
+            <div className="w-full rounded-[16px] border border-emerald-100/20 bg-gradient-to-br from-black/75 via-emerald-950/40 to-black/60 p-3 shadow-[0_24px_70px_rgba(0,0,0,0.35)] backdrop-blur-xl md:max-w-sm">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.24em] text-emerald-200">
+                  {hasTourFromUrl ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Compass className="h-3.5 w-3.5" />}
+                  <span>{isEs ? "Tour seleccionado" : "Selected tour"}</span>
                 </div>
-              ) : (
-                <select
-                  value={activeTour?.slug ?? ""}
-                  onChange={(event) => setSelectedTourSlug(event.target.value)}
-                  className="w-full rounded-[8px] border border-white/15 bg-white/10 px-3 py-2 text-sm font-black text-white outline-none transition focus:border-emerald-200/60"
-                >
-                  {tours.map((tour) => (
-                    <option key={tour.slug} value={tour.slug} className="bg-zinc-950 text-white">
-                      {isEs ? tour.titleEs : tour.titleEn}
-                    </option>
-                  ))}
-                </select>
-              )}
+
+                {hasTourFromUrl ? (
+                  <div className="flex items-center justify-between gap-3 rounded-2xl border border-emerald-200/20 bg-emerald-300/10 px-3 py-3 shadow-sm shadow-emerald-950/10">
+                    <p className="text-sm font-semibold text-white">{displayTourTitle}</p>
+                    <Link href="/reservar" className="shrink-0 rounded-full bg-white/5 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.18em] text-emerald-200 transition hover:bg-white/10 hover:text-white">
+                      {isEs ? "Cambiar" : "Change"}
+                    </Link>
+                  </div>
+                ) : (
+                  <select
+                    value={activeTour?.slug ?? ""}
+                    onChange={(event) => {
+                      setSelectedTourSlug(event.target.value);
+                      document.getElementById("booking")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }}
+                    className="w-full rounded-2xl border border-white/15 bg-zinc-950/80 px-3 py-3 text-sm font-semibold text-white outline-none ring-1 ring-transparent transition duration-200 focus:border-emerald-300/70 focus:ring-emerald-200/15"
+                  >
+                    {tours.map((tour) => (
+                      <option key={tour.slug} value={tour.slug} className="bg-zinc-950 text-white">
+                        {isEs ? tour.titleEs : tour.titleEn}
+                      </option>
+                    ))}
+                  </select>
+                )}
+
+                <p className="text-xs text-zinc-300">{isEs ? "Siguiente paso: elegí tu fecha en el calendario abajo." : "Next step: pick your date in the calendar below."}</p>
+              </div>
             </div>
           </div>
         </section>

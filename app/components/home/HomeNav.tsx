@@ -44,20 +44,26 @@ export default function HomeNav() {
         className={[
           "fixed inset-x-0 top-0 z-50 transition-all duration-300",
           scrolled
-            ? "border-b border-stone-200/70 bg-white/85 shadow-[0_1px_24px_rgba(0,0,0,0.06)] backdrop-blur-xl"
-            : "bg-gradient-to-b from-black/55 via-black/20 to-transparent",
+            ? "border-b border-stone-200/70 bg-white/88 shadow-[0_1px_24px_rgba(0,0,0,0.06)] backdrop-blur-xl"
+            : "bg-transparent",
         ].join(" ")}
       >
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 md:h-[4.5rem] lg:px-8">
+        <div className="mx-auto flex h-16 max-w-[1520px] items-center justify-between px-4 sm:px-6 md:h-[5.5rem] lg:px-8">
           {/* Brand */}
-          <Link href="/" className="flex items-center gap-2.5">
+          <Link
+            href="/"
+            className={[
+              "flex items-center gap-2.5 rounded-full transition-all",
+              onDark ? "bg-black/18 py-1.5 pl-1.5 pr-4 backdrop-blur-md" : "",
+            ].join(" ")}
+          >
             <Image
               src="/logo2.jpg"
               alt="La Vieja Adventures"
               width={40}
               height={40}
               priority
-              className="h-9 w-9 rounded-full object-cover ring-2 ring-white/40 md:h-10 md:w-10"
+              className="h-9 w-9 rounded-full object-cover ring-2 ring-white/40 md:h-11 md:w-11"
             />
             <span
               className={[
@@ -70,7 +76,12 @@ export default function HomeNav() {
           </Link>
 
           {/* Desktop nav */}
-          <nav className="hidden items-center gap-1 md:flex">
+          <nav
+            className={[
+              "hidden items-center gap-1 rounded-full p-1.5 md:flex",
+              onDark ? "border border-white/12 bg-black/20 backdrop-blur-xl" : "",
+            ].join(" ")}
+          >
             {links.map((link) => {
               const active = pathname === link.href;
               return (
@@ -78,7 +89,7 @@ export default function HomeNav() {
                   key={link.href}
                   href={link.href}
                   className={[
-                    "rounded-full px-4 py-2 text-sm font-semibold transition-colors",
+                    "rounded-full px-4 py-2 text-sm font-bold transition-colors",
                     onDark
                       ? active
                         ? "bg-white/15 text-white"
@@ -123,7 +134,7 @@ export default function HomeNav() {
 
             <Link
               href="/reservar"
-              className="ml-1 inline-flex items-center gap-2 rounded-full bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-emerald-600/25 transition-all hover:-translate-y-0.5 hover:bg-emerald-500"
+              className="ml-1 inline-flex items-center gap-2 rounded-full bg-emerald-400 px-5 py-2.5 text-sm font-black text-emerald-950 shadow-[0_14px_36px_rgba(52,211,153,0.25)] transition-all hover:-translate-y-0.5 hover:bg-white"
             >
               {isEs ? "Reservar" : "Book now"}
               <ArrowRight size={15} />
