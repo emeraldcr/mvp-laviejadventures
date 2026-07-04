@@ -120,6 +120,25 @@ export function isMatchLive(match: MundialMatch) {
   return match.liveStatus === "live" || match.liveStatus === "halftime";
 }
 
+export function isMatchFinished(match: MundialMatch) {
+  return match.liveStatus === "fulltime";
+}
+
+/** Next live match in schedule order after one just finished (Live tab focus). */
+export function pickNextLiveFocusMatch(matches: MundialMatch[], finishedMatchId: string) {
+  const sorted = [...matches].sort((a, b) => kickoffMs(a) - kickoffMs(b) || a.number - b.number);
+  const live = sorted.filter(isMatchLive);
+  if (live.length === 0) return null;
+
+  const finishedIdx = sorted.findIndex((m) => m.id === finishedMatchId);
+  if (finishedIdx >= 0) {
+    const after = sorted.slice(finishedIdx + 1).find(isMatchLive);
+    if (after) return after;
+  }
+
+  return live.find((m) => m.id !== finishedMatchId) ?? live[0] ?? null;
+}
+
 // Returns true when kickoff has passed but the admin hasn't set liveStatus yet.
 export function isMatchAutoLive(match: MundialMatch, nowMs: number): boolean {
   if (!nowMs || match.liveStatus !== "scheduled") return false;
@@ -170,7 +189,36 @@ export function liveScoreText(match: MundialMatch) {
 
 export function finalScoreText(match: MundialMatch) {
   if (!hasFinalScore(match)) return "Resultado pendiente";
-  return `${match.homeTeam} ${match.homeFinalScore} - ${match.awayFinalScore} ${match.awayTeam}`;
+  const methodLabel =
+    match.decisionMethod === "extraTime"
+      ? "TE"
+      : match.decisionMethod === "penalties"
+        ? "Pen"
+        : "";
+  const regulationText =
+    methodLabel && match.homeRegulationScore !== null && match.awayRegulationScore !== null
+      ? ` (90' ${match.homeRegulationScore}-${match.awayRegulationScore})`
+      : "";
+  return `${match.homeTeam} ${match.homeFinalScore} - ${match.awayFinalScore} ${match.awayTeam}${methodLabel ? ` ${methodLabel}` : ""}${regulationText}`;
+}
+
+export function winnerPickText(
+  winnerPick: "home" | "away" | null | undefined,
+  winnerPickMethod: "extraTime" | "penalties" | null | undefined,
+  homeTeam: string,
+  awayTeam: string,
+  compact = false
+) {
+  if (!winnerPick) return null;
+  const team = winnerPick === "home" ? homeTeam : awayTeam;
+  const methodLabel = winnerPickMethod === "extraTime"
+    ? (compact ? "TE" : "tiempos extra")
+    : winnerPickMethod === "penalties"
+      ? (compact ? "Pen" : "penales")
+      : "";
+  return compact
+    ? `${team}${methodLabel ? ` ${methodLabel}` : ""}`
+    : `Pasa ${team}${methodLabel ? ` (${methodLabel})` : ""}`;
 }
 
 export function formatKickoff(value: string) {

@@ -18,12 +18,16 @@ const ANALYTICS_LIMIT = 250;
 
 type WinnerPick = "home" | "away" | null;
 type LiveMatchStatus = "scheduled" | "live" | "halftime" | "fulltime";
+type MatchDecisionMethod = "regular" | "extraTime" | "penalties";
 
 type MundialMatchDoc = MundialMatch & {
   forceClosed?: boolean;
   actualWinner?: WinnerPick;
+  decisionMethod?: MatchDecisionMethod;
   homeFinalScore?: number;
   awayFinalScore?: number;
+  homeRegulationScore?: number;
+  awayRegulationScore?: number;
   liveStatus?: LiveMatchStatus;
   liveMinute?: number | null;
   liveMinuteUpdatedAt?: Date | string | null;
@@ -273,7 +277,7 @@ function predictionScores(doc: PredictionDoc) {
 }
 
 function computePoints(
-  match: { stage: MundialStage; homeFinalScore: number; awayFinalScore: number; actualWinner?: WinnerPick },
+  match: { stage: MundialStage; homeFinalScore: number; awayFinalScore: number; homeRegulationScore?: number | null; awayRegulationScore?: number | null; actualWinner?: WinnerPick; decisionMethod?: MatchDecisionMethod },
   prediction: { homeScore: number; awayScore: number; winnerPick?: WinnerPick; winnerPickMethod?: "extraTime" | "penalties" | null }
 ): number {
   return computePredictionPoints(match, prediction);
@@ -399,7 +403,10 @@ export async function GET() {
             stage: match.stage,
             homeFinalScore: match.homeFinalScore,
             awayFinalScore: match.awayFinalScore,
+            homeRegulationScore: match.homeRegulationScore,
+            awayRegulationScore: match.awayRegulationScore,
             actualWinner: match.actualWinner,
+            decisionMethod: match.decisionMethod,
           },
           { homeScore: scores.homeScore, awayScore: scores.awayScore, winnerPick: prediction.winnerPick, winnerPickMethod: prediction.winnerPickMethod ?? null }
         );
@@ -461,8 +468,11 @@ export async function GET() {
         group: match.group ?? null,
         homeFinalScore: typeof match.homeFinalScore === "number" ? match.homeFinalScore : null,
         awayFinalScore: typeof match.awayFinalScore === "number" ? match.awayFinalScore : null,
+        homeRegulationScore: typeof match.homeRegulationScore === "number" ? match.homeRegulationScore : null,
+        awayRegulationScore: typeof match.awayRegulationScore === "number" ? match.awayRegulationScore : null,
         forceClosed: match.forceClosed ?? false,
         actualWinner: match.actualWinner ?? null,
+        decisionMethod: match.decisionMethod ?? null,
         liveStatus,
         liveMinute,
         liveMinuteUpdatedAt: toIsoString(match.liveMinuteUpdatedAt),

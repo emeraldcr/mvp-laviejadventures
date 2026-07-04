@@ -83,6 +83,12 @@ function winnerTeam(m: MundialMatch | undefined): string | null {
   return w === "home" ? m.homeTeam : m.awayTeam;
 }
 
+function decisionSuffix(method: MundialMatch["decisionMethod"] | Prediction["winnerPickMethod"] | undefined) {
+  if (method === "extraTime") return " TE";
+  if (method === "penalties") return " Pen";
+  return "";
+}
+
 function isReal(name: string) {
   return !!name && !/^(Ganador|Perdedor|1ro|2do|3ro|TBD|$)/.test(name.trim());
 }
@@ -748,10 +754,10 @@ function InnerDot({
 
   const clipId = `dotclip-${match?.number ?? `${Math.round(r)}-${Math.round(angle)}`}`;
 
-  // score chip: raw score, "+ pen" when decided on penalties
+  // score chip: raw score, plus decision method for tied knockouts
   const score = hasResult && match
     ? `${match.homeFinalScore}-${match.awayFinalScore}${
-        match.homeFinalScore === match.awayFinalScore ? " pen" : ""
+        match.homeFinalScore === match.awayFinalScore ? decisionSuffix(match.decisionMethod) : ""
       }`
     : null;
 
@@ -1038,9 +1044,12 @@ function MatchCard({
         stage: match.stage,
         homeFinalScore: match.homeFinalScore!,
         awayFinalScore: match.awayFinalScore!,
+        homeRegulationScore: match.homeRegulationScore,
+        awayRegulationScore: match.awayRegulationScore,
         actualWinner: match.actualWinner,
+        decisionMethod: match.decisionMethod ?? undefined,
       },
-      { homeScore: pred.homeScore, awayScore: pred.awayScore, winnerPick: pred.winnerPick },
+      { homeScore: pred.homeScore, awayScore: pred.awayScore, winnerPick: pred.winnerPick, winnerPickMethod: pred.winnerPickMethod },
     );
     predKind = predictionScoreKind(predPoints);
   }
@@ -1135,7 +1144,7 @@ function MatchCard({
             </span>
             {pred.winnerPick && (
               <span className="rounded-md border border-[#d5ff3f]/35 bg-[#1a2206] px-2 py-1 text-xs font-black text-[#d5ff3f]">
-                pen. {teamCode(pred.winnerPick === "home" ? match.homeTeam : match.awayTeam)}
+                {teamCode(pred.winnerPick === "home" ? match.homeTeam : match.awayTeam)}{decisionSuffix(pred.winnerPickMethod)}
               </span>
             )}
           </div>

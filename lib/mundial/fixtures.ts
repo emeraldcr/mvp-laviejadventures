@@ -28,7 +28,10 @@ export type MundialMatch = {
   awaySeed?: string;
   homeFinalScore?: number;
   awayFinalScore?: number;
+  homeRegulationScore?: number;
+  awayRegulationScore?: number;
   actualWinner?: "home" | "away" | null;
+  decisionMethod?: "regular" | "extraTime" | "penalties";
   sortOrder: number;
 };
 

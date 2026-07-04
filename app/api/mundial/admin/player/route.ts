@@ -11,10 +11,14 @@ export const dynamic = "force-dynamic";
 const PREDICTIONS_COLLECTION = "mundial_predictions";
 
 type WinnerPick = "home" | "away" | null;
+type MatchDecisionMethod = "regular" | "extraTime" | "penalties";
 
 type MundialMatchDoc = MundialMatch & {
   forceClosed?: boolean;
   actualWinner?: WinnerPick;
+  decisionMethod?: MatchDecisionMethod;
+  homeRegulationScore?: number;
+  awayRegulationScore?: number;
   homeFinalScore?: number;
   awayFinalScore?: number;
 };
@@ -54,7 +58,7 @@ function predictionScores(doc: PredictionDoc) {
 }
 
 function computePoints(
-  match: { stage: MundialStage; homeFinalScore: number; awayFinalScore: number; actualWinner?: WinnerPick },
+  match: { stage: MundialStage; homeFinalScore: number; awayFinalScore: number; homeRegulationScore?: number | null; awayRegulationScore?: number | null; actualWinner?: WinnerPick; decisionMethod?: MatchDecisionMethod },
   prediction: { homeScore: number; awayScore: number; winnerPick?: WinnerPick; winnerPickMethod?: "extraTime" | "penalties" | null }
 ): number {
   return computePredictionPoints(match, prediction);
@@ -98,7 +102,10 @@ export async function GET(req: NextRequest) {
               stage: match.stage,
               homeFinalScore: match.homeFinalScore,
               awayFinalScore: match.awayFinalScore,
+              homeRegulationScore: match.homeRegulationScore,
+              awayRegulationScore: match.awayRegulationScore,
               actualWinner: match.actualWinner,
+              decisionMethod: match.decisionMethod,
             },
             { homeScore: scores.homeScore, awayScore: scores.awayScore, winnerPick: pred.winnerPick, winnerPickMethod: pred.winnerPickMethod ?? null }
           );
@@ -116,9 +123,13 @@ export async function GET(req: NextRequest) {
           stageLabel: match.stageLabel,
           homeFinalScore: typeof match.homeFinalScore === "number" ? match.homeFinalScore : null,
           awayFinalScore: typeof match.awayFinalScore === "number" ? match.awayFinalScore : null,
+          homeRegulationScore: typeof match.homeRegulationScore === "number" ? match.homeRegulationScore : null,
+          awayRegulationScore: typeof match.awayRegulationScore === "number" ? match.awayRegulationScore : null,
+          decisionMethod: match.decisionMethod ?? null,
           predictedHome: scores.homeScore,
           predictedAway: scores.awayScore,
           winnerPick: pred.winnerPick ?? null,
+          winnerPickMethod: pred.winnerPickMethod ?? null,
           points,
           isExact,
           correctOutcome,

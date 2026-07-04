@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import { Check, CircleAlert, Gamepad2, Loader2, Sparkles, Target, X } from "lucide-react";
 import type { LiveMatchStatus, MundialMatch } from "./types";
-import { normalizeKey } from "./utils";
+import { isMatchFinished, normalizeKey, pickNextLiveFocusMatch } from "./utils";
 import { useMundial } from "./useMundial";
 import { useLiveMatch } from "./useLiveMatch";
 import { MineView } from "./components/MineView";
@@ -44,7 +44,6 @@ export default function MundialClient() {
     activeMatch,
     liveMatch,
     activeMatchId,
-    recentClosedMatches,
     todayEditableMatchIds,
     drafts,
     dirtyDrafts,
@@ -163,27 +162,102 @@ export default function MundialClient() {
       ? effectiveLiveMatch
       : null;
 
-  const mostRecentMatch = useMemo(
-    () => effectiveLiveMatch ?? recentClosedMatches[0] ?? activeMatch ?? matches[0] ?? null,
-    [activeMatch, effectiveLiveMatch, matches, recentClosedMatches]
+  const matchesWithLiveSSE = useMemo(
+    () =>
+      matches.map((match) => {
+        if (!liveSSE.matchId || liveSSE.matchId !== match.id) return match;
+        const isFulltime = liveSSE.liveStatus === "fulltime";
+        return {
+          ...match,
+          liveStatus: liveSSE.liveStatus as LiveMatchStatus,
+          homeLiveScore: liveSSE.homeLiveScore,
+          awayLiveScore: liveSSE.awayLiveScore,
+          homeFinalScore:
+            isFulltime && liveSSE.homeLiveScore !== null ? liveSSE.homeLiveScore : match.homeFinalScore,
+          awayFinalScore:
+            isFulltime && liveSSE.awayLiveScore !== null ? liveSSE.awayLiveScore : match.awayFinalScore,
+          closed: isFulltime ? true : match.closed,
+          liveMinute: liveSSE.liveMinute,
+          liveMinuteUpdatedAt: liveSSE.liveMinuteUpdatedAt,
+          liveNote: liveSSE.liveNote,
+          liveEvents: liveSSE.liveEvents,
+          liveStats: liveSSE.liveStats,
+          liveUpdatedAt: liveSSE.liveUpdatedAt,
+        };
+      }),
+    [liveSSE, matches]
   );
 
-  // Upgrade the explicitly selected match with SSE live data if it's the live one
-  const explicitSelectedMatch = useMemo(() => {
-    const m = matches.find((match) => match.id === selectedInfoMatchId) ?? null;
-    if (!m || !effectiveLiveMatch || m.id !== effectiveLiveMatch.id) return m;
-    return effectiveLiveMatch;
-  }, [matches, selectedInfoMatchId, effectiveLiveMatch]);
+  const mostRecentMatch = useMemo(
+    () => effectiveLiveMatch ?? activeMatch ?? matches[0] ?? null,
+    [activeMatch, effectiveLiveMatch, matches]
+  );
 
-  // Upgrade the featured match with SSE live data if it's the live one
+  const focusLiveStatusRef = useRef<Map<string, LiveMatchStatus>>(new Map());
+  const prevActiveLiveIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (viewMode !== "next") return;
+
+    const focusId = featuredMatchId ?? selectedInfoMatchId ?? prevActiveLiveIdRef.current;
+    if (!focusId) return;
+
+    const focused = matchesWithLiveSSE.find((match) => match.id === focusId);
+    if (!focused) return;
+
+    const status = focused.liveStatus;
+    const prevStatus = focusLiveStatusRef.current.get(focusId);
+    focusLiveStatusRef.current.set(focusId, status);
+
+    const wasLive = prevStatus === "live" || prevStatus === "halftime";
+    const justFinished = wasLive && isMatchFinished(focused);
+    if (!justFinished) return;
+
+    const next = pickNextLiveFocusMatch(matchesWithLiveSSE, focusId);
+    if (next) {
+      setFeaturedMatchId(next.id);
+      setSelectedInfoMatchId(next.id);
+    } else {
+      setFeaturedMatchId(null);
+      setSelectedInfoMatchId(null);
+    }
+  }, [featuredMatchId, matchesWithLiveSSE, selectedInfoMatchId, viewMode]);
+
+  useEffect(() => {
+    const liveId = activeLiveMatch?.id ?? null;
+    const prevLiveId = prevActiveLiveIdRef.current;
+
+    if (viewMode === "next" && prevLiveId && prevLiveId !== liveId) {
+      const userFocusId = featuredMatchId ?? selectedInfoMatchId;
+      if (!userFocusId || userFocusId === prevLiveId) {
+        const finished = matchesWithLiveSSE.find((match) => match.id === prevLiveId);
+        if (finished && isMatchFinished(finished)) {
+          const next = pickNextLiveFocusMatch(matchesWithLiveSSE, prevLiveId);
+          if (next) {
+            setFeaturedMatchId(next.id);
+            setSelectedInfoMatchId(next.id);
+          } else {
+            setFeaturedMatchId(null);
+            setSelectedInfoMatchId(null);
+          }
+        }
+      }
+    }
+
+    prevActiveLiveIdRef.current = liveId;
+  }, [activeLiveMatch?.id, featuredMatchId, matchesWithLiveSSE, selectedInfoMatchId, viewMode]);
+
+  const explicitSelectedMatch = useMemo(
+    () => matchesWithLiveSSE.find((match) => match.id === selectedInfoMatchId) ?? null,
+    [matchesWithLiveSSE, selectedInfoMatchId]
+  );
+
   const featuredMatch = useMemo(() => {
     if (featuredMatchId) {
-      const m = matches.find((match) => match.id === featuredMatchId) ?? activeMatch;
-      if (m && effectiveLiveMatch && m?.id === effectiveLiveMatch.id) return effectiveLiveMatch;
-      return m;
+      return matchesWithLiveSSE.find((match) => match.id === featuredMatchId) ?? activeMatch;
     }
     return effectiveLiveMatch ?? activeMatch;
-  }, [activeMatch, featuredMatchId, effectiveLiveMatch, matches]);
+  }, [activeMatch, featuredMatchId, effectiveLiveMatch, matchesWithLiveSSE]);
 
   const selectedInfoMatch = explicitSelectedMatch ?? featuredMatch ?? mostRecentMatch;
 
@@ -246,7 +320,7 @@ export default function MundialClient() {
                 activeMatch={activeMatch}
                 selectedInfoMatch={selectedInfoMatch}
                 featuredMatch={featuredMatch}
-                matches={matches}
+                matches={matchesWithLiveSSE}
                 predictions={predictions}
                 drafts={drafts}
                 activeMatchId={activeMatchId}

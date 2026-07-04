@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Loader2, X, Target, TrendingUp, Clock, ShieldOff, ShieldCheck } from "lucide-react";
 import { Flag } from "../../components/Flag";
-import { cn } from "../../utils";
+import { cn, winnerPickText } from "../../utils";
 import type { LeaderboardEntry, BanInfo } from "../adminTypes";
 
 type PlayerMatchDetail = {
@@ -16,9 +16,13 @@ type PlayerMatchDetail = {
   stageLabel: string;
   homeFinalScore: number | null;
   awayFinalScore: number | null;
+  homeRegulationScore: number | null;
+  awayRegulationScore: number | null;
+  decisionMethod: "regular" | "extraTime" | "penalties" | null;
   predictedHome: number;
   predictedAway: number;
   winnerPick: "home" | "away" | null;
+  winnerPickMethod: "extraTime" | "penalties" | null;
   points: number | null;
   isExact: boolean;
   correctOutcome: boolean;
@@ -74,6 +78,16 @@ function PointsBadge({ match }: { match: PlayerMatchDetail }) {
       Incorrecto · 0pts
     </span>
   );
+}
+
+function finalScoreLabel(match: PlayerMatchDetail) {
+  if (match.homeFinalScore === null || match.awayFinalScore === null) return "vs";
+  const methodLabel = match.decisionMethod === "extraTime" ? "TE" : match.decisionMethod === "penalties" ? "Pen" : "";
+  const regulation =
+    methodLabel && match.homeRegulationScore !== null && match.awayRegulationScore !== null
+      ? `90' ${match.homeRegulationScore}-${match.awayRegulationScore}`
+      : "";
+  return [`${match.homeFinalScore}-${match.awayFinalScore}`, methodLabel, regulation].filter(Boolean).join(" · ");
 }
 
 export function PlayerDetailModal({ entry, onClose }: Props) {
@@ -340,9 +354,10 @@ export function PlayerDetailModal({ entry, onClose }: Props) {
                         <span className="truncate text-sm font-black text-white/80">{match.homeTeam}</span>
                       </div>
 
-                      <div className="flex flex-col items-center gap-0.5">
+                      <div className="flex flex-col items-center gap-1">
                         {hasResult ? (
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex flex-col items-center gap-1">
+                            <div className="flex items-center gap-1.5">
                             <span className={cn(
                               "w-7 text-center text-base font-black tabular-nums",
                               match.isExact ? "text-emerald-700" : match.correctOutcome ? "text-sky-700" : "text-white"
@@ -356,6 +371,12 @@ export function PlayerDetailModal({ entry, onClose }: Props) {
                             )}>
                               {match.awayFinalScore}
                             </span>
+                            </div>
+                            {match.decisionMethod && match.decisionMethod !== "regular" && (
+                              <span className="rounded bg-[#d5ff3f]/10 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-[#d5ff3f]">
+                                {finalScoreLabel(match)}
+                              </span>
+                            )}
                           </div>
                         ) : (
                           <span className="text-xs font-black text-white/25">vs</span>
@@ -365,6 +386,11 @@ export function PlayerDetailModal({ entry, onClose }: Props) {
                           <span className="text-[11px] font-black tabular-nums text-white/65">
                             {match.predictedHome}–{match.predictedAway}
                           </span>
+                          {match.winnerPick && (
+                            <span className="rounded bg-[#d5ff3f]/10 px-1 py-0.5 text-[9px] font-black text-[#d5ff3f]">
+                              {winnerPickText(match.winnerPick, match.winnerPickMethod, match.homeTeam, match.awayTeam, true)}
+                            </span>
+                          )}
                         </div>
                       </div>
 

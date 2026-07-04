@@ -204,7 +204,10 @@ export function useMundial() {
             stage: match.stage,
             homeFinalScore: match.homeFinalScore,
             awayFinalScore: match.awayFinalScore,
+            homeRegulationScore: match.homeRegulationScore,
+            awayRegulationScore: match.awayRegulationScore,
             actualWinner: match.actualWinner,
+            decisionMethod: match.decisionMethod ?? undefined,
           },
           { homeScore: pred.homeScore, awayScore: pred.awayScore, winnerPick: pred.winnerPick, winnerPickMethod: pred.winnerPickMethod },
         );

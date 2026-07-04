@@ -14,8 +14,10 @@ const MAX_LIVE_MINUTE = 130;
 type LiveMatchStatus = "scheduled" | "live" | "halftime" | "fulltime";
 type LiveEventType = "goal" | "penalty" | "yellow" | "red" | "var" | "substitution" | "note";
 type LiveEventTeam = "home" | "away" | null;
+type MatchDecisionMethod = "regular" | "extraTime" | "penalties";
 
 const LIVE_STATUSES = new Set<LiveMatchStatus>(["scheduled", "live", "halftime", "fulltime"]);
+const DECISION_METHODS = new Set<MatchDecisionMethod>(["regular", "extraTime", "penalties"]);
 const LIVE_EVENT_TYPES = new Set<LiveEventType>([
   "goal",
   "penalty",
@@ -43,6 +45,12 @@ function parseLiveMinute(value: unknown): number | null {
 function parseLiveStatus(value: unknown): LiveMatchStatus | null {
   return typeof value === "string" && LIVE_STATUSES.has(value as LiveMatchStatus)
     ? (value as LiveMatchStatus)
+    : null;
+}
+
+function parseDecisionMethod(value: unknown): MatchDecisionMethod | null {
+  return typeof value === "string" && DECISION_METHODS.has(value as MatchDecisionMethod)
+    ? (value as MatchDecisionMethod)
     : null;
 }
 
@@ -103,7 +111,7 @@ function parseLiveEvents(value: unknown) {
 export async function PATCH(req: NextRequest) {
   try {
     const body = await req.json();
-    const { matchId, homeFinalScore, awayFinalScore, forceClosed, actualWinner } = body;
+    const { matchId, homeFinalScore, awayFinalScore, homeRegulationScore, awayRegulationScore, forceClosed, actualWinner, decisionMethod } = body;
 
     if (!matchId || typeof matchId !== "string") {
       return NextResponse.json({ error: "matchId requerido." }, { status: 400 });
@@ -172,12 +180,38 @@ export async function PATCH(req: NextRequest) {
       touchedFinalScore = true;
     }
 
+    if ("homeRegulationScore" in body) {
+      const parsed = body.homeRegulationScore === null || body.homeRegulationScore === "" ? null : parseScore(homeRegulationScore);
+      if (body.homeRegulationScore !== null && body.homeRegulationScore !== "" && parsed === null) {
+        return NextResponse.json({ error: "homeRegulationScore invalido (0-30)." }, { status: 400 });
+      }
+      $set.homeRegulationScore = parsed;
+      touchedFinalScore = true;
+    }
+
+    if ("awayRegulationScore" in body) {
+      const parsed = body.awayRegulationScore === null || body.awayRegulationScore === "" ? null : parseScore(awayRegulationScore);
+      if (body.awayRegulationScore !== null && body.awayRegulationScore !== "" && parsed === null) {
+        return NextResponse.json({ error: "awayRegulationScore invalido (0-30)." }, { status: 400 });
+      }
+      $set.awayRegulationScore = parsed;
+      touchedFinalScore = true;
+    }
+
     if ("forceClosed" in body) {
       $set.forceClosed = Boolean(forceClosed);
     }
 
     if ("actualWinner" in body) {
       $set.actualWinner = actualWinner === "home" || actualWinner === "away" ? actualWinner : null;
+    }
+
+    if ("decisionMethod" in body) {
+      const parsed = body.decisionMethod === null || body.decisionMethod === "" ? null : parseDecisionMethod(decisionMethod);
+      if (body.decisionMethod !== null && body.decisionMethod !== "" && parsed === null) {
+        return NextResponse.json({ error: "decisionMethod invalido." }, { status: 400 });
+      }
+      $set.decisionMethod = parsed;
     }
 
     if ("liveStatus" in body) {
@@ -261,6 +295,9 @@ export async function PATCH(req: NextRequest) {
           $set.actualWinner =
             finalHomeScore > finalAwayScore ? "home" : finalAwayScore > finalHomeScore ? "away" : null;
         }
+        if (!("decisionMethod" in body)) {
+          $set.decisionMethod = finalHomeScore === finalAwayScore ? null : "regular";
+        }
       }
     }
 
@@ -270,9 +307,12 @@ export async function PATCH(req: NextRequest) {
         .findOne<{
           homeFinalScore?: number | null;
           awayFinalScore?: number | null;
+          homeRegulationScore?: number | null;
+          awayRegulationScore?: number | null;
           stage?: string;
           actualWinner?: "home" | "away" | null;
-        }>({ id: matchId }, { projection: { homeFinalScore: 1, awayFinalScore: 1, stage: 1, actualWinner: 1 } });
+          decisionMethod?: MatchDecisionMethod | null;
+        }>({ id: matchId }, { projection: { homeFinalScore: 1, awayFinalScore: 1, homeRegulationScore: 1, awayRegulationScore: 1, stage: 1, actualWinner: 1, decisionMethod: 1 } });
 
       if (!existingMatch) {
         return NextResponse.json({ error: "Partido no encontrado." }, { status: 404 });
@@ -286,19 +326,49 @@ export async function PATCH(req: NextRequest) {
       if (typeof finalHomeScore === "number" && typeof finalAwayScore === "number") {
         const finalActualWinner =
           "actualWinner" in $set ? $set.actualWinner : existingMatch.actualWinner;
+        const finalDecisionMethod =
+          "decisionMethod" in $set ? $set.decisionMethod : existingMatch.decisionMethod;
+        const scoringHomeScore =
+          "homeRegulationScore" in $set ? $set.homeRegulationScore : existingMatch.homeRegulationScore;
+        const scoringAwayScore =
+          "awayRegulationScore" in $set ? $set.awayRegulationScore : existingMatch.awayRegulationScore;
 
         if (existingMatch.stage !== "group" && finalHomeScore !== finalAwayScore) {
           $set.actualWinner = finalHomeScore > finalAwayScore ? "home" : "away";
+          if (!("decisionMethod" in body)) $set.decisionMethod = finalDecisionMethod ?? "regular";
         }
 
         if (
           existingMatch.stage !== "group" &&
-          finalHomeScore === finalAwayScore &&
+          (finalHomeScore === finalAwayScore || finalDecisionMethod === "extraTime" || finalDecisionMethod === "penalties") &&
           finalActualWinner !== "home" &&
           finalActualWinner !== "away"
         ) {
           return NextResponse.json(
             { error: "En eliminatoria empatada tenes que elegir quien pasa." },
+            { status: 400 }
+          );
+        }
+
+        if (
+          existingMatch.stage !== "group" &&
+          finalHomeScore === finalAwayScore &&
+          finalDecisionMethod !== "extraTime" &&
+          finalDecisionMethod !== "penalties"
+        ) {
+          return NextResponse.json(
+            { error: "En eliminatoria empatada tenes que elegir tiempos extra o penales." },
+            { status: 400 }
+          );
+        }
+
+        if (
+          existingMatch.stage !== "group" &&
+          (finalDecisionMethod === "extraTime" || finalDecisionMethod === "penalties") &&
+          (typeof scoringHomeScore !== "number" || typeof scoringAwayScore !== "number" || scoringHomeScore !== scoringAwayScore)
+        ) {
+          return NextResponse.json(
+            { error: "Para tiempos extra o penales, guarda el marcador empatado al final de 90 minutos." },
             { status: 400 }
           );
         }

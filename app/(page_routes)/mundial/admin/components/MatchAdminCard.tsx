@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { BarChart3, Braces, Check, ChevronDown, ChevronUp, ClipboardPaste, Heart, Loader2, Lock, LockOpen, MessageCircle, Minus, Plus, RefreshCw, Repeat2, Save, Send, Trash2, Tv2, Users } from "lucide-react";
-import type { AdminLiveMatchEvent, AdminLiveMatchStats, AdminLiveTeamStats, AdminMatch, AdminRosterPlayer, LiveEventTeam, LiveEventType, LiveMatchStatus } from "../adminTypes";
+import type { AdminLiveMatchEvent, AdminLiveMatchStats, AdminLiveTeamStats, AdminMatch, AdminRosterPlayer, LiveEventTeam, LiveEventType, LiveMatchStatus, MatchDecisionMethod } from "../adminTypes";
 import { cn, formatKickoff } from "../../utils";
 import { getCountryFlag } from "../../flags";
 import { Flag } from "../../components/Flag";
@@ -50,6 +50,12 @@ const LIVE_EVENT_OPTIONS: Array<{ value: LiveEventType; label: string }> = [
   { value: "substitution", label: "Cambio" },
   { value: "note", label: "Nota" },
 ];
+
+const DECISION_METHOD_LABELS: Record<MatchDecisionMethod, string> = {
+  regular: "Tiempo regular",
+  extraTime: "Tiempos extra",
+  penalties: "Penales",
+};
 
 const LIVE_STATS_FIELDS: Array<{ key: keyof AdminLiveTeamStats; label: string; max?: number; suffix?: string; decimal?: boolean }> = [
   { key: "possessionPct", label: "Posesion", max: 100, suffix: "%" },
@@ -242,7 +248,10 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
 
   const [homeScore, setHomeScore] = useState(match.homeFinalScore !== null ? String(match.homeFinalScore) : "");
   const [awayScore, setAwayScore] = useState(match.awayFinalScore !== null ? String(match.awayFinalScore) : "");
+  const [homeRegulationScore, setHomeRegulationScore] = useState(match.homeRegulationScore !== null ? String(match.homeRegulationScore) : "");
+  const [awayRegulationScore, setAwayRegulationScore] = useState(match.awayRegulationScore !== null ? String(match.awayRegulationScore) : "");
   const [actualWinner, setActualWinner] = useState<"home" | "away" | "">(match.actualWinner ?? "");
+  const [decisionMethod, setDecisionMethod] = useState<MatchDecisionMethod | "">(match.decisionMethod ?? "");
   const [liveStatus, setLiveStatus] = useState<LiveMatchStatus>(match.liveStatus);
   const [liveMinute, setLiveMinute] = useState(match.liveMinute !== null ? String(match.liveMinute) : "");
   const [homeLiveScore, setHomeLiveScore] = useState(match.homeLiveScore !== null ? String(match.homeLiveScore) : "");
@@ -278,7 +287,10 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
     queueMicrotask(() => {
       setHomeScore(match.homeFinalScore !== null ? String(match.homeFinalScore) : "");
       setAwayScore(match.awayFinalScore !== null ? String(match.awayFinalScore) : "");
+      setHomeRegulationScore(match.homeRegulationScore !== null ? String(match.homeRegulationScore) : "");
+      setAwayRegulationScore(match.awayRegulationScore !== null ? String(match.awayRegulationScore) : "");
       setActualWinner(match.actualWinner ?? "");
+      setDecisionMethod(match.decisionMethod ?? "");
       setLiveStatus(match.liveStatus);
       setLiveMinute(match.liveMinute !== null ? String(match.liveMinute) : "");
       setHomeLiveScore(match.homeLiveScore !== null ? String(match.homeLiveScore) : "");
@@ -304,7 +316,8 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
   const parsedHome = homeScore === "" ? null : Number(homeScore);
   const parsedAway = awayScore === "" ? null : Number(awayScore);
   const isTied = parsedHome !== null && parsedAway !== null && parsedHome === parsedAway;
-  const needsWinner = isKnockout && isTied;
+  const needsRegulationScore = isKnockout && (decisionMethod === "extraTime" || decisionMethod === "penalties");
+  const needsWinner = isKnockout && (isTied || needsRegulationScore);
   const isLiveNow = liveStatus === "live";
   const isHalftime = liveStatus === "halftime";
   const homePlayersListId = `players-${match.id}-home`;
@@ -317,7 +330,12 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
     setError("");
     setSaved(false);
     const patch: Record<string, unknown> = { homeFinalScore: parsedHome, awayFinalScore: parsedAway };
-    if (isKnockout) patch.actualWinner = actualWinner === "home" || actualWinner === "away" ? actualWinner : null;
+    if (isKnockout) {
+      patch.actualWinner = actualWinner === "home" || actualWinner === "away" ? actualWinner : null;
+      patch.decisionMethod = decisionMethod || null;
+      patch.homeRegulationScore = needsRegulationScore ? (homeRegulationScore === "" ? null : Number(homeRegulationScore)) : null;
+      patch.awayRegulationScore = needsRegulationScore ? (awayRegulationScore === "" ? null : Number(awayRegulationScore)) : null;
+    }
     setIsSaving(true);
     try {
       await onPatch(match.id, patch);
@@ -345,6 +363,13 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
         if (isKnockout) {
           patch.actualWinner =
             liveHome > liveAway ? "home" : liveAway > liveHome ? "away" : actualWinner || null;
+          patch.decisionMethod = liveHome === liveAway ? decisionMethod || null : decisionMethod || "regular";
+          patch.homeRegulationScore = decisionMethod === "extraTime" || decisionMethod === "penalties"
+            ? homeRegulationScore === "" ? null : Number(homeRegulationScore)
+            : null;
+          patch.awayRegulationScore = decisionMethod === "extraTime" || decisionMethod === "penalties"
+            ? awayRegulationScore === "" ? null : Number(awayRegulationScore)
+            : null;
         }
       }
 
@@ -629,6 +654,12 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
               {match.actualWinner && (
                 <span className="mt-1 rounded-md bg-white/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-white/50">
                   Pasa {match.actualWinner === "home" ? match.homeTeam : match.awayTeam}
+                  {match.decisionMethod && match.decisionMethod !== "regular" ? ` - ${DECISION_METHOD_LABELS[match.decisionMethod]}` : ""}
+                </span>
+              )}
+              {match.decisionMethod && match.decisionMethod !== "regular" && match.homeRegulationScore !== null && match.awayRegulationScore !== null && (
+                <span className="rounded-md bg-[#d5ff3f]/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-[#d5ff3f]/80">
+                  90&apos; {match.homeRegulationScore} - {match.awayRegulationScore}
                 </span>
               )}
             </div>
@@ -692,19 +723,53 @@ export function MatchAdminCard({ match, onPatch }: MatchAdminCardProps) {
             </div>
 
             {isKnockout && (
-              <div className="mb-3">
-                <label className="mb-1 block text-xs font-black uppercase text-white/45">
-                  {needsWinner ? "Pasa (requerido - empate)" : "Pasa (opcional)"}
+              <div className="mb-3 grid gap-3 sm:grid-cols-2">
+                <label className="grid gap-1">
+                  <span className="text-xs font-black uppercase text-white/45">
+                    {needsWinner ? "Pasa (requerido - empate)" : "Pasa (opcional)"}
+                  </span>
+                  <select
+                    value={actualWinner}
+                    onChange={(e) => setActualWinner(e.target.value as "home" | "away" | "")}
+                    className={cn("h-10 w-full rounded-lg border bg-black/35 px-3 text-sm font-bold text-white outline-none focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100", needsWinner ? "border-amber-400" : "border-white/18")}
+                  >
+                    <option value="">Sin definir</option>
+                    <option value="home">{match.homeTeam}</option>
+                    <option value="away">{match.awayTeam}</option>
+                  </select>
                 </label>
-                <select
-                  value={actualWinner}
-                  onChange={(e) => setActualWinner(e.target.value as "home" | "away" | "")}
-                  className={cn("h-10 w-full rounded-lg border bg-black/35 px-3 text-sm font-bold text-white outline-none focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100", needsWinner ? "border-amber-400" : "border-white/18")}
-                >
-                  <option value="">Sin definir</option>
-                  <option value="home">{match.homeTeam}</option>
-                  <option value="away">{match.awayTeam}</option>
-                </select>
+                <label className="grid gap-1">
+                  <span className="text-xs font-black uppercase text-white/45">Decision</span>
+                  <select
+                    value={decisionMethod}
+                    onChange={(e) => setDecisionMethod(e.target.value as MatchDecisionMethod | "")}
+                    className={cn("h-10 w-full rounded-lg border bg-black/35 px-3 text-sm font-bold text-white outline-none focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100", needsWinner ? "border-amber-400" : "border-white/18")}
+                  >
+                    <option value="">Sin definir</option>
+                    <option value="regular">Tiempo regular</option>
+                    <option value="extraTime">Tiempos extra</option>
+                    <option value="penalties">Penales</option>
+                  </select>
+                </label>
+              </div>
+            )}
+
+            {needsRegulationScore && (
+              <div className="mb-3 rounded-xl border border-[#d5ff3f]/25 bg-[#10240b]/55 p-3">
+                <p className="mb-3 text-xs font-black uppercase text-[#d5ff3f]/80">
+                  Marcador 90&apos; para leaderboard
+                </p>
+                <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-3">
+                  <div className="flex flex-col gap-1">
+                    <label className="truncate text-[10px] font-black uppercase text-white/40">{match.homeTeam}</label>
+                    <ScoreSpinner value={homeRegulationScore} onChange={setHomeRegulationScore} />
+                  </div>
+                  <p className="pb-2 text-center text-xl font-black text-white/25">-</p>
+                  <div className="flex flex-col items-end gap-1">
+                    <label className="truncate text-[10px] font-black uppercase text-white/40">{match.awayTeam}</label>
+                    <ScoreSpinner value={awayRegulationScore} onChange={setAwayRegulationScore} />
+                  </div>
+                </div>
               </div>
             )}
 

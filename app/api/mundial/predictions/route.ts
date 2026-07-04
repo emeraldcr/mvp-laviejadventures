@@ -23,6 +23,9 @@ type MundialMatchDoc = MundialMatch & {
   source?: string;
   forceClosed?: boolean;
   actualWinner?: "home" | "away" | null;
+  decisionMethod?: "regular" | "extraTime" | "penalties";
+  homeRegulationScore?: number;
+  awayRegulationScore?: number;
   liveStatus?: "scheduled" | "live" | "halftime" | "fulltime";
   liveMinute?: number | null;
   liveMinuteUpdatedAt?: Date | string | null;
@@ -163,7 +166,10 @@ function serializeMatch(doc: MundialMatchDoc, now = new Date()) {
     awaySeed: doc.awaySeed ?? null,
     homeFinalScore: typeof doc.homeFinalScore === "number" ? doc.homeFinalScore : null,
     awayFinalScore: typeof doc.awayFinalScore === "number" ? doc.awayFinalScore : null,
+    homeRegulationScore: typeof doc.homeRegulationScore === "number" ? doc.homeRegulationScore : null,
+    awayRegulationScore: typeof doc.awayRegulationScore === "number" ? doc.awayRegulationScore : null,
     actualWinner: doc.actualWinner ?? null,
+    decisionMethod: doc.decisionMethod ?? null,
     liveStatus:
       doc.liveStatus === "live" || doc.liveStatus === "halftime" || doc.liveStatus === "fulltime"
         ? doc.liveStatus
@@ -256,7 +262,10 @@ function buildLeaderboard(
           stage: match.stage,
           homeFinalScore: match.homeFinalScore,
           awayFinalScore: match.awayFinalScore,
+          homeRegulationScore: match.homeRegulationScore,
+          awayRegulationScore: match.awayRegulationScore,
           actualWinner: match.actualWinner ?? null,
+          decisionMethod: match.decisionMethod,
         },
 { homeScore: scores.homeScore, awayScore: scores.awayScore, winnerPick: prediction.winnerPick ?? null, winnerPickMethod: prediction.winnerPickMethod ?? null },
       );

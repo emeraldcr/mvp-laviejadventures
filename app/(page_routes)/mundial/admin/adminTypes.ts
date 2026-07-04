@@ -5,6 +5,7 @@ import type { LiveMatchStats, LiveTeamStats } from "@/lib/mundial/live-stats";
 export type LiveMatchStatus = "scheduled" | "live" | "halftime" | "fulltime";
 export type LiveEventType = "goal" | "penalty" | "yellow" | "red" | "var" | "substitution" | "note";
 export type LiveEventTeam = "home" | "away" | null;
+export type MatchDecisionMethod = "regular" | "extraTime" | "penalties";
 
 export type AdminLiveMatchEvent = {
   id: string;
@@ -47,8 +48,11 @@ export type AdminMatch = {
   group: string | null;
   homeFinalScore: number | null;
   awayFinalScore: number | null;
+  homeRegulationScore: number | null;
+  awayRegulationScore: number | null;
   forceClosed: boolean;
   actualWinner: "home" | "away" | null;
+  decisionMethod: MatchDecisionMethod | null;
   liveStatus: LiveMatchStatus;
   liveMinute: number | null;
   liveMinuteUpdatedAt: string | null;

@@ -35,8 +35,10 @@ export type MundialMatch = {
   awaySeed: string | null;
   homeFinalScore: number | null;
   awayFinalScore: number | null;
+  homeRegulationScore: number | null;
+  awayRegulationScore: number | null;
   actualWinner: WinnerPick;
-  decisionMethod?: MatchDecisionMethod;
+  decisionMethod?: MatchDecisionMethod | null;
   liveStatus: LiveMatchStatus;
   liveMinute: number | null;
   homeLiveScore: number | null;

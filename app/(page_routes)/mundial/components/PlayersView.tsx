@@ -3,7 +3,7 @@
 import { CalendarDays, Camera, ChevronRight, Crown, Lock, MinusCircle, Target, TrendingUp, Trophy, Users, X, Zap } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type { LeaderboardEntry, MundialMatch, Prediction } from "../types";
-import { cn, finalScoreText, formatKickoff, normalizeKey } from "../utils";
+import { cn, finalScoreText, formatKickoff, normalizeKey, winnerPickText } from "../utils";
 import { teamCode } from "../flags";
 import { computePredictionPoints, predictionScoreKind } from "@/lib/mundial/prediction-scoring";
 import { Flag } from "./Flag";
@@ -672,7 +672,7 @@ function PredictionRow({
         </span>
         {prediction.winnerPick && match && (
           <span className="rounded-md border border-[#d5ff3f]/45 bg-[#1a2206] px-2 py-1 text-xs font-black text-[#d5ff3f]">
-            pen. {prediction.winnerPick === "home" ? teamCode(match.homeTeam) : teamCode(match.awayTeam)}
+            {winnerPickText(prediction.winnerPick, prediction.winnerPickMethod, teamCode(match.homeTeam), teamCode(match.awayTeam), true)}
           </span>
         )}
         <span className="rounded-md border border-white/15 bg-black/35 px-3 py-2 text-sm font-black text-white">
@@ -832,7 +832,10 @@ function computePredictionScore(match: MundialMatch | undefined, prediction: Pre
       stage: match.stage,
       homeFinalScore: match.homeFinalScore,
       awayFinalScore: match.awayFinalScore,
+      homeRegulationScore: match.homeRegulationScore,
+      awayRegulationScore: match.awayRegulationScore,
       actualWinner: match.actualWinner,
+      decisionMethod: match.decisionMethod ?? undefined,
     },
     {
       homeScore: prediction.homeScore,

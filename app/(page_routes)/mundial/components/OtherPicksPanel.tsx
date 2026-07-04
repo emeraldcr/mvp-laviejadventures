@@ -58,7 +58,10 @@ function pickStatus(match: MundialMatch, prediction: Prediction): PickStatus {
         stage: match.stage,
         homeFinalScore: refHome,
         awayFinalScore: refAway,
+        homeRegulationScore: hasFinalScore ? match.homeRegulationScore : null,
+        awayRegulationScore: hasFinalScore ? match.awayRegulationScore : null,
         actualWinner: match.actualWinner,
+        decisionMethod: match.decisionMethod ?? undefined,
       },
       {
         homeScore: prediction.homeScore,

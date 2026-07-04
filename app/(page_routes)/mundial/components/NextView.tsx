@@ -1,5 +1,5 @@
 import { Trophy } from "lucide-react";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import type { Draft, MundialMatch, Prediction } from "../types";
 import { emptyDraft } from "../utils";
 import { FeaturedMatch } from "./FeaturedMatch";
@@ -40,12 +40,22 @@ export function NextView({
   onOpenPlayerPicker,
 }: NextViewProps) {
   const detailRef = useRef<HTMLDivElement>(null);
+  const skipDetailScrollRef = useRef(true);
+
+  useEffect(() => {
+    if (!selectedInfoMatch) return;
+    if (skipDetailScrollRef.current) {
+      skipDetailScrollRef.current = false;
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      detailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 50);
+    return () => window.clearTimeout(timer);
+  }, [selectedInfoMatch?.id]);
 
   function handleSelectMatch(match: MundialMatch) {
     onSelectMatch(match);
-    setTimeout(() => {
-      detailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 50);
   }
 
   return (

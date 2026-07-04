@@ -1,7 +1,7 @@
 "use client";
 
 import { CalendarDays, Timer } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import type { MundialMatch } from "../types";
 import {
@@ -83,6 +83,19 @@ export function MatchSelector({
   }, [upcomingMatches]);
 
   const tabMatches = effectiveTab === "live" ? liveMatches : effectiveTab === "today" ? todayMatches : [];
+
+  const prevSelectedIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!selectedMatchId || selectedMatchId === prevSelectedIdRef.current) return;
+    prevSelectedIdRef.current = selectedMatchId;
+    requestAnimationFrame(() => {
+      document.getElementById(`selector-match-${selectedMatchId}`)?.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+        inline: "nearest",
+      });
+    });
+  }, [selectedMatchId]);
 
   return (
     <div className="overflow-hidden rounded-lg border border-[#f0b429]/20 bg-[#06140f] shadow-[0_4px_20px_rgba(0,0,0,0.22)]">
@@ -268,6 +281,7 @@ function CompactMatchCard({
   return (
     <button
       type="button"
+      id={`selector-match-${match.id}`}
       onClick={onClick}
       className={cn(
         "group relative w-full rounded-lg border p-2 text-left transition-all active:scale-95 min-[420px]:p-2.5",

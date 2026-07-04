@@ -15,6 +15,7 @@ export const CENTRALIZED_KNOCKOUT_STAGES = new Set<MundialStage>([
 type StoredMundialMatch = MundialMatch & {
   source?: string;
   forceClosed?: boolean;
+  decisionMethod?: "regular" | "extraTime" | "penalties";
   liveStatus?: "scheduled" | "live" | "halftime" | "fulltime";
   liveMinute?: number | null;
   liveMinuteUpdatedAt?: Date | string | null;
