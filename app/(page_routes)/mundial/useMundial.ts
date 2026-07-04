@@ -127,6 +127,7 @@ export function useMundial() {
           homeScore: prediction.homeScore,
           awayScore: prediction.awayScore,
           winnerPick: prediction.winnerPick,
+          winnerPickMethod: prediction.winnerPickMethod,
           locked: prediction.locked || closed,
           dirty: false,
           saved: true,
@@ -205,7 +206,7 @@ export function useMundial() {
             awayFinalScore: match.awayFinalScore,
             actualWinner: match.actualWinner,
           },
-          { homeScore: pred.homeScore, awayScore: pred.awayScore, winnerPick: pred.winnerPick },
+          { homeScore: pred.homeScore, awayScore: pred.awayScore, winnerPick: pred.winnerPick, winnerPickMethod: pred.winnerPickMethod },
         );
         entry.scoredPredictions++;
         entry.totalPoints += pts;
@@ -518,6 +519,7 @@ export function useMundial() {
       homeScore: draft.homeScore,
       awayScore: draft.awayScore,
       winnerPick: draft.winnerPick,
+      winnerPickMethod: draft.winnerPickMethod,
       locked: false,
     };
   }
@@ -558,8 +560,9 @@ export function useMundial() {
 
   function validatePrediction(match: MundialMatch) {
     const draft = getDraft(match.id);
-    if (match.stage !== "group" && draft.homeScore === draft.awayScore && !draft.winnerPick) {
-      return "Elegis quien pasa antes de guardar una llave empatada.";
+    if (match.stage !== "group" && draft.homeScore === draft.awayScore) {
+      if (!draft.winnerPick) return "Elegis quien pasa antes de guardar una llave empatada.";
+      if (!draft.winnerPickMethod) return "Elegis si pasa en tiempos extra o penales.";
     }
     if (!canEditMatch(match)) return "Ese partido no esta abierto.";
     return "";

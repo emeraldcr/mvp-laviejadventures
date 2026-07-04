@@ -3,6 +3,8 @@ import type { LiveMatchStats } from "@/lib/mundial/live-stats";
 
 export type MundialStage = "group" | "round32" | "round16" | "quarterfinal" | "semifinal" | "thirdPlace" | "final";
 export type WinnerPick = "home" | "away" | null;
+export type WinnerPickMethod = "extraTime" | "penalties" | null;
+export type MatchDecisionMethod = "regular" | "extraTime" | "penalties";
 export type ViewMode = "next" | "mine" | "players" | "bracket";
 export type LiveMatchStatus = "scheduled" | "live" | "halftime" | "fulltime";
 export type LiveEventType = "goal" | "penalty" | "yellow" | "red" | "var" | "substitution" | "note";
@@ -34,6 +36,7 @@ export type MundialMatch = {
   homeFinalScore: number | null;
   awayFinalScore: number | null;
   actualWinner: WinnerPick;
+  decisionMethod?: MatchDecisionMethod;
   liveStatus: LiveMatchStatus;
   liveMinute: number | null;
   homeLiveScore: number | null;
@@ -100,6 +103,7 @@ export type Prediction = {
   homeScore: number;
   awayScore: number;
   winnerPick: WinnerPick;
+  winnerPickMethod: WinnerPickMethod;
   locked: boolean;
   lockedAt: string | null;
   createdAt: string | null;
@@ -135,6 +139,7 @@ export type Draft = {
   homeScore: number;
   awayScore: number;
   winnerPick: WinnerPick;
+  winnerPickMethod: WinnerPickMethod;
   locked: boolean;
   dirty: boolean;
   saved: boolean;

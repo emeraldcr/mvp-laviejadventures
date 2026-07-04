@@ -54,7 +54,7 @@ function predictionScores(doc: PredictionDoc) {
 
 function computePoints(
   match: { stage: MundialStage; homeFinalScore: number; awayFinalScore: number; actualWinner?: WinnerPick },
-  prediction: { homeScore: number; awayScore: number; winnerPick?: WinnerPick }
+  prediction: { homeScore: number; awayScore: number; winnerPick?: WinnerPick; winnerPickMethod?: "extraTime" | "penalties" | null }
 ): number {
   return computePredictionPoints(match, prediction);
 }
@@ -99,7 +99,7 @@ export async function GET(req: NextRequest) {
               awayFinalScore: match.awayFinalScore,
               actualWinner: match.actualWinner,
             },
-            { homeScore: scores.homeScore, awayScore: scores.awayScore, winnerPick: pred.winnerPick }
+            { homeScore: scores.homeScore, awayScore: scores.awayScore, winnerPick: pred.winnerPick, winnerPickMethod: pred.winnerPickMethod ?? null }
           );
           isExact = points >= 3;
           correctOutcome = points >= 1;

@@ -5,7 +5,6 @@ import {
   finalScoreText,
   formatKickoff,
   formatUpdatedAt,
-  getWinnerPickOptions,
   isMatchClosed,
   isMatchLive,
   livePickStatus,
@@ -139,22 +138,65 @@ export function MatchCard({ match, draft, savingId, isSavingBulk, todayEditableM
       </div>
 
       {isKnockoutTie && canEdit && (
-        <select
-          value={draft.winnerPick ?? ""}
-          onChange={(event) =>
-            onUpdateDraft(match.id, {
-              winnerPick: event.target.value === "home" || event.target.value === "away" ? event.target.value : null,
-            })
-          }
-          className="mt-3 h-11 w-full rounded-lg border border-[#d5ff3f]/45 bg-black/55 px-3 text-sm font-black text-[#d5ff3f] outline-none focus:border-white focus:ring-2 focus:ring-[#d5ff3f]/20"
-          aria-label={`Ganador por penales del partido ${match.number}`}
-        >
-          {getWinnerPickOptions(match).map((option) => (
-            <option key={option.value || "none"} value={option.value} className="bg-[#071018] text-white">
-              {option.label}
-            </option>
-          ))}
-        </select>
+        <div className="mt-3 grid gap-3">
+          <div>
+            <label className="mb-2 block text-sm font-black uppercase tracking-[0.14em] text-white/70">
+              Quién avanza
+            </label>
+            <select
+              value={draft.winnerPick ?? ""}
+              onChange={(event) =>
+                onUpdateDraft(match.id, {
+                  winnerPick: event.target.value === "home" || event.target.value === "away" ? event.target.value : null,
+                  winnerPickMethod: event.target.value ? draft.winnerPickMethod : null,
+                })
+              }
+              className="h-11 w-full rounded-lg border border-[#d5ff3f]/45 bg-black/55 px-3 text-sm font-black text-[#d5ff3f] outline-none focus:border-white focus:ring-2 focus:ring-[#d5ff3f]/20"
+              aria-label={`Quien pasa del partido ${match.number}`}
+            >
+              <option value="" className="bg-[#071018] text-white">
+                Elige quién pasa
+              </option>
+              <option value="home" className="bg-[#071018] text-white">
+                {match.homeTeam}
+              </option>
+              <option value="away" className="bg-[#071018] text-white">
+                {match.awayTeam}
+              </option>
+            </select>
+          </div>
+
+          {draft.winnerPick && (
+            <div>
+              <label className="mb-2 block text-sm font-black uppercase tracking-[0.14em] text-white/70">
+                Método de definición
+              </label>
+              <select
+                value={draft.winnerPickMethod ?? ""}
+                onChange={(event) =>
+                  onUpdateDraft(match.id, {
+                    winnerPickMethod:
+                      event.target.value === "extraTime" || event.target.value === "penalties"
+                        ? event.target.value
+                        : null,
+                  })
+                }
+                className="h-11 w-full rounded-lg border border-[#d5ff3f]/45 bg-black/55 px-3 text-sm font-black text-[#d5ff3f] outline-none focus:border-white focus:ring-2 focus:ring-[#d5ff3f]/20"
+                aria-label={`Método de definición del partido ${match.number}`}
+              >
+                <option value="" className="bg-[#071018] text-white">
+                  Seleccioná tiempos extra o penales
+                </option>
+                <option value="extraTime" className="bg-[#071018] text-white">
+                  Tiempos extra
+                </option>
+                <option value="penalties" className="bg-[#071018] text-white">
+                  Penales
+                </option>
+              </select>
+            </div>
+          )}
+        </div>
       )}
 
       <div className="mt-4 flex flex-col gap-3 rounded-lg border border-white/10 bg-black/35 p-3 min-[380px]:flex-row min-[380px]:items-center min-[380px]:justify-between">

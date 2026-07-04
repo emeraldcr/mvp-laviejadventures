@@ -58,6 +58,7 @@ export function emptyDraft(): Draft {
     homeScore: 0,
     awayScore: 0,
     winnerPick: null,
+    winnerPickMethod: null,
     locked: false,
     dirty: false,
     saved: false,
@@ -225,8 +226,14 @@ export function predictionResult(match: MundialMatch, draft: Draft) {
   if (draft.homeScore > draft.awayScore) return `Gana ${match.homeTeam}`;
   if (draft.awayScore > draft.homeScore) return `Gana ${match.awayTeam}`;
   if (match.stage === "group") return "Empate";
-  if (draft.winnerPick === "home") return `Pasa ${match.homeTeam}`;
-  if (draft.winnerPick === "away") return `Pasa ${match.awayTeam}`;
+  if (draft.winnerPick === "home") {
+    const methodLabel = draft.winnerPickMethod === "extraTime" ? "(tiempos extra)" : draft.winnerPickMethod === "penalties" ? "(penales)" : "";
+    return `Pasa ${match.homeTeam} ${methodLabel}`.trim();
+  }
+  if (draft.winnerPick === "away") {
+    const methodLabel = draft.winnerPickMethod === "extraTime" ? "(tiempos extra)" : draft.winnerPickMethod === "penalties" ? "(penales)" : "";
+    return `Pasa ${match.awayTeam} ${methodLabel}`.trim();
+  }
   return "Falta pase";
 }
 

@@ -1,17 +1,21 @@
 export type PredictionSide = "home" | "away";
 export type PredictionWinnerPick = PredictionSide | null;
 
+export type MatchDecisionMethod = "regular" | "extraTime" | "penalties";
+
 export type PredictionScoringMatch = {
   stage: string;
   homeFinalScore: number;
   awayFinalScore: number;
   actualWinner?: PredictionWinnerPick;
+  decisionMethod?: MatchDecisionMethod;
 };
 
 export type PredictionScoringPick = {
   homeScore: number;
   awayScore: number;
   winnerPick?: PredictionWinnerPick;
+  winnerPickMethod?: MatchDecisionMethod;
 };
 
 export function predictionOutcome(homeScore: number, awayScore: number) {
@@ -35,11 +39,19 @@ export function computePredictionPoints(
     isDrawInKnockout &&
     match.actualWinner != null &&
     prediction.winnerPick === match.actualWinner;
+  const correctMethod =
+    correctWinner &&
+    match.decisionMethod != null &&
+    match.decisionMethod === prediction.winnerPickMethod;
 
-  if (isExact && isDrawInKnockout && correctWinner) return 4;
+  if (isExact && isDrawInKnockout && correctWinner && correctMethod) return 4;
   if (isExact && isDrawInKnockout) return 1;
   if (isExact) return 3;
-  if (correctOutcome && correctWinner) return 2;
+  if (correctOutcome && correctWinner) {
+    if (correctMethod && match.decisionMethod === "penalties") return 3;
+    if (correctMethod && match.decisionMethod === "extraTime") return 2;
+    return 1;
+  }
   if (correctOutcome) return 1;
   return 0;
 }

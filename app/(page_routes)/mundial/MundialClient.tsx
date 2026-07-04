@@ -450,6 +450,7 @@ function LiveCommandCenter({
     homeScore: 0,
     awayScore: 0,
     winnerPick: null,
+    winnerPickMethod: null,
     locked: false,
     dirty: false,
     saved: false,

@@ -62,6 +62,7 @@ type PredictionDoc = {
   mexicoScore?: number;
   southAfricaScore?: number;
   winnerPick?: WinnerPick;
+  winnerPickMethod?: "extraTime" | "penalties" | null;
   locked?: boolean;
   lockedAt?: Date | null;
   createdAt?: Date;
@@ -74,6 +75,7 @@ type PredictionPayload = {
   homeScore?: unknown;
   awayScore?: unknown;
   winnerPick?: unknown;
+  winnerPickMethod?: unknown;
   locked?: unknown;
 };
 
@@ -111,6 +113,11 @@ function parseScore(value: unknown) {
 
 function parseWinnerPick(value: unknown): WinnerPick {
   if (value === "home" || value === "away") return value;
+  return null;
+}
+
+function parseWinnerPickMethod(value: unknown): "extraTime" | "penalties" | null {
+  if (value === "extraTime" || value === "penalties") return value;
   return null;
 }
 
@@ -208,6 +215,7 @@ function serializePrediction(
     homeScore: scores.homeScore,
     awayScore: scores.awayScore,
     winnerPick: doc.winnerPick ?? null,
+    winnerPickMethod: doc.winnerPickMethod ?? null,
     locked: closedByTime,
     lockedAt: toIsoString(closedByTime ? match?.kickoffAt : doc.lockedAt),
     createdAt: toIsoString(doc.createdAt),
@@ -252,7 +260,7 @@ function buildLeaderboard(
           awayFinalScore: match.awayFinalScore,
           actualWinner: match.actualWinner ?? null,
         },
-        { homeScore: scores.homeScore, awayScore: scores.awayScore, winnerPick: prediction.winnerPick ?? null },
+{ homeScore: scores.homeScore, awayScore: scores.awayScore, winnerPick: prediction.winnerPick ?? null, winnerPickMethod: prediction.winnerPickMethod ?? null },
       );
 
       entry.scoredPredictions++;
@@ -371,13 +379,17 @@ async function savePrediction(
   const homeScore = parseScore(payload.homeScore);
   const awayScore = parseScore(payload.awayScore);
   const winnerPick = parseWinnerPick(payload.winnerPick);
+  const winnerPickMethod = parseWinnerPickMethod(payload.winnerPickMethod);
   const locked = Boolean(payload.locked);
   const now = new Date();
 
   if (!match) throw new ApiError("Partido invalido.");
   if (isMatchClosed(match, now)) throw new ApiError("Ese partido ya cerro. Solo se puede guardar antes del inicio.", 423);
   if (!playerName || homeScore === null || awayScore === null) throw new ApiError("Faltan datos para guardar la prediccion.");
-  if (match.stage !== "group" && homeScore === awayScore && !winnerPick) throw new ApiError("Elegis quien pasa antes de guardar una llave empatada.");
+  if (match.stage !== "group" && homeScore === awayScore) {
+    if (!winnerPick) throw new ApiError("Elegis quien pasa antes de guardar una llave empatada.");
+    if (!winnerPickMethod) throw new ApiError("Elegis si pasa en tiempos extra o penales.");
+  }
 
   const predictions = db.collection<PredictionDoc>(MUNDIAL_PREDICTIONS_COLLECTION);
   const existing = await predictions.findOne({ matchId, normalizedName });
@@ -387,7 +399,8 @@ async function savePrediction(
     isMatchClosed(match, now) &&
     (currentScores?.homeScore !== homeScore ||
       currentScores?.awayScore !== awayScore ||
-      (existing?.winnerPick ?? null) !== winnerPick);
+      (existing?.winnerPick ?? null) !== winnerPick ||
+      (existing?.winnerPickMethod ?? null) !== winnerPickMethod);
 
   if (changesLockedScore) throw new ApiError("Ese resultado esta bloqueado. Desbloquealo antes de editar.", 423);
 
@@ -404,6 +417,7 @@ async function savePrediction(
         homeScore,
         awayScore,
         winnerPick,
+        winnerPickMethod,
         locked,
         lockedAt: locked ? now : null,
         updatedAt: now,

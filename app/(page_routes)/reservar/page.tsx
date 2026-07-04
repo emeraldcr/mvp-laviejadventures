@@ -11,16 +11,12 @@ import BookingSection from "@/app/components/sections/BookingSection";
 import { MobileBottomNav } from "@/app/components/navigation/SiteNavigation";
 import { getTourImage } from "@/lib/tour-display";
 
-function getInitialTourSlug() {
-  if (typeof window === "undefined") return "";
-  return new URLSearchParams(window.location.search).get("tour")?.trim() ?? "";
-}
-
 export default function ReservarPage() {
   const { lang, toggle } = useLanguage();
   const { tours } = useReservationData();
-  const [urlTourSlug] = useState(getInitialTourSlug);
-  const [selectedTourSlug, setSelectedTourSlug] = useState(getInitialTourSlug);
+  const [urlTourSlug, setUrlTourSlug] = useState("");
+  const [selectedTourSlug, setSelectedTourSlug] = useState("");
+  const [hasReadUrl, setHasReadUrl] = useState(false);
   const isEs = lang === "es";
   const hasTourFromUrl = urlTourSlug.length > 0;
 
@@ -34,10 +30,20 @@ export default function ReservarPage() {
     : selectedTourSlug.replace(/-/g, " ");
 
   useEffect(() => {
+    const tourFromUrl = new URLSearchParams(window.location.search).get("tour")?.trim() ?? "";
+    if (tourFromUrl) {
+      setUrlTourSlug(tourFromUrl);
+      setSelectedTourSlug(tourFromUrl);
+    }
+    setHasReadUrl(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hasReadUrl) return;
     if (!selectedTourSlug && tours[0]?.slug) {
       setSelectedTourSlug(tours[0].slug);
     }
-  }, [selectedTourSlug, tours]);
+  }, [hasReadUrl, selectedTourSlug, tours]);
 
   useEffect(() => {
     if (!selectedTourSlug) return;
