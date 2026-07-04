@@ -26,6 +26,7 @@ type Props = {
   liveMatch: MundialMatch;
   playerName: string;
   onOpenPlayerPicker: () => void;
+  variant?: "floating" | "panel";
 };
 
 // ── Audio ─────────────────────────────────────────────────────────────────────
@@ -172,8 +173,9 @@ function ChatToast({
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export function LiveMatchChat({ liveMatch, playerName, onOpenPlayerPicker }: Props) {
-  const [isOpen, setIsOpen] = useState(false);
+export function LiveMatchChat({ liveMatch, playerName, onOpenPlayerPicker, variant = "floating" }: Props) {
+  const isPanel = variant === "panel";
+  const [isOpen, setIsOpen] = useState(isPanel);
   const [messages, setMessages] = useState<LiveChatMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [visitorId, setVisitorId] = useState("");
@@ -194,6 +196,10 @@ export function LiveMatchChat({ liveMatch, playerName, onOpenPlayerPicker }: Pro
   const matchLabel = `${liveMatch.homeTeam} vs ${liveMatch.awayTeam}`;
   const canSend =
     Boolean(playerName.trim()) && Boolean(visitorId) && draft.trim().length > 0;
+
+  useEffect(() => {
+    if (isPanel) setIsOpen(true);
+  }, [isPanel]);
 
   const applyPayload = useCallback((payload: ChatPayload) => {
     const signature = JSON.stringify(payload.messages);
@@ -270,7 +276,7 @@ export function LiveMatchChat({ liveMatch, playerName, onOpenPlayerPicker }: Pro
 
     if (newFromOthers.length === 0) return;
 
-    if (!isOpen) {
+    if (!isOpen && !isPanel) {
       queueMicrotask(() => {
         setUnreadCount((prev) => prev + newFromOthers.length);
         playMessageSound();
@@ -287,7 +293,7 @@ export function LiveMatchChat({ liveMatch, playerName, onOpenPlayerPicker }: Pro
         toastTimerRef.current = setTimeout(() => setToast(null), 3_500);
       });
     }
-  }, [confirmedMessages, isOpen, visitorId]);
+  }, [confirmedMessages, isOpen, isPanel, visitorId]);
 
   // Reset unread when opened
   useEffect(() => {
@@ -365,14 +371,15 @@ export function LiveMatchChat({ liveMatch, playerName, onOpenPlayerPicker }: Pro
   return (
     <>
       {/* ── Toast notification (chat closed) ── */}
-      {toast && !isOpen && (
+      {toast && !isOpen && !isPanel && (
         <ChatToast message={toast} onClick={() => setIsOpen(true)} />
       )}
 
       {/* ── Floating chat panel ── */}
       <div
         className={cn(
-          "fixed bottom-[4.75rem] right-4 z-[55] flex w-[22rem] flex-col overflow-hidden rounded-2xl border border-[#f0b429]/30 bg-[#06140f]/97 shadow-[0_24px_64px_rgba(0,0,0,0.75)] backdrop-blur-md transition-all duration-300 sm:w-96",
+          "flex flex-col overflow-hidden rounded-2xl border border-[#f0b429]/30 bg-[#06140f]/97 shadow-[0_24px_64px_rgba(0,0,0,0.75)] backdrop-blur-md transition-all duration-300",
+          isPanel ? "relative w-full" : "fixed bottom-[4.75rem] right-4 z-[55] w-[22rem] sm:w-96",
           isOpen
             ? "pointer-events-auto translate-y-0 scale-100 opacity-100"
             : "pointer-events-none translate-y-4 scale-95 opacity-0"
@@ -398,21 +405,23 @@ export function LiveMatchChat({ liveMatch, playerName, onOpenPlayerPicker }: Pro
               )}
               {connected ? "Live" : "..."}
             </span>
-            <button
-              type="button"
-              onClick={() => setIsOpen(false)}
-              aria-label="Cerrar chat"
-              className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-white/15 bg-black/20 text-white/50 transition hover:border-white/30 hover:text-white"
-            >
-              <X className="h-4 w-4" />
-            </button>
+            {!isPanel && (
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                aria-label="Cerrar chat"
+                className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-white/15 bg-black/20 text-white/50 transition hover:border-white/30 hover:text-white"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
           </div>
         </div>
 
         {/* Messages */}
         <div
           ref={listRef}
-          className="max-h-72 min-h-40 space-y-2 overflow-y-auto px-4 py-3"
+          className={cn("space-y-2 overflow-y-auto px-4 py-3", isPanel ? "max-h-80 min-h-56" : "max-h-72 min-h-40")}
         >
           {visibleMessages.length > 0 ? (
             visibleMessages.map((message) => (
@@ -478,6 +487,7 @@ export function LiveMatchChat({ liveMatch, playerName, onOpenPlayerPicker }: Pro
       </div>
 
       {/* ── Floating trigger button ── */}
+      {!isPanel && (
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
@@ -508,6 +518,7 @@ export function LiveMatchChat({ liveMatch, playerName, onOpenPlayerPicker }: Pro
           </span>
         )}
       </button>
+      )}
 
       {/* ── Keyframes ── */}
       <style>{`

@@ -366,14 +366,15 @@ export default function MundialClient() {
 
             {/* ====================== LIVE SECTION ========================== */}
             {activeLiveMatch && (
-              <div className="mt-3 grid gap-3 xl:grid-cols-[minmax(0,0.82fr)_minmax(360px,0.6fr)]">
-                <div className="grid gap-2 rounded-xl border border-[#f0b429]/20 bg-black/30 p-2.5 sm:grid-cols-2 xl:self-start">
+              <div className="mt-4 grid gap-3 rounded-2xl border border-[#f0b429]/35 bg-[#06140f]/92 p-3 shadow-[0_18px_70px_rgba(0,0,0,0.45)] [background-image:linear-gradient(135deg,rgba(240,180,41,0.14),transparent_42%),linear-gradient(180deg,rgba(157,255,52,0.06),transparent_55%)] sm:p-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(380px,0.65fr)]">
+                <div className="grid gap-3 sm:grid-cols-2 xl:self-start">
                   {/* Penalitos - siempre gratis */}
                   <LiveToolButton
                     icon={<Gamepad2 className="h-5 w-5" />}
                     title="Penalitos"
                     description="Mini-juego en vivo · Gratis"
                     onClick={() => setLiveModal("penalitos")}
+                    featured
                   />
                   <LiveToolButton
                     icon={<Target className="h-5 w-5" />}
@@ -388,6 +389,7 @@ export default function MundialClient() {
                     liveMatch={activeLiveMatch}
                     playerName={playerName}
                     onOpenPlayerPicker={openPlayerPicker}
+                    variant="panel"
                   />
                 </div>
 
@@ -471,24 +473,31 @@ function LiveToolButton({
   title,
   description,
   onClick,
+  featured = false,
 }: {
   icon: ReactNode;
   title: string;
   description: string;
   onClick: () => void;
+  featured?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="flex min-w-0 items-center gap-3 rounded-lg border border-white/12 bg-[#06140f] px-3 py-3 text-left transition hover:border-[#f0b429]/45 hover:bg-[#10240b] sm:px-4"
+      className={[
+        "group flex min-w-0 items-center gap-3 rounded-xl border px-3 py-4 text-left transition hover:-translate-y-0.5 sm:px-4 sm:py-5",
+        featured
+          ? "border-[#f0b429]/55 bg-[#1a2206]/95 shadow-[0_12px_36px_rgba(240,180,41,0.16)] hover:border-[#f0b429] hover:bg-[#232d08]"
+          : "border-white/14 bg-[#06140f] hover:border-[#f0b429]/55 hover:bg-[#10240b]",
+      ].join(" ")}
     >
-      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-[#f0b429]/35 bg-[#1a2206] text-[#f0b429]">
+      <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-[#f0b429]/45 bg-[#1a2206] text-[#f0b429] transition group-hover:scale-105 sm:h-14 sm:w-14">
         {icon}
       </span>
       <span className="min-w-0">
-        <span className="block min-w-0 break-words text-sm font-black uppercase leading-tight text-white sm:truncate">{title}</span>
-        <span className="mt-0.5 block min-w-0 break-words text-xs font-bold leading-snug text-white/45 sm:truncate">{description}</span>
+        <span className="block min-w-0 break-words text-base font-black uppercase leading-tight text-white sm:text-lg">{title}</span>
+        <span className="mt-1 block min-w-0 break-words text-xs font-bold leading-snug text-white/55 sm:text-sm">{description}</span>
       </span>
     </button>
   );
