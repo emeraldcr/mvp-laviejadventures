@@ -5,7 +5,7 @@ import { Calendar, MapPin, Trophy, X } from "lucide-react";
 import type { LeaderboardEntry, MundialMatch, Prediction } from "../types";
 import { cn, formatKickoff } from "../utils";
 import { teamCode } from "../flags";
-import { computePredictionPoints, predictionScoreKind } from "@/lib/mundial/prediction-scoring";
+import { computePredictionResult } from "@/lib/mundial/prediction-scoring";
 import { Flag } from "./Flag";
 
 // ─── Bracket layout ───────────────────────────────────────────────────────────
@@ -1036,10 +1036,10 @@ function MatchCard({
 
   const predScore = hasPred ? `${pred.homeScore}-${pred.awayScore}` : null;
 
-  let predKind: "exact" | "outcome" | "miss" | "pending" = "pending";
+  let predKind: "exact" | "outcome" | "bonus" | "miss" | "pending" = "pending";
   let predPoints: number | null = null;
   if (hasPred && hasResult) {
-    predPoints = computePredictionPoints(
+    const result = computePredictionResult(
       {
         stage: match.stage,
         homeFinalScore: match.homeFinalScore!,
@@ -1051,12 +1051,14 @@ function MatchCard({
       },
       { homeScore: pred.homeScore, awayScore: pred.awayScore, winnerPick: pred.winnerPick, winnerPickMethod: pred.winnerPickMethod },
     );
-    predKind = predictionScoreKind(predPoints);
+    predPoints = result.points;
+    predKind = result.kind;
   }
 
   const kindStyle = {
     exact: "border-[#d5ff3f]/55 bg-[#1a2206] text-[#d5ff3f]",
     outcome: "border-[#62ffe6]/55 bg-[#071d2a] text-[#62ffe6]",
+    bonus: "border-[#f0b429]/55 bg-[#211707] text-[#f0b429]",
     miss: "border-[#ff6a3d]/55 bg-[#2a120b] text-[#ffb15f]",
     pending: "border-white/15 bg-white/5 text-white/45",
   }[predKind];

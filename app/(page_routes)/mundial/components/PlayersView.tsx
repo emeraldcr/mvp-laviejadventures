@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { LeaderboardEntry, MundialMatch, Prediction } from "../types";
 import { cn, finalScoreText, formatKickoff, normalizeKey, winnerPickText } from "../utils";
 import { teamCode } from "../flags";
-import { computePredictionPoints, predictionScoreKind } from "@/lib/mundial/prediction-scoring";
+import { computePredictionResult } from "@/lib/mundial/prediction-scoring";
 import { Flag } from "./Flag";
 
 type PlayersViewProps = {
@@ -18,7 +18,7 @@ type PlayersViewProps = {
 
 type PredictionScore = {
   points: number | null;
-  kind: "exact" | "outcome" | "miss" | "pending";
+  kind: "exact" | "outcome" | "bonus" | "miss" | "pending";
 };
 
 function PremiumCrown({ className }: { className?: string }) {
@@ -520,16 +520,21 @@ function PlayerPredictionsModal({
   matchById: Map<string, MundialMatch>;
   onClose: () => void;
 }) {
-  const sortedPredictions = [...predictions].sort((a, b) => {
-    const aMatch = matchById.get(a.matchId);
-    const bMatch = matchById.get(b.matchId);
-    return (bMatch?.sortOrder ?? -1) - (aMatch?.sortOrder ?? -1) || (b.matchNumber ?? -1) - (a.matchNumber ?? -1);
-  });
-  const scored = sortedPredictions
-    .map((prediction) => computePredictionScore(matchById.get(prediction.matchId), prediction))
+  const predictionByMatch = new Map(predictions.map((prediction) => [prediction.matchId, prediction]));
+  const detailRows = Array.from(matchById.values())
+    .filter((match) => match.homeFinalScore !== null || predictionByMatch.has(match.id))
+    .map((match) => ({ match, prediction: predictionByMatch.get(match.id) }))
+    .sort((a, b) => (b.match.sortOrder ?? -1) - (a.match.sortOrder ?? -1) || b.match.number - a.match.number);
+  const visiblePredictionCount = detailRows.filter((row) => row.prediction).length;
+  const missedPlayedCount = detailRows.filter(
+    (row) => !row.prediction && row.match.homeFinalScore !== null && row.match.awayFinalScore !== null
+  ).length;
+  const scored = detailRows
+    .filter((row) => row.prediction)
+    .map((row) => computePredictionScore(row.match, row.prediction!))
     .filter((score) => score.points !== null);
   const modalPoints = scored.reduce((sum, score) => sum + (score.points ?? 0), 0);
-  const hiddenCount = Math.max(entry.totalPredictions - sortedPredictions.length, 0);
+  const hiddenCount = Math.max(entry.totalPredictions - visiblePredictionCount, 0);
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 p-2 backdrop-blur-sm sm:items-center sm:p-4">
@@ -540,7 +545,7 @@ function PlayerPredictionsModal({
             <div className="min-w-0">
               <p className="truncate text-lg font-black uppercase text-white">{entry.playerName}</p>
               <p className="mt-1 text-xs font-black uppercase tracking-[0.16em] text-[#d5ff3f]">
-                {modalPoints} pts visibles / {entry.totalPredictions} picks / {accuracyPct(entry)}% precision
+                {modalPoints} pts visibles / {entry.totalPredictions} picks / {missedPlayedCount} sin pick / {accuracyPct(entry)}% precision
               </p>
             </div>
           </div>
@@ -554,11 +559,12 @@ function PlayerPredictionsModal({
           </button>
         </div>
 
-        <div className="grid shrink-0 grid-cols-3 gap-1.5 border-b border-white/10 bg-black/25 p-3 sm:grid-cols-5 sm:gap-2">
+        <div className="grid shrink-0 grid-cols-3 gap-1.5 border-b border-white/10 bg-black/25 p-3 sm:grid-cols-6 sm:gap-2">
           <MiniStat label="Total" value={entry.totalPoints} tone="lime" />
           <MiniStat label="Exactos" value={entry.exactScores} tone="lime" />
           <MiniStat label="Result." value={entry.correctOutcomes} tone="cyan" />
           <MiniStat label="Fallos" value={Math.max(entry.scoredPredictions - entry.correctOutcomes, 0)} tone="orange" />
+          <MiniStat label="No pred." value={missedPlayedCount} tone="orange" />
           <MiniStat label="Jugados" value={`${entry.scoredPredictions}/${entry.totalPredictions}`} tone="white" />
         </div>
 
@@ -572,15 +578,16 @@ function PlayerPredictionsModal({
             </div>
           )}
 
-          {sortedPredictions.length ? (
+          {detailRows.length ? (
             <div className="grid gap-2">
-              {sortedPredictions.map((prediction) => {
-                const match = matchById.get(prediction.matchId);
-                const score = computePredictionScore(match, prediction);
+              {detailRows.map(({ match, prediction }) => {
+                const score = prediction
+                  ? computePredictionScore(match, prediction)
+                  : ({ points: 0, kind: "miss" } satisfies PredictionScore);
 
                 return (
                   <PredictionRow
-                    key={prediction.id}
+                    key={prediction?.id ?? `missing-${match.id}`}
                     prediction={prediction}
                     match={match}
                     score={score}
@@ -617,28 +624,32 @@ function PredictionRow({
   match,
   score,
 }: {
-  prediction: Prediction;
+  prediction?: Prediction;
   match?: MundialMatch;
   score: PredictionScore;
 }) {
+  const noPrediction = !prediction;
   const status = score.kind;
   const statusClass =
     status === "exact"
       ? "border-[#d5ff3f]/60 bg-[#1a2206] text-[#d5ff3f]"
       : status === "outcome"
         ? "border-[#62ffe6]/60 bg-[#071d2a] text-[#62ffe6]"
+        : status === "bonus"
+          ? "border-[#f0b429]/60 bg-[#211707] text-[#f0b429]"
         : status === "miss"
           ? "border-[#ff6a3d]/60 bg-[#2a120b] text-[#ffb15f]"
           : "border-white/15 bg-white/5 text-white/55";
   const statusLabel =
     status === "exact" ? "Exacto" : status === "outcome" ? "Resultado" : status === "miss" ? "Fallo" : "Pendiente";
+  const displayStatusLabel = noPrediction ? "No predijo" : status === "bonus" ? "Bonus TE" : statusLabel;
 
   return (
     <article className="grid gap-3 rounded-lg border border-white/10 bg-black/35 p-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
           <span className="rounded-md border border-white/15 bg-black/35 px-2 py-1 text-xs font-black text-white">
-            #{match?.number ?? prediction.matchNumber ?? "?"}
+            #{match?.number ?? prediction?.matchNumber ?? "?"}
           </span>
           {match && (
             <span className="rounded-md border border-white/15 bg-black/35 px-2 py-1 text-xs font-black text-white/60">
@@ -667,10 +678,17 @@ function PredictionRow({
       </div>
 
       <div className="flex flex-wrap items-center gap-2 lg:justify-end">
-        <span className="rounded-md border border-[#62ffe6]/45 bg-[#071d2a] px-3 py-2 text-sm font-black tabular-nums text-[#62ffe6]">
-          Pick {prediction.homeScore}-{prediction.awayScore}
+        <span
+          className={cn(
+            "rounded-md border px-3 py-2 text-sm font-black tabular-nums",
+            noPrediction
+              ? "border-[#ff6a3d]/45 bg-[#2a120b] text-[#ffb15f]"
+              : "border-[#62ffe6]/45 bg-[#071d2a] text-[#62ffe6]"
+          )}
+        >
+          {prediction ? `Pick ${prediction.homeScore}-${prediction.awayScore}` : "No predijo"}
         </span>
-        {prediction.winnerPick && match && (
+        {prediction?.winnerPick && match && (
           <span className="rounded-md border border-[#d5ff3f]/45 bg-[#1a2206] px-2 py-1 text-xs font-black text-[#d5ff3f]">
             {winnerPickText(prediction.winnerPick, prediction.winnerPickMethod, teamCode(match.homeTeam), teamCode(match.awayTeam), true)}
           </span>
@@ -679,8 +697,8 @@ function PredictionRow({
           {match ? finalScoreText(match) : "Resultado pendiente"}
         </span>
         <span className={cn("inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-black", statusClass)}>
-          {status === "exact" ? <Target className="h-3.5 w-3.5" /> : status === "outcome" ? <TrendingUp className="h-3.5 w-3.5" /> : status === "miss" ? <MinusCircle className="h-3.5 w-3.5" /> : null}
-          {statusLabel}
+          {status === "exact" ? <Target className="h-3.5 w-3.5" /> : status === "outcome" || status === "bonus" ? <TrendingUp className="h-3.5 w-3.5" /> : status === "miss" ? <MinusCircle className="h-3.5 w-3.5" /> : null}
+          {displayStatusLabel}
           {score.points !== null && <span className="tabular-nums">+{score.points}</span>}
         </span>
       </div>
@@ -827,7 +845,7 @@ function computePredictionScore(match: MundialMatch | undefined, prediction: Pre
     return { points: null, kind: "pending" };
   }
 
-  const points = computePredictionPoints(
+  const result = computePredictionResult(
     {
       stage: match.stage,
       homeFinalScore: match.homeFinalScore,
@@ -845,5 +863,5 @@ function computePredictionScore(match: MundialMatch | undefined, prediction: Pre
     },
   );
 
-  return { points, kind: predictionScoreKind(points) };
+  return { points: result.points, kind: result.kind };
 }

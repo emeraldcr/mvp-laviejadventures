@@ -6,7 +6,7 @@ import { isBanned } from "@/lib/mundial/bans";
 import { recordMundialAnalyticsEvent } from "@/lib/mundial/analytics";
 import type { MundialMatch } from "@/lib/mundial/fixtures";
 import { serializeLiveMatchStats, type LiveMatchStats } from "@/lib/mundial/live-stats";
-import { computePredictionPoints } from "@/lib/mundial/prediction-scoring";
+import { computePredictionResult } from "@/lib/mundial/prediction-scoring";
 import {
   MUNDIAL_PREDICTIONS_COLLECTION,
   readMundialMatches,
@@ -257,7 +257,7 @@ function buildLeaderboard(
       typeof match.awayFinalScore === "number"
     ) {
       const scores = predictionScores(prediction);
-      const points = computePredictionPoints(
+      const result = computePredictionResult(
         {
           stage: match.stage,
           homeFinalScore: match.homeFinalScore,
@@ -271,9 +271,9 @@ function buildLeaderboard(
       );
 
       entry.scoredPredictions++;
-      entry.totalPoints += points;
-      if (points >= 3) entry.exactScores++;
-      if (points >= 1) entry.correctOutcomes++;
+      entry.totalPoints += result.points;
+      if (result.exactScore) entry.exactScores++;
+      if (result.correctOutcome) entry.correctOutcomes++;
     }
   }
 

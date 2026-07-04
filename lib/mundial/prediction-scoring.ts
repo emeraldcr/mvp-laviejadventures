@@ -20,16 +20,25 @@ export type PredictionScoringPick = {
   winnerPickMethod?: MatchDecisionMethod | null;
 };
 
+export type PredictionScoreKind = "exact" | "outcome" | "bonus" | "miss";
+
+export type PredictionScoreResult = {
+  points: number;
+  exactScore: boolean;
+  correctOutcome: boolean;
+  kind: PredictionScoreKind;
+};
+
 export function predictionOutcome(homeScore: number, awayScore: number) {
   if (homeScore > awayScore) return "home";
   if (awayScore > homeScore) return "away";
   return "draw";
 }
 
-export function computePredictionPoints(
+export function computePredictionResult(
   match: PredictionScoringMatch,
   prediction: PredictionScoringPick,
-): number {
+): PredictionScoreResult {
   const scoringHomeScore = match.homeRegulationScore ?? match.homeFinalScore;
   const scoringAwayScore = match.awayRegulationScore ?? match.awayFinalScore;
   const actualOutcome = predictionOutcome(scoringHomeScore, scoringAwayScore);
@@ -42,7 +51,9 @@ export function computePredictionPoints(
     prediction.awayScore === match.awayFinalScore &&
     predictionOutcome(match.homeFinalScore, match.awayFinalScore) === match.actualWinner;
 
-  if (predictedTiebreak && actualOutcome !== "draw") return 0;
+  if (predictedTiebreak && actualOutcome !== "draw") {
+    return { points: 0, exactScore: false, correctOutcome: false, kind: "miss" };
+  }
 
   const correctOutcome = actualOutcome === predictedOutcome;
   const isExact =
@@ -58,20 +69,39 @@ export function computePredictionPoints(
     match.decisionMethod != null &&
     match.decisionMethod === prediction.winnerPickMethod;
 
-  if (isExact && isDrawInKnockout && correctWinner && correctMethod) return 4;
-  if (isExact && isDrawInKnockout) return 1;
-  if (isExact) return 3;
-  if (exactExtraTimeFinal) return 2;
-  if (correctOutcome && correctWinner) {
-    if (correctMethod && match.decisionMethod === "penalties") return 3;
-    if (correctMethod && match.decisionMethod === "extraTime") return 2;
-    return 1;
+  if (isExact && isDrawInKnockout && correctWinner && correctMethod) {
+    return { points: 4, exactScore: true, correctOutcome: true, kind: "exact" };
   }
-  if (correctOutcome) return 1;
-  return 0;
+  if (isExact && isDrawInKnockout) {
+    return { points: 1, exactScore: true, correctOutcome: true, kind: "exact" };
+  }
+  if (isExact) {
+    return { points: 3, exactScore: true, correctOutcome: true, kind: "exact" };
+  }
+  if (exactExtraTimeFinal) {
+    return { points: 2, exactScore: false, correctOutcome: false, kind: "bonus" };
+  }
+  if (correctOutcome && correctWinner) {
+    if (correctMethod && match.decisionMethod === "penalties") {
+      return { points: 3, exactScore: false, correctOutcome: true, kind: "outcome" };
+    }
+    if (correctMethod && match.decisionMethod === "extraTime") {
+      return { points: 2, exactScore: false, correctOutcome: true, kind: "outcome" };
+    }
+    return { points: 1, exactScore: false, correctOutcome: true, kind: "outcome" };
+  }
+  if (correctOutcome) return { points: 1, exactScore: false, correctOutcome: true, kind: "outcome" };
+  return { points: 0, exactScore: false, correctOutcome: false, kind: "miss" };
 }
 
-export function predictionScoreKind(points: number): "exact" | "outcome" | "miss" {
+export function computePredictionPoints(
+  match: PredictionScoringMatch,
+  prediction: PredictionScoringPick,
+): number {
+  return computePredictionResult(match, prediction).points;
+}
+
+export function predictionScoreKind(points: number): Exclude<PredictionScoreKind, "bonus"> {
   if (points >= 3) return "exact";
   if (points >= 1) return "outcome";
   return "miss";

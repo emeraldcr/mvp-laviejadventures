@@ -4,7 +4,7 @@ import { ObjectId } from "mongodb";
 import { getDb } from "@/lib/helpers/mongodb";
 import type { MundialMatch, MundialStage } from "@/lib/mundial/fixtures";
 import { readMundialMatches } from "@/lib/mundial/matches-store";
-import { computePredictionPoints } from "@/lib/mundial/prediction-scoring";
+import { computePredictionPoints, computePredictionResult } from "@/lib/mundial/prediction-scoring";
 
 export const dynamic = "force-dynamic";
 
@@ -97,7 +97,7 @@ export async function GET(req: NextRequest) {
           typeof match.homeFinalScore === "number" &&
           typeof match.awayFinalScore === "number"
         ) {
-          points = computePoints(
+          const scoreResult = computePredictionResult(
             {
               stage: match.stage,
               homeFinalScore: match.homeFinalScore,
@@ -109,8 +109,9 @@ export async function GET(req: NextRequest) {
             },
             { homeScore: scores.homeScore, awayScore: scores.awayScore, winnerPick: pred.winnerPick, winnerPickMethod: pred.winnerPickMethod ?? null }
           );
-          isExact = points >= 3;
-          correctOutcome = points >= 1;
+          points = scoreResult.points;
+          isExact = scoreResult.exactScore;
+          correctOutcome = scoreResult.correctOutcome;
         }
 
         return {

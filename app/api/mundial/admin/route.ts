@@ -6,7 +6,7 @@ import { COLLECTIONS } from "@/lib/constants/db";
 import type { MundialMatch, MundialStage } from "@/lib/mundial/fixtures";
 import { serializeLiveMatchStats, type LiveMatchStats } from "@/lib/mundial/live-stats";
 import { readMundialMatches } from "@/lib/mundial/matches-store";
-import { computePredictionPoints } from "@/lib/mundial/prediction-scoring";
+import { computePredictionPoints, computePredictionResult } from "@/lib/mundial/prediction-scoring";
 
 export const dynamic = "force-dynamic";
 
@@ -398,7 +398,7 @@ export async function GET() {
         typeof match.homeFinalScore === "number" &&
         typeof match.awayFinalScore === "number"
       ) {
-        const pts = computePoints(
+        const scoreResult = computePredictionResult(
           {
             stage: match.stage,
             homeFinalScore: match.homeFinalScore,
@@ -411,9 +411,9 @@ export async function GET() {
           { homeScore: scores.homeScore, awayScore: scores.awayScore, winnerPick: prediction.winnerPick, winnerPickMethod: prediction.winnerPickMethod ?? null }
         );
         entry.scoredPredictions++;
-        entry.predictionPoints += pts;
-        if (pts >= 3) { entry.exactScores++; ms.exactCount++; }
-        if (pts >= 1) { entry.correctOutcomes++; ms.correctOutcomeCount++; }
+        entry.predictionPoints += scoreResult.points;
+        if (scoreResult.exactScore) { entry.exactScores++; ms.exactCount++; }
+        if (scoreResult.correctOutcome) { entry.correctOutcomes++; ms.correctOutcomeCount++; }
       }
     }
 

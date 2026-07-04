@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import type { MundialMatch, Prediction } from "../types";
 import { cn, formatKickoff, normalizeKey } from "../utils";
 import { teamCode } from "../flags";
-import { computePredictionPoints, predictionScoreKind } from "@/lib/mundial/prediction-scoring";
+import { computePredictionResult } from "@/lib/mundial/prediction-scoring";
 import { Flag } from "./Flag";
 
 type Outcome = "home" | "draw" | "away";
@@ -12,7 +12,7 @@ type PickStatus = {
   isWinning: boolean;
   isExact: boolean;
   points: number | null;
-  kind: "exact" | "outcome" | "miss" | "pending";
+  kind: "exact" | "outcome" | "bonus" | "miss" | "pending";
 };
 
 function getOutcome(home: number, away: number): Outcome {
@@ -53,7 +53,7 @@ function pickStatus(match: MundialMatch, prediction: Prediction): PickStatus {
   }
 
   if (hasFinalScore) {
-    const points = computePredictionPoints(
+    const result = computePredictionResult(
       {
         stage: match.stage,
         homeFinalScore: refHome,
@@ -73,10 +73,10 @@ function pickStatus(match: MundialMatch, prediction: Prediction): PickStatus {
 
     return {
       showIndicator,
-      isWinning: points >= 1,
-      isExact: predictionScoreKind(points) === "exact",
-      points,
-      kind: predictionScoreKind(points),
+      isWinning: result.correctOutcome || result.kind === "bonus",
+      isExact: result.exactScore,
+      points: result.points,
+      kind: result.kind,
     };
   }
 
@@ -190,6 +190,8 @@ export function OtherPicksPanel({ match, predictions, playerName, showEmpty = fa
                       ? "Exacto"
                       : kind === "outcome"
                         ? "Resultado"
+                        : kind === "bonus"
+                          ? "Bonus TE"
                         : "Fallo"
                     : "Pendiente";
 
