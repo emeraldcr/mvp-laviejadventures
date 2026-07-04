@@ -29,6 +29,7 @@ type PredictionDoc = {
   mexicoScore?: number;
   southAfricaScore?: number;
   winnerPick?: WinnerPick;
+  winnerPickMethod?: "extraTime" | "penalties" | null;
   updatedAt?: Date;
 };
 

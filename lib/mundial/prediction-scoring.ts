@@ -15,7 +15,7 @@ export type PredictionScoringPick = {
   homeScore: number;
   awayScore: number;
   winnerPick?: PredictionWinnerPick;
-  winnerPickMethod?: MatchDecisionMethod;
+  winnerPickMethod?: MatchDecisionMethod | null;
 };
 
 export function predictionOutcome(homeScore: number, awayScore: number) {
