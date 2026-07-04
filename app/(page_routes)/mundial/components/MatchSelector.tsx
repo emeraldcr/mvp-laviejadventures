@@ -53,8 +53,8 @@ export function MatchSelector({
 
   const defaultTab: SelectorTab =
     liveMatches.length > 0 ? "live" : todayMatches.length > 0 ? "today" : "upcoming";
-  const [tab, setTab] = useState<SelectorTab>(defaultTab);
-  const effectiveTab = liveMatches.length > 0 ? "live" : tab;
+  const [tab, setTab] = useState<SelectorTab | null>(null);
+  const effectiveTab = tab ?? defaultTab;
 
   const upcomingByDate = useMemo(() => {
     const groups: Array<{ label: string; dateKey: string; matches: MundialMatch[] }> = [];
@@ -102,7 +102,7 @@ export function MatchSelector({
           icon={<CalendarDays className="h-3 w-3" />}
         />
         <TabButton
-          active={tab === "upcoming"}
+          active={effectiveTab === "upcoming"}
           onClick={() => setTab("upcoming")}
           label="Próximos"
           count={upcomingMatches.length}
@@ -111,7 +111,7 @@ export function MatchSelector({
       </div>
 
       <div className="p-3">
-        {tab !== "upcoming" ? (
+        {effectiveTab !== "upcoming" ? (
           <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
             {tabMatches.map((m) => (
               <CompactMatchCard
@@ -125,7 +125,7 @@ export function MatchSelector({
             ))}
             {tabMatches.length === 0 && (
               <p className="py-4 text-sm font-bold text-white/40 min-[420px]:col-span-2">
-                {tab === "live" ? "No hay partido en vivo ahora." : "No hay partidos hoy."}
+                {effectiveTab === "live" ? "No hay partido en vivo ahora." : "No hay partidos hoy."}
               </p>
             )}
           </div>
