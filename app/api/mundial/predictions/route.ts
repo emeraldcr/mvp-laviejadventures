@@ -8,7 +8,6 @@ import type { MundialMatch } from "@/lib/mundial/fixtures";
 import { serializeLiveMatchStats, type LiveMatchStats } from "@/lib/mundial/live-stats";
 import { computePredictionPoints } from "@/lib/mundial/prediction-scoring";
 import {
-  MUNDIAL_FIXTURE_VERSION,
   MUNDIAL_PREDICTIONS_COLLECTION,
   readMundialMatches,
 } from "@/lib/mundial/matches-store";
@@ -21,8 +20,7 @@ const MAX_SCORE = 30;
 type WinnerPick = "home" | "away" | null;
 
 type MundialMatchDoc = MundialMatch & {
-  source: string;
-  sourceVersion: string;
+  source?: string;
   forceClosed?: boolean;
   actualWinner?: "home" | "away" | null;
   liveStatus?: "scheduled" | "live" | "halftime" | "fulltime";
@@ -445,7 +443,6 @@ export async function GET(req: NextRequest) {
     const visiblePredictions = visiblePredictionDocs(predictionDocs, playerName);
 
     return NextResponse.json({
-      fixtureVersion: MUNDIAL_FIXTURE_VERSION,
       matches: matches.map((m) => serializeMatch(m, now)),
       predictions: visiblePredictions.map((p) => serializePrediction(p, matchesById, now)),
       players: players.map(serializePlayer),

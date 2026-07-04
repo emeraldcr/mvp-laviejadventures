@@ -21,6 +21,12 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useLanguage } from "@/lib/LanguageContext";
+import {
+  LA_VIEJA_GOOGLE_MAPS_EMBED_URL,
+  LA_VIEJA_GOOGLE_MAPS_URL,
+  LA_VIEJA_WAZE_EMBED_URL,
+  LA_VIEJA_WAZE_URL,
+} from "@/lib/constants/location";
 import { translations } from "@/lib/translations";
 
 const socialLinks = [
@@ -105,13 +111,6 @@ const youtubeVideos = [
   "8GKq7rw6ZcQ",
   "Fuuquz1FsjI",
 ];
-
-const googleMapsUrl =
-  "https://www.google.com/maps/search/?api=1&query=La+Vieja+Adventures+Canyon+Tour+Sucre+Ciudad+Quesada";
-const googleMapsEmbedUrl =
-  "https://www.google.com/maps?q=La+Vieja+Adventures+Canyon+Tour+Sucre+Ciudad+Quesada&output=embed";
-const wazeUrl = "https://waze.com/ul?ll=10.330,-84.430&navigate=yes";
-const wazeEmbedUrl = "https://embed.waze.com/iframe?zoom=14&lat=10.330&lon=-84.430";
 
 const whyIcons = [TreePine, Mountain, Bird, MapPin];
 const whyColors = [
@@ -408,7 +407,7 @@ export default function InfoPage() {
             <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">{tr.mapsDescription}</p>
             <div className="mb-4 grid gap-3 sm:grid-cols-2">
               <a
-                href={googleMapsUrl}
+                href={LA_VIEJA_GOOGLE_MAPS_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700"
@@ -417,7 +416,7 @@ export default function InfoPage() {
                 <ExternalLink size={14} />
               </a>
               <a
-                href={wazeUrl}
+                href={LA_VIEJA_WAZE_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-sky-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-sky-700"
@@ -430,7 +429,7 @@ export default function InfoPage() {
               <div className="overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-800">
                 <iframe
                   title="La Vieja Adventures en Google Maps"
-                  src={googleMapsEmbedUrl}
+                  src={LA_VIEJA_GOOGLE_MAPS_EMBED_URL}
                   loading="lazy"
                   className="h-52 w-full"
                   referrerPolicy="no-referrer-when-downgrade"
@@ -439,7 +438,7 @@ export default function InfoPage() {
               <div className="overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-800">
                 <iframe
                   title="La Vieja Adventures en Waze"
-                  src={wazeEmbedUrl}
+                  src={LA_VIEJA_WAZE_EMBED_URL}
                   loading="lazy"
                   className="h-52 w-full"
                 />

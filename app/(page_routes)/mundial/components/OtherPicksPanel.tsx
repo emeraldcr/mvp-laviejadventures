@@ -1,7 +1,8 @@
 import { CalendarDays, Check, Star, TrendingUp, Users, X as XIcon } from "lucide-react";
 import { useMemo } from "react";
 import type { MundialMatch, Prediction } from "../types";
-import { cn, formatKickoff, normalizeKey, teamCode } from "../utils";
+import { cn, formatKickoff, normalizeKey } from "../utils";
+import { teamCode } from "../flags";
 import { computePredictionPoints, predictionScoreKind } from "@/lib/mundial/prediction-scoring";
 import { Flag } from "./Flag";
 
@@ -141,7 +142,7 @@ export function OtherPicksPanel({ match, predictions, playerName, showEmpty = fa
 
   return (
     <section className="min-w-0 overflow-hidden rounded-lg border border-[#f0b429]/45 bg-[#06140f] shadow-[0_24px_70px_rgba(0,0,0,0.26)]">
-      <div className="bg-[#12351f] px-4 py-3 sm:px-5 [background-image:linear-gradient(135deg,rgba(240,180,41,0.22),transparent_58%)]">
+      <div className="bg-[#12351f] px-5 py-4 sm:px-6 [background-image:linear-gradient(135deg,rgba(240,180,41,0.22),transparent_58%)]">
         <div className="flex flex-col items-stretch gap-3 min-[620px]:flex-row min-[620px]:items-center min-[620px]:justify-between">
           <div className="flex min-w-0 items-center gap-3">
             <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-[#f0b429]/40 bg-[#f0b429] text-[#07110b]">
@@ -166,7 +167,7 @@ export function OtherPicksPanel({ match, predictions, playerName, showEmpty = fa
 
       <div className="p-3 sm:p-4">
         {total > 0 ? (
-          <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_15rem] lg:items-start">
+          <div className="grid gap-3 2xl:grid-cols-[minmax(18rem,1fr)_15rem] 2xl:items-start">
             <div className="min-w-0">
               <div className="mb-2 flex items-center justify-between gap-2 px-1">
                 <p className="text-xs font-black uppercase tracking-[0.18em] text-[#d5ff3f]">Amigos</p>
@@ -175,7 +176,7 @@ export function OtherPicksPanel({ match, predictions, playerName, showEmpty = fa
                 </span>
               </div>
 
-              <div className="max-h-[32rem] space-y-2 overflow-y-auto pr-1">
+              <div className="max-h-[36rem] space-y-3 overflow-y-auto pr-2">
                 {sorted.map((p) => {
                   const isMe = normalizeKey(p.playerName) === myKey;
                   const outcome = getOutcome(p.homeScore, p.awayScore);
@@ -193,7 +194,7 @@ export function OtherPicksPanel({ match, predictions, playerName, showEmpty = fa
                     <div
                       key={p.id}
                       className={cn(
-                        "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg border px-3 py-2.5",
+                        "grid grid-cols-1 items-start gap-3 rounded-lg border px-4 py-3 min-h-[64px] min-[520px]:grid-cols-[minmax(0,1fr)_auto] min-[520px]:items-center min-[520px]:gap-4",
                         isExact
                           ? "border-[#f0b429]/70 bg-[#211706]/80 shadow-[0_0_18px_rgba(240,180,41,0.14)]"
                           : isMe
@@ -203,9 +204,15 @@ export function OtherPicksPanel({ match, predictions, playerName, showEmpty = fa
                     >
                       <div className="flex min-w-0 items-center gap-2">
                         {isMe && <span className="h-2 w-2 shrink-0 rounded-full bg-[#d5ff3f] shadow-[0_0_10px_rgba(213,255,63,0.9)]" />}
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-2">
-                            <span className={cn("min-w-0 truncate text-base font-black", isMe ? "text-[#d5ff3f]" : "text-white")}>
+                            <span
+                              className={cn(
+                                "min-w-0 text-base font-black leading-tight break-words",
+                                isMe ? "text-[#d5ff3f]" : "text-white"
+                              )}
+                              title={isMe ? "Vos" : p.playerName}
+                            >
                               {isMe ? "Vos" : p.playerName}
                             </span>
                             {isExact && (
@@ -232,8 +239,8 @@ export function OtherPicksPanel({ match, predictions, playerName, showEmpty = fa
                         </div>
                       </div>
 
-                      <div className="flex min-w-0 shrink-0 items-center justify-end gap-1.5">
-                        <Flag team={match.homeTeam} size="xs" />
+                      <div className="flex min-w-0 shrink-0 items-center justify-end gap-2 justify-self-end">
+                        <Flag team={match.homeTeam} size="sm" />
                         <span
                           className={cn(
                             "rounded-md border px-2 py-1 text-sm font-black tabular-nums sm:text-base",
@@ -246,7 +253,7 @@ export function OtherPicksPanel({ match, predictions, playerName, showEmpty = fa
                         >
                           {p.homeScore}-{p.awayScore}
                         </span>
-                        <Flag team={match.awayTeam} size="xs" />
+                        <Flag team={match.awayTeam} size="sm" />
                         {showIndicator && (
                           isExact ? (
                             <Star className="h-4 w-4 shrink-0 fill-[#f0b429] text-[#f0b429]" />
@@ -263,7 +270,7 @@ export function OtherPicksPanel({ match, predictions, playerName, showEmpty = fa
               </div>
             </div>
 
-            <aside className="min-w-0 rounded-lg border border-white/15 bg-black/35 p-2.5">
+            <aside className="min-w-0 rounded-lg border border-white/15 bg-black/35 p-3.5">
               <div className="mb-2 flex items-center justify-between gap-2">
                 <p className="inline-flex min-w-0 items-center gap-1.5 text-xs font-black uppercase tracking-[0.16em] text-[#d5ff3f]">
                   <TrendingUp className="h-3.5 w-3.5 shrink-0 text-[#f0b429]" />
@@ -275,7 +282,7 @@ export function OtherPicksPanel({ match, predictions, playerName, showEmpty = fa
                   </span>
                 )}
               </div>
-              <div className="grid gap-2">
+              <div className="grid gap-3">
                 <DistBar team={match.homeTeam} label={teamCode(match.homeTeam)} pct={pctHome} count={homeWins} color="emerald" />
                 <DistBar label="EMP" pct={pctDraw} count={draws} color="lime" />
                 <DistBar team={match.awayTeam} label={teamCode(match.awayTeam)} pct={pctAway} count={awayWins} color="orange" />

@@ -14,9 +14,10 @@ import {
   liveStatusLabel,
   LIVE_TIMING,
   predictionResult,
-  teamCode,
+
 } from "../utils";
 import { Flag } from "./Flag";
+import { teamCode } from "../flags";
 import { StatBetsPanel } from "./StatBetsPanel";
 
 type FeaturedMatchProps = {
@@ -114,7 +115,7 @@ export function FeaturedMatch({
 
       {/* ── LIVE layout: single column, breathing room ── */}
       {isLive ? (
-        <div className="space-y-3 p-3 min-[380px]:p-4 sm:p-5">
+        <div className="space-y-3 p-3 min-[380px]:p-4">
           <LiveMatchScoreboard
             match={match}
             isLive={true}
@@ -589,7 +590,7 @@ function LiveMatchScoreboard({
   })();
 
   return (
-    <div className={cn("mt-3 overflow-hidden rounded-xl border shadow-[0_18px_45px_rgba(0,0,0,0.25)] min-[380px]:mt-4 min-[380px]:rounded-2xl", tone)}>
+    <div className={cn("mt-2 overflow-hidden rounded-xl border shadow-[0_18px_45px_rgba(0,0,0,0.25)] min-[380px]:mt-3 min-[380px]:rounded-2xl", tone)}>
       {/* Header */}
       <div className="flex items-center justify-between gap-2 border-b border-white/10 bg-black/35 px-3 py-2">
         <span className={cn("inline-flex items-center gap-2 rounded-full border bg-black/35 px-3 py-1 text-xs font-black uppercase tracking-wide", clockTone)}>
@@ -601,7 +602,7 @@ function LiveMatchScoreboard({
         </span>
       </div>
 
-      <div className="px-2.5 py-3 min-[380px]:px-3 min-[380px]:py-4">
+      <div className="px-2.5 py-3 min-[380px]:px-3">
         {/* [Home team] [SCORE – SCORE] [Away team] */}
         <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1.5 sm:gap-3">
           <div className="flex min-w-0 flex-col items-center gap-1 text-center min-[420px]:flex-row min-[420px]:text-left">
@@ -614,14 +615,14 @@ function LiveMatchScoreboard({
 
           <div className="flex shrink-0 items-center gap-0.5 min-[380px]:gap-1 sm:gap-2">
             <span className={cn(
-              "grid h-11 w-11 place-items-center rounded-lg border text-4xl font-black tabular-nums leading-none min-[380px]:h-14 min-[380px]:w-14 min-[380px]:rounded-xl min-[380px]:text-5xl sm:h-20 sm:w-20 sm:text-6xl",
+              "grid h-11 w-11 place-items-center rounded-lg border text-4xl font-black tabular-nums leading-none min-[380px]:h-14 min-[380px]:w-14 min-[380px]:rounded-xl min-[380px]:text-5xl sm:h-16 sm:w-16 sm:text-5xl",
               scoreTone
             )}>
               {homeLiveScore}
             </span>
             <span className="text-sm font-black text-white/25">–</span>
             <span className={cn(
-              "grid h-11 w-11 place-items-center rounded-lg border text-4xl font-black tabular-nums leading-none min-[380px]:h-14 min-[380px]:w-14 min-[380px]:rounded-xl min-[380px]:text-5xl sm:h-20 sm:w-20 sm:text-6xl",
+              "grid h-11 w-11 place-items-center rounded-lg border text-4xl font-black tabular-nums leading-none min-[380px]:h-14 min-[380px]:w-14 min-[380px]:rounded-xl min-[380px]:text-5xl sm:h-16 sm:w-16 sm:text-5xl",
               scoreTone
             )}>
               {awayLiveScore}

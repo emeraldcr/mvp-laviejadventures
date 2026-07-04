@@ -2,9 +2,12 @@
 "use client";
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { Eye, Trophy, Users, Wifi, WifiOff } from "lucide-react";
 import confetti from "canvas-confetti";
 import { cn } from "../utils";
+import { PENALITOS_ANIM_MS } from "./penalitos/constants";
+import { FieldFallback } from "./penalitos/PenalitosField3D";
 import type {
   PenalitosDirection,
   PenalitosGame,
@@ -14,10 +17,15 @@ import type {
   MundialMatch,
 } from "../types";
 
+const PenalitosField3D = dynamic(
+  () => import("./penalitos/PenalitosField3D").then((m) => ({ default: m.PenalitosField3D })),
+  { ssr: false, loading: () => <FieldFallback /> },
+);
+
 // -------------------------------------------------------------------
 // Constants
 // -------------------------------------------------------------------
-const ANIM_DURATION_MS = 1_800;
+const ANIM_DURATION_MS = PENALITOS_ANIM_MS;
 const VISITOR_KEY = "penalitos-vid";
 const CHOICES: PenalitosDirection[] = ["left", "center", "right"];
 
@@ -70,25 +78,6 @@ function getDisplayName(playerName: string): string {
   } catch {}
   return `Jugador-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
 }
-
-// -------------------------------------------------------------------
-// Field position helpers
-// -------------------------------------------------------------------
-const BALL_X: Record<PenalitosDirection, string> = {
-  left: "-100px",
-  center: "0px",
-  right: "100px",
-};
-const BALL_Y: Record<PenalitosDirection, string> = {
-  left: "-60px",
-  center: "-40px",
-  right: "-60px",
-};
-const GK_X: Record<PenalitosDirection, string> = {
-  left: "-60px",
-  center: "0px",
-  right: "60px",
-};
 
 // -------------------------------------------------------------------
 // Sub-components
@@ -356,9 +345,10 @@ export function PenalitosPanel({ liveMatch, playerName, compact = false }: Props
   const showJoinShooter = !isPlaying && !isInQueue && (!game || game.status === "waiting") && !game?.shooter;
   const showQueue = !isPlaying && !isInQueue && !showJoinGoalkeeper && !showJoinShooter;
 
-  const ballDirX = game?.shooterChoice ? BALL_X[game.shooterChoice] : "0px";
-  const ballDirY = game?.shooterChoice ? BALL_Y[game.shooterChoice] : "0px";
-  const gkDirX = game?.goalkeeperChoice ? GK_X[game.goalkeeperChoice] : "0px";
+  const scenePhase =
+    isAnimating ? "animating" as const
+    : showResult ? "result" as const
+    : "idle" as const;
 
   const topScorers = useMemo(
     () => Object.entries(scores).sort(([, a], [, b]) => b - a).slice(0, 5),
@@ -578,74 +568,41 @@ export function PenalitosPanel({ liveMatch, playerName, compact = false }: Props
             </div>
           )}
 
-          {/* ═══ SOCCER FIELD ═══ */}
-          <div className={cn(
-            "relative rounded-2xl overflow-hidden bg-[#0a3d1f] border border-white/5 shadow-inner",
-            compact ? "h-32 sm:h-44" : "h-56 sm:h-72"
-          )}>
-            {/* Field grid */}
-            <div className="absolute inset-0 opacity-20"
-              style={{
-                backgroundImage:
-                  "linear-gradient(rgba(255,255,255,0.15) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.15) 1px,transparent 1px)",
-                backgroundSize: "40px 40px",
-              }}
+          {/* ═══ SOCCER FIELD (3D) ═══ */}
+          <div className="relative rounded-2xl overflow-hidden border border-white/5 shadow-inner bg-[#061a0e]">
+            <PenalitosField3D
+              phase={scenePhase}
+              shooterChoice={game?.shooterChoice ?? null}
+              goalkeeperChoice={game?.goalkeeperChoice ?? null}
+              outcome={game?.outcome ?? null}
+              animStartMs={resolvedAtMs}
+              nowMs={nowMs}
+              compact={compact}
             />
-            {/* Penalty arc */}
-            <div className="absolute left-14 top-1/2 -translate-y-1/2 w-16 h-28 rounded-r-full border-2 border-white/20 border-l-0" />
-            {/* Goal post */}
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-12 h-32 border-4 border-white/60 rounded-r-2xl border-l-0 bg-black/20" />
-
-            {/* Goalkeeper emoji */}
-            <div
-              className="absolute text-5xl drop-shadow-xl transition-transform duration-700"
-              style={{
-                left: "24px",
-                top: "50%",
-                transform: `translateY(-50%) translateX(${isAnimating || showResult ? gkDirX : "0px"})`,
-              }}
-            >
-              🧤
-            </div>
-
-            {/* Shooter emoji */}
-            <div className="absolute right-8 bottom-8 text-4xl drop-shadow-xl">🥾</div>
-
-            {/* Ball */}
-            <div
-              className="absolute text-5xl drop-shadow-xl transition-all duration-700"
-              style={{
-                left: "50%",
-                top: "55%",
-                transform: `translate(-50%, -50%) translateX(${isAnimating || showResult ? `calc(${ballDirX} - 80px)` : "0px"}) translateY(${isAnimating || showResult ? ballDirY : "0px"})`,
-              }}
-            >
-              ⚽
-            </div>
 
             {/* Result overlay */}
             {showResult && game?.outcome && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm">
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-[2px] pointer-events-none">
                 {game.outcome === "goal" ? (
                   <>
-                    <p className="text-6xl sm:text-7xl font-black text-emerald-300 drop-shadow-2xl tracking-tight">
+                    <p className="text-5xl sm:text-6xl font-black text-emerald-300 drop-shadow-2xl tracking-tight animate-bounce">
                       ¡GOL!
                     </p>
-                    <p className="text-white/70 text-sm mt-2 font-bold">
+                    <p className="text-white/80 text-sm mt-2 font-bold">
                       🥾 {game.shooter?.name} anotó
                     </p>
                   </>
                 ) : (
                   <>
-                    <p className="text-5xl sm:text-6xl font-black text-orange-300 drop-shadow-2xl tracking-tight">
+                    <p className="text-4xl sm:text-5xl font-black text-orange-300 drop-shadow-2xl tracking-tight">
                       ¡PARADA!
                     </p>
-                    <p className="text-white/70 text-sm mt-2 font-bold">
+                    <p className="text-white/80 text-sm mt-2 font-bold">
                       🧤 {game.goalkeeper?.name} lo atajó
                     </p>
                   </>
                 )}
-                <div className="mt-4 flex gap-6 text-xs font-mono text-white/50">
+                <div className="mt-3 flex gap-6 text-xs font-mono text-white/60">
                   {game.goalkeeperChoice && (
                     <span>🧤 {game.goalkeeperChoice === "left" ? "←" : game.goalkeeperChoice === "center" ? "↑" : "→"}</span>
                   )}

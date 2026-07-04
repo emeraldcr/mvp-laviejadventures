@@ -1,7 +1,6 @@
-import { createHash } from "node:crypto";
 import type { Collection, CreateIndexesOptions, Db, Document } from "mongodb";
 
-import { MUNDIAL_MATCHES, MUNDIAL_TOTAL_MATCHES, type MundialMatch, type MundialStage } from "./fixtures";
+import { MUNDIAL_MATCHES, type MundialMatch, type MundialStage } from "./fixtures";
 
 export const MUNDIAL_MATCHES_COLLECTION = "mundial_matches";
 export const MUNDIAL_KNOCKOUT_MATCHES_COLLECTION = "mundial_knockout_matches";
@@ -13,43 +12,8 @@ export const CENTRALIZED_KNOCKOUT_STAGES = new Set<MundialStage>([
   "quarterfinal",
 ]);
 
-// Only the fields that define a fixture's identity/schedule/result. Live and
-// admin-only fields (liveStatus, liveScore, ...) are intentionally excluded so
-// editing them in Mongo does not trigger a re-seed, and re-seeding never wipes
-// them.
-function fixtureFingerprint(matches: readonly MundialMatch[]): string {
-  const stable = matches
-    .map((m) => [
-      m.number,
-      m.stage,
-      m.date,
-      m.kickoffAt,
-      m.venue,
-      m.homeTeam,
-      m.awayTeam,
-      m.homeSeed ?? "",
-      m.awaySeed ?? "",
-      m.homeFinalScore ?? "",
-      m.awayFinalScore ?? "",
-      m.actualWinner ?? "",
-    ].join("|"))
-    .sort()
-    .join("\n");
-  return createHash("sha1").update(stable).digest("hex").slice(0, 12);
-}
-
-// Versions are derived from the fixture content, so ANY edit to fixtures.ts
-// (teams, kickoff times, dates, scores) changes the hash and forces Mongo to
-// re-sync from the file on the next read. fixtures.ts is the single source of
-// truth — no manual version bump needed.
-export const MUNDIAL_FIXTURE_VERSION = `fixtures-${fixtureFingerprint(MUNDIAL_MATCHES)}`;
-export const MUNDIAL_KNOCKOUT_FIXTURE_VERSION = `knockouts-${fixtureFingerprint(
-  MUNDIAL_MATCHES.filter((match) => CENTRALIZED_KNOCKOUT_STAGES.has(match.stage))
-)}`;
-
 type StoredMundialMatch = MundialMatch & {
   source?: string;
-  sourceVersion?: string;
   forceClosed?: boolean;
   liveStatus?: "scheduled" | "live" | "halftime" | "fulltime";
   liveMinute?: number | null;
@@ -78,10 +42,53 @@ async function safeCreateIndex<TSchema extends Document>(
   }
 }
 
+// Mongo is the source of truth for match data (teams, kickoff times, scores,
+// live fields). fixtures.ts only provides the initial calendar: seeding is
+// insert-only ($setOnInsert), so existing documents are never overwritten.
+// All later updates go through the admin API or maintenance scripts.
+async function seedMissingMatches(
+  collection: Collection<StoredMundialMatch>,
+  fixtures: readonly MundialMatch[],
+  source: string,
+  liveDefaults: boolean
+) {
+  const seededCount = await collection.countDocuments({});
+  if (seededCount >= fixtures.length) return;
+
+  const now = new Date();
+
+  await collection.bulkWrite(
+    fixtures.map((match) => ({
+      updateOne: {
+        filter: { id: match.id },
+        update: {
+          $setOnInsert: {
+            ...match,
+            source,
+            ...(liveDefaults
+              ? {
+                  liveStatus: "scheduled" as const,
+                  liveMinute: null,
+                  homeLiveScore: null,
+                  awayLiveScore: null,
+                  liveNote: "",
+                  liveEvents: [],
+                }
+              : {}),
+            createdAt: now,
+            updatedAt: now,
+          },
+        },
+        upsert: true,
+      },
+    })),
+    { ordered: false }
+  );
+}
+
 export async function ensureMundialData(db: Db) {
   const matches = db.collection<StoredMundialMatch>(MUNDIAL_MATCHES_COLLECTION);
   const predictions = db.collection(MUNDIAL_PREDICTIONS_COLLECTION);
-  const seededCount = await matches.countDocuments({ sourceVersion: MUNDIAL_FIXTURE_VERSION });
 
   await Promise.all([
     safeCreateIndex(matches, { id: 1 }, { unique: true }),
@@ -90,45 +97,12 @@ export async function ensureMundialData(db: Db) {
     safeCreateIndex(predictions, { normalizedName: 1, updatedAt: -1 }),
   ]);
 
-  if (seededCount === MUNDIAL_TOTAL_MATCHES) return;
-
-  const now = new Date();
-
-  await matches.bulkWrite(
-    MUNDIAL_MATCHES.map((match) => {
-      const { homeFinalScore, awayFinalScore, actualWinner, ...fixtureData } = match;
-      const scorePatch =
-        typeof homeFinalScore === "number" && typeof awayFinalScore === "number"
-          ? { homeFinalScore, awayFinalScore, actualWinner: actualWinner ?? null }
-          : {};
-
-      return {
-        updateOne: {
-          filter: { id: match.id },
-          update: {
-            $set: {
-              ...fixtureData,
-              ...scorePatch,
-              source: "fifa-world-cup-2026",
-              sourceVersion: MUNDIAL_FIXTURE_VERSION,
-              updatedAt: now,
-            },
-            $setOnInsert: {
-              createdAt: now,
-            },
-          },
-          upsert: true,
-        },
-      };
-    }),
-    { ordered: false }
-  );
+  await seedMissingMatches(matches, MUNDIAL_MATCHES, "fifa-world-cup-2026", false);
 }
 
 export async function ensureCentralizedKnockoutMatches(db: Db) {
   const matches = db.collection<StoredMundialMatch>(MUNDIAL_KNOCKOUT_MATCHES_COLLECTION);
   const centralizedFixtures = MUNDIAL_MATCHES.filter((match) => CENTRALIZED_KNOCKOUT_STAGES.has(match.stage));
-  const seededCount = await matches.countDocuments({ sourceVersion: MUNDIAL_KNOCKOUT_FIXTURE_VERSION });
 
   await Promise.all([
     safeCreateIndex(matches, { id: 1 }, { unique: true }),
@@ -137,45 +111,7 @@ export async function ensureCentralizedKnockoutMatches(db: Db) {
     safeCreateIndex(matches, { liveStatus: 1, liveUpdatedAt: -1 }),
   ]);
 
-  if (seededCount === centralizedFixtures.length) return;
-
-  const now = new Date();
-
-  await matches.bulkWrite(
-    centralizedFixtures.map((match) => {
-      const { homeFinalScore, awayFinalScore, actualWinner, ...fixtureData } = match;
-      const scorePatch =
-        typeof homeFinalScore === "number" && typeof awayFinalScore === "number"
-          ? { homeFinalScore, awayFinalScore, actualWinner: actualWinner ?? null, forceClosed: true }
-          : {};
-
-      return {
-        updateOne: {
-          filter: { id: match.id },
-          update: {
-            $set: {
-              ...fixtureData,
-              ...scorePatch,
-              source: "fifa-world-cup-2026-centralized-knockout",
-              sourceVersion: MUNDIAL_KNOCKOUT_FIXTURE_VERSION,
-              updatedAt: now,
-            },
-            $setOnInsert: {
-              liveStatus: "scheduled",
-              liveMinute: null,
-              homeLiveScore: null,
-              awayLiveScore: null,
-              liveNote: "",
-              liveEvents: [],
-              createdAt: now,
-            },
-          },
-          upsert: true,
-        },
-      };
-    }),
-    { ordered: false }
-  );
+  await seedMissingMatches(matches, centralizedFixtures, "fifa-world-cup-2026-centralized-knockout", true);
 }
 
 export async function readMundialMatches<T = StoredMundialMatch>(db: Db) {

@@ -4,7 +4,7 @@ import { serializeLiveMatchStats } from "@/lib/mundial/live-stats";
 import { notifyLiveMatchChanged } from "@/lib/mundial/live-match-events";
 import { notifyPenalitosChanged } from "@/lib/mundial/penalitos-events";
 import { notifyScorerChanged } from "@/lib/mundial/scorer-events";
-import { getMundialMatchCollectionForWrite } from "@/lib/mundial/matches-store";
+import { getMundialMatchCollectionForWrite, MUNDIAL_PREDICTIONS_COLLECTION } from "@/lib/mundial/matches-store";
 
 export const dynamic = "force-dynamic";
 
@@ -113,6 +113,46 @@ export async function PATCH(req: NextRequest) {
     const $set: Record<string, unknown> = { updatedAt: new Date() };
     let touchedLiveState = false;
     let touchedFinalScore = false;
+    let touchedFixture = false;
+
+    // Fixture data (teams, kickoff, venue) lives in Mongo; this is the only
+    // supported way to change it after the initial seed.
+    if ("homeTeam" in body) {
+      const parsed = cleanText(body.homeTeam, 60);
+      if (!parsed) {
+        return NextResponse.json({ error: "homeTeam invalido." }, { status: 400 });
+      }
+      $set.homeTeam = parsed;
+      touchedFixture = true;
+    }
+
+    if ("awayTeam" in body) {
+      const parsed = cleanText(body.awayTeam, 60);
+      if (!parsed) {
+        return NextResponse.json({ error: "awayTeam invalido." }, { status: 400 });
+      }
+      $set.awayTeam = parsed;
+      touchedFixture = true;
+    }
+
+    if ("kickoffAt" in body) {
+      const raw = cleanText(body.kickoffAt, 40);
+      if (!/^\d{4}-\d{2}-\d{2}T/.test(raw) || Number.isNaN(new Date(raw).getTime())) {
+        return NextResponse.json({ error: "kickoffAt invalido (ISO 8601)." }, { status: 400 });
+      }
+      $set.kickoffAt = raw;
+      $set.date = raw.slice(0, 10);
+      touchedFixture = true;
+    }
+
+    if ("venue" in body) {
+      const parsed = cleanText(body.venue, 100);
+      if (!parsed) {
+        return NextResponse.json({ error: "venue invalido." }, { status: 400 });
+      }
+      $set.venue = parsed;
+      touchedFixture = true;
+    }
 
     if ("homeFinalScore" in body) {
       const parsed = body.homeFinalScore === null ? null : parseScore(homeFinalScore);
@@ -272,6 +312,32 @@ export async function PATCH(req: NextRequest) {
 
     if (!result.matchedCount) {
       return NextResponse.json({ error: "Partido no encontrado." }, { status: 404 });
+    }
+
+    // Keep denormalized prediction labels in sync with the edited fixture
+    if (touchedFixture) {
+      const updated = await writeCollection.findOne<{
+        number?: number;
+        stage?: string;
+        homeTeam?: string;
+        awayTeam?: string;
+        kickoffAt?: string;
+      }>({ id: matchId }, { projection: { number: 1, stage: 1, homeTeam: 1, awayTeam: 1, kickoffAt: 1 } });
+
+      if (updated?.homeTeam && updated.awayTeam) {
+        await db.collection(MUNDIAL_PREDICTIONS_COLLECTION).updateMany(
+          { matchId },
+          {
+            $set: {
+              matchNumber: updated.number,
+              matchLabel: `${updated.homeTeam} vs ${updated.awayTeam}`,
+              matchTime: updated.kickoffAt,
+              stage: updated.stage,
+              updatedAt: new Date(),
+            },
+          }
+        );
+      }
     }
 
     if (touchedLiveState) {

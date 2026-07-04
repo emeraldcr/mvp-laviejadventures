@@ -52,52 +52,52 @@ function BookingCard({ tours }: { tours: TourSummary[] }) {
   };
 
   return (
-    <aside className="w-full max-w-[430px] rounded-[2rem] border border-white/16 bg-black/28 p-4 shadow-[0_30px_90px_rgba(0,0,0,0.42)] backdrop-blur-2xl">
-      <div className="rounded-[1.45rem] border border-white/10 bg-white/[0.08] p-5">
-        <div className="mb-5 flex items-start justify-between gap-4">
+    <aside className="w-full max-w-[520px] rounded-[2.4rem] border border-white/16 bg-black/28 p-5 shadow-[0_34px_110px_rgba(0,0,0,0.46)] backdrop-blur-2xl">
+      <div className="rounded-[1.85rem] border border-white/10 bg-white/[0.08] p-7">
+        <div className="mb-7 flex items-start justify-between gap-4">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.24em] text-emerald-200/80">
               {isEs ? "Reserva rápida" : "Quick booking"}
             </p>
-            <h2 className="mt-2 font-display text-2xl font-black leading-none text-white">
+            <h2 className="mt-3 font-display text-3xl font-black leading-none text-white">
               {isEs ? "Armá tu salida" : "Plan your tour"}
             </h2>
           </div>
-          <span className="rounded-full border border-emerald-300/25 bg-emerald-300/12 px-3 py-1.5 text-[10px] font-black uppercase tracking-wide text-emerald-200">
+          <span className="rounded-full border border-emerald-300/25 bg-emerald-300/12 px-4 py-2 text-[10px] font-black uppercase tracking-wide text-emerald-200">
             {isEs ? "Online" : "Online"}
           </span>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-6">
           <div className="relative">
             <span className="block text-[10px] font-bold uppercase tracking-widest text-emerald-200/80">
               {isEs ? "Experiencia" : "Experience"}
             </span>
           <details ref={tourMenuRef} className="group/tour">
             <summary
-              className="mt-2 flex min-h-16 w-full cursor-pointer list-none items-center justify-between gap-3 rounded-2xl border border-white/12 bg-white/[0.08] px-4 py-3 text-left outline-none transition hover:border-emerald-300/45 hover:bg-white/[0.11] group-open/tour:border-emerald-300/70 group-open/tour:bg-emerald-300/10 group-open/tour:shadow-[0_0_0_4px_rgba(52,211,153,0.10)] [&::-webkit-details-marker]:hidden"
+              className="mt-3 flex min-h-20 w-full cursor-pointer list-none items-center justify-between gap-4 rounded-[1.35rem] border border-white/12 bg-white/[0.08] px-5 py-4 text-left outline-none transition hover:border-emerald-300/45 hover:bg-white/[0.11] group-open/tour:border-emerald-300/70 group-open/tour:bg-emerald-300/10 group-open/tour:shadow-[0_0_0_4px_rgba(52,211,153,0.10)] [&::-webkit-details-marker]:hidden"
             >
               <span className="min-w-0">
-                <span className="block truncate text-sm font-black text-white">
+                <span className="block truncate text-base font-black text-white">
                   {selectedTour ? tourTitle(selectedTour, isEs) : isEs ? "Elegí un tour" : "Choose a tour"}
                 </span>
                 {selectedTour && (
-                  <span className="mt-0.5 block text-[11px] font-bold uppercase tracking-wide text-emerald-200/75">
+                  <span className="mt-1 block text-xs font-bold uppercase tracking-wide text-emerald-200/75">
                     {isEs ? "Desde" : "From"} {formatTourPrice(selectedTour, isEs)}
                     {selectedTour.duration ? ` · ${selectedTour.duration}` : ""}
                   </span>
                 )}
               </span>
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/12 bg-black/18 text-white/65 transition group-open/tour:rotate-180 group-open/tour:border-emerald-300/40 group-open/tour:text-emerald-200">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/12 bg-black/18 text-white/65 transition group-open/tour:rotate-180 group-open/tour:border-emerald-300/40 group-open/tour:text-emerald-200">
                 <ChevronDown size={15} />
               </span>
             </summary>
 
-            <div className="absolute left-0 right-0 top-[calc(100%+0.6rem)] z-30 overflow-hidden rounded-2xl border border-emerald-300/24 bg-[#101713]/96 p-1.5 shadow-[0_26px_70px_rgba(0,0,0,0.52)] backdrop-blur-2xl">
+            <div className="absolute left-0 right-0 top-[calc(100%+0.75rem)] z-30 overflow-hidden rounded-[1.35rem] border border-emerald-300/24 bg-[#101713]/96 p-2 shadow-[0_26px_70px_rgba(0,0,0,0.52)] backdrop-blur-2xl">
               <div
                 role="listbox"
                 aria-label={isEs ? "Seleccionar experiencia" : "Select experience"}
-                className="max-h-72 overflow-y-auto pr-1 [scrollbar-color:rgba(110,231,183,0.45)_rgba(255,255,255,0.08)] [scrollbar-width:thin]"
+                className="max-h-96 overflow-y-auto pr-1 [scrollbar-color:rgba(110,231,183,0.45)_rgba(255,255,255,0.08)] [scrollbar-width:thin]"
               >
                 {tours.map((tour) => {
                   const isSelected = tour.slug === resolvedSlug;
@@ -112,19 +112,19 @@ function BookingCard({ tours }: { tours: TourSummary[] }) {
                         tourMenuRef.current?.removeAttribute("open");
                       }}
                       className={[
-                        "group flex w-full items-center justify-between gap-3 rounded-xl px-3.5 py-3 text-left transition",
+                        "group flex min-h-20 w-full items-center justify-between gap-4 rounded-2xl px-4 py-4 text-left transition",
                         isSelected
                           ? "bg-emerald-300 text-emerald-950"
                           : "text-white hover:bg-white/[0.08]",
                       ].join(" ")}
-                    >
-                      <span className="min-w-0">
-                        <span className="block truncate text-sm font-black">
+                      >
+                        <span className="min-w-0">
+                        <span className="block truncate text-base font-black">
                           {tourTitle(tour, isEs)}
                         </span>
                         <span
                           className={[
-                            "mt-0.5 block text-[10px] font-bold uppercase tracking-wide",
+                            "mt-1 block text-[11px] font-bold uppercase tracking-wide",
                             isSelected ? "text-emerald-950/70" : "text-white/45 group-hover:text-emerald-200/80",
                           ].join(" ")}
                         >
@@ -133,7 +133,7 @@ function BookingCard({ tours }: { tours: TourSummary[] }) {
                       </span>
                       <span
                         className={[
-                          "shrink-0 rounded-full px-2.5 py-1 text-[11px] font-black",
+                          "shrink-0 rounded-full px-3 py-1.5 text-xs font-black",
                           isSelected
                             ? "bg-emerald-950/10 text-emerald-950"
                             : "bg-white/[0.08] text-emerald-200",
@@ -153,25 +153,25 @@ function BookingCard({ tours }: { tours: TourSummary[] }) {
             <span className="block text-[10px] font-bold uppercase tracking-widest text-emerald-200/80">
             {isEs ? "Personas" : "Guests"}
             </span>
-            <div className="mt-2 flex h-14 items-center justify-between rounded-2xl border border-white/12 bg-white/[0.08] px-3">
+            <div className="mt-3 flex h-20 items-center justify-between rounded-[1.35rem] border border-white/12 bg-white/[0.08] px-4">
             <button
               type="button"
               onClick={() => setPeople((p) => Math.max(1, p - 1))}
               aria-label={isEs ? "Menos personas" : "Fewer guests"}
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-white/20 text-white/75 transition hover:border-white/45 hover:text-white"
+              className="flex h-12 w-12 items-center justify-center rounded-full border border-white/20 text-white/75 transition hover:border-emerald-300/50 hover:bg-emerald-300/10 hover:text-white"
             >
-              <Minus size={13} />
+              <Minus size={16} />
             </button>
-            <span className="min-w-[2rem] text-center text-xl font-black tabular-nums text-white">
+            <span className="min-w-[2rem] text-center text-3xl font-black tabular-nums text-white">
               {people}
             </span>
             <button
               type="button"
               onClick={() => setPeople((p) => Math.min(30, p + 1))}
               aria-label={isEs ? "Más personas" : "More guests"}
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-white/20 text-white/75 transition hover:border-white/45 hover:text-white"
+              className="flex h-12 w-12 items-center justify-center rounded-full border border-white/20 text-white/75 transition hover:border-emerald-300/50 hover:bg-emerald-300/10 hover:text-white"
             >
-              <Plus size={13} />
+              <Plus size={16} />
             </button>
             </div>
           </div>
@@ -180,14 +180,14 @@ function BookingCard({ tours }: { tours: TourSummary[] }) {
         <button
           type="button"
           onClick={handleBook}
-          className="group mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-400 px-8 text-sm font-black uppercase tracking-wide text-emerald-950 shadow-[0_18px_45px_rgba(16,185,129,0.22)] transition-all hover:-translate-y-0.5 hover:bg-white"
+          className="group mt-7 flex h-16 w-full items-center justify-center gap-2 rounded-[1.35rem] bg-emerald-400 px-8 text-sm font-black uppercase tracking-wide text-emerald-950 shadow-[0_22px_55px_rgba(16,185,129,0.26)] transition-all hover:-translate-y-0.5 hover:bg-white"
         >
           {isEs ? "Ver fechas" : "See dates"}
           <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
         </button>
 
         {selectedTour?.duration && (
-          <p className="mt-4 text-center text-[11px] font-medium text-white/55">
+          <p className="mt-5 text-center text-sm font-semibold text-white/55">
             {selectedTour.duration}
             {selectedTour.difficulty ? ` - ${selectedTour.difficulty}` : ""}
           </p>
@@ -238,7 +238,7 @@ export default function HomeHero({ tours }: { tours: TourSummary[] }) {
       </div>
 
       <div className="relative mx-auto flex w-full max-w-[1520px] flex-1 items-center px-4 pb-10 pt-24 sm:px-6 md:pb-12 md:pt-28 lg:px-8">
-        <div className="grid w-full items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(360px,430px)] xl:gap-16">
+        <div className="grid w-full items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(430px,520px)] xl:gap-16">
         <div>
           <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 backdrop-blur-md">
             <span className="flex items-center gap-0.5 text-amber-400">

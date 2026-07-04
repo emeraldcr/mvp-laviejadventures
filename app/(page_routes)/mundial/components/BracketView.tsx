@@ -3,7 +3,8 @@
 import { useMemo, useState } from "react";
 import { Calendar, MapPin, Trophy, X } from "lucide-react";
 import type { LeaderboardEntry, MundialMatch, Prediction } from "../types";
-import { cn, teamCode, formatKickoff } from "../utils";
+import { cn, formatKickoff } from "../utils";
+import { teamCode } from "../flags";
 import { computePredictionPoints, predictionScoreKind } from "@/lib/mundial/prediction-scoring";
 import { Flag } from "./Flag";
 
@@ -127,38 +128,15 @@ const RA = { outer: 268, label: 300, r32: 238, r16: 198, qf: 140, sf: 82, finalP
 
 export function BracketView({
   matches,
-  leaderboard,
-  predictions,
-  playerName,
 }: {
   matches: MundialMatch[];
-  leaderboard: LeaderboardEntry[];
-  predictions: Prediction[];
-  playerName: string;
 }) {
   const [selected, setSelected] = useState<number | null>(null);
 
   const byNum = useMemo(() => new Map(matches.map((m) => [m.number, m])), [matches]);
 
-  const myPred = useMemo(() => {
-    const key = playerName.trim().toLowerCase();
-    return new Map(
-      predictions
-        .filter((p) => p.playerName.trim().toLowerCase() === key)
-        .map((p) => [p.matchId, p])
-    );
-  }, [predictions, playerName]);
-
-  const selMatch = selected != null ? byNum.get(selected) : undefined;
-  const knockoutMatches = useMemo(
-    () => matches.filter((match) => match.stage !== "group").sort((a, b) => a.number - b.number),
-    [matches],
-  );
-
   return (
     <section className="grid gap-4">
-      {leaderboard.length > 0 && <MiniPodium leaderboard={leaderboard} />}
-
       <div className="relative overflow-hidden rounded-2xl border border-[#f0b429]/25 bg-[#04100a] shadow-[0_32px_80px_rgba(0,0,0,0.60)]">
         <div className="pointer-events-none absolute inset-0 opacity-25 [background-image:linear-gradient(90deg,rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(0deg,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:48px_48px]" />
         <div className="pointer-events-none absolute inset-0 [background:radial-gradient(ellipse_50%_46%_at_50%_48%,rgba(240,180,41,0.11),transparent_70%),radial-gradient(ellipse_36%_32%_at_22%_18%,rgba(98,255,230,0.08),transparent_68%),radial-gradient(ellipse_32%_30%_at_80%_84%,rgba(213,255,63,0.07),transparent_70%)]" />
@@ -171,17 +149,14 @@ export function BracketView({
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#d5ff3f]">Quiniela · Mundial 2026</p>
             <p className="truncate text-base font-black uppercase text-white">Bracket Eliminatorias</p>
           </div>
-          <p className="ml-auto hidden text-xs font-bold text-white/40 sm:block">Toca un partido para ver detalles</p>
+          <p className="ml-auto hidden text-xs font-bold text-white/40 sm:block">Bracket gráfico de eliminatorias</p>
         </div>
-
-        <LatestBracketRail matches={knockoutMatches} onSelect={setSelected} />
 
         <div className="p-2 sm:p-4">
           <div className="mx-auto w-full rounded-[1.25rem] border border-white/8 bg-black/18 p-1 shadow-[inset_0_0_50px_rgba(0,0,0,0.35)] sm:p-2" style={{ maxWidth: 700, aspectRatio: "1 / 1" }}>
             <BracketSVG
               byNum={byNum}
               selected={selected}
-              selectedPrediction={selMatch ? myPred.get(selMatch.id) ?? null : null}
               onSelect={(n) => setSelected((prev) => (prev === n ? null : n))}
             />
           </div>
@@ -196,8 +171,7 @@ export function BracketView({
       </div>
 
       <div className="sr-only" aria-live="polite">
-        {selMatch ? `Partido seleccionado ${selMatch.number}` : "Ningun partido seleccionado"}
-        {myPred.size > 0 ? " con predicciones disponibles." : ""}
+        {selected != null ? `Partido seleccionado ${selected}` : "Ningun partido seleccionado"}
       </div>
     </section>
   );
@@ -318,16 +292,13 @@ function RailTeam({
 function BracketSVG({
   byNum,
   selected,
-  selectedPrediction,
   onSelect,
 }: {
   byNum: Map<number, MundialMatch>;
   selected: number | null;
-  selectedPrediction: Prediction | null;
   onSelect: (n: number) => void;
 }) {
   const gm = (n: number) => byNum.get(n);
-  const selectedMatch = selected != null ? gm(selected) : undefined;
   const hasRes = (n: number) => gm(n)?.homeFinalScore != null;
   const lineC = (n: number) =>
     hasRes(n) ? "rgba(240,180,41,0.72)" : "rgba(255,255,255,0.08)";
@@ -505,14 +476,6 @@ function BracketSVG({
 
       {/* Final / trophy center */}
       <FinalCenter match={gm(104)} isSelected={selected === 104} onClick={() => onSelect(104)} />
-
-      {selectedMatch && (
-        <SelectedMatchCallout
-          match={selectedMatch}
-          prediction={selectedPrediction}
-          onClose={() => onSelect(selectedMatch.number)}
-        />
-      )}
 
       {/* Stage ring labels */}
       <StageRingLabels showThirdCaption={!winnerTeam(gm(103))} />
@@ -1022,93 +985,20 @@ const PODIUM_STYLES = [
 
 function MiniPodium({ leaderboard }: { leaderboard: LeaderboardEntry[] }) {
   const top3 = leaderboard.slice(0, 3);
-  const maxPts = top3[0]?.totalPoints ?? 1;
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-[#f0b429]/25 bg-[#04100a] shadow-[0_24px_60px_rgba(0,0,0,0.55)]">
-      {/* grid overlay */}
-      <div className="pointer-events-none absolute inset-0 opacity-35 [background-image:linear-gradient(90deg,rgba(240,180,41,0.05)_1px,transparent_1px),linear-gradient(0deg,rgba(255,255,255,0.04)_1px,transparent_1px)] [background-size:64px_64px]" />
-      {/* gold top spotlight */}
-      <div className="pointer-events-none absolute inset-0 [background:radial-gradient(ellipse_70%_45%_at_50%_0%,rgba(240,180,41,0.14),transparent_70%)]" />
-      {/* sparkles */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 select-none overflow-hidden">
-        <span className="absolute left-[5%] top-[12%] text-base text-[#f0b429] opacity-35">✦</span>
-        <span className="absolute left-[20%] top-[6%] text-xs text-[#d5ff3f] opacity-25">★</span>
-        <span className="absolute right-[8%] top-[10%] text-sm text-[#f0b429] opacity-30">✦</span>
-        <span className="absolute right-[22%] top-[4%] text-xs text-[#62ffe6] opacity-20">★</span>
-        <span className="absolute left-[48%] top-[3%] text-xs text-[#f0b429] opacity-18">✦</span>
-      </div>
-
-      {/* header */}
-      <div className="relative border-b border-white/10 px-4 py-3">
-        <div className="flex items-center gap-2.5">
-          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-[#f0b429]/40 bg-[#f0b429] text-[#07110b] shadow-[0_0_14px_rgba(240,180,41,0.22)]">
-            <Trophy className="h-4 w-4" />
-          </span>
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#d5ff3f]">Tabla de Líderes</p>
-            <p className="text-sm font-black uppercase text-white">Top 3 · {leaderboard.length} participantes</p>
+    <div className="flex items-center justify-center gap-6">
+      {top3.map((entry, i) => (
+        <div key={entry.normalizedName} className="flex flex-col items-center gap-2">
+          <div className={cn(
+            "grid place-items-center rounded-full border-2 shadow-lg",
+            "w-20 h-20 sm:w-28 sm:h-28"
+          )}>
+            <span className="text-xl font-black sm:text-2xl text-white">{i + 1}</span>
           </div>
+          <p className="max-w-[10rem] truncate text-xs font-black text-white/80 text-center">{entry.playerName}</p>
         </div>
-      </div>
-
-      {/* podium cards */}
-      <div className="relative grid grid-cols-3 gap-2 p-3 sm:gap-3 sm:p-4">
-        {top3.map((entry, i) => {
-          const s = PODIUM_STYLES[i];
-          const bar = maxPts > 0 ? Math.round((entry.totalPoints / maxPts) * 100) : 0;
-          const acc = accuracyPct(entry);
-          const rank = i + 1;
-
-          return (
-            <div
-              key={entry.normalizedName}
-              className={cn("rounded-xl border p-3 shadow-[0_16px_40px_rgba(0,0,0,0.22)] sm:p-4", s.wrap)}
-            >
-              {/* rank + points */}
-              <div className="mb-2 flex items-start justify-between gap-1">
-                <span className={cn(
-                  "grid h-8 w-8 shrink-0 place-items-center rounded-full border-2 text-sm font-black",
-                  s.rank
-                )}>
-                  {rank === 1 ? (
-                    <svg viewBox="0 0 48 30" className="h-5 w-7">
-                      <path d="M4 25h40v5H4z" fill="#7a4d08" />
-                      <path d="M4 25L9 7l9 11L24 3l6 15 9-11 5 18z" fill="#f0b429" stroke="#9a5e0a" strokeWidth="1.5" strokeLinejoin="round" />
-                      <circle cx="9" cy="7" r="3" fill="#d5ff3f" stroke="#9a5e0a" strokeWidth="0.8" />
-                      <circle cx="24" cy="3" r="3" fill="#d5ff3f" stroke="#9a5e0a" strokeWidth="0.8" />
-                      <circle cx="39" cy="7" r="3" fill="#d5ff3f" stroke="#9a5e0a" strokeWidth="0.8" />
-                    </svg>
-                  ) : rank}
-                </span>
-                <div className="text-right">
-                  <span className={cn("text-lg font-black tabular-nums leading-none sm:text-xl", s.pts)}>
-                    {entry.totalPoints}
-                  </span>
-                  <span className="ml-0.5 text-[9px] font-bold text-white/30">pts</span>
-                </div>
-              </div>
-
-              {/* name */}
-              <p className="mb-2 truncate text-xs font-black text-white sm:text-sm" title={entry.playerName}>
-                {entry.playerName}
-              </p>
-
-              {/* progress bar */}
-              <div className="mb-2.5 h-1 overflow-hidden rounded-full bg-white/10">
-                <div className={cn("h-full rounded-full transition-all", s.bar)} style={{ width: `${bar}%` }} />
-              </div>
-
-              {/* stats */}
-              <div className="grid grid-cols-3 gap-1">
-                <PodiumStat label="Exact." value={entry.exactScores} accent={s.accent} />
-                <PodiumStat label="Res." value={entry.correctOutcomes} accent="text-white/55" />
-                <PodiumStat label="Prec." value={`${acc}%`} accent="text-white/55" />
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      ))}
     </div>
   );
 }

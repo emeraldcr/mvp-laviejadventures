@@ -3,7 +3,8 @@
 import { CalendarDays, Camera, ChevronRight, Crown, Lock, MinusCircle, Target, TrendingUp, Trophy, Users, X, Zap } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type { LeaderboardEntry, MundialMatch, Prediction } from "../types";
-import { cn, finalScoreText, formatKickoff, normalizeKey, teamCode } from "../utils";
+import { cn, finalScoreText, formatKickoff, normalizeKey } from "../utils";
+import { teamCode } from "../flags";
 import { computePredictionPoints, predictionScoreKind } from "@/lib/mundial/prediction-scoring";
 import { Flag } from "./Flag";
 

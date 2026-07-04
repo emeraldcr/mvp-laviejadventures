@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { BarChart3, Braces, Check, ChevronDown, ChevronUp, ClipboardPaste, Heart, Loader2, Lock, LockOpen, MessageCircle, Minus, Plus, RefreshCw, Repeat2, Save, Send, Trash2, Tv2, Users } from "lucide-react";
 import type { AdminLiveMatchEvent, AdminLiveMatchStats, AdminLiveTeamStats, AdminMatch, AdminRosterPlayer, LiveEventTeam, LiveEventType, LiveMatchStatus } from "../adminTypes";
-import { cn, formatKickoff, getCountryFlag } from "../../utils";
+import { cn, formatKickoff } from "../../utils";
+import { getCountryFlag } from "../../flags";
 import { Flag } from "../../components/Flag";
 
 type MatchAdminCardProps = {

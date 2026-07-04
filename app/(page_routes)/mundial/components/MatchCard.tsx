@@ -10,9 +10,10 @@ import {
   livePickStatus,
   liveStatusLabel,
   predictionResult,
-  teamCode,
+
 } from "../utils";
 import { Flag } from "./Flag";
+import { teamCode } from "../flags";
 import { ScoreInput } from "./ScoreInput";
 
 type MatchStatus = {

@@ -1,5 +1,4 @@
 import { REQUEST_TIMEOUT_MS } from "./constants";
-import { normalizeTeamName, resolveTeamFlag } from "./flags";
 import type { Draft, LiveMatchStatus, MundialMatch } from "./types";
 
 const HALF_MINUTES = 45;
@@ -88,12 +87,6 @@ function formatCRHour(ms: number) {
       hour12: false,
     }).format(ms)
   );
-}
-
-export function isSameDayInCR(leftMs: number, rightMs: number) {
-  if (!Number.isFinite(leftMs) || !Number.isFinite(rightMs)) return false;
-
-  return formatCRDate(leftMs) === formatCRDate(rightMs);
 }
 
 export function isSameMatchDayInCR(leftMs: number, rightMs: number) {
@@ -263,14 +256,6 @@ export function livePickStatus(match: MundialMatch, draft: Draft) {
   return null;
 }
 
-export function getWinnerPickOptions(match: MundialMatch) {
-  return [
-    { value: "", label: "Pasa por penales" },
-    { value: "home", label: match.homeTeam },
-    { value: "away", label: match.awayTeam },
-  ];
-}
-
 export function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
@@ -383,147 +368,4 @@ export function buildTeamResolver(allMatches: MundialMatch[]): (teamName: string
 
     return teamName;
   };
-}
-
-export { normalizeTeamName };
-
-export function getCountryFlag(teamName: string): string {
-  return resolveTeamFlag(teamName).emoji;
-}
-
-const TEAM_CODES: Record<string, string> = {
-  argentina: "ARG",
-  brasil: "BRA",
-  brazil: "BRA",
-  mexico: "MEX",
-  "estados unidos": "USA",
-  usa: "USA",
-  "united states": "USA",
-  canada: "CAN",
-  uruguay: "URU",
-  colombia: "COL",
-  chile: "CHI",
-  ecuador: "ECU",
-  peru: "PER",
-  paraguay: "PAR",
-  venezuela: "VEN",
-  bolivia: "BOL",
-  "costa rica": "CRC",
-  panama: "PAN",
-  honduras: "HON",
-  jamaica: "JAM",
-  "el salvador": "SLV",
-  guatemala: "GUA",
-  haiti: "HAI",
-  "trinidad y tobago": "TTO",
-  "trinidad and tobago": "TTO",
-  curazao: "CUW",
-  curacao: "CUW",
-  "cabo verde": "CPV",
-  "cape verde": "CPV",
-  alemania: "GER",
-  germany: "GER",
-  francia: "FRA",
-  france: "FRA",
-  espana: "ESP",
-  spain: "ESP",
-  portugal: "POR",
-  "paises bajos": "NED",
-  netherlands: "NED",
-  holanda: "NED",
-  belgica: "BEL",
-  belgium: "BEL",
-  italia: "ITA",
-  italy: "ITA",
-  croacia: "CRO",
-  croatia: "CRO",
-  serbia: "SRB",
-  polonia: "POL",
-  poland: "POL",
-  suiza: "SUI",
-  switzerland: "SUI",
-  dinamarca: "DEN",
-  denmark: "DEN",
-  suecia: "SWE",
-  sweden: "SWE",
-  ucrania: "UKR",
-  ukraine: "UKR",
-  turquia: "TUR",
-  turkey: "TUR",
-  turkiye: "TUR",
-  austria: "AUT",
-  noruega: "NOR",
-  norway: "NOR",
-  "bosnia y herzegovina": "BIH",
-  "bosnia and herzegovina": "BIH",
-  hungria: "HUN",
-  hungary: "HUN",
-  albania: "ALB",
-  eslovenia: "SVN",
-  slovenia: "SVN",
-  rumania: "ROU",
-  romania: "ROU",
-  eslovaquia: "SVK",
-  slovakia: "SVK",
-  "republica checa": "CZE",
-  "czech republic": "CZE",
-  czechia: "CZE",
-  grecia: "GRE",
-  greece: "GRE",
-  japon: "JPN",
-  japan: "JPN",
-  "corea del sur": "KOR",
-  "south korea": "KOR",
-  "korea republic": "KOR",
-  "arabia saudita": "KSA",
-  "saudi arabia": "KSA",
-  iran: "IRN",
-  "ir iran": "IRN",
-  australia: "AUS",
-  china: "CHN",
-  indonesia: "IDN",
-  uzbekistan: "UZB",
-  qatar: "QAT",
-  irak: "IRQ",
-  iraq: "IRQ",
-  jordania: "JOR",
-  jordan: "JOR",
-  marruecos: "MAR",
-  morocco: "MAR",
-  senegal: "SEN",
-  nigeria: "NGA",
-  ghana: "GHA",
-  camerun: "CMR",
-  cameroon: "CMR",
-  tunez: "TUN",
-  tunisia: "TUN",
-  egipto: "EGY",
-  egypt: "EGY",
-  argelia: "ALG",
-  algeria: "ALG",
-  "costa de marfil": "CIV",
-  "ivory coast": "CIV",
-  "cote d'ivoire": "CIV",
-  mali: "MLI",
-  "rd congo": "COD",
-  "congo dr": "COD",
-  sudafrica: "RSA",
-  "south africa": "RSA",
-  "nueva zelanda": "NZL",
-  "new zealand": "NZL",
-  england: "ENG",
-  inglaterra: "ENG",
-  scotland: "SCO",
-  escocia: "SCO",
-  wales: "WAL",
-  gales: "WAL",
-};
-
-export function teamCode(teamName: string) {
-  const normalized = normalizeTeamName(teamName);
-  const known = TEAM_CODES[normalized];
-  if (known) return known;
-
-  const letters = normalized.replace(/[^a-z0-9]/g, "").toUpperCase();
-  return (letters || "TBD").slice(0, 3).padEnd(3, "-");
 }

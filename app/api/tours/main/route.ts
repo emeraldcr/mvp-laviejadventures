@@ -14,7 +14,7 @@ const DEFAULT_MAIN_TOUR = {
   operator: "Operado por La Vieja Adventures",
   duration: "3-4 horas",
   price: "₡25,000 por persona",
-  location: "San Isidro de El General, Pérez Zeledón, Costa Rica",
+  location: "Sucre de Ciudad Quesada, San Carlos, Alajuela, Costa Rica",
   inclusions: [
     "Entrada a instalaciones.",
     "Guía profesional bilingüe (español e inglés).",

@@ -3,8 +3,13 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, MapPin, MessageCircle, Plus } from "lucide-react";
+import { ArrowRight, ExternalLink, MapPin, MessageCircle, Plus } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
+import {
+  LA_VIEJA_GOOGLE_MAPS_EMBED_URL,
+  LA_VIEJA_GOOGLE_MAPS_URL,
+  LA_VIEJA_LOCATION_LABEL,
+} from "@/lib/constants/location";
 import { principalContent } from "@/lib/constants/principal";
 import type { TourSummary } from "@/lib/types/index";
 import { WHATSAPP_HREF, formatTourPrice } from "./home-utils";
@@ -141,7 +146,7 @@ function HomeFooter() {
   return (
     <footer className="bg-stone-950 text-stone-400">
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="grid gap-12 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)]">
+        <div className="grid gap-12 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,0.75fr)_minmax(0,0.9fr)_minmax(260px,1.1fr)]">
           <div>
             <div className="flex items-center gap-2.5">
               <Image
@@ -195,9 +200,35 @@ function HomeFooter() {
               </li>
               <li className="inline-flex items-center gap-2">
                 <MapPin size={15} className="text-emerald-400" />
-                {isEs ? "San Carlos, Alajuela, Costa Rica" : "San Carlos, Alajuela, Costa Rica"}
+                {LA_VIEJA_LOCATION_LABEL}
               </li>
             </ul>
+          </div>
+
+          <div>
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <h3 className="text-xs font-bold uppercase tracking-widest text-white">
+                {isEs ? "Como llegar" : "How to get here"}
+              </h3>
+              <a
+                href={LA_VIEJA_GOOGLE_MAPS_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-300 transition-colors hover:text-emerald-200"
+              >
+                {isEs ? "Abrir" : "Open"}
+                <ExternalLink size={13} />
+              </a>
+            </div>
+            <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5">
+              <iframe
+                title="La Vieja Adventures en Google Maps"
+                src={LA_VIEJA_GOOGLE_MAPS_EMBED_URL}
+                loading="lazy"
+                className="h-56 w-full"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+            </div>
           </div>
         </div>
 

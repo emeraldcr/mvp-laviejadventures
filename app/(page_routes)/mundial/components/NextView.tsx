@@ -61,7 +61,7 @@ export function NextView({
 
       {/* Selected match detail */}
       {featuredMatch ? (
-        <div ref={detailRef} className="grid min-w-0 scroll-mt-20 gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(340px,0.46fr)] xl:items-start">
+        <div ref={detailRef} className="grid min-w-0 scroll-mt-20 gap-3 xl:grid-cols-[minmax(0,0.8fr)_minmax(430px,0.7fr)] xl:items-start">
           <div className="min-w-0">
             <FeaturedMatch
               match={featuredMatch}

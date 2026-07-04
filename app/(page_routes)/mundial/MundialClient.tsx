@@ -3,9 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
-import { Check, ChevronRight, CircleAlert, ClipboardList, Gamepad2, GitBranch, Loader2, Sparkles, Target, Users, X } from "lucide-react";
-import type { Draft, LiveMatchStatus, MundialMatch, Prediction } from "./types";
-import { formatKickoff, normalizeKey, predictionResult, teamCode } from "./utils";
+import { Check, CircleAlert, Gamepad2, Loader2, Sparkles, Target, X } from "lucide-react";
+import type { LiveMatchStatus, MundialMatch } from "./types";
+import { normalizeKey } from "./utils";
 import { useMundial } from "./useMundial";
 import { useLiveMatch } from "./useLiveMatch";
 import { MineView } from "./components/MineView";
@@ -19,7 +19,6 @@ import { PenalitosPanel } from "./components/PenalitosPanel";
 import { ProximoEnAnotarPanel } from "./components/ProximoEnAnotarPanel";
 import { LiveMatchChat } from "./components/LiveMatchChat";
 import { BracketView } from "./components/BracketView";
-import { Flag } from "./components/Flag";
 
 export default function MundialClient() {
   const router = useRouter();
@@ -187,7 +186,6 @@ export default function MundialClient() {
   }, [activeMatch, featuredMatchId, effectiveLiveMatch, matches]);
 
   const selectedInfoMatch = explicitSelectedMatch ?? featuredMatch ?? mostRecentMatch;
-  const commandMatch = activeLiveMatch ?? (viewMode === "next" ? featuredMatch : null);
 
   function handlePickPlayer(name: string) {
     selectPlayer(name);
@@ -201,12 +199,6 @@ export default function MundialClient() {
   function handleGoToMine(matchId?: string) {
     setFocusedMineMatchId(matchId ?? null);
     setViewMode("mine");
-  }
-
-  function handleGoToBracket(match: MundialMatch) {
-    setSelectedInfoMatchId(match.id);
-    setFeaturedMatchId(match.id);
-    setViewMode("bracket");
   }
 
   return (
@@ -249,22 +241,6 @@ export default function MundialClient() {
           </div>
         ) : (
           <>
-            {commandMatch && (
-              <LiveCommandCenter
-                match={commandMatch}
-                isLive={Boolean(activeLiveMatch && commandMatch.id === activeLiveMatch.id)}
-                draft={drafts[commandMatch.id]}
-                predictions={predictions}
-                playerName={playerName}
-                matches={matches}
-                onGoToMine={handleGoToMine}
-                onGoToBracket={handleGoToBracket}
-                onOpenPlayerPicker={openPlayerPicker}
-                onOpenPenalitos={() => setLiveModal("penalitos")}
-                onOpenScorer={() => setLiveModal("scorer")}
-              />
-            )}
-
             {viewMode === "next" && (
               <NextView
                 activeMatch={activeMatch}
@@ -311,12 +287,7 @@ export default function MundialClient() {
             )}
 
             {viewMode === "bracket" && (
-              <BracketView
-                matches={matches}
-                leaderboard={leaderboard}
-                predictions={predictions}
-                playerName={playerName}
-              />
+              <BracketView matches={matches} />
             )}
 
             {/* ====================== LIVE SECTION ========================== */}
@@ -419,205 +390,6 @@ export default function MundialClient() {
       )}
     </main>
   );
-}
-
-function LiveCommandCenter({
-  match,
-  isLive,
-  draft,
-  predictions,
-  playerName,
-  matches,
-  onGoToMine,
-  onGoToBracket,
-  onOpenPlayerPicker,
-  onOpenPenalitos,
-  onOpenScorer,
-}: {
-  match: MundialMatch;
-  isLive: boolean;
-  draft?: Draft;
-  predictions: Prediction[];
-  playerName: string;
-  matches: MundialMatch[];
-  onGoToMine: (matchId?: string) => void;
-  onGoToBracket: (match: MundialMatch) => void;
-  onOpenPlayerPicker: () => void;
-  onOpenPenalitos: () => void;
-  onOpenScorer: () => void;
-}) {
-  const safeDraft: Draft = draft ?? {
-    homeScore: 0,
-    awayScore: 0,
-    winnerPick: null,
-    winnerPickMethod: null,
-    locked: false,
-    dirty: false,
-    saved: false,
-    updatedAt: null,
-  };
-  const matchPredictions = predictions.filter((prediction) => prediction.matchId === match.id);
-  const playerPrediction = playerName
-    ? matchPredictions.find((prediction) => normalizeKey(prediction.playerName) === normalizeKey(playerName))
-    : null;
-  const homeLiveScore = match.homeLiveScore ?? match.homeFinalScore ?? 0;
-  const awayLiveScore = match.awayLiveScore ?? match.awayFinalScore ?? 0;
-  const nextKnockout = getNextKnockoutMatch(match, matches);
-  const badgeLabel = isLive ? "Live ahora" : "Pick abierto";
-  const matchLine = isLive ? match.liveNote : "Marcador, ganador y bracket del partido en un solo lugar.";
-
-  return (
-    <section className="mb-3 overflow-hidden rounded-xl border border-[#9dff34]/45 bg-[#06140f] shadow-[0_18px_54px_rgba(0,0,0,0.28)]">
-      <div className="grid lg:grid-cols-[minmax(0,1.05fr)_minmax(320px,0.72fr)_minmax(270px,0.55fr)]">
-        <div className="border-b border-white/10 p-3 lg:border-b-0 lg:border-r lg:border-white/10">
-          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-            <span className="inline-flex items-center gap-2 rounded-full border border-[#9dff34]/35 bg-[#10240b] px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-[#d5ff3f]">
-              <span className="h-2 w-2 animate-pulse rounded-full bg-[#9dff34]" />
-              {badgeLabel}
-            </span>
-            <span className="text-xs font-bold text-white/45">{formatKickoff(match.kickoffAt)}</span>
-          </div>
-
-          <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
-            <LiveTeamBlock team={match.homeTeam} align="left" />
-            <div className="flex items-center gap-1">
-              <LiveScoreBox value={homeLiveScore} />
-              <span className="text-lg font-black text-white/25">-</span>
-              <LiveScoreBox value={awayLiveScore} />
-            </div>
-            <LiveTeamBlock team={match.awayTeam} align="right" />
-          </div>
-
-          {matchLine && (
-            <p className="mt-2 rounded-lg border border-[#9dff34]/18 bg-black/30 px-3 py-2 text-sm font-bold leading-snug text-[#e7ffc0]">
-              {matchLine}
-            </p>
-          )}
-        </div>
-
-        <div className="border-b border-white/10 p-3 lg:border-b-0 lg:border-r lg:border-white/10">
-          <div className="mb-2 flex items-center justify-between gap-2">
-            <p className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-[#f0b429]">
-              <ClipboardList className="h-3.5 w-3.5" />
-              Tu pick
-            </p>
-            <span className="rounded-md border border-white/10 bg-black/30 px-2 py-1 text-[10px] font-black text-white/45">
-              {playerPrediction ? "Guardado" : "Sin pick"}
-            </span>
-          </div>
-
-          <div className="grid grid-cols-[auto_minmax(0,1fr)] gap-3 rounded-xl border border-white/10 bg-black/30 p-3">
-            <div className="flex items-center gap-1">
-              <span className="text-4xl font-black tabular-nums text-white">{safeDraft.homeScore}</span>
-              <span className="text-xl font-black text-white/20">-</span>
-              <span className="text-4xl font-black tabular-nums text-white">{safeDraft.awayScore}</span>
-            </div>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-black text-white/85">{predictionResult(match, safeDraft)}</p>
-              <p className="mt-1 text-xs font-bold text-white/42">{matchPredictions.length} picks visibles en este juego</p>
-            </div>
-          </div>
-
-          <div className="mt-2 grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => playerName ? onGoToMine(match.id) : onOpenPlayerPicker()}
-              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-[#d5ff3f]/40 bg-[#d5ff3f] px-3 text-xs font-black uppercase text-[#06110b] transition hover:bg-[#efff9a]"
-            >
-              <ClipboardList className="h-4 w-4" />
-              {playerName ? "Editar pick" : "Jugador"}
-            </button>
-            <button
-              type="button"
-              onClick={() => onGoToMine(match.id)}
-              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-white/12 bg-white/5 px-3 text-xs font-black uppercase text-white/70 transition hover:border-[#f0b429]/45 hover:text-white"
-            >
-              <Users className="h-4 w-4 text-[#f0b429]" />
-              Mis picks
-            </button>
-          </div>
-        </div>
-
-        <div className="p-3">
-          <div className="mb-2 flex items-center justify-between gap-2">
-            <p className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-[#62ffe6]">
-              <GitBranch className="h-3.5 w-3.5" />
-              Bracket
-            </p>
-            <button
-              type="button"
-              onClick={() => onGoToBracket(match)}
-              className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wide text-white/45 transition hover:text-white"
-            >
-              Abrir <ChevronRight className="h-3 w-3" />
-            </button>
-          </div>
-
-          <div className="rounded-xl border border-white/10 bg-black/30 p-3">
-            <p className="text-xs font-black uppercase tracking-wide text-white/40">
-              {match.group ? `Grupo ${match.group}` : match.stageLabel}
-            </p>
-            <p className="mt-1 truncate text-sm font-black text-white">
-              #{match.number} · {match.homeTeam} vs {match.awayTeam}
-            </p>
-            <p className="mt-1 text-xs font-bold leading-snug text-white/45">
-              {nextKnockout
-                ? `El ganador alimenta ${nextKnockout.stageLabel} #${nextKnockout.number}.`
-                : "Revisa el camino completo y los cruces definidos."}
-            </p>
-          </div>
-
-          <div className="mt-2 grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={onOpenPenalitos}
-              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-[#f0b429]/30 bg-[#1a2206] px-3 text-xs font-black uppercase text-[#f0b429] transition hover:bg-[#2a2b09]"
-            >
-              <Gamepad2 className="h-4 w-4" />
-              Penalitos
-            </button>
-            <button
-              type="button"
-              onClick={onOpenScorer}
-              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-[#9dff34]/30 bg-[#10240b] px-3 text-xs font-black uppercase text-[#d5ff3f] transition hover:bg-[#16351d]"
-            >
-              <Target className="h-4 w-4" />
-              Anotador
-            </button>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function LiveScoreBox({ value }: { value: number }) {
-  return (
-    <span className="grid h-14 w-14 place-items-center rounded-xl border border-[#9dff34]/45 bg-[#0c2409] text-5xl font-black leading-none text-[#9dff34] sm:h-16 sm:w-16">
-      {value}
-    </span>
-  );
-}
-
-function LiveTeamBlock({ team, align }: { team: string; align: "left" | "right" }) {
-  return (
-    <div className={`flex min-w-0 items-center gap-2 ${align === "right" ? "justify-end text-right" : ""}`}>
-      {align === "left" && <Flag team={team} size="sm" className="shrink-0 rounded-sm" />}
-      <div className="min-w-0">
-        <p className="text-[10px] font-black uppercase tracking-[0.14em] text-white/40">{teamCode(team)}</p>
-        <p className="truncate text-sm font-black text-white sm:text-base">{team}</p>
-      </div>
-      {align === "right" && <Flag team={team} size="sm" className="shrink-0 rounded-sm" />}
-    </div>
-  );
-}
-
-function getNextKnockoutMatch(match: MundialMatch, matches: MundialMatch[]) {
-  if (match.stage === "group") return null;
-  const winnerSeed = `W${match.number}`;
-  return matches
-    .filter((candidate) => candidate.homeSeed === winnerSeed || candidate.awaySeed === winnerSeed)
-    .sort((a, b) => a.number - b.number)[0] ?? null;
 }
 
 function LiveToolButton({

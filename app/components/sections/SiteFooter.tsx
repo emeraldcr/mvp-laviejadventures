@@ -23,12 +23,11 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
+import {
+  LA_VIEJA_GOOGLE_MAPS_EMBED_URL,
+  LA_VIEJA_GOOGLE_MAPS_URL,
+} from "@/lib/constants/location";
 import { TOUR_INFO } from "@/lib/tour-info";
-
-const googleMapsUrl =
-  "https://www.google.com/maps/search/?api=1&query=La+Vieja+Adventures+Canyon+Tour+Sucre+Ciudad+Quesada";
-const googleMapsEmbedUrl =
-  "https://www.google.com/maps?q=La+Vieja+Adventures+Canyon+Tour+Sucre+Ciudad+Quesada&output=embed";
 
 const socialLinks = [
   {
@@ -206,7 +205,7 @@ export default function SiteFooter() {
                   <p className="mt-1 text-sm leading-relaxed text-zinc-400">{copy.mapCopy}</p>
                 </div>
                 <a
-                  href={googleMapsUrl}
+                  href={LA_VIEJA_GOOGLE_MAPS_URL}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-cyan-300/30 bg-cyan-300/10 text-cyan-200 transition hover:bg-cyan-300 hover:text-black"
@@ -218,7 +217,7 @@ export default function SiteFooter() {
               <div className="overflow-hidden rounded-2xl border border-white/10">
                 <iframe
                   title="La Vieja Adventures en Google Maps"
-                  src={googleMapsEmbedUrl}
+                  src={LA_VIEJA_GOOGLE_MAPS_EMBED_URL}
                   loading="lazy"
                   className="h-72 w-full"
                   referrerPolicy="no-referrer-when-downgrade"
