@@ -1,119 +1,50 @@
 import { NextResponse } from "next/server";
 import {
-  calculateEMA,
-  doubleEMAForecast,
   extractSections,
-  getConfidence,
   getRainIntensity,
   getRiskStatus,
-  linearRegressionForecast,
-  movingAverageForecast,
   parseCurrentTotals,
   parseDailyRows,
   parseHourlyRows,
   round1,
-  weightedMovingAverage,
 } from "./helpers";
 import { ABBREVIATIONS, CACHE_TTL_SECONDS, FETCH_HEADERS, IMN_URL } from "@/lib/types/tiempo-api";
-import {
-  RIVER_BASE_LEVEL_M,
-  RIVER_LEVEL_CRITICAL_M,
-  RIVER_LEVEL_HIGH_M,
-  RIVER_LEVEL_MULTIPLIER,
-  RIVER_LEVEL_NORMAL_M,
-  RELIABILITY_DEDUCTION_FRESHNESS_HIGH,
-  RELIABILITY_DEDUCTION_FRESHNESS_LOW,
-  RELIABILITY_DEDUCTION_FRESHNESS_MED,
-  RELIABILITY_DEDUCTION_NO_SNAPSHOT,
-  RELIABILITY_DEDUCTION_RECORDS_LOW,
-  RELIABILITY_DEDUCTION_RECORDS_MED,
-  RELIABILITY_FRESHNESS_HIGH_MIN,
-  RELIABILITY_FRESHNESS_LOW_MIN,
-  RELIABILITY_FRESHNESS_MED_MIN,
-  RELIABILITY_LEVEL_HIGH_SCORE,
-  RELIABILITY_LEVEL_MED_SCORE,
-  RELIABILITY_RECORDS_THRESHOLD_FULL,
-  RELIABILITY_RECORDS_THRESHOLD_LOW,
-  RELIABILITY_SCORE_MAX,
-} from "@/lib/constants/tiempo";
 
+// La estación de la Reserva Montaña Sagrada solo mide LLUVIA (mm).
+// No hay sensor de temperatura, humedad ni un limnímetro de río. Por eso todo
+// lo que se muestra al usuario se deriva de la lluvia y se etiqueta con honestidad:
+// no inventamos un "nivel del río en metros".
 
-function estimateRiverLevel(sumLluvMm: number) {
-  const level = RIVER_BASE_LEVEL_M + sumLluvMm * RIVER_LEVEL_MULTIPLIER;
-  if (level >= RIVER_LEVEL_CRITICAL_M) {
+function buildCrecidaRisk(last3h: number, last6h: number, last24h: number) {
+  if (last3h >= 20 || last6h >= 35 || last24h >= 70) {
     return {
-      station: "Río La Vieja (Sucre)",
-      label: "Crecida fuerte",
-      status: "critico" as const,
-      estimatedLevelM: round1(level),
-      guidance: "Evitar ingresos al cañón. Revisar en sitio antes de operar.",
+      level: "critico" as const,
+      label: "Riesgo alto de crecida",
+      guidance: "Evitá ingresar al cañón. Confirmá condiciones en sitio antes de operar.",
+      basisMm: round1(last3h),
     };
   }
-  if (level >= RIVER_LEVEL_HIGH_M) {
+  if (last3h >= 10 || last6h >= 18 || last24h >= 40) {
     return {
-      station: "Río La Vieja (Sucre)",
-      label: "Caudal alto",
-      status: "alto" as const,
-      estimatedLevelM: round1(level),
-      guidance: "Operar solo con alta precaución y monitoreo constante.",
+      level: "alto" as const,
+      label: "El caudal puede subir",
+      guidance: "Operar solo con alta precaución y monitoreo constante del río.",
+      basisMm: round1(last3h),
     };
   }
-  if (level >= RIVER_LEVEL_NORMAL_M) {
+  if (last3h >= 3 || last6h >= 6) {
     return {
-      station: "Río La Vieja (Sucre)",
-      label: "Caudal normal",
-      status: "normal" as const,
-      estimatedLevelM: round1(level),
-      guidance: "Condiciones operativas normales, mantener observación.",
+      level: "moderado" as const,
+      label: "Lluvia reciente",
+      guidance: "Condiciones cambiantes. Mantené observación del río antes de entrar.",
+      basisMm: round1(last3h),
     };
   }
   return {
-    station: "Río La Vieja (Sucre)",
-    label: "Caudal bajo",
-    status: "bajo" as const,
-    estimatedLevelM: round1(level),
-    guidance: "Caudal bajo. Mantener protocolos de seguridad estándar.",
-  };
-}
-
-function buildReliability(args: { records24h: number; freshnessMinutes: number; hasCurrentSnapshot: boolean; }) {
-  const { records24h, freshnessMinutes, hasCurrentSnapshot } = args;
-  let score = RELIABILITY_SCORE_MAX;
-  const reasons: string[] = [];
-
-  if (records24h < RELIABILITY_RECORDS_THRESHOLD_LOW) {
-    score -= RELIABILITY_DEDUCTION_RECORDS_LOW;
-    reasons.push("faltan registros horarios en las últimas 24h");
-  } else if (records24h < RELIABILITY_RECORDS_THRESHOLD_FULL) {
-    score -= RELIABILITY_DEDUCTION_RECORDS_MED;
-    reasons.push("faltan algunos registros horarios");
-  }
-
-  if (freshnessMinutes > RELIABILITY_FRESHNESS_HIGH_MIN) {
-    score -= RELIABILITY_DEDUCTION_FRESHNESS_HIGH;
-    reasons.push("datos con más de 3 horas de atraso");
-  } else if (freshnessMinutes > RELIABILITY_FRESHNESS_MED_MIN) {
-    score -= RELIABILITY_DEDUCTION_FRESHNESS_MED;
-    reasons.push("datos algo desactualizados");
-  } else if (freshnessMinutes > RELIABILITY_FRESHNESS_LOW_MIN) {
-    score -= RELIABILITY_DEDUCTION_FRESHNESS_LOW;
-    reasons.push("actualización no reciente");
-  }
-
-  if (!hasCurrentSnapshot) {
-    score -= RELIABILITY_DEDUCTION_NO_SNAPSHOT;
-    reasons.push("snapshot actual de estación no disponible");
-  }
-
-  score = Math.max(0, Math.min(RELIABILITY_SCORE_MAX, score));
-  const level = score >= RELIABILITY_LEVEL_HIGH_SCORE ? "alta" : score >= RELIABILITY_LEVEL_MED_SCORE ? "media" : "baja";
-
-  return {
-    level,
-    score,
-    reason: reasons.length ? reasons.join(" · ") : "datos consistentes y recientes",
-    freshnessMinutes,
-    records24h,
+    level: "bajo" as const,
+    label: "Caudal estable",
+    guidance: "Sin lluvia significativa reciente. Protocolos de seguridad estándar.",
+    basisMm: round1(last3h),
   };
 }
 
@@ -146,9 +77,9 @@ export async function GET(request: Request) {
     const current = parseCurrentTotals(sections.current);
     const dailyRows = parseDailyRows(sections.daily);
 
-    const lastValues = hourlyRows.map((r) => r.lluvia_mm);
-    const last1h = lastValues[0] ?? 0;
+    const last1h = hourlyRows[0]?.lluvia_mm ?? 0;
     const last3h = hourlyRows.slice(0, 3).reduce((a, r) => a + r.lluvia_mm, 0);
+    const prev3h = hourlyRows.slice(3, 6).reduce((a, r) => a + r.lluvia_mm, 0);
     const last6h = hourlyRows.slice(0, 6).reduce((a, r) => a + r.lluvia_mm, 0);
     const last24h = hourlyRows.slice(0, 24).reduce((a, r) => a + r.lluvia_mm, 0);
     const last48h = hourlyRows.slice(0, 48).reduce((a, r) => a + r.lluvia_mm, 0);
@@ -156,42 +87,17 @@ export async function GET(request: Request) {
     const intensity = getRainIntensity(last1h);
     const risk = getRiskStatus(last3h, last6h, last24h);
 
-    const forecastValues = lastValues.slice(0, 12);
-    const ema = calculateEMA(forecastValues);
-    const recent8 = forecastValues.slice(0, 8);
-    const mean8 = recent8.reduce((a, b) => a + b, 0) / Math.max(1, recent8.length);
-    const variance8 =
-      recent8.reduce((a, b) => a + (b - mean8) ** 2, 0) / Math.max(1, recent8.length - 1);
-    const confidence = getConfidence(recent8.length, Math.sqrt(variance8));
-
-    const forecastMethods = {
-      ema: { value: round1(ema), label: "EMA exponencial (α=0.6)" },
-      doubleEMA: {
-        value: round1(doubleEMAForecast(forecastValues)),
-        label: "Double EMA / Holt-Winters",
-      },
-      linearRegression: {
-        value: round1(linearRegressionForecast(forecastValues)),
-        label: "Regresión lineal (12h)",
-      },
-      movingAverage3h: {
-        value: round1(movingAverageForecast(lastValues, 3)),
-        label: "Media móvil simple (3h)",
-      },
-      movingAverage6h: {
-        value: round1(movingAverageForecast(lastValues, 6)),
-        label: "Media móvil simple (6h)",
-      },
-      weightedAverage6h: {
-        value: round1(weightedMovingAverage(lastValues, 6)),
-        label: "Media ponderada reciente (6h)",
-      },
-    };
-
-    const consensusMm = round1(
-      Object.values(forecastMethods).reduce((sum, method) => sum + method.value, 0) /
-        Object.values(forecastMethods).length,
-    );
+    // ── Señal única de tendencia (reemplaza el ensemble de 6 métodos) ──────────
+    // Comparamos la lluvia de las últimas 3h contra las 3h previas. Es una lectura
+    // honesta de "¿va subiendo o bajando?", sin pronósticos de falsa precisión.
+    const trendDirection: "subiendo" | "estable" | "bajando" =
+      last3h > prev3h + 1 ? "subiendo" : last3h < prev3h - 1 ? "bajando" : "estable";
+    const trendLabel =
+      trendDirection === "subiendo"
+        ? "La lluvia va en aumento"
+        : trendDirection === "bajando"
+          ? "La lluvia va cediendo"
+          : "Lluvia estable";
 
     const recent24 = hourlyRows.slice(0, 24);
     const wetHoursLast24 = recent24.filter((r) => r.lluvia_mm > 0.5).length;
@@ -217,9 +123,6 @@ export async function GET(request: Request) {
       break;
     }
 
-    const tempVals = recent24.map((r) => r.temp_c).filter((v): v is number => v !== null);
-    const hrVals = recent24.map((r) => r.hr_pct).filter((v): v is number => v !== null);
-
     const rollingRisk = recent24
       .map((_, i, arr) => {
         const r3h = arr.slice(i, Math.min(i + 3, arr.length)).reduce((a, v) => a + v.lluvia_mm, 0);
@@ -229,14 +132,7 @@ export async function GET(request: Request) {
       .reverse();
 
     const lastUpdate = hourlyRows[0]?.timestamp ?? current?.timestamp ?? new Date();
-    const freshnessMinutes = Math.max(0, Math.round((Date.now() - lastUpdate.getTime()) / 60000));
-    const reliability = buildReliability({
-      records24h: recent24.length,
-      freshnessMinutes,
-      hasCurrentSnapshot: Boolean(current),
-    });
-    const referenceMm = round1(current?.sum_lluv_mm ?? last24h);
-    const riverLevel = estimateRiverLevel(referenceMm);
+    const crecidaRisk = buildCrecidaRisk(last3h, last6h, last24h);
 
     return NextResponse.json(
       {
@@ -254,7 +150,7 @@ export async function GET(request: Request) {
           riskEmoji: risk.emoji,
           intensity,
           lastHour_mm: round1(last1h),
-          trend: last3h > last6h * 1.3 ? "subiendo" : last3h < last6h * 0.7 ? "bajando" : "estable",
+          trend: trendDirection,
         },
         now: { lastHour: hourlyRows[0] ?? null, currentTotals: current },
         stats: {
@@ -271,21 +167,11 @@ export async function GET(request: Request) {
             fecha: recent24[peakIdx24]?.fecha ?? "—",
           },
         },
-        forecast: {
-          nextHour_mm: round1(ema),
-          confidence,
-          consensusMm,
-          method: "EMA (α=0.6)",
-          methods: forecastMethods,
-        },
-        weather: {
-          hasData: tempVals.length > 0,
-          avgTemp24h: tempVals.length ? round1(tempVals.reduce((a, b) => a + b) / tempVals.length) : null,
-          maxTemp24h: tempVals.length ? round1(Math.max(...tempVals)) : null,
-          minTemp24h: tempVals.length ? round1(Math.min(...tempVals)) : null,
-          avgHR24h: hrVals.length ? Math.round(hrVals.reduce((a, b) => a + b) / hrVals.length) : null,
-          maxHR24h: hrVals.length ? Math.round(Math.max(...hrVals)) : null,
-          minHR24h: hrVals.length ? Math.round(Math.min(...hrVals)) : null,
+        rainTrend: {
+          direction: trendDirection,
+          label: trendLabel,
+          last3h_mm: round1(last3h),
+          prev3h_mm: round1(prev3h),
         },
         analysis: { rollingRisk },
         data: {
@@ -293,11 +179,7 @@ export async function GET(request: Request) {
           daily: full ? dailyRows : dailyRows.slice(0, days),
         },
         currentSnapshot: current,
-        riverLevel: {
-          ...riverLevel,
-          referenceMm,
-        },
-        reliability,
+        crecidaRisk,
         counts: { hourlyAvailable: hourlyRows.length, dailyAvailable: dailyRows.length },
       },
       {

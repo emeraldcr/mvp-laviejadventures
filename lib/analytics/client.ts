@@ -14,7 +14,9 @@ export type AnalyticsEventName =
   | "payment_order_created"
   | "payment_approved"
   | "payment_error"
-  | "booking_completed";
+  | "booking_completed"
+  | "whatsapp_checkout_click"
+  | "sinpe_checkout_selected";
 
 export type AnalyticsPayload = {
   path?: string;

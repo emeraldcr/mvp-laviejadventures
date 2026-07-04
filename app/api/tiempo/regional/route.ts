@@ -54,11 +54,11 @@ async function fetchLocation(loc: (typeof REGIONAL_LOCATIONS)[number]): Promise<
   );
   url.searchParams.set(
     "hourly",
-    "temperature_2m,relative_humidity_2m,precipitation,rain,weather_code"
+    "temperature_2m,relative_humidity_2m,precipitation,precipitation_probability,rain,weather_code"
   );
   url.searchParams.set(
     "daily",
-    "weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum"
+    "weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max"
   );
   url.searchParams.set("timezone",       "America/Costa_Rica");
   url.searchParams.set("forecast_days",  String(REGIONAL_FORECAST_DAYS));
@@ -70,23 +70,6 @@ async function fetchLocation(loc: (typeof REGIONAL_LOCATIONS)[number]): Promise<
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const json = await res.json();
 
-    // ── Current conditions ──────────────────────────────────────────────────
-    const cur = json.current;
-    const current: LocationWeather["current"] = cur
-      ? {
-          time:          cur.time,
-          temp_c:        cur.temperature_2m ?? 0,
-          hr_pct:        cur.relative_humidity_2m ?? 0,
-          precip_mm:     cur.precipitation ?? 0,
-          rain_mm:       cur.rain ?? 0,
-          wind_kmh:      cur.wind_speed_10m ?? 0,
-          cloud_pct:     cur.cloud_cover ?? 0,
-          weather_code:  cur.weather_code ?? 0,
-          weather_label: wmo(cur.weather_code ?? 0).label,
-          weather_icon:  wmo(cur.weather_code ?? 0).icon,
-        }
-      : null;
-
     // ── 24-hour hourly ──────────────────────────────────────────────────────
     const h = json.hourly ?? {};
     const times: string[] = h.time ?? [];
@@ -95,10 +78,37 @@ async function fetchLocation(loc: (typeof REGIONAL_LOCATIONS)[number]): Promise<
       temp_c:       h.temperature_2m?.[i]           ?? 0,
       hr_pct:       h.relative_humidity_2m?.[i]     ?? 0,
       precip_mm:    h.precipitation?.[i]             ?? 0,
+      precip_prob:  h.precipitation_probability?.[i] ?? null,
       rain_mm:      h.rain?.[i]                      ?? 0,
       weather_code: h.weather_code?.[i]              ?? 0,
       weather_icon: wmo(h.weather_code?.[i] ?? 0).icon,
     }));
+
+    // Probabilidad de lluvia máxima en las próximas ~3 horas (dato honesto que
+    // la estación local no puede dar). Reemplaza al "pronóstico ensemble".
+    const nextProbs = hourly_24h
+      .slice(0, 3)
+      .map((x) => x.precip_prob)
+      .filter((v): v is number => typeof v === "number");
+    const precipProbNext3h = nextProbs.length ? Math.max(...nextProbs) : null;
+
+    // ── Current conditions ──────────────────────────────────────────────────
+    const cur = json.current;
+    const current: LocationWeather["current"] = cur
+      ? {
+          time:          cur.time,
+          temp_c:        cur.temperature_2m ?? 0,
+          hr_pct:        cur.relative_humidity_2m ?? 0,
+          precip_mm:     cur.precipitation ?? 0,
+          precip_prob_next3h: precipProbNext3h,
+          rain_mm:       cur.rain ?? 0,
+          wind_kmh:      cur.wind_speed_10m ?? 0,
+          cloud_pct:     cur.cloud_cover ?? 0,
+          weather_code:  cur.weather_code ?? 0,
+          weather_label: wmo(cur.weather_code ?? 0).label,
+          weather_icon:  wmo(cur.weather_code ?? 0).icon,
+        }
+      : null;
 
     // ── 5-day daily ─────────────────────────────────────────────────────────
     const d = json.daily ?? {};
@@ -111,6 +121,7 @@ async function fetchLocation(loc: (typeof REGIONAL_LOCATIONS)[number]): Promise<
       temp_max_c:     d.temperature_2m_max?.[i]  ?? 0,
       temp_min_c:     d.temperature_2m_min?.[i]  ?? 0,
       precip_sum_mm:  d.precipitation_sum?.[i]   ?? 0,
+      precip_prob_max: d.precipitation_probability_max?.[i] ?? null,
     }));
 
     return {

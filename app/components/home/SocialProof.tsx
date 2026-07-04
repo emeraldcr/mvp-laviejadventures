@@ -44,14 +44,14 @@ export default function SocialProof() {
   const isEs = lang === "es";
 
   return (
-    <section className="overflow-hidden bg-[#FAF9F6] py-20 md:py-28">
+    <section className="overflow-hidden bg-[#FAF9F6] py-20 dark:bg-[#0b0a09] md:py-28">
       {/* Testimonials */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-12 text-center">
-          <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em] text-emerald-700">
+          <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em] text-emerald-700 dark:text-emerald-300">
             {isEs ? "Lo que dicen" : "What they say"}
           </p>
-          <h2 className="font-display mx-auto max-w-2xl text-balance text-4xl font-bold leading-[1.02] tracking-tight text-stone-900 md:text-5xl">
+          <h2 className="font-display mx-auto max-w-2xl text-balance text-4xl font-bold leading-[1.02] tracking-tight text-stone-900 dark:text-stone-50 md:text-5xl">
             {isEs ? "Historias que salen del cañón" : "Stories that come out of the canyon"}
           </h2>
         </div>
@@ -60,19 +60,19 @@ export default function SocialProof() {
           {TESTIMONIALS.map((t) => (
             <figure
               key={t.name}
-              className="flex flex-col rounded-3xl border border-stone-200 bg-white p-8 shadow-[0_10px_40px_rgba(0,0,0,0.04)]"
+              className="flex flex-col rounded-3xl border border-stone-200 bg-white p-8 shadow-[0_10px_40px_rgba(0,0,0,0.04)] dark:border-stone-800 dark:bg-white/[0.03]"
             >
               <span className="flex gap-0.5 text-amber-400">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <Star key={i} size={14} className="fill-current" />
                 ))}
               </span>
-              <blockquote className="mt-4 flex-1 text-sm leading-relaxed text-stone-600">
+              <blockquote className="mt-4 flex-1 text-sm leading-relaxed text-stone-600 dark:text-stone-300">
                 “{isEs ? t.es : t.en}”
               </blockquote>
               <figcaption className="mt-5">
-                <p className="text-sm font-bold text-stone-900">{t.name}</p>
-                <p className="text-xs text-stone-500">{isEs ? t.origin.es : t.origin.en}</p>
+                <p className="text-sm font-bold text-stone-900 dark:text-stone-100">{t.name}</p>
+                <p className="text-xs text-stone-500 dark:text-stone-400">{isEs ? t.origin.es : t.origin.en}</p>
               </figcaption>
             </figure>
           ))}
@@ -82,7 +82,7 @@ export default function SocialProof() {
       {/* Gallery marquee */}
       <div className="mt-20 md:mt-28">
         <div className="mb-8 text-center">
-          <h2 className="font-display text-3xl font-bold tracking-tight text-stone-900 md:text-4xl">
+          <h2 className="font-display text-3xl font-bold tracking-tight text-stone-900 dark:text-stone-50 md:text-4xl">
             {isEs ? "Esto es lo que vas a vivir" : "This is what you'll experience"}
           </h2>
         </div>
@@ -119,7 +119,7 @@ export default function SocialProof() {
         <div className="mt-10 text-center">
           <Link
             href="/galeria"
-            className="group inline-flex items-center gap-2 rounded-full border border-stone-300 px-7 py-3.5 text-sm font-bold text-stone-800 transition-colors hover:border-emerald-600 hover:text-emerald-700"
+            className="group inline-flex items-center gap-2 rounded-full border border-stone-300 px-7 py-3.5 text-sm font-bold text-stone-800 transition-colors hover:border-emerald-600 hover:text-emerald-700 dark:border-stone-600 dark:text-stone-200 dark:hover:border-emerald-400 dark:hover:text-emerald-300"
           >
             {isEs ? "Ver galería completa" : "See full gallery"}
             <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />

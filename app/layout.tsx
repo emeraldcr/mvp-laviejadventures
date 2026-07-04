@@ -3,6 +3,7 @@ import { Bricolage_Grotesque, Manrope } from "next/font/google";
 import "./globals.css";
 
 import { LanguageProvider } from "@/lib/LanguageContext";
+import { ThemeProvider, THEME_NO_FLASH_SCRIPT } from "@/lib/ThemeContext";
 
 const manrope = Manrope({
   subsets: ["latin"],
@@ -27,9 +28,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${manrope.variable} ${bricolage.variable}`}>
+    <html
+      lang="en"
+      className={`dark ${manrope.variable} ${bricolage.variable}`}
+      suppressHydrationWarning
+    >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_NO_FLASH_SCRIPT }} />
+      </head>
       <body className="antialiased">
-        <LanguageProvider>{children}</LanguageProvider>
+        <ThemeProvider>
+          <LanguageProvider>{children}</LanguageProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

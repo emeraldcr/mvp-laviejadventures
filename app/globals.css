@@ -1,8 +1,17 @@
 @import "tailwindcss";
 
+/* Class-based dark mode: `dark:` utilities apply when <html> (or an ancestor)
+   has the `.dark` class, driven by the theme toggle — not the OS preference. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  --background: #ffffff;
+  --background: #faf9f6;
   --foreground: #171717;
+}
+
+.dark {
+  --background: #0b0a09;
+  --foreground: #ededed;
 }
 
 @theme inline {
@@ -11,13 +20,6 @@
   --font-sans: var(--font-manrope), system-ui, sans-serif;
   --font-display: var(--font-bricolage), var(--font-manrope), system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {

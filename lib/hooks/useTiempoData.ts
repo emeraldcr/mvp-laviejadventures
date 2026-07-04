@@ -1,8 +1,12 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import {
-  getDecision,
+  getWeatherAssessment,
+  getCanyonSchedule,
+  getSaturation,
+  buildRainNarrative,
+  getTomorrowMorningSlots,
+  summarizeMorningSlots,
   buildHourlyChart,
-  buildForecastChart,
   buildRiskChart,
   buildDailyChart,
 } from "@/lib/helpers/tiempoHelpers";
@@ -56,10 +60,20 @@ export function useTiempoData() {
     return () => clearTimeout(timer);
   }, [cooldown]);
 
-  const decision = getDecision(rain);
+  const assessment = getWeatherAssessment(rain);
+  const canyonSchedule = getCanyonSchedule(rain?.meta?.lastUpdateISO);
+  const saturation = getSaturation(rain);
+  const rainNarrative = buildRainNarrative(rain, rain?.meta?.lastUpdateISO);
+
+  const sanCarlosHourly = regional?.locations?.find(l => l.id === "san_carlos")?.hourly_24h;
+  const morningSlots = getTomorrowMorningSlots(sanCarlosHourly);
+  const morningSummary = summarizeMorningSlots(morningSlots);
 
   const weatherSnap = useMemo<WeatherSnapshot | null>(() => {
     if (!rain?.status) return null;
+    // Temperatura y humedad reales vienen de Open-Meteo (San Carlos), no de la
+    // estación de lluvia, que no las mide.
+    const sc = regional?.locations?.find(l => l.id === "san_carlos")?.current ?? null;
     return {
       risk:        rain.status.risk,
       riskLabel:   rain.status.riskLabel,
@@ -71,9 +85,6 @@ export function useTiempoData() {
       intensity:   rain.status.intensity,
       trend:       rain.status.trend,
       wetHoursLast24: rain.stats?.wetHoursLast24 ?? 0,
-      consensusMm: rain.forecast?.consensusMm ?? 0,
-      forecastNextHourMm: rain.forecast?.nextHour_mm ?? 0,
-      confidence:  rain.forecast?.confidence  ?? "baja",
       wetStreak:   rain.stats?.wetStreak  ?? 0,
       dryStreak:   rain.stats?.dryStreak  ?? 0,
       peakHourMm:  rain.stats?.peakHour24h?.mm ?? 0,
@@ -81,15 +92,13 @@ export function useTiempoData() {
       stationName: rain.meta?.station ?? "San Carlos",
       currentSumMm: rain.currentSnapshot?.sum_lluv_mm ?? 0,
       yesterdayMm: rain.currentSnapshot?.lluv_ayer_mm ?? 0,
-      avgTemp24h:  rain.weather?.avgTemp24h ?? null,
-      maxTemp24h:  rain.weather?.maxTemp24h ?? null,
-      minTemp24h:  rain.weather?.minTemp24h ?? null,
-      avgHR24h:    rain.weather?.avgHR24h   ?? null,
+      rainProbNext3h: sc?.precip_prob_next3h ?? null,
+      avgTemp24h:  sc?.temp_c ?? null,
+      avgHR24h:    sc?.hr_pct ?? null,
     };
-  }, [rain]);
+  }, [rain, regional]);
 
   const hourlyChart  = useMemo(() => buildHourlyChart(rain),   [rain]);
-  const forecastChart = useMemo(() => buildForecastChart(rain), [rain]);
   const riskChart    = useMemo(() => buildRiskChart(rain),     [rain]);
   const dailyChart   = useMemo(() => buildDailyChart(rain),    [rain]);
 
@@ -100,10 +109,14 @@ export function useTiempoData() {
     lastRefresh,
     cooldown,
     fetchAll,
-    decision,
+    assessment,
+    canyonSchedule,
+    saturation,
+    rainNarrative,
+    morningSlots,
+    morningSummary,
     weatherSnap,
     hourlyChart,
-    forecastChart,
     riskChart,
     dailyChart,
     showRawForecast,

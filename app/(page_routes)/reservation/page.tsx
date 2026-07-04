@@ -136,7 +136,9 @@ export default function ReservationPage() {
             <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
               {paymentTr.stepLabel}
             </p>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white">{paymentTr.title}</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white">
+              {lang === "es" ? "Finalizá tu reserva" : "Complete your booking"}
+            </h1>
           </div>
           <Link
             href={returnHref}

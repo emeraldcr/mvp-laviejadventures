@@ -25,23 +25,23 @@ export default function ToursShowcase({ tours, onSelectTour }: Props) {
   ];
 
   return (
-    <section id="tours" className="bg-[#f4f1ea] py-16 md:py-24">
+    <section id="tours" className="bg-[#f4f1ea] py-16 dark:bg-[#0b0a09] md:py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="relative overflow-hidden rounded-3xl border border-white/70 bg-white/70 shadow-[0_28px_90px_rgba(30,24,16,0.12)] backdrop-blur-xl">
+        <div className="relative overflow-hidden rounded-3xl border border-white/70 bg-white/70 shadow-[0_28px_90px_rgba(30,24,16,0.12)] backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.04] dark:shadow-[0_28px_90px_rgba(0,0,0,0.5)]">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_10%,rgba(16,185,129,0.18),transparent_28%),radial-gradient(circle_at_86%_18%,rgba(245,158,11,0.16),transparent_24%),linear-gradient(110deg,rgba(255,255,255,0.72),rgba(255,255,255,0.22),rgba(255,255,255,0.66))] opacity-90" />
           <div className="pointer-events-none absolute -inset-y-16 -left-1/3 w-1/2 rotate-12 bg-gradient-to-r from-transparent via-white/65 to-transparent blur-sm animate-[lva-light-sweep_6.5s_ease-in-out_infinite]" />
-          <div className="relative grid grid-cols-2 gap-px bg-stone-900/[0.08] md:grid-cols-4">
+          <div className="relative grid grid-cols-2 gap-px bg-stone-900/[0.08] dark:bg-white/[0.06] md:grid-cols-4">
             {stats.map((stat) => (
               <div
                 key={stat.label}
-                className="group relative isolate overflow-hidden bg-white/68 px-4 py-7 text-center transition duration-300 hover:-translate-y-0.5 hover:bg-white/88 hover:shadow-[0_18px_45px_rgba(16,185,129,0.12)]"
+                className="group relative isolate overflow-hidden bg-white/68 px-4 py-7 text-center transition duration-300 hover:-translate-y-0.5 hover:bg-white/88 hover:shadow-[0_18px_45px_rgba(16,185,129,0.12)] dark:bg-white/[0.03] dark:hover:bg-white/[0.07]"
               >
                 <div className="pointer-events-none absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-emerald-300/0 to-transparent transition group-hover:via-emerald-300/80" />
                 <div className="pointer-events-none absolute left-1/2 top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-300/0 blur-2xl transition duration-300 group-hover:bg-emerald-300/18" />
-                <p className="relative font-display text-3xl font-black tracking-tight text-stone-950 transition duration-300 group-hover:text-emerald-800 md:text-4xl">
+                <p className="relative font-display text-3xl font-black tracking-tight text-stone-950 transition duration-300 group-hover:text-emerald-800 dark:text-stone-50 dark:group-hover:text-emerald-300 md:text-4xl">
                   {stat.value}
                 </p>
-                <p className="relative mt-1 text-[10px] font-bold uppercase tracking-widest text-stone-500 transition group-hover:text-stone-700">
+                <p className="relative mt-1 text-[10px] font-bold uppercase tracking-widest text-stone-500 transition group-hover:text-stone-700 dark:text-stone-400 dark:group-hover:text-stone-200">
                   {stat.label}
                 </p>
               </div>
@@ -51,19 +51,19 @@ export default function ToursShowcase({ tours, onSelectTour }: Props) {
 
         <div className="mt-16 flex flex-wrap items-end justify-between gap-6 md:mt-20">
           <div>
-            <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em] text-emerald-700">
+            <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em] text-emerald-700 dark:text-emerald-300">
               {isEs ? "Experiencias" : "Experiences"}
             </p>
-            <h2 className="font-display max-w-2xl text-balance text-4xl font-black leading-[0.98] tracking-tight text-stone-950 md:text-6xl">
+            <h2 className="font-display max-w-2xl text-balance text-4xl font-black leading-[0.98] tracking-tight text-stone-950 dark:text-stone-50 md:text-6xl">
               {isEs ? "Elegí la aventura que calza con tu grupo" : "Choose the adventure that fits your crew"}
             </h2>
           </div>
           <Link
             href="/tours"
-            className="group inline-flex items-center gap-2 text-sm font-black text-stone-950 transition-colors hover:text-emerald-700"
+            className="group inline-flex items-center gap-2 text-sm font-black text-stone-950 transition-colors hover:text-emerald-700 dark:text-stone-50 dark:hover:text-emerald-300"
           >
             {isEs ? "Ver todos los tours" : "See all tours"}
-            <span className="flex h-9 w-9 items-center justify-center rounded-full border border-stone-300 transition-all group-hover:border-emerald-600 group-hover:bg-emerald-600 group-hover:text-white">
+            <span className="flex h-9 w-9 items-center justify-center rounded-full border border-stone-300 transition-all group-hover:border-emerald-600 group-hover:bg-emerald-600 group-hover:text-white dark:border-stone-600">
               <ArrowRight size={15} />
             </span>
           </Link>
@@ -110,10 +110,10 @@ export default function ToursShowcase({ tours, onSelectTour }: Props) {
                   </div>
 
                   <div className="mt-4 px-1">
-                    <h3 className="font-display text-xl font-black tracking-tight text-stone-950 transition-colors group-hover:text-emerald-700">
+                    <h3 className="font-display text-xl font-black tracking-tight text-stone-950 transition-colors group-hover:text-emerald-700 dark:text-stone-50 dark:group-hover:text-emerald-300">
                       {title}
                     </h3>
-                    <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-stone-500">
+                    <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-stone-500 dark:text-stone-400">
                       {tour.duration && (
                         <span className="inline-flex items-center gap-1.5">
                           <Clock3 size={14} />
@@ -125,7 +125,7 @@ export default function ToursShowcase({ tours, onSelectTour }: Props) {
                         {location}
                       </span>
                     </div>
-                    <span className="mt-4 inline-flex items-center gap-2 text-xs font-black uppercase tracking-wide text-emerald-800">
+                    <span className="mt-4 inline-flex items-center gap-2 text-xs font-black uppercase tracking-wide text-emerald-800 dark:text-emerald-300">
                       {isEs ? "Reservar fechas" : "Reserve dates"}
                       <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
                     </span>

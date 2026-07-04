@@ -16,29 +16,29 @@ function FaqSection() {
   const [open, setOpen] = useState<number | null>(0);
 
   return (
-    <section className="bg-white py-20 md:py-28">
+    <section className="bg-white py-20 dark:bg-[#0b0a09] md:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid gap-12 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:gap-20">
           <div>
-            <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em] text-emerald-700">FAQ</p>
-            <h2 className="font-display text-balance text-4xl font-bold leading-[1.02] tracking-tight text-stone-900 md:text-5xl">
+            <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em] text-emerald-700 dark:text-emerald-300">FAQ</p>
+            <h2 className="font-display text-balance text-4xl font-bold leading-[1.02] tracking-tight text-stone-900 dark:text-stone-50 md:text-5xl">
               {copy.title}
             </h2>
             {copy.subtitle && (
-              <p className="mt-4 max-w-md text-base leading-relaxed text-stone-600">{copy.subtitle}</p>
+              <p className="mt-4 max-w-md text-base leading-relaxed text-stone-600 dark:text-stone-300">{copy.subtitle}</p>
             )}
             <a
               href={WHATSAPP_HREF}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-7 inline-flex items-center gap-2 rounded-full border border-stone-300 px-6 py-3 text-sm font-bold text-stone-800 transition-colors hover:border-emerald-600 hover:text-emerald-700"
+              className="mt-7 inline-flex items-center gap-2 rounded-full border border-stone-300 px-6 py-3 text-sm font-bold text-stone-800 transition-colors hover:border-emerald-600 hover:text-emerald-700 dark:border-stone-600 dark:text-stone-200 dark:hover:border-emerald-400 dark:hover:text-emerald-300"
             >
               <MessageCircle size={16} />
               {isEs ? "¿Otra pregunta? Escribinos" : "Another question? Message us"}
             </a>
           </div>
 
-          <div className="divide-y divide-stone-200 border-y border-stone-200">
+          <div className="divide-y divide-stone-200 border-y border-stone-200 dark:divide-stone-800 dark:border-stone-800">
             {copy.faqs.map((faq, index) => {
               const isOpen = open === index;
               return (
@@ -49,20 +49,20 @@ function FaqSection() {
                     aria-expanded={isOpen}
                     className="flex w-full items-center justify-between gap-4 py-5 text-left"
                   >
-                    <span className="text-base font-bold text-stone-900 md:text-lg">{faq.question}</span>
+                    <span className="text-base font-bold text-stone-900 dark:text-stone-100 md:text-lg">{faq.question}</span>
                     <span
                       className={[
                         "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition-all duration-300",
                         isOpen
                           ? "rotate-45 border-emerald-600 bg-emerald-600 text-white"
-                          : "border-stone-300 text-stone-500",
+                          : "border-stone-300 text-stone-500 dark:border-stone-600 dark:text-stone-400",
                       ].join(" ")}
                     >
                       <Plus size={15} />
                     </span>
                   </button>
                   {isOpen && (
-                    <p className="pb-6 pr-12 text-sm leading-relaxed text-stone-600 md:text-base">
+                    <p className="pb-6 pr-12 text-sm leading-relaxed text-stone-600 dark:text-stone-300 md:text-base">
                       {faq.answer.replaceAll("**", "")}
                     </p>
                   )}
@@ -81,7 +81,7 @@ function FinalCta() {
   const isEs = lang === "es";
 
   return (
-    <section className="bg-white px-4 pb-20 sm:px-6 md:pb-28 lg:px-8">
+    <section className="bg-white px-4 pb-20 dark:bg-[#0b0a09] sm:px-6 md:pb-28 lg:px-8">
       <div className="relative mx-auto max-w-7xl overflow-hidden rounded-[2.5rem]">
         <Image
           src="/image/IMG_6810.jpg"
@@ -216,15 +216,15 @@ function MobileStickyCta({ tours }: { tours: TourSummary[] }) {
   const main = tours[0];
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-stone-200 bg-white/95 px-4 py-3 backdrop-blur-xl md:hidden" style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom, 0px))" }}>
+    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-stone-200 bg-white/95 px-4 py-3 backdrop-blur-xl dark:border-stone-800 dark:bg-stone-950/95 md:hidden" style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom, 0px))" }}>
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-[10px] font-medium uppercase tracking-widest text-stone-400">
+          <p className="text-[10px] font-medium uppercase tracking-widest text-stone-400 dark:text-stone-500">
             {isEs ? "Desde" : "From"}
           </p>
-          <p className="font-display text-lg font-bold leading-none text-stone-900">
+          <p className="font-display text-lg font-bold leading-none text-stone-900 dark:text-stone-50">
             {formatTourPrice(main, isEs)}
-            <span className="ml-1 text-xs font-medium text-stone-500">/ {isEs ? "persona" : "person"}</span>
+            <span className="ml-1 text-xs font-medium text-stone-500 dark:text-stone-400">/ {isEs ? "persona" : "person"}</span>
           </p>
         </div>
         <Link

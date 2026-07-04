@@ -23,24 +23,24 @@ export function ToursClient({ tours }: { tours: PublicTour[] }) {
   };
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#FAF9F6] font-sans text-stone-900">
+    <main className="min-h-screen overflow-x-hidden bg-[#FAF9F6] font-sans text-stone-900 dark:bg-[#0b0a09] dark:text-stone-100">
       <HomeNav solid />
 
-      <section className="border-b border-stone-200 bg-white pt-28 pb-10 md:pt-32 md:pb-12">
+      <section className="border-b border-stone-200 bg-white pt-28 pb-10 dark:border-white/10 dark:bg-stone-950 md:pt-32 md:pb-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em] text-emerald-700">
+          <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em] text-emerald-700 dark:text-emerald-300">
             {tr.badge}
           </p>
           <div className="flex flex-wrap items-end justify-between gap-6">
             <div className="max-w-2xl">
-              <h1 className="font-display text-balance text-4xl font-black leading-[0.98] tracking-tight text-stone-950 md:text-5xl">
+              <h1 className="font-display text-balance text-4xl font-black leading-[0.98] tracking-tight text-stone-950 dark:text-stone-50 md:text-5xl">
                 {tr.title}
               </h1>
-              <p className="mt-4 text-base leading-relaxed text-stone-600 md:text-lg">
+              <p className="mt-4 text-base leading-relaxed text-stone-600 dark:text-stone-300 md:text-lg">
                 {tr.description}
               </p>
             </div>
-            <p className="text-sm font-semibold text-stone-500">
+            <p className="text-sm font-semibold text-stone-500 dark:text-stone-400">
               {tours.length} {tr.experiences}
             </p>
           </div>
@@ -90,15 +90,15 @@ export function ToursClient({ tours }: { tours: PublicTour[] }) {
                   </div>
 
                   <div className="mt-4 px-1">
-                    <h2 className="font-display text-xl font-black tracking-tight text-stone-950">
+                    <h2 className="font-display text-xl font-black tracking-tight text-stone-950 dark:text-stone-50">
                       {title}
                     </h2>
                     {(tour.descriptionEs || tour.descriptionEn) && (
-                      <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-stone-500">
+                      <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-stone-500 dark:text-stone-400">
                         {isEs ? tour.descriptionEs : tour.descriptionEn}
                       </p>
                     )}
-                    <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-stone-500">
+                    <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-stone-500 dark:text-stone-400">
                       {tour.duration && (
                         <span className="inline-flex items-center gap-1.5">
                           <Clock3 size={14} />
@@ -122,7 +122,7 @@ export function ToursClient({ tours }: { tours: PublicTour[] }) {
                       </button>
                       <Link
                         href={`/tour/${encodeURIComponent(tour.slug)}`}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-stone-300 px-4 py-2.5 text-xs font-bold text-stone-700 transition hover:border-stone-400 hover:text-stone-900"
+                        className="inline-flex items-center gap-1.5 rounded-full border border-stone-300 px-4 py-2.5 text-xs font-bold text-stone-700 transition hover:border-stone-400 hover:text-stone-900 dark:border-white/15 dark:text-stone-200 dark:hover:border-white/30 dark:hover:text-white"
                       >
                         {isEs ? "Ver detalle" : "View details"}
                         <ArrowUpRight size={14} />
@@ -135,7 +135,7 @@ export function ToursClient({ tours }: { tours: PublicTour[] }) {
           </div>
 
           {tours.length === 0 && (
-            <div className="rounded-3xl border border-dashed border-stone-300 bg-white px-6 py-16 text-center text-stone-500">
+            <div className="rounded-3xl border border-dashed border-stone-300 bg-white px-6 py-16 text-center text-stone-500 dark:border-white/15 dark:bg-stone-900 dark:text-stone-400">
               {isEs
                 ? "No hay tours disponibles en este momento."
                 : "No tours available at the moment."}

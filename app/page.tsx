@@ -30,7 +30,7 @@ export default function Home(): JSX.Element {
         </div>
       }
     >
-      <main className="min-h-screen overflow-x-hidden bg-[#FAF9F6] font-sans text-stone-900">
+      <main className="min-h-screen overflow-x-hidden bg-[#FAF9F6] font-sans text-stone-900 dark:bg-[#0b0a09] dark:text-stone-100">
         <HomeNav />
         <HomeHero tours={tours} />
         <ToursShowcase tours={tours} onSelectTour={handleSelectTour} />

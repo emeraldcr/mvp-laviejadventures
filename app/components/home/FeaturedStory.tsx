@@ -63,7 +63,7 @@ export default function FeaturedStory({ tours, onSelectTour }: Props) {
   ];
 
   return (
-    <section className="bg-white py-20 md:py-28">
+    <section className="bg-white py-20 dark:bg-[#0b0a09] md:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
           {/* Image collage */}
@@ -84,30 +84,30 @@ export default function FeaturedStory({ tours, onSelectTour }: Props) {
             </span>
 
             {/* Floating review card */}
-            <div className="absolute -bottom-6 right-4 w-56 rounded-2xl bg-white p-4 shadow-[0_20px_60px_rgba(0,0,0,0.15)] sm:right-8 sm:w-64">
+            <div className="absolute -bottom-6 right-4 w-56 rounded-2xl bg-white p-4 shadow-[0_20px_60px_rgba(0,0,0,0.15)] dark:bg-stone-900 dark:shadow-[0_20px_60px_rgba(0,0,0,0.5)] dark:ring-1 dark:ring-white/10 sm:right-8 sm:w-64">
               <span className="flex gap-0.5 text-amber-400">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <Star key={i} size={13} className="fill-current" />
                 ))}
               </span>
-              <p className="mt-2 text-xs leading-relaxed text-stone-600">
+              <p className="mt-2 text-xs leading-relaxed text-stone-600 dark:text-stone-300">
                 {isEs
                   ? "“El agua es de un color que no se ve en fotos. Increíble.”"
                   : "“The water is a color photos can't capture. Incredible.”"}
               </p>
-              <p className="mt-2 text-[11px] font-bold text-stone-900">— María F.</p>
+              <p className="mt-2 text-[11px] font-bold text-stone-900 dark:text-stone-100">— María F.</p>
             </div>
           </div>
 
           {/* Copy */}
           <div>
-            <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em] text-emerald-700">
+            <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em] text-emerald-700 dark:text-emerald-300">
               {isEs ? "Ciudad Esmeralda · Río La Vieja" : "Ciudad Esmeralda · La Vieja River"}
             </p>
-            <h2 className="font-display text-balance text-4xl font-bold leading-[1.02] tracking-tight text-stone-900 md:text-5xl">
+            <h2 className="font-display text-balance text-4xl font-bold leading-[1.02] tracking-tight text-stone-900 dark:text-stone-50 md:text-5xl">
               {isEs ? "El cañón de aguas color esmeralda" : "The emerald water canyon"}
             </h2>
-            <p className="mt-5 max-w-lg text-base leading-relaxed text-stone-600 md:text-lg">
+            <p className="mt-5 max-w-lg text-base leading-relaxed text-stone-600 dark:text-stone-300 md:text-lg">
               {(isEs ? featured.descriptionEs : featured.descriptionEn) ||
                 (isEs
                   ? "Bajá al corazón del cañón y descubrí pozas de agua esmeralda rodeadas de roca viva, guiado por gente local que conoce cada rincón del río."
@@ -116,9 +116,9 @@ export default function FeaturedStory({ tours, onSelectTour }: Props) {
 
             <ul className="mt-7 grid gap-3 sm:grid-cols-2">
               {inclusions.map((item) => (
-                <li key={item} className="flex items-start gap-2.5 text-sm text-stone-700">
-                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100">
-                    <Check size={12} className="text-emerald-700" />
+                <li key={item} className="flex items-start gap-2.5 text-sm text-stone-700 dark:text-stone-200">
+                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/40">
+                    <Check size={12} className="text-emerald-700 dark:text-emerald-300" />
                   </span>
                   {item}
                 </li>
@@ -127,16 +127,16 @@ export default function FeaturedStory({ tours, onSelectTour }: Props) {
 
             <div className="mt-8 flex flex-wrap items-center gap-5">
               <div>
-                <span className="block text-xs font-medium uppercase tracking-widest text-stone-400">
+                <span className="block text-xs font-medium uppercase tracking-widest text-stone-400 dark:text-stone-500">
                   {isEs ? "Desde" : "From"}
                 </span>
-                <span className="font-display text-3xl font-bold text-stone-900">
+                <span className="font-display text-3xl font-bold text-stone-900 dark:text-stone-50">
                   {formatTourPrice(featured, isEs)}
                 </span>
-                <span className="ml-1.5 text-sm text-stone-500">/ {isEs ? "persona" : "person"}</span>
+                <span className="ml-1.5 text-sm text-stone-500 dark:text-stone-400">/ {isEs ? "persona" : "person"}</span>
               </div>
               {featured.duration && (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-stone-100 px-3.5 py-2 text-xs font-semibold text-stone-600">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-stone-100 px-3.5 py-2 text-xs font-semibold text-stone-600 dark:bg-stone-800 dark:text-stone-300">
                   <Clock3 size={13} />
                   {featured.duration}
                 </span>
@@ -156,7 +156,7 @@ export default function FeaturedStory({ tours, onSelectTour }: Props) {
                 href={WHATSAPP_HREF}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-full border border-stone-300 px-7 py-3.5 text-sm font-bold text-stone-800 transition-colors hover:border-emerald-600 hover:text-emerald-700"
+                className="inline-flex items-center gap-2 rounded-full border border-stone-300 px-7 py-3.5 text-sm font-bold text-stone-800 transition-colors hover:border-emerald-600 hover:text-emerald-700 dark:border-stone-600 dark:text-stone-200 dark:hover:border-emerald-400 dark:hover:text-emerald-300"
               >
                 <MessageCircle size={16} />
                 {isEs ? "Preguntar por WhatsApp" : "Ask on WhatsApp"}
@@ -168,10 +168,10 @@ export default function FeaturedStory({ tours, onSelectTour }: Props) {
         {/* How it works */}
         <div className="mt-24 md:mt-32">
           <div className="mb-10 text-center">
-            <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em] text-emerald-700">
+            <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em] text-emerald-700 dark:text-emerald-300">
               {isEs ? "Así de fácil" : "This easy"}
             </p>
-            <h2 className="font-display text-3xl font-bold tracking-tight text-stone-900 md:text-4xl">
+            <h2 className="font-display text-3xl font-bold tracking-tight text-stone-900 dark:text-stone-50 md:text-4xl">
               {isEs ? "De tu pantalla al río en tres pasos" : "From your screen to the river in three steps"}
             </h2>
           </div>
@@ -180,13 +180,13 @@ export default function FeaturedStory({ tours, onSelectTour }: Props) {
             {steps.map((step) => (
               <div
                 key={step.num}
-                className="rounded-3xl border border-stone-200 bg-[#FAF9F6] p-8 transition-all hover:-translate-y-1 hover:border-emerald-200 hover:shadow-[0_20px_50px_rgba(0,0,0,0.06)]"
+                className="rounded-3xl border border-stone-200 bg-[#FAF9F6] p-8 transition-all hover:-translate-y-1 hover:border-emerald-200 hover:shadow-[0_20px_50px_rgba(0,0,0,0.06)] dark:border-stone-800 dark:bg-white/[0.03] dark:hover:border-emerald-500/40"
               >
-                <span className="font-display text-sm font-bold text-emerald-700">{step.num}</span>
-                <h3 className="font-display mt-3 text-xl font-bold tracking-tight text-stone-900">
+                <span className="font-display text-sm font-bold text-emerald-700 dark:text-emerald-300">{step.num}</span>
+                <h3 className="font-display mt-3 text-xl font-bold tracking-tight text-stone-900 dark:text-stone-50">
                   {step.title}
                 </h3>
-                <p className="mt-2 text-sm leading-relaxed text-stone-600">{step.body}</p>
+                <p className="mt-2 text-sm leading-relaxed text-stone-600 dark:text-stone-300">{step.body}</p>
               </div>
             ))}
           </div>

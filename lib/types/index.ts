@@ -130,20 +130,11 @@ export type RainData = {
     dryStreak: number;
     peakHour24h: { mm: number; fecha: string };
   };
-  forecast?: {
-    nextHour_mm: number;
-    confidence: string;
-    consensusMm: number;
-    methods: Record<string, { value: number; label: string }>;
-  };
-  weather?: {
-    hasData: boolean;
-    avgTemp24h: number | null;
-    maxTemp24h: number | null;
-    minTemp24h: number | null;
-    avgHR24h: number | null;
-    maxHR24h: number | null;
-    minHR24h: number | null;
+  rainTrend?: {
+    direction: "subiendo" | "estable" | "bajando";
+    label: string;
+    last3h_mm: number;
+    prev3h_mm: number;
   };
   analysis?: {
     rollingRisk: Array<{
@@ -164,22 +155,24 @@ export type RainData = {
     daily: Array<{ fecha: string; timestamp?: string | null; lluvia_mm: number }>;
   };
   currentSnapshot?: { sum_lluv_mm: number; lluv_ayer_mm: number } | null;
-  riverLevel?: {
-    station: string;
+  crecidaRisk?: {
+    level: "bajo" | "moderado" | "alto" | "critico";
     label: string;
-    status: "bajo" | "normal" | "alto" | "critico";
-    estimatedLevelM: number;
-    referenceMm: number;
     guidance: string;
-  };
-  reliability?: {
-    level: "alta" | "media" | "baja";
-    score: number;
-    reason: string;
-    freshnessMinutes: number;
-    records24h: number;
+    basisMm: number;
   };
   error?: string;
+};
+
+export type RegionalHourlyEntry = {
+  time: string;
+  temp_c: number;
+  hr_pct: number;
+  precip_mm: number;
+  precip_prob: number | null;
+  rain_mm: number;
+  weather_code: number;
+  weather_icon: string;
 };
 
 export type RegionalData = {
@@ -194,10 +187,12 @@ export type RegionalData = {
       temp_c: number;
       hr_pct: number;
       precip_mm: number;
+      precip_prob_next3h: number | null;
       weather_label: string;
       weather_icon: string;
       wind_kmh: number;
     } | null;
+    hourly_24h?: RegionalHourlyEntry[];
     daily_5d: Array<{
       date: string;
       weather_icon: string;
@@ -205,6 +200,7 @@ export type RegionalData = {
       temp_max_c: number;
       temp_min_c: number;
       precip_sum_mm: number;
+      precip_prob_max: number | null;
     }>;
   }>;
 };
@@ -298,6 +294,7 @@ export type LocationWeather = {
     temp_c: number;
     hr_pct: number;
     precip_mm: number;
+    precip_prob_next3h: number | null;
     rain_mm: number;
     wind_kmh: number;
     cloud_pct: number;
@@ -310,6 +307,7 @@ export type LocationWeather = {
     temp_c: number;
     hr_pct: number;
     precip_mm: number;
+    precip_prob: number | null;
     rain_mm: number;
     weather_code: number;
     weather_icon: string;
@@ -322,6 +320,7 @@ export type LocationWeather = {
     temp_max_c: number;
     temp_min_c: number;
     precip_sum_mm: number;
+    precip_prob_max: number | null;
   }>;
   error?: string;
 };

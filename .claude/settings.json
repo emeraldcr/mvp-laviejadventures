@@ -1,19 +1,23 @@
 {
   "permissions": {
     "allow": [
-      "Bash",
-      "Bash(*)",
-      "Read",
-      "Edit",
-      "Write",
-      "WebFetch",
-      "Task",
-      // Tus comandos específicos actuales (puedes dejarlos o borrarlos)
       "Bash(node --env-file=.env scripts/seed-mundial-sweden-tunisia.mjs)",
       "Bash(npm run *)",
-      "Bash(curl *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3777/api/tours)",
+      "Bash(curl -s -X POST http://localhost:3777/api/paypal/create-order -H \"Content-Type: application/json\" -d '{\"name\":\"Test User\",\"email\":\"test@example.com\",\"phone\":\"+506 88888888\",\"tickets\":1,\"date\":\"2026-07-11\",\"dateIso\":\"2026-07-11\",\"tourTime\":\"09:00\",\"tourPackage\":\"basic\",\"tourSlug\":\"tour-ciudad-esmeralda\",\"tourName\":\"Tour Ciudad Esmeralda\",\"packagePrice\":40,\"language\":\"es\"}')",
+      "Bash(curl -s -X POST http://localhost:3777/api/paypal/create-order -H \"Content-Type: application/json\" -d '{\"name\":\"Test User\",\"email\":\"test@example.com\",\"phone\":\"+506 88888888\",\"tickets\":1,\"date\":\"2026-07-11\",\"dateIso\":\"2026-07-11\",\"tourTime\":\"09:00\",\"packageId\":\"does-not-exist\",\"tourPackage\":\"does-not-exist\",\"tourSlug\":\"tour-ciudad-esmeralda\",\"tourName\":\"Tour\",\"packagePrice\":40,\"language\":\"es\"}')",
+      "Bash(curl -s -X POST http://localhost:3777/api/paypal/create-order -H \"Content-Type: application/json\" -d '{\"name\":\"Test User\",\"email\":\"test@example.com\",\"phone\":\"+506 88888888\",\"tickets\":2,\"total\":124.3,\"date\":\"2026-07-15\",\"dateIso\":\"2026-07-15\",\"tourTime\":\"09:00\",\"packageId\":\"entrada-general\",\"tourPackage\":\"Entrada General\",\"tourSlug\":\"tour-ciudad-esmeralda\",\"tourName\":\"Tour Ciudad Esmeralda\",\"packagePrice\":40,\"addons\":[\"Almuerzo Típico\"],\"addonIds\":[\"almuerzo\"],\"language\":\"es\"}')",
       "Bash(npx next *)",
-      "PowerShell(*)"
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3457/)",
+      "Bash(curl -s http://localhost:3457/)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/)",
+      "Bash(curl -s http://localhost:3000/)",
+      "PowerShell(Test-NetConnection -ComputerName localhost -Port 3000 -InformationLevel Quiet -WarningAction SilentlyContinue)",
+      "PowerShell($r = Invoke-WebRequest -Uri \"http://localhost:3000/reservar\" -UseBasicParsing -TimeoutSec 60; $r.StatusCode; if \\($r.Content -match 'Tour seleccionado|Selected tour'\\) { 'hero-selector OK' }; if \\($r.Content -match 'booking'\\) { 'booking section OK' })",
+      "PowerShell($r = Invoke-WebRequest -Uri \"http://localhost:3000/galeria\" -UseBasicParsing -TimeoutSec 90; $r.StatusCode; \\([regex]::Matches\\($r.Content, '/image/IMG_'\\)\\).Count; if \\($r.Content -match 'PNG|\\\\.JPG'\\) { 'uppercase/png images included' })",
+      "PowerShell($r = Invoke-WebRequest -Uri \"http://localhost:3000/store\" -UseBasicParsing -TimeoutSec 90; $r.StatusCode; $r2 = Invoke-WebRequest -Uri \"http://localhost:3000/galeria\" -UseBasicParsing -TimeoutSec 60; $r2.StatusCode; if \\($r2.Content -match '/store'\\) { 'gallery->store link OK' })",
+      "Bash(curl -s \"http://localhost:3000/api/mundial/predictions?playerName=__resync__\" -o /tmp/pred.json -w \"HTTP %{http_code}\\\\n\" --max-time 90)",
+      "Bash(node -e \"const d=require\\('/tmp/pred.json'\\); console.log\\('fixtureVersion:', d.fixtureVersion\\); const r16=\\(d.matches||[]\\).filter\\(m=>m.number>=89&&m.number<=96\\); r16.forEach\\(m=>console.log\\('#'+m.number, m.stage, m.homeTeam,'vs',m.awayTeam,'|',m.kickoffAt\\)\\);\")"
     ]
   }
 }

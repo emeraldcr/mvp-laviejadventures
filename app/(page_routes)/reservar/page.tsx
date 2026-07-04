@@ -3,9 +3,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, CheckCircle2, Compass } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Compass, Moon, Sun } from "lucide-react";
 import { CalendarProvider } from "@/lib/CalendarContext";
 import { useLanguage } from "@/lib/LanguageContext";
+import { useTheme } from "@/lib/ThemeContext";
 import { useReservationData } from "@/lib/hooks/useReservationData";
 import BookingSection from "@/app/components/sections/BookingSection";
 import { MobileBottomNav } from "@/app/components/navigation/SiteNavigation";
@@ -28,6 +29,8 @@ const DEFAULT_URL_PARAMS: UrlBookingParams = {
 
 export default function ReservarPage() {
   const { lang, toggle } = useLanguage();
+  const { theme, toggle: toggleTheme } = useTheme();
+  const isDark = theme === "dark";
   const { tours } = useReservationData();
   const [urlParams, setUrlParams] = useState<UrlBookingParams>(DEFAULT_URL_PARAMS);
   const [selectedTourSlug, setSelectedTourSlug] = useState("");
@@ -89,8 +92,8 @@ export default function ReservarPage() {
       initialTickets={urlParams.pax}
       initialDateIso={urlParams.date || null}
     >
-      <main className="min-h-screen bg-[#FAF9F6] font-sans text-stone-900">
-        <header className="sticky top-0 z-40 border-b border-stone-200/80 bg-white/90 shadow-sm backdrop-blur-xl">
+      <main className="min-h-screen bg-[#FAF9F6] font-sans text-stone-900 dark:bg-[#0b0a09] dark:text-stone-100">
+        <header className="sticky top-0 z-40 border-b border-stone-200/80 bg-white/90 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-stone-950/85">
           <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-8">
             <Link href="/" className="flex min-w-0 items-center gap-3">
               <Image
@@ -98,23 +101,32 @@ export default function ReservarPage() {
                 alt="La Vieja Adventures"
                 width={42}
                 height={42}
-                className="rounded-lg border border-stone-200 object-cover"
+                className="rounded-lg border border-stone-200 object-cover dark:border-white/15"
                 priority
               />
-              <span className="truncate text-sm font-black text-stone-900 md:text-base">La Vieja Adventures</span>
+              <span className="truncate text-sm font-black text-stone-900 dark:text-stone-50 md:text-base">La Vieja Adventures</span>
             </Link>
             <nav className="flex items-center gap-2">
               <Link
                 href="/"
-                className="inline-flex items-center gap-2 rounded-full border border-stone-300 px-3 py-2 text-xs font-black uppercase tracking-wider text-stone-700 transition hover:border-emerald-500 hover:text-emerald-700"
+                className="inline-flex items-center gap-2 rounded-full border border-stone-300 px-3 py-2 text-xs font-black uppercase tracking-wider text-stone-700 transition hover:border-emerald-500 hover:text-emerald-700 dark:border-white/15 dark:text-stone-200 dark:hover:border-emerald-300/60 dark:hover:text-emerald-300"
               >
                 <ArrowLeft className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">{isEs ? "Inicio" : "Home"}</span>
               </Link>
               <button
                 type="button"
+                onClick={toggleTheme}
+                aria-label={isDark ? "Modo claro" : "Modo oscuro"}
+                title={isDark ? "Modo claro" : "Modo oscuro"}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-stone-300 text-stone-700 transition hover:border-emerald-500 hover:text-emerald-700 dark:border-white/15 dark:text-stone-200 dark:hover:border-emerald-300/60 dark:hover:text-emerald-300"
+              >
+                {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              </button>
+              <button
+                type="button"
                 onClick={toggle}
-                className="rounded-full border border-stone-300 px-3 py-2 text-xs font-black text-stone-800 transition hover:border-emerald-500"
+                className="rounded-full border border-stone-300 px-3 py-2 text-xs font-black text-stone-800 transition hover:border-emerald-500 dark:border-white/15 dark:text-stone-200 dark:hover:border-emerald-300/60"
                 aria-label={isEs ? "Switch to English" : "Cambiar a Espanol"}
               >
                 {isEs ? "EN" : "ES"}
@@ -123,47 +135,47 @@ export default function ReservarPage() {
           </div>
         </header>
 
-        <section className="relative overflow-hidden border-b border-stone-200 bg-white">
+        <section className="relative overflow-hidden border-b border-stone-200 bg-white dark:border-white/10 dark:bg-stone-950">
           {(activeTour || selectedTourSlug) && (
             <Image
               src={getTourImage(activeTour?.slug ?? selectedTourSlug)}
               alt={displayTourTitle}
               fill
               sizes="100vw"
-              className="object-cover opacity-20"
+              className="object-cover opacity-20 dark:opacity-30"
               priority
             />
           )}
           <div className="relative mx-auto flex max-w-7xl flex-col gap-4 px-4 py-6 md:flex-row md:items-center md:justify-between md:px-8 md:py-8">
             <div>
-              <p className="mb-2 text-xs font-bold uppercase tracking-[0.25em] text-emerald-700">
+              <p className="mb-2 text-xs font-bold uppercase tracking-[0.25em] text-emerald-700 dark:text-emerald-300">
                 {isEs ? "Reserva en línea" : "Book online"}
               </p>
-              <h1 className="text-balance text-2xl font-black leading-tight text-stone-950 md:text-3xl">
+              <h1 className="text-balance text-2xl font-black leading-tight text-stone-950 dark:text-stone-50 md:text-3xl">
                 {hasTourFromUrl
                   ? isEs ? "Elegí fecha, paquete y listo." : "Pick date, package, and go."
                   : isEs ? "Reservá tu aventura." : "Book your adventure."}
               </h1>
               {activeTour && (
-                <p className="mt-2 text-sm font-semibold text-stone-600">
+                <p className="mt-2 text-sm font-semibold text-stone-600 dark:text-stone-300">
                   {isEs ? "Desde" : "From"} {formatTourPrice(activeTour, isEs)} / {isEs ? "persona" : "person"}
                 </p>
               )}
             </div>
 
-            <div className="w-full rounded-2xl border border-stone-200 bg-white p-3 shadow-sm md:max-w-sm">
+            <div className="w-full rounded-2xl border border-stone-200 bg-white p-3 shadow-sm dark:border-white/10 dark:bg-stone-900 md:max-w-sm">
               <div className="space-y-2">
-                <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.2em] text-emerald-700">
+                <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300">
                   {hasTourFromUrl ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Compass className="h-3.5 w-3.5" />}
                   <span>{isEs ? "Tour" : "Tour"}</span>
                 </div>
 
                 {hasTourFromUrl ? (
-                  <div className="flex items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-3">
-                    <p className="text-sm font-semibold text-stone-900">{displayTourTitle}</p>
+                  <div className="flex items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-3 dark:border-emerald-800/50 dark:bg-emerald-950/30">
+                    <p className="text-sm font-semibold text-stone-900 dark:text-stone-100">{displayTourTitle}</p>
                     <Link
                       href="/reservar"
-                      className="shrink-0 rounded-full border border-stone-300 px-3 py-1.5 text-xs font-bold text-stone-700 transition hover:border-emerald-500"
+                      className="shrink-0 rounded-full border border-stone-300 px-3 py-1.5 text-xs font-bold text-stone-700 transition hover:border-emerald-500 dark:border-white/15 dark:text-stone-200 dark:hover:border-emerald-300/60"
                     >
                       {isEs ? "Cambiar" : "Change"}
                     </Link>
@@ -175,17 +187,17 @@ export default function ReservarPage() {
                       setSelectedTourSlug(event.target.value);
                       document.getElementById("booking")?.scrollIntoView({ behavior: "smooth", block: "start" });
                     }}
-                    className="w-full rounded-xl border border-stone-300 bg-white px-3 py-3 text-sm font-semibold text-stone-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+                    className="w-full rounded-xl border border-stone-300 bg-white px-3 py-3 text-sm font-semibold text-stone-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-white/15 dark:bg-stone-950 dark:text-stone-100"
                   >
                     {tours.map((tour) => (
-                      <option key={tour.slug} value={tour.slug}>
+                      <option key={tour.slug} value={tour.slug} className="dark:bg-stone-950">
                         {isEs ? tour.titleEs : tour.titleEn}
                       </option>
                     ))}
                   </select>
                 )}
 
-                <p className="text-xs text-stone-500">
+                <p className="text-xs text-stone-500 dark:text-stone-400">
                   {isEs ? "Paso 1: elegí fecha en el calendario." : "Step 1: pick your date on the calendar."}
                 </p>
               </div>

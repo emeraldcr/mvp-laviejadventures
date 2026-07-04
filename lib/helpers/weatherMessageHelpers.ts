@@ -16,9 +16,7 @@ export type WeatherSnapshot = {
   intensity: string;
   trend: string;
   wetHoursLast24?: number;
-  consensusMm: number;
-  forecastNextHourMm?: number;
-  confidence?: string;
+  rainProbNext3h?: number | null;
   wetStreak?: number;
   dryStreak?: number;
   peakHourMm?: number;
@@ -27,8 +25,6 @@ export type WeatherSnapshot = {
   currentSumMm?: number;
   yesterdayMm?: number;
   avgTemp24h: number | null;
-  maxTemp24h?: number | null;
-  minTemp24h?: number | null;
   avgHR24h?: number | null;
 };
 
@@ -71,19 +67,15 @@ export function buildUserPrompt(snap: WeatherSnapshot): string {
 - Lluvia última 6h: ${fmt(snap.last6h_mm, " mm")}
 - Lluvia últimas 24h: ${fmt(snap.last24h_mm, " mm")}
 - Lluvia últimas 48h: ${fmt(snap.last48h_mm, " mm")}
-- Lluvia esperada próxima hora: ${fmt(snap.forecastNextHourMm, " mm")}
-- Consenso pronóstico: ${fmt(snap.consensusMm, " mm")}
-- Confianza del pronóstico: ${snap.confidence ?? "sin dato"}
+- Probabilidad de lluvia próximas 3h: ${fmt(snap.rainProbNext3h, " %")}
 - Horas con lluvia en 24h: ${fmt(snap.wetHoursLast24)}
 - Racha mojada: ${fmt(snap.wetStreak, " h")}
 - Racha seca: ${fmt(snap.dryStreak, " h")}
 - Pico de lluvia 24h: ${fmt(snap.peakHourMm, " mm")} (${snap.peakHourLabel ?? "hora no disponible"})
 - Acumulado de hoy: ${fmt(snap.currentSumMm, " mm")}
 - Ayer cayó: ${fmt(snap.yesterdayMm, " mm")}
-- Temperatura promedio 24h: ${fmt(snap.avgTemp24h, " °C")}
-- Temperatura máxima 24h: ${fmt(snap.maxTemp24h, " °C")}
-- Temperatura mínima 24h: ${fmt(snap.minTemp24h, " °C")}
-- Humedad promedio 24h: ${fmt(snap.avgHR24h, " %")}
+- Temperatura actual: ${fmt(snap.avgTemp24h, " °C")}
+- Humedad actual: ${fmt(snap.avgHR24h, " %")}
 - Estación/zona: ${snap.stationName ?? "San Carlos"}
 
 Personalización obligatoria Río La Vieja:

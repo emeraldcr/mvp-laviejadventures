@@ -71,7 +71,7 @@ export const REGIONAL_CACHE_TTL_SECONDS = 1800; // 30 minutos
 export const REGIONAL_FORECAST_DAYS = 5;
 
 /** Horas de pronóstico horario solicitadas a Open-Meteo */
-export const REGIONAL_FORECAST_HOURS = 24;
+export const REGIONAL_FORECAST_HOURS = 48;
 
 // ─── Ubicaciones regionales monitoreadas ─────────────────────────────────────
 

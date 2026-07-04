@@ -2,13 +2,15 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CalendarDays, Clock3, CreditCard, Mail, Phone, ShieldCheck, Ticket, UserRound } from "lucide-react";
+import { Building2, CalendarDays, Clock3, CreditCard, Mail, MessageCircle, Phone, ShieldCheck, Ticket, UserRound } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
 import { trackAnalyticsEvent } from "@/lib/analytics/client";
 import { translations } from "@/lib/translations";
 import type { OrderDetails } from "@/lib/types/index";
 import { PHONE_COUNTRIES } from "@/app/components/reservation/phoneCountries";
 import { getPayPalLocaleForCountry } from "@/app/components/reservation/paypalLocales";
+import LocalPaymentOptions, { type LocalPaymentMethod } from "@/app/components/reservation/LocalPaymentOptions";
+import { usePendingBooking } from "@/lib/reservation/use-pending-booking";
 
 declare global {
   interface Window {
@@ -65,6 +67,8 @@ const SummaryRow = ({
   </div>
 );
 
+type PaymentMethod = "paypal" | LocalPaymentMethod;
+
 type Props = {
   orderDetails: OrderDetails;
   onSuccess: (orderData: unknown) => void;
@@ -72,6 +76,7 @@ type Props = {
 
 export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Props) {
   const paypalRef = useRef<HTMLDivElement>(null);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("paypal");
   const [loadedPaypalKey, setLoadedPaypalKey] = useState<string | null>(null);
   const [paypalLoadFailure, setPaypalLoadFailure] = useState<{ checkoutKey: string; message: string } | null>(null);
   const router = useRouter();
@@ -128,23 +133,43 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
   const packageName = (tr.packages as Record<string, string>)[tourPackage] ?? tourPackage;
   const formattedTime = tr.timeLabels[tourTime] ?? tourTime;
   const buyerCountryCode = getBuyerCountryFromPhone(phone);
+  const {
+    referenceCode,
+    reservationId,
+    isSaving: isPendingSaving,
+    saveError: pendingSaveError,
+    savePendingBooking,
+  } = usePendingBooking(orderDetails, lang);
   const paymentCopy = {
     contactTitle: lang === "es" ? "Datos del viajero" : "Traveler details",
     bookingTitle: lang === "es" ? "Resumen de reserva" : "Booking summary",
-    paymentTitle: lang === "es" ? "Pago seguro" : "Secure payment",
+    paymentTitle: lang === "es" ? "Elegí cómo pagar" : "Choose how to pay",
     paymentSubtitle: lang === "es"
-      ? "PayPal puede pedir dirección de facturación para validar la tarjeta. Ya enviamos tu nombre, email y teléfono a la orden."
-      : "PayPal may request billing address to validate the card. Your name, email, and phone are already attached to the order.",
+      ? "PayPal, tarjeta, WhatsApp o SINPE. Elegí la opción que te quede más cómoda para confirmar tu aventura."
+      : "PayPal, card, WhatsApp, or SINPE. Pick the option that works best to confirm your adventure.",
     checkoutHint: lang === "es"
-      ? "Elige PayPal o tarjeta. La confirmación se genera apenas el pago quede aprobado."
-      : "Choose PayPal or card. Your confirmation is created as soon as payment is approved.",
+      ? "PayPal confirma al instante. WhatsApp y SINPE quedan pendientes hasta que el equipo valide tu pago."
+      : "PayPal confirms instantly. WhatsApp and SINPE stay pending until our team validates your payment.",
     dateLabel: lang === "es" ? "Fecha" : "Date",
     guestsLabel: lang === "es" ? "Personas" : "Guests",
     tourLabel: lang === "es" ? "Experiencia" : "Experience",
     packagePriceLabel: lang === "es" ? "Tarifa" : "Rate",
+    methods: {
+      paypal: lang === "es" ? "PayPal / Tarjeta" : "PayPal / Card",
+      whatsapp: "WhatsApp",
+      sinpe: "SINPE",
+    },
   };
 
+  const paymentTabs: Array<{ id: PaymentMethod; label: string; icon: React.ReactNode }> = [
+    { id: "paypal", label: paymentCopy.methods.paypal, icon: <CreditCard className="h-4 w-4" aria-hidden /> },
+    { id: "whatsapp", label: paymentCopy.methods.whatsapp, icon: <MessageCircle className="h-4 w-4" aria-hidden /> },
+    { id: "sinpe", label: paymentCopy.methods.sinpe, icon: <Building2 className="h-4 w-4" aria-hidden /> },
+  ];
+
   useEffect(() => {
+    if (paymentMethod !== "paypal") return;
+
     const paypalContainer = paypalRef.current;
     let isMounted = true;
     let scriptForCleanup: HTMLScriptElement | null = null;
@@ -407,7 +432,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
         paypalContainer.innerHTML = "";
       }
     };
-  }, [checkoutKey]); // Only re-evaluate when the logical checkout session changes
+  }, [checkoutKey, paymentMethod]); // Only re-evaluate when the logical checkout session changes
 
   return (
     <div className="grid gap-5 lg:grid-cols-[minmax(0,0.92fr)_minmax(360px,1.08fr)]">
@@ -462,32 +487,76 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
           </div>
         </div>
 
+        <div
+          className="mb-4 grid grid-cols-3 gap-2 rounded-2xl border border-white/10 bg-white/[0.03] p-1.5"
+          role="tablist"
+          aria-label={paymentCopy.paymentTitle}
+        >
+          {paymentTabs.map((tab) => {
+            const isActive = paymentMethod === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                onClick={() => setPaymentMethod(tab.id)}
+                className={[
+                  "inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-[11px] font-bold uppercase tracking-[0.08em] transition sm:text-xs",
+                  isActive
+                    ? "bg-teal-400/20 text-teal-100 shadow-inner shadow-teal-900/20"
+                    : "text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-200",
+                ].join(" ")}
+              >
+                {tab.icon}
+                <span className="truncate">{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
         <div className="mb-4 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm font-medium text-zinc-300">
           {paymentCopy.checkoutHint}
         </div>
 
-        <div className="relative min-h-[160px] w-full overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-3">
-          {isPaypalLoading && (
-            <div
-              className="absolute inset-3 z-10 flex min-h-[140px] items-center justify-center rounded-xl border border-emerald-100/20 bg-zinc-950/90 px-4 text-center text-sm font-medium text-emerald-100 shadow-sm"
-              role="status"
-              aria-live="polite"
-            >
-              <span className="mr-3 h-5 w-5 animate-spin rounded-full border-2 border-emerald-200/30 border-t-emerald-300" aria-hidden="true" />
-              {tr.loadingPaymentInfo}
-            </div>
-          )}
-          {paypalLoadError && (
-            <div
-              className="min-h-[140px] rounded-xl border border-red-400/30 bg-red-950/40 px-4 py-5 text-sm text-red-100 shadow-sm"
-              role="alert"
-            >
-              <p className="font-semibold">{tr.error}</p>
-              <p className="mt-2 break-words text-xs opacity-90">{paypalLoadError}</p>
-            </div>
-          )}
-          <div ref={paypalRef} className="min-h-[140px] w-full" />
-        </div>
+        {paymentMethod === "paypal" ? (
+          <div className="relative min-h-[160px] w-full overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+            {isPaypalLoading && (
+              <div
+                className="absolute inset-3 z-10 flex min-h-[140px] items-center justify-center rounded-xl border border-emerald-100/20 bg-zinc-950/90 px-4 text-center text-sm font-medium text-emerald-100 shadow-sm"
+                role="status"
+                aria-live="polite"
+              >
+                <span className="mr-3 h-5 w-5 animate-spin rounded-full border-2 border-emerald-200/30 border-t-emerald-300" aria-hidden="true" />
+                {tr.loadingPaymentInfo}
+              </div>
+            )}
+            {paypalLoadError && (
+              <div
+                className="min-h-[140px] rounded-xl border border-red-400/30 bg-red-950/40 px-4 py-5 text-sm text-red-100 shadow-sm"
+                role="alert"
+              >
+                <p className="font-semibold">{tr.error}</p>
+                <p className="mt-2 break-words text-xs opacity-90">{paypalLoadError}</p>
+              </div>
+            )}
+            <div ref={paypalRef} className="min-h-[140px] w-full" />
+          </div>
+        ) : (
+          <LocalPaymentOptions
+            method={paymentMethod}
+            orderDetails={orderDetails}
+            lang={lang}
+            packageLabel={packageName}
+            timeLabel={formattedTime}
+            analyticsMetadata={bookingAnalyticsMetadata}
+            referenceCode={referenceCode}
+            reservationId={reservationId}
+            isSaving={isPendingSaving}
+            saveError={pendingSaveError}
+            savePendingBooking={savePendingBooking}
+          />
+        )}
       </section>
     </div>
   );

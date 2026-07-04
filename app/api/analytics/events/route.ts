@@ -18,7 +18,9 @@ type AnalyticsEventName =
   | "payment_order_created"
   | "payment_approved"
   | "payment_error"
-  | "booking_completed";
+  | "booking_completed"
+  | "whatsapp_checkout_click"
+  | "sinpe_checkout_selected";
 
 type AnalyticsEventInput = {
   event?: AnalyticsEventName;
@@ -44,6 +46,8 @@ const VALID_EVENTS: AnalyticsEventName[] = [
   "payment_approved",
   "payment_error",
   "booking_completed",
+  "whatsapp_checkout_click",
+  "sinpe_checkout_selected",
 ];
 
 function sanitizeValue(value: unknown): unknown {
