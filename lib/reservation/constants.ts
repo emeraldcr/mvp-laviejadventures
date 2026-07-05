@@ -7,24 +7,11 @@ export const PHONE_NUMBER_REGEX = /^[\d\s().-]{6,20}$/;
 
 export const DEFAULT_DEPARTURE_TIMES = ["08:00", "09:00", "10:00"];
 
-export const TRANSPORT_LOCATIONS = [
-  { id: "san-carlos", labelEs: "San Carlos", labelEn: "San Carlos" },
-  { id: "la-fortuna", labelEs: "La Fortuna", labelEn: "La Fortuna" },
-  { id: "ciudad-quesada", labelEs: "Ciudad Quesada", labelEn: "Ciudad Quesada" },
-  { id: "san-jose", labelEs: "San José", labelEn: "San José" },
-  { id: "hotel-airbnb", labelEs: "Hotel / Airbnb", labelEn: "Hotel / Airbnb" },
-  { id: "la-vieja-adventures", labelEs: "La Vieja Adventures", labelEn: "La Vieja Adventures" },
-  { id: "san-vicente", labelEs: "San Vicente", labelEn: "San Vicente" },
-];
-
-const TRANSPORT_LOCATION_MAP = new Map(TRANSPORT_LOCATIONS.map((location) => [location.id, location]));
-
-export function getTransportLocationLabel(id: string, lang: "es" | "en") {
-  if (id === "same-pickup") {
-    return lang === "es" ? "Mismo pickup" : "Same pickup";
-  }
-  return TRANSPORT_LOCATION_MAP.get(id)?.[lang === "es" ? "labelEs" : "labelEn"] ?? id;
-}
+export {
+  getTransportLocationLabel,
+  TRANSPORT_DROPOFF_OPTIONS,
+  TRANSPORT_PICKUP_OPTIONS,
+} from "./transport";
 
 const ADDON_ICONS: Record<string, LucideIcon> = {
   almuerzo: UtensilsCrossed,

@@ -8,7 +8,9 @@ import { translations } from "@/lib/translations";
 import { MapPin, ShieldCheck } from "lucide-react";
 import { trackAnalyticsEvent } from "@/lib/analytics/client";
 import { TOUR_INFO } from "@/lib/tour-info";
-import { ADDON_OPTIONS, DEFAULT_DEPARTURE_TIMES } from "@/lib/reservation/constants";
+import { ADDON_OPTIONS, DEFAULT_DEPARTURE_TIMES, getTransportLocationLabel } from "@/lib/reservation/constants";
+import { getAddonPricePerPerson } from "@/lib/reservation/addons";
+import { getTransportPerPersonPrice, isTransportConfigComplete } from "@/lib/reservation/transport";
 import {
   getExcludedAddonIds,
   getPackageDepartureTimes,
@@ -32,6 +34,7 @@ import { resolveSelectedTourSlug, getDefaultMainTourInfo } from "./reservationDe
 import ReservationDetailsStep1 from "./ReservationDetailsStep1";
 import ReservationDetailsStep2 from "./ReservationDetailsStep2";
 import type { MainTourInfo, TourPackageOption } from "@/lib/types/index";
+import { useTransportQuote } from "./hooks/useTransportQuote";
 
 // ---------------------- MAIN COMPONENT ----------------------
 
@@ -68,9 +71,12 @@ export default function ReservationDetails({
   const [tourTime, setTourTime] = useState<TourTime | null>(null);
   const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
   const [addonDetails, setAddonDetails] = useState<ReservationAddonDetails>({});
-  const [transportQuote, setTransportQuote] = useState<any | null>(null);
-  const [transportLoading, setTransportLoading] = useState(false);
-  const [transportError, setTransportError] = useState<string | null>(null);
+  const transportQuoteEnabled = isTransportConfigComplete(addonDetails);
+  const { transportQuote, transportLoading, transportError } = useTransportQuote({
+    enabled: transportQuoteEnabled,
+    addonDetails,
+    tickets,
+  });
   const [currentStep, setCurrentStep] = useState<BookingStepId>(1);
   const currentStepRef = useRef<BookingStepId>(1);
   const stepEnteredAtRef = useRef(0);
@@ -219,16 +225,17 @@ export default function ReservationDetails({
     return tr.defaultCancellationPolicy;
   }, [lang, resolvedTourInfo.cancellationPolicy, seemsSpanish, tr.defaultCancellationPolicy]);
 
-  // Addon price per person for selected addons
   const addonsPricePerPerson = useMemo(() => {
-    return ADDON_OPTIONS.filter((a) => selectedAddons.includes(a.id)).reduce((sum, a) => {
-      if (a.id === "transporte") {
-        const transportPerPerson = transportQuote?.perPerson ?? a.price;
-        return sum + transportPerPerson;
-      }
-      return sum + a.price;
-    }, 0);
-  }, [selectedAddons, transportQuote]);
+    return ADDON_OPTIONS
+      .filter((addon) => selectedAddons.includes(addon.id))
+      .reduce((sum, addon) => {
+        if (addon.id === "transporte") {
+          if (!isTransportConfigComplete(addonDetails)) return sum;
+          return sum + getTransportPerPersonPrice(transportQuote, addon.price);
+        }
+        return sum + getAddonPricePerPerson(addon.id);
+      }, 0);
+  }, [selectedAddons, transportQuote, addonDetails]);
 
   const addonDetailsSummary = useMemo(() => {
     const lines: string[] = [];
@@ -254,11 +261,19 @@ export default function ReservationDetails({
     if (selectedAddons.includes("transporte")) {
       lines.push([
         lang === "es" ? "Transporte" : "Transport",
-        addonDetails.transportType,
-        addonDetails.pickupLocation ? `Pickup ${addonDetails.pickupLocation}` : null,
-        addonDetails.dropoffLocation ? `Drop-off ${addonDetails.dropoffLocation}` : null,
+        addonDetails.transportType === "private"
+          ? (lang === "es" ? "Privado 4x4" : "Private 4x4")
+          : addonDetails.transportType === "shared"
+            ? (lang === "es" ? "Compartido" : "Shared shuttle")
+            : null,
+        addonDetails.pickupLocation
+          ? `${lang === "es" ? "Pickup" : "Pickup"}: ${getTransportLocationLabel(addonDetails.pickupLocation, lang)}`
+          : null,
+        addonDetails.dropoffLocation
+          ? `${lang === "es" ? "Drop-off" : "Drop-off"}: ${getTransportLocationLabel(addonDetails.dropoffLocation, lang)}`
+          : null,
         addonDetails.transportNotes,
-      ].filter(Boolean).join(": "));
+      ].filter(Boolean).join(" | "));
     }
 
     return lines.filter((line) => line.includes(":")).join(" | ");
@@ -675,6 +690,7 @@ export default function ReservationDetails({
     addonDetails,
     addonDetailsSummary,
     addonsPricePerPerson,
+    transportQuote,
     lang,
     trackBlockedStep,
     trackStepCompleted,
@@ -781,64 +797,6 @@ export default function ReservationDetails({
       },
     });
   }, [getAnalyticsBookingSnapshot, stepLabels]);
-
-  // Fetch transport quote when transport addon is selected and locations change
-  useEffect(() => {
-    let mounted = true;
-    async function fetchQuote() {
-      if (!selectedAddons.includes("transporte")) {
-        setTransportQuote(null);
-        setTransportError(null);
-        setTransportLoading(false);
-        return;
-      }
-
-      const pickup = addonDetails.pickupLocation ? { type: "ref", id: addonDetails.pickupLocation } : null;
-      let dropoff = addonDetails.dropoffLocation ? { type: "ref", id: addonDetails.dropoffLocation } : null;
-      if (dropoff && dropoff.id === "same-pickup") {
-        dropoff = pickup;
-      }
-
-      if (!pickup && !dropoff) {
-        setTransportQuote(null);
-        setTransportError("Pickup or dropoff required");
-        setTransportLoading(false);
-        return;
-      }
-
-      setTransportLoading(true);
-      setTransportError(null);
-
-      try {
-        const res = await fetch(`/api/transport/calc`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ pickup, dropoff, transportType: addonDetails.transportType ?? "private", pax: tickets }),
-        });
-
-        const data = await res.json();
-        if (!mounted) return;
-        if (!res.ok || !data?.ok) {
-          setTransportQuote(null);
-          setTransportError(data?.error ?? "Failed to fetch transport quote");
-        } else {
-          setTransportQuote(data.result ?? null);
-          setTransportError(null);
-        }
-      } catch (err) {
-        if (!mounted) return;
-        setTransportQuote(null);
-        setTransportError("Error contacting transport API");
-      } finally {
-        if (mounted) setTransportLoading(false);
-      }
-    }
-
-    fetchQuote();
-    return () => {
-      mounted = false;
-    };
-  }, [selectedAddons, addonDetails.pickupLocation, addonDetails.dropoffLocation, addonDetails.transportType, tickets]);
 
   const handleTicketsChange = useCallback((rawValue: string) => {
     const parsedValue = Number(rawValue);
@@ -983,6 +941,10 @@ export default function ReservationDetails({
           onAddonDetailsChange={setAddonDetails}
           onContinue={() => goToStep(2, "continue_button")}
           canContinue={isStep1Valid}
+          transportQuote={transportQuote}
+          transportLoading={transportLoading}
+          transportError={transportError}
+          transportPreview={transportQuoteEnabled}
           tr={tr}
           lang={lang}
         />

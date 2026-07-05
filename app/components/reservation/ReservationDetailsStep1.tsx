@@ -40,6 +40,10 @@ interface ReservationDetailsStep1Props {
   onAddonDetailsChange: (details: ReservationAddonDetails) => void;
   onContinue: () => void;
   canContinue: boolean;
+  transportQuote?: import("@/lib/reservation/transport").TransportQuoteResult | null;
+  transportLoading?: boolean;
+  transportError?: string | null;
+  transportPreview?: boolean;
   tr: ReservationTranslations;
   lang: "es" | "en";
 }
@@ -70,6 +74,10 @@ export default function ReservationDetailsStep1({
   onAddonDetailsChange,
   onContinue,
   canContinue,
+  transportQuote = null,
+  transportLoading = false,
+  transportError = null,
+  transportPreview = false,
   tr,
   lang,
 }: ReservationDetailsStep1Props) {
@@ -187,6 +195,10 @@ export default function ReservationDetailsStep1({
         onAddonDetailsChange={onAddonDetailsChange}
         excludedAddonIds={excludedAddonIds}
         defaultCollapsed
+        transportQuote={transportQuote}
+        transportLoading={transportLoading}
+        transportError={transportError}
+        transportPreview={transportPreview}
       />
 
       {selectedAddons.length > 0 && (

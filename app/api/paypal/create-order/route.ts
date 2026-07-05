@@ -9,17 +9,19 @@ import {
 import { getDb } from "@/lib/helpers/mongodb";
 import { PAYPAL_CURRENCY, PAYPAL_CUSTOM_ID_MAX_LENGTH } from "@/lib/constants/paypal";
 import { COLLECTIONS } from "@/lib/constants/db";
-import { DEFAULT_AVAILABILITY } from "@/lib/constants/business";
 
 import {
   getMinBookableIsoDateInCostaRica,
   isDateOnOrAfterMinBookableInCostaRica,
 } from "@/lib/helpers/costa-rica-time";
 
-import { fallbackPackagesForTour, getPackageSchedule, isPackageAvailableOnDate, normalizeTourPackages } from "@/lib/tour-packages";
-import { getAddonsPricePerPerson } from "@/lib/reservation/addons";
 import type { ReservationAddonDetails } from "@/lib/reservation/types";
-import { getB2BSettings } from "@/lib/models/b2b-settings";
+import { normalizeReservationDate } from "@/lib/reservation/dates";
+import {
+  isReservationQuoteError,
+  quoteReservation,
+  requiredReservationFieldsPresent,
+} from "@/lib/reservation/quote";
 
 interface CreateOrderRequest {
   name?: string;
@@ -73,23 +75,15 @@ export async function POST(req: Request) {
     } = body;
 
     // Basic validation
-    if (!name || !email || !phone || !tickets || !date || !tourPackage) {
+    if (!requiredReservationFieldsPresent({ name, email, phone, tickets, date, tourPackage })) {
       return NextResponse.json(
         { success: false, message: "Missing required fields" },
         { status: 400 }
       );
     }
 
-    const safeTickets = Number(tickets);
-    if (!Number.isFinite(safeTickets) || safeTickets < 1) {
-      return NextResponse.json(
-        { success: false, message: "Invalid ticket quantity" },
-        { status: 400 }
-      );
-    }
-
     // Normalize and validate date
-    const normalizedDate = normalizeOrderDate(date, dateIso);
+    const normalizedDate = normalizeReservationDate(date, dateIso);
     if (!normalizedDate) {
       return NextResponse.json(
         {
@@ -114,101 +108,36 @@ export async function POST(req: Request) {
     }
 
     const db = await getDb();
-
-    // Get tour and packages
-    const tour = tourSlug
-      ? await db.collection(COLLECTIONS.TOURS).findOne({
-          slug: tourSlug,
-          isActive: { $ne: false },
-        })
-      : null;
-
-    const dbPackages = normalizeTourPackages(tour?.packages);
-    const availablePackages = dbPackages.length > 0 ? dbPackages : fallbackPackagesForTour(tourSlug);
-
-    // === Package Lookup ===
-    // The booking form now sells a single "General Entry" ticket plus optional
-    // add-ons; it is not part of the per-tour package list, so resolve it first.
-    const selectedPackage = isGeneralEntrySelection(packageId || tourPackage)
-      ? buildGeneralEntryPackage(tour, tourSlug)
-      : findPackageByLegacyOrCurrentId(availablePackages, packageId || tourPackage);
-
-    if (!selectedPackage) {
-      console.error("Package lookup failed - Selected package is no longer available", {
-        tourSlug,
-        packageId,
-        tourPackage,
-        availablePackages: availablePackages.map((p) => ({
-          id: p.id,
-          name: p.name,
-          nameEs: p.nameEs,
-        })),
-      });
-
-      return NextResponse.json(
-        { 
-          success: false, 
-          message: "Selected package is no longer available",
-          debug: {
-            input: packageId || tourPackage,
-            availableCount: availablePackages.length,
-            tourSlug,
-          }
-        },
-        { status: 400 }
-      );
-    }
-
-    if (!isPackageAvailableOnDate(selectedPackage, normalizedDate)) {
-      const schedule = getPackageSchedule(selectedPackage);
-      const message = schedule === "weekday"
-        ? "Selected package is only available on weekdays. Please choose a weekday date."
-        : "Selected package is only available on weekends. Please choose a weekend date or select the private tour for weekdays.";
-
-      return NextResponse.json(
-        {
-          success: false,
-          message,
-          selectedDate: normalizedDate,
-          packageId: selectedPackage.id ?? null,
-          packageSchedule: schedule,
-        },
-        { status: 400 }
-      );
-    }
-
-    const remainingCapacity = await getRemainingCapacityForTourDate({
-      db,
+    const quote = await quoteReservation(db, {
+      name,
+      email,
+      phone,
+      tickets,
+      date,
+      dateIso,
+      tourTime,
+      packageId,
+      tourPackage,
       tourSlug,
-      date: normalizedDate,
+      tourName,
+      addons,
+      addonIds,
+      addonDetails,
+      specialRequests,
+      language,
     });
 
-    if (safeTickets > remainingCapacity) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Not enough availability remains for this tour and date.",
-          selectedDate: normalizedDate,
-          tourSlug,
-          requestedTickets: safeTickets,
-          remainingCapacity,
-        },
-        { status: 400 }
-      );
-    }
-
-    // Price calculation
-    const settings = await getB2BSettings();
-    const ivaRate = Number(settings?.ivaRate ?? 13) / 100;
-
-    const packagePrice = Number(selectedPackage.price);
-    const addonsPricePerPerson = getAddonsPricePerPerson(addonIds);
-    const subtotal = safeTickets * (packagePrice + addonsPricePerPerson);
-    const totalWithTax = subtotal * (1 + ivaRate);
-    const formattedTotal = totalWithTax.toFixed(2);
-
-    // Package label for user
-    const packageLabel = getPackageLabel(tourPackage, selectedPackage, language);
+    const {
+      safeTickets,
+      selectedPackage,
+      packageLabel,
+      packagePrice,
+      addonsPricePerPerson,
+      addonsPrice,
+      totalWithTax,
+      formattedTotal,
+      ivaRatePercent,
+    } = quote;
 
     // Custom ID (PayPal limit = 127 chars)
     const custom_id = createCustomId({
@@ -277,13 +206,13 @@ export async function POST(req: Request) {
       addonIds: Array.isArray(addonIds) ? addonIds : [],
       addonDetails: addonDetails ?? {},
       specialRequests: typeof specialRequests === "string" ? specialRequests : "",
-      addonsPrice: addonsPricePerPerson * safeTickets,
+      addonsPrice,
       tourSlug,
       tourName,
       clientTotal: total ? Number(total) : null,
       total: totalWithTax,
-      ivaRate: Number(settings?.ivaRate ?? 13),
-      language: language === "en" ? "en" : "es",
+      ivaRate: ivaRatePercent,
+      language: quote.language,
     });
 
     const approvalUrl = data.links?.find((link) => link.rel === "approve")?.href;
@@ -302,6 +231,13 @@ export async function POST(req: Request) {
       approvalUrl,
     });
   } catch (error: unknown) {
+    if (isReservationQuoteError(error)) {
+      return NextResponse.json(
+        { success: false, message: error.message, code: error.code, ...error.details },
+        { status: error.status }
+      );
+    }
+
     console.error("Create Order Route Error:", error);
 
     const message = error instanceof Error ? error.message : "Unknown internal error";
@@ -315,107 +251,6 @@ export async function POST(req: Request) {
 
 // ====================== Helper Functions ======================
 
-function normalizeOrderDate(date: unknown, dateIso: unknown): string | null {
-  const tryParse = (value: unknown): string | null => {
-    if (typeof value !== "string" || !value.trim()) return null;
-
-    const isoMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if (isoMatch) return value;
-
-    const parsed = new Date(value);
-    if (Number.isNaN(parsed.getTime())) return null;
-
-    return parsed.toISOString().split("T")[0];
-  };
-
-  return tryParse(dateIso) ?? tryParse(date);
-}
-
-// Slugify so ids ("paquete-esencial"), display names ("Essential Package"),
-// and legacy values all compare on the same footing.
-function normalizePackageLookup(value: unknown): string {
-  return String(value ?? "")
-    .trim()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
-function resolveLegacyPackageId(value: unknown): string {
-  const normalized = normalizePackageLookup(value);
-
-  const legacyMap: Record<string, string> = {
-    "basic": "essential-package",
-    "full-day": "lunch-package",
-    "full_day": "lunch-package",
-    "private": "private-package",
-    "standard": "essential-package",
-    // Add more mappings as needed
-  };
-
-  return legacyMap[normalized] || normalized;
-}
-
-const GENERAL_ENTRY_KEYS = new Set([
-  "entrada-general",
-  "entrada general",
-  "general-entry",
-  "general entry",
-]);
-
-// USD conversion used by the booking form (see basePriceUSD in ReservationDetails)
-const CRC_PER_USD = 525;
-const DEFAULT_GENERAL_ENTRY_USD = 30;
-const DEFAULT_MAIN_TOUR_SLUG = "tour-ciudad-esmeralda";
-const DEFAULT_MAIN_TOUR_PRICE_CRC = 21000;
-
-function isGeneralEntrySelection(value: unknown): boolean {
-  return GENERAL_ENTRY_KEYS.has(normalizePackageLookup(value));
-}
-
-function buildGeneralEntryPackage(
-  tour: Record<string, unknown> | null,
-  tourSlug?: string
-) {
-  const dbPriceCRC = Number(tour?.priceCRC);
-  const priceCRC = Number.isFinite(dbPriceCRC) && dbPriceCRC > 0
-    ? dbPriceCRC
-    : tourSlug === DEFAULT_MAIN_TOUR_SLUG
-      ? DEFAULT_MAIN_TOUR_PRICE_CRC
-      : null;
-
-  return {
-    id: "entrada-general",
-    name: "General Entry",
-    nameEs: "Entrada General",
-    price: priceCRC ? Math.round(priceCRC / CRC_PER_USD) : DEFAULT_GENERAL_ENTRY_USD,
-  };
-}
-
-function findPackageByLegacyOrCurrentId(
-  packages: any[], 
-  input: string | undefined
-): any | null {
-  if (!input || !packages?.length) return null;
-
-  const normalizedInput = normalizePackageLookup(input);
-  const legacyMapped = resolveLegacyPackageId(input);
-
-  return packages.find((pkg) => {
-    const candidates = [
-      pkg.id,
-      pkg.name,
-      pkg.nameEs,
-      pkg._id?.toString?.(), // in case of ObjectId
-    ].filter(Boolean).map(normalizePackageLookup);
-
-    return candidates.includes(normalizedInput) || 
-           candidates.includes(normalizePackageLookup(legacyMapped));
-  });
-}
-
 function getPackageLabel(tourPackage: string | undefined, selectedPackage: any, language: string): string {
   if (tourPackage === "basic") return "Paquete Básico";
   if (tourPackage === "full-day") return "Día Completo con Almuerzo";
@@ -424,47 +259,6 @@ function getPackageLabel(tourPackage: string | undefined, selectedPackage: any, 
   return language === "en"
     ? selectedPackage.name
     : selectedPackage.nameEs || selectedPackage.name;
-}
-
-async function getRemainingCapacityForTourDate({
-  db,
-  tourSlug,
-  date,
-}: {
-  db: Awaited<ReturnType<typeof getDb>>;
-  tourSlug?: string;
-  date: string;
-}): Promise<number> {
-  const dateParts = date.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (!dateParts) return 0;
-
-  const [, yearRaw, monthRaw, dayRaw] = dateParts;
-  const localDate = new Date(Number(yearRaw), Number(monthRaw) - 1, Number(dayRaw));
-  const isWeekend = localDate.getDay() === 0 || localDate.getDay() === 6;
-  const capacity = isWeekend ? DEFAULT_AVAILABILITY.WEEKEND : DEFAULT_AVAILABILITY.WEEKDAY;
-
-  const query: Record<string, unknown> = {
-    date,
-    status: {
-      $in: ["COMPLETED", "completed", "confirmed", "CONFIRMED"],
-    },
-  };
-
-  if (tourSlug?.trim()) {
-    query.tourSlug = tourSlug.trim();
-  }
-
-  const existingReservations = await db
-    .collection(COLLECTIONS.RESERVATIONS)
-    .find(query, { projection: { tickets: 1 } })
-    .toArray();
-
-  const reserved = existingReservations.reduce((sum, doc) => {
-    const tickets = typeof doc.tickets === "number" ? doc.tickets : Number(doc.tickets ?? 0);
-    return Number.isFinite(tickets) && tickets > 0 ? sum + tickets : sum;
-  }, 0);
-
-  return Math.max(0, capacity - reserved);
 }
 
 function createCustomId(data: Record<string, any>): string {

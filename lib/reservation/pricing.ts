@@ -1,7 +1,6 @@
 import { fallbackPackagesForTour } from "@/lib/tour-packages";
 import type { TourPackageOption, TourSummary } from "@/lib/types/index";
-
-const CRC_TO_USD = 525;
+import { buildGeneralEntryPackage } from "./packages";
 
 export function getTourPackageOptions(tour: TourSummary | null | undefined): TourPackageOption[] {
   const fromTour = (tour?.packages ?? []).filter(
@@ -13,32 +12,10 @@ export function getTourPackageOptions(tour: TourSummary | null | undefined): Tou
   if (fallback.length > 0) return fallback;
 
   if (typeof tour?.priceCRC === "number" && tour.priceCRC > 0) {
-    const usd = Math.max(1, Math.round(tour.priceCRC / CRC_TO_USD));
-    return [
-      {
-        id: "general-entry",
-        name: "General Entry",
-        nameEs: "Entrada General",
-        price: usd,
-        priceCRC: tour.priceCRC,
-        descriptionEn: tour.descriptionEn ?? "",
-        descriptionEs: tour.descriptionEs ?? "",
-        groupTour: true,
-        departureTimes: ["08:00", "09:00", "10:00"],
-      },
-    ];
+    return [buildGeneralEntryPackage(tour, tour.slug)];
   }
 
-  return [
-    {
-      id: "general-entry",
-      name: "General Entry",
-      nameEs: "Entrada General",
-      price: 40,
-      groupTour: true,
-      departureTimes: ["08:00", "09:00", "10:00"],
-    },
-  ];
+  return [buildGeneralEntryPackage(tour, tour?.slug)];
 }
 
 export function resolveInitialPackage(

@@ -108,7 +108,6 @@ export async function POST(req: Request) {
         payerID: data.payer?.payer_id ?? null,
       },
       metadata: parseCustomData(purchaseUnit?.custom_id),
-      raw: data, // Remove in production if you want
     });
 
   } catch (error: unknown) {

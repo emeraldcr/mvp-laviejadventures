@@ -3,6 +3,7 @@ import type { KeyboardEvent, RefObject } from "react";
 import { Check, ShieldCheck } from "lucide-react";
 import type { ReservationAddonDetails, TourTime } from "@/lib/reservation/types";
 import { ADDON_OPTIONS, getTransportLocationLabel } from "@/lib/reservation/constants";
+import { getTransportPerPersonPrice } from "@/lib/reservation/transport";
 
 type ReservationTranslations = typeof import("@/lib/translations").translations["es"]["reservation"];
 
@@ -78,10 +79,9 @@ export default function ReservationDetailsStep3({
             {ADDON_OPTIONS.filter((a) => selectedAddons.includes(a.id)).map((addon) => {
               const detailLines = getAddonDetailLines(addon.id, addonDetails, lang);
               const isTransport = addon.id === "transporte";
-              let displayPrice = addon.price;
-              if (isTransport && transportQuote) {
-                displayPrice = transportQuote.perPerson ?? transportQuote.basePrice ?? addon.price;
-              }
+              const displayPrice = isTransport
+                ? getTransportPerPersonPrice(transportQuote, addon.price)
+                : addon.price;
 
               return (
                 <div key={addon.id} className="mb-3 rounded-xl border border-zinc-200 bg-white p-3 text-sm dark:border-zinc-700 dark:bg-zinc-900">

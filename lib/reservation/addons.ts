@@ -76,12 +76,33 @@ export const ADDON_DATA: AddOnData[] = [
   },
 ];
 
-export function getAddonsPricePerPerson(addonIds: readonly string[] | undefined | null): number {
+export type AddonPricingOptions = {
+  transportPricePerPerson?: number | null;
+};
+
+export function getAddonPricePerPerson(
+  addonId: string,
+  options: AddonPricingOptions = {},
+): number {
+  const addon = ADDON_DATA.find((item) => item.id === addonId);
+  if (!addon) return 0;
+
+  if (addonId === "transporte" && typeof options.transportPricePerPerson === "number") {
+    return options.transportPricePerPerson;
+  }
+
+  return addon.price;
+}
+
+export function getAddonsPricePerPerson(
+  addonIds: readonly string[] | undefined | null,
+  options: AddonPricingOptions = {},
+): number {
   if (!Array.isArray(addonIds) || addonIds.length === 0) return 0;
 
   const requested = new Set(addonIds.map((id) => String(id).trim()).filter(Boolean));
 
   return ADDON_DATA
     .filter((addon) => requested.has(addon.id))
-    .reduce((sum, addon) => sum + addon.price, 0);
+    .reduce((sum, addon) => sum + getAddonPricePerPerson(addon.id, options), 0);
 }

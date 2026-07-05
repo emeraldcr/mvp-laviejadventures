@@ -2,8 +2,19 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Check, ChevronRight, MapPin, SlidersHorizontal, X } from "lucide-react";
-import { ADDON_OPTIONS } from "@/lib/reservation/constants";
+import { Check, MapPin, SlidersHorizontal, X } from "lucide-react";
+import {
+  ADDON_OPTIONS,
+  TRANSPORT_DROPOFF_OPTIONS,
+  TRANSPORT_PICKUP_OPTIONS,
+} from "@/lib/reservation/constants";
+import { getAddonPricePerPerson } from "@/lib/reservation/addons";
+import {
+  getDefaultTransportDetails,
+  getTransportPerPersonPrice,
+  isTransportConfigComplete,
+  type TransportQuoteResult,
+} from "@/lib/reservation/transport";
 import type { AddOnOption, ReservationAddonDetails } from "@/lib/reservation/types";
 
 type Lang = "es" | "en";
@@ -17,6 +28,10 @@ type AddOnsExperienceProps = {
   showReserveLink?: boolean;
   excludedAddonIds?: string[];
   defaultCollapsed?: boolean;
+  transportQuote?: TransportQuoteResult | null;
+  transportLoading?: boolean;
+  transportError?: string | null;
+  transportPreview?: boolean;
 };
 
 const CATEGORY_LABELS: Record<AddOnOption["category"], { es: string; en: string }> = {
@@ -29,25 +44,6 @@ const CATEGORY_LABELS: Record<AddOnOption["category"], { es: string; en: string 
 
 const FOOD_OPTIONS = ["Casado con pollo", "Casado con res", "Vegetariano", "Menú infantil"];
 const PROTEIN_OPTIONS = ["Pollo", "Res", "Vegetariano", "Sin preferencia"];
-const PICKUP_OPTIONS = [
-  { id: "san-carlos", label: "San Carlos" },
-  { id: "la-fortuna", label: "La Fortuna" },
-  { id: "ciudad-quesada", label: "Ciudad Quesada" },
-  { id: "san-jose", label: "San Jose" },
-  { id: "hotel-airbnb", label: "Hotel / Airbnb" },
-  { id: "hotel-la-fortuna-central", label: "Hotel - La Fortuna central" },
-  { id: "hotel-arenal-area", label: "Hotel - Arenal area" },
-  { id: "hotel-san-vicente", label: "Hotel - San Vicente" },
-  { id: "hotel-ciudad-quesada", label: "Hotel - Ciudad Quesada" },
-  { id: "hotel-san-jose-airport", label: "Hotel - SJO airport area" },
-];
-const DROPOFF_OPTIONS = [
-  { id: "la-vieja-adventures", label: "La Vieja Adventures" },
-  { id: "san-vicente", label: "San Vicente" },
-  { id: "la-fortuna", label: "La Fortuna" },
-  { id: "san-jose", label: "San José" },
-  { id: "same-pickup", label: "Mismo pickup" },
-];
 
 export default function AddOnsExperience({
   lang,
@@ -58,6 +54,10 @@ export default function AddOnsExperience({
   showReserveLink = false,
   excludedAddonIds = [],
   defaultCollapsed = true,
+  transportQuote = null,
+  transportLoading = false,
+  transportError = null,
+  transportPreview = false,
 }: AddOnsExperienceProps) {
   const canSelect = Boolean(onAddonToggle);
   const [expanded, setExpanded] = useState(!defaultCollapsed);
@@ -72,11 +72,26 @@ export default function AddOnsExperience({
     onAddonDetailsChange?.({ ...addonDetails, ...patch });
   };
 
-  const toggleAddon = (addon: AddOnOption) => {
-    onAddonToggle?.(addon.id);
-    if (addon.configurable) {
-      setActiveAddonId(addon.id);
+  const openConfigurator = (addon: AddOnOption) => {
+    if (addon.id === "transporte" && !addonDetails.pickupLocation) {
+      updateDetails(getDefaultTransportDetails());
     }
+    setActiveAddonId(addon.id);
+  };
+
+  const handleAddonAction = (addon: AddOnOption) => {
+    const selected = selectedAddons.includes(addon.id);
+
+    if (addon.configurable) {
+      if (selected) {
+        onAddonToggle?.(addon.id);
+        return;
+      }
+      openConfigurator(addon);
+      return;
+    }
+
+    onAddonToggle?.(addon.id);
   };
 
   if (visibleAddons.length === 0) return null;
@@ -112,7 +127,15 @@ export default function AddOnsExperience({
           const Icon = addon.icon;
           const name = lang === "es" ? addon.nameEs : addon.nameEn;
           const description = lang === "es" ? addon.descriptionEs : addon.descriptionEn;
-          const priceNote = lang === "es" ? addon.priceNoteEs : addon.priceNoteEn;
+          const priceDisplay = getAddonPriceDisplay({
+            addon,
+            lang,
+            selected,
+            addonDetails,
+            transportQuote,
+            transportLoading,
+            transportPreview,
+          });
 
           return (
             <article
@@ -141,14 +164,16 @@ export default function AddOnsExperience({
 
               <div className="mt-4 flex items-end justify-between gap-3">
                 <div>
-                  <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-zinc-400">{priceNote}</p>
-                  <p className="text-2xl font-black text-zinc-950 dark:text-zinc-50">${addon.price}</p>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-zinc-400">{priceDisplay.note}</p>
+                  <p className={`text-2xl font-black ${priceDisplay.muted ? "text-zinc-500 dark:text-zinc-400" : "text-zinc-950 dark:text-zinc-50"}`}>
+                    {priceDisplay.value}
+                  </p>
                 </div>
                 <div className="flex gap-2">
                   {addon.configurable && (
                     <button
                       type="button"
-                      onClick={() => setActiveAddonId(addon.id)}
+                      onClick={() => openConfigurator(addon)}
                       className="flex h-11 w-11 items-center justify-center rounded-xl border border-zinc-300 bg-white text-zinc-700 transition hover:border-emerald-500 hover:text-emerald-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
                       aria-label={lang === "es" ? `Configurar ${name}` : `Configure ${name}`}
                     >
@@ -158,7 +183,7 @@ export default function AddOnsExperience({
                   {canSelect && (
                     <button
                       type="button"
-                      onClick={() => toggleAddon(addon)}
+                      onClick={() => handleAddonAction(addon)}
                       aria-pressed={selected}
                       className={`flex h-11 min-w-11 items-center justify-center rounded-xl px-3 font-black transition ${
                         selected
@@ -166,7 +191,7 @@ export default function AddOnsExperience({
                           : "bg-zinc-950 text-white hover:bg-emerald-700 dark:bg-zinc-100 dark:text-zinc-950"
                       }`}
                     >
-                      {selected ? <Check className="h-4 w-4" aria-hidden /> : "+"}
+                      {selected ? <Check className="h-4 w-4" aria-hidden /> : addon.configurable ? <SlidersHorizontal className="h-4 w-4" aria-hidden /> : "+"}
                     </button>
                   )}
                   {!canSelect && !addon.configurable && (
@@ -193,6 +218,10 @@ export default function AddOnsExperience({
           close={() => setActiveAddonId(null)}
           selected={selectedAddons.includes(activeAddon.id)}
           canSelect={canSelect}
+          transportQuote={transportQuote}
+          transportLoading={transportLoading}
+          transportError={transportError}
+          transportPreview={transportPreview || activeAddon.id === "transporte"}
           onSelect={() => {
             if (!selectedAddons.includes(activeAddon.id)) {
               onAddonToggle?.(activeAddon.id);
@@ -207,6 +236,68 @@ export default function AddOnsExperience({
   );
 }
 
+function getAddonPriceDisplay({
+  addon,
+  lang,
+  selected,
+  addonDetails,
+  transportQuote,
+  transportLoading,
+  transportPreview,
+}: {
+  addon: AddOnOption;
+  lang: Lang;
+  selected: boolean;
+  addonDetails: ReservationAddonDetails;
+  transportQuote: TransportQuoteResult | null;
+  transportLoading: boolean;
+  transportPreview: boolean;
+}) {
+  const priceNote = lang === "es" ? addon.priceNoteEs : addon.priceNoteEn;
+
+  if (addon.id !== "transporte") {
+    return {
+      note: priceNote,
+      value: `$${addon.price}`,
+      muted: false,
+    };
+  }
+
+  const configured = isTransportConfigComplete(addonDetails);
+  const showQuote = configured && (selected || transportPreview);
+
+  if (!configured) {
+    return {
+      note: lang === "es" ? "Configurá pickup y drop-off" : "Set pickup and drop-off",
+      value: lang === "es" ? "Configurar" : "Configure",
+      muted: true,
+    };
+  }
+
+  if (transportLoading && showQuote) {
+    return {
+      note: lang === "es" ? "Calculando ruta" : "Calculating route",
+      value: "…",
+      muted: true,
+    };
+  }
+
+  if (showQuote && transportQuote) {
+    const perPerson = getTransportPerPersonPrice(transportQuote, addon.price);
+    return {
+      note: `${priceNote} · ${transportQuote.distanceKm} km`,
+      value: `$${perPerson}`,
+      muted: false,
+    };
+  }
+
+  return {
+    note: lang === "es" ? "Precio según ruta" : "Price by route",
+    value: lang === "es" ? "Configurar" : "Configure",
+    muted: true,
+  };
+}
+
 function AddonModal({
   addon,
   lang,
@@ -216,6 +307,10 @@ function AddonModal({
   selected,
   canSelect,
   onSelect,
+  transportQuote,
+  transportLoading,
+  transportError,
+  transportPreview,
 }: {
   addon: AddOnOption;
   lang: Lang;
@@ -225,8 +320,18 @@ function AddonModal({
   selected: boolean;
   canSelect: boolean;
   onSelect: () => void;
+  transportQuote: TransportQuoteResult | null;
+  transportLoading: boolean;
+  transportError: string | null;
+  transportPreview: boolean;
 }) {
   const name = lang === "es" ? addon.nameEs : addon.nameEn;
+  const transportConfigured = addon.id === "transporte" && isTransportConfigComplete(details);
+  const transportReady = transportConfigured && Boolean(transportQuote) && !transportLoading && !transportError;
+  const canConfirmTransport = addon.id !== "transporte" || transportReady;
+  const transportPerPerson = transportQuote
+    ? getTransportPerPersonPrice(transportQuote, addon.price)
+    : getAddonPricePerPerson("transporte");
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-zinc-950/70 p-3 backdrop-blur-sm sm:items-center">
@@ -314,20 +419,26 @@ function AddonModal({
             <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-semibold text-emerald-900 dark:border-emerald-900/60 dark:bg-emerald-950/25 dark:text-emerald-200">
               <MapPin className="mb-1 h-4 w-4" aria-hidden />
               {lang === "es"
-                ? "La ruta final se confirma según clima, camino y horario. Seguridad primero, mae."
-                : "Final route is confirmed by weather, road conditions, and schedule. Safety first."}
+                ? "Primero elegí pickup y drop-off; el precio se calcula con la ruta."
+                : "Choose pickup and drop-off first; price is calculated from the route."}
             </div>
             <OptionSelect
               label={lang === "es" ? "Pickup" : "Pickup"}
-              value={details.pickupLocation ?? PICKUP_OPTIONS[0].id}
+              value={details.pickupLocation ?? TRANSPORT_PICKUP_OPTIONS[0].id}
               onChange={(value) => updateDetails({ pickupLocation: value })}
-              options={PICKUP_OPTIONS.map((option) => [option.id, option.label])}
+              options={TRANSPORT_PICKUP_OPTIONS.map((option) => [
+                option.id,
+                lang === "es" ? option.labelEs : option.labelEn,
+              ])}
             />
             <OptionSelect
               label={lang === "es" ? "Drop-off" : "Drop-off"}
-              value={details.dropoffLocation ?? DROPOFF_OPTIONS[0].id}
+              value={details.dropoffLocation ?? TRANSPORT_DROPOFF_OPTIONS[0].id}
               onChange={(value) => updateDetails({ dropoffLocation: value })}
-              options={DROPOFF_OPTIONS.map((option) => [option.id, option.label])}
+              options={TRANSPORT_DROPOFF_OPTIONS.map((option) => [
+                option.id,
+                lang === "es" ? option.labelEs : option.labelEn,
+              ])}
             />
             <TextInput
               className="sm:col-span-2"
@@ -336,6 +447,42 @@ function AddonModal({
               onChange={(value) => updateDetails({ transportNotes: value })}
               placeholder={lang === "es" ? "Nombre del hotel, vuelo, hora ideal..." : "Hotel name, flight, ideal time..."}
             />
+          </div>
+        )}
+
+        {addon.id === "transporte" && transportPreview && (
+          <div className="mt-5 rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/60">
+            <p className="text-[11px] font-black uppercase tracking-[0.14em] text-zinc-400">
+              {lang === "es" ? "Precio estimado" : "Estimated price"}
+            </p>
+            {transportLoading && (
+              <p className="mt-2 text-sm font-semibold text-zinc-600 dark:text-zinc-300">
+                {lang === "es" ? "Calculando ruta segura..." : "Calculating safe route..."}
+              </p>
+            )}
+            {transportError && (
+              <p className="mt-2 text-sm font-semibold text-red-600">{transportError}</p>
+            )}
+            {transportReady && transportQuote && (
+              <div className="mt-2 space-y-1">
+                <p className="text-3xl font-black text-zinc-950 dark:text-zinc-50">
+                  ${transportPerPerson}
+                  <span className="ml-2 text-sm font-bold text-zinc-500">
+                    / {lang === "es" ? "persona" : "person"}
+                  </span>
+                </p>
+                <p className="text-sm font-medium text-zinc-500">
+                  {transportQuote.distanceKm} km · {transportQuote.type === "private"
+                    ? (lang === "es" ? `Total vehículo $${transportQuote.total}` : `Vehicle total $${transportQuote.total}`)
+                    : (lang === "es" ? "Traslado compartido" : "Shared shuttle")}
+                </p>
+              </div>
+            )}
+            {transportConfigured && !transportLoading && !transportQuote && !transportError && (
+              <p className="mt-2 text-sm font-semibold text-zinc-600 dark:text-zinc-300">
+                {lang === "es" ? "Seleccioná pickup y drop-off para ver el precio." : "Select pickup and drop-off to see the price."}
+              </p>
+            )}
           </div>
         )}
 
@@ -351,9 +498,14 @@ function AddonModal({
             <button
               type="button"
               onClick={onSelect}
-              className="min-h-11 rounded-xl bg-emerald-600 px-5 py-2 font-black text-white hover:bg-emerald-500"
+              disabled={!canConfirmTransport}
+              className="min-h-11 rounded-xl bg-emerald-600 px-5 py-2 font-black text-white hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {selected ? (lang === "es" ? "Guardar cambios" : "Save changes") : (lang === "es" ? "Agregar extra" : "Add add-on")}
+              {selected
+                ? (lang === "es" ? "Guardar cambios" : "Save changes")
+                : addon.id === "transporte"
+                  ? (lang === "es" ? "Agregar con este precio" : "Add at this price")
+                  : (lang === "es" ? "Agregar extra" : "Add add-on")}
             </button>
           ) : (
             <Link

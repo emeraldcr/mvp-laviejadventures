@@ -1,12 +1,13 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
-import { ArrowLeft, CalendarDays, Check, ChevronRight, Clock, MapPin, ShieldCheck, Users } from "lucide-react";
+import { ArrowLeft, Backpack, CalendarDays, Check, ChevronRight, Clock, HelpCircle, Info, MapPin, Route, ShieldCheck, Sparkles, Users, X } from "lucide-react";
 import DynamicHeroHeader from "@/app/components/sections/DynamicHeroHeader";
 import { getDb } from "@/lib/helpers/mongodb";
 import { COLLECTIONS } from "@/lib/constants/db";
 import { fallbackPackagesForTour, normalizeTourPackages } from "@/lib/tour-packages";
 import { getTourGallery, getTourImage } from "@/lib/tour-display";
+import { getTourContent } from "@/lib/tour-content";
 import type { TourPackageOption } from "@/lib/types/index";
 
 export const dynamic = "force-dynamic";
@@ -102,16 +103,23 @@ export default async function TourDetailPage({ params }: TourDetailPageProps) {
 
   if (!tour) notFound();
 
-  const gallery = getTourGallery(tour.slug);
-  const heroImage = getTourImage(tour.slug);
+  const content = getTourContent(tour.slug);
+  const gallery = content && content.gallery.length > 0 ? content.gallery : getTourGallery(tour.slug);
+  const heroImage = content?.gallery[0] ?? getTourImage(tour.slug);
   const bookingHref = `/reservar?tour=${encodeURIComponent(tour.slug)}`;
   const bookingHrefForPackage = (packageId?: string | null) => {
     const packageParam = packageId ? `&package=${encodeURIComponent(packageId)}` : "";
     return `/reservar?tour=${encodeURIComponent(tour.slug)}${packageParam}`;
   };
   const title = tour.titleEs || tour.titleEn || "Tour";
+  const heroTagline = content?.tagline || tour.tagEs || "";
   const description = tour.details || tour.descriptionEs || tour.descriptionEn;
-  const inclusions = tour.inclusions.length > 0 ? tour.inclusions : DEFAULT_TOUR.inclusions;
+  const overview = content?.overview.length ? content.overview : [description];
+  const inclusions = content?.included.length
+    ? content.included
+    : tour.inclusions.length > 0
+      ? tour.inclusions
+      : DEFAULT_TOUR.inclusions;
 
   return (
     <main className="min-h-screen bg-black text-white">
@@ -160,22 +168,34 @@ export default async function TourDetailPage({ params }: TourDetailPageProps) {
 
       <section className="mx-auto grid max-w-7xl gap-8 px-4 pb-16 md:grid-cols-[1.1fr_0.9fr] md:px-8">
         <div>
-          <h2 className="text-2xl font-black text-white">Mas informacion</h2>
-          <p className="mt-4 text-base leading-relaxed text-zinc-300">
-            {description}
-          </p>
-
-          <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.04] p-6">
-            <h3 className="mb-4 text-lg font-black text-white">Incluye</h3>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {inclusions.map((item) => (
-                <div key={item} className="flex items-start gap-3 rounded-2xl border border-white/10 bg-black/35 p-4">
-                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" aria-hidden />
-                  <span className="text-sm leading-relaxed text-zinc-200">{item}</span>
-                </div>
-              ))}
-            </div>
+          <h2 className="text-2xl font-black text-white">Sobre esta experiencia</h2>
+          {heroTagline && (
+            <p className="mt-3 text-base font-bold italic leading-relaxed text-cyan-200/90">{heroTagline}</p>
+          )}
+          <div className="mt-4 space-y-4">
+            {overview.map((paragraph, index) => (
+              <p key={index} className="text-base leading-relaxed text-zinc-300">
+                {paragraph}
+              </p>
+            ))}
           </div>
+
+          {content && content.highlights.length > 0 && (
+            <div className="mt-8 rounded-3xl border border-cyan-400/15 bg-cyan-400/[0.04] p-6">
+              <h3 className="mb-4 flex items-center gap-2 text-lg font-black text-white">
+                <Sparkles className="h-5 w-5 text-cyan-300" aria-hidden />
+                Lo mejor del tour
+              </h3>
+              <ul className="grid gap-3 sm:grid-cols-2">
+                {content.highlights.map((item) => (
+                  <li key={item} className="flex items-start gap-3">
+                    <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" aria-hidden />
+                    <span className="text-sm leading-relaxed text-zinc-200">{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-1">
@@ -184,11 +204,136 @@ export default async function TourDetailPage({ params }: TourDetailPageProps) {
               key={`${image}-${index}`}
               src={image}
               alt={`${title} ${index + 1}`}
+              loading={index === 0 ? undefined : "lazy"}
               className="h-56 w-full rounded-3xl border border-white/10 object-cover shadow-2xl sm:h-64"
             />
           ))}
         </div>
       </section>
+
+      {content && content.itinerary.length > 0 && (
+        <section className="mx-auto max-w-7xl px-4 pb-16 md:px-8">
+          <div className="mb-6 flex items-center gap-4">
+            <h2 className="flex items-center gap-2 text-2xl font-black text-white">
+              <Route className="h-6 w-6 text-cyan-300" aria-hidden />
+              Cómo es el recorrido
+            </h2>
+            <div className="h-px flex-1 bg-gradient-to-r from-white/20 to-transparent" />
+          </div>
+          <ol className="relative ml-3 space-y-6 border-l border-white/10 pl-6">
+            {content.itinerary.map((stop, index) => (
+              <li key={index} className="relative">
+                <span className="absolute -left-[31px] top-1 grid h-4 w-4 place-items-center rounded-full border-2 border-cyan-300 bg-black" aria-hidden>
+                  <span className="h-1.5 w-1.5 rounded-full bg-cyan-300" />
+                </span>
+                <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                  {stop.time && (
+                    <span className="rounded-full bg-cyan-400/10 px-2.5 py-0.5 text-xs font-black tabular-nums text-cyan-200">
+                      {stop.time}
+                    </span>
+                  )}
+                  <h3 className="text-base font-black text-white">{stop.title}</h3>
+                </div>
+                <p className="mt-1.5 text-sm leading-relaxed text-zinc-400">{stop.description}</p>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
+
+      <section className="mx-auto grid max-w-7xl gap-6 px-4 pb-16 md:grid-cols-2 md:px-8">
+        <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
+          <h3 className="mb-4 flex items-center gap-2 text-lg font-black text-white">
+            <Check className="h-5 w-5 text-cyan-300" aria-hidden />
+            Incluye
+          </h3>
+          <ul className="space-y-3">
+            {inclusions.map((item) => (
+              <li key={item} className="flex items-start gap-3">
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" aria-hidden />
+                <span className="text-sm leading-relaxed text-zinc-200">{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {content && content.notIncluded.length > 0 && (
+          <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
+            <h3 className="mb-4 flex items-center gap-2 text-lg font-black text-white">
+              <X className="h-5 w-5 text-rose-300/80" aria-hidden />
+              No incluye
+            </h3>
+            <ul className="space-y-3">
+              {content.notIncluded.map((item) => (
+                <li key={item} className="flex items-start gap-3">
+                  <X className="mt-0.5 h-4 w-4 shrink-0 text-rose-300/70" aria-hidden />
+                  <span className="text-sm leading-relaxed text-zinc-300">{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </section>
+
+      {content && (content.whatToBring.length > 0 || content.goodToKnow.length > 0) && (
+        <section className="mx-auto grid max-w-7xl gap-6 px-4 pb-16 md:grid-cols-2 md:px-8">
+          {content.whatToBring.length > 0 && (
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
+              <h3 className="mb-4 flex items-center gap-2 text-lg font-black text-white">
+                <Backpack className="h-5 w-5 text-cyan-300" aria-hidden />
+                Qué llevar
+              </h3>
+              <ul className="space-y-3">
+                {content.whatToBring.map((item) => (
+                  <li key={item} className="flex items-start gap-3">
+                    <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" aria-hidden />
+                    <span className="text-sm leading-relaxed text-zinc-200">{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {content.goodToKnow.length > 0 && (
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
+              <h3 className="mb-4 flex items-center gap-2 text-lg font-black text-white">
+                <Info className="h-5 w-5 text-cyan-300" aria-hidden />
+                Bueno saber antes de ir
+              </h3>
+              <ul className="space-y-3">
+                {content.goodToKnow.map((item) => (
+                  <li key={item} className="flex items-start gap-3">
+                    <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" aria-hidden />
+                    <span className="text-sm leading-relaxed text-zinc-200">{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </section>
+      )}
+
+      {content && content.faqs.length > 0 && (
+        <section className="mx-auto max-w-7xl px-4 pb-16 md:px-8">
+          <div className="mb-6 flex items-center gap-4">
+            <h2 className="flex items-center gap-2 text-2xl font-black text-white">
+              <HelpCircle className="h-6 w-6 text-cyan-300" aria-hidden />
+              Preguntas frecuentes
+            </h2>
+            <div className="h-px flex-1 bg-gradient-to-r from-white/20 to-transparent" />
+          </div>
+          <div className="space-y-3">
+            {content.faqs.map((faq) => (
+              <details key={faq.q} className="group rounded-2xl border border-white/10 bg-white/[0.04] p-5 [&_summary::-webkit-details-marker]:hidden">
+                <summary className="flex cursor-pointer items-center justify-between gap-3 text-base font-bold text-white">
+                  {faq.q}
+                  <ChevronRight className="h-4 w-4 shrink-0 text-cyan-300 transition-transform group-open:rotate-90" aria-hidden />
+                </summary>
+                <p className="mt-3 text-sm leading-relaxed text-zinc-400">{faq.a}</p>
+              </details>
+            ))}
+          </div>
+        </section>
+      )}
 
       {tour.packages.length > 0 && (
         <section className="mx-auto max-w-7xl px-4 pb-20 md:px-8">
