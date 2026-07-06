@@ -259,7 +259,7 @@ async function advanceToNextRound(
   );
   const queue = state.queue.filter((entry) => !completedIds.has(entry.visitorId));
   const newRound = (state.game?.roundNumber ?? 0) + 1;
-  const usedIds = new Set<string>();
+  const usedIds = new Set(completedIds);
 
   function pull(preferred: PenalitosRoleKey): PenalitosPlayerDoc | null {
     let idx = queue.findIndex((e) => e.preferredRole === preferred && !usedIds.has(e.visitorId));

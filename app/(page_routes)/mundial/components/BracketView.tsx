@@ -1,9 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Calendar, MapPin, Trophy, X } from "lucide-react";
+import { Calendar, MapPin, Trophy, Users, X } from "lucide-react";
 import type { LeaderboardEntry, MundialMatch, Prediction } from "../types";
-import { cn, formatKickoff } from "../utils";
+import { cn, formatKickoff, normalizeKey } from "../utils";
 import { teamCode } from "../flags";
 import { computePredictionResult, matchWinnerSide } from "@/lib/mundial/prediction-scoring";
 import { Flag } from "./Flag";
@@ -84,6 +84,12 @@ function decisionSuffix(method: MundialMatch["decisionMethod"] | Prediction["win
   return "";
 }
 
+function decisionLong(method: MundialMatch["decisionMethod"] | Prediction["winnerPickMethod"] | undefined) {
+  if (method === "extraTime") return "tiempos extra";
+  if (method === "penalties") return "penales";
+  return "regular";
+}
+
 function isReal(name: string) {
   return !!name && !/^(Ganador|Perdedor|1ro|2do|3ro|TBD|$)/.test(name.trim());
 }
@@ -129,12 +135,17 @@ const RA = { outer: 268, label: 300, r32: 238, r16: 198, qf: 140, sf: 82, finalP
 
 export function BracketView({
   matches,
+  predictions,
+  playerName,
 }: {
   matches: MundialMatch[];
+  predictions: Prediction[];
+  playerName: string;
 }) {
   const [selected, setSelected] = useState<number | null>(null);
 
   const byNum = useMemo(() => new Map(matches.map((m) => [m.number, m])), [matches]);
+  const selectedMatch = selected != null ? byNum.get(selected) ?? null : null;
 
   return (
     <section className="grid gap-4">
@@ -157,8 +168,12 @@ export function BracketView({
           <div className="mx-auto w-full rounded-[1.25rem] border border-white/8 bg-black/18 p-1 shadow-[inset_0_0_50px_rgba(0,0,0,0.35)] sm:p-2" style={{ maxWidth: 700, aspectRatio: "1 / 1" }}>
             <BracketSVG
               byNum={byNum}
+              predictions={predictions}
+              playerName={playerName}
+              selectedMatch={selectedMatch}
               selected={selected}
               onSelect={(n) => setSelected((prev) => (prev === n ? null : n))}
+              onClear={() => setSelected(null)}
             />
           </div>
         </div>
@@ -292,18 +307,28 @@ function RailTeam({
 
 function BracketSVG({
   byNum,
+  predictions,
+  playerName,
+  selectedMatch,
   selected,
   onSelect,
+  onClear,
 }: {
   byNum: Map<number, MundialMatch>;
+  predictions: Prediction[];
+  playerName: string;
+  selectedMatch: MundialMatch | null;
   selected: number | null;
   onSelect: (n: number) => void;
+  onClear: () => void;
 }) {
   const gm = (n: number) => byNum.get(n);
   const hasRes = (n: number) => gm(n)?.homeFinalScore != null;
-  const lineC = (n: number) =>
-    hasRes(n) ? "rgba(240,180,41,0.72)" : "rgba(255,255,255,0.08)";
-  const lineW = (n: number) => (hasRes(n) ? 1.5 : 0.8);
+  const lineC = (n: number) => {
+    if (selected === n) return "rgba(213,255,63,0.95)";
+    return hasRes(n) ? "rgba(240,180,41,0.78)" : "rgba(255,255,255,0.11)";
+  };
+  const lineW = (n: number) => selected === n ? 2.2 : hasRes(n) ? 1.55 : 0.85;
 
   function connLine(r1: number, a1: number, r2: number, a2: number, matchNum: number) {
     const [x1, y1] = pt(r1, a1);
@@ -333,8 +358,8 @@ function BracketSVG({
       <line
         key={`entry-${matchNum}-${side}`}
         x1={x1} y1={y1} x2={x2} y2={y2}
-        stroke={won ? "rgba(240,180,41,0.75)" : "rgba(255,255,255,0.1)"}
-        strokeWidth={won ? 1.25 : 0.65}
+        stroke={selected === matchNum ? "rgba(213,255,63,0.95)" : won ? "rgba(240,180,41,0.82)" : "rgba(255,255,255,0.12)"}
+        strokeWidth={selected === matchNum ? 1.85 : won ? 1.35 : 0.72}
         strokeLinecap="round"
       />
     );
@@ -395,12 +420,13 @@ function BracketSVG({
       {/* center ambient */}
       <circle cx={CX} cy={CY} r={92} fill="url(#cg)" />
       <circle cx={CX} cy={CY} r={48} fill="none" stroke="rgba(240,180,41,0.16)" strokeWidth={1} />
+      <circle cx={CX} cy={CY} r={72} fill="none" stroke="rgba(213,255,63,0.08)" strokeWidth={0.8} strokeDasharray="4 8" />
 
       {/* guide rings */}
       {[RA.outer, RA.r32, RA.r16, RA.qf, RA.sf].map((r) => (
         <circle key={r} cx={CX} cy={CY} r={r}
-          fill="none" stroke="rgba(255,255,255,0.06)"
-          strokeWidth={r === RA.outer ? 1 : 1} strokeDasharray={r === RA.outer ? "" : "2 7"} />
+          fill="none" stroke={r === RA.outer ? "rgba(240,180,41,0.16)" : "rgba(255,255,255,0.075)"}
+          strokeWidth={r === RA.outer ? 1.2 : 0.95} strokeDasharray={r === RA.outer ? "" : "2 7"} />
       ))}
 
       {/* connectors */}
@@ -480,6 +506,15 @@ function BracketSVG({
 
       {/* Stage ring labels */}
       <StageRingLabels showThirdCaption={!winnerTeam(gm(103))} />
+
+      {selectedMatch && (
+        <SelectedMatchCallout
+          match={selectedMatch}
+          predictions={predictions}
+          playerName={playerName}
+          onClose={onClear}
+        />
+      )}
     </svg>
   );
 }
@@ -488,27 +523,77 @@ function BracketSVG({
 
 function SelectedMatchCallout({
   match,
-  prediction,
+  predictions,
+  playerName,
   onClose,
 }: {
   match: MundialMatch;
-  prediction: Prediction | null;
+  predictions: Prediction[];
+  playerName: string;
   onClose: () => void;
 }) {
   const winner = mwinner(match);
   const hasResult = match.homeFinalScore != null && match.awayFinalScore != null;
-  const status = hasResult ? "Resultado" : formatKickoff(match.kickoffAt);
-  const predText = prediction ? `${prediction.homeScore}-${prediction.awayScore}` : "Sin pick";
+  const matchPicks = predictions.filter((prediction) => prediction.matchId === match.id);
+  const myKey = normalizeKey(playerName);
+  const myPick = matchPicks.find((prediction) => normalizeKey(prediction.playerName) === myKey) ?? null;
+  const scoreCounts = new Map<string, number>();
+  for (const pick of matchPicks) {
+    const key = `${pick.homeScore}-${pick.awayScore}`;
+    scoreCounts.set(key, (scoreCounts.get(key) ?? 0) + 1);
+  }
+  const popular = [...scoreCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3);
+  const predText = myPick ? `${myPick.homeScore}-${myPick.awayScore}` : "Sin pick";
+
+  let myPoints: number | null = null;
+  let myStatus = hasResult ? "Sin pick" : "Pendiente";
+  if (myPick && hasResult) {
+    const result = computePredictionResult(
+      {
+        stage: match.stage,
+        homeFinalScore: match.homeFinalScore!,
+        awayFinalScore: match.awayFinalScore!,
+        homeRegulationScore: match.homeRegulationScore,
+        awayRegulationScore: match.awayRegulationScore,
+        actualWinner: match.actualWinner,
+        decisionMethod: match.decisionMethod ?? undefined,
+      },
+      {
+        homeScore: myPick.homeScore,
+        awayScore: myPick.awayScore,
+        winnerPick: myPick.winnerPick,
+        winnerPickMethod: myPick.winnerPickMethod,
+      },
+    );
+    myPoints = result.points;
+    myStatus = result.kind === "exact"
+      ? "Exacto"
+      : result.kind === "outcome"
+        ? "Resultado"
+        : result.kind === "bonus"
+          ? "Bonus"
+          : "Fallo";
+  } else if (myPick) {
+    myStatus = myPick.winnerPick
+      ? `Pasa ${teamCode(myPick.winnerPick === "home" ? match.homeTeam : match.awayTeam)}`
+      : "Guardado";
+  }
+
+  const resultText = hasResult
+    ? `${match.homeFinalScore}-${match.awayFinalScore}${match.homeFinalScore === match.awayFinalScore ? decisionSuffix(match.decisionMethod) : ""}`
+    : formatKickoff(match.kickoffAt);
 
   return (
-    <foreignObject x={224} y={292} width={252} height={92} style={{ overflow: "visible" }}>
-      <div className="pointer-events-auto h-full rounded-xl border border-[#f0b429]/45 bg-[#030806]/92 p-2.5 text-white shadow-[0_18px_46px_rgba(0,0,0,0.65),0_0_26px_rgba(240,180,41,0.12)] backdrop-blur-md">
-        <div className="mb-2 flex items-center justify-between gap-2">
+    <foreignObject x={216} y={244} width={268} height={214} style={{ overflow: "visible" }}>
+      <div className="pointer-events-auto h-full rounded-xl border border-[#f0b429]/50 bg-[#030806]/94 p-2.5 text-white shadow-[0_18px_46px_rgba(0,0,0,0.70),0_0_30px_rgba(240,180,41,0.16)] backdrop-blur-md">
+        <div className="mb-2 flex items-start justify-between gap-2">
           <div className="min-w-0">
             <p className="text-[8px] font-black uppercase tracking-[0.18em] text-[#d5ff3f]">
               {match.stageLabel} #{match.number}
             </p>
-            <p className="truncate text-[10px] font-bold text-white/45">{status}</p>
+            <p className="truncate text-[10px] font-bold text-white/45">
+              {hasResult ? `Resultado por ${decisionLong(match.decisionMethod)}` : "Por jugar"}
+            </p>
           </div>
           <button
             type="button"
@@ -522,14 +607,69 @@ function SelectedMatchCallout({
 
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
           <CalloutTeam team={match.homeTeam} score={match.homeFinalScore} active={winner === "home"} align="right" />
-          <div className="rounded-lg border border-white/10 bg-black/40 px-2 py-1 text-center">
-            <p className="text-[8px] font-bold uppercase text-white/35">pick</p>
-            <p className="text-xs font-black tabular-nums text-[#62ffe6]">{predText}</p>
+          <div className="rounded-lg border border-white/10 bg-black/45 px-2 py-1 text-center">
+            <p className="text-[8px] font-bold uppercase text-white/35">{hasResult ? "marcador" : "inicio"}</p>
+            <p className="text-xs font-black tabular-nums text-[#f0b429]">{resultText}</p>
           </div>
           <CalloutTeam team={match.awayTeam} score={match.awayFinalScore} active={winner === "away"} align="left" />
         </div>
+
+        <div className="mt-2 grid grid-cols-2 gap-1.5">
+          <MiniInfoStat label="Mi pick" value={predText} tone="cyan" />
+          <MiniInfoStat label="Como voy" value={myPoints != null ? `${myStatus} +${myPoints}` : myStatus} tone={myPoints && myPoints > 0 ? "lime" : myStatus === "Fallo" ? "orange" : "muted"} />
+        </div>
+
+        <div className="mt-2 rounded-lg border border-white/10 bg-black/35 p-2">
+          <div className="mb-1.5 flex items-center justify-between gap-2">
+            <p className="inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-[0.16em] text-white/45">
+              <Users className="h-2.5 w-2.5 text-[#f0b429]" />
+              Amigos
+            </p>
+            <span className="text-[9px] font-black text-[#d5ff3f]">{matchPicks.length} picks</span>
+          </div>
+          <div className="grid gap-1">
+            {popular.length > 0 ? popular.map(([score, count]) => (
+              <div key={score} className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-1.5">
+                <span className="text-[10px] font-black tabular-nums text-white">{score}</span>
+                <span className="h-1.5 overflow-hidden rounded-full bg-white/10">
+                  <span
+                    className="block h-full rounded-full bg-[#f0b429]"
+                    style={{ width: `${Math.max(10, Math.round((count / Math.max(1, matchPicks.length)) * 100))}%` }}
+                  />
+                </span>
+                <span className="text-[9px] font-bold text-white/45">{count}</span>
+              </div>
+            )) : (
+              <p className="text-[10px] font-bold text-white/35">Todavia nadie se ha mandado con este.</p>
+            )}
+          </div>
+        </div>
       </div>
     </foreignObject>
+  );
+}
+
+function MiniInfoStat({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone: "cyan" | "lime" | "orange" | "muted";
+}) {
+  const toneClass = {
+    cyan: "text-[#62ffe6]",
+    lime: "text-[#d5ff3f]",
+    orange: "text-[#ffb15f]",
+    muted: "text-white/65",
+  }[tone];
+
+  return (
+    <div className="min-w-0 rounded-lg border border-white/10 bg-black/35 px-2 py-1.5">
+      <p className="text-[8px] font-black uppercase tracking-[0.12em] text-white/35">{label}</p>
+      <p className={cn("mt-0.5 truncate text-[10px] font-black", toneClass)}>{value}</p>
+    </div>
   );
 }
 

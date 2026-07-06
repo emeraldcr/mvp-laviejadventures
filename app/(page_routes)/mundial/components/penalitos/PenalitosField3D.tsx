@@ -18,7 +18,7 @@ export type PenalitosField3DProps = {
 function FieldFallback({ compact }: { compact?: boolean }) {
   return (
     <div
-      className={`flex items-center justify-center bg-[#0a3d1f] ${compact ? "h-32 sm:h-44" : "h-56 sm:h-72"}`}
+      className={`flex items-center justify-center bg-[#0a3d1f] ${compact ? "h-28 min-[380px]:h-32 sm:h-40" : "h-56 sm:h-72"}`}
     >
       <span className="text-white/40 text-xs font-bold uppercase tracking-widest animate-pulse">
         Cargando cancha…
@@ -37,7 +37,7 @@ export const PenalitosField3D = memo(function PenalitosField3D({
   compact = false,
 }: PenalitosField3DProps) {
   return (
-    <div className={compact ? "h-32 sm:h-44" : "h-56 sm:h-72"}>
+    <div className={compact ? "h-28 min-[380px]:h-32 sm:h-40" : "h-56 sm:h-72"}>
       <Canvas
         camera={{ position: [0, 1.75, 7.2], fov: 48, near: 0.1, far: 40 }}
         gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}

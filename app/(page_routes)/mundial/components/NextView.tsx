@@ -5,9 +5,11 @@ import { emptyDraft } from "../utils";
 import { FeaturedMatch } from "./FeaturedMatch";
 import { MatchSelector } from "./MatchSelector";
 import { OtherPicksPanel } from "./OtherPicksPanel";
+import { PenalitosPanel } from "./PenalitosPanel";
 
 type NextViewProps = {
   activeMatch: MundialMatch | null;
+  activeLiveMatch: MundialMatch | null;
   selectedInfoMatch: MundialMatch | null;
   featuredMatch: MundialMatch | null;
   matches: MundialMatch[];
@@ -25,6 +27,7 @@ type NextViewProps = {
 
 export function NextView({
   activeMatch,
+  activeLiveMatch,
   selectedInfoMatch,
   featuredMatch,
   matches,
@@ -85,7 +88,10 @@ export function NextView({
               onOpenPlayerPicker={onOpenPlayerPicker}
             />
           </div>
-          <div className="min-w-0 xl:sticky xl:top-20">
+          <div className="grid min-w-0 gap-3 xl:sticky xl:top-20">
+            {activeLiveMatch && (
+              <PenalitosPanel liveMatch={activeLiveMatch} playerName={playerName} compact />
+            )}
             <OtherPicksPanel
               match={featuredMatch}
               predictions={predictions}

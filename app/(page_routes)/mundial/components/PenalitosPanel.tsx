@@ -119,11 +119,13 @@ const DirectionButton = memo(function DirectionButton({
   chosen,
   disabled,
   onChoose,
+  compact = false,
 }: {
   dir: PenalitosDirection;
   chosen: PenalitosDirection | null;
   disabled: boolean;
   onChoose: (d: PenalitosDirection) => void;
+  compact?: boolean;
 }) {
   const isSelected = chosen === dir;
   return (
@@ -131,7 +133,8 @@ const DirectionButton = memo(function DirectionButton({
       onClick={() => onChoose(dir)}
       disabled={disabled}
       className={cn(
-        "h-16 sm:h-20 rounded-2xl font-black text-base sm:text-xl transition-all active:scale-95 select-none",
+        "rounded-2xl font-black transition-all active:scale-95 select-none",
+        compact ? "h-12 text-xs sm:h-14 sm:text-sm" : "h-16 text-base sm:h-20 sm:text-xl",
         isSelected
           ? "bg-[#f0b429] text-black shadow-lg shadow-[#f0b429]/40 scale-105"
           : "bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -152,6 +155,7 @@ const PlayerCard = memo(function PlayerCard({
   isMe,
   choice,
   revealed,
+  compact = false,
 }: {
   emoji: string;
   label: string;
@@ -160,6 +164,7 @@ const PlayerCard = memo(function PlayerCard({
   isMe: boolean;
   choice: PenalitosDirection | null;
   revealed: boolean;
+  compact?: boolean;
 }) {
   const choiceLabel = choice
     ? choice === "left" ? "← IZQ" : choice === "center" ? "CENTRO" : "DER →"
@@ -168,13 +173,14 @@ const PlayerCard = memo(function PlayerCard({
   return (
     <div
       className={cn(
-        "flex flex-col items-center rounded-2xl p-4 bg-black/50 transition-all",
+        "flex flex-col items-center rounded-2xl bg-black/50 transition-all",
+        compact ? "p-2.5" : "p-4",
         isMe && "ring-2 ring-[#f0b429]"
       )}
     >
-      <div className="text-4xl mb-1">{emoji}</div>
-      <p className="font-black text-base truncate max-w-[120px]">{name || "—"}</p>
-      <p className={cn("text-xs font-bold uppercase tracking-widest", labelColor)}>{label}</p>
+      <div className={cn("mb-1", compact ? "text-2xl" : "text-4xl")}>{emoji}</div>
+      <p className={cn("truncate font-black", compact ? "max-w-[96px] text-xs" : "max-w-[120px] text-base")}>{name || "—"}</p>
+      <p className={cn("font-bold uppercase tracking-widest", compact ? "text-[10px]" : "text-xs", labelColor)}>{label}</p>
       {isMe && <p className="text-[10px] text-[#f0b429] mt-1">TÚ</p>}
       {revealed && choiceLabel && (
         <p className="mt-2 text-xs font-mono bg-white/10 rounded px-2 py-0.5">{choiceLabel}</p>
@@ -335,6 +341,36 @@ export function PenalitosPanel({ liveMatch, playerName, compact = false }: Props
     }
   }, [gameId]);
 
+  // ------- Derived state -------
+  const isGoalkeeper = !!visitorId && game?.goalkeeper?.visitorId === visitorId;
+  const isShooter = !!visitorId && game?.shooter?.visitorId === visitorId;
+  const isPlaying = isGoalkeeper || isShooter;
+  const myRole: PenalitosRole | null = isGoalkeeper ? "goalkeeper" : isShooter ? "shooter" : null;
+
+  const queuePosition = useMemo(
+    () => (visitorId ? queue.findIndex((e) => e.visitorId === visitorId) + 1 : 0),
+    [queue, visitorId]
+  );
+  const isInQueue = queuePosition > 0;
+
+  const chooseDeadlineMs = game?.chooseDeadline ? new Date(game.chooseDeadline).getTime() : null;
+  const timerSec = chooseDeadlineMs
+    ? Math.max(0, Math.ceil((chooseDeadlineMs - nowMs) / 1000))
+    : 0;
+  const timerPct = chooseDeadlineMs
+    ? Math.max(0, Math.min(100, ((chooseDeadlineMs - nowMs) / 10_000) * 100))
+    : 0;
+
+  const serverChoice =
+    myRole === "goalkeeper"
+      ? game?.goalkeeperChoice ?? null
+      : myRole === "shooter"
+      ? game?.shooterChoice ?? null
+      : null;
+  const selectedChoice = myChoice ?? serverChoice;
+  const needsMyChoice =
+    game?.status === "choosing" && isPlaying && selectedChoice === null;
+
   // Confetti on goal
   useEffect(() => {
     if (game?.status !== "finished" || !game.outcome || !game.resolvedAt) return;
@@ -368,41 +404,51 @@ export function PenalitosPanel({ liveMatch, playerName, compact = false }: Props
   useEffect(() => {
     if (!notificationsEnabled || typeof Notification === "undefined" || Notification.permission !== "granted") return;
     if (!game || !visitorId) return;
-    const isMyTurn =
-      game.status === "choosing" &&
-      (game.goalkeeper?.visitorId === visitorId || game.shooter?.visitorId === visitorId) &&
-      !game.goalkeeperChoice &&
-      !game.shooterChoice;
-    if (!isMyTurn) return;
-    const key = `penalitos-notified-${game.id}`;
+
+    if (needsMyChoice) {
+      const key = `penalitos-turn-${game.id}`;
+      if (!sessionStorage.getItem(key)) {
+        sessionStorage.setItem(key, "1");
+        new Notification("Penalitos: es su turno", {
+          body: "Tenés 10 segundos para elegir dirección.",
+          tag: `penalitos-turn-${game.id}`,
+        });
+      }
+    }
+
+    if (game.status === "finished" && game.resolvedAt && isPlaying) {
+      const key = `penalitos-result-${game.id}-${game.resolvedAt}`;
+      if (!sessionStorage.getItem(key)) {
+        sessionStorage.setItem(key, "1");
+        const won =
+          (game.outcome === "goal" && isShooter) ||
+          (game.outcome === "save" && isGoalkeeper);
+        new Notification(won ? "Penalitos: ¡ganaste!" : "Penalitos: perdiste", {
+          body: game.outcome === "goal"
+            ? `${game.shooter?.name ?? "Lanzador"} anotó`
+            : `${game.goalkeeper?.name ?? "Portero"} la atajó`,
+          tag: `penalitos-result-${game.id}`,
+        });
+      }
+    }
+  }, [game, isGoalkeeper, isPlaying, isShooter, needsMyChoice, notificationsEnabled, visitorId]);
+
+  useEffect(() => {
+    if (!notificationsEnabled || typeof Notification === "undefined" || Notification.permission !== "granted") return;
+    if (!visitorId || !isInQueue || queuePosition > 2) return;
+    const key = `penalitos-queue-${queuePosition}-${queue[queuePosition - 1]?.visitorId ?? ""}`;
     if (sessionStorage.getItem(key)) return;
     sessionStorage.setItem(key, "1");
-    new Notification("Penalitos: es su turno", {
-      body: "Tiene 10 segundos para elegir dirección.",
-      tag: game.id,
-      silent: false,
-    });
-  }, [game, notificationsEnabled, visitorId]);
-
-  // ------- Derived state -------
-  const isGoalkeeper = !!visitorId && game?.goalkeeper?.visitorId === visitorId;
-  const isShooter = !!visitorId && game?.shooter?.visitorId === visitorId;
-  const isPlaying = isGoalkeeper || isShooter;
-  const myRole: PenalitosRole | null = isGoalkeeper ? "goalkeeper" : isShooter ? "shooter" : null;
-
-  const queuePosition = useMemo(
-    () => (visitorId ? queue.findIndex((e) => e.visitorId === visitorId) + 1 : 0),
-    [queue, visitorId]
-  );
-  const isInQueue = queuePosition > 0;
-
-  const chooseDeadlineMs = game?.chooseDeadline ? new Date(game.chooseDeadline).getTime() : null;
-  const timerSec = chooseDeadlineMs
-    ? Math.max(0, Math.ceil((chooseDeadlineMs - nowMs) / 1000))
-    : 0;
-  const timerPct = chooseDeadlineMs
-    ? Math.max(0, Math.min(100, ((chooseDeadlineMs - nowMs) / 10_000) * 100))
-    : 0;
+    new Notification(
+      queuePosition === 1 ? "Penalitos: sos el siguiente" : "Penalitos: casi te toca",
+      {
+        body: queuePosition === 1
+          ? "Quedás primero en la cola. Preparate."
+          : `Estás #${queuePosition} en la cola.`,
+        tag: "penalitos-queue",
+      }
+    );
+  }, [isInQueue, notificationsEnabled, queue, queuePosition, visitorId]);
 
   const resolvedAtMs = game?.resolvedAt ? new Date(game.resolvedAt).getTime() : null;
   const isAnimating =
@@ -410,15 +456,7 @@ export function PenalitosPanel({ liveMatch, playerName, compact = false }: Props
   const showResult =
     game?.status === "finished" && resolvedAtMs !== null && nowMs - resolvedAtMs >= ANIM_DURATION_MS;
 
-  const serverChoice =
-    myRole === "goalkeeper"
-      ? game?.goalkeeperChoice ?? null
-      : myRole === "shooter"
-      ? game?.shooterChoice ?? null
-      : null;
-  const selectedChoice = myChoice ?? serverChoice;
-  const canChoose =
-    game?.status === "choosing" && isPlaying && selectedChoice === null;
+  const canChoose = needsMyChoice;
   const alreadyChose = isPlaying && selectedChoice !== null;
 
   const showJoinGoalkeeper = !isPlaying && !isInQueue && (!game || game.status === "waiting") && !game?.goalkeeper;
@@ -435,24 +473,53 @@ export function PenalitosPanel({ liveMatch, playerName, compact = false }: Props
     [scores]
   );
 
-  const visibleViewers = useMemo(
-    () => viewers.filter((viewer) => viewer.visitorId !== visitorId).slice(0, compact ? 5 : 12),
-    [compact, viewers, visitorId]
-  );
+  const activePlayers = useMemo(() => {
+    const playing = new Map<string, { name: string; status: "playing" | "queued" | "online"; role?: PenalitosRole }>();
 
-  const visibleRecentViewers = useMemo(
-    () =>
-      recentViewers
-        .filter((viewer) => viewer.visitorId !== visitorId && !viewers.some((active) => active.visitorId === viewer.visitorId))
-        .slice(0, compact ? 4 : 10),
-    [compact, recentViewers, viewers, visitorId]
-  );
+    if (game?.goalkeeper) {
+      playing.set(game.goalkeeper.visitorId, {
+        name: game.goalkeeper.name,
+        status: "playing",
+        role: "goalkeeper",
+      });
+    }
+    if (game?.shooter) {
+      playing.set(game.shooter.visitorId, {
+        name: game.shooter.name,
+        status: "playing",
+        role: "shooter",
+      });
+    }
+    for (const entry of queue) {
+      if (playing.has(entry.visitorId)) continue;
+      playing.set(entry.visitorId, {
+        name: entry.name,
+        status: "queued",
+        role: entry.preferredRole,
+      });
+    }
+    for (const viewer of viewers) {
+      if (playing.has(viewer.visitorId)) continue;
+      playing.set(viewer.visitorId, { name: viewer.name, status: "online" });
+    }
+
+    const order = { playing: 0, queued: 1, online: 2 } as const;
+    return [...playing.entries()]
+      .map(([id, info]) => ({ id, ...info, isMe: id === visitorId }))
+      .sort((a, b) => order[a.status] - order[b.status] || a.name.localeCompare(b.name))
+      .slice(0, compact ? 8 : 14);
+  }, [compact, game, queue, visitorId, viewers]);
 
   // Use SSE liveMatch for real-time score; fall back to prop
   const displayMatch: LiveMatchSnapshot | MundialMatch | null = sseLiveMatch ?? liveMatch;
 
   // ------- Handlers -------
   const enableGameFeedback = useCallback(async () => {
+    if (soundEnabled || notificationsEnabled) {
+      setSoundEnabled(false);
+      setNotificationsEnabled(false);
+      return;
+    }
     setSoundEnabled(true);
     playTone([[520, 0, 90], [760, 120, 120]]);
     if (typeof Notification !== "undefined") {
@@ -463,7 +530,7 @@ export function PenalitosPanel({ liveMatch, playerName, compact = false }: Props
         setNotificationsEnabled(permission === "granted");
       }
     }
-  }, []);
+  }, [notificationsEnabled, soundEnabled]);
 
   const joinAs = useCallback(async (role: PenalitosRole) => {
     if (!visitorId || isPlaying || isInQueue) return;
@@ -569,7 +636,7 @@ export function PenalitosPanel({ liveMatch, playerName, compact = false }: Props
         {/* ═══ HEADER ═══ */}
         <div className={cn("border-b border-white/5", compact ? "px-3 pt-3 pb-2" : "px-5 sm:px-8 pt-6 pb-4")}>
           {compact ? (
-            <div className="flex items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <span className="text-base leading-none">⚽</span>
                 <span className="text-sm font-black tracking-tight">PENALITOS</span>
@@ -585,8 +652,8 @@ export function PenalitosPanel({ liveMatch, playerName, compact = false }: Props
                       ? "border-[#f0b429]/70 bg-[#f0b429]/15 text-[#f0b429]"
                       : "border-white/10 bg-white/5 text-white/45 hover:text-white"
                   )}
-                  aria-label="Activar sonidos y notificaciones"
-                  title="Activar sonidos y notificaciones"
+                  aria-label={soundEnabled || notificationsEnabled ? "Desactivar sonidos y notificaciones" : "Activar sonidos y notificaciones"}
+                  title={soundEnabled || notificationsEnabled ? "Sonido y alertas ON" : "Activar sonido y alertas"}
                 >
                   {notificationsEnabled ? <Bell className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
                 </button>
@@ -657,7 +724,7 @@ export function PenalitosPanel({ liveMatch, playerName, compact = false }: Props
                     )}
                   >
                     {notificationsEnabled ? <Bell className="h-3 w-3" /> : <Volume2 className="h-3 w-3" />}
-                    {soundEnabled ? "Sonido ON" : "Activar sonido"}
+                    {soundEnabled || notificationsEnabled ? "Alertas ON" : "Activar alertas"}
                   </button>
                   {viewerCount > 1 && (
                     <div className="flex items-center gap-1 text-white/35 text-[11px] font-bold">
@@ -762,6 +829,7 @@ export function PenalitosPanel({ liveMatch, playerName, compact = false }: Props
               isMe={isGoalkeeper}
               choice={game?.goalkeeperChoice ?? null}
               revealed={showResult}
+              compact={compact}
             />
             <PlayerCard
               emoji="🥾"
@@ -771,6 +839,7 @@ export function PenalitosPanel({ liveMatch, playerName, compact = false }: Props
               isMe={isShooter}
               choice={game?.shooterChoice ?? null}
               revealed={showResult}
+              compact={compact}
             />
           </div>
 
@@ -788,6 +857,7 @@ export function PenalitosPanel({ liveMatch, playerName, compact = false }: Props
                     chosen={selectedChoice}
                     disabled={!!selectedChoice}
                     onChoose={makeChoice}
+                    compact={compact}
                   />
                 ))}
               </div>
@@ -812,7 +882,7 @@ export function PenalitosPanel({ liveMatch, playerName, compact = false }: Props
               {showJoinGoalkeeper && (
                 <button
                   onClick={() => joinAs("goalkeeper")}
-                  className="py-5 rounded-2xl bg-emerald-700 hover:bg-emerald-600 font-black text-lg transition active:scale-95"
+                  className={cn("rounded-2xl bg-emerald-700 font-black transition hover:bg-emerald-600 active:scale-95", compact ? "py-3 text-sm" : "py-5 text-lg")}
                 >
                   🧤 SER PORTERO
                 </button>
@@ -820,7 +890,7 @@ export function PenalitosPanel({ liveMatch, playerName, compact = false }: Props
               {showJoinShooter && (
                 <button
                   onClick={() => joinAs("shooter")}
-                  className="py-5 rounded-2xl bg-orange-700 hover:bg-orange-600 font-black text-lg transition active:scale-95"
+                  className={cn("rounded-2xl bg-orange-700 font-black transition hover:bg-orange-600 active:scale-95", compact ? "py-3 text-sm" : "py-5 text-lg")}
                 >
                   🥾 SER LANZADOR
                 </button>
@@ -832,13 +902,13 @@ export function PenalitosPanel({ liveMatch, playerName, compact = false }: Props
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => joinQueue("goalkeeper")}
-                className="py-4 rounded-2xl bg-emerald-900/60 hover:bg-emerald-800/60 font-bold text-sm transition border border-emerald-700/30 active:scale-95"
+                className={cn("rounded-2xl border border-emerald-700/30 bg-emerald-900/60 font-bold transition hover:bg-emerald-800/60 active:scale-95", compact ? "py-3 text-xs" : "py-4 text-sm")}
               >
                 🧤 Cola portero
               </button>
               <button
                 onClick={() => joinQueue("shooter")}
-                className="py-4 rounded-2xl bg-orange-900/60 hover:bg-orange-800/60 font-bold text-sm transition border border-orange-700/30 active:scale-95"
+                className={cn("rounded-2xl border border-orange-700/30 bg-orange-900/60 font-bold transition hover:bg-orange-800/60 active:scale-95", compact ? "py-3 text-xs" : "py-4 text-sm")}
               >
                 🥾 Cola lanzador
               </button>
@@ -865,32 +935,88 @@ export function PenalitosPanel({ liveMatch, playerName, compact = false }: Props
             </p>
           )}
 
-          {/* ═══ QUEUE LIST ═══ */}
-          {!compact && queue.length > 0 && (
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <Users className="h-3.5 w-3.5 text-white/30" />
-                <p className="text-xs uppercase tracking-widest text-white/30">
-                  Cola de espera ({queue.length})
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {queue.map((p, i) => (
-                  <div
-                    key={p.visitorId + i}
-                    className={cn(
-                      "px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5",
-                      p.visitorId === visitorId
-                        ? "bg-[#f0b429]/20 text-[#f0b429] ring-1 ring-[#f0b429]/40"
-                        : "bg-white/8 text-white/60"
-                    )}
-                  >
-                    <span className="tabular-nums text-white/30">#{i + 1}</span>
-                    {p.name}
-                    {p.preferredRole === "goalkeeper" ? " 🧤" : " 🥾"}
+          {/* ═══ ACTIVE PLAYERS + QUEUE ═══ */}
+          {(activePlayers.length > 0 || queue.length > 0) && (
+            <div className="rounded-xl border border-white/10 bg-black/30 p-2.5 sm:p-3">
+              {activePlayers.length > 0 && (
+                <div>
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5">
+                      <Users className="h-3.5 w-3.5 text-[#9dff34]" />
+                      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#9dff34]">
+                        Activos ahora
+                      </p>
+                    </div>
+                    <span className="rounded-full border border-white/10 bg-black/40 px-2 py-0.5 text-[10px] font-black tabular-nums text-white/55">
+                      {viewerCount}
+                    </span>
                   </div>
-                ))}
-              </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {activePlayers.map((player) => (
+                      <span
+                        key={player.id}
+                        className={cn(
+                          "inline-flex max-w-full items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-bold",
+                          player.isMe
+                            ? "border-[#f0b429]/50 bg-[#f0b429]/12 text-[#f0b429]"
+                            : player.status === "playing"
+                              ? "border-[#62ffe6]/40 bg-[#071d2a]/80 text-[#62ffe6]"
+                              : player.status === "queued"
+                                ? "border-[#f0b429]/30 bg-[#211706]/70 text-[#f0b429]"
+                                : "border-white/10 bg-white/5 text-white/65"
+                        )}
+                        title={player.isMe ? "Vos" : player.name}
+                      >
+                        <span
+                          className={cn(
+                            "h-1.5 w-1.5 shrink-0 rounded-full",
+                            player.status === "playing"
+                              ? "bg-[#62ffe6] animate-pulse"
+                              : player.status === "queued"
+                                ? "bg-[#f0b429]"
+                                : "bg-white/35"
+                          )}
+                        />
+                        <span className="truncate">{player.isMe ? "Vos" : player.name}</span>
+                        {player.role === "goalkeeper" ? "🧤" : player.role === "shooter" ? "🥾" : null}
+                        {player.status === "playing" && (
+                          <span className="text-[9px] font-black uppercase tracking-wide text-white/45">Jugando</span>
+                        )}
+                        {player.status === "queued" && (
+                          <span className="text-[9px] font-black uppercase tracking-wide text-white/45">
+                            #{queue.findIndex((entry) => entry.visitorId === player.id) + 1}
+                          </span>
+                        )}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {queue.length > 0 && (
+                <div className={activePlayers.length > 0 ? "mt-3 border-t border-white/8 pt-3" : ""}>
+                  <p className="mb-2 text-[10px] font-black uppercase tracking-[0.16em] text-white/35">
+                    Cola ({queue.length})
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {queue.map((p, i) => (
+                      <div
+                        key={p.visitorId + i}
+                        className={cn(
+                          "flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium",
+                          p.visitorId === visitorId
+                            ? "bg-[#f0b429]/20 text-[#f0b429] ring-1 ring-[#f0b429]/40"
+                            : "bg-white/8 text-white/60"
+                        )}
+                      >
+                        <span className="tabular-nums text-white/30">#{i + 1}</span>
+                        {p.name}
+                        {p.preferredRole === "goalkeeper" ? " 🧤" : " 🥾"}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

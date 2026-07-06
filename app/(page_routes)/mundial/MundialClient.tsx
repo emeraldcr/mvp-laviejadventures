@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
-import { Check, CircleAlert, Gamepad2, Loader2, Sparkles, Target, X } from "lucide-react";
+import { Check, CircleAlert, Loader2, Sparkles, Target, X } from "lucide-react";
 import type { LiveMatchStatus, MundialMatch } from "./types";
 import { isMatchFinished, normalizeKey, pickNextLiveFocusMatch } from "./utils";
 import { useMundial } from "./useMundial";
@@ -72,7 +72,7 @@ export default function MundialClient() {
   const [selectedInfoMatchId, setSelectedInfoMatchId] = useState<string | null>(null);
   const [featuredMatchId, setFeaturedMatchId] = useState<string | null>(null);
   const [focusedMineMatchId, setFocusedMineMatchId] = useState<string | null>(null);
-  const [liveModal, setLiveModal] = useState<"penalitos" | "scorer" | null>(null);
+  const [liveModal, setLiveModal] = useState<"scorer" | null>(null);
   const [showProfile, setShowProfile] = useState(false);
   const [profileIsFirstTime, setProfileIsFirstTime] = useState(false);
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
@@ -318,6 +318,7 @@ export default function MundialClient() {
             {viewMode === "next" && (
               <NextView
                 activeMatch={activeMatch}
+                activeLiveMatch={activeLiveMatch}
                 selectedInfoMatch={selectedInfoMatch}
                 featuredMatch={featuredMatch}
                 matches={matchesWithLiveSSE}
@@ -361,21 +362,16 @@ export default function MundialClient() {
             )}
 
             {viewMode === "bracket" && (
-              <BracketView matches={matches} />
+              <BracketView matches={matches} predictions={predictions} playerName={playerName} />
             )}
 
             {/* ====================== LIVE SECTION ========================== */}
             {activeLiveMatch && (
-              <div className="mt-4 grid gap-3 rounded-2xl border border-[#f0b429]/35 bg-[#06140f]/92 p-3 shadow-[0_18px_70px_rgba(0,0,0,0.45)] [background-image:linear-gradient(135deg,rgba(240,180,41,0.14),transparent_42%),linear-gradient(180deg,rgba(157,255,52,0.06),transparent_55%)] sm:p-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(380px,0.65fr)]">
-                <div className="grid gap-3 sm:grid-cols-2 xl:self-start">
-                  {/* Penalitos - siempre gratis */}
-                  <LiveToolButton
-                    icon={<Gamepad2 className="h-5 w-5" />}
-                    title="Penalitos"
-                    description="Mini-juego en vivo · Gratis"
-                    onClick={() => setLiveModal("penalitos")}
-                    featured
-                  />
+              <div className="mt-4 grid gap-3 rounded-2xl border border-[#f0b429]/35 bg-[#06140f]/92 p-3 shadow-[0_18px_70px_rgba(0,0,0,0.45)] [background-image:linear-gradient(135deg,rgba(240,180,41,0.14),transparent_42%),linear-gradient(180deg,rgba(157,255,52,0.06),transparent_55%)] sm:p-4 xl:grid-cols-[minmax(0,1fr)_minmax(340px,0.55fr)]">
+                <div className="grid min-w-0 gap-3">
+                  {viewMode !== "next" && (
+                    <PenalitosPanel liveMatch={activeLiveMatch} playerName={playerName} compact />
+                  )}
                   <LiveToolButton
                     icon={<Target className="h-5 w-5" />}
                     title="Próximo en anotar"
@@ -392,19 +388,12 @@ export default function MundialClient() {
                     variant="panel"
                   />
                 </div>
-
               </div>
             )}
             {/* ============================================================= */}
           </>
         )}
       </section>
-
-      {activeLiveMatch && liveModal === "penalitos" && (
-        <LiveToolModal title="Penalitos" onClose={() => setLiveModal(null)}>
-          <PenalitosPanel liveMatch={activeLiveMatch} playerName={playerName} />
-        </LiveToolModal>
-      )}
 
       {activeLiveMatch && liveModal === "scorer" && (
         <LiveToolModal title="Próximo en anotar" onClose={() => setLiveModal(null)}>

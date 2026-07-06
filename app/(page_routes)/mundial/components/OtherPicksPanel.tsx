@@ -185,22 +185,27 @@ export function OtherPicksPanel({ match, predictions, playerName, showEmpty = fa
                   const outcome = getOutcome(p.homeScore, p.awayScore);
                   const { showIndicator, isWinning, isExact, points, kind } = pickStatus(match, p);
                   const winnerText = formatWinnerPick(match, p);
-                  const statusLabel = showIndicator
-                    ? kind === "exact"
+                  const hasFinalScore =
+                    match.homeFinalScore !== null && match.awayFinalScore !== null;
+                  const statusLabel =
+                    kind === "exact"
                       ? "Exacto"
                       : kind === "outcome"
                         ? "Resultado"
                         : kind === "bonus"
                           ? "Bonus TE"
-                        : "Fallo"
-                    : "Pendiente";
+                          : kind === "miss"
+                            ? "Fallo"
+                            : showIndicator && !hasFinalScore
+                              ? "En vivo"
+                              : "Pendiente";
 
                   return (
                     <div
                       key={p.id}
                       className={cn(
                         "grid grid-cols-1 items-start gap-3 rounded-lg border px-4 py-3 min-h-[64px] min-[520px]:grid-cols-[minmax(0,1fr)_auto] min-[520px]:items-center min-[520px]:gap-4",
-                        isExact
+                        kind === "exact"
                           ? "border-[#f0b429]/70 bg-[#211706]/80 shadow-[0_0_18px_rgba(240,180,41,0.14)]"
                           : isMe
                             ? "border-[#9dff34]/60 bg-[#10240b]/80"
@@ -220,7 +225,7 @@ export function OtherPicksPanel({ match, predictions, playerName, showEmpty = fa
                             >
                               {isMe ? "Vos" : p.playerName}
                             </span>
-                            {isExact && (
+                            {kind === "exact" && (
                               <span className="hidden shrink-0 rounded border border-[#f0b429]/55 bg-[#f0b429]/15 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.08em] text-[#f0b429] min-[460px]:inline">
                                 Exacto
                               </span>

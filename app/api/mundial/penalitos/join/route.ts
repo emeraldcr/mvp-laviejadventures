@@ -87,7 +87,12 @@ export async function POST(req: NextRequest) {
       const result = await db.collection(PENALITOS_COLLECTION).updateOne(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         { _id: PENALITOS_STATE_ID, game: null } as any,
-        { $set: { game: newGame, updatedAt: now }, $inc: { version: 1 } }
+        {
+          $set: { game: newGame, updatedAt: now },
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          $pull: { queue: { visitorId } } as any,
+          $inc: { version: 1 },
+        }
       );
       if (result.modifiedCount === 0) {
         return NextResponse.json({ ok: true, status: "retry" });
@@ -107,6 +112,9 @@ export async function POST(req: NextRequest) {
         const bothReady = !!goalkeeper && !!shooter;
 
         const slotField = needsGoalkeeper ? "game.goalkeeper" : "game.shooter";
+        const pullIds = [goalkeeper?.visitorId, shooter?.visitorId].filter(
+          (id): id is string => typeof id === "string"
+        );
         const result = await db.collection(PENALITOS_COLLECTION).updateOne(
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           { _id: PENALITOS_STATE_ID as any, "game.status": "waiting", [slotField]: null },
@@ -121,6 +129,8 @@ export async function POST(req: NextRequest) {
               "game.startedAt": bothReady ? now : game.startedAt,
               updatedAt: now,
             },
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            $pull: { queue: { visitorId: { $in: pullIds } } } as any,
             $inc: { version: 1 },
           }
         );
