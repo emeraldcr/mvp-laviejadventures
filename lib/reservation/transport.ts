@@ -1,4 +1,3 @@
-import { calculateTransportCost, resolvePoint } from "@/lib/transport/calc";
 import type { ReservationAddonDetails } from "./types";
 
 export type TransportPointRef = { type: "ref"; id: string };
@@ -72,33 +71,6 @@ export function resolveTransportEndpoints(
 export function isTransportConfigComplete(details: ReservationAddonDetails): boolean {
   const { pickup, dropoff } = resolveTransportEndpoints(details);
   return Boolean(pickup?.id && dropoff?.id);
-}
-
-export async function quoteTransportAddon(
-  details: ReservationAddonDetails,
-  pax: number,
-): Promise<TransportQuoteResult | null> {
-  const { pickup, dropoff } = resolveTransportEndpoints(details);
-  if (!pickup?.id || !dropoff?.id) return null;
-
-  async function toCoords(ref: TransportPointRef | null) {
-    if (!ref?.id) return null;
-    const resolved = await resolvePoint({ type: "ref", id: ref.id });
-    if (!resolved) return null;
-    return { lat: resolved.lat, lng: resolved.lng };
-  }
-
-  const pickupCoords = await toCoords(pickup);
-  const dropoffCoords = await toCoords(dropoff);
-  if (!pickupCoords || !dropoffCoords) return null;
-
-  const transportType = details.transportType === "shared" ? "shared" : "private";
-  return calculateTransportCost({
-    pickupCoords,
-    dropoffCoords,
-    transportType,
-    pax: Math.max(1, pax),
-  }) as TransportQuoteResult;
 }
 
 export function getTransportPerPersonPrice(

@@ -67,8 +67,10 @@ export interface ReservationOrderPayload {
   addons: string[];
   addonIds: string[];
   addonsPrice: number;
+  addonsPricePerPerson?: number;
+  addonsBreakdown?: Array<{ id: string; pricePerPerson: number }>;
   addonDetails?: ReservationAddonDetails;
-  transportQuote?: any;
+  transportQuote?: import("./transport").TransportQuoteResult | null;
 }
 
 export interface ReservationDetailsProps {

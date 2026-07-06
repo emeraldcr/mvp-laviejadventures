@@ -19,7 +19,7 @@ export function ToursClient({ tours }: { tours: PublicTour[] }) {
   const tr = translations[lang].tours;
 
   const handleSelectTour = (slug: string) => {
-    window.location.href = `/reservar?tour=${encodeURIComponent(slug)}`;
+    window.location.assign(`/reservar?tour=${encodeURIComponent(slug)}`);
   };
 
   return (

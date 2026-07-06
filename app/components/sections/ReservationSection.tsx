@@ -25,7 +25,10 @@ type OrderPayload = {
   addons?: string[];
   addonIds?: string[];
   addonsPrice?: number;
+  addonsPricePerPerson?: number;
+  addonsBreakdown?: Array<{ id: string; pricePerPerson: number }>;
   addonDetails?: import("@/lib/reservation/types").ReservationAddonDetails;
+  transportQuote?: import("@/lib/reservation/transport").TransportQuoteResult | null;
 };
 
 type Props = {

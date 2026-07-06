@@ -145,6 +145,8 @@ export async function POST(req: Request) {
       specialRequests: typeof specialRequests === "string" ? specialRequests.trim() : "",
       clientTotal: total ? Number(total) : null,
       addonsPrice: quote.addonsPrice,
+      addonsBreakdown: quote.addonsBreakdown,
+      transportQuote: quote.transportQuote,
       ivaRate: quote.ivaRatePercent,
       language: quote.language,
       createdAt: new Date(),

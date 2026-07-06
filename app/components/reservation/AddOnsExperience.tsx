@@ -8,7 +8,15 @@ import {
   TRANSPORT_DROPOFF_OPTIONS,
   TRANSPORT_PICKUP_OPTIONS,
 } from "@/lib/reservation/constants";
-import { getAddonPricePerPerson } from "@/lib/reservation/addons";
+import {
+  FOOD_MEAL_OPTIONS,
+  FOOD_PROTEIN_OPTIONS,
+  getAddonPricePerPerson,
+  getDefaultFoodDetails,
+  getDefaultLodgingDetails,
+  isFoodConfigComplete,
+  isLodgingConfigComplete,
+} from "@/lib/reservation/addons";
 import {
   getDefaultTransportDetails,
   getTransportPerPersonPrice,
@@ -42,9 +50,6 @@ const CATEGORY_LABELS: Record<AddOnOption["category"], { es: string; en: string 
   media: { es: "Fotos", en: "Photos" },
 };
 
-const FOOD_OPTIONS = ["Casado con pollo", "Casado con res", "Vegetariano", "Menú infantil"];
-const PROTEIN_OPTIONS = ["Pollo", "Res", "Vegetariano", "Sin preferencia"];
-
 export default function AddOnsExperience({
   lang,
   selectedAddons,
@@ -75,6 +80,12 @@ export default function AddOnsExperience({
   const openConfigurator = (addon: AddOnOption) => {
     if (addon.id === "transporte" && !addonDetails.pickupLocation) {
       updateDetails(getDefaultTransportDetails());
+    }
+    if (addon.id === "alojamiento" && !addonDetails.lodgingType) {
+      updateDetails(getDefaultLodgingDetails());
+    }
+    if (addon.id === "almuerzo" && !addonDetails.restaurantMeal) {
+      updateDetails(getDefaultFoodDetails());
     }
     setActiveAddonId(addon.id);
   };
@@ -255,6 +266,40 @@ function getAddonPriceDisplay({
 }) {
   const priceNote = lang === "es" ? addon.priceNoteEs : addon.priceNoteEn;
 
+  if (addon.id === "alojamiento") {
+    if (!isLodgingConfigComplete(addonDetails) && !selected) {
+      return {
+        note: lang === "es" ? "Configurá tipo y noches" : "Set type and nights",
+        value: lang === "es" ? "Configurar" : "Configure",
+        muted: true,
+      };
+    }
+
+    const configuredPrice = getAddonPricePerPerson("alojamiento", addonDetails);
+    const nights = addonDetails.lodgingNights ?? 1;
+    return {
+      note: `${priceNote} · ${nights} ${lang === "es" ? "noche(s)" : "night(s)"}`,
+      value: `$${configuredPrice}`,
+      muted: false,
+    };
+  }
+
+  if (addon.id === "almuerzo") {
+    if (!isFoodConfigComplete(addonDetails) && !selected) {
+      return {
+        note: lang === "es" ? "Elegí comida y proteína" : "Choose meal and protein",
+        value: lang === "es" ? "Configurar" : "Configure",
+        muted: true,
+      };
+    }
+
+    return {
+      note: priceNote,
+      value: `$${getAddonPricePerPerson("almuerzo", addonDetails)}`,
+      muted: false,
+    };
+  }
+
   if (addon.id !== "transporte") {
     return {
       note: priceNote,
@@ -328,10 +373,15 @@ function AddonModal({
   const name = lang === "es" ? addon.nameEs : addon.nameEn;
   const transportConfigured = addon.id === "transporte" && isTransportConfigComplete(details);
   const transportReady = transportConfigured && Boolean(transportQuote) && !transportLoading && !transportError;
-  const canConfirmTransport = addon.id !== "transporte" || transportReady;
+  const lodgingReady = addon.id !== "alojamiento" || isLodgingConfigComplete(details);
+  const foodReady = addon.id !== "almuerzo" || isFoodConfigComplete(details);
+  const canConfirmAddon = (addon.id !== "transporte" || transportReady) && lodgingReady && foodReady;
+  const configuredPrice = getAddonPricePerPerson(addon.id, details, {
+    transportPricePerPerson: transportQuote?.perPerson ?? null,
+  });
   const transportPerPerson = transportQuote
     ? getTransportPerPersonPrice(transportQuote, addon.price)
-    : getAddonPricePerPerson("transporte");
+    : getAddonPricePerPerson("transporte", details);
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-zinc-950/70 p-3 backdrop-blur-sm sm:items-center">
@@ -385,15 +435,15 @@ function AddonModal({
           <div className="grid gap-4 sm:grid-cols-2">
             <OptionSelect
               label={lang === "es" ? "Comida" : "Meal"}
-              value={details.restaurantMeal ?? FOOD_OPTIONS[0]}
+              value={details.restaurantMeal ?? FOOD_MEAL_OPTIONS[0]}
               onChange={(value) => updateDetails({ restaurantMeal: value })}
-              options={FOOD_OPTIONS.map((option) => [option, option])}
+              options={FOOD_MEAL_OPTIONS.map((option) => [option, option])}
             />
             <OptionSelect
               label={lang === "es" ? "Proteína" : "Protein"}
-              value={details.restaurantProtein ?? PROTEIN_OPTIONS[0]}
+              value={details.restaurantProtein ?? FOOD_PROTEIN_OPTIONS[0]}
               onChange={(value) => updateDetails({ restaurantProtein: value })}
-              options={PROTEIN_OPTIONS.map((option) => [option, option])}
+              options={FOOD_PROTEIN_OPTIONS.map((option) => [option, option])}
             />
             <TextInput
               className="sm:col-span-2"
@@ -450,40 +500,19 @@ function AddonModal({
           </div>
         )}
 
-        {addon.id === "transporte" && transportPreview && (
-          <div className="mt-5 rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/60">
-            <p className="text-[11px] font-black uppercase tracking-[0.14em] text-zinc-400">
-              {lang === "es" ? "Precio estimado" : "Estimated price"}
-            </p>
-            {transportLoading && (
-              <p className="mt-2 text-sm font-semibold text-zinc-600 dark:text-zinc-300">
-                {lang === "es" ? "Calculando ruta segura..." : "Calculating safe route..."}
-              </p>
-            )}
-            {transportError && (
-              <p className="mt-2 text-sm font-semibold text-red-600">{transportError}</p>
-            )}
-            {transportReady && transportQuote && (
-              <div className="mt-2 space-y-1">
-                <p className="text-3xl font-black text-zinc-950 dark:text-zinc-50">
-                  ${transportPerPerson}
-                  <span className="ml-2 text-sm font-bold text-zinc-500">
-                    / {lang === "es" ? "persona" : "person"}
-                  </span>
-                </p>
-                <p className="text-sm font-medium text-zinc-500">
-                  {transportQuote.distanceKm} km · {transportQuote.type === "private"
-                    ? (lang === "es" ? `Total vehículo $${transportQuote.total}` : `Vehicle total $${transportQuote.total}`)
-                    : (lang === "es" ? "Traslado compartido" : "Shared shuttle")}
-                </p>
-              </div>
-            )}
-            {transportConfigured && !transportLoading && !transportQuote && !transportError && (
-              <p className="mt-2 text-sm font-semibold text-zinc-600 dark:text-zinc-300">
-                {lang === "es" ? "Seleccioná pickup y drop-off para ver el precio." : "Select pickup and drop-off to see the price."}
-              </p>
-            )}
-          </div>
+        {addon.configurable && (
+          <AddonPricePreview
+            addon={addon}
+            lang={lang}
+            configuredPrice={configuredPrice}
+            transportQuote={transportQuote}
+            transportPerPerson={transportPerPerson}
+            transportLoading={transportLoading}
+            transportError={transportError}
+            transportReady={transportReady}
+            transportConfigured={transportConfigured}
+            details={details}
+          />
         )}
 
         <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
@@ -498,14 +527,12 @@ function AddonModal({
             <button
               type="button"
               onClick={onSelect}
-              disabled={!canConfirmTransport}
+              disabled={!canConfirmAddon}
               className="min-h-11 rounded-xl bg-emerald-600 px-5 py-2 font-black text-white hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {selected
                 ? (lang === "es" ? "Guardar cambios" : "Save changes")
-                : addon.id === "transporte"
-                  ? (lang === "es" ? "Agregar con este precio" : "Add at this price")
-                  : (lang === "es" ? "Agregar extra" : "Add add-on")}
+                : (lang === "es" ? "Agregar con este precio" : "Add at this price")}
             </button>
           ) : (
             <Link
@@ -519,6 +546,104 @@ function AddonModal({
       </div>
     </div>
   );
+}
+
+function AddonPricePreview({
+  addon,
+  lang,
+  configuredPrice,
+  transportQuote,
+  transportPerPerson,
+  transportLoading,
+  transportError,
+  transportReady,
+  transportConfigured,
+  details,
+}: {
+  addon: AddOnOption;
+  lang: Lang;
+  configuredPrice: number;
+  transportQuote: TransportQuoteResult | null;
+  transportPerPerson: number;
+  transportLoading: boolean;
+  transportError: string | null;
+  transportReady: boolean;
+  transportConfigured: boolean;
+  details: ReservationAddonDetails;
+}) {
+  if (addon.id === "transporte") {
+    return (
+      <div className="mt-5 rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/60">
+        <p className="text-[11px] font-black uppercase tracking-[0.14em] text-zinc-400">
+          {lang === "es" ? "Precio estimado" : "Estimated price"}
+        </p>
+        {transportLoading && (
+          <p className="mt-2 text-sm font-semibold text-zinc-600 dark:text-zinc-300">
+            {lang === "es" ? "Calculando ruta segura..." : "Calculating safe route..."}
+          </p>
+        )}
+        {transportError && (
+          <p className="mt-2 text-sm font-semibold text-red-600">{transportError}</p>
+        )}
+        {transportReady && transportQuote && (
+          <div className="mt-2 space-y-1">
+            <p className="text-3xl font-black text-zinc-950 dark:text-zinc-50">
+              ${transportPerPerson}
+              <span className="ml-2 text-sm font-bold text-zinc-500">
+                / {lang === "es" ? "persona" : "person"}
+              </span>
+            </p>
+            <p className="text-sm font-medium text-zinc-500">
+              {transportQuote.distanceKm} km · {transportQuote.type === "private"
+                ? (lang === "es" ? `Total vehículo $${transportQuote.total}` : `Vehicle total $${transportQuote.total}`)
+                : (lang === "es" ? "Traslado compartido" : "Shared shuttle")}
+            </p>
+          </div>
+        )}
+        {transportConfigured && !transportLoading && !transportQuote && !transportError && (
+          <p className="mt-2 text-sm font-semibold text-zinc-600 dark:text-zinc-300">
+            {lang === "es" ? "Seleccioná pickup y drop-off para ver el precio." : "Select pickup and drop-off to see the price."}
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  if (addon.id === "alojamiento" && isLodgingConfigComplete(details)) {
+    return (
+      <div className="mt-5 rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/60">
+        <p className="text-[11px] font-black uppercase tracking-[0.14em] text-zinc-400">
+          {lang === "es" ? "Precio estimado" : "Estimated price"}
+        </p>
+        <p className="mt-2 text-3xl font-black text-zinc-950 dark:text-zinc-50">
+          ${configuredPrice}
+          <span className="ml-2 text-sm font-bold text-zinc-500">/ {lang === "es" ? "persona" : "person"}</span>
+        </p>
+        <p className="mt-1 text-sm font-medium text-zinc-500">
+          {details.lodgingNights ?? 1} {lang === "es" ? "noche(s)" : "night(s)"} · {details.lodgingType}
+        </p>
+      </div>
+    );
+  }
+
+  if (addon.id === "almuerzo" && isFoodConfigComplete(details)) {
+    return (
+      <div className="mt-5 rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/60">
+        <p className="text-[11px] font-black uppercase tracking-[0.14em] text-zinc-400">
+          {lang === "es" ? "Precio estimado" : "Estimated price"}
+        </p>
+        <p className="mt-2 text-3xl font-black text-zinc-950 dark:text-zinc-50">
+          ${configuredPrice}
+          <span className="ml-2 text-sm font-bold text-zinc-500">/ {lang === "es" ? "persona" : "person"}</span>
+        </p>
+        <p className="mt-1 text-sm font-medium text-zinc-500">
+          {details.restaurantMeal} · {details.restaurantProtein}
+        </p>
+      </div>
+    );
+  }
+
+  return null;
 }
 
 function OptionSelect({

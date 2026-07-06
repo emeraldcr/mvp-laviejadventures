@@ -1,47 +1,16 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useMemo, useState } from "react";
 import { Building2, CalendarDays, Clock3, CreditCard, Mail, MessageCircle, Phone, ShieldCheck, Ticket, UserRound } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
-import { trackAnalyticsEvent } from "@/lib/analytics/client";
 import { translations } from "@/lib/translations";
 import type { OrderDetails } from "@/lib/types/index";
-import { PHONE_COUNTRIES } from "@/app/components/reservation/phoneCountries";
-import { getPayPalLocaleForCountry } from "@/app/components/reservation/paypalLocales";
 import LocalPaymentOptions, { type LocalPaymentMethod } from "@/app/components/reservation/LocalPaymentOptions";
+import { useCheckoutQuote } from "@/app/components/reservation/hooks/useCheckoutQuote";
+import { ADDON_DATA } from "@/lib/reservation/addons";
 import { usePendingBooking } from "@/lib/reservation/use-pending-booking";
-
-declare global {
-  interface Window {
-    paypal?: { Buttons: (config: unknown) => { render: (container: HTMLDivElement) => Promise<void> | void } };
-  }
-}
-
-const isLivePayPalMode = (mode: string | undefined) => {
-  const normalizedMode = mode?.trim().toLowerCase();
-  return normalizedMode === "live" || normalizedMode === "production" || normalizedMode === "prod";
-};
-
-const isConfiguredPayPalClientId = (clientId: string | undefined): clientId is string => {
-  if (!clientId) return false;
-
-  const normalizedClientId = clientId.trim().toLowerCase();
-  return Boolean(normalizedClientId) && !normalizedClientId.startsWith("your-");
-};
-
-const DEFAULT_BUYER_COUNTRY = "CR";
-
-const getBuyerCountryFromPhone = (phone: string) => {
-  const normalizedPhone = phone.trim().replace(/[^\d+]/g, "");
-  if (!normalizedPhone.startsWith("+")) return DEFAULT_BUYER_COUNTRY;
-
-  const matchingCountry = PHONE_COUNTRIES
-    .filter((country) => normalizedPhone.startsWith(country.code))
-    .sort((a, b) => b.code.length - a.code.length)[0];
-
-  return matchingCountry?.flag ?? DEFAULT_BUYER_COUNTRY;
-};
+import { usePayPalCheckout } from "@/app/components/reservation/hooks/usePayPalCheckout";
+import { buildBookingAnalyticsMetadata } from "@/app/components/reservation/checkoutUtils";
 
 const SummaryRow = ({
   icon,
@@ -75,71 +44,73 @@ type Props = {
 };
 
 export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Props) {
-  const paypalRef = useRef<HTMLDivElement>(null);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("paypal");
-  const [loadedPaypalKey, setLoadedPaypalKey] = useState<string | null>(null);
-  const [paypalLoadFailure, setPaypalLoadFailure] = useState<{ checkoutKey: string; message: string } | null>(null);
-  const router = useRouter();
   const { lang } = useLanguage();
   const tr = translations[lang].payment;
 
-  const { name, email, phone, tickets, total, date, dateIso, tourTime, packageId, tourPackage, tourSlug, tourName, packagePrice, addons, addonIds, addonDetails, specialRequests } = orderDetails;
+  const {
+    name,
+    email,
+    phone,
+    tickets,
+    total: initialTotal,
+    date,
+    dateIso,
+    tourTime,
+    packageId,
+    tourPackage,
+    tourSlug,
+    tourName,
+    packagePrice,
+    addons,
+    addonIds,
+    addonDetails,
+    specialRequests,
+  } = orderDetails;
 
-  const checkoutKey = useMemo(
-    () => [
-      name,
-      email,
-      phone,
-      tickets,
-      total,
-      dateIso ?? date,
-      tourTime,
-      packageId,
-      tourPackage,
-      tourSlug,
-      tourName,
-      packagePrice,
-      (addonIds ?? []).join(","),
-      JSON.stringify(addonDetails ?? {}),
-      specialRequests ?? "",
-      lang,
-    ].join("|"),
-    [addonDetails, addonIds, date, dateIso, email, lang, name, packageId, packagePrice, phone, specialRequests, tickets, total, tourName, tourPackage, tourSlug, tourTime],
-  );
-
-  const bookingAnalyticsMetadata = useMemo(
+  const checkoutQuote = useCheckoutQuote(orderDetails, lang);
+  const total = checkoutQuote.total;
+  const checkoutOrderDetails = useMemo(
     () => ({
-      tickets,
-      date: dateIso ?? date,
-      tourTime,
-      packageId,
-      tourPackage,
-      tourSlug,
-      tourName,
-      packagePrice,
-      addons,
-      addonIds,
-      addonDetails,
-      specialRequests,
-      amount: total,
-      currency: "USD",
-      language: lang,
+      ...orderDetails,
+      total: checkoutQuote.total,
+      addonsPrice: checkoutQuote.addonsPrice,
+      addonsPricePerPerson: checkoutQuote.addonsPricePerPerson,
+      addonsBreakdown: checkoutQuote.addonsBreakdown,
+      transportQuote: checkoutQuote.transportQuote,
     }),
-    [addonDetails, addonIds, addons, date, dateIso, lang, packageId, packagePrice, specialRequests, tickets, total, tourName, tourPackage, tourSlug, tourTime],
+    [checkoutQuote, orderDetails],
   );
 
-  const paypalLoadError = paypalLoadFailure?.checkoutKey === checkoutKey ? paypalLoadFailure.message : null;
-  const isPaypalLoading = !paypalLoadError && loadedPaypalKey !== checkoutKey;
   const packageName = (tr.packages as Record<string, string>)[tourPackage] ?? tourPackage;
   const formattedTime = tr.timeLabels[tourTime] ?? tourTime;
-  const buyerCountryCode = getBuyerCountryFromPhone(phone);
   const {
     referenceCode,
     reservationId,
     isSaving: isPendingSaving,
     saveError: pendingSaveError,
     savePendingBooking,
-  } = usePendingBooking(orderDetails, lang);
+  } = usePendingBooking(checkoutOrderDetails, lang);
+  const {
+    paypalRef,
+    paypalLoadError,
+    isPaypalLoading: isPayPalSdkLoading,
+  } = usePayPalCheckout({
+    enabled: paymentMethod === "paypal" && !checkoutQuote.syncing,
+    orderDetails: checkoutOrderDetails,
+    lang,
+    errorMessage: tr.error,
+    onSuccess,
+  });
+  const isPaypalLoading = checkoutQuote.syncing || isPayPalSdkLoading;
+  const localPaymentAnalyticsMetadata = useMemo(
+    () => ({
+      ...buildBookingAnalyticsMetadata(checkoutOrderDetails, lang),
+      addonsBreakdown: checkoutQuote.addonsBreakdown,
+    }),
+    [checkoutOrderDetails, checkoutQuote.addonsBreakdown, lang],
+  );
+
   const paymentCopy = {
     contactTitle: lang === "es" ? "Datos del viajero" : "Traveler details",
     bookingTitle: lang === "es" ? "Resumen de reserva" : "Booking summary",
@@ -161,278 +132,23 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
     },
   };
 
+  const addonSummaryLines = useMemo(() => {
+    const breakdown = checkoutQuote.addonsBreakdown;
+    if (!breakdown.length) return [];
+
+    return breakdown.map((item) => {
+      const addon = ADDON_DATA.find((entry) => entry.id === item.id);
+      const label = addon ? (lang === "es" ? addon.nameEs : addon.nameEn) : item.id;
+      return `${label} (+$${item.pricePerPerson}/${lang === "es" ? "persona" : "person"})`;
+    });
+  }, [checkoutQuote.addonsBreakdown, lang]);
+
   const paymentTabs: Array<{ id: PaymentMethod; label: string; icon: React.ReactNode }> = [
     { id: "paypal", label: paymentCopy.methods.paypal, icon: <CreditCard className="h-4 w-4" aria-hidden /> },
     { id: "whatsapp", label: paymentCopy.methods.whatsapp, icon: <MessageCircle className="h-4 w-4" aria-hidden /> },
     { id: "sinpe", label: paymentCopy.methods.sinpe, icon: <Building2 className="h-4 w-4" aria-hidden /> },
   ];
 
-  useEffect(() => {
-    if (paymentMethod !== "paypal") return;
-
-    const paypalContainer = paypalRef.current;
-    let isMounted = true;
-    let scriptForCleanup: HTMLScriptElement | null = null;
-    let loadFallbackAttempted = false;
-
-    trackAnalyticsEvent("booking_checkout_started", {
-      metadata: bookingAnalyticsMetadata,
-    });
-
-    const finishLoading = () => {
-      if (isMounted) setLoadedPaypalKey(checkoutKey);
-    };
-
-    const failPayPalLoad = (stage: string, reason: string, error?: unknown) => {
-      if (isMounted) {
-        setPaypalLoadFailure({ checkoutKey, message: reason });
-        setLoadedPaypalKey(checkoutKey);
-      }
-
-      trackAnalyticsEvent("payment_error", {
-        metadata: {
-          ...bookingAnalyticsMetadata,
-          stage,
-          reason,
-        },
-      });
-
-      const sdkError = error instanceof Error ? error : new Error(reason);
-      console.error(`PAYPAL SDK ERROR (${stage}):`, sdkError);
-    };
-
-    const initializeButtons = () => {
-      if (!paypalContainer) {
-        failPayPalLoad("paypal_container", "PayPal button container was not found.");
-        return;
-      }
-
-      if (!window.paypal) {
-        failPayPalLoad("paypal_sdk_load", "PayPal SDK loaded, but window.paypal is unavailable.");
-        return;
-      }
-
-      paypalContainer.innerHTML = "";
-
-      const buttons = window.paypal
-        .Buttons({
-          style: {
-            layout: "vertical",
-            color: "gold",
-            shape: "pill",
-            label: "paypal",
-          },
-          createOrder: async () => {
-            const res = await fetch("/api/paypal/create-order", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                name,
-                email,
-                phone,
-                tickets,
-                date: dateIso ?? date,
-                total,
-                tourTime,
-                packageId,
-                tourPackage,
-                packagePrice,
-                tourSlug,
-                tourName,
-                addons,
-                addonIds,
-                addonDetails,
-                specialRequests,
-                language: lang,
-                countryCode: buyerCountryCode,
-              }),
-            });
-
-            const data = await res.json();
-
-            if (!res.ok || !data?.orderID) {
-              const reason = data?.message || "PayPal create order response did not include orderID.";
-              const minDate = typeof data?.minBookableDate === "string" ? data.minBookableDate : null;
-
-              if (minDate) {
-                alert(`${reason} Earliest available date: ${minDate}.`);
-              } else {
-                alert(reason);
-              }
-
-              throw new Error(reason);
-            }
-
-            trackAnalyticsEvent("payment_order_created", {
-              metadata: {
-                ...bookingAnalyticsMetadata,
-                orderId: data.orderID,
-              },
-            });
-
-            return data.orderID as string;
-          },
-          onApprove: async (data: { orderID: string }) => {
-            const res = await fetch("/api/paypal/capture-order", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ orderID: data.orderID }),
-            });
-
-            const output = await res.json();
-
-            if (!res.ok || !output?.captureID || output?.status !== "COMPLETED") {
-              console.error("PAYPAL CAPTURE FAILED:", output);
-              trackAnalyticsEvent("payment_error", {
-                metadata: {
-                  ...bookingAnalyticsMetadata,
-                  orderId: data.orderID,
-                  stage: "capture",
-                  status: output?.status ?? null,
-                  reason: output?.message ?? "capture_failed",
-                },
-              });
-              alert(tr.error);
-              return;
-            }
-
-            trackAnalyticsEvent("payment_approved", {
-              metadata: {
-                ...bookingAnalyticsMetadata,
-                orderId: data.orderID,
-                captureId: output.captureID,
-                status: output.status,
-              },
-            });
-
-            sessionStorage.removeItem("reservationOrderDetails");
-            onSuccess(output);
-            router.push(`/success?orderId=${output.id}`);
-          },
-          onError: (err: unknown) => {
-            alert(tr.error);
-            trackAnalyticsEvent("payment_error", {
-              metadata: {
-                ...bookingAnalyticsMetadata,
-                stage: "paypal_buttons",
-                reason: err instanceof Error ? err.message : "paypal_error",
-              },
-            });
-            console.error("PAYPAL ERROR:", err);
-          },
-        });
-
-      Promise.resolve(buttons.render(paypalContainer))
-        .then(finishLoading)
-        .catch((err: unknown) => {
-          failPayPalLoad("paypal_render", err instanceof Error ? err.message : "paypal_render_error", err);
-          //alert(tr.error);
-        });
-    };
-
-    const mode = process.env.NEXT_PUBLIC_PAYPAL_MODE;
-    const isLiveMode = isLivePayPalMode(mode);
-    const clientId = (isLiveMode
-      ? process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID
-      : process.env.NEXT_PUBLIC_PAYPAL_SANDBOX_CLIENT_ID)?.trim();
-
-    if (!isConfiguredPayPalClientId(clientId)) {
-      failPayPalLoad(
-        "paypal_config",
-        `Missing or placeholder PayPal ${isLiveMode ? "live" : "sandbox"} client ID for mode "${mode || "sandbox"}".`,
-      );
-      return;
-    }
-
-    const buildSdkSrc = (locale?: string) => {
-      const sdkParams = new URLSearchParams({
-        "client-id": clientId,
-        components: "buttons",
-        currency: "USD",
-        intent: "capture",
-      });
-
-      if (locale) {
-        sdkParams.set("locale", locale);
-      }
-
-      return `https://www.paypal.com/sdk/js?${sdkParams.toString()}`;
-    };
-
-    const requestedLocale = getPayPalLocaleForCountry(buyerCountryCode, lang);
-    const sdkSrc = buildSdkSrc(requestedLocale);
-    const fallbackSdkSrc = buildSdkSrc();
-
-    const handleScriptError = (failedSrc: string) => {
-      document.querySelector<HTMLScriptElement>("#paypal-sdk")?.remove();
-
-      if (failedSrc !== fallbackSdkSrc && !loadFallbackAttempted) {
-        loadFallbackAttempted = true;
-        trackAnalyticsEvent("payment_error", {
-          metadata: {
-            ...bookingAnalyticsMetadata,
-            stage: "paypal_sdk_locale_fallback",
-            reason: "paypal_sdk_locale_load_error",
-            requestedLocale,
-            buyerCountryCode,
-          },
-        });
-        loadSdkScript(fallbackSdkSrc);
-        return;
-      }
-
-      failPayPalLoad("paypal_sdk_load", "paypal_sdk_load_error");
-      alert(tr.error);
-    };
-
-    const loadSdkScript = (src: string) => {
-      const script = document.createElement("script");
-      script.id = "paypal-sdk";
-      script.src = src;
-      script.async = true;
-      scriptForCleanup = script;
-
-      script.onload = () => {
-        if (isMounted) initializeButtons();
-      };
-      script.onerror = () => handleScriptError(src);
-
-      document.body.appendChild(script);
-    };
-
-    // Clean up any previous script that had a different src (rare now that we use a stable simple URL)
-    const existing = document.querySelector<HTMLScriptElement>("#paypal-sdk");
-    if (existing && existing.src !== sdkSrc) {
-      existing.remove();
-    }
-
-    const activeScript = document.querySelector<HTMLScriptElement>("#paypal-sdk");
-
-    if (!activeScript) {
-      // Load the SDK script once - simple and reliable
-      loadSdkScript(sdkSrc);
-    } else if (window.paypal) {
-      // Already loaded and ready
-      initializeButtons();
-    } else {
-      // Script tag exists but not yet executed — wait for it
-      activeScript.addEventListener("load", initializeButtons, { once: true });
-      activeScript.addEventListener("error", () => handleScriptError(activeScript.src), { once: true });
-    }
-
-    return () => {
-      isMounted = false;
-      // Best-effort cleanup of listeners (the {once:true} helps)
-      activeScript?.removeEventListener("load", initializeButtons);
-      if (scriptForCleanup) {
-        scriptForCleanup.onload = null;
-        scriptForCleanup.onerror = null;
-      }
-      if (paypalContainer) {
-        paypalContainer.innerHTML = "";
-      }
-    };
-  }, [checkoutKey, paymentMethod]); // Only re-evaluate when the logical checkout session changes
 
   return (
     <div className="grid gap-5 lg:grid-cols-[minmax(0,0.92fr)_minmax(360px,1.08fr)]">
@@ -468,6 +184,19 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
               label={paymentCopy.packagePriceLabel}
               value={`${packageName} ($${packagePrice} USD/${tr.pricePerPersonUnit})`}
             />
+            {addonSummaryLines.length > 0 && (
+              <SummaryRow
+                icon={<Ticket className="h-4 w-4" aria-hidden />}
+                label={lang === "es" ? "Extras" : "Add-ons"}
+                value={(
+                  <span className="block space-y-1">
+                    {addonSummaryLines.map((line) => (
+                      <span key={line} className="block">{line}</span>
+                    ))}
+                  </span>
+                )}
+              />
+            )}
           </div>
         </section>
       </aside>
@@ -483,7 +212,22 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
           </div>
           <div className="rounded-2xl border border-teal-300/20 bg-teal-400/10 px-4 py-3 text-right">
             <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-teal-200">{tr.total}</p>
-            <p className="text-3xl font-black leading-none text-white">${total.toFixed(2)}</p>
+            <p className="text-3xl font-black leading-none text-white">
+              {checkoutQuote.syncing ? "…" : `$${total.toFixed(2)}`}
+            </p>
+            {checkoutQuote.syncing && (
+              <p className="mt-1 text-xs font-medium text-teal-100/80">
+                {lang === "es" ? "Validando extras..." : "Validating add-ons..."}
+              </p>
+            )}
+            {checkoutQuote.error && (
+              <p className="mt-1 text-xs font-medium text-red-200">{checkoutQuote.error}</p>
+            )}
+            {!checkoutQuote.syncing && !checkoutQuote.error && Math.abs(initialTotal - total) >= 0.02 && (
+              <p className="mt-1 text-xs font-medium text-amber-100">
+                {lang === "es" ? "Total actualizado con extras." : "Total updated with add-ons."}
+              </p>
+            )}
           </div>
         </div>
 
@@ -545,11 +289,11 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
         ) : (
           <LocalPaymentOptions
             method={paymentMethod}
-            orderDetails={orderDetails}
+            orderDetails={checkoutOrderDetails}
             lang={lang}
             packageLabel={packageName}
             timeLabel={formattedTime}
-            analyticsMetadata={bookingAnalyticsMetadata}
+            analyticsMetadata={localPaymentAnalyticsMetadata}
             referenceCode={referenceCode}
             reservationId={reservationId}
             isSaving={isPendingSaving}

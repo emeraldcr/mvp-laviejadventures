@@ -134,10 +134,29 @@ export async function POST(req: Request) {
       packagePrice,
       addonsPricePerPerson,
       addonsPrice,
+      addonsBreakdown,
+      transportQuote,
       totalWithTax,
       formattedTotal,
       ivaRatePercent,
     } = quote;
+
+    const clientTotal = total != null ? Number(total) : null;
+    if (clientTotal != null && Number.isFinite(clientTotal) && Math.abs(clientTotal - totalWithTax) >= 0.02) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: language === "en"
+            ? "The booking total changed. Please refresh checkout and try again."
+            : "El total de la reserva cambió. Actualizá el checkout e intentá de nuevo.",
+          code: "total_mismatch",
+          serverTotal: totalWithTax,
+          formattedTotal,
+          clientTotal,
+        },
+        { status: 409 },
+      );
+    }
 
     // Custom ID (PayPal limit = 127 chars)
     const custom_id = createCustomId({
@@ -207,6 +226,8 @@ export async function POST(req: Request) {
       addonDetails: addonDetails ?? {},
       specialRequests: typeof specialRequests === "string" ? specialRequests : "",
       addonsPrice,
+      addonsBreakdown,
+      transportQuote: transportQuote ?? null,
       tourSlug,
       tourName,
       clientTotal: total ? Number(total) : null,
@@ -229,6 +250,9 @@ export async function POST(req: Request) {
       success: true,
       orderID: data.id,
       approvalUrl,
+      totalWithTax,
+      formattedTotal,
+      addonsBreakdown,
     });
   } catch (error: unknown) {
     if (isReservationQuoteError(error)) {

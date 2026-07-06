@@ -9,8 +9,12 @@ import { MapPin, ShieldCheck } from "lucide-react";
 import { trackAnalyticsEvent } from "@/lib/analytics/client";
 import { TOUR_INFO } from "@/lib/tour-info";
 import { ADDON_OPTIONS, DEFAULT_DEPARTURE_TIMES, getTransportLocationLabel } from "@/lib/reservation/constants";
-import { getAddonPricePerPerson } from "@/lib/reservation/addons";
-import { getTransportPerPersonPrice, isTransportConfigComplete } from "@/lib/reservation/transport";
+import {
+  buildAddonsBreakdown,
+  getAddonsPricePerPerson,
+  validateSelectedAddons,
+} from "@/lib/reservation/addons";
+import { isTransportConfigComplete } from "@/lib/reservation/transport";
 import {
   getExcludedAddonIds,
   getPackageDepartureTimes,
@@ -226,16 +230,17 @@ export default function ReservationDetails({
   }, [lang, resolvedTourInfo.cancellationPolicy, seemsSpanish, tr.defaultCancellationPolicy]);
 
   const addonsPricePerPerson = useMemo(() => {
-    return ADDON_OPTIONS
-      .filter((addon) => selectedAddons.includes(addon.id))
-      .reduce((sum, addon) => {
-        if (addon.id === "transporte") {
-          if (!isTransportConfigComplete(addonDetails)) return sum;
-          return sum + getTransportPerPersonPrice(transportQuote, addon.price);
-        }
-        return sum + getAddonPricePerPerson(addon.id);
-      }, 0);
-  }, [selectedAddons, transportQuote, addonDetails]);
+    return getAddonsPricePerPerson(selectedAddons, addonDetails, {
+      transportPricePerPerson: transportQuote?.perPerson ?? null,
+    });
+  }, [selectedAddons, addonDetails, transportQuote]);
+
+  const addonsBreakdown = useMemo(
+    () => buildAddonsBreakdown(selectedAddons, addonDetails, {
+      transportPricePerPerson: transportQuote?.perPerson ?? null,
+    }),
+    [selectedAddons, addonDetails, transportQuote],
+  );
 
   const addonDetailsSummary = useMemo(() => {
     const lines: string[] = [];
@@ -626,6 +631,13 @@ export default function ReservationDetails({
   }, [currentStep, guideToElement, tourTime]);
 
   const handleReserve = useCallback(() => {
+    const addonValidation = validateSelectedAddons(selectedAddons, addonDetails, lang);
+    if (!addonValidation.ok) {
+      trackBlockedStep("checkout", "addon_config");
+      guideToStep(1);
+      return;
+    }
+
     if (!isFormValid || !tourTime || !selectedTour) {
       trackBlockedStep("checkout", "checkout_button");
       guideToStep(!isStep1Valid ? 1 : !isStep2Valid ? 2 : 3);
@@ -669,6 +681,8 @@ export default function ReservationDetails({
       addons: selectedAddonObjects.map((a) => (lang === "es" ? a.nameEs : a.nameEn)),
       addonIds: selectedAddonObjects.map((a) => a.id),
       addonsPrice: addonsPricePerPerson * tickets,
+      addonsPricePerPerson,
+      addonsBreakdown,
       transportQuote,
       addonDetails,
     });
@@ -690,6 +704,7 @@ export default function ReservationDetails({
     addonDetails,
     addonDetailsSummary,
     addonsPricePerPerson,
+    addonsBreakdown,
     transportQuote,
     lang,
     trackBlockedStep,

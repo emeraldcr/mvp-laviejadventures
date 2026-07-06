@@ -16,9 +16,17 @@ function formatAddonLines(orderDetails: OrderDetails, lang: "es" | "en"): string
   if (ids.length === 0) return "";
 
   const isEs = lang === "es";
+  const breakdown = new Map(
+    (orderDetails.addonsBreakdown ?? []).map((item) => [item.id, item.pricePerPerson]),
+  );
+
   const lines = ids.map((id) => {
     const addon = ADDON_DATA.find((item) => item.id === id);
-    return addon ? `• ${isEs ? addon.nameEs : addon.nameEn}` : `• ${id}`;
+    const label = addon ? (isEs ? addon.nameEs : addon.nameEn) : id;
+    const price = breakdown.get(id);
+    return price != null
+      ? `• ${label} (+$${price}/${isEs ? "persona" : "person"})`
+      : `• ${label}`;
   });
 
   return `\n${isEs ? "Extras:" : "Add-ons:"}\n${lines.join("\n")}`;
