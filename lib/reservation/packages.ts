@@ -1,4 +1,4 @@
-import { fallbackPackagesForTour, normalizeTourPackages } from "@/lib/tour-packages";
+import { buildStandardPackagesFromPrice, fallbackPackagesForTour, normalizeTourPackages } from "@/lib/tour-packages";
 import type { TourPackageOption, TourSummary } from "@/lib/types/index";
 
 export const CRC_PER_USD = 525;
@@ -95,7 +95,11 @@ export function getAvailablePackagesForTour(
   const dbPackages = normalizeTourPackages(packages);
   if (dbPackages.length > 0) return dbPackages;
 
-  return fallbackPackagesForTour(tourSlug);
+  const fallback = fallbackPackagesForTour(tourSlug);
+  if (fallback.length > 0) return fallback;
+
+  const priceCRC = Number((tour as { priceCRC?: unknown } | null | undefined)?.priceCRC);
+  return buildStandardPackagesFromPrice(Number.isFinite(priceCRC) ? priceCRC : null);
 }
 
 export function getPackageLabel(

@@ -6,7 +6,7 @@ import DynamicHeroHeader from "@/app/components/sections/DynamicHeroHeader";
 import BirdwatchingTourPage from "@/app/components/tours/BirdwatchingTourPage";
 import { getDb } from "@/lib/helpers/mongodb";
 import { COLLECTIONS } from "@/lib/constants/db";
-import { fallbackPackagesForTour, normalizeTourPackages } from "@/lib/tour-packages";
+import { buildStandardPackagesFromPrice, fallbackPackagesForTour, normalizeTourPackages } from "@/lib/tour-packages";
 import { getTourGallery, getTourImage } from "@/lib/tour-display";
 import { getTourContent } from "@/lib/tour-content";
 import type { TourPackageOption } from "@/lib/types/index";
@@ -103,9 +103,15 @@ async function getTour(slug: string): Promise<TourDetail | null> {
     if (!tour) return getFallbackTour(slug);
 
     const packages = normalizeTourPackages(tour.packages);
+    const resolvedSlug = String(tour.slug ?? slug);
+    const slugFallback = packages.length > 0 ? packages : fallbackPackagesForTour(resolvedSlug);
+    const priceCRC = Number(tour.priceCRC ?? tour.retailPricePerPax ?? 0);
+    const resolvedPackages = slugFallback.length > 0
+      ? slugFallback
+      : buildStandardPackagesFromPrice(priceCRC);
 
     return {
-      slug: String(tour.slug ?? slug),
+      slug: resolvedSlug,
       titleEs: String(tour.titleEs ?? tour.name ?? DEFAULT_TOUR.titleEs),
       titleEn: String(tour.titleEn ?? tour.name ?? tour.titleEs ?? DEFAULT_TOUR.titleEn),
       descriptionEs: String(tour.descriptionEs ?? tour.details ?? ""),
@@ -114,12 +120,12 @@ async function getTour(slug: string): Promise<TourDetail | null> {
       duration: String(tour.duration ?? ""),
       difficulty: String(tour.difficulty ?? ""),
       location: String(tour.location ?? ""),
-      priceCRC: Number(tour.priceCRC ?? tour.retailPricePerPax ?? 0),
+      priceCRC,
       tagEs: String(tour.tagEs ?? ""),
       inclusions: asStringArray(tour.inclusions ?? tour.includes),
       restrictions: String(tour.restrictions ?? ""),
       cancellationPolicy: String(tour.cancellationPolicy ?? ""),
-      packages: packages.length > 0 ? packages : fallbackPackagesForTour(String(tour.slug ?? slug)),
+      packages: resolvedPackages,
     };
   } catch (error) {
     console.error("Failed to load tour detail:", error);

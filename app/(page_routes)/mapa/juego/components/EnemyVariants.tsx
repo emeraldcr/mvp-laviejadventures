@@ -4,31 +4,26 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { EnemyData, GameState } from '../types';
 import { useGameRuntimeContext } from '../context/GameContext';
+import { isSideHit, isStomp } from '../lib/enemyCombat';
 
 interface Props {
   data: EnemyData;
   gameStatus: GameState['status'];
 }
 
-// Shared hit tuning
-const STOMP_X = 0.6;
-const STOMP_MIN_Y = 0.3;
-const STOMP_MAX_Y = 1.0;
-const SIDE_X = 0.62;
-const SIDE_Y = 0.5;
+// Bullet hit tuning (stomp / side-hit live in ../lib/enemyCombat)
 const BULLET_HIT_X = 0.55;
 const BULLET_HIT_Y = 0.5;
 
 // ── Crawler: ground beetle / prehistoric critter (Goomba-like) ──────────────
 export const CrawlerEnemy = memo(function CrawlerEnemy({ data, gameStatus }: Props) {
-  const { playerPosRef, bulletsRef, handlePlayerHit } = useGameRuntimeContext();
+  const { playerPosRef, playerVelRef, bulletsRef, stompBounceRef, handlePlayerHit } = useGameRuntimeContext();
   const groupRef = useRef<THREE.Group>(null);
   const squashRef = useRef<THREE.Group>(null);
   const defeated = useRef(false);
   const posX = useRef(data.position[0]);
   const dir = useRef(1);
   const hitCd = useRef(false);
-  const lastPlayerY = useRef(data.position[1] + STOMP_MAX_Y);
   const legT = useRef(0);
   const legL = useRef<THREE.Group>(null);
   const legR = useRef<THREE.Group>(null);
@@ -73,17 +68,16 @@ export const CrawlerEnemy = memo(function CrawlerEnemy({ data, gameStatus }: Pro
 
     const dx = playerPosRef.current.x - posX.current;
     const dy = playerPosRef.current.y - y;
-    const falling = playerPosRef.current.y <= lastPlayerY.current + 0.02;
-    if (Math.abs(dx) < STOMP_X && dy > STOMP_MIN_Y && dy < STOMP_MAX_Y && falling) {
+    if (isStomp(dx, dy, playerVelRef.current.y)) {
       markDefeated();
+      stompBounceRef.current = true;
       return;
     }
-    if (Math.abs(dx) < SIDE_X && Math.abs(dy) < SIDE_Y && !hitCd.current) {
+    if (isSideHit(dx, dy) && !hitCd.current) {
       hitCd.current = true;
       handlePlayerHit();
       setTimeout(() => { hitCd.current = false; }, 2200);
     }
-    lastPlayerY.current = playerPosRef.current.y;
   });
 
   return (
@@ -130,14 +124,13 @@ export const CrawlerEnemy = memo(function CrawlerEnemy({ data, gameStatus }: Pro
 
 // ── Charger: raptor that patrols then dashes at the player (prehistoric) ─────
 export const ChargerEnemy = memo(function ChargerEnemy({ data, gameStatus }: Props) {
-  const { playerPosRef, bulletsRef, handlePlayerHit } = useGameRuntimeContext();
+  const { playerPosRef, playerVelRef, bulletsRef, stompBounceRef, handlePlayerHit } = useGameRuntimeContext();
   const groupRef = useRef<THREE.Group>(null);
   const squashRef = useRef<THREE.Group>(null);
   const defeated = useRef(false);
   const posX = useRef(data.position[0]);
   const dir = useRef(1);
   const hitCd = useRef(false);
-  const lastPlayerY = useRef(data.position[1] + STOMP_MAX_Y);
   const charging = useRef(false);
   const chargeT = useRef(0);
   const cooldown = useRef(0);
@@ -211,17 +204,16 @@ export const ChargerEnemy = memo(function ChargerEnemy({ data, gameStatus }: Pro
 
     const dx = px - posX.current;
     const dy = py - y;
-    const falling = py <= lastPlayerY.current + 0.02;
-    if (Math.abs(dx) < STOMP_X && dy > STOMP_MIN_Y && dy < STOMP_MAX_Y && falling) {
+    if (isStomp(dx, dy, playerVelRef.current.y)) {
       markDefeated();
+      stompBounceRef.current = true;
       return;
     }
-    if (Math.abs(dx) < SIDE_X && Math.abs(dy) < SIDE_Y && !hitCd.current) {
+    if (isSideHit(dx, dy) && !hitCd.current) {
       hitCd.current = true;
       handlePlayerHit();
       setTimeout(() => { hitCd.current = false; }, 2200);
     }
-    lastPlayerY.current = py;
   });
 
   return (
@@ -277,13 +269,12 @@ const FIRE_INTERVAL = 2.1;
 interface Projectile { x: number; y: number; dir: number; active: boolean; }
 
 export const SpitterEnemy = memo(function SpitterEnemy({ data, gameStatus }: Props) {
-  const { playerPosRef, bulletsRef, handlePlayerHit } = useGameRuntimeContext();
+  const { playerPosRef, playerVelRef, bulletsRef, stompBounceRef, handlePlayerHit } = useGameRuntimeContext();
   const groupRef = useRef<THREE.Group>(null);
   const defeated = useRef(false);
   const headRef = useRef<THREE.Group>(null);
   const fireT = useRef(FIRE_INTERVAL * 0.5);
   const hitCd = useRef(false);
-  const lastPlayerY = useRef(data.position[1] + STOMP_MAX_Y);
   const t = useRef(0);
 
   const projectiles = useRef<Projectile[]>(
@@ -358,18 +349,17 @@ export const SpitterEnemy = memo(function SpitterEnemy({ data, gameStatus }: Pro
       }
     }
     const pdx = playerPosRef.current.x - ex;
-    const pdy = playerPosRef.current.y - (ey + 0.5);
-    const falling = playerPosRef.current.y <= lastPlayerY.current + 0.02;
-    if (Math.abs(pdx) < STOMP_X && pdy > STOMP_MIN_Y && pdy < STOMP_MAX_Y && falling) {
+    const pdy = playerPosRef.current.y - (ey + 0.45);
+    if (isStomp(pdx, pdy, playerVelRef.current.y)) {
       markDefeated();
+      stompBounceRef.current = true;
       return;
     }
-    if (Math.abs(pdx) < SIDE_X && Math.abs(playerPosRef.current.y - (ey + 0.4)) < 0.55 && !hitCd.current) {
+    if (Math.abs(pdx) < 0.5 && Math.abs(playerPosRef.current.y - (ey + 0.4)) < 0.5 && !hitCd.current) {
       hitCd.current = true;
       handlePlayerHit();
       setTimeout(() => { hitCd.current = false; }, 2200);
     }
-    lastPlayerY.current = playerPosRef.current.y;
   });
 
   return (

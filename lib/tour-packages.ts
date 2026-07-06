@@ -101,10 +101,311 @@ export const BIRDWATCHING_PACKAGES: TourPackageOption[] = [
   },
 ];
 
+// ─────────────────────────────────────────────────────────────────────────
+//  Standard 3-tier package builder (Essential / Plus / Private) so every tour
+//  offers bookable packages, matching the shape of the curated sets above.
+// ─────────────────────────────────────────────────────────────────────────
+
+interface TourPackageSeed {
+  essential: { price: number; priceCRC: number; descriptionEn: string; descriptionEs: string; includes: string[] };
+  plus: { id: string; name: string; nameEs: string; price: number; priceCRC: number; descriptionEn: string; descriptionEs: string; includes: string[] };
+  privatePkg: { price: number; priceCRC: number; descriptionEn: string; descriptionEs: string; includes: string[] };
+  departureTimes: string[];
+  privateDepartureTimes?: string[];
+  scheduleNote: string;
+}
+
+function expandSeed(seed: TourPackageSeed): TourPackageOption[] {
+  return [
+    {
+      id: "essential-package",
+      name: "Essential Package",
+      nameEs: "Paquete Esencial",
+      price: seed.essential.price,
+      priceCRC: seed.essential.priceCRC,
+      descriptionEn: seed.essential.descriptionEn,
+      descriptionEs: seed.essential.descriptionEs,
+      includes: seed.essential.includes,
+      groupTour: true,
+      departureTimes: seed.departureTimes,
+      scheduleNote: seed.scheduleNote,
+    },
+    {
+      id: seed.plus.id,
+      name: seed.plus.name,
+      nameEs: seed.plus.nameEs,
+      price: seed.plus.price,
+      priceCRC: seed.plus.priceCRC,
+      descriptionEn: seed.plus.descriptionEn,
+      descriptionEs: seed.plus.descriptionEs,
+      includes: seed.plus.includes,
+      groupTour: true,
+      departureTimes: seed.departureTimes,
+      scheduleNote: seed.scheduleNote,
+    },
+    {
+      id: "private-package",
+      name: "Private Package",
+      nameEs: "Paquete Privado",
+      price: seed.privatePkg.price,
+      priceCRC: seed.privatePkg.priceCRC,
+      descriptionEn: seed.privatePkg.descriptionEn,
+      descriptionEs: seed.privatePkg.descriptionEs,
+      includes: seed.privatePkg.includes,
+      groupTour: false,
+      departureTimes: seed.privateDepartureTimes ?? ["Flexible"],
+      scheduleNote: "Flexible departure time - please check availability with the operator",
+    },
+  ];
+}
+
+export const CUADRA_TOURS_PACKAGES: TourPackageOption[] = expandSeed({
+  essential: {
+    price: 38, priceCRC: 19990,
+    descriptionEn: "Guided ATV ride through exclusive northern-zone trails",
+    descriptionEs: "Recorrido guiado en cuadra por senderos exclusivos de la zona norte",
+    includes: ["Local guide", "Single ATV rental", "Safety equipment (helmet)", "1.5-2 hour trail ride"],
+  },
+  plus: {
+    id: "adventure-plus-package",
+    name: "Adventure Plus Package", nameEs: "Paquete Aventura Plus",
+    price: 53, priceCRC: 27990,
+    descriptionEn: "Extended route with scenic viewpoints, refreshment and photo stops",
+    descriptionEs: "Ruta extendida con miradores escenicos, refrigerio y paradas fotograficas",
+    includes: ["Everything in Essential Package", "Extended trail route", "Refreshment stop", "Scenic viewpoint photos"],
+  },
+  privatePkg: {
+    price: 76, priceCRC: 39990,
+    descriptionEn: "Private ATV adventure with a dedicated guide and flexible pace",
+    descriptionEs: "Aventura privada en cuadra con guia dedicado y ritmo flexible",
+    includes: ["Everything in Adventure Plus Package", "Private guide for your group only", "Flexible route and pace", "Professional photos"],
+  },
+  departureTimes: ["08:00", "09:00", "10:00", "14:00"],
+  scheduleNote: "All groups are combined in the same departure time",
+});
+
+export const CASCADAS_PACKAGES: TourPackageOption[] = expandSeed({
+  essential: {
+    price: 38, priceCRC: 19990,
+    descriptionEn: "Guided hike to hidden waterfalls of the La Vieja River",
+    descriptionEs: "Caminata guiada hacia cascadas escondidas del Rio La Vieja",
+    includes: ["Local guide", "Trail access", "Photo stops", "2-3 hour hiking experience"],
+  },
+  plus: {
+    id: "explorer-package",
+    name: "Explorer Package", nameEs: "Paquete Explorador",
+    price: 57, priceCRC: 29990,
+    descriptionEn: "Waterfall hike plus a riverside picnic and photography guidance",
+    descriptionEs: "Caminata a cascadas + picnic junto al rio y guia de fotografia",
+    includes: ["Everything in Essential Package", "Riverside picnic snack", "Photography guidance", "Extra viewpoints"],
+  },
+  privatePkg: {
+    price: 76, priceCRC: 39990,
+    descriptionEn: "Private waterfall adventure with photos and a personalized focus",
+    descriptionEs: "Aventura privada a las cascadas con fotos y enfoque personalizado",
+    includes: ["Everything in Explorer Package", "Private guide for your group only", "Flexible schedule", "Professional photos"],
+  },
+  departureTimes: ["07:00", "08:00", "09:00"],
+  scheduleNote: "All groups are combined in the same departure time",
+});
+
+export const GASTRONOMICO_PACKAGES: TourPackageOption[] = expandSeed({
+  essential: {
+    price: 48, priceCRC: 24990,
+    descriptionEn: "Guided tasting of traditional dishes prepared by local cooks",
+    descriptionEs: "Degustacion guiada de platillos tradicionales preparados por cocineros locales",
+    includes: ["Local host", "Traditional dish tasting", "Natural drink", "Cultural experience"],
+  },
+  plus: {
+    id: "full-tasting-package",
+    name: "Full Tasting Package", nameEs: "Paquete Degustacion Completa",
+    price: 65, priceCRC: 33990,
+    descriptionEn: "Complete tasting menu with dessert and drink pairing",
+    descriptionEs: "Menu de degustacion completo con postre y maridaje de bebidas",
+    includes: ["Everything in Essential Package", "Full tasting menu", "Traditional dessert", "Drink pairing"],
+  },
+  privatePkg: {
+    price: 86, priceCRC: 44990,
+    descriptionEn: "Private culinary experience with a dedicated host and menu",
+    descriptionEs: "Experiencia culinaria privada con anfitrion y menu dedicados",
+    includes: ["Everything in Full Tasting Package", "Private host for your group only", "Personalized menu", "Flexible schedule"],
+  },
+  departureTimes: ["11:00", "12:00", "17:00"],
+  scheduleNote: "All groups are combined in the same departure time",
+});
+
+export const LLUVIA_PACKAGES: TourPackageOption[] = expandSeed({
+  essential: {
+    price: 38, priceCRC: 19990,
+    descriptionEn: "Sensory forest walk in the rain with special gear",
+    descriptionEs: "Caminata sensorial por el bosque bajo la lluvia con equipo especial",
+    includes: ["Local guide", "Special rain gear", "Sensory route", "1 hour experience"],
+  },
+  plus: {
+    id: "sensory-plus-package",
+    name: "Sensory Plus Package", nameEs: "Paquete Sensorial Plus",
+    price: 53, priceCRC: 27990,
+    descriptionEn: "Rain walk plus a warm drink and guided photography",
+    descriptionEs: "Caminata bajo la lluvia + bebida caliente y fotografia guiada",
+    includes: ["Everything in Essential Package", "Hot natural drink", "Photography guidance", "Extended sensory route"],
+  },
+  privatePkg: {
+    price: 72, priceCRC: 37990,
+    descriptionEn: "Private rain experience with a dedicated guide and photos",
+    descriptionEs: "Experiencia privada bajo la lluvia con guia dedicado y fotos",
+    includes: ["Everything in Sensory Plus Package", "Private guide for your group only", "Flexible schedule", "Professional photos"],
+  },
+  departureTimes: ["09:00", "10:00", "14:00"],
+  scheduleNote: "All groups are combined in the same departure time",
+});
+
+export const NOCTURNO_PACKAGES: TourPackageOption[] = expandSeed({
+  essential: {
+    price: 44, priceCRC: 22990,
+    descriptionEn: "Guided night walk to discover the forest's nightlife",
+    descriptionEs: "Caminata nocturna guiada para descubrir la vida nocturna del bosque",
+    includes: ["Local guide", "Night route", "Safety briefing", "1.5 hour experience"],
+  },
+  plus: {
+    id: "night-explorer-package",
+    name: "Night Explorer Package", nameEs: "Paquete Explorador Nocturno",
+    price: 61, priceCRC: 31990,
+    descriptionEn: "Night tour plus wildlife photography guidance and a snack",
+    descriptionEs: "Tour nocturno + guia de fotografia de fauna y un refrigerio",
+    includes: ["Everything in Essential Package", "Night photography guidance", "Snack and hot drink", "Extra observation points"],
+  },
+  privatePkg: {
+    price: 82, priceCRC: 42990,
+    descriptionEn: "Private night adventure with a dedicated guide and photos",
+    descriptionEs: "Aventura nocturna privada con guia dedicado y fotos",
+    includes: ["Everything in Night Explorer Package", "Private guide for your group only", "Flexible schedule", "Professional night photos"],
+  },
+  departureTimes: ["18:00", "19:00", "20:00"],
+  scheduleNote: "All groups are combined in the same departure time",
+});
+
+export const RAPEL_PACKAGES: TourPackageOption[] = expandSeed({
+  essential: {
+    price: 57, priceCRC: 29990,
+    descriptionEn: "Controlled canyon rappel with certified guides and pro equipment",
+    descriptionEs: "Descenso controlado en el canon con guias certificados y equipo profesional",
+    includes: ["Certified guide", "Professional rappelling equipment", "Safety briefing", "2 hour experience"],
+  },
+  plus: {
+    id: "extreme-package",
+    name: "Extreme Package", nameEs: "Paquete Extremo",
+    price: 76, priceCRC: 39990,
+    descriptionEn: "Extended multi-drop descent with action photos",
+    descriptionEs: "Descenso extendido de varias secciones con fotos de accion",
+    includes: ["Everything in Essential Package", "Extended multi-drop route", "Action photos", "Extra canyon sections"],
+  },
+  privatePkg: {
+    price: 101, priceCRC: 52990,
+    descriptionEn: "Private canyon rappel with a dedicated certified guide",
+    descriptionEs: "Rapel privado en el canon con guia certificado dedicado",
+    includes: ["Everything in Extreme Package", "Private certified guide for your group only", "Flexible schedule", "Professional photos"],
+  },
+  departureTimes: ["08:00", "09:00", "10:00"],
+  scheduleNote: "All groups are combined in the same departure time",
+});
+
+export const VOLCANES_PACKAGES: TourPackageOption[] = expandSeed({
+  essential: {
+    price: 67, priceCRC: 34990,
+    descriptionEn: "Guided hike to ancient craters of Juan Castro Blanco park",
+    descriptionEs: "Caminata guiada a crateres antiguos del parque Juan Castro Blanco",
+    includes: ["Local guide", "Route to ancient craters", "Natural viewpoints", "3-4 hour hiking experience"],
+  },
+  plus: {
+    id: "summit-package",
+    name: "Summit Package", nameEs: "Paquete Cumbre",
+    price: 86, priceCRC: 44990,
+    descriptionEn: "Full-summit hike with a traditional lunch and photography",
+    descriptionEs: "Caminata a la cumbre completa con almuerzo tipico y fotografia",
+    includes: ["Everything in Essential Package", "Typical Costa Rican lunch", "Full summit route", "Photography guidance"],
+  },
+  privatePkg: {
+    price: 110, priceCRC: 57990,
+    descriptionEn: "Private volcano hike with lunch, photos and a dedicated guide",
+    descriptionEs: "Caminata privada al volcan con almuerzo, fotos y guia dedicado",
+    includes: ["Everything in Summit Package", "Private guide for your group only", "Flexible schedule", "Professional photos"],
+  },
+  departureTimes: ["06:00", "07:00", "08:00"],
+  scheduleNote: "Early departures are recommended before midday clouds",
+});
+
+// Generic 3-tier packages derived from a tour's base price — the last-resort
+// fallback so that ANY tour (even a brand-new one) always has bookable packages.
+export function buildStandardPackagesFromPrice(
+  priceCRC?: number | null,
+  departureTimes: string[] = ["08:00", "09:00", "10:00"],
+): TourPackageOption[] {
+  const base = Number.isFinite(Number(priceCRC)) && Number(priceCRC) > 0 ? Number(priceCRC) : 19990;
+  const plusCRC = Math.round((base * 1.4) / 10) * 10;
+  const privateCRC = Math.round((base * 1.85) / 10) * 10;
+  const usd = (crc: number) => Math.round(crc / 525);
+  const groupNote = "All groups are combined in the same departure time";
+
+  return [
+    {
+      id: "essential-package",
+      name: "Essential Package",
+      nameEs: "Paquete Esencial",
+      price: usd(base),
+      priceCRC: base,
+      descriptionEn: "Guided group experience with a local guide and essential equipment",
+      descriptionEs: "Experiencia guiada en grupo con guia local y equipo esencial",
+      includes: ["Local guide", "Essential equipment", "Group experience"],
+      groupTour: true,
+      departureTimes,
+      scheduleNote: groupNote,
+    },
+    {
+      id: "plus-package",
+      name: "Plus Package",
+      nameEs: "Paquete Plus",
+      price: usd(plusCRC),
+      priceCRC: plusCRC,
+      descriptionEn: "Essential experience plus a refreshment and photography guidance",
+      descriptionEs: "Experiencia esencial + refrigerio y guia de fotografia",
+      includes: ["Everything in Essential Package", "Refreshment", "Photography guidance"],
+      groupTour: true,
+      departureTimes,
+      scheduleNote: groupNote,
+    },
+    {
+      id: "private-package",
+      name: "Private Package",
+      nameEs: "Paquete Privado",
+      price: usd(privateCRC),
+      priceCRC: privateCRC,
+      descriptionEn: "Private experience with a dedicated guide and a flexible schedule",
+      descriptionEs: "Experiencia privada con guia dedicado y horario flexible",
+      includes: ["Everything in Plus Package", "Private guide for your group only", "Flexible schedule", "Professional photos"],
+      groupTour: false,
+      departureTimes: ["Flexible"],
+      scheduleNote: "Flexible departure time - please check availability with the operator",
+    },
+  ];
+}
+
+const PACKAGES_BY_SLUG: Record<string, TourPackageOption[]> = {
+  "tour-ciudad-esmeralda": CIUDAD_ESMERALDA_PACKAGES,
+  "ciudad-esmeralda": CIUDAD_ESMERALDA_PACKAGES,
+  "avistamiento-aves-norteno": BIRDWATCHING_PACKAGES,
+  "avistamiento-aves": BIRDWATCHING_PACKAGES,
+  "cuadra-tours-aventura": CUADRA_TOURS_PACKAGES,
+  "cascadas-secretas-rio-la-vieja": CASCADAS_PACKAGES,
+  "tour-gastronomico-local": GASTRONOMICO_PACKAGES,
+  "lluvia-en-la-naturaleza": LLUVIA_PACKAGES,
+  "tour-nocturno-la-vieja": NOCTURNO_PACKAGES,
+  "rapel-canon-del-rio": RAPEL_PACKAGES,
+  "caminata-volcanes-dormidos": VOLCANES_PACKAGES,
+};
+
 export function fallbackPackagesForTour(slug?: string | null): TourPackageOption[] {
-  if (slug === "tour-ciudad-esmeralda") return CIUDAD_ESMERALDA_PACKAGES;
-  if (slug === "avistamiento-aves-norteno" || slug === "avistamiento-aves") return BIRDWATCHING_PACKAGES;
-  return [];
+  if (!slug) return [];
+  return PACKAGES_BY_SLUG[slug] ?? [];
 }
 
 export function normalizeTourPackages(value: unknown): TourPackageOption[] {

@@ -64,9 +64,11 @@ export function GameProvider({
   const keys = useKeyboard();
   const internalPosRef = useRef(new THREE.Vector3(...level.spawnPosition));
   const playerPosRef = sharedPosRef ?? internalPosRef;
+  const playerVelRef = useRef(new THREE.Vector3());
   const bulletsRef = useRef<BulletState[]>([]);
   const pendingPowerUpRef = useRef<PowerUpKind | null>(null);
   const playerImmuneRef = useRef(false);
+  const stompBounceRef = useRef(false);
   const platformRegistryRef = useRef<Map<string, LivePlatform>>(new Map());
 
   const [activePowerUps, setActivePowerUps] = useState({
@@ -160,9 +162,11 @@ export function GameProvider({
     levelKey: state.restartKey,
     keys,
     playerPosRef,
+    playerVelRef,
     bulletsRef,
     pendingPowerUpRef,
     playerImmuneRef,
+    stompBounceRef,
     platformRegistryRef,
     activePowerUps,
     handlePowerUpChange,
@@ -178,17 +182,19 @@ export function GameProvider({
     enterLevel,
     resetAdventure,
   }), [
-    state, leaderboard, level, keys, playerPosRef, bulletsRef, pendingPowerUpRef, playerImmuneRef,
-    activePowerUps, handlePowerUpChange, handlePlayerHit, handleTrap, dieFromFall, handleWin,
+    state, leaderboard, level, keys, playerPosRef, playerVelRef, bulletsRef, pendingPowerUpRef, playerImmuneRef,
+    stompBounceRef, activePowerUps, handlePowerUpChange, handlePlayerHit, handleTrap, dieFromFall, handleWin,
     registerPlayer, clearPlayer, collectCrystal, respawn, restart, enterLevel, resetAdventure,
   ]);
 
   const runtimeValue = useMemo<GameRuntimeContextValue>(() => ({
     keys,
     playerPosRef,
+    playerVelRef,
     bulletsRef,
     pendingPowerUpRef,
     playerImmuneRef,
+    stompBounceRef,
     platformRegistryRef,
     handlePowerUpChange,
     handlePlayerHit,
@@ -199,9 +205,11 @@ export function GameProvider({
   }), [
     keys,
     playerPosRef,
+    playerVelRef,
     bulletsRef,
     pendingPowerUpRef,
     playerImmuneRef,
+    stompBounceRef,
     handlePowerUpChange,
     handlePlayerHit,
     handleTrap,

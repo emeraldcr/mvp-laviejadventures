@@ -1,6 +1,6 @@
 import { getDb } from "@/lib/helpers/mongodb";
 import { COLLECTIONS } from "@/lib/constants/db";
-import { fallbackPackagesForTour, normalizeTourPackages } from "@/lib/tour-packages";
+import { buildStandardPackagesFromPrice, fallbackPackagesForTour, normalizeTourPackages } from "@/lib/tour-packages";
 import type { TourSummary } from "@/lib/types/index";
 
 export type PublicTour = TourSummary & {
@@ -290,7 +290,10 @@ function serializePublicTour(t: Record<string, unknown>): PublicTour {
   const defaults = DEFAULT_TOUR_DETAILS[slug] ?? null;
 
   const sourcePackages = normalizeTourPackages(t.packages);
-  const packages = sourcePackages.length > 0 ? sourcePackages : fallbackPackagesForTour(slug);
+  const slugFallback = sourcePackages.length > 0 ? sourcePackages : fallbackPackagesForTour(slug);
+  const packages = slugFallback.length > 0
+    ? slugFallback
+    : buildStandardPackagesFromPrice(typeof t.priceCRC === "number" ? t.priceCRC : null);
 
   return {
     id: String(t._id ?? slug),

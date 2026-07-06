@@ -31,9 +31,11 @@ export interface GameContextValue {
   levelKey: number;
   keys: React.MutableRefObject<KeyState>;
   playerPosRef: React.MutableRefObject<THREE.Vector3>;
+  playerVelRef: React.MutableRefObject<THREE.Vector3>;
   bulletsRef: React.MutableRefObject<BulletState[]>;
   pendingPowerUpRef: React.MutableRefObject<PowerUpKind | null>;
   playerImmuneRef: React.MutableRefObject<boolean>;
+  stompBounceRef: React.MutableRefObject<boolean>;
   platformRegistryRef: React.MutableRefObject<Map<string, LivePlatform>>;
   activePowerUps: ActivePowerUps;
   handlePowerUpChange: (ruby: boolean, sapphire: boolean, rubyRemaining?: number, sapphireRemaining?: number) => void;
@@ -54,9 +56,11 @@ export type GameRuntimeContextValue = Pick<
   GameContextValue,
   | 'keys'
   | 'playerPosRef'
+  | 'playerVelRef'
   | 'bulletsRef'
   | 'pendingPowerUpRef'
   | 'playerImmuneRef'
+  | 'stompBounceRef'
   | 'platformRegistryRef'
   | 'handlePowerUpChange'
   | 'handlePlayerHit'

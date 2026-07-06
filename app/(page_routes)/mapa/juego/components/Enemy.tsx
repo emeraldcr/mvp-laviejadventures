@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import type { EnemyData, GameState } from '../types';
 import { useGameRuntimeContext } from '../context/GameContext';
 import { CrawlerEnemy, ChargerEnemy, SpitterEnemy } from './EnemyVariants';
+import { isSideHit, isStomp } from '../lib/enemyCombat';
 
 interface Props {
   data: EnemyData;
@@ -21,16 +22,11 @@ export const Enemy = memo(function Enemy({ data, gameStatus }: Props) {
 });
 
 const PATROL_SPEED = 2.4;
-const SIDE_HIT_X   = 0.62;
-const SIDE_HIT_Y   = 0.42;
-const STOMP_X      = 0.58;
-const STOMP_MIN_Y  = 0.36;
-const STOMP_MAX_Y  = 0.92;
 const BULLET_HIT_X = 0.52;
 const BULLET_HIT_Y = 0.38;
 
 const BatEnemy = memo(function BatEnemy({ data, gameStatus }: Props) {
-  const { playerPosRef, bulletsRef, handlePlayerHit } = useGameRuntimeContext();
+  const { playerPosRef, playerVelRef, bulletsRef, stompBounceRef, handlePlayerHit } = useGameRuntimeContext();
   const defeated = useRef(false);
   const groupRef  = useRef<THREE.Group>(null);
   const defeatedRef = useRef<THREE.Group>(null);
@@ -38,7 +34,6 @@ const BatEnemy = memo(function BatEnemy({ data, gameStatus }: Props) {
   const dir       = useRef(1);
   const hitCd     = useRef(false);
   const stomped   = useRef(false);
-  const lastPlayerY = useRef(data.position[1] + STOMP_MAX_Y);
   const leftWing  = useRef<THREE.Mesh>(null);
   const rightWing = useRef<THREE.Mesh>(null);
   const t         = useRef(0);
@@ -86,23 +81,19 @@ const BatEnemy = memo(function BatEnemy({ data, gameStatus }: Props) {
     // ── Player collision ───────────────────────────────────────────────────
     const dx = playerPosRef.current.x - posX.current;
     const dy = playerPosRef.current.y - enemyY;
-    const fallingOrLevel = playerPosRef.current.y <= lastPlayerY.current + 0.02;
-    const stompHit = Math.abs(dx) < STOMP_X && dy > STOMP_MIN_Y && dy < STOMP_MAX_Y && fallingOrLevel;
 
-    if (stompHit && !stomped.current) {
+    if (isStomp(dx, dy, playerVelRef.current.y) && !stomped.current) {
       stomped.current = true;
       markDefeated(enemyY);
+      stompBounceRef.current = true;
       return;
     }
 
-    const sideHit = Math.abs(dx) < SIDE_HIT_X && Math.abs(dy) < SIDE_HIT_Y;
-    if (sideHit && !hitCd.current) {
+    if (isSideHit(dx, dy) && !hitCd.current) {
       hitCd.current = true;
       handlePlayerHit();
       setTimeout(() => { hitCd.current = false; }, 2200);
     }
-
-    lastPlayerY.current = playerPosRef.current.y;
   });
 
   return (

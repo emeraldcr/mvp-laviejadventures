@@ -1,5 +1,5 @@
 'use client';
-import { memo, Suspense } from 'react';
+import { memo, Suspense, useCallback, useEffect, useRef, type PointerEvent } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Scene } from './Scene';
 import { GameUI } from './GameUI/GameUI';
@@ -14,14 +14,51 @@ export const GameCanvas = memo(function GameCanvas() {
     runtimeValue,
     otherPlayers,
   } = useGameSceneContext();
+  const touchMovePointers = useRef(new Set<number>());
+
+  const releaseTouchAdvance = useCallback((pointerId: number) => {
+    touchMovePointers.current.delete(pointerId);
+    if (touchMovePointers.current.size === 0) {
+      runtimeValue.keys.current.right = false;
+    }
+  }, [runtimeValue.keys]);
+
+  const handleTouchAdvanceStart = useCallback((event: PointerEvent<HTMLDivElement>) => {
+    if (gameStatus !== 'playing' || event.pointerType === 'mouse') return;
+    event.preventDefault();
+    touchMovePointers.current.add(event.pointerId);
+    runtimeValue.keys.current.right = true;
+  }, [gameStatus, runtimeValue.keys]);
+
+  const handleTouchAdvanceEnd = useCallback((event: PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === 'mouse') return;
+    releaseTouchAdvance(event.pointerId);
+  }, [releaseTouchAdvance]);
+
+  useEffect(() => {
+    if (gameStatus === 'playing') return;
+    touchMovePointers.current.clear();
+    runtimeValue.keys.current.right = false;
+  }, [gameStatus, runtimeValue.keys]);
+
+  useEffect(() => {
+    return () => {
+      runtimeValue.keys.current.right = false;
+    };
+  }, [runtimeValue.keys]);
 
   return (
     <div
+      onPointerDown={handleTouchAdvanceStart}
+      onPointerUp={handleTouchAdvanceEnd}
+      onPointerCancel={handleTouchAdvanceEnd}
+      onPointerLeave={handleTouchAdvanceEnd}
       style={{
         width: '100vw', height: '100vh',
         position: 'relative',
         background: '#060c10',
         overflow: 'hidden',
+        touchAction: gameStatus === 'playing' ? 'none' : 'auto',
       }}
     >
       <Canvas

@@ -3,7 +3,7 @@ import { useLayoutEffect, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useGameRuntimeContext } from '../context/GameContext';
-import { MAX_FRAME_DT, PHYSICS_STEP } from '../constants/physics';
+import { MAX_FRAME_DT, PHYSICS_STEP, STOMP_BOUNCE_VEL } from '../constants/physics';
 import { DEATH_Y } from '../constants/world';
 import { updatePlayerAnimation } from '../lib/playerAnimation';
 import { handleJumpInput, stepPlayerPhysics, updateHorizontalMovement } from '../lib/playerMovement';
@@ -20,7 +20,7 @@ export function Player({
   gameStatus: GameState['status'];
 }) {
   const {
-    keys, playerPosRef, bulletsRef, platformRegistryRef,
+    keys, playerPosRef, playerVelRef, bulletsRef, platformRegistryRef, stompBounceRef,
     pendingPowerUpRef, playerImmuneRef, handlePowerUpChange, handleDie,
   } = useGameRuntimeContext();
   const platforms = level.platforms;
@@ -111,6 +111,18 @@ export function Player({
     handleJumpInput({ grounded: grounded.current, jumpCount, jumpWas, keys: k, velocity: vel.current });
     const landedId = stepPlayerPhysics({ dt, grounded, jumpCount, keys: k, platformBounds, pos, steps, velocity: vel.current });
     groundPlatformId.current = grounded.current ? landedId : null;
+
+    // ── Stomp bounce (estilo Mario): rebota tras pisar un bicho ────────────
+    if (stompBounceRef.current) {
+      stompBounceRef.current = false;
+      vel.current.y = STOMP_BOUNCE_VEL;
+      grounded.current = false;
+      jumpCount.current = 1; // permite un salto extra en el aire tras rebotar
+      groundPlatformId.current = null;
+    }
+
+    // Publica la velocidad para que los enemigos detecten el pisotón con fiabilidad
+    playerVelRef.current.copy(vel.current);
 
     if (pos.y < DEATH_Y && !deathFired.current) {
       deathFired.current = true;

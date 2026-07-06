@@ -4,6 +4,7 @@ export const JUMP2_VEL = 10.5;
 export const GRAVITY = -28;
 export const GLIDE_FALL = -4.2;
 export const MAX_JUMPS = 2;
+export const STOMP_BOUNCE_VEL = 9.5;
 export const P_HALF_W = 0.28;
 export const P_HALF_H = 0.42;
 export const MAX_FRAME_DT = 1 / 30;
