@@ -12,7 +12,7 @@ import {
 } from "@/lib/constants/location";
 import { principalContent } from "@/lib/constants/principal";
 import type { TourSummary } from "@/lib/types/index";
-import { WHATSAPP_HREF, formatTourPrice } from "./home-utils";
+import { BOOKING_HREF, WHATSAPP_HREF, formatTourPrice, primaryBookingLabel } from "./home-utils";
 
 function FaqSection() {
   const { lang } = useLanguage();
@@ -108,10 +108,10 @@ function FinalCta() {
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
-              href="/reservar"
+              href={BOOKING_HREF}
               className="group inline-flex items-center gap-2 rounded-full bg-white px-8 py-4 text-sm font-bold text-emerald-900 shadow-xl transition-all hover:-translate-y-0.5"
             >
-              {isEs ? "Explorar experiencias" : "Explore experiences"}
+              {primaryBookingLabel(isEs)}
               <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
             </Link>
             <a
@@ -140,7 +140,7 @@ function HomeFooter() {
     { href: "/galeria", label: isEs ? "Galería" : "Gallery" },
     { href: "/info", label: isEs ? "Información" : "Information" },
     { href: "/tiempo", label: isEs ? "Clima" : "Weather" },
-    { href: "/reservar", label: isEs ? "Reservar" : "Book" },
+    { href: BOOKING_HREF, label: isEs ? "Reservar" : "Book" },
   ];
 
   return (
@@ -259,10 +259,10 @@ function MobileStickyCta({ tours }: { tours: TourSummary[] }) {
           </p>
         </div>
         <Link
-          href="/reservar"
+          href={BOOKING_HREF}
           className="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-600/25"
         >
-          {isEs ? "Reservar ahora" : "Book now"}
+          {primaryBookingLabel(isEs)}
           <ArrowRight size={15} />
         </Link>
       </div>

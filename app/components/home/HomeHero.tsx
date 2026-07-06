@@ -6,7 +6,7 @@ import Link from "next/link";
 import { ArrowRight, CalendarDays, Check, ChevronDown, MapPin, Minus, Plus, ShieldCheck, Star } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
 import type { TourSummary } from "@/lib/types/index";
-import { WHATSAPP_HREF, formatTourPrice, tourTitle } from "./home-utils";
+import { BOOKING_HREF, WHATSAPP_HREF, formatTourPrice, primaryBookingLabel, tourTitle } from "./home-utils";
 
 const SLIDE_DURATION = 6500;
 
@@ -55,7 +55,7 @@ function BookingCard({ tours }: { tours: TourSummary[] }) {
 
   const handleBook = () => {
     if (!resolvedSlug) return;
-    window.location.href = `/reservar?tour=${encodeURIComponent(resolvedSlug)}&pax=${people}`;
+    window.location.href = `${BOOKING_HREF}?tour=${encodeURIComponent(resolvedSlug)}&pax=${people}`;
   };
 
   return (
@@ -189,7 +189,7 @@ function BookingCard({ tours }: { tours: TourSummary[] }) {
           onClick={handleBook}
           className="group mt-7 flex h-16 w-full items-center justify-center gap-2 rounded-[1.35rem] bg-emerald-400 px-8 text-sm font-black uppercase tracking-wide text-emerald-950 shadow-[0_22px_55px_rgba(16,185,129,0.26)] transition-all hover:-translate-y-0.5 hover:bg-white"
         >
-          {isEs ? "Ver fechas" : "See dates"}
+          {primaryBookingLabel(isEs)}
           <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
         </button>
 
@@ -280,10 +280,10 @@ export default function HomeHero({ tours }: { tours: TourSummary[] }) {
 
           <div className="mt-7 flex flex-wrap items-center gap-3">
             <Link
-              href="/tours"
+              href={BOOKING_HREF}
               className="group inline-flex min-h-14 items-center gap-2 rounded-full bg-emerald-400 px-7 py-4 text-sm font-black uppercase tracking-wide text-emerald-950 shadow-[0_20px_55px_rgba(52,211,153,0.28)] transition-all hover:-translate-y-0.5 hover:bg-white"
             >
-              {isEs ? "Explorar experiencias" : "Explore experiences"}
+              {primaryBookingLabel(isEs)}
               <ArrowRight size={17} className="transition-transform group-hover:translate-x-1" />
             </Link>
             <a
@@ -304,6 +304,10 @@ export default function HomeHero({ tours }: { tours: TourSummary[] }) {
                 {item}
               </span>
             ))}
+          </div>
+
+          <div className="mt-8 lg:hidden">
+            <BookingCard tours={tours} />
           </div>
         </div>
         <div className="hidden justify-self-end lg:block">

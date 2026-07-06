@@ -4,11 +4,21 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { EnemyData, GameState } from '../types';
 import { useGameRuntimeContext } from '../context/GameContext';
+import { CrawlerEnemy, ChargerEnemy, SpitterEnemy } from './EnemyVariants';
 
 interface Props {
   data: EnemyData;
   gameStatus: GameState['status'];
 }
+
+export const Enemy = memo(function Enemy({ data, gameStatus }: Props) {
+  switch (data.kind) {
+    case 'crawler': return <CrawlerEnemy data={data} gameStatus={gameStatus} />;
+    case 'charger': return <ChargerEnemy data={data} gameStatus={gameStatus} />;
+    case 'spitter': return <SpitterEnemy data={data} gameStatus={gameStatus} />;
+    default:        return <BatEnemy data={data} gameStatus={gameStatus} />;
+  }
+});
 
 const PATROL_SPEED = 2.4;
 const SIDE_HIT_X   = 0.62;
@@ -19,7 +29,7 @@ const STOMP_MAX_Y  = 0.92;
 const BULLET_HIT_X = 0.52;
 const BULLET_HIT_Y = 0.38;
 
-export const Enemy = memo(function Enemy({ data, gameStatus }: Props) {
+const BatEnemy = memo(function BatEnemy({ data, gameStatus }: Props) {
   const { playerPosRef, bulletsRef, handlePlayerHit } = useGameRuntimeContext();
   const defeated = useRef(false);
   const groupRef  = useRef<THREE.Group>(null);

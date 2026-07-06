@@ -1,4 +1,4 @@
-import type { PlatformData, CollectibleData, EnemyData, PowerUpData } from '../../types';
+import type { PlatformData, CollectibleData, EnemyData, PowerUpData, HazardData } from '../../types';
 
 // ─────────────────────────────────────────────────────────────────────────
 //  LEVEL 2 – "Laberinto del Cafetal"  (Versión Extendida)
@@ -26,7 +26,7 @@ export const platforms: PlatformData[] = [
   { id: 'p12', position: [44.0, 4.6,  0], size: [3.8, 0.9, 2.3], kind: 'mud'   }, // Loma 1
 
   // ── SECCIÓN 4: Cruce elevado + primer riesgo ──────────────────────
-  { id: 'p13', position: [48.5, 3.2, 0], size: [3.5, 0.85, 2.1], kind: 'root'  },
+  { id: 'p13', position: [48.5, 3.2, 0], size: [3.2, 0.85, 2.1], kind: 'root', behavior: 'moveY', moveRange: 1.35, moveSpeed: 0.95 }, // ascensor
   { id: 'p14', position: [52.5, 1.6, 0], size: [3.2, 0.85, 2.0], kind: 'trail' },
 
   // ── SECCIÓN 5: Ridge principal (punto alto con vista) ─────────────
@@ -35,13 +35,14 @@ export const platforms: PlatformData[] = [
 
   // ── SECCIÓN 6: Gran descenso al cañón (tensión) ───────────────────
   { id: 'p17', position: [65.0, 0.6, 0], size: [3.0, 0.85, 2.0], kind: 'trail' },
-  { id: 'p18', position: [68.5, -1.2, 0], size: [3.2, 0.85, 2.1], kind: 'mud'   },
+  { id: 'p18', position: [68.5, -1.2, 0], size: [3.2, 0.85, 2.1], kind: 'bridge', behavior: 'collapse', collapseDelay: 0.5, respawnDelay: 2.6 }, // puente que se derrumba
   { id: 'p19', position: [72.0, -2.9, 0], size: [3.0, 0.85, 2.0], kind: 'root'  },
   { id: 'p20', position: [75.5, -4.5, 0], size: [3.5, 0.9, 2.2], kind: 'trail' },
 
   // ── SECCIÓN 7: Zigzag del cañón (más largo y técnico) ─────────────
   { id: 'p21', position: [79.5, -3.1, 0], size: [3.0, 0.85, 2.0], kind: 'mud'   },
-  { id: 'p22', position: [83.0, -1.4, 0], size: [3.2, 0.85, 2.1], kind: 'root'  },
+  { id: 'p22', position: [83.0, -1.4, 0], size: [2.8, 0.85, 2.1], kind: 'root', behavior: 'moveX', moveRange: 2.1, moveSpeed: 1.05 }, // plataforma deslizante
+
   { id: 'p23', position: [86.5, -3.0, 0], size: [3.0, 0.85, 2.0], kind: 'trail' },
   { id: 'p24', position: [90.0, -4.8, 0], size: [3.5, 0.9, 2.2], kind: 'mud'   },
   { id: 'p25', position: [94.0, -3.2, 0], size: [3.8, 0.85, 2.3], kind: 'trail' }, // última plataforma antes del goal
@@ -86,16 +87,22 @@ export const collectibles: CollectibleData[] = [
 // ── ENEMIGOS ─────────────────────────────────────────────────────────
 export const enemies: EnemyData[] = [
   { id: 'e1',  position: [9.5,  6.65, 0], patrolRange: 1.3 },
-  { id: 'e2',  position: [15.5, 4.45, 0], patrolRange: 1.4 },
-  { id: 'e3',  position: [24.0, -0.35, 0], patrolRange: 1.6 }, // valle
+  { id: 'e2',  position: [15.5, 4.5,  0], patrolRange: 1.4, kind: 'crawler' },
+  { id: 'e3',  position: [30.0, -1.6, 0], patrolRange: 1.6, kind: 'crawler' }, // valle
   { id: 'e4',  position: [31.0, -1.55, 0], patrolRange: 1.2 },
   { id: 'e5',  position: [36.5, 2.45, 0], patrolRange: 1.5 },
-  { id: 'e6',  position: [43.5, 6.15, 0], patrolRange: 1.8 }, // loma
+  { id: 'e6',  position: [43.5, 6.2,  0], patrolRange: 1.9, kind: 'charger' }, // raptor en la loma
   { id: 'e7',  position: [51.0, 3.0,  0], patrolRange: 1.3 },
-  { id: 'e8',  position: [59.5, 4.35, 0], patrolRange: 1.6 }, // ridge
+  { id: 'e8',  position: [57.0, 4.45, 0], patrolRange: 1.6, kind: 'spitter' }, // planta en el ridge
   { id: 'e9',  position: [67.5, 0.15, 0], patrolRange: 1.4 },
-  { id: 'e10', position: [76.5, -3.95, 0], patrolRange: 1.5 },
+  { id: 'e10', position: [76.5, -3.9, 0], patrolRange: 1.5, kind: 'crawler' },
   { id: 'e11', position: [84.5, -2.45, 0], patrolRange: 1.3 },
+];
+
+// ── TRAMPAS ──────────────────────────────────────────────────────────
+export const hazards: HazardData[] = [
+  { id: 'h1', kind: 'spikes', position: [29.5, -1.63, 0], size: [1.7, 0.5, 2.2] }, // fondo del valle
+  { id: 'h2', kind: 'log',    position: [66.7, 3.6, 0], range: 2.7, speed: 2.1 }, // tronco sobre el descenso
 ];
 
 // ── POWER-UPS ────────────────────────────────────────────────────────

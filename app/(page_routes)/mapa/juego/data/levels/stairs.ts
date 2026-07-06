@@ -1,4 +1,4 @@
-import type { PlatformData, CollectibleData, EnemyData, PowerUpData } from '../../types';
+import type { PlatformData, CollectibleData, EnemyData, PowerUpData, HazardData } from '../../types';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  LEVEL 4 – "Las Gargantas del Cañón"  (Versión Maximizada)
@@ -22,16 +22,16 @@ export const platforms: PlatformData[] = [
 
   // ── SECCIÓN 3: Suelo del cañón (punto medio amplio) ───────────────
   { id: 'pF',  position: [31.0, -4.15, 0], size: [7.5, 1.0, 2.5], kind: 'rock'  }, // SUELO DEL CAÑÓN (ampliado)
-  { id: 'brd', position: [28.5, -3.4, 0], size: [2.5, 0.55, 1.8], kind: 'bridge' }, // puente de conexión
+  { id: 'brd', position: [28.5, -3.4, 0], size: [2.5, 0.55, 1.8], kind: 'bridge', behavior: 'collapse', collapseDelay: 0.45, respawnDelay: 2.8 }, // puente que se derrumba
 
   // ── SECCIÓN 4: Zigzag dramático post-suelo ────────────────────────
-  { id: 'p8',  position: [35.5, -2.6, 0], size: [2.5, 0.85, 2.0], kind: 'stair' },
+  { id: 'p8',  position: [35.5, -2.6, 0], size: [2.5, 0.85, 2.0], kind: 'stair', behavior: 'moveY', moveRange: 1.05, moveSpeed: 1.0 }, // ascensor
   { id: 'cw3', position: [33.8, -2.9, 0], size: [0.6, 2.8, 2.0], kind: 'rock'  },
   { id: 'p9',  position: [39.0, -4.0, 0], size: [2.5, 0.85, 2.0], kind: 'rock'  },
   { id: 'p10', position: [42.5, -2.5, 0], size: [2.5, 0.85, 2.0], kind: 'stair' },
   { id: 'cw4', position: [44.8, -2.8, 0], size: [0.6, 2.8, 2.0], kind: 'rock'  },
   { id: 'p11', position: [47.5, -3.9, 0], size: [2.5, 0.85, 2.0], kind: 'rock'  },
-  { id: 'p12', position: [51.0, -2.4, 0], size: [2.5, 0.85, 2.0], kind: 'stair' },
+  { id: 'p12', position: [51.0, -2.4, 0], size: [2.5, 0.85, 2.0], kind: 'stair', behavior: 'moveX', moveRange: 1.6, moveSpeed: 1.05 }, // deslizante
   { id: 'p13', position: [54.5, -4.0, 0], size: [2.8, 0.85, 2.1], kind: 'rock'  },
 
   // ── SECCIÓN 5: Plataforma final ───────────────────────────────────
@@ -71,13 +71,22 @@ export const collectibles: CollectibleData[] = [
 // ── ENEMIGOS ─────────────────────────────────────────────────────────
 export const enemies: EnemyData[] = [
   { id: 'e1', position: [10.5, 5.05, 0], patrolRange: 1.0 },
-  { id: 'e2', position: [15.5, 2.35, 0], patrolRange: 1.0 },
+  { id: 'e2', position: [16.0, 2.3,  0], patrolRange: 1.0, kind: 'crawler' },
   { id: 'e3', position: [21.0, 0.05, 0], patrolRange: 1.1 },
-  { id: 'e4', position: [27.5, -2.6, 0], patrolRange: 2.2 }, // Guardián del suelo (amplio)
-  { id: 'e5', position: [34.5, -3.55, 0], patrolRange: 1.0 },
+  { id: 'e4', position: [31.0, -3.25, 0], patrolRange: 2.6, kind: 'charger' }, // ¡RAPTOR guardián del suelo!
+  { id: 'e5', position: [39.0, -3.4,  0], patrolRange: 0,   kind: 'spitter' }, // planta en el zigzag
   { id: 'e6', position: [40.0, -3.55, 0], patrolRange: 1.0 },
-  { id: 'e7', position: [45.5, -3.35, 0], patrolRange: 1.1 },
+  { id: 'e7', position: [47.5, -3.1,  0], patrolRange: 1.0, kind: 'crawler' },
   { id: 'e8', position: [51.5, -3.35, 0], patrolRange: 1.0 },
+];
+
+// ── TRAMPAS ──────────────────────────────────────────────────────────
+export const hazards: HazardData[] = [
+  { id: 'h1', kind: 'spikes',  position: [12.5, 3.65, 0], size: [1.3, 0.5, 1.8] },  // descenso inicial
+  { id: 'h2', kind: 'log',     position: [22.5, 2.7, 0], range: 2.2, speed: 2.3 },  // tronco sobre el gap
+  { id: 'h3', kind: 'fire',    position: [20.5, 0.98, 0], size: [1.0, 1.3, 1.6] },  // llamarada
+  { id: 'h4', kind: 'saw',     position: [31.0, -1.95, 0], size: [1.15, 1, 1], range: 2.6, speed: 3.6 }, // sierra que barre el suelo
+  { id: 'h5', kind: 'boulder', position: [54.5, -2.95, 0], size: [1.1, 1, 1], range: 1.6, speed: 3.2 }, // roca en el zigzag final
 ];
 
 // ── POWER-UPS ────────────────────────────────────────────────────────

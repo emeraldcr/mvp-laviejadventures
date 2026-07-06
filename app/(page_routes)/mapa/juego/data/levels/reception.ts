@@ -1,4 +1,4 @@
-import type { PlatformData, CollectibleData, EnemyData, PowerUpData } from '../../types';
+import type { PlatformData, CollectibleData, EnemyData, PowerUpData, HazardData } from '../../types';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  LEVEL 1 – "El Sendero Verde"  (Versión Maximizada)
@@ -28,7 +28,7 @@ export const platforms: PlatformData[] = [
 
   // ── SECCIÓN 5: Zigzag del cañón (más dinámico) ────────────────────
   { id: 'p12', position: [45.0, -0.3, 0], size: [3.2, 0.85, 2.1], kind: 'mud'   },
-  { id: 'p13', position: [48.5, -2.0, 0], size: [3.0, 0.85, 2.0], kind: 'root'  },
+  { id: 'p13', position: [48.5, -2.0, 0], size: [3.0, 0.85, 2.0], kind: 'bridge', behavior: 'collapse', collapseDelay: 0.55, respawnDelay: 2.6 }, // ¡se cae como en Crash!
   { id: 'p14', position: [52.0, -0.8, 0], size: [3.0, 0.85, 2.0], kind: 'trail' },
   { id: 'p15', position: [55.5, -2.5, 0], size: [3.0, 0.85, 2.0], kind: 'mud'   },
   { id: 'p16', position: [59.0, -1.2, 0], size: [3.2, 0.85, 2.1], kind: 'root'  },
@@ -70,13 +70,19 @@ export const collectibles: CollectibleData[] = [
 
 // ── ENEMIGOS ─────────────────────────────────────────────────────────
 export const enemies: EnemyData[] = [
-  { id: 'e1', position: [11.5, 4.15, 0], patrolRange: 1.2 },
+  { id: 'e1', position: [11.5, 4.2,  0], patrolRange: 1.2, kind: 'crawler' }, // escarabajo de tierra
   { id: 'e2', position: [20.5, 5.45, 0], patrolRange: 1.4 },
   { id: 'e3', position: [26.5, 7.65, 0], patrolRange: 1.6 }, // Guardián de la loma
-  { id: 'e4', position: [35.5, 4.85, 0], patrolRange: 1.3 },
-  { id: 'e5', position: [43.5, 2.0,  0], patrolRange: 1.4 },
+  { id: 'e4', position: [35.5, 4.9,  0], patrolRange: 1.3, kind: 'crawler' },
+  { id: 'e5', position: [43.5, 2.1,  0], patrolRange: 1.6, kind: 'charger' }, // raptor que embiste
   { id: 'e6', position: [51.0, -1.45, 0], patrolRange: 1.3 },
   { id: 'e7', position: [57.5, -2.0, 0], patrolRange: 1.2 },
+];
+
+// ── TRAMPAS ──────────────────────────────────────────────────────────
+export const hazards: HazardData[] = [
+  { id: 'h1', kind: 'spikes', position: [30.0, 7.72, 0], size: [1.5, 0.55, 2.2] }, // saltar en la cima
+  { id: 'h2', kind: 'spikes', position: [59.0, -0.77, 0], size: [1.4, 0.5, 2.0] }, // zigzag final
 ];
 
 // ── POWER-UPS ────────────────────────────────────────────────────────

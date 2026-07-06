@@ -1,17 +1,17 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { ArrowRight, Check, Clock3, MessageCircle, Sparkles, Star } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
 import type { TourSummary } from "@/lib/types/index";
-import { WHATSAPP_HREF } from "./home-utils";
+import { BOOKING_HREF, WHATSAPP_HREF, primaryBookingLabel } from "./home-utils";
 
 type Props = {
   tours: TourSummary[];
-  onSelectTour: (slug: string) => void;
 };
 
-export default function FeaturedStory({ tours, onSelectTour }: Props) {
+export default function FeaturedStory({ tours }: Props) {
   const { lang } = useLanguage();
   const isEs = lang === "es";
 
@@ -133,14 +133,13 @@ export default function FeaturedStory({ tours, onSelectTour }: Props) {
             </div>
 
             <div className="mt-7 flex flex-wrap gap-3">
-              <button
-                type="button"
-                onClick={() => onSelectTour(tours[0]?.slug ?? "")}
+              <Link
+                href={BOOKING_HREF}
                 className="group inline-flex items-center gap-2 rounded-full bg-emerald-600 px-7 py-3.5 text-sm font-bold text-white shadow-lg shadow-emerald-600/25 transition-all hover:-translate-y-0.5 hover:bg-emerald-500"
               >
-                {isEs ? "Ver fechas" : "See dates"}
+                {primaryBookingLabel(isEs)}
                 <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
-              </button>
+              </Link>
               <a
                 href={WHATSAPP_HREF}
                 target="_blank"

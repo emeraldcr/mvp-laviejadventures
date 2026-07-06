@@ -1,4 +1,4 @@
-import type { PlatformData, CollectibleData, EnemyData, LevelData, PowerUpData } from '../types';
+import type { PlatformData, CollectibleData, EnemyData, LevelData, PowerUpData, HazardData } from '../types';
 import { getSafeGoalPosition, getSafeSpawnPosition } from '../lib/levelSpawn';
 import * as reception from './levels/reception';
 import * as cafetales from './levels/cafetales';
@@ -24,6 +24,7 @@ const makeLevel = (
   collectibles: CollectibleData[],
   enemies: EnemyData[],
   powerUps: PowerUpData[] = [],
+  hazards: HazardData[] = [],
 ): LevelData => ({
   id,
   title,
@@ -37,6 +38,7 @@ const makeLevel = (
   collectibles,
   enemies,
   powerUps,
+  hazards,
 });
 
 export const GAME_LEVELS: LevelData[] = [
@@ -51,6 +53,7 @@ export const GAME_LEVELS: LevelData[] = [
     reception.collectibles,
     reception.enemies,
     reception.powerUps,
+    reception.hazards,
   ),
   makeLevel(
     'cafetales-montanita',
@@ -63,6 +66,7 @@ export const GAME_LEVELS: LevelData[] = [
     cafetales.collectibles,
     cafetales.enemies,
     cafetales.powerUps,
+    cafetales.hazards,
   ),
   makeLevel(
     'montanita-descenso',
@@ -75,6 +79,7 @@ export const GAME_LEVELS: LevelData[] = [
     montanita.collectibles,
     montanita.enemies,
     montanita.powerUps,
+    montanita.hazards,
   ),
   makeLevel(
     'escaleras-canon',
@@ -87,6 +92,7 @@ export const GAME_LEVELS: LevelData[] = [
     stairs.collectibles,
     stairs.enemies,
     stairs.powerUps,
+    stairs.hazards,
   ),
   makeLevel(
     'descenso-rio',
@@ -99,5 +105,6 @@ export const GAME_LEVELS: LevelData[] = [
     river.collectibles,
     river.enemies,
     river.powerUps,
+    river.hazards,
   ),
 ];

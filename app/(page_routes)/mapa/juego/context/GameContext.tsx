@@ -142,7 +142,10 @@ export function GameProvider({
     return () => clearTimeout(id);
   }, [state.status, respawn]);
 
-  // Snap player position and clear bullets on respawn
+  // Snap player position and clear bullets on respawn. Dynamic platforms
+  // self-manage their registry entries via mount/unmount (Level is keyed by
+  // restartKey), so we must NOT clear the registry here — a passive effect
+  // would race with and wipe the children's layout-effect registration.
   useEffect(() => {
     if (state.status === 'playing') {
       playerPosRef.current.set(...level.spawnPosition);
@@ -160,9 +163,11 @@ export function GameProvider({
     bulletsRef,
     pendingPowerUpRef,
     playerImmuneRef,
+    platformRegistryRef,
     activePowerUps,
     handlePowerUpChange,
     handlePlayerHit,
+    handleTrap,
     handleDie: dieFromFall,
     handleWin,
     registerPlayer,
@@ -174,7 +179,7 @@ export function GameProvider({
     resetAdventure,
   }), [
     state, leaderboard, level, keys, playerPosRef, bulletsRef, pendingPowerUpRef, playerImmuneRef,
-    activePowerUps, handlePowerUpChange, handlePlayerHit, dieFromFall, handleWin,
+    activePowerUps, handlePowerUpChange, handlePlayerHit, handleTrap, dieFromFall, handleWin,
     registerPlayer, clearPlayer, collectCrystal, respawn, restart, enterLevel, resetAdventure,
   ]);
 
@@ -184,8 +189,10 @@ export function GameProvider({
     bulletsRef,
     pendingPowerUpRef,
     playerImmuneRef,
+    platformRegistryRef,
     handlePowerUpChange,
     handlePlayerHit,
+    handleTrap,
     handleDie: dieFromFall,
     handleWin,
     collectCrystal,
@@ -197,6 +204,7 @@ export function GameProvider({
     playerImmuneRef,
     handlePowerUpChange,
     handlePlayerHit,
+    handleTrap,
     dieFromFall,
     handleWin,
     collectCrystal,

@@ -9,9 +9,11 @@ import { useReservationData } from "@/lib/hooks/useReservationData";
 import HomeNav from "@/app/components/home/HomeNav";
 import HomeHero from "@/app/components/home/HomeHero";
 import ToursShowcase from "@/app/components/home/ToursShowcase";
+import HomeOrganicsFeature from "@/app/components/home/HomeOrganicsFeature";
 import FeaturedStory from "@/app/components/home/FeaturedStory";
 import SocialProof from "@/app/components/home/SocialProof";
 import HomeFaqFooter from "@/app/components/home/HomeFaqFooter";
+import { BOOKING_HREF } from "@/app/components/home/home-utils";
 
 export default function Home(): JSX.Element {
   const { lang } = useLanguage();
@@ -19,7 +21,7 @@ export default function Home(): JSX.Element {
   const copy = principalContent[lang].errors;
 
   const handleSelectTour = (slug: string) => {
-    window.location.href = `/reservar?tour=${encodeURIComponent(slug)}`;
+    window.location.href = `${BOOKING_HREF}?tour=${encodeURIComponent(slug)}`;
   };
 
   return (
@@ -34,7 +36,8 @@ export default function Home(): JSX.Element {
         <HomeNav />
         <HomeHero tours={tours} />
         <ToursShowcase tours={tours} onSelectTour={handleSelectTour} />
-        <FeaturedStory tours={tours} onSelectTour={handleSelectTour} />
+        <HomeOrganicsFeature />
+        <FeaturedStory tours={tours} />
         <SocialProof />
         <HomeFaqFooter tours={tours} />
       </main>

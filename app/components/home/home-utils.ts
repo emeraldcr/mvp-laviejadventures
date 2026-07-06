@@ -2,6 +2,16 @@ import type { TourSummary } from "@/lib/types/index";
 import { CRC_PER_USD } from "@/lib/reservation/packages";
 
 export const WHATSAPP_HREF = "https://wa.me/50662332535";
+export const BOOKING_HREF = "/reservar";
+export const TOURS_HREF = "/tours";
+
+export function primaryBookingLabel(isEs: boolean): string {
+  return isEs ? "Reservar ahora" : "Book now";
+}
+
+export function compactBookingLabel(isEs: boolean): string {
+  return isEs ? "Reservar" : "Book";
+}
 
 type PricePair = {
   usd: number | null;

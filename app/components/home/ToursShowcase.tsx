@@ -6,7 +6,7 @@ import { ArrowRight, ArrowUpRight, Clock3, MapPin, Zap } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
 import { getTourImage } from "@/lib/tour-display";
 import type { TourSummary } from "@/lib/types/index";
-import { getTourPriceDisplay, tourTitle } from "./home-utils";
+import { TOURS_HREF, getTourPriceDisplay, primaryBookingLabel, tourTitle } from "./home-utils";
 
 type Props = {
   tours: TourSummary[];
@@ -59,7 +59,7 @@ export default function ToursShowcase({ tours, onSelectTour }: Props) {
             </h2>
           </div>
           <Link
-            href="/tours"
+            href={TOURS_HREF}
             className="group inline-flex items-center gap-2 text-sm font-black text-stone-950 transition-colors hover:text-emerald-700 dark:text-stone-50 dark:hover:text-emerald-300"
           >
             {isEs ? "Ver todos los tours" : "See all tours"}
@@ -137,7 +137,7 @@ export default function ToursShowcase({ tours, onSelectTour }: Props) {
                       </span>
                     </div>
                     <span className="mt-4 inline-flex items-center gap-2 text-xs font-black uppercase tracking-wide text-emerald-800 dark:text-emerald-300">
-                      {isEs ? "Reservar fechas" : "Reserve dates"}
+                      {primaryBookingLabel(isEs)}
                       <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
                     </span>
                   </div>

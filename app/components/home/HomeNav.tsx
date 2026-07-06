@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 import { ArrowRight, Globe, Menu, MessageCircle, Moon, Sun, X } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
 import { useTheme } from "@/lib/ThemeContext";
-import { WHATSAPP_HREF } from "./home-utils";
+import { BOOKING_HREF, WHATSAPP_HREF, compactBookingLabel, primaryBookingLabel } from "./home-utils";
 
 export default function HomeNav({ solid = false }: { solid?: boolean }) {
   const { lang, toggle } = useLanguage();
@@ -36,6 +36,7 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
     { href: "/tours", label: "Tours" },
     { href: "/galeria", label: isEs ? "Galería" : "Gallery" },
     { href: "/store", label: isEs ? "Tienda" : "Store" },
+    { href: "/organics", label: "Organics" },
     { href: "/info", label: "Info" },
     { href: "/tiempo", label: isEs ? "Clima" : "Weather" },
   ];
@@ -150,10 +151,10 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
             </a>
 
             <Link
-              href="/reservar"
+              href={BOOKING_HREF}
               className="ml-1 inline-flex items-center gap-2 rounded-full bg-emerald-400 px-5 py-2.5 text-sm font-black text-emerald-950 shadow-[0_14px_36px_rgba(52,211,153,0.25)] transition-all hover:-translate-y-0.5 hover:bg-white"
             >
-              {isEs ? "Reservar" : "Book now"}
+              {compactBookingLabel(isEs)}
               <ArrowRight size={15} />
             </Link>
           </nav>
@@ -231,11 +232,11 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
 
           <div className="space-y-3 px-8 pb-10">
             <Link
-              href="/reservar"
+              href={BOOKING_HREF}
               onClick={() => setMenuOpen(false)}
               className="flex items-center justify-center gap-2 rounded-full bg-emerald-600 py-4 text-base font-bold text-white shadow-lg shadow-emerald-600/25"
             >
-              {isEs ? "Reservar mi aventura" : "Book my adventure"}
+              {primaryBookingLabel(isEs)}
               <ArrowRight size={17} />
             </Link>
             <a

@@ -1,5 +1,5 @@
 'use client';
-import { useLayoutEffect, useMemo, useRef } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useGameRuntimeContext } from '../context/GameContext';
@@ -7,7 +7,7 @@ import { MAX_FRAME_DT, PHYSICS_STEP } from '../constants/physics';
 import { DEATH_Y } from '../constants/world';
 import { updatePlayerAnimation } from '../lib/playerAnimation';
 import { handleJumpInput, stepPlayerPhysics, updateHorizontalMovement } from '../lib/playerMovement';
-import { buildPlatformBounds } from '../lib/playerPhysics';
+import { buildDynamicBounds } from '../lib/playerPhysics';
 import { applyPowerUpMaterial, consumePendingPowerUp, tickPowerUps, tryShootSapphire } from '../lib/playerPowerUps';
 import { PlayerVisual } from './PlayerVisual';
 import type { GameState, LevelData } from '../types';
@@ -20,7 +20,7 @@ export function Player({
   gameStatus: GameState['status'];
 }) {
   const {
-    keys, playerPosRef, bulletsRef,
+    keys, playerPosRef, bulletsRef, platformRegistryRef,
     pendingPowerUpRef, playerImmuneRef, handlePowerUpChange, handleDie,
   } = useGameRuntimeContext();
   const platforms = level.platforms;
@@ -47,7 +47,7 @@ export function Player({
   const eyeR = useRef<THREE.Mesh>(null);
   const blinkT = useRef(0);
 
-  const platformBounds = useMemo(() => buildPlatformBounds(platforms), [platforms]);
+  const groundPlatformId = useRef<string | null>(null);
 
   useLayoutEffect(() => {
     if (gameStatus === 'playing') {
@@ -59,6 +59,7 @@ export function Player({
       fireWas.current = false;
       deathFired.current = false;
       grounded.current = false;
+      groundPlatformId.current = null;
       // Reset powerups on respawn
       rubyTimer.current = 0;
       sapphTimer.current = 0;
@@ -93,10 +94,23 @@ export function Player({
     const fireNow = k.fire;
     tryShootSapphire({ bulletsRef, facingR, fireCd, fireNow, fireWas, hasSapph, nextBulletId, pos });
 
+    // ── Carry with the moving platform the player is riding ────────────────
+    const registry = platformRegistryRef.current;
+    const ridingId = groundPlatformId.current;
+    if (ridingId) {
+      const ride = registry.get(ridingId);
+      if (ride && ride.active && (ride.frameDx !== 0 || ride.frameDy !== 0)) {
+        pos.x += ride.frameDx;
+        pos.y += ride.frameDy;
+      }
+    }
+
     // ── Movement ───────────────────────────────────────────────────────────
+    const platformBounds = buildDynamicBounds(platforms, registry);
     const moveX = updateHorizontalMovement(k, vel.current, facingR);
     handleJumpInput({ grounded: grounded.current, jumpCount, jumpWas, keys: k, velocity: vel.current });
-    stepPlayerPhysics({ dt, grounded, jumpCount, keys: k, platformBounds, pos, steps, velocity: vel.current });
+    const landedId = stepPlayerPhysics({ dt, grounded, jumpCount, keys: k, platformBounds, pos, steps, velocity: vel.current });
+    groundPlatformId.current = grounded.current ? landedId : null;
 
     if (pos.y < DEATH_Y && !deathFired.current) {
       deathFired.current = true;
