@@ -1,4 +1,4 @@
-export type DeathCause = 'fall' | 'enemy';
+export type DeathCause = 'fall' | 'enemy' | 'trap';
 
 export type GameStatus = 'map' | 'playing' | 'dead' | 'gameover' | 'win' | 'complete';
 

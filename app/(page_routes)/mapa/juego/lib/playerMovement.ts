@@ -60,8 +60,9 @@ export const stepPlayerPhysics = ({
   pos: THREE.Vector3;
   steps: number;
   velocity: THREE.Vector3;
-}) => {
+}): string | null => {
   grounded.current = false;
+  let landedId: string | null = null;
 
   for (let step = 0; step < steps; step++) {
     velocity.y += GRAVITY * dt;
@@ -74,9 +75,13 @@ export const stepPlayerPhysics = ({
 
     const prevY = pos.y;
     pos.y += velocity.y * dt;
-    if (resolveVerticalCollisions(pos, velocity, platformBounds, prevY)) {
+    const hitId = resolveVerticalCollisions(pos, velocity, platformBounds, prevY);
+    if (hitId !== null) {
       grounded.current = true;
       jumpCount.current = 0;
+      landedId = hitId;
     }
   }
+
+  return landedId;
 };

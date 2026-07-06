@@ -1,4 +1,4 @@
-import type { PlatformData, CollectibleData, EnemyData, PowerUpData } from './entities';
+import type { PlatformData, CollectibleData, EnemyData, PowerUpData, HazardData } from './entities';
 
 export interface LevelData {
   id: string;
@@ -13,6 +13,7 @@ export interface LevelData {
   collectibles: CollectibleData[];
   enemies: EnemyData[];
   powerUps: PowerUpData[];
+  hazards: HazardData[];
 }
 
 export interface TrailStation {

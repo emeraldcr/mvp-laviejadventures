@@ -17,6 +17,7 @@ import type {
   GameProviderProps,
   GameRuntimeContextValue,
   GameSceneContextValue,
+  LivePlatform,
   OtherPlayerView,
   PowerUpKind,
 } from '../types';
@@ -48,6 +49,7 @@ export function GameProvider({
     collectCrystal,
     dieFromFall,
     dieFromEnemy,
+    dieFromTrap,
     respawn,
     win,
     restart,
@@ -65,6 +67,7 @@ export function GameProvider({
   const bulletsRef = useRef<BulletState[]>([]);
   const pendingPowerUpRef = useRef<PowerUpKind | null>(null);
   const playerImmuneRef = useRef(false);
+  const platformRegistryRef = useRef<Map<string, LivePlatform>>(new Map());
 
   const [activePowerUps, setActivePowerUps] = useState({
     ruby: false,
@@ -108,6 +111,10 @@ export function GameProvider({
   const handlePlayerHit = useCallback(() => {
     if (!playerImmuneRef.current) dieFromEnemy();
   }, [dieFromEnemy]);
+
+  const handleTrap = useCallback(() => {
+    if (!playerImmuneRef.current) dieFromTrap();
+  }, [dieFromTrap]);
 
   const handleWin = useCallback(() => {
     win();

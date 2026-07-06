@@ -217,8 +217,8 @@ export default function HomeHero({ tours }: { tours: TourSummary[] }) {
   }, [next]);
 
   const trustItems = isEs
-    ? ["Avistamiento responsable", "Grupos pequenos", "Guias locales", "Ruta ajustada al clima"]
-    : ["Responsible birding", "Small groups", "Local guides", "Weather-aware route"];
+    ? ["Cañón y pozas", "Aves y volcanes", "Guias locales", "Ruta ajustada al clima"]
+    : ["Canyon and pools", "Birds and volcanoes", "Local guides", "Weather-aware route"];
 
   return (
     <section className="relative flex min-h-[92svh] flex-col overflow-hidden bg-stone-950">
@@ -258,30 +258,32 @@ export default function HomeHero({ tours }: { tours: TourSummary[] }) {
             </span>
           </div>
 
-          <h1 className="font-display max-w-5xl text-balance text-[clamp(3rem,6.5vw,6.6rem)] font-black leading-[0.9] tracking-tight text-white">
+          <h1 className="font-display max-w-5xl text-balance text-[clamp(2.6rem,5.8vw,5.8rem)] font-black leading-[0.92] tracking-tight text-white">
             {isEs ? (
               <>
-                El tour de aves <span className="text-emerald-300">sale al amanecer.</span>
+                El verde de la naturaleza te está llamando.{" "}
+                <span className="text-emerald-300">¿Estás listo para sentirlo?</span>
               </>
             ) : (
               <>
-                The birdwatching tour <span className="text-emerald-300">starts at sunrise.</span>
+                The green of nature is calling.{" "}
+                <span className="text-emerald-300">Are you ready to feel it?</span>
               </>
             )}
           </h1>
 
           <p className="mt-6 max-w-2xl text-base leading-relaxed text-white/82 md:text-xl">
             {isEs
-              ? "Avistamiento de aves en el corredor biologico Juan Castro Blanco, con guias locales, ritmo tranquilo y puntos escogidos para escuchar, observar y aprender sin carreras."
-              : "Birdwatching in the Juan Castro Blanco biological corridor, with local guides, an easy pace, and carefully chosen spots to listen, observe, and learn."}
+              ? "Cañón, pozas cristalinas, avistamiento de aves, volcanes dormidos y bosque vivo en San Carlos y Juan Castro Blanco — guías locales, grupos pequeños y rutas ajustadas al clima."
+              : "Canyon, crystal pools, birdwatching, dormant volcanoes, and living forest in San Carlos and Juan Castro Blanco — local guides, small groups, and weather-aware routes."}
           </p>
 
           <div className="mt-7 flex flex-wrap items-center gap-3">
             <Link
-              href="/reservar?tour=avistamiento-aves-norteno"
+              href="/tours"
               className="group inline-flex min-h-14 items-center gap-2 rounded-full bg-emerald-400 px-7 py-4 text-sm font-black uppercase tracking-wide text-emerald-950 shadow-[0_20px_55px_rgba(52,211,153,0.28)] transition-all hover:-translate-y-0.5 hover:bg-white"
             >
-              {isEs ? "Reservar aves" : "Book birdwatching"}
+              {isEs ? "Explorar experiencias" : "Explore experiences"}
               <ArrowRight size={17} className="transition-transform group-hover:translate-x-1" />
             </Link>
             <a

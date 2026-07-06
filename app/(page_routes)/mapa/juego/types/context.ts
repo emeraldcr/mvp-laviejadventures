@@ -1,7 +1,7 @@
 import type React from 'react';
 import type * as THREE from 'three';
 import type { KeyState } from '../hooks/useKeyboard';
-import type { BulletState, OtherPlayerView, PowerUpKind } from './entities';
+import type { BulletState, LivePlatform, OtherPlayerView, PowerUpKind } from './entities';
 import type { GameState, LeaderboardEntry } from './game';
 import type { LevelData } from './level';
 
@@ -34,9 +34,11 @@ export interface GameContextValue {
   bulletsRef: React.MutableRefObject<BulletState[]>;
   pendingPowerUpRef: React.MutableRefObject<PowerUpKind | null>;
   playerImmuneRef: React.MutableRefObject<boolean>;
+  platformRegistryRef: React.MutableRefObject<Map<string, LivePlatform>>;
   activePowerUps: ActivePowerUps;
   handlePowerUpChange: (ruby: boolean, sapphire: boolean, rubyRemaining?: number, sapphireRemaining?: number) => void;
   handlePlayerHit: () => void;
+  handleTrap: () => void;
   handleDie: () => void;
   handleWin: () => void;
   registerPlayer: (name: string) => void;
@@ -55,8 +57,10 @@ export type GameRuntimeContextValue = Pick<
   | 'bulletsRef'
   | 'pendingPowerUpRef'
   | 'playerImmuneRef'
+  | 'platformRegistryRef'
   | 'handlePowerUpChange'
   | 'handlePlayerHit'
+  | 'handleTrap'
   | 'handleDie'
   | 'handleWin'
   | 'collectCrystal'

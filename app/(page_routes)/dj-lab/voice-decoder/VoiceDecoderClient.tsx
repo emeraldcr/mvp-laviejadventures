@@ -6,6 +6,7 @@ import {
   CircleStop,
   FileAudio,
   Gauge,
+  Mic,
   Pause,
   Play,
   RotateCcw,
@@ -42,6 +43,24 @@ const DEFAULT_EFFECTS: EffectState = {
   delay: 0,
   drive: 0,
 };
+
+const EXAMPLE_CLIPS = [
+  {
+    label: "Apollo 11 radio",
+    file: "100Apollo11.mp3",
+    source: "Internet Archive public domain spoken word",
+  },
+  {
+    label: "Apollo callout",
+    file: "102Apollo11.mp3",
+    source: "Internet Archive public domain spoken word",
+  },
+  {
+    label: "NASA voice clip",
+    file: "1NASA.mp3",
+    source: "Internet Archive public domain spoken word",
+  },
+];
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
@@ -95,6 +114,7 @@ export default function VoiceDecoderClient() {
   const [peaks, setPeaks] = useState<number[]>([]);
   const [effects, setEffects] = useState<EffectState>(DEFAULT_EFFECTS);
   const [playing, setPlaying] = useState(false);
+  const [recording, setRecording] = useState(false);
   const [progress, setProgress] = useState(0);
   const [message, setMessage] = useState("Upload an MP3, WAV, or M4A to decode the waveform locally.");
 
@@ -103,6 +123,9 @@ export default function VoiceDecoderClient() {
   const bufferRef = useRef<AudioBuffer | null>(null);
   const nodesRef = useRef<VoiceNodes>({ startedAt: 0, offset: 0 });
   const playingRef = useRef(false);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const recordChunksRef = useRef<Blob[]>([]);
+  const recordStreamRef = useRef<MediaStream | null>(null);
   const rafRef = useRef<number | null>(null);
 
   const currentTime = progress * duration;
@@ -145,6 +168,16 @@ export default function VoiceDecoderClient() {
     }
   }, []);
 
+  const setDecodedBuffer = useCallback((buffer: AudioBuffer, name: string, readyMessage: string) => {
+    bufferRef.current = buffer;
+    nodesRef.current = { startedAt: 0, offset: 0 };
+    setFileName(name);
+    setDuration(buffer.duration);
+    setPeaks(buildPeaks(buffer));
+    setProgress(0);
+    setMessage(readyMessage);
+  }, []);
+
   useEffect(() => {
     playingRef.current = playing;
   }, [playing]);
@@ -168,6 +201,7 @@ export default function VoiceDecoderClient() {
       nodes.source.disconnect();
     }
 
+    playingRef.current = false;
     nodesRef.current = { startedAt: 0, offset: keepOffset ? nodes.offset : 0 };
     setPlaying(false);
   }, []);
@@ -222,18 +256,78 @@ export default function VoiceDecoderClient() {
       const context = await getContext();
       const data = await file.arrayBuffer();
       const buffer = await context.decodeAudioData(data.slice(0));
-      bufferRef.current = buffer;
-      nodesRef.current = { startedAt: 0, offset: 0 };
-      setFileName(file.name);
-      setDuration(buffer.duration);
-      setPeaks(buildPeaks(buffer));
-      setProgress(0);
-      setMessage("Waveform ready. Press play and start shaping the voice.");
+      setDecodedBuffer(buffer, file.name, "Waveform ready. Press play and start shaping the voice.");
     } catch (error) {
       const detail = error instanceof Error ? error.message : "Unknown decode error";
       setMessage(`Could not decode that file: ${detail}`);
     }
-  }, [getContext, stopPlayback]);
+  }, [getContext, setDecodedBuffer, stopPlayback]);
+
+  const loadExample = useCallback(async (file: string, label: string) => {
+    try {
+      stopPlayback(false);
+      setMessage(`Loading example: ${label}...`);
+      const context = await getContext();
+      const response = await fetch(`/dj-lab/voice-examples/${file}`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.arrayBuffer();
+      const buffer = await context.decodeAudioData(data.slice(0));
+      setDecodedBuffer(buffer, label, "Example loaded. These clips are local public-domain MP3 samples.");
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : "Unknown example load error";
+      setMessage(`Could not load example: ${detail}`);
+    }
+  }, [getContext, setDecodedBuffer, stopPlayback]);
+
+  const stopRecording = useCallback(() => {
+    recorderRef.current?.stop();
+  }, []);
+
+  const startRecording = useCallback(async () => {
+    try {
+      stopPlayback(false);
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      recordChunksRef.current = [];
+      recordStreamRef.current = stream;
+      recorderRef.current = recorder;
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) recordChunksRef.current.push(event.data);
+      };
+
+      recorder.onstop = async () => {
+        setRecording(false);
+        recordStreamRef.current?.getTracks().forEach((track) => track.stop());
+        recordStreamRef.current = null;
+        recorderRef.current = null;
+
+        const blob = new Blob(recordChunksRef.current, { type: recorder.mimeType || "audio/webm" });
+        recordChunksRef.current = [];
+        if (!blob.size) {
+          setMessage("Recording was empty. Try again with mic permission enabled.");
+          return;
+        }
+
+        try {
+          const context = await getContext();
+          const data = await blob.arrayBuffer();
+          const buffer = await context.decodeAudioData(data.slice(0));
+          setDecodedBuffer(buffer, `Mic recording ${new Date().toLocaleTimeString()}`, "Recording decoded. Now you can shape it with the FX chain.");
+        } catch (error) {
+          const detail = error instanceof Error ? error.message : "Unknown recording decode error";
+          setMessage(`Recorded audio could not be decoded: ${detail}`);
+        }
+      };
+
+      recorder.start();
+      setRecording(true);
+      setMessage("Recording from microphone...");
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : "Microphone permission failed";
+      setMessage(`Could not start recording: ${detail}`);
+    }
+  }, [getContext, setDecodedBuffer, stopPlayback]);
 
   const seek = useCallback((nextProgress: number) => {
     const buffer = bufferRef.current;
@@ -317,6 +411,8 @@ export default function VoiceDecoderClient() {
   useEffect(() => {
     return () => {
       stopPlayback(false);
+      recorderRef.current?.stop();
+      recordStreamRef.current?.getTracks().forEach((track) => track.stop());
       void contextRef.current?.close();
     };
   }, [stopPlayback]);
@@ -349,11 +445,26 @@ export default function VoiceDecoderClient() {
           <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
             <section className="grid gap-4 rounded-lg border border-white/10 bg-white/[0.045] p-4 shadow-2xl">
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                <label className="inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-emerald-300/40 bg-emerald-300/10 px-4 text-sm font-black text-emerald-100 transition hover:bg-emerald-300/15">
-                  <Upload size={18} />
-                  Upload MP3 or audio
-                  <input className="sr-only" type="file" accept="audio/*,.mp3" onChange={(event) => void handleFile(event.target.files?.[0])} />
-                </label>
+                <div className="flex flex-wrap gap-2">
+                  <label className="inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-emerald-300/40 bg-emerald-300/10 px-4 text-sm font-black text-emerald-100 transition hover:bg-emerald-300/15">
+                    <Upload size={18} />
+                    Upload MP3 or audio
+                    <input className="sr-only" type="file" accept="audio/*,.mp3" onChange={(event) => void handleFile(event.target.files?.[0])} />
+                  </label>
+
+                  <button
+                    type="button"
+                    onClick={() => (recording ? stopRecording() : void startRecording())}
+                    className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-md border px-4 text-sm font-black transition ${
+                      recording
+                        ? "border-red-300 bg-red-400 text-black hover:bg-red-300"
+                        : "border-sky-300/35 bg-sky-300/10 text-sky-100 hover:bg-sky-300/15"
+                    }`}
+                  >
+                    <Mic size={18} />
+                    {recording ? "Stop recording" : "Record mic"}
+                  </button>
+                </div>
 
                 <div className="flex min-w-0 items-center gap-2 rounded-md border border-white/10 bg-black/30 px-3 py-2">
                   <FileAudio className="h-4 w-4 shrink-0 text-sky-200" />
@@ -421,6 +532,27 @@ export default function VoiceDecoderClient() {
                   <Waves size={15} /> Decoder log
                 </p>
                 <p className="mt-2 text-sm leading-6 text-slate-300">{message}</p>
+              </div>
+
+              <div className="rounded-md border border-white/10 bg-black/30 p-3">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <p className="text-xs font-black uppercase text-slate-500">Example MP3 clips</p>
+                  <span className="text-[11px] font-bold text-slate-500">Public domain</span>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-3">
+                  {EXAMPLE_CLIPS.map((clip) => (
+                    <button
+                      key={clip.file}
+                      type="button"
+                      onClick={() => void loadExample(clip.file, clip.label)}
+                      className="min-h-14 rounded-md border border-white/10 bg-white/[0.055] px-3 text-left transition hover:border-emerald-300/45 hover:bg-white/[0.09]"
+                      title={clip.source}
+                    >
+                      <span className="block truncate text-sm font-black text-white">{clip.label}</span>
+                      <span className="mt-1 block truncate text-xs text-slate-500">{clip.file}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
             </section>
 

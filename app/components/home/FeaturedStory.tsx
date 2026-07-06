@@ -3,9 +3,8 @@
 import Image from "next/image";
 import { ArrowRight, Check, Clock3, MessageCircle, Sparkles, Star } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
-import { getTourImage } from "@/lib/tour-display";
 import type { TourSummary } from "@/lib/types/index";
-import { WHATSAPP_HREF, formatTourPrice, tourTitle } from "./home-utils";
+import { WHATSAPP_HREF } from "./home-utils";
 
 type Props = {
   tours: TourSummary[];
@@ -16,27 +15,21 @@ export default function FeaturedStory({ tours, onSelectTour }: Props) {
   const { lang } = useLanguage();
   const isEs = lang === "es";
 
-  const featured =
-    tours.find((t) => t.slug === "avistamiento-aves-norteno" || t.slug === "avistamiento-aves") ?? tours[0];
+  if (tours.length === 0) return null;
 
-  if (!featured) return null;
-
-  const inclusions =
-    featured.inclusions && featured.inclusions.length > 0
-      ? featured.inclusions.slice(0, 4)
-      : isEs
-        ? [
-            "Guia naturalista especializado",
-            "Binoculares compartidos",
-            "Lista de especies observadas",
-            "Ruta suave de 2 horas",
-          ]
-        : [
-            "Specialized naturalist guide",
-            "Shared binoculars",
-            "Observed species checklist",
-            "Easy 2-hour route",
-          ];
+  const inclusions = isEs
+    ? [
+        "Cañón Ciudad Esmeralda y pozas cristalinas",
+        "Avistamiento de aves y volcanes dormidos",
+        "Tours gastronómicos y experiencias sensoriales",
+        "Guías locales certificados en cada ruta",
+      ]
+    : [
+        "Ciudad Esmeralda canyon and crystal pools",
+        "Birdwatching and dormant volcano hikes",
+        "Gastronomic and sensory experiences",
+        "Certified local guides on every route",
+      ];
 
   const steps = [
     {
@@ -55,10 +48,10 @@ export default function FeaturedStory({ tours, onSelectTour }: Props) {
     },
     {
       num: "03",
-      title: isEs ? "Salí al bosque" : "Head into the forest",
+      title: isEs ? "Salí a la aventura" : "Head out on your adventure",
       body: isEs
-        ? "Llegas temprano, ajustamos binoculares y buscamos aves con calma."
-        : "Arrive early, set your binoculars, and look for birds at an easy pace.",
+        ? "Llegás con guías locales, equipo listo y una ruta pensada para tu grupo y el clima del día."
+        : "Arrive with local guides, gear ready, and a route tailored to your group and the day's weather.",
     },
   ];
 
@@ -66,12 +59,11 @@ export default function FeaturedStory({ tours, onSelectTour }: Props) {
     <section className="bg-white py-20 dark:bg-[#0b0a09] md:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
-          {/* Image collage */}
           <div className="relative">
             <div className="relative aspect-[4/5] overflow-hidden rounded-[2.5rem]">
               <Image
-                src={getTourImage(featured.slug)}
-                alt={tourTitle(featured, isEs)}
+                src="/image/IMG_4671.jpg"
+                alt={isEs ? "Experiencias en la naturaleza de Costa Rica" : "Nature experiences in Costa Rica"}
                 fill
                 sizes="(min-width: 1024px) 50vw, 100vw"
                 className="object-cover"
@@ -80,10 +72,9 @@ export default function FeaturedStory({ tours, onSelectTour }: Props) {
 
             <span className="absolute left-6 top-6 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-4 py-2 text-xs font-bold text-stone-900 shadow-lg backdrop-blur-sm">
               <Sparkles size={13} className="text-amber-500" />
-              {isEs ? "Tour estrella" : "Star tour"}
+              {isEs ? `${tours.length} experiencias` : `${tours.length} experiences`}
             </span>
 
-            {/* Floating review card */}
             <div className="absolute -bottom-6 right-4 w-56 rounded-2xl bg-white p-4 shadow-[0_20px_60px_rgba(0,0,0,0.15)] dark:bg-stone-900 dark:shadow-[0_20px_60px_rgba(0,0,0,0.5)] dark:ring-1 dark:ring-white/10 sm:right-8 sm:w-64">
               <span className="flex gap-0.5 text-amber-400">
                 {Array.from({ length: 5 }).map((_, i) => (
@@ -92,26 +83,24 @@ export default function FeaturedStory({ tours, onSelectTour }: Props) {
               </span>
               <p className="mt-2 text-xs leading-relaxed text-stone-600 dark:text-stone-300">
                 {isEs
-                  ? "“Escuchamos tucanes antes de verlos. Una mañana demasiado pura vida.”"
-                  : "“We heard toucans before seeing them. Such a pure vida morning.”"}
+                  ? "“Desde el cañón hasta las pozas, cada tour fue distinto y todos nos dejaron con ganas de volver.”"
+                  : "“From the canyon to the pools, every tour was different and all of them made us want to come back.”"}
               </p>
               <p className="mt-2 text-[11px] font-bold text-stone-900 dark:text-stone-100">— María F.</p>
             </div>
           </div>
 
-          {/* Copy */}
           <div>
             <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em] text-emerald-700 dark:text-emerald-300">
-              {isEs ? "Avistamiento de aves · Juan Castro Blanco" : "Birdwatching · Juan Castro Blanco"}
+              {isEs ? "San Carlos · Juan Castro Blanco" : "San Carlos · Juan Castro Blanco"}
             </p>
             <h2 className="font-display text-balance text-4xl font-bold leading-[1.02] tracking-tight text-stone-900 dark:text-stone-50 md:text-5xl">
-              {isEs ? "El bosque se despierta con alas" : "The forest wakes up on wings"}
+              {isEs ? "Naturaleza viva, experiencias para cada estilo" : "Living nature, experiences for every style"}
             </h2>
             <p className="mt-5 max-w-lg text-base leading-relaxed text-stone-600 dark:text-stone-300 md:text-lg">
-              {(isEs ? featured.descriptionEs : featured.descriptionEn) ||
-                (isEs
-                  ? "Caminata guiada para observar aves del corredor biologico Juan Castro Blanco, con explicaciones sobre cantos, habitat y conservacion."
-                  : "A guided walk to observe birds of the Juan Castro Blanco biological corridor, with insight into calls, habitat, and conservation.")}
+              {isEs
+                ? "Somos un proyecto familiar con rutas por cañón, río, bosque nuboso y corredor biológico. Elegí la intensidad que va con tu grupo — desde pozas tranquilas hasta aventura de verdad."
+                : "We are a family-run project with routes through canyon, river, cloud forest, and biological corridor. Choose the intensity that fits your group — from calm pools to real adventure."}
             </p>
 
             <ul className="mt-7 grid gap-3 sm:grid-cols-2">
@@ -128,28 +117,28 @@ export default function FeaturedStory({ tours, onSelectTour }: Props) {
             <div className="mt-8 flex flex-wrap items-center gap-5">
               <div>
                 <span className="block text-xs font-medium uppercase tracking-widest text-stone-400 dark:text-stone-500">
-                  {isEs ? "Desde" : "From"}
+                  {isEs ? "Experiencias disponibles" : "Available experiences"}
                 </span>
                 <span className="font-display text-3xl font-bold text-stone-900 dark:text-stone-50">
-                  {formatTourPrice(featured, isEs)}
+                  {tours.length}
                 </span>
-                <span className="ml-1.5 text-sm text-stone-500 dark:text-stone-400">/ {isEs ? "persona" : "person"}</span>
+                <span className="ml-1.5 text-sm text-stone-500 dark:text-stone-400">
+                  {isEs ? "tours en la zona" : "tours in the area"}
+                </span>
               </div>
-              {featured.duration && (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-stone-100 px-3.5 py-2 text-xs font-semibold text-stone-600 dark:bg-stone-800 dark:text-stone-300">
-                  <Clock3 size={13} />
-                  {featured.duration}
-                </span>
-              )}
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-stone-100 px-3.5 py-2 text-xs font-semibold text-stone-600 dark:bg-stone-800 dark:text-stone-300">
+                <Clock3 size={13} />
+                {isEs ? "2 h a día completo" : "2 h to full day"}
+              </span>
             </div>
 
             <div className="mt-7 flex flex-wrap gap-3">
               <button
                 type="button"
-                onClick={() => onSelectTour(featured.slug)}
+                onClick={() => onSelectTour(tours[0]?.slug ?? "")}
                 className="group inline-flex items-center gap-2 rounded-full bg-emerald-600 px-7 py-3.5 text-sm font-bold text-white shadow-lg shadow-emerald-600/25 transition-all hover:-translate-y-0.5 hover:bg-emerald-500"
               >
-                {isEs ? "Reservar este tour" : "Book this tour"}
+                {isEs ? "Ver fechas" : "See dates"}
                 <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
               </button>
               <a
@@ -165,7 +154,6 @@ export default function FeaturedStory({ tours, onSelectTour }: Props) {
           </div>
         </div>
 
-        {/* How it works */}
         <div className="mt-24 md:mt-32">
           <div className="mb-10 text-center">
             <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em] text-emerald-700 dark:text-emerald-300">

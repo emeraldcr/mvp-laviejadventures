@@ -72,6 +72,10 @@ export function useGameState() {
     setState(s => applyDeath(s, 'enemy'));
   }, []);
 
+  const dieFromTrap = useCallback(() => {
+    setState(s => applyDeath(s, 'trap'));
+  }, []);
+
   const respawn = useCallback(() => {
     setState(s => ({ ...s, status: 'playing' }));
   }, []);
@@ -106,5 +110,5 @@ export function useGameState() {
     setState(s => ({ ...s, currentLevelIndex: clamped }));
   }, []);
 
-  return { state, leaderboard, registerPlayer, clearPlayer, collectCrystal, dieFromFall, dieFromEnemy, respawn, win, restart, enterLevel, preSelectLevel, resetAdventure };
+  return { state, leaderboard, registerPlayer, clearPlayer, collectCrystal, dieFromFall, dieFromEnemy, dieFromTrap, respawn, win, restart, enterLevel, preSelectLevel, resetAdventure };
 }

@@ -25,3 +25,17 @@ export const ENEMY_GAMEOVER = [
   '¡Los bichos del cañón son muy fuertes! 🦇',
   '¡No pudiste con los guardianes del sendero! 🌿',
 ];
+
+export const TRAP_MESSAGES = [
+  '¡Caíste en la trampa del sendero! 🪤',
+  '¡Las púas te agarraron, mae! 🦴',
+  '¡La roca rodante te aplastó! 🪨',
+  '¡El tronco te barrió del puente! 🪵',
+];
+
+export const TRAP_GAMEOVER = [
+  '¡Las trampas del cañón te vencieron! 🪤',
+  '¡No esquivaste los peligros! 🦴',
+  '¡El sendero está lleno de sorpresas mortales! 🪨',
+  '¡Ojo con las trampas la próxima vez! 🪵',
+];

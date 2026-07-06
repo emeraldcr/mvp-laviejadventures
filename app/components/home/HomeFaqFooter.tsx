@@ -99,19 +99,19 @@ function FinalCta() {
 
         <div className="relative px-8 py-16 md:px-16 md:py-24">
           <h2 className="font-display max-w-2xl text-balance text-4xl font-bold leading-[1.0] tracking-tight text-white md:text-6xl">
-            {isEs ? "El bosque esta cantando. ¿Usted viene?" : "The forest is singing. Are you coming?"}
+            {isEs ? "La naturaleza te espera. ¿Cuál experiencia elegís?" : "Nature is waiting. Which experience will you choose?"}
           </h2>
           <p className="mt-4 max-w-xl text-base leading-relaxed text-white/75 md:text-lg">
             {isEs
-              ? "Cupos limitados por dia para observar aves con calma, cuidar el bosque y darte una experiencia sin multitudes."
-              : "Limited daily spots to birdwatch calmly, protect the forest, and keep the experience crowd-free."}
+              ? "Cupos limitados por día en cada tour — cañón, pozas, aves, volcanes y más — para cuidar el bosque y darte una experiencia sin multitudes."
+              : "Limited daily spots on every tour — canyon, pools, birds, volcanoes, and more — to protect the forest and keep the experience crowd-free."}
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
-              href="/reservar?tour=avistamiento-aves-norteno"
+              href="/reservar"
               className="group inline-flex items-center gap-2 rounded-full bg-white px-8 py-4 text-sm font-bold text-emerald-900 shadow-xl transition-all hover:-translate-y-0.5"
             >
-              {isEs ? "Reservar aves" : "Book birdwatching"}
+              {isEs ? "Explorar experiencias" : "Explore experiences"}
               <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
             </Link>
             <a
