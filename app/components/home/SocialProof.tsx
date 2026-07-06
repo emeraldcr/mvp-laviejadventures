@@ -22,20 +22,20 @@ const TESTIMONIALS = [
   {
     name: "María F.",
     origin: { es: "San José, Costa Rica", en: "San José, Costa Rica" },
-    es: "El color del agua no se puede describir. Los guías nos cuidaron en todo momento y las fotos que nos tomaron quedaron espectaculares.",
-    en: "The color of the water can't be described. The guides looked after us the whole time and the photos they took turned out spectacular.",
+    es: "Escuchamos tucanes, vimos tangaras y el guia nos fue explicando cada canto. Una manana tranquila y lindisima.",
+    en: "We heard toucans, spotted tanagers, and the guide explained every call. Such a calm, beautiful morning.",
   },
   {
     name: "Daniel R.",
     origin: { es: "Alajuela, Costa Rica", en: "Alajuela, Costa Rica" },
-    es: "Fuimos en familia y hasta mi mamá de 60 años lo disfrutó. Todo muy bien organizado, desde la reserva en línea hasta el almuerzo típico.",
-    en: "We went as a family and even my 60-year-old mom enjoyed it. Everything was well organized, from the online booking to the traditional lunch.",
+    es: "Fuimos en familia y todos pudimos seguir el ritmo. Binoculares, bosque fresco y cero carreras, justo lo que queriamos.",
+    en: "We went as a family and everyone could keep the pace. Binoculars, cool forest, and no rush, exactly what we wanted.",
   },
   {
     name: "Emily & Jake",
     origin: { es: "Texas, EE. UU.", en: "Texas, USA" },
-    es: "La joya escondida de Costa Rica. Nada de multitudes: solo el cañón, el agua esmeralda y un equipo local increíble.",
-    en: "Costa Rica's hidden gem. No crowds — just the canyon, the emerald water, and an amazing local crew.",
+    es: "La joya escondida de Costa Rica. Nada de multitudes: solo bosque, aves y un equipo local increible.",
+    en: "Costa Rica's hidden gem. No crowds, just forest, birds, and an amazing local crew.",
   },
 ];
 
@@ -52,7 +52,7 @@ export default function SocialProof() {
             {isEs ? "Lo que dicen" : "What they say"}
           </p>
           <h2 className="font-display mx-auto max-w-2xl text-balance text-4xl font-bold leading-[1.02] tracking-tight text-stone-900 dark:text-stone-50 md:text-5xl">
-            {isEs ? "Historias que salen del cañón" : "Stories that come out of the canyon"}
+            {isEs ? "Historias que salen del bosque" : "Stories from the forest"}
           </h2>
         </div>
 

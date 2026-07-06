@@ -5,7 +5,7 @@ import { Calendar, MapPin, Trophy, X } from "lucide-react";
 import type { LeaderboardEntry, MundialMatch, Prediction } from "../types";
 import { cn, formatKickoff } from "../utils";
 import { teamCode } from "../flags";
-import { computePredictionResult } from "@/lib/mundial/prediction-scoring";
+import { computePredictionResult, matchWinnerSide } from "@/lib/mundial/prediction-scoring";
 import { Flag } from "./Flag";
 
 // ─── Bracket layout ───────────────────────────────────────────────────────────
@@ -69,12 +69,7 @@ function pt(r: number, deg: number): [number, number] {
 }
 
 function mwinner(m: MundialMatch | undefined): "home" | "away" | null {
-  if (!m || m.homeFinalScore == null || m.awayFinalScore == null) return null;
-  const aw = (m as Record<string, unknown>).actualWinner as "home" | "away" | null;
-  if (aw) return aw;
-  if (m.homeFinalScore > m.awayFinalScore) return "home";
-  if (m.awayFinalScore > m.homeFinalScore) return "away";
-  return null;
+  return m ? matchWinnerSide(m) : null;
 }
 
 function winnerTeam(m: MundialMatch | undefined): string | null {

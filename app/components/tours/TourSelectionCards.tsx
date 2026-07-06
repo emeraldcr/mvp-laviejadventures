@@ -8,19 +8,19 @@ import { getTourImage } from "@/lib/tour-display";
 import { TourSummary } from "@/lib/types/index";
 
 const TOUR_TAGS_BY_SLUG: Record<string, { tagEs: string; tagEn: string }> = [
-  { slug: "tour-ciudad-esmeralda", tagEs: "Tour estrella", tagEn: "Star tour" },
-  { slug: "ciudad-esmeralda",      tagEs: "Tour estrella", tagEn: "Star tour" },
+  { slug: "avistamiento-aves-norteno",      tagEs: "Tour estrella", tagEn: "Star tour" },
+  { slug: "avistamiento-aves",              tagEs: "Tour estrella", tagEn: "Star tour" },
+  { slug: "caminata-volcanes-dormidos",     tagEs: "Top 2", tagEn: "Top 2" },
+  { slug: "tour-ciudad-esmeralda", tagEs: "Top 3 aventura", tagEn: "Top 3 adventure" },
+  { slug: "ciudad-esmeralda",      tagEs: "Top 3 aventura", tagEn: "Top 3 adventure" },
   { slug: "aventuras-cataratas",   tagEs: "Temporada lluviosa", tagEn: "Rainy season pick" },
   { slug: "pozas-cristalinas",     tagEs: "Mas vendido", tagEn: "Best seller" },
   { slug: "cuadra-tours-aventura", tagEs: "Adrenalina", tagEn: "Adrenaline" },
   { slug: "cascadas-secretas-rio-la-vieja", tagEs: "Cataratas", tagEn: "Waterfalls" },
   { slug: "tour-gastronomico-local",        tagEs: "Cultura local", tagEn: "Local culture" },
   { slug: "lluvia-en-la-naturaleza",        tagEs: "Sensorial", tagEn: "Sensory" },
-  { slug: "avistamiento-aves-norteno",      tagEs: "Fauna", tagEn: "Wildlife" },
-  { slug: "avistamiento-aves",              tagEs: "Fauna", tagEn: "Wildlife" },
   { slug: "tour-nocturno-la-vieja",         tagEs: "Nocturno", tagEn: "Nocturnal" },
   { slug: "rapel-canon-del-rio",            tagEs: "Extremo", tagEn: "Extreme" },
-  { slug: "caminata-volcanes-dormidos",     tagEs: "Volcanes", tagEn: "Volcanoes" },
 ].reduce((acc, t) => {
   acc[t.slug] = { tagEs: t.tagEs, tagEn: t.tagEn };
   return acc;
@@ -71,7 +71,7 @@ export default function TourSelectionCards({
         };
         const tourTitle = isEs ? tour.titleEs : tour.titleEn;
         const isSelected = selectedTourSlug === tour.slug;
-        const isFeatured = tour.slug === "tour-ciudad-esmeralda" || tour.slug === "ciudad-esmeralda";
+        const isFeatured = tour.slug === "avistamiento-aves-norteno" || tour.slug === "avistamiento-aves";
         const price = tour.packages?.[0]?.price ? `$${tour.packages[0].price}` : isEs ? "Consultar" : "Ask";
 
         return (
@@ -106,7 +106,7 @@ export default function TourSelectionCards({
             {/* Emerald glow hover */}
             <div className="absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100 bg-[radial-gradient(circle_at_50%_92%,rgba(16,185,129,0.22),transparent_52%)]" />
 
-            {/* Featured glow (Ciudad Esmeralda) */}
+            {/* Featured glow (birdwatching) */}
             {isFeatured && (
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_35%_10%,rgba(52,211,153,0.20),transparent_40%)]" />
             )}

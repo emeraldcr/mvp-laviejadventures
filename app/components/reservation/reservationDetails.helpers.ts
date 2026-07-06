@@ -14,7 +14,7 @@ export const resolveSelectedTourSlug = (
     return initialSelectedTourSlug;
   }
 
-  return tours[0]?.slug ?? "tour-ciudad-esmeralda";
+  return tours[0]?.slug ?? "avistamiento-aves-norteno";
 };
 
 export const getDefaultMainTourInfo = (): MainTourInfo => ({

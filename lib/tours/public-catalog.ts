@@ -11,6 +11,29 @@ export type PublicTour = TourSummary & {
   isMain?: boolean;
 };
 
+const STAR_TOUR_SLUGS = new Set(["avistamiento-aves-norteno", "avistamiento-aves"]);
+
+const TOUR_PRIORITY_BY_SLUG: Record<string, number> = {
+  "avistamiento-aves-norteno": 1,
+  "avistamiento-aves": 1,
+  "caminata-volcanes-dormidos": 2,
+  "tour-ciudad-esmeralda": 3,
+  "ciudad-esmeralda": 3,
+  "lluvia-en-la-naturaleza": 4,
+};
+
+function tourPriority(slug: string) {
+  return TOUR_PRIORITY_BY_SLUG[slug] ?? 50;
+}
+
+function prioritizeTours<T extends { slug?: string; priceCRC?: number }>(tours: T[]) {
+  return [...tours].sort((a, b) => {
+    const priorityDiff = tourPriority(String(a.slug ?? "")) - tourPriority(String(b.slug ?? ""));
+    if (priorityDiff !== 0) return priorityDiff;
+    return (Number(a.priceCRC) || 999999) - (Number(b.priceCRC) || 999999);
+  });
+}
+
 const DEFAULT_TOURS = [
   {
     slug: "cuadra-tours-aventura",
@@ -108,14 +131,14 @@ const DEFAULT_TOURS = [
     duration: "2 horas",
     difficulty: "Fácil",
     priceCRC: 22990,
-    tagEs: "Fauna",
-    tagEn: "Wildlife",
+    tagEs: "Tour estrella",
+    tagEn: "Star tour",
     accent: "from-lime-900/40 to-lime-950/60",
     border: "border-lime-700/30 hover:border-lime-500/60",
     type: "public",
     isActive: true,
-    isFeatured: false,
-    isMain: false,
+    isFeatured: true,
+    isMain: true,
   },
   {
     slug: "tour-nocturno-la-vieja",
@@ -227,6 +250,18 @@ const DEFAULT_TOUR_DETAILS: Record<
     restrictions: "Facil",
     cancellationPolicy: "Cancelacion gratuita hasta 24 horas antes del tour.",
   },
+  "avistamiento-aves-norteno": {
+    location: "Juan Castro Blanco, Alajuela Norte, Costa Rica",
+    inclusions: [
+      "Guia especializado en aves bilingue",
+      "Binoculares compartidos de alta calidad",
+      "Lista de especies observadas",
+      "Explicaciones educativas sobre avifauna local",
+    ],
+    exclusions: ["Transporte", "Binoculares personales", "Alimentos y bebidas no especificadas"],
+    restrictions: "Facil",
+    cancellationPolicy: "Cancelacion gratuita hasta 24 horas antes del tour.",
+  },
   "tour-nocturno-la-vieja": {
     location: "Bosque La Vieja Adventures",
     inclusions: ["Guia local", "Ruta nocturna", "Briefing de seguridad"],
@@ -296,8 +331,8 @@ function serializePublicTour(t: Record<string, unknown>): PublicTour {
     tagEn: typeof t.tagEn === "string" ? t.tagEn : undefined,
     accent: typeof t.accent === "string" ? t.accent : undefined,
     border: typeof t.border === "string" ? t.border : undefined,
-    isFeatured: Boolean(t.isFeatured),
-    isMain: Boolean(t.isMain),
+    isFeatured: STAR_TOUR_SLUGS.has(slug),
+    isMain: STAR_TOUR_SLUGS.has(slug),
   };
 }
 
@@ -307,16 +342,16 @@ export async function readPublicTours(): Promise<PublicTour[]> {
 
   let tours = await collection
     .find({ type: { $in: ["public", "both"] }, isActive: { $ne: false } })
-    .sort({ isFeatured: -1, priceCRC: 1 })
+    .sort({ priceCRC: 1 })
     .toArray();
 
   if (tours.length === 0) {
     await collection.insertMany(DEFAULT_TOURS);
     tours = await collection
       .find({ type: { $in: ["public", "both"] }, isActive: { $ne: false } })
-      .sort({ isFeatured: -1, priceCRC: 1 })
+      .sort({ priceCRC: 1 })
       .toArray();
   }
 
-  return tours.map((tour) => serializePublicTour(tour as Record<string, unknown>));
+  return prioritizeTours(tours.map((tour) => serializePublicTour(tour as Record<string, unknown>)));
 }

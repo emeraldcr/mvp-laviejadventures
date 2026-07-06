@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Backpack, CalendarDays, Check, ChevronRight, Clock, HelpCircle, Info, MapPin, Route, ShieldCheck, Sparkles, Users, X } from "lucide-react";
 import DynamicHeroHeader from "@/app/components/sections/DynamicHeroHeader";
+import BirdwatchingTourPage from "@/app/components/tours/BirdwatchingTourPage";
 import { getDb } from "@/lib/helpers/mongodb";
 import { COLLECTIONS } from "@/lib/constants/db";
 import { fallbackPackagesForTour, normalizeTourPackages } from "@/lib/tour-packages";
@@ -52,6 +53,35 @@ const DEFAULT_TOUR: TourDetail = {
   packages: fallbackPackagesForTour("tour-ciudad-esmeralda"),
 };
 
+const DEFAULT_BIRDWATCHING_TOUR: TourDetail = {
+  slug: "avistamiento-aves-norteno",
+  titleEs: "Avistamiento de Aves Norteno",
+  titleEn: "Northern Birdwatching",
+  descriptionEs: "Observacion guiada de aves con binoculares, senderos de bosque y explicaciones sobre comportamiento, habitat y conservacion.",
+  descriptionEn: "Guided birdwatching with binoculars, forest trails, and insight into behavior, habitats, and conservation.",
+  details: "Observacion guiada de aves en el corredor biologico Juan Castro Blanco, con ritmo tranquilo y apoyo para identificar especies por canto, silueta y color.",
+  duration: "2 horas",
+  difficulty: "Facil",
+  location: "Juan Castro Blanco, Alajuela Norte, Costa Rica",
+  priceCRC: 24990,
+  tagEs: "Tour estrella",
+  inclusions: [
+    "Guia especializado en aves bilingue",
+    "Binoculares compartidos de alta calidad",
+    "Lista de especies observadas",
+    "Explicaciones educativas sobre avifauna local",
+  ],
+  restrictions: "Apto para principiantes. Se recomienda ropa de colores neutros.",
+  cancellationPolicy: "Cancelacion gratuita hasta 24 horas antes del tour.",
+  packages: fallbackPackagesForTour("avistamiento-aves-norteno"),
+};
+
+function getFallbackTour(slug: string): TourDetail | null {
+  if (slug === "avistamiento-aves-norteno" || slug === "avistamiento-aves") return DEFAULT_BIRDWATCHING_TOUR;
+  if (slug === DEFAULT_TOUR.slug) return DEFAULT_TOUR;
+  return null;
+}
+
 function asStringArray(value: unknown): string[] {
   return Array.isArray(value) ? value.map((item) => String(item)).filter(Boolean) : [];
 }
@@ -70,7 +100,7 @@ async function getTour(slug: string): Promise<TourDetail | null> {
       type: { $in: ["public", "both"] },
     });
 
-    if (!tour) return slug === DEFAULT_TOUR.slug ? DEFAULT_TOUR : null;
+    if (!tour) return getFallbackTour(slug);
 
     const packages = normalizeTourPackages(tour.packages);
 
@@ -93,7 +123,7 @@ async function getTour(slug: string): Promise<TourDetail | null> {
     };
   } catch (error) {
     console.error("Failed to load tour detail:", error);
-    return slug === DEFAULT_TOUR.slug ? DEFAULT_TOUR : null;
+    return getFallbackTour(slug);
   }
 }
 
@@ -104,6 +134,12 @@ export default async function TourDetailPage({ params }: TourDetailPageProps) {
   if (!tour) notFound();
 
   const content = getTourContent(tour.slug);
+
+  const isBirdwatching = tour.slug === "avistamiento-aves" || tour.slug === "avistamiento-aves-norteno";
+  if (isBirdwatching && content) {
+    return <BirdwatchingTourPage tour={tour} content={content} />;
+  }
+
   const gallery = content && content.gallery.length > 0 ? content.gallery : getTourGallery(tour.slug);
   const heroImage = content?.gallery[0] ?? getTourImage(tour.slug);
   const bookingHref = `/reservar?tour=${encodeURIComponent(tour.slug)}`;

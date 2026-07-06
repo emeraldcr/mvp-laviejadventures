@@ -5,6 +5,7 @@ import { notifyLiveMatchChanged } from "@/lib/mundial/live-match-events";
 import { notifyPenalitosChanged } from "@/lib/mundial/penalitos-events";
 import { notifyScorerChanged } from "@/lib/mundial/scorer-events";
 import { getMundialMatchCollectionForWrite, MUNDIAL_PREDICTIONS_COLLECTION } from "@/lib/mundial/matches-store";
+import { propagateKnockoutAdvancement } from "@/lib/mundial/knockout-advance";
 
 export const dynamic = "force-dynamic";
 
@@ -407,6 +408,20 @@ export async function PATCH(req: NextRequest) {
             },
           }
         );
+      }
+    }
+
+    // Result changed → push the decided winner into the next round (Mongo only)
+    const touchedResult =
+      touchedFinalScore ||
+      "actualWinner" in body ||
+      "decisionMethod" in body ||
+      $set.liveStatus === "fulltime";
+    if (touchedResult) {
+      try {
+        await propagateKnockoutAdvancement(db);
+      } catch (error) {
+        console.error("Failed to propagate knockout advancement", error);
       }
     }
 

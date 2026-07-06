@@ -482,12 +482,12 @@ const HeroCommandCenter: React.FC<Pick<HeroCarouselProps, "height" | "onSelectTo
           </div>
 
           <h1 className="mb-2 max-w-3xl text-balance font-black leading-[0.9] text-white text-[clamp(2rem,12vw,3.45rem)] md:text-[clamp(2.25rem,3.6vw,3.45rem)]">
-            {isEs ? "Baje al canon. Elija la aventura." : "Step into the canyon. Choose the adventure."}
+            {isEs ? "Mire al bosque. Elija la experiencia." : "Look to the forest. Choose the experience."}
           </h1>
           <p className="mb-3 max-w-2xl text-sm font-semibold leading-relaxed text-white/68 sm:text-base lg:mb-4">
             {isEs
-              ? "Fotos grandes, agua esmeralda y rutas reales de San Carlos. Toque una experiencia y vea cual le hace ojitos, mae."
-              : "Large photos, emerald water, and real San Carlos routes. Tap an experience and find the one that calls you."}
+              ? "Fotos grandes, aves, volcanes dormidos y rutas reales de San Carlos. Toque una experiencia y vea cual le hace ojitos, mae."
+              : "Large photos, birds, dormant volcanoes, and real San Carlos routes. Tap an experience and find the one that calls you."}
           </p>
 
           <div className="grid gap-2 pb-2 pr-1 [scrollbar-color:rgba(94,234,212,0.35)_rgba(15,23,42,0.5)] [scrollbar-width:thin] sm:grid-cols-2 lg:max-h-[42vh] lg:overflow-y-auto xl:max-h-none">
@@ -752,16 +752,16 @@ const MainMosaicHero: React.FC = () => {
               San Carlos · Costa Rica
             </p>
             <h1 className="text-balance text-[clamp(3rem,9vw,7.6rem)] font-black leading-[0.88] text-white drop-shadow-[0_12px_40px_rgba(0,0,0,0.75)]">
-              {isEs ? "Donde el cañón se vuelve esmeralda." : "Where the canyon turns emerald."}
+              {isEs ? "Donde el bosque canta al amanecer." : "Where the forest sings at sunrise."}
             </h1>
             <p className="mx-auto mt-5 max-w-2xl text-base font-semibold leading-relaxed text-white/74 md:text-xl">
               {isEs
-                ? "Aventura local, pozas cristalinas y paredes verdes del Rio La Vieja. Reserve con seguridad, sin enredos, pura vida."
-                : "Local adventure, crystal pools, and green canyon walls on the La Vieja River. Book clearly and safely."}
+                ? "Avistamiento de aves, volcanes dormidos y aventura local en San Carlos. Reserve con seguridad, sin enredos, pura vida."
+                : "Birdwatching, dormant volcanoes, and local adventure in San Carlos. Book clearly and safely."}
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link
-                href="/reservar?tour=tour-ciudad-esmeralda"
+                href="/reservar?tour=avistamiento-aves-norteno"
                 className="emerald-wave-button inline-flex min-h-14 items-center gap-3 rounded-full bg-emerald-400 px-8 py-4 text-sm font-black uppercase tracking-[0.22em] text-emerald-950 shadow-[0_18px_50px_rgba(16,185,129,0.42)] transition hover:-translate-y-0.5 hover:bg-amber-300"
               >
                 {isEs ? "Reservar ahora" : "Book now"}

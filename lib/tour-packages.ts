@@ -59,8 +59,52 @@ export const CIUDAD_ESMERALDA_PACKAGES: TourPackageOption[] = [
   },
 ];
 
+export const BIRDWATCHING_PACKAGES: TourPackageOption[] = [
+  {
+    id: "essential-package",
+    name: "Essential Package",
+    nameEs: "Paquete Esencial",
+    price: 45,
+    priceCRC: 24990,
+    descriptionEn: "Guided birdwatching tour with an expert naturalist",
+    descriptionEs: "Tour guiado de avistamiento de aves con naturalista experto",
+    includes: ["Naturalist guide", "Shared binoculars", "Observed species checklist"],
+    groupTour: true,
+    departureTimes: ["05:30", "06:00"],
+    scheduleNote: "Early departures are recommended for best bird activity",
+  },
+  {
+    id: "birder-plus-package",
+    name: "Birder Plus Package",
+    nameEs: "Paquete Avistador Plus",
+    price: 65,
+    priceCRC: 34990,
+    descriptionEn: "Essential package plus breakfast and photography guidance",
+    descriptionEs: "Paquete Esencial + desayuno y guia de fotografia",
+    includes: ["Everything in Essential Package", "Breakfast", "Photography guidance"],
+    groupTour: true,
+    departureTimes: ["05:30", "06:00"],
+    scheduleNote: "Early departures are recommended for best bird activity",
+  },
+  {
+    id: "private-birdwatching-package",
+    name: "Private Birdwatching Package",
+    nameEs: "Paquete Avistamiento Privado",
+    price: 92,
+    priceCRC: 49990,
+    descriptionEn: "Private birdwatching tour with photos and a personalized focus",
+    descriptionEs: "Tour privado exclusivo con fotos profesionales y enfoque personalizado",
+    includes: ["Private guide", "Flexible focus by species or photography", "Professional photos"],
+    groupTour: false,
+    departureTimes: ["Flexible"],
+    scheduleNote: "Flexible departure time - please check availability with the operator",
+  },
+];
+
 export function fallbackPackagesForTour(slug?: string | null): TourPackageOption[] {
-  return slug === "tour-ciudad-esmeralda" ? CIUDAD_ESMERALDA_PACKAGES : [];
+  if (slug === "tour-ciudad-esmeralda") return CIUDAD_ESMERALDA_PACKAGES;
+  if (slug === "avistamiento-aves-norteno" || slug === "avistamiento-aves") return BIRDWATCHING_PACKAGES;
+  return [];
 }
 
 export function normalizeTourPackages(value: unknown): TourPackageOption[] {

@@ -17,7 +17,7 @@ export default function FeaturedStory({ tours, onSelectTour }: Props) {
   const isEs = lang === "es";
 
   const featured =
-    tours.find((t) => t.slug === "tour-ciudad-esmeralda" || t.slug === "ciudad-esmeralda") ?? tours[0];
+    tours.find((t) => t.slug === "avistamiento-aves-norteno" || t.slug === "avistamiento-aves") ?? tours[0];
 
   if (!featured) return null;
 
@@ -26,16 +26,16 @@ export default function FeaturedStory({ tours, onSelectTour }: Props) {
       ? featured.inclusions.slice(0, 4)
       : isEs
         ? [
-            "Guía bilingüe profesional",
-            "Equipo de seguridad completo",
-            "Entrada al cañón",
-            "Experiencia de 3 a 4 horas",
+            "Guia naturalista especializado",
+            "Binoculares compartidos",
+            "Lista de especies observadas",
+            "Ruta suave de 2 horas",
           ]
         : [
-            "Professional bilingual guide",
-            "Full safety equipment",
-            "Canyon entrance fee",
-            "3 to 4 hour experience",
+            "Specialized naturalist guide",
+            "Shared binoculars",
+            "Observed species checklist",
+            "Easy 2-hour route",
           ];
 
   const steps = [
@@ -55,10 +55,10 @@ export default function FeaturedStory({ tours, onSelectTour }: Props) {
     },
     {
       num: "03",
-      title: isEs ? "Viví el cañón" : "Live the canyon",
+      title: isEs ? "Salí al bosque" : "Head into the forest",
       body: isEs
-        ? "Llegás, te equipamos y bajamos juntos al agua esmeralda."
-        : "You arrive, we gear you up, and we descend to the emerald water together.",
+        ? "Llegas temprano, ajustamos binoculares y buscamos aves con calma."
+        : "Arrive early, set your binoculars, and look for birds at an easy pace.",
     },
   ];
 
@@ -92,8 +92,8 @@ export default function FeaturedStory({ tours, onSelectTour }: Props) {
               </span>
               <p className="mt-2 text-xs leading-relaxed text-stone-600 dark:text-stone-300">
                 {isEs
-                  ? "“El agua es de un color que no se ve en fotos. Increíble.”"
-                  : "“The water is a color photos can't capture. Incredible.”"}
+                  ? "“Escuchamos tucanes antes de verlos. Una mañana demasiado pura vida.”"
+                  : "“We heard toucans before seeing them. Such a pure vida morning.”"}
               </p>
               <p className="mt-2 text-[11px] font-bold text-stone-900 dark:text-stone-100">— María F.</p>
             </div>
@@ -102,16 +102,16 @@ export default function FeaturedStory({ tours, onSelectTour }: Props) {
           {/* Copy */}
           <div>
             <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em] text-emerald-700 dark:text-emerald-300">
-              {isEs ? "Ciudad Esmeralda · Río La Vieja" : "Ciudad Esmeralda · La Vieja River"}
+              {isEs ? "Avistamiento de aves · Juan Castro Blanco" : "Birdwatching · Juan Castro Blanco"}
             </p>
             <h2 className="font-display text-balance text-4xl font-bold leading-[1.02] tracking-tight text-stone-900 dark:text-stone-50 md:text-5xl">
-              {isEs ? "El cañón de aguas color esmeralda" : "The emerald water canyon"}
+              {isEs ? "El bosque se despierta con alas" : "The forest wakes up on wings"}
             </h2>
             <p className="mt-5 max-w-lg text-base leading-relaxed text-stone-600 dark:text-stone-300 md:text-lg">
               {(isEs ? featured.descriptionEs : featured.descriptionEn) ||
                 (isEs
-                  ? "Bajá al corazón del cañón y descubrí pozas de agua esmeralda rodeadas de roca viva, guiado por gente local que conoce cada rincón del río."
-                  : "Descend into the heart of the canyon and discover emerald pools surrounded by living rock, guided by locals who know every corner of the river.")}
+                  ? "Caminata guiada para observar aves del corredor biologico Juan Castro Blanco, con explicaciones sobre cantos, habitat y conservacion."
+                  : "A guided walk to observe birds of the Juan Castro Blanco biological corridor, with insight into calls, habitat, and conservation.")}
             </p>
 
             <ul className="mt-7 grid gap-3 sm:grid-cols-2">
@@ -172,7 +172,7 @@ export default function FeaturedStory({ tours, onSelectTour }: Props) {
               {isEs ? "Así de fácil" : "This easy"}
             </p>
             <h2 className="font-display text-3xl font-bold tracking-tight text-stone-900 dark:text-stone-50 md:text-4xl">
-              {isEs ? "De tu pantalla al río en tres pasos" : "From your screen to the river in three steps"}
+              {isEs ? "De tu pantalla al bosque en tres pasos" : "From your screen to the forest in three steps"}
             </h2>
           </div>
 

@@ -5,7 +5,7 @@ import { getDb } from "@/lib/helpers/mongodb";
 import { COLLECTIONS } from "@/lib/constants/db";
 import type { MundialMatch, MundialStage } from "@/lib/mundial/fixtures";
 import { serializeLiveMatchStats, type LiveMatchStats } from "@/lib/mundial/live-stats";
-import { readMundialMatches } from "@/lib/mundial/matches-store";
+import { propagateKnockoutAdvancement } from "@/lib/mundial/knockout-advance";
 import { computePredictionPoints, computePredictionResult } from "@/lib/mundial/prediction-scoring";
 
 export const dynamic = "force-dynamic";
@@ -301,7 +301,8 @@ export async function GET() {
       premiumPlayers,
       premiumPredictions,
     ] = await Promise.all([
-      readMundialMatches<MundialMatchDoc>(db),
+      // Also self-heals the bracket: writes decided winners into later rounds
+      propagateKnockoutAdvancement<MundialMatchDoc>(db),
       db.collection<PredictionDoc>(PREDICTIONS_COLLECTION).find({}).toArray(),
       db.collection<StatQuestionDoc>(STAT_QUESTIONS_COLLECTION).find({}).sort({ createdAt: 1 }).toArray(),
       db.collection<StatBetDoc>(STAT_BETS_COLLECTION).find({}).toArray(),

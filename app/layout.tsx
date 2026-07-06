@@ -18,9 +18,9 @@ const bricolage = Bricolage_Grotesque({
 });
 
 export const metadata: Metadata = {
-  title: "La Vieja Adventures | Ciudad Esmeralda Tour Aventura San Carlos en Rio La Vieja",
+  title: "La Vieja Adventures | Avistamiento de Aves Norteno San Carlos Costa Rica",
   description:
-    "La Vieja Adventures | Ciudad Esmeralda Tour Aventura San Carlos en Rio La Vieja y Parque Nacional del Agua Juan Castro Blanco",
+    "La Vieja Adventures | Avistamiento de aves, volcanes dormidos, Ciudad Esmeralda y naturaleza en San Carlos y Juan Castro Blanco",
 };
 export default function RootLayout({
   children,

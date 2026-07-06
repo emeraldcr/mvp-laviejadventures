@@ -17,6 +17,13 @@ const HERO_SLIDES = [
   { src: "/image/IMG_6810.jpg", es: "Río La Vieja", en: "La Vieja River" },
 ];
 
+const FEATURED_HERO_SLIDES = [
+  { src: "/ads/IMG_5668.jpg", es: "Avistamiento de Aves Norteno", en: "Northern Birdwatching" },
+  { src: "/ads/IMG_5666.jpg", es: "Volcanes Dormidos", en: "Dormant Volcanoes" },
+  { src: "/image/IMG_4671.jpg", es: "Ciudad Esmeralda", en: "Ciudad Esmeralda" },
+  { src: "/ads/IMG_5669.jpg", es: "Lluvia en la Naturaleza", en: "Rain in Nature" },
+];
+
 function BookingCard({ tours }: { tours: TourSummary[] }) {
   const { lang } = useLanguage();
   const isEs = lang === "es";
@@ -202,7 +209,7 @@ export default function HomeHero({ tours }: { tours: TourSummary[] }) {
   const isEs = lang === "es";
   const [current, setCurrent] = useState(0);
 
-  const next = useCallback(() => setCurrent((c) => (c + 1) % HERO_SLIDES.length), []);
+  const next = useCallback(() => setCurrent((c) => (c + 1) % FEATURED_HERO_SLIDES.length), []);
 
   useEffect(() => {
     const id = setInterval(next, SLIDE_DURATION);
@@ -210,13 +217,13 @@ export default function HomeHero({ tours }: { tours: TourSummary[] }) {
   }, [next]);
 
   const trustItems = isEs
-    ? ["Seguridad primero", "Grupos pequeños", "Guías locales", "Río validado antes de salir"]
-    : ["Safety first", "Small groups", "Local guides", "River checked before departure"];
+    ? ["Avistamiento responsable", "Grupos pequenos", "Guias locales", "Ruta ajustada al clima"]
+    : ["Responsible birding", "Small groups", "Local guides", "Weather-aware route"];
 
   return (
     <section className="relative flex min-h-[92svh] flex-col overflow-hidden bg-stone-950">
       <div className="absolute inset-0">
-        {HERO_SLIDES.map((slide, index) => (
+        {FEATURED_HERO_SLIDES.map((slide, index) => (
           <div
             key={slide.src}
             className={`absolute inset-0 transition-opacity duration-[1400ms] ease-in-out ${
@@ -254,27 +261,27 @@ export default function HomeHero({ tours }: { tours: TourSummary[] }) {
           <h1 className="font-display max-w-5xl text-balance text-[clamp(3rem,6.5vw,6.6rem)] font-black leading-[0.9] tracking-tight text-white">
             {isEs ? (
               <>
-                El cañón esmeralda <span className="text-emerald-300">te está esperando.</span>
+                El tour de aves <span className="text-emerald-300">sale al amanecer.</span>
               </>
             ) : (
               <>
-                The emerald canyon <span className="text-emerald-300">is waiting for you.</span>
+                The birdwatching tour <span className="text-emerald-300">starts at sunrise.</span>
               </>
             )}
           </h1>
 
           <p className="mt-6 max-w-2xl text-base leading-relaxed text-white/82 md:text-xl">
             {isEs
-              ? "Canyoning, pozas cristalinas y cascadas escondidas en San Carlos. Tours de grupos pequeños, guías locales y reserva clara antes de bajar al río."
-              : "Canyoning, crystal pools, and hidden waterfalls in San Carlos. Small-group tours, local guides, and clear booking before entering the river."}
+              ? "Avistamiento de aves en el corredor biologico Juan Castro Blanco, con guias locales, ritmo tranquilo y puntos escogidos para escuchar, observar y aprender sin carreras."
+              : "Birdwatching in the Juan Castro Blanco biological corridor, with local guides, an easy pace, and carefully chosen spots to listen, observe, and learn."}
           </p>
 
           <div className="mt-7 flex flex-wrap items-center gap-3">
             <Link
-              href="/reservar"
+              href="/reservar?tour=avistamiento-aves-norteno"
               className="group inline-flex min-h-14 items-center gap-2 rounded-full bg-emerald-400 px-7 py-4 text-sm font-black uppercase tracking-wide text-emerald-950 shadow-[0_20px_55px_rgba(52,211,153,0.28)] transition-all hover:-translate-y-0.5 hover:bg-white"
             >
-              {isEs ? "Reservar aventura" : "Book adventure"}
+              {isEs ? "Reservar aves" : "Book birdwatching"}
               <ArrowRight size={17} className="transition-transform group-hover:translate-x-1" />
             </Link>
             <a
@@ -306,10 +313,10 @@ export default function HomeHero({ tours }: { tours: TourSummary[] }) {
       <div className="absolute bottom-7 right-4 z-10 hidden flex-col items-end gap-3 sm:right-8 md:flex">
         <span className="flex items-center gap-1.5 rounded-full bg-black/35 px-3.5 py-1.5 text-[11px] font-semibold text-white/85 backdrop-blur-md">
           <MapPin size={11} className="text-emerald-300" />
-          {isEs ? HERO_SLIDES[current].es : HERO_SLIDES[current].en}
+          {isEs ? FEATURED_HERO_SLIDES[current].es : FEATURED_HERO_SLIDES[current].en}
         </span>
         <div className="flex items-center gap-2">
-          {HERO_SLIDES.map((slide, index) => (
+          {FEATURED_HERO_SLIDES.map((slide, index) => (
             <button
               key={slide.src}
               type="button"

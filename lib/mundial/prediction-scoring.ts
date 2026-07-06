@@ -29,6 +29,23 @@ export type PredictionScoreResult = {
   kind: PredictionScoreKind;
 };
 
+export type MatchWinnerSource = {
+  homeFinalScore?: number | null;
+  awayFinalScore?: number | null;
+  actualWinner?: PredictionWinnerPick;
+};
+
+// Single source of truth for "who won this match": the admin's explicit pick
+// wins (covers extra time / penalties), otherwise the final score decides.
+// A tied knockout with no explicit winner is undecided (null).
+export function matchWinnerSide(match: MatchWinnerSource): PredictionSide | null {
+  if (typeof match.homeFinalScore !== "number" || typeof match.awayFinalScore !== "number") return null;
+  if (match.actualWinner === "home" || match.actualWinner === "away") return match.actualWinner;
+  if (match.homeFinalScore > match.awayFinalScore) return "home";
+  if (match.awayFinalScore > match.homeFinalScore) return "away";
+  return null;
+}
+
 export function predictionOutcome(homeScore: number, awayScore: number) {
   if (homeScore > awayScore) return "home";
   if (awayScore > homeScore) return "away";

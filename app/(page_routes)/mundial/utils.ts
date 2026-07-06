@@ -1,4 +1,5 @@
 import { REQUEST_TIMEOUT_MS } from "./constants";
+import { matchWinnerSide } from "@/lib/mundial/prediction-scoring";
 import type { Draft, LiveMatchStatus, MundialMatch } from "./types";
 
 const HALF_MINUTES = 45;
@@ -311,7 +312,9 @@ export function cn(...classes: Array<string | false | null | undefined>) {
 /**
  * Builds a function that resolves knockout-stage placeholder team names like
  * "1ro Grupo C" or "2do Grupo A" into actual team names derived from
- * completed group-stage standings.
+ * completed group-stage standings, and "Ganador 89" / "Perdedor 101"
+ * placeholders into the decided winner/loser of that match (admin's
+ * actualWinner pick first, then final score — all from Mongo match data).
  *
  * For multi-group 3rd-place slots like "3ro Grupo A/B/C/D/F" it picks the
  * best-ranked qualifying 3rd-place team from those groups (top-8 thirds).
@@ -319,6 +322,28 @@ export function cn(...classes: Array<string | false | null | undefined>) {
  * Returns the original string unchanged when it can't be resolved yet.
  */
 export function buildTeamResolver(allMatches: MundialMatch[]): (teamName: string) => string {
+  const byNumber = new Map(allMatches.map((m) => [m.number, m]));
+
+  function resolveAdvance(teamName: string, depth = 0): string {
+    const m = teamName.trim().match(/^(Ganador|Perdedor)\s+(?:Partido\s+)?(\d+)$/i);
+    if (!m || depth > 4) return teamName;
+
+    const source = byNumber.get(Number(m[2]));
+    if (!source) return teamName;
+
+    const winnerSide = matchWinnerSide(source);
+    if (!winnerSide) return teamName;
+
+    const wantsLoser = m[1].toLowerCase() === "perdedor";
+    const side = wantsLoser ? (winnerSide === "home" ? "away" : "home") : winnerSide;
+    const team = side === "home" ? source.homeTeam : source.awayTeam;
+    if (!team) return teamName;
+
+    // The source slot may itself still hold a placeholder — resolve it too.
+    const resolved = resolveAdvance(team, depth + 1);
+    return /^(Ganador|Perdedor)\s/i.test(resolved) ? teamName : resolved;
+  }
+
   type Entry = { team: string; points: number; goalDiff: number; goalsFor: number; played: number };
   const groupMap = new Map<string, Map<string, Entry>>();
 
@@ -399,21 +424,23 @@ export function buildTeamResolver(allMatches: MundialMatch[]): (teamName: string
   }
 
   return function resolve(teamName: string): string {
-    const m = teamName.trim().match(/^(\d+)(?:ro|do|to|er|°)?\s+[Gg]rupo\s+([A-Za-z](?:\/[A-Za-z])*)/i);
-    if (!m) return teamName;
+    const advanced = resolveAdvance(teamName);
+
+    const m = advanced.trim().match(/^(\d+)(?:ro|do|to|er|°)?\s+[Gg]rupo\s+([A-Za-z](?:\/[A-Za-z])*)/i);
+    if (!m) return advanced;
 
     const pos = Number(m[1]);
     const groups = m[2].toUpperCase().split("/");
 
     // Single-group seed: "1ro Grupo C" → 1st place of Group C
-    if (groups.length === 1) return posLookup.get(`${pos}:${groups[0]}`) ?? teamName;
+    if (groups.length === 1) return posLookup.get(`${pos}:${groups[0]}`) ?? advanced;
 
     // Multi-group 3rd-place slot: use pre-computed unique assignment
     if (pos === 3) {
       const seedKey = groups.join("/");
-      return seedToTeam.get(seedKey) ?? teamName;
+      return seedToTeam.get(seedKey) ?? advanced;
     }
 
-    return teamName;
+    return advanced;
   };
 }

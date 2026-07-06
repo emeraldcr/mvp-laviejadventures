@@ -89,7 +89,7 @@ function FinalCta() {
     <section className="bg-white px-4 pb-20 dark:bg-[#0b0a09] sm:px-6 md:pb-28 lg:px-8">
       <div className="relative mx-auto max-w-7xl overflow-hidden rounded-[2.5rem]">
         <Image
-          src="/image/IMG_6810.jpg"
+          src="/ads/IMG_5668.jpg"
           alt=""
           fill
           sizes="100vw"
@@ -99,19 +99,19 @@ function FinalCta() {
 
         <div className="relative px-8 py-16 md:px-16 md:py-24">
           <h2 className="font-display max-w-2xl text-balance text-4xl font-bold leading-[1.0] tracking-tight text-white md:text-6xl">
-            {isEs ? "El río está esperando. ¿Y vos?" : "The river is waiting. Are you?"}
+            {isEs ? "El bosque esta cantando. ¿Usted viene?" : "The forest is singing. Are you coming?"}
           </h2>
           <p className="mt-4 max-w-xl text-base leading-relaxed text-white/75 md:text-lg">
             {isEs
-              ? "Cupos limitados por día para cuidar el cañón y darte una experiencia sin multitudes."
-              : "Limited spots per day to protect the canyon and give you a crowd-free experience."}
+              ? "Cupos limitados por dia para observar aves con calma, cuidar el bosque y darte una experiencia sin multitudes."
+              : "Limited daily spots to birdwatch calmly, protect the forest, and keep the experience crowd-free."}
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
-              href="/reservar"
+              href="/reservar?tour=avistamiento-aves-norteno"
               className="group inline-flex items-center gap-2 rounded-full bg-white px-8 py-4 text-sm font-bold text-emerald-900 shadow-xl transition-all hover:-translate-y-0.5"
             >
-              {isEs ? "Reservar mi aventura" : "Book my adventure"}
+              {isEs ? "Reservar aves" : "Book birdwatching"}
               <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
             </Link>
             <a
@@ -162,8 +162,8 @@ function HomeFooter() {
             </div>
             <p className="mt-4 max-w-sm text-sm leading-relaxed">
               {isEs
-                ? "Turismo de aventura local en el Río La Vieja y Ciudad Esmeralda, San Carlos. Operado por gente de la zona que conoce y cuida el cañón."
-                : "Local adventure tourism on the La Vieja River and Ciudad Esmeralda, San Carlos. Run by locals who know and protect the canyon."}
+                ? "Turismo de naturaleza local en San Carlos y Juan Castro Blanco: aves, volcanes dormidos, Ciudad Esmeralda y bosque vivo, operado por gente de la zona."
+                : "Local nature tourism in San Carlos and Juan Castro Blanco: birds, dormant volcanoes, Ciudad Esmeralda, and living forest, run by locals."}
             </p>
           </div>
 
