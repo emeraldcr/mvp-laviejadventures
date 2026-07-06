@@ -7,7 +7,7 @@ import { useLanguage } from "@/lib/LanguageContext";
 import { translations } from "@/lib/translations";
 import HomeNav from "@/app/components/home/HomeNav";
 import SiteFooter from "@/app/components/sections/SiteFooter";
-import { formatTourPrice, tourTitle } from "@/app/components/home/home-utils";
+import { getTourPriceDisplay, tourTitle } from "@/app/components/home/home-utils";
 import { getTourImage } from "@/lib/tour-display";
 import type { PublicTour } from "@/lib/tours/public-catalog";
 
@@ -54,6 +54,7 @@ export function ToursClient({ tours }: { tours: PublicTour[] }) {
               const title = tourTitle(tour, isEs);
               const location = tour.location?.split("-")[0]?.trim() || "San Carlos";
               const isFeatured = tour.isFeatured || tour.isMain;
+              const price = getTourPriceDisplay(tour, isEs);
 
               return (
                 <article key={tour.slug} className="group">
@@ -81,11 +82,21 @@ export function ToursClient({ tours }: { tours: PublicTour[] }) {
                       )}
                     </div>
 
-                    <span className="absolute bottom-4 left-4 rounded-full bg-white px-4 py-2 text-sm font-black text-stone-900 shadow-lg">
-                      {tr.from} {formatTourPrice(tour, isEs)}
-                      <span className="ml-1 text-xs font-medium text-stone-500">
-                        / {tr.perPerson}
+                    <span className="absolute bottom-4 left-4 max-w-[calc(100%-5.5rem)] rounded-2xl bg-white px-4 py-2.5 text-stone-900 shadow-lg">
+                      <span className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+                        <span className="text-[11px] font-black uppercase tracking-wide text-stone-500">
+                          {tr.from}
+                        </span>
+                        <span className="text-sm font-black">{price.primary}</span>
+                        <span className="text-xs font-medium text-stone-500">
+                          / {tr.perPerson}
+                        </span>
                       </span>
+                      {price.secondary && (
+                        <span className="mt-0.5 block text-[11px] font-bold leading-none text-emerald-700">
+                          {price.secondary}
+                        </span>
+                      )}
                     </span>
                   </div>
 

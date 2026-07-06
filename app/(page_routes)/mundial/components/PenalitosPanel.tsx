@@ -3,7 +3,7 @@
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import { Eye, Trophy, Users, Wifi, WifiOff } from "lucide-react";
+import { Bell, Eye, Trophy, Users, Volume2, Wifi, WifiOff } from "lucide-react";
 import confetti from "canvas-confetti";
 import { cn } from "../utils";
 import { PENALITOS_ANIM_MS } from "./penalitos/constants";
@@ -50,9 +50,18 @@ type SSEPayload = {
   history?: PenalitosRoundHistory[];
   liveMatch: LiveMatchSnapshot | null;
   viewerCount: number;
+  viewers?: PenalitosViewer[];
+  recentViewers?: PenalitosViewer[];
   version?: number;
   serverTime?: string;
   updatedAt?: string | null;
+};
+
+type PenalitosViewer = {
+  visitorId: string;
+  name: string;
+  connectedAt: string;
+  lastSeenAt: string;
 };
 
 // -------------------------------------------------------------------
@@ -77,6 +86,29 @@ function getDisplayName(playerName: string): string {
     if (stored?.trim()) return stored.trim().slice(0, 20);
   } catch {}
   return `Jugador-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+}
+
+function playTone(sequence: Array<[number, number, number]>) {
+  if (typeof window === "undefined") return;
+  const AudioContextCtor = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+  if (!AudioContextCtor) return;
+
+  const ctx = new AudioContextCtor();
+  const start = ctx.currentTime;
+  sequence.forEach(([frequency, offsetMs, durationMs]) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = frequency;
+    gain.gain.setValueAtTime(0.0001, start + offsetMs / 1000);
+    gain.gain.exponentialRampToValueAtTime(0.12, start + offsetMs / 1000 + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + (offsetMs + durationMs) / 1000);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(start + offsetMs / 1000);
+    osc.stop(start + (offsetMs + durationMs + 40) / 1000);
+  });
+  window.setTimeout(() => void ctx.close().catch(() => {}), 1200);
 }
 
 // -------------------------------------------------------------------
@@ -195,18 +227,24 @@ export function PenalitosPanel({ liveMatch, playerName, compact = false }: Props
   const [scores, setScores] = useState<Record<string, number>>({});
   const [sseLiveMatch, setSseLiveMatch] = useState<LiveMatchSnapshot | null>(null);
   const [viewerCount, setViewerCount] = useState(0);
+  const [viewers, setViewers] = useState<PenalitosViewer[]>([]);
+  const [recentViewers, setRecentViewers] = useState<PenalitosViewer[]>([]);
   const [connected, setConnected] = useState(true);
   const [reconnecting, setReconnecting] = useState(false);
 
   const [visitorId, setVisitorId] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [myChoice, setMyChoice] = useState<PenalitosDirection | null>(null);
+  const [soundEnabled, setSoundEnabled] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
   // Local clock for timer countdown
   const [nowMs, setNowMs] = useState(() => Date.now());
 
   const confettiFiredRef = useRef<string | null>(null);
   const lastPayloadRef = useRef<string>("");
+  const lastSoundEventRef = useRef<string | null>(null);
+  const lastTimerSoundRef = useRef<number | null>(null);
   const serverClockOffsetRef = useRef(0);
 
   const applyPayload = useCallback((data: SSEPayload) => {
@@ -225,6 +263,8 @@ export function PenalitosPanel({ liveMatch, playerName, compact = false }: Props
     setScores(data.scores ?? {});
     setSseLiveMatch(data.liveMatch ?? null);
     setViewerCount(data.viewerCount ?? 0);
+    setViewers(data.viewers ?? []);
+    setRecentViewers(data.recentViewers ?? []);
   }, []);
 
   // Init visitor identity once
@@ -245,13 +285,15 @@ export function PenalitosPanel({ liveMatch, playerName, compact = false }: Props
 
   // SSE connection with auto-reconnect
   useEffect(() => {
+    if (!visitorId || !displayName) return;
     let es: EventSource | null = null;
     let reconnectTimer: ReturnType<typeof setTimeout>;
     let reconnectDelay = 800;
 
     const connect = () => {
       setReconnecting(false);
-      es = new EventSource("/api/mundial/penalitos/live");
+      const params = new URLSearchParams({ visitorId, name: displayName });
+      es = new EventSource(`/api/mundial/penalitos/live?${params.toString()}`);
       es.onopen = () => {
         setConnected(true);
         setReconnecting(false);
@@ -280,7 +322,7 @@ export function PenalitosPanel({ liveMatch, playerName, compact = false }: Props
       es?.close();
       clearTimeout(reconnectTimer);
     };
-  }, [applyPayload]);
+  }, [applyPayload, displayName, visitorId]);
 
   // Reset myChoice when a new round starts
   const prevGameIdRef = useRef<string | null>(null);
@@ -303,6 +345,44 @@ export function PenalitosPanel({ liveMatch, playerName, compact = false }: Props
       confetti({ particleCount: 200, spread: 90, origin: { y: 0.6 } });
     }
   }, [game?.status, game?.outcome, game?.resolvedAt, game?.id]);
+
+  useEffect(() => {
+    if (!soundEnabled || game?.status !== "choosing") return;
+    if (timerSec > 3 || timerSec < 1) return;
+    if (lastTimerSoundRef.current === timerSec) return;
+    lastTimerSoundRef.current = timerSec;
+    playTone([[timerSec === 1 ? 880 : 620, 0, 110]]);
+  }, [game?.status, soundEnabled, timerSec]);
+
+  useEffect(() => {
+    if (!soundEnabled || !game) return;
+    const eventKey = `${game.id}-${game.status}-${game.goalkeeperChoice ?? "x"}-${game.shooterChoice ?? "x"}-${game.outcome ?? "x"}`;
+    if (lastSoundEventRef.current === eventKey) return;
+    lastSoundEventRef.current = eventKey;
+
+    if (game.status === "choosing") playTone([[440, 0, 90], [660, 110, 120]]);
+    if (game.status === "finished" && game.outcome === "goal") playTone([[660, 0, 120], [880, 130, 160], [1040, 310, 220]]);
+    if (game.status === "finished" && game.outcome === "save") playTone([[260, 0, 160], [180, 180, 220]]);
+  }, [game, soundEnabled]);
+
+  useEffect(() => {
+    if (!notificationsEnabled || typeof Notification === "undefined" || Notification.permission !== "granted") return;
+    if (!game || !visitorId) return;
+    const isMyTurn =
+      game.status === "choosing" &&
+      (game.goalkeeper?.visitorId === visitorId || game.shooter?.visitorId === visitorId) &&
+      !game.goalkeeperChoice &&
+      !game.shooterChoice;
+    if (!isMyTurn) return;
+    const key = `penalitos-notified-${game.id}`;
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, "1");
+    new Notification("Penalitos: es su turno", {
+      body: "Tiene 10 segundos para elegir dirección.",
+      tag: game.id,
+      silent: false,
+    });
+  }, [game, notificationsEnabled, visitorId]);
 
   // ------- Derived state -------
   const isGoalkeeper = !!visitorId && game?.goalkeeper?.visitorId === visitorId;
@@ -355,12 +435,39 @@ export function PenalitosPanel({ liveMatch, playerName, compact = false }: Props
     [scores]
   );
 
+  const visibleViewers = useMemo(
+    () => viewers.filter((viewer) => viewer.visitorId !== visitorId).slice(0, compact ? 5 : 12),
+    [compact, viewers, visitorId]
+  );
+
+  const visibleRecentViewers = useMemo(
+    () =>
+      recentViewers
+        .filter((viewer) => viewer.visitorId !== visitorId && !viewers.some((active) => active.visitorId === viewer.visitorId))
+        .slice(0, compact ? 4 : 10),
+    [compact, recentViewers, viewers, visitorId]
+  );
+
   // Use SSE liveMatch for real-time score; fall back to prop
   const displayMatch: LiveMatchSnapshot | MundialMatch | null = sseLiveMatch ?? liveMatch;
 
   // ------- Handlers -------
+  const enableGameFeedback = useCallback(async () => {
+    setSoundEnabled(true);
+    playTone([[520, 0, 90], [760, 120, 120]]);
+    if (typeof Notification !== "undefined") {
+      if (Notification.permission === "granted") {
+        setNotificationsEnabled(true);
+      } else if (Notification.permission !== "denied") {
+        const permission = await Notification.requestPermission();
+        setNotificationsEnabled(permission === "granted");
+      }
+    }
+  }, []);
+
   const joinAs = useCallback(async (role: PenalitosRole) => {
     if (!visitorId || isPlaying || isInQueue) return;
+    if (!soundEnabled) void enableGameFeedback();
     try {
       await fetch("/api/mundial/penalitos/join", {
         method: "POST",
@@ -370,10 +477,11 @@ export function PenalitosPanel({ liveMatch, playerName, compact = false }: Props
     } catch (err) {
       console.error("[penalitos] join error", err);
     }
-  }, [displayName, isInQueue, isPlaying, visitorId]);
+  }, [displayName, enableGameFeedback, isInQueue, isPlaying, soundEnabled, visitorId]);
 
   const joinQueue = useCallback(async (role: PenalitosRole) => {
     if (!visitorId || isPlaying || isInQueue) return;
+    if (!soundEnabled) void enableGameFeedback();
     try {
       await fetch("/api/mundial/penalitos/join", {
         method: "POST",
@@ -383,7 +491,7 @@ export function PenalitosPanel({ liveMatch, playerName, compact = false }: Props
     } catch (err) {
       console.error("[penalitos] queue error", err);
     }
-  }, [displayName, isInQueue, isPlaying, visitorId]);
+  }, [displayName, enableGameFeedback, isInQueue, isPlaying, soundEnabled, visitorId]);
 
   const leaveQueue = useCallback(async () => {
     if (!visitorId) return;
@@ -398,6 +506,7 @@ export function PenalitosPanel({ liveMatch, playerName, compact = false }: Props
 
   const makeChoice = useCallback(async (choice: PenalitosDirection) => {
     if (!canChoose || !visitorId) return;
+    if (soundEnabled) playTone([[720, 0, 80], [360, 90, 80]]);
     setMyChoice(choice);
     try {
       const res = await fetch("/api/mundial/penalitos/choice", {
@@ -417,12 +526,14 @@ export function PenalitosPanel({ liveMatch, playerName, compact = false }: Props
           scores: data.scores ?? {},
           liveMatch: data.liveMatch ?? sseLiveMatch,
           viewerCount: data.viewerCount ?? viewerCount,
+          viewers: data.viewers ?? viewers,
+          recentViewers: data.recentViewers ?? recentViewers,
         });
       }
     } catch {
       setMyChoice(null);
     }
-  }, [applyPayload, canChoose, sseLiveMatch, viewerCount, visitorId]);
+  }, [applyPayload, canChoose, recentViewers, sseLiveMatch, viewerCount, viewers, visitorId]);
 
   // ------- Empty state -------
   if (!liveMatch && !sseLiveMatch) {
@@ -465,6 +576,20 @@ export function PenalitosPanel({ liveMatch, playerName, compact = false }: Props
                 {game && <span className="text-[10px] text-white/30 font-mono">#{game.roundNumber}</span>}
               </div>
               <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={enableGameFeedback}
+                  className={cn(
+                    "grid h-7 w-7 place-items-center rounded-full border transition",
+                    soundEnabled
+                      ? "border-[#f0b429]/70 bg-[#f0b429]/15 text-[#f0b429]"
+                      : "border-white/10 bg-white/5 text-white/45 hover:text-white"
+                  )}
+                  aria-label="Activar sonidos y notificaciones"
+                  title="Activar sonidos y notificaciones"
+                >
+                  {notificationsEnabled ? <Bell className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
+                </button>
                 <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider", statusBadge.color)}>
                   {statusBadge.text}
                 </span>
@@ -521,6 +646,19 @@ export function PenalitosPanel({ liveMatch, playerName, compact = false }: Props
                 </span>
 
                 <div className="ml-auto flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={enableGameFeedback}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-wider transition",
+                      soundEnabled
+                        ? "border-[#f0b429]/60 bg-[#f0b429]/12 text-[#f0b429]"
+                        : "border-white/10 bg-white/5 text-white/45 hover:border-white/25 hover:text-white"
+                    )}
+                  >
+                    {notificationsEnabled ? <Bell className="h-3 w-3" /> : <Volume2 className="h-3 w-3" />}
+                    {soundEnabled ? "Sonido ON" : "Activar sonido"}
+                  </button>
                   {viewerCount > 1 && (
                     <div className="flex items-center gap-1 text-white/35 text-[11px] font-bold">
                       <Eye className="h-3 w-3" />

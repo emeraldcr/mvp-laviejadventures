@@ -9,6 +9,7 @@ import {
   serializeState,
   tickState,
   type SerializedLiveMatch,
+  type SerializedPenalitosViewer,
   type SerializedPenalitosState,
 } from "@/lib/mundial/penalitos";
 import { subscribePenalitosChanges } from "@/lib/mundial/penalitos-events";
@@ -47,6 +48,25 @@ type LiveClient = {
 };
 
 const clients = new Set<LiveClient>();
+const activeViewers = new Map<string, SerializedPenalitosViewer>();
+const recentViewers = new Map<string, SerializedPenalitosViewer>();
+
+function cleanName(value: string | null): string {
+  const name = (value ?? "").trim().slice(0, 30);
+  return name || "Invitado";
+}
+
+function viewerList(map: Map<string, SerializedPenalitosViewer>) {
+  return [...map.values()].sort((a, b) => b.lastSeenAt.localeCompare(a.lastSeenAt)).slice(0, 18);
+}
+
+function presenceExtras() {
+  return {
+    viewerCount: activeConnections,
+    viewers: viewerList(activeViewers),
+    recentViewers: viewerList(recentViewers),
+  };
+}
 
 async function fetchLiveMatch(db: Db): Promise<SerializedLiveMatch | null> {
   const doc = await readLiveMundialMatch(db) as MatchDoc | null;
@@ -79,7 +99,7 @@ async function refreshSnapshot() {
     const db = await getDb();
     await tickState(db);
     const [state, liveMatch] = await Promise.all([getState(db), fetchLiveMatch(db)]);
-    broadcast(serializeState(state, { liveMatch, viewerCount: activeConnections }));
+    broadcast(serializeState(state, { liveMatch, ...presenceExtras() }));
   })().finally(() => {
     refreshPromise = null;
   });
@@ -111,12 +131,26 @@ function stopPollerIfIdle() {
 
 export async function GET(req: Request) {
   const encoder = new TextEncoder();
+  const url = new URL(req.url);
+  const visitorId = (url.searchParams.get("visitorId") ?? "").trim().slice(0, 64);
+  const viewerName = cleanName(url.searchParams.get("name"));
   let closed = false;
   let heartbeatId: ReturnType<typeof setInterval> | null = null;
   let decremented = false;
   let client: LiveClient | null = null;
 
   activeConnections++;
+  if (visitorId) {
+    const now = new Date().toISOString();
+    const viewer: SerializedPenalitosViewer = {
+      visitorId,
+      name: viewerName,
+      connectedAt: activeViewers.get(visitorId)?.connectedAt ?? now,
+      lastSeenAt: now,
+    };
+    activeViewers.set(visitorId, viewer);
+    recentViewers.set(visitorId, viewer);
+  }
 
   function decrement() {
     if (decremented) return;
@@ -130,6 +164,14 @@ export async function GET(req: Request) {
     if (client) {
       clients.delete(client);
       client = null;
+    }
+    if (visitorId) {
+      const viewer = activeViewers.get(visitorId);
+      if (viewer) {
+        const updated = { ...viewer, lastSeenAt: new Date().toISOString() };
+        recentViewers.set(visitorId, updated);
+      }
+      activeViewers.delete(visitorId);
     }
     stopPollerIfIdle();
     if (heartbeatId) clearInterval(heartbeatId);
@@ -149,6 +191,14 @@ export async function GET(req: Request) {
 
       function heartbeat() {
         if (closed) return;
+        if (visitorId) {
+          const viewer = activeViewers.get(visitorId);
+          if (viewer) {
+            const updated = { ...viewer, lastSeenAt: new Date().toISOString() };
+            activeViewers.set(visitorId, updated);
+            recentViewers.set(visitorId, updated);
+          }
+        }
         try {
           controller.enqueue(encoder.encode(": ping\n\n"));
         } catch {
@@ -171,7 +221,7 @@ export async function GET(req: Request) {
         await refreshSnapshot();
       } catch (err) {
         console.error("[penalitos/live] initial fetch error", err);
-        send(serializeState(null, { liveMatch: null, viewerCount: activeConnections }));
+        send(serializeState(null, { liveMatch: null, ...presenceExtras() }));
       }
 
       startPoller();

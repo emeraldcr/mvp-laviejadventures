@@ -83,9 +83,18 @@ export type SerializedPenalitosState = {
   history: SerializedRoundHistory[];
   liveMatch: SerializedLiveMatch | null;
   viewerCount: number;
+  viewers: SerializedPenalitosViewer[];
+  recentViewers: SerializedPenalitosViewer[];
   version: number;
   serverTime: string;
   updatedAt: string | null;
+};
+
+export type SerializedPenalitosViewer = {
+  visitorId: string;
+  name: string;
+  connectedAt: string;
+  lastSeenAt: string;
 };
 
 export type SerializedGame = {
@@ -245,7 +254,10 @@ async function advanceToNextRound(
   state: PenalitosStateDoc,
   now: Date
 ): Promise<void> {
-  const queue = [...state.queue];
+  const completedIds = new Set(
+    [state.game?.goalkeeper?.visitorId, state.game?.shooter?.visitorId].filter((id): id is string => Boolean(id))
+  );
+  const queue = state.queue.filter((entry) => !completedIds.has(entry.visitorId));
   const newRound = (state.game?.roundNumber ?? 0) + 1;
   const usedIds = new Set<string>();
 
@@ -319,12 +331,19 @@ export async function startGame(
 
 export function serializeState(
   state: PenalitosStateDoc | null,
-  extras: { liveMatch?: SerializedLiveMatch | null; viewerCount?: number } = {}
+  extras: {
+    liveMatch?: SerializedLiveMatch | null;
+    viewerCount?: number;
+    viewers?: SerializedPenalitosViewer[];
+    recentViewers?: SerializedPenalitosViewer[];
+  } = {}
 ): SerializedPenalitosState {
   const now = new Date().toISOString();
   const base = {
     liveMatch: extras.liveMatch ?? null,
     viewerCount: extras.viewerCount ?? 0,
+    viewers: extras.viewers ?? [],
+    recentViewers: extras.recentViewers ?? [],
     version: state?.version ?? 0,
     serverTime: now,
     updatedAt: state?.updatedAt?.toISOString() ?? null,
