@@ -774,7 +774,7 @@ export function PenalitosPanel({ liveMatch, playerName, compact = false }: Props
           )}
 
           {/* ═══ SOCCER FIELD (3D) ═══ */}
-          <div className="relative rounded-2xl overflow-hidden border border-white/5 shadow-inner bg-[#061a0e]">
+          <div className="relative rounded-2xl overflow-hidden border border-white/5 shadow-inner bg-[#04070f]">
             <PenalitosField3D
               phase={scenePhase}
               shooterChoice={game?.shooterChoice ?? null}

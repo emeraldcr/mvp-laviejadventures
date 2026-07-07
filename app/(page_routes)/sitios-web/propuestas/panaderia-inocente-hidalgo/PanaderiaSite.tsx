@@ -39,6 +39,7 @@ const SHOP = {
     "100 m norte de la Catedral de Ciudad Quesada, calle principal, frente al Mercado Municipal, Costa Rica",
   phone: "24601701",
   phoneDisplay: "2460-1701",
+  faxDisplay: "2461-0151",
   email: "panihsa@ice.co.cr",
   facebook: "https://www.facebook.com/inocentehidalgoquesada",
   mapsQuery: "Panadería Inocente Hidalgo, Ciudad Quesada, Costa Rica",
@@ -48,6 +49,7 @@ const NAV = [
   { href: "#inicio", label: "Inicio" },
   { href: "#favoritos", label: "Favoritos" },
   { href: "#historia", label: "Historia" },
+  { href: "#empresa", label: "Empresa" },
   { href: "#encargos", label: "Encargos" },
   { href: "#ubicacion", label: "Visítenos" },
 ];
@@ -135,10 +137,23 @@ const SCHEDULE = [
 ];
 
 const PROOF = [
-  { value: "60+", label: "años en la memoria de Quesada" },
+  { value: "1933", label: "año de fundación por Don Inocente Hidalgo Quesada" },
   { value: "5 a.m.", label: "horno encendido desde temprano" },
   { value: "100 m", label: "norte de la Catedral" },
 ];
+
+const PURPOSE = [
+  {
+    title: "Misión",
+    text: "Ofrecer productos de primera calidad y satisfacer las necesidades de todos nuestros clientes.",
+  },
+  {
+    title: "Visión",
+    text: "Mantener nuestro posicionamiento en el mercado, generando satisfacción al cliente por medio de la innovación de productos.",
+  },
+];
+
+const VALUES = ["Responsabilidad", "Compromiso social", "Honestidad"];
 
 const TESTIMONIALS = [
   {
@@ -389,9 +404,9 @@ export default function PanaderiaSite() {
               transition={{ duration: 0.55 }}
               className="mt-5 max-w-2xl text-lg leading-8 text-amber-50/88 sm:text-xl"
             >
-              Pan caliente, repostería honesta y queques por encargo en el corazón
-              de Ciudad Quesada. Un negocio de los de antes, con presencia digital
-              de primera.
+              Desde 1933, pan caliente, repostería honesta y queques por encargo
+              en el corazón de Ciudad Quesada. Un negocio familiar de tercera
+              generación, con presencia digital de primera.
             </motion.p>
             <motion.div
               variants={fadeUp}
@@ -427,7 +442,7 @@ export default function PanaderiaSite() {
               <ChefHat className="h-5 w-5 text-amber-200" />
             </div>
             <div className="mt-4 space-y-4">
-              {["Pan dulce recién horneado", "Queques para celebrar", "Café para llevar"].map(
+              {["Tradición desde 1933", "Queques para celebrar", "Café para llevar"].map(
                 (item) => (
                   <div key={item} className="flex items-center gap-3">
                     <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-200" />
@@ -570,17 +585,18 @@ export default function PanaderiaSite() {
           >
             <Eyebrow>Historia con presente</Eyebrow>
             <h2 className="mt-5 text-4xl font-black leading-tight text-stone-950 sm:text-5xl">
-              Un clásico de Ciudad Quesada, presentado como merece.
+              Desde 1933, una empresa familiar que sigue creciendo.
             </h2>
             <div className="mt-6 space-y-4 text-lg leading-8 text-stone-600">
               <p>
-                Panadería Inocente Hidalgo forma parte del recorrido cotidiano de
-                San Carlos: mercado, Catedral, mandados, cafecito y pan para la casa.
+                Panadería Inocente Hidalgo fue fundada en el año 1933 por el señor
+                Inocente Hidalgo Quesada. Desde entonces ha permanecido en el
+                mercado gracias al esfuerzo familiar y al cariño de sus clientes.
               </p>
               <p>
-                La nueva página conserva esa confianza local y le suma una imagen
-                más moderna, clara y preparada para convertir visitas en llamadas,
-                encargos y clientes en tienda.
+                Actualmente está a cargo de la tercera generación de Don Inocente,
+                con la expectativa de seguir creciendo de generación en generación,
+                como esos negocios que San Carlos reconoce por nombre y por sabor.
               </p>
             </div>
             <div className="mt-8 grid gap-3 sm:grid-cols-2">
@@ -598,6 +614,53 @@ export default function PanaderiaSite() {
               ))}
             </div>
           </motion.div>
+        </div>
+      </Section>
+
+      <Section id="empresa" className="bg-[#efe7da]">
+        <div className="grid gap-8 lg:grid-cols-[0.78fr_1fr] lg:items-stretch">
+          <div className="rounded-lg bg-stone-950 p-6 text-white shadow-2xl shadow-stone-950/15 sm:p-8 lg:p-10">
+            <Eyebrow light>Nuestra empresa</Eyebrow>
+            <h2 className="mt-5 text-4xl font-black leading-tight sm:text-5xl">
+              Calidad, innovación y valores claros.
+            </h2>
+            <p className="mt-5 text-lg leading-8 text-stone-200">
+              El sitio nuevo convierte la misión, visión y valores en señales de
+              confianza visibles. Se siente institucional, pero con calidez local.
+            </p>
+            <div className="mt-8 grid gap-3">
+              {VALUES.map((value) => (
+                <div key={value} className="flex items-center gap-3 rounded-lg bg-white/8 p-4">
+                  <CheckCircle2 className="h-5 w-5 text-amber-200" />
+                  <span className="font-black">{value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            {PURPOSE.map((item) => (
+              <article
+                key={item.title}
+                className="rounded-lg border border-stone-950/10 bg-white p-6 shadow-sm sm:p-8"
+              >
+                <span className="grid h-12 w-12 place-items-center rounded-lg bg-emerald-50 text-emerald-800">
+                  <ShieldCheck className="h-6 w-6" />
+                </span>
+                <h3 className="mt-5 text-2xl font-black text-stone-950">{item.title}</h3>
+                <p className="mt-4 text-base leading-8 text-stone-600">{item.text}</p>
+              </article>
+            ))}
+            <article className="rounded-lg border border-stone-950/10 bg-white p-6 shadow-sm md:col-span-2 sm:p-8">
+              <p className="text-sm font-black uppercase tracking-[0.16em] text-emerald-800">
+                Diferencial de marca
+              </p>
+              <p className="mt-3 text-xl font-black leading-8 text-stone-950">
+                Una panadería con casi un siglo de historia necesita una web que
+                transmita trayectoria, confianza y antojo desde el primer vistazo.
+              </p>
+            </article>
+          </div>
         </div>
       </Section>
 
@@ -724,6 +787,7 @@ export default function PanaderiaSite() {
               {[
                 { icon: MapPin, label: "Dirección", value: SHOP.address, href: mapsUrl },
                 { icon: Phone, label: "Teléfono", value: SHOP.phoneDisplay, href: `tel:+506${SHOP.phone}` },
+                { icon: Phone, label: "Fax", value: SHOP.faxDisplay, href: `tel:+506${SHOP.faxDisplay.replace("-", "")}` },
                 { icon: Mail, label: "Correo", value: SHOP.email, href: `mailto:${SHOP.email}` },
               ].map((item) => (
                 <a
