@@ -1,6 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Croissant, Dumbbell, Fish } from "lucide-react";
+import {
+  ArrowRight,
+  Coffee,
+  Croissant,
+  Dumbbell,
+  Fish,
+  PawPrint,
+  Pizza,
+  Scissors,
+  Soup,
+  UtensilsCrossed,
+  Wheat,
+} from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Propuestas de sitios web",
@@ -17,6 +29,14 @@ type Proposal = {
 };
 
 const PROPOSALS: Proposal[] = [
+  {
+    slug: "latina-pizza",
+    name: "Latina Pizza",
+    category: "Pizzería",
+    location: "9 sucursales en Costa Rica",
+    accent: "from-red-600 to-orange-500",
+    icon: Pizza,
+  },
   {
     slug: "extreme-gym",
     name: "Xtreme Gym",
@@ -40,6 +60,86 @@ const PROPOSALS: Proposal[] = [
     location: "Costa Rica",
     accent: "from-cyan-500 to-blue-600",
     icon: Fish,
+  },
+  {
+    slug: "panaderias-belen",
+    name: "Panaderías Belén",
+    category: "Panadería",
+    location: "Ciudad Quesada, San Carlos",
+    accent: "from-amber-500 to-orange-600",
+    icon: Croissant,
+  },
+  {
+    slug: "el-chonete",
+    name: "El Chonete",
+    category: "Comida típica",
+    location: "Ciudad Quesada, San Carlos",
+    accent: "from-red-500 to-rose-600",
+    icon: UtensilsCrossed,
+  },
+  {
+    slug: "la-cafeteria",
+    name: "La Cafetería",
+    category: "Café & Restaurante",
+    location: "Ciudad Quesada, San Carlos",
+    accent: "from-amber-700 to-yellow-800",
+    icon: Coffee,
+  },
+  {
+    slug: "soda-lorena",
+    name: "Soda Lorena",
+    category: "Soda",
+    location: "Ciudad Quesada, San Carlos",
+    accent: "from-green-500 to-emerald-600",
+    icon: Soup,
+  },
+  {
+    slug: "soda-viquez",
+    name: "Soda Víquez",
+    category: "Soda",
+    location: "Ciudad Quesada, San Carlos",
+    accent: "from-teal-500 to-emerald-600",
+    icon: UtensilsCrossed,
+  },
+  {
+    slug: "panaderia-santa-clara",
+    name: "Panadería Santa Clara",
+    category: "Panadería",
+    location: "Ciudad Quesada, San Carlos",
+    accent: "from-rose-500 to-pink-600",
+    icon: Wheat,
+  },
+  {
+    slug: "tio-panchito",
+    name: "Tío Panchito",
+    category: "Panadería & Café",
+    location: "Ciudad Quesada, San Carlos",
+    accent: "from-orange-500 to-amber-600",
+    icon: Croissant,
+  },
+  {
+    slug: "veterinaria-mascoticas",
+    name: "Veterinaria Mascoticas",
+    category: "Veterinaria",
+    location: "Ciudad Quesada, San Carlos",
+    accent: "from-cyan-500 to-sky-600",
+    icon: PawPrint,
+  },
+  {
+    slug: "restaurante-divino",
+    name: "Restaurante Divino",
+    category: "Restaurante",
+    location: "Ciudad Quesada, San Carlos",
+    accent: "from-violet-500 to-purple-600",
+    icon: UtensilsCrossed,
+  },
+  {
+    slug: "arte-belleza-salon",
+    name: "Arte & Belleza Salón",
+    category: "Salón de belleza",
+    location: "Ciudad Quesada, San Carlos",
+    accent: "from-pink-500 to-fuchsia-600",
+    icon: Scissors,
   },
 ];
 
