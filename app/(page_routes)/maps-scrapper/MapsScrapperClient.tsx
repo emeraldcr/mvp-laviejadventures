@@ -14,6 +14,7 @@ import {
   MousePointer2,
   Phone,
   Search,
+  Send,
   Sparkles,
 } from "lucide-react";
 
@@ -77,6 +78,17 @@ type Pitch = {
 type PitchState = {
   status: "loading" | "ready" | "error";
   data?: Pitch;
+};
+
+type EmailDraft = {
+  to: string;
+  subject: string;
+  body: string;
+};
+
+type SendState = {
+  status: "idle" | "sending" | "sent" | "error";
+  message?: string;
 };
 
 type GoogleMapsWindow = Window & {
@@ -215,6 +227,8 @@ export default function MapsScrapperClient({
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState("");
   const [pitches, setPitches] = useState<Record<string, PitchState>>({});
+  const [emailDrafts, setEmailDrafts] = useState<Record<string, EmailDraft>>({});
+  const [sendStates, setSendStates] = useState<Record<string, SendState>>({});
   const [copiedKey, setCopiedKey] = useState("");
 
   const hasBrowserMapKey = mapsBrowserKey.length > 0;
@@ -436,6 +450,8 @@ export default function MapsScrapperClient({
     setSavedCount(0);
     setAlreadySavedCount(0);
     setPitches({});
+    setEmailDrafts({});
+    setSendStates({});
 
     try {
       const response = await fetch("/api/maps-scrapper/businesses", {
@@ -511,10 +527,75 @@ export default function MapsScrapperClient({
         ...prev,
         [business.id]: { status: "ready", data: payload },
       }));
+      // Seed the editable email draft: keep any address the user already typed,
+      // otherwise prefill the first public email the scraper found.
+      setEmailDrafts((prev) => ({
+        ...prev,
+        [business.id]: {
+          to: prev[business.id]?.to || business.contactIntel?.emails[0] || "",
+          subject: payload.email.subject,
+          body: payload.email.body,
+        },
+      }));
+      setSendStates((prev) => ({ ...prev, [business.id]: { status: "idle" } }));
     } catch {
       setPitches((prev) => ({ ...prev, [business.id]: { status: "error" } }));
     }
   }, []);
+
+  const updateEmailDraft = useCallback(
+    (businessId: string, patch: Partial<EmailDraft>) => {
+      setEmailDrafts((prev) => {
+        const current = prev[businessId] ?? { to: "", subject: "", body: "" };
+        return { ...prev, [businessId]: { ...current, ...patch } };
+      });
+      // Editing after a send/error returns the row to a sendable state.
+      setSendStates((prev) =>
+        prev[businessId]?.status === "sending"
+          ? prev
+          : { ...prev, [businessId]: { status: "idle" } },
+      );
+    },
+    [],
+  );
+
+  const sendPitchEmail = useCallback(
+    async (businessId: string) => {
+      const draft = emailDrafts[businessId];
+      if (!draft) return;
+
+      setSendStates((prev) => ({ ...prev, [businessId]: { status: "sending" } }));
+
+      try {
+        const response = await fetch("/api/maps-scrapper/send-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            to: draft.to,
+            subject: draft.subject,
+            body: draft.body,
+          }),
+        });
+
+        const payload = (await response.json()) as { sent?: boolean; error?: string };
+
+        if (!response.ok || !payload.sent) {
+          throw new Error(payload.error || "No se pudo enviar el correo.");
+        }
+
+        setSendStates((prev) => ({ ...prev, [businessId]: { status: "sent" } }));
+      } catch (error) {
+        setSendStates((prev) => ({
+          ...prev,
+          [businessId]: {
+            status: "error",
+            message: error instanceof Error ? error.message : "Error al enviar.",
+          },
+        }));
+      }
+    },
+    [emailDrafts],
+  );
 
   const copyText = useCallback(async (key: string, text: string) => {
     try {
@@ -1028,37 +1109,147 @@ export default function MapsScrapperClient({
                                   )}
                                 </div>
 
-                                <div className="border-t border-violet-200 pt-3">
-                                  <div className="flex items-center justify-between gap-2">
-                                    <span className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wide text-violet-800">
-                                      <Mail className="h-3.5 w-3.5" />
-                                      Email
-                                    </span>
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        copyText(
-                                          `${business.id}-mail`,
-                                          `${pitch.data!.email.subject}\n\n${pitch.data!.email.body}`,
-                                        )
-                                      }
-                                      className="inline-flex items-center gap-1 text-xs font-bold text-violet-700 hover:text-violet-900"
-                                    >
-                                      {copiedKey === `${business.id}-mail` ? (
-                                        <Check className="h-3.5 w-3.5" />
-                                      ) : (
-                                        <Copy className="h-3.5 w-3.5" />
+                                {(() => {
+                                  const draft = emailDrafts[business.id] ?? {
+                                    to: "",
+                                    subject: pitch.data!.email.subject,
+                                    body: pitch.data!.email.body,
+                                  };
+                                  const send = sendStates[business.id] ?? {
+                                    status: "idle" as const,
+                                  };
+                                  const detectedEmails = business.contactIntel?.emails ?? [];
+                                  const canSend =
+                                    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.to.trim()) &&
+                                    draft.subject.trim().length > 0 &&
+                                    draft.body.trim().length > 0 &&
+                                    send.status !== "sending";
+
+                                  return (
+                                    <div className="border-t border-violet-200 pt-3">
+                                      <div className="flex items-center justify-between gap-2">
+                                        <span className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wide text-violet-800">
+                                          <Mail className="h-3.5 w-3.5" />
+                                          Email
+                                        </span>
+                                        <button
+                                          type="button"
+                                          onClick={() =>
+                                            copyText(
+                                              `${business.id}-mail`,
+                                              `${draft.subject}\n\n${draft.body}`,
+                                            )
+                                          }
+                                          className="inline-flex items-center gap-1 text-xs font-bold text-violet-700 hover:text-violet-900"
+                                        >
+                                          {copiedKey === `${business.id}-mail` ? (
+                                            <Check className="h-3.5 w-3.5" />
+                                          ) : (
+                                            <Copy className="h-3.5 w-3.5" />
+                                          )}
+                                          {copiedKey === `${business.id}-mail`
+                                            ? "Copiado"
+                                            : "Copiar"}
+                                        </button>
+                                      </div>
+
+                                      <label className="mt-2 block text-[11px] font-black uppercase tracking-wide text-violet-700">
+                                        Para
+                                      </label>
+                                      <input
+                                        type="email"
+                                        value={draft.to}
+                                        onChange={(event) =>
+                                          updateEmailDraft(business.id, {
+                                            to: event.target.value,
+                                          })
+                                        }
+                                        placeholder="correo@negocio.com"
+                                        className="mt-1 h-9 w-full rounded-lg border border-violet-200 bg-white px-2 text-sm font-semibold text-slate-900 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100"
+                                      />
+                                      {detectedEmails.length > 0 && (
+                                        <div className="mt-1.5 flex flex-wrap gap-1.5">
+                                          {detectedEmails.map((email) => (
+                                            <button
+                                              key={email}
+                                              type="button"
+                                              onClick={() =>
+                                                updateEmailDraft(business.id, { to: email })
+                                              }
+                                              className={`rounded px-2 py-0.5 text-[11px] font-bold ring-1 transition ${
+                                                draft.to === email
+                                                  ? "bg-violet-600 text-white ring-violet-600"
+                                                  : "bg-white text-violet-700 ring-violet-200 hover:bg-violet-100"
+                                              }`}
+                                            >
+                                              {email}
+                                            </button>
+                                          ))}
+                                        </div>
                                       )}
-                                      {copiedKey === `${business.id}-mail` ? "Copiado" : "Copiar"}
-                                    </button>
-                                  </div>
-                                  <p className="mt-1.5 text-sm font-black text-slate-800">
-                                    {pitch.data.email.subject}
-                                  </p>
-                                  <p className="mt-1 whitespace-pre-line text-sm leading-6 text-slate-700">
-                                    {pitch.data.email.body}
-                                  </p>
-                                </div>
+
+                                      <label className="mt-2 block text-[11px] font-black uppercase tracking-wide text-violet-700">
+                                        Asunto
+                                      </label>
+                                      <input
+                                        type="text"
+                                        value={draft.subject}
+                                        onChange={(event) =>
+                                          updateEmailDraft(business.id, {
+                                            subject: event.target.value,
+                                          })
+                                        }
+                                        className="mt-1 h-9 w-full rounded-lg border border-violet-200 bg-white px-2 text-sm font-black text-slate-800 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100"
+                                      />
+
+                                      <label className="mt-2 block text-[11px] font-black uppercase tracking-wide text-violet-700">
+                                        Mensaje
+                                      </label>
+                                      <textarea
+                                        value={draft.body}
+                                        onChange={(event) =>
+                                          updateEmailDraft(business.id, {
+                                            body: event.target.value,
+                                          })
+                                        }
+                                        rows={5}
+                                        className="mt-1 w-full rounded-lg border border-violet-200 bg-white px-2 py-1.5 text-sm leading-6 text-slate-700 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100"
+                                      />
+
+                                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                                        <button
+                                          type="button"
+                                          onClick={() => sendPitchEmail(business.id)}
+                                          disabled={!canSend}
+                                          className="inline-flex min-h-9 items-center gap-2 rounded-lg bg-violet-700 px-3 text-sm font-black text-white shadow-sm transition hover:bg-violet-800 disabled:cursor-not-allowed disabled:opacity-55"
+                                        >
+                                          {send.status === "sending" ? (
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                          ) : send.status === "sent" ? (
+                                            <Check className="h-4 w-4" />
+                                          ) : (
+                                            <Send className="h-4 w-4" />
+                                          )}
+                                          {send.status === "sending"
+                                            ? "Enviando..."
+                                            : send.status === "sent"
+                                              ? "Enviado"
+                                              : "Enviar email"}
+                                        </button>
+                                        {send.status === "sent" && (
+                                          <span className="text-xs font-bold text-emerald-700">
+                                            Correo enviado a {draft.to}
+                                          </span>
+                                        )}
+                                      </div>
+                                      {send.status === "error" && (
+                                        <p className="mt-1.5 text-xs font-semibold text-red-600">
+                                          {send.message}
+                                        </p>
+                                      )}
+                                    </div>
+                                  );
+                                })()}
                               </div>
                             )}
                           </div>
