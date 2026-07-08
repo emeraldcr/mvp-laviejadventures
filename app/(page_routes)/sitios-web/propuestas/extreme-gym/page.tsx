@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import ExtremeGymCheckout from "./ExtremeGymCheckout";
 import {
   ArrowRight,
   CalendarCheck,
@@ -151,6 +152,37 @@ function ImageTile({ src, alt, className = "" }: { src: string; alt: string; cla
 export default function ExtremeGymLandingPage() {
   return (
     <main className="min-h-screen bg-[#070707] text-white selection:bg-[#f6c400] selection:text-black">
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-[#070707]/65 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3.5 sm:px-8">
+          <Link href="/sitios-web/propuestas/extreme-gym" className="flex min-w-0 items-center gap-3">
+            <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden bg-[#f6c400] text-black">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/xtreme/logo.jpg" alt="Xtreme Gym" className="h-full w-full object-cover" />
+            </span>
+            <span className="min-w-0 text-lg font-black uppercase tracking-tight">
+              Xtreme<span className="text-[#f6c400]">Gym</span>
+            </span>
+          </Link>
+
+          <nav className="hidden items-center gap-7 text-xs font-black uppercase tracking-[0.18em] text-white/58 lg:flex">
+            <a href="#zonas" className="transition hover:text-white">Zonas</a>
+            <a href="#planes" className="transition hover:text-white">Precios</a>
+            <a href="#inscripcion" className="transition hover:text-white">Inscripción</a>
+            <a href="#adultos" className="transition hover:text-white">Adultos</a>
+            <a href="#app" className="transition hover:text-white">App</a>
+            <a href="#contacto" className="transition hover:text-white">Contacto</a>
+          </nav>
+
+          <a
+            href={waLink("Hola Xtreme Gym, quiero empezar a entrenar y conocer las opciones disponibles.")}
+            className="hidden items-center gap-2 bg-white px-5 py-2.5 text-sm font-black uppercase text-black transition hover:bg-[#f6c400] sm:inline-flex"
+          >
+            <MessageCircle className="h-4 w-4" />
+            WhatsApp
+          </a>
+        </div>
+      </header>
+
       <section className="relative overflow-hidden">
         <div className="absolute inset-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -164,34 +196,6 @@ export default function ExtremeGymLandingPage() {
         </div>
 
         <div className="relative mx-auto flex min-h-screen max-w-7xl flex-col px-5 py-5 sm:px-8">
-          <header className="flex items-center justify-between gap-4">
-            <Link href="/sitios-web/propuestas/extreme-gym" className="flex min-w-0 items-center gap-3">
-              <span className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden bg-[#f6c400] text-black">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/xtreme/logo.jpg" alt="Xtreme Gym" className="h-full w-full object-cover" />
-              </span>
-              <span className="min-w-0 text-xl font-black uppercase tracking-tight">
-                Xtreme<span className="text-[#f6c400]">Gym</span>
-              </span>
-            </Link>
-
-            <nav className="hidden items-center gap-7 text-xs font-black uppercase tracking-[0.18em] text-white/58 lg:flex">
-              <a href="#zonas" className="transition hover:text-white">Zonas</a>
-              <a href="#planes" className="transition hover:text-white">Precios</a>
-              <a href="#adultos" className="transition hover:text-white">Adultos</a>
-              <a href="#app" className="transition hover:text-white">App</a>
-              <a href="#contacto" className="transition hover:text-white">Contacto</a>
-            </nav>
-
-            <a
-              href={waLink("Hola Xtreme Gym, quiero empezar a entrenar y conocer las opciones disponibles.")}
-              className="hidden items-center gap-2 bg-white px-5 py-3 text-sm font-black uppercase text-black transition hover:bg-[#f6c400] sm:inline-flex"
-            >
-              <MessageCircle className="h-4 w-4" />
-              WhatsApp
-            </a>
-          </header>
-
           <div className="grid flex-1 gap-10 py-10 lg:grid-cols-[.92fr_1.08fr] lg:items-center lg:py-12">
             <div className="min-w-0">
               <div className="inline-flex items-center gap-2 border border-[#f6c400]/45 bg-[#f6c400]/12 px-3 py-2 text-xs font-black uppercase tracking-[0.22em] text-[#ffe875]">
@@ -364,6 +368,8 @@ export default function ExtremeGymLandingPage() {
           </div>
         </div>
       </section>
+
+      <ExtremeGymCheckout />
 
       <section id="zonas" className="border-y border-white/10 bg-[#101010] px-5 py-20 sm:px-8">
         <div className="mx-auto max-w-7xl">
