@@ -2,12 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import {
   ArrowRight,
-  BadgeCheck,
   CalendarCheck,
   CheckCircle2,
-  ChevronRight,
   Clock,
-  CreditCard,
   Dumbbell,
   Flame,
   HeartPulse,
@@ -17,7 +14,6 @@ import {
   QrCode,
   ShieldCheck,
   Smartphone,
-  Sparkles,
   Star,
   Timer,
   Trophy,
@@ -26,276 +22,500 @@ import {
 } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Xtreme Gym | Gym premium en Ciudad Quesada",
+  title: "Xtreme Gym | Ciudad Quesada",
   description:
-    "Xtreme Gym en Ciudad Quesada, San Carlos. Fuerza, funcional, cardio, clases, reservas, rachas y app de socios con PIN.",
+    "Xtreme Gym en Ciudad Quesada, San Carlos. Gimnasio completo para construir hábitos, mejorar condición física, ganar energía y entrenar con acompañamiento.",
 };
 
 const BUSINESS = {
   whatsapp: "50688984000",
-  phone: "2461 2005",
+  phone: "8898 4000",
   email: "xtremegymadm@gmail.com",
-  location: "Barrio San Pablo, Buena Vista, Ciudad Quesada",
+  location: "Ciudad Quesada, Barrio San Pablo",
   maps: "https://maps.app.goo.gl/RxUmrxqqchH5men99",
 };
 
 const waLink = (message: string) =>
   `https://wa.me/${BUSINESS.whatsapp}?text=${encodeURIComponent(message)}`;
 
-const HERO_STATS = [
-  ["500+", "socios activos"],
-  ["4", "zonas de entreno"],
-  ["7", "dias por semana"],
-  ["PIN", "app de socios"],
+const HERO_IMAGES = [
+  {
+    src: "https://images.unsplash.com/photo-1593079831268-3381b0db4a77?auto=format&fit=crop&w=1200&q=86",
+    alt: "Zona de máquinas y pesas en gimnasio moderno",
+  },
+  {
+    src: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=900&q=86",
+    alt: "Entrenamiento de fuerza con mancuernas",
+  },
+  {
+    src: "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=900&q=86",
+    alt: "Clase grupal funcional",
+  },
 ];
 
-const TRAINING_ZONES = [
+const ZONES = [
   {
     icon: Dumbbell,
-    title: "Fuerza seria",
-    tag: "Pesas / maquinas / tecnica",
-    text: "Piso de fuerza para progresar cargas, construir musculo y entrenar con estructura.",
+    title: "Fuerza",
+    eyebrow: "Pesas / máquinas",
+    text: "Equipo completo para ganar fuerza, mejorar técnica y convertir el esfuerzo en progreso.",
+    image: "https://images.unsplash.com/photo-1534368420009-621bfab424a8?auto=format&fit=crop&w=1000&q=84",
   },
   {
     icon: Zap,
-    title: "Funcional Xtreme",
-    tag: "HIIT / circuitos / condicion",
-    text: "Clases con cupo, energia alta y bloques medibles para salir diciendo: hoy si le meti.",
+    title: "Funcional",
+    eyebrow: "HIIT / circuitos",
+    text: "Sesiones dinámicas para moverse mejor, subir energía y mantener el cuerpo activo.",
+    image: "https://images.unsplash.com/photo-1517963879433-6ad2b056d712?auto=format&fit=crop&w=1000&q=84",
   },
   {
     icon: HeartPulse,
-    title: "Cardio inteligente",
-    tag: "Resistencia / salud / quema",
-    text: "Sesiones para mejorar condicion sin perder el norte: constancia, control y ritmo.",
+    title: "Cardio",
+    eyebrow: "Condición / salud",
+    text: "Trabajo cardiovascular para respirar mejor, rendir más y cuidar su salud todos los días.",
+    image: "https://images.unsplash.com/photo-1570829460005-c840387bb1ca?auto=format&fit=crop&w=1000&q=84",
   },
   {
     icon: Flame,
     title: "Lower Lab",
-    tag: "Pierna / gluteo / estabilidad",
-    text: "Trabajo tecnico de tren inferior, progresiones y seguimiento para resultados visibles.",
+    eyebrow: "Pierna / glúteo",
+    text: "Pierna, glúteo y estabilidad con ejercicios pensados para avanzar sin perder control.",
+    image: "https://images.unsplash.com/photo-1434596922112-19c563067271?auto=format&fit=crop&w=1000&q=84",
   },
 ];
 
-const APP_STACK = [
-  [CalendarCheck, "Reservas con cupo real", "El socio aparta clase y el cupo baja en vivo."],
-  [CreditCard, "Estado de membresia", "Plan, dias restantes y aviso de vencimiento."],
-  [Users, "Ocupacion del gym", "Para saber si esta tranquilo o a full antes de llegar."],
-  [Trophy, "Rachas y ranking", "Gamificacion tica: no aflojar, mae, que la racha pesa."],
-  [Timer, "Progreso corporal", "Peso, cintura y grafica simple para seguimiento."],
-  [QrCode, "Carne digital", "Codigo de socio con acceso protegido por PIN."],
+const APP_FEATURES = [
+  [CalendarCheck, "Reservas con cupo real"],
+  [ShieldCheck, "PIN privado de socio"],
+  [Users, "Ocupación del gym"],
+  [Trophy, "Rachas y ranking"],
+  [Timer, "Progreso corporal"],
+  [QrCode, "Carné digital"],
 ];
 
-const PLANS = [
+const COSTS = [
+  { period: "Día", price: "CRC 3.000", note: "Primer paso" },
+  { period: "Semana", price: "CRC 8.000", note: "Activa el hábito" },
+  { period: "Quincena", price: "CRC 13.500", note: "Mantiene el ritmo" },
+  { period: "Mes", price: "CRC 23.000", note: "Compromiso completo" },
+];
+
+const QUICK_INFO = [
+  { label: "Mensualidad", value: "CRC 23.000", detail: "confirme vigencia" },
+  { label: "Día", value: "CRC 3.000", detail: "entrada rápida" },
+  { label: "Horario", value: "5 AM - 10 PM", detail: "lunes a viernes" },
+];
+
+const PLAN_DETAILS = [
+  "Equipo, ambiente y acompañamiento para entrenar mejor",
+  "Clases y zonas para diferentes objetivos",
+  "Reservas, rachas y progreso desde la app de socios",
+  "Información vigente directo con recepción",
+];
+
+const GALLERY = [
   {
-    name: "Dia Xtreme",
-    eyebrow: "Para probar",
-    price: "Consultar",
-    text: "Ideal para conocer el ambiente, hacer una clase o entrenar una sesion completa.",
-    features: ["Acceso por dia", "Zonas de fuerza y cardio", "Orientacion inicial"],
+    src: "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?auto=format&fit=crop&w=1200&q=84",
+    label: "Piso de fuerza",
   },
   {
-    name: "Mensual Xtreme",
-    eyebrow: "Mas elegido",
-    price: "Consultar",
-    highlighted: true,
-    text: "La base para entrenar constante, reservar clases y sostener progreso sin complicarse.",
-    features: ["Acceso recurrente", "App de reservas", "Rachas y check-in", "Seguimiento base"],
+    src: "https://images.unsplash.com/photo-1571902943202-507ec2618e8f?auto=format&fit=crop&w=1200&q=84",
+    label: "Zona funcional",
   },
   {
-    name: "Xtreme Coach",
-    eyebrow: "Mas acompanado",
-    price: "Consultar",
-    text: "Para socios que quieren estructura, medidas, rutina guiada y contacto mas cercano.",
-    features: ["Rutinas guiadas", "Medidas corporales", "Objetivos por ciclo", "Soporte de coach"],
+    src: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&w=1200&q=84",
+    label: "Entreno con coach",
   },
 ];
 
 const SCHEDULE = [
   { day: "Lunes a viernes", hours: "5:00 AM - 10:00 PM" },
-  { day: "Sabados", hours: "6:00 AM - 6:00 PM" },
+  { day: "Sábados", hours: "6:00 AM - 6:00 PM" },
   { day: "Domingos", hours: "7:00 AM - 1:00 PM" },
 ];
 
-const PROOF_POINTS = [
-  "Reservas de clases",
-  "Membresia visible",
-  "Rachas por socio",
-  "Rutinas guiadas",
-  "Progreso corporal",
-  "Pase para compas",
+const SENIOR_CLASSES = [
+  { label: "Primera clase", time: "9:00 AM - 10:00 AM" },
+  { label: "Segunda clase", time: "10:00 AM - 11:00 AM" },
 ];
+
+function ImageTile({ src, alt, className = "" }: { src: string; alt: string; className?: string }) {
+  return (
+    <div className={`overflow-hidden bg-neutral-900 ${className}`}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={src} alt={alt} className="h-full w-full object-cover transition duration-500 hover:scale-105" />
+    </div>
+  );
+}
 
 export default function ExtremeGymLandingPage() {
   return (
-    <main className="min-h-screen bg-[#070707] text-white selection:bg-[#d8ff3e] selection:text-black">
-      <section className="relative min-h-[92vh] overflow-hidden">
+    <main className="min-h-screen bg-[#070707] text-white selection:bg-[#f6c400] selection:text-black">
+      <section className="relative overflow-hidden">
         <div className="absolute inset-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="https://images.unsplash.com/photo-1571902943202-507ec2618e8f?auto=format&fit=crop&w=2400&q=88"
-            alt="Entrenamiento premium en gimnasio moderno"
-            className="h-full w-full object-cover"
+            src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=2400&q=88"
+            alt="Interior de gimnasio con máquinas"
+            className="h-full w-full object-cover opacity-38"
           />
-          <div className="absolute inset-0 bg-black/58" />
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,#070707_0%,rgba(7,7,7,.91)_42%,rgba(7,7,7,.28)_100%)]" />
-          <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#070707] to-transparent" />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,#070707_0%,rgba(7,7,7,.92)_42%,rgba(7,7,7,.58)_100%)]" />
+          <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-[#070707] to-transparent" />
         </div>
 
-        <div className="relative mx-auto flex min-h-[92vh] max-w-7xl flex-col px-5 py-5 sm:px-8">
+        <div className="relative mx-auto flex min-h-screen max-w-7xl flex-col px-5 py-5 sm:px-8">
           <header className="flex items-center justify-between gap-4">
-            <Link href="/sitios-web/propuestas/extreme-gym" className="flex items-center gap-3">
-              <span className="grid h-12 w-12 place-items-center bg-[#d8ff3e] text-black">
-                <Dumbbell className="h-7 w-7" />
+            <Link href="/sitios-web/propuestas/extreme-gym" className="flex min-w-0 items-center gap-3">
+              <span className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden bg-[#f6c400] text-black">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/xtreme/logo.jpg" alt="Xtreme Gym" className="h-full w-full object-cover" />
               </span>
-              <span className="text-xl font-black uppercase tracking-tight">
-                Xtreme<span className="text-[#d8ff3e]">Gym</span>
+              <span className="min-w-0 text-xl font-black uppercase tracking-tight">
+                Xtreme<span className="text-[#f6c400]">Gym</span>
               </span>
             </Link>
 
             <nav className="hidden items-center gap-7 text-xs font-black uppercase tracking-[0.18em] text-white/58 lg:flex">
-              <a href="#experiencia" className="transition hover:text-white">Experiencia</a>
+              <a href="#promo" className="transition hover:text-white">Promo</a>
+              <a href="#zonas" className="transition hover:text-white">Zonas</a>
+              <a href="#planes" className="transition hover:text-white">Precios</a>
+              <a href="#adultos" className="transition hover:text-white">Adultos</a>
               <a href="#app" className="transition hover:text-white">App</a>
-              <a href="#planes" className="transition hover:text-white">Planes</a>
               <a href="#contacto" className="transition hover:text-white">Contacto</a>
             </nav>
 
             <a
-              href={waLink("Hola Xtreme Gym, quiero informacion para empezar a entrenar.")}
-              className="hidden items-center gap-2 bg-white px-5 py-3 text-sm font-black uppercase text-black transition hover:bg-[#d8ff3e] sm:inline-flex"
+              href={waLink("Hola Xtreme Gym, quiero empezar a entrenar y conocer las opciones disponibles.")}
+              className="hidden items-center gap-2 bg-white px-5 py-3 text-sm font-black uppercase text-black transition hover:bg-[#f6c400] sm:inline-flex"
             >
               <MessageCircle className="h-4 w-4" />
               WhatsApp
             </a>
           </header>
 
-          <div className="grid flex-1 gap-10 py-14 lg:grid-cols-[1fr_430px] lg:items-end">
-            <div className="pb-5">
-              <div className="inline-flex items-center gap-2 border border-[#d8ff3e]/35 bg-[#d8ff3e]/10 px-3 py-2 text-xs font-black uppercase tracking-[0.22em] text-[#eaff93]">
+          <div className="grid flex-1 gap-10 py-10 lg:grid-cols-[.92fr_1.08fr] lg:items-center lg:py-12">
+            <div className="min-w-0">
+              <div className="inline-flex items-center gap-2 border border-[#f6c400]/45 bg-[#f6c400]/12 px-3 py-2 text-xs font-black uppercase tracking-[0.22em] text-[#ffe875]">
                 <MapPin className="h-4 w-4" />
-                Ciudad Quesada, San Carlos
+                {BUSINESS.location}
               </div>
-              <h1 className="mt-7 max-w-5xl text-5xl font-black uppercase leading-[0.88] tracking-tight sm:text-7xl lg:text-8xl">
-                Gym de barrio.
-                <span className="block text-[#d8ff3e]">Nivel cadena.</span>
+              <h1 className="mt-7 max-w-4xl text-[2.8rem] font-black uppercase leading-[0.88] tracking-tight min-[420px]:text-5xl sm:text-7xl lg:text-8xl">
+                Entrene fuerte.
+                <span className="block text-[#f6c400]">Viva mejor.</span>
               </h1>
               <p className="mt-6 max-w-2xl text-lg font-semibold leading-8 text-white/72">
-                Entrene fuerza, funcional y cardio en un ambiente premium, directo y sin poses.
-                Aqui la racha se respeta, el progreso se mide y el CTA es simple:
-                escribanos y arranca, pura vida.
+                Construya hábitos que lo acerquen a una mejor condición física, más energía,
+                mayor salud y a la versión de usted que quiere alcanzar. Cada objetivo es distinto,
+                pero todos comienzan con la decisión de no rendirse.
               </p>
 
               <div className="mt-9 flex flex-wrap gap-3">
                 <a
-                  href={waLink("Hola Xtreme Gym, quiero agendar una clase de prueba.")}
-                  className="inline-flex items-center gap-2 bg-[#d8ff3e] px-6 py-4 font-black uppercase text-black transition hover:bg-white"
+                  href={waLink("Hola Xtreme Gym, quiero empezar hoy. ¿Me comparte horarios, costos y opciones de entrenamiento?")}
+                  className="inline-flex items-center gap-2 bg-[#f6c400] px-6 py-4 font-black uppercase text-black transition hover:bg-white"
                 >
-                  Agendar clase
+                  Empieza hoy
                   <ArrowRight className="h-5 w-5" />
                 </a>
                 <Link
                   href="/sitios-web/propuestas/extreme-gym/app"
                   className="inline-flex items-center gap-2 border border-white/20 bg-white/[0.07] px-6 py-4 font-black uppercase text-white transition hover:border-white/45 hover:bg-white/10"
                 >
-                  Ver app de socios
+                  Ver app
                   <Smartphone className="h-5 w-5" />
                 </Link>
               </div>
-            </div>
 
-            <div className="border border-white/12 bg-black/62 p-5 shadow-2xl backdrop-blur-md">
-              <div className="flex items-start justify-between gap-4 border-b border-white/10 pb-5">
-                <div>
-                  <p className="text-xs font-black uppercase tracking-[0.2em] text-[#d8ff3e]">Hoy se entrena</p>
-                  <h2 className="mt-2 text-3xl font-black uppercase">HIIT Quemador</h2>
-                  <p className="mt-2 text-sm font-bold text-white/55">6:00 PM - 35 min - cupos limitados</p>
-                </div>
-                <Flame className="h-9 w-9 text-orange-300" />
-              </div>
-              <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-                {HERO_STATS.map(([value, label]) => (
-                  <div key={label} className="flex items-center justify-between border border-white/10 bg-white/[0.045] p-4">
-                    <span className="text-2xl font-black uppercase">{value}</span>
-                    <span className="text-right text-xs font-black uppercase tracking-[0.16em] text-white/45">{label}</span>
+              <div className="mt-10 grid max-w-xl grid-cols-3 border border-white/10 bg-black/35 backdrop-blur">
+                {[
+                  ["Salud", "meta"],
+                  ["Energía", "diaria"],
+                  ["Hábito", "real"],
+                ].map(([value, label]) => (
+                  <div key={label} className="border-r border-white/10 p-3 last:border-r-0 sm:p-4">
+                    <p className="text-xl font-black text-[#f6c400] sm:text-2xl">{value}</p>
+                    <p className="mt-1 text-xs font-black uppercase tracking-[0.16em] text-white/42">{label}</p>
                   </div>
                 ))}
               </div>
+
+              <div className="mt-5 grid max-w-2xl gap-3 sm:grid-cols-3">
+                {QUICK_INFO.map((item) => (
+                  <a
+                    key={item.label}
+                    href={item.label === "Horario" ? "#contacto" : "#planes"}
+                    className="border border-white/10 bg-white/[0.06] p-4 transition hover:border-[#f6c400]/55 hover:bg-[#f6c400]/10"
+                  >
+                    <p className="text-xs font-black uppercase tracking-[0.16em] text-white/45">{item.label}</p>
+                    <p className="mt-2 text-xl font-black uppercase text-white">{item.value}</p>
+                    <p className="mt-1 text-xs font-bold uppercase tracking-[0.12em] text-[#f6c400]">{item.detail}</p>
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            <div className="hidden gap-4 lg:grid lg:grid-cols-[1fr_250px]">
+              <div className="relative border border-white/12 bg-black/60 p-4 shadow-2xl">
+                <ImageTile src={HERO_IMAGES[0].src} alt={HERO_IMAGES[0].alt} className="aspect-[4/5]" />
+                <div className="absolute left-8 top-8 bg-[#f6c400] px-4 py-3 text-black">
+                  <p className="text-xs font-black uppercase tracking-[0.18em]">Movimiento Xtreme</p>
+                  <p className="text-2xl font-black uppercase leading-none">No se rinda</p>
+                </div>
+              </div>
+
+              <div className="grid gap-4">
+                <ImageTile src={HERO_IMAGES[1].src} alt={HERO_IMAGES[1].alt} className="aspect-square" />
+                <div className="border border-[#f6c400]/45 bg-[#f6c400] p-5 text-black">
+                  <p className="text-xs font-black uppercase tracking-[0.2em]">Empiece con decisión</p>
+                  <h2 className="mt-3 text-3xl font-black uppercase leading-none">Moverse es bienestar</h2>
+                  <p className="mt-3 text-sm font-bold leading-6">
+                    Cada entrenamiento es una decisión a favor de su salud, energía y calidad de vida.
+                  </p>
+                </div>
+                <ImageTile src={HERO_IMAGES[2].src} alt={HERO_IMAGES[2].alt} className="aspect-[4/3]" />
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="border-y border-white/10 bg-[#d8ff3e] px-5 py-4 text-black sm:px-8">
+      <section className="border-y border-white/10 bg-[#f6c400] px-5 py-4 text-black sm:px-8">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 text-xs font-black uppercase tracking-[0.16em]">
-          {PROOF_POINTS.map((point) => <span key={point}>{point}</span>)}
+          <span>Fuerza</span>
+          <span>Funcional</span>
+          <span>Cardio</span>
+          <span>Acompañamiento</span>
+          <span>Hábitos reales</span>
+          <span>Adultos mayores</span>
+          <span>San Carlos</span>
         </div>
       </section>
 
-      <section id="experiencia" className="px-5 py-20 sm:px-8">
-        <div className="mx-auto max-w-7xl">
-          <div className="grid gap-8 lg:grid-cols-[.78fr_1.22fr] lg:items-end">
-            <div>
-              <p className="text-xs font-black uppercase tracking-[0.22em] text-[#d8ff3e]">Experiencia Xtreme</p>
-              <h2 className="mt-3 text-4xl font-black uppercase leading-none sm:text-6xl">
-                Todo lo que ocupa para ponerse serio.
-              </h2>
-            </div>
-            <p className="text-base font-semibold leading-8 text-white/58">
-              La estetica es global, pero la experiencia es de aqui: saludo en recepcion,
-              clases con energia, coaches atentos y una app que convierte la constancia en algo visible.
-              Nada de prometer milagros, aqui se viene a sumar dias.
+      <section id="promo" className="px-5 py-20 sm:px-8">
+        <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[.95fr_1.05fr] lg:items-center">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-[#f6c400]">Entrenar acompañado</p>
+            <h2 className="mt-3 text-4xl font-black uppercase leading-none sm:text-6xl">
+              El esfuerzo se sostiene mejor en equipo.
+            </h2>
+            <p className="mt-5 text-base font-semibold leading-8 text-white/62">
+              Entrenar con alguien cercano ayuda a mantener la disciplina, celebrar avances
+              y no abandonar a mitad de camino. Pregunte por beneficios activos para venir
+              con un compa, familiar o esa persona que necesita el empujón.
             </p>
+            <div className="mt-7 flex flex-wrap gap-3">
+              <a
+                href={waLink("Hola Xtreme Gym, quiero saber si está activa la promo para venir con un amigo.")}
+                className="inline-flex items-center gap-2 bg-white px-5 py-3 font-black uppercase text-black transition hover:bg-[#f6c400]"
+              >
+                Consultar beneficio
+                <MessageCircle className="h-4 w-4" />
+              </a>
+                <a
+                  href={`tel:${BUSINESS.phone.replace(/\s/g, "")}`}
+                  className="inline-flex items-center gap-2 border border-white/15 px-5 py-3 font-black uppercase text-white transition hover:border-white/40"
+                >
+                Llamar {BUSINESS.phone}
+                <Phone className="h-4 w-4" />
+              </a>
+            </div>
           </div>
 
-          <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {TRAINING_ZONES.map((item) => (
-              <article key={item.title} className="group border border-white/10 bg-white/[0.04] p-6 transition hover:border-[#d8ff3e]/45 hover:bg-white/[0.07]">
-                <item.icon className="h-8 w-8 text-[#d8ff3e]" />
-                <p className="mt-6 text-xs font-black uppercase tracking-[0.16em] text-white/40">{item.tag}</p>
-                <h3 className="mt-2 text-2xl font-black uppercase">{item.title}</h3>
-                <p className="mt-4 text-sm font-semibold leading-6 text-white/58">{item.text}</p>
-                <ChevronRight className="mt-6 h-5 w-5 text-white/25 transition group-hover:translate-x-1 group-hover:text-[#d8ff3e]" />
+          <div className="grid gap-4 sm:grid-cols-2">
+            {[
+              ["Para usted", "Cliente regular", "Mantenga su proceso", "Sume constancia"],
+              ["Para su amigo", "Nuevo ingreso", "Empieza acompañado", "Primer paso"],
+            ].map(([title, subtitle, benefit, detail]) => (
+              <article key={title} className="overflow-hidden border border-white/12 bg-white text-black">
+                <div className="bg-black px-5 py-4 text-center text-white">
+                  <p className="text-3xl font-black uppercase text-[#f6c400]">{title}</p>
+                  <p className="text-xs font-black uppercase tracking-[0.16em] text-white/65">{subtitle}</p>
+                </div>
+                <div className="p-6 text-center">
+                  <p className="text-sm font-black uppercase tracking-[0.16em] text-black/50">{benefit}</p>
+                  <p className="mt-4 text-4xl font-black uppercase leading-none">Promo</p>
+                  <p className="mt-2 text-lg font-black uppercase text-[#bd9300]">{detail}</p>
+                  <div className="mx-auto mt-6 grid h-16 w-16 place-items-center border-2 border-[#f6c400]">
+                    <Users className="h-8 w-8" />
+                  </div>
+                  <p className="mt-5 text-sm font-bold text-black/60">
+                    Condiciones vigentes se confirman por WhatsApp o en recepción.
+                  </p>
+                </div>
               </article>
             ))}
           </div>
         </div>
       </section>
 
-      <section id="app" className="border-y border-white/10 bg-[#101010] px-5 py-20 sm:px-8">
-        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[.95fr_1.05fr] lg:items-center">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-orange-300">Diferenciador real</p>
-            <h2 className="mt-3 text-4xl font-black uppercase leading-none sm:text-6xl">
-              Una app para que el socio vuelva manana.
+      <section id="zonas" className="border-y border-white/10 bg-[#101010] px-5 py-20 sm:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.22em] text-[#f6c400]">Entrenamiento completo</p>
+              <h2 className="mt-3 text-4xl font-black uppercase leading-none sm:text-6xl">
+                Equipo, ambiente y objetivos claros.
+              </h2>
+            </div>
+            <p className="max-w-xl text-sm font-semibold leading-7 text-white/55">
+              En Xtreme encuentra el espacio, las herramientas y el acompañamiento para trabajar
+              fuerza, condición, salud y confianza. Lo importante es empezar y mantenerse en movimiento.
+            </p>
+          </div>
+
+          <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+            {ZONES.map((zone) => (
+              <article key={zone.title} className="group overflow-hidden border border-white/10 bg-black">
+                <div className="relative aspect-[4/5] overflow-hidden">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={zone.image} alt={zone.title} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
+                  <zone.icon className="absolute left-5 top-5 h-8 w-8 text-[#f6c400]" />
+                  <div className="absolute inset-x-0 bottom-0 p-5">
+                    <p className="text-xs font-black uppercase tracking-[0.16em] text-[#f6c400]">{zone.eyebrow}</p>
+                    <h3 className="mt-2 text-3xl font-black uppercase">{zone.title}</h3>
+                    <p className="mt-3 text-sm font-semibold leading-6 text-white/70">{zone.text}</p>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="px-5 py-20 sm:px-8">
+        <div className="mx-auto grid max-w-7xl gap-5 lg:grid-cols-[1.15fr_.85fr]">
+          <div className="grid gap-5 sm:grid-cols-2">
+            <ImageTile src={GALLERY[0].src} alt={GALLERY[0].label} className="aspect-[4/5] sm:row-span-2" />
+            <ImageTile src={GALLERY[1].src} alt={GALLERY[1].label} className="aspect-[4/3]" />
+            <ImageTile src={GALLERY[2].src} alt={GALLERY[2].label} className="aspect-[4/3]" />
+          </div>
+
+          <div className="flex flex-col justify-center border border-white/10 bg-white/[0.04] p-7">
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-[#f6c400]">Compromiso personal</p>
+            <h2 className="mt-3 text-4xl font-black uppercase leading-none sm:text-5xl">
+              Cada entreno cuenta.
             </h2>
             <p className="mt-5 text-base font-semibold leading-8 text-white/60">
-              Xtreme Gym no se queda en un landing bonito. La app separada permite reservar,
-              validar PIN, ver membresia, medir progreso, activar recordatorios y cuidar la racha.
-              Moderno, elegante y util para recepcion.
+              El entrenamiento no es solo un hábito, es un compromiso con usted mismo.
+              Cuando cuida su cuerpo, también fortalece su mente. Haga del movimiento
+              parte de su estilo de vida.
             </p>
-            <div className="mt-7 flex flex-wrap gap-3">
-              <Link
-                href="/sitios-web/propuestas/extreme-gym/app"
-                className="inline-flex items-center gap-2 bg-white px-5 py-3 font-black uppercase text-black transition hover:bg-[#d8ff3e]"
-              >
-                Abrir app
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-              <a
-                href={waLink("Hola Xtreme Gym, quiero activar la app de socios.")}
-                className="inline-flex items-center gap-2 border border-white/15 px-5 py-3 font-black uppercase text-white transition hover:border-white/35"
-              >
-                Consultar demo
-                <MessageCircle className="h-4 w-4" />
-              </a>
+            <a
+                href={waLink("Hola Xtreme Gym, quiero visitar el gym y conocer las instalaciones.")}
+              className="mt-7 inline-flex w-fit items-center gap-2 bg-[#f6c400] px-5 py-3 font-black uppercase text-black transition hover:bg-white"
+            >
+              Conocer el gym
+              <ArrowRight className="h-4 w-4" />
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section id="adultos" className="border-y border-white/10 bg-[#f6c400] px-5 py-20 text-black sm:px-8">
+        <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1.05fr_.95fr] lg:items-center">
+          <div className="overflow-hidden border border-black/10 bg-black">
+            <div className="relative min-h-[520px]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=1300&q=86"
+                alt="Adultos activos entrenando bienestar"
+                className="absolute inset-0 h-full w-full object-cover opacity-82"
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-black via-black/62 to-black/8" />
+              <div className="relative flex min-h-[520px] flex-col justify-between p-7 text-white">
+                <div>
+                  <p className="text-sm font-black uppercase tracking-[0.24em] text-[#f6c400]">Clase de</p>
+                  <h2 className="mt-3 max-w-xl text-5xl font-black uppercase leading-none sm:text-7xl">
+                    Adultos Mayores
+                  </h2>
+                </div>
+                <div className="grid max-w-xl gap-4">
+                  {SENIOR_CLASSES.map((item) => (
+                    <div key={item.label} className="grid grid-cols-[.82fr_1.18fr] overflow-hidden border border-[#f6c400] bg-black/70">
+                      <div className="grid place-items-center bg-[#f6c400] px-4 py-5 text-center text-black">
+                        <span className="text-lg font-black uppercase leading-none">{item.label}</span>
+                      </div>
+                      <div className="grid place-items-center px-4 py-5 text-center">
+                        <span className="text-lg font-black uppercase">{item.time}</span>
+                      </div>
+                    </div>
+                  ))}
+                  <p className="text-center text-sm font-black uppercase tracking-[0.22em] text-white/80">
+                    Tres clases por semana - costo: CRC 16.000
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            {APP_STACK.map(([Icon, title, text]) => (
-              <div key={title as string} className="border border-white/10 bg-black/28 p-5">
-                <Icon className="h-7 w-7 text-[#d8ff3e]" />
-                <h3 className="mt-5 font-black uppercase">{title as string}</h3>
-                <p className="mt-2 text-sm font-semibold leading-6 text-white/52">{text as string}</p>
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-black/52">Bienestar y movimiento</p>
+            <h2 className="mt-3 text-4xl font-black uppercase leading-none sm:text-6xl">
+              Nunca es tarde para sentirse mejor.
+            </h2>
+            <p className="mt-5 text-base font-bold leading-8 text-black/66">
+              Moverse es bienestar. No importa la edad ni el punto de partida:
+              cada clase es una oportunidad para cuidar su cuerpo, fortalecer su mente
+              y ganar confianza en comunidad.
+            </p>
+            <div className="mt-7 grid gap-3 sm:grid-cols-3">
+              {[
+                ["3", "clases por semana"],
+                ["CRC 16.000", "inversión"],
+                ["8898 4000", "información"],
+              ].map(([value, label]) => (
+                <div key={label} className="border border-black/15 bg-white p-4">
+                  <p className="text-2xl font-black uppercase">{value}</p>
+                  <p className="mt-1 text-xs font-black uppercase tracking-[0.16em] text-black/45">{label}</p>
+                </div>
+              ))}
+            </div>
+            <div className="mt-7 flex flex-wrap gap-3">
+              <a
+                href={waLink("Hola Xtreme Gym, quiero información de la clase de Adultos Mayores.")}
+                className="inline-flex items-center gap-2 bg-black px-5 py-3 font-black uppercase text-white transition hover:bg-white hover:text-black"
+              >
+                Consultar clase
+                <MessageCircle className="h-4 w-4" />
+              </a>
+              <a
+                href={`tel:${BUSINESS.phone.replace(/\s/g, "")}`}
+                className="inline-flex items-center gap-2 border border-black/20 px-5 py-3 font-black uppercase text-black transition hover:bg-white"
+              >
+                Llamar
+                <Phone className="h-4 w-4" />
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="app" className="border-y border-white/10 bg-white px-5 py-20 text-black sm:px-8">
+        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[.85fr_1.15fr] lg:items-center">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-black/50">App de socios</p>
+            <h2 className="mt-3 text-4xl font-black uppercase leading-none sm:text-6xl">
+              Su progreso también se organiza.
+            </h2>
+            <p className="mt-5 text-base font-semibold leading-8 text-black/62">
+              Registre entrenamientos, reserve clases, revise su membresía y cuide su racha.
+              La app ayuda a convertir el esfuerzo diario en seguimiento claro y motivación real.
+            </p>
+            <Link
+              href="/sitios-web/propuestas/extreme-gym/app"
+              className="mt-7 inline-flex items-center gap-2 bg-black px-5 py-3 font-black uppercase text-white transition hover:bg-[#f6c400] hover:text-black"
+            >
+              Abrir app de socios
+              <Smartphone className="h-4 w-4" />
+            </Link>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {APP_FEATURES.map(([Icon, label]) => (
+              <div key={label as string} className="border border-black/10 bg-[#f7f7f7] p-5">
+                <Icon className="h-7 w-7 text-black" />
+                <p className="mt-5 font-black uppercase">{label as string}</p>
               </div>
             ))}
           </div>
@@ -303,89 +523,97 @@ export default function ExtremeGymLandingPage() {
       </section>
 
       <section id="planes" className="px-5 py-20 sm:px-8">
-        <div className="mx-auto max-w-7xl">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <p className="text-xs font-black uppercase tracking-[0.22em] text-[#d8ff3e]">Membresias</p>
-              <h2 className="mt-3 text-4xl font-black uppercase leading-none sm:text-6xl">
-                Planes claros. Entreno serio.
-              </h2>
-            </div>
-            <p className="max-w-xl text-sm font-semibold leading-7 text-white/55">
-              Precios y promociones se confirman por WhatsApp para mantener la informacion correcta.
-              Nada de inventar numeros, mae.
-            </p>
-          </div>
+        <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1.05fr_.95fr] lg:items-center">
+          <div className="relative overflow-hidden border border-white/10 bg-black">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="https://images.unsplash.com/photo-1571902943202-507ec2618e8f?auto=format&fit=crop&w=1500&q=84"
+              alt="Costos Xtreme Gym"
+              className="absolute inset-0 h-full w-full object-cover opacity-34"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-black via-black/78 to-black/38" />
+            <div className="relative p-6 sm:p-9">
+              <div className="inline-flex bg-[#f6c400] px-6 py-3 text-black">
+                <span className="text-5xl font-black uppercase leading-none sm:text-7xl">Costos</span>
+              </div>
+              <p className="mt-3 text-xl font-semibold italic text-white/78">
+                El momento de comenzar es ahora.
+              </p>
 
-          <div className="mt-10 grid gap-5 lg:grid-cols-3">
-            {PLANS.map((plan) => (
-              <article
-                key={plan.name}
-                className={`border p-7 ${
-                  plan.highlighted
-                    ? "border-[#d8ff3e]/55 bg-[#d8ff3e]/10"
-                    : "border-white/10 bg-white/[0.04]"
-                }`}
-              >
-                <p className="text-xs font-black uppercase tracking-[0.18em] text-white/42">{plan.eyebrow}</p>
-                <h3 className="mt-3 text-3xl font-black uppercase">{plan.name}</h3>
-                <p className="mt-4 text-4xl font-black">{plan.price}</p>
-                <p className="mt-4 min-h-16 text-sm font-semibold leading-6 text-white/55">{plan.text}</p>
-                <ul className="mt-6 space-y-3">
-                  {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-center gap-3 text-sm font-bold text-white/70">
-                      <CheckCircle2 className="h-5 w-5 text-[#d8ff3e]" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
+              <div className="mt-9 grid gap-4">
+                {COSTS.map((item) => (
+                  <div key={item.period} className="grid gap-2 sm:grid-cols-[150px_1fr] sm:items-center">
+                    <p className="text-xl font-black uppercase italic text-white/80 sm:text-right">{item.period}</p>
+                    <div className="border-2 border-[#f6c400] bg-black/56 px-5 py-3">
+                      <p className="text-4xl font-black uppercase italic leading-none text-white sm:text-5xl">
+                        {item.price}
+                      </p>
+                      <p className="mt-1 text-xs font-black uppercase tracking-[0.18em] text-[#f6c400]">{item.note}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-5">
+                <p className="text-sm font-black uppercase tracking-[0.16em] text-white/65">
+                  Información: {BUSINESS.phone}
+                </p>
                 <a
-                  href={waLink(`Hola Xtreme Gym, quiero informacion del plan ${plan.name}.`)}
-                  className={`mt-7 inline-flex w-full items-center justify-center gap-2 px-5 py-3 font-black uppercase transition ${
-                    plan.highlighted ? "bg-[#d8ff3e] text-black hover:bg-white" : "bg-white text-black hover:bg-[#d8ff3e]"
-                  }`}
+                  href={waLink("Hola Xtreme Gym, quiero confirmar costos vigentes: día, semana, quincena o mes.")}
+                  className="inline-flex items-center gap-2 bg-[#f6c400] px-5 py-3 font-black uppercase text-black transition hover:bg-white"
                 >
-                  Consultar por WhatsApp
-                  <ArrowRight className="h-4 w-4" />
+                  Confirmar costo
+                  <MessageCircle className="h-4 w-4" />
                 </a>
-              </article>
-            ))}
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-[#f6c400]">Membresías</p>
+            <h2 className="mt-3 text-4xl font-black uppercase leading-none sm:text-6xl">
+              Elija el ritmo que puede sostener.
+            </h2>
+            <p className="mt-5 text-base font-semibold leading-8 text-white/62">
+              Día, semana, quincena o mes: lo importante es tomar la decisión y mantenerse activo.
+              Recepción confirma costos, horarios y cualquier promoción vigente antes de matricular.
+            </p>
+            <div className="mt-7 grid gap-3">
+              {PLAN_DETAILS.map((detail) => (
+                <div key={detail} className="flex items-center gap-3 border border-white/10 bg-white/[0.04] p-4">
+                  <CheckCircle2 className="h-5 w-5 text-[#f6c400]" />
+                  <span className="font-bold text-white/72">{detail}</span>
+                </div>
+              ))}
+            </div>
+            <a
+              href={waLink("Hola Xtreme Gym, quiero empezar. ¿Me confirma costos y requisitos?")}
+              className="mt-7 inline-flex items-center gap-2 bg-white px-5 py-3 font-black uppercase text-black transition hover:bg-[#f6c400]"
+            >
+              Quiero comenzar
+              <ArrowRight className="h-4 w-4" />
+            </a>
           </div>
         </div>
       </section>
 
-      <section className="border-y border-white/10 bg-white px-5 py-16 text-black sm:px-8">
-        <div className="mx-auto grid max-w-7xl gap-5 md:grid-cols-3">
-          {[
-            [BadgeCheck, "Premium sin complicarse", "Diseno moderno, experiencia directa y lenguaje cercano."],
-            [ShieldCheck, "Datos protegidos", "PIN por socio y perfil guardado en Mongo."],
-            [Sparkles, "Aterrizado a CR", "Frases ticas, CTA completo y cero promesas raras."],
-          ].map(([Icon, title, text]) => (
-            <div key={title as string} className="border border-black/10 p-6">
-              <Icon className="h-8 w-8" />
-              <h3 className="mt-5 text-2xl font-black uppercase">{title as string}</h3>
-              <p className="mt-3 text-sm font-semibold leading-6 text-black/58">{text as string}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section id="contacto" className="px-5 py-20 sm:px-8">
-        <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[.92fr_1.08fr]">
+      <section id="contacto" className="border-t border-white/10 bg-[#101010] px-5 py-20 sm:px-8">
+        <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[.9fr_1.1fr]">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-[#d8ff3e]">Contacto</p>
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-[#f6c400]">Contacto</p>
             <h2 className="mt-3 text-4xl font-black uppercase leading-none sm:text-6xl">
-              Listo para entrenar en San Carlos.
+              Su próximo entreno empieza aquí.
             </h2>
             <p className="mt-5 text-base font-semibold leading-8 text-white/60">
-              {BUSINESS.location}. Escriba por WhatsApp para confirmar membresias,
-              horarios especiales o una clase de prueba. Llegue con ganas; del resto nos encargamos.
+              {BUSINESS.location}. Escriba por WhatsApp para consultar horarios, costos,
+              clases o una visita al gimnasio. Le esperamos en Xtreme Gym, donde cada día
+              es una oportunidad para sentirse mejor.
             </p>
             <div className="mt-7 grid gap-3">
               {SCHEDULE.map((item) => (
-                <div key={item.day} className="flex flex-wrap items-center justify-between gap-3 border border-white/10 bg-white/[0.04] p-4">
+                <div key={item.day} className="flex flex-wrap items-center justify-between gap-3 border border-white/10 bg-black/25 p-4">
                   <span className="flex items-center gap-3 font-black uppercase">
-                    <Clock className="h-5 w-5 text-[#d8ff3e]" />
+                    <Clock className="h-5 w-5 text-[#f6c400]" />
                     {item.day}
                   </span>
                   <span className="text-sm font-bold text-white/58">{item.hours}</span>
@@ -394,17 +622,22 @@ export default function ExtremeGymLandingPage() {
             </div>
           </div>
 
-          <div className="border border-white/10 bg-white/[0.04] p-6">
-            <div className="grid min-h-[380px] place-items-center bg-black/32 p-6 text-center">
+          <div className="grid overflow-hidden border border-white/10 bg-black lg:grid-cols-[.9fr_1.1fr]">
+            <ImageTile
+              src="https://images.unsplash.com/photo-1546483875-ad9014c88eba?auto=format&fit=crop&w=900&q=84"
+              alt="Persona entrenando con pesas"
+              className="min-h-[360px]"
+            />
+            <div className="grid place-items-center p-6 text-center">
               <div>
-                <MapPin className="mx-auto h-12 w-12 text-[#d8ff3e]" />
+                <MapPin className="mx-auto h-12 w-12 text-[#f6c400]" />
                 <p className="mt-5 text-3xl font-black uppercase">Xtreme Gym</p>
-                <p className="mt-2 text-sm font-semibold text-white/52">{BUSINESS.location}</p>
+                <p className="mt-2 text-sm font-semibold text-white/55">{BUSINESS.location}</p>
                 <p className="mt-1 text-sm font-semibold text-white/42">{BUSINESS.phone} - {BUSINESS.email}</p>
                 <div className="mt-7 flex flex-wrap justify-center gap-3">
                   <a
-                    href={waLink("Hola Xtreme Gym, quiero informacion para entrenar.")}
-                    className="inline-flex items-center gap-2 bg-[#d8ff3e] px-5 py-3 font-black uppercase text-black transition hover:bg-white"
+                    href={waLink("Hola Xtreme Gym, quiero información para entrenar.")}
+                    className="inline-flex items-center gap-2 bg-[#f6c400] px-5 py-3 font-black uppercase text-black transition hover:bg-white"
                   >
                     <Phone className="h-4 w-4" />
                     WhatsApp
@@ -415,7 +648,7 @@ export default function ExtremeGymLandingPage() {
                     rel="noreferrer"
                     className="inline-flex items-center gap-2 border border-white/15 px-5 py-3 font-black uppercase text-white transition hover:border-white/35"
                   >
-                    Como llegar
+                    Cómo llegar
                     <MapPin className="h-4 w-4" />
                   </a>
                 </div>
@@ -427,13 +660,41 @@ export default function ExtremeGymLandingPage() {
 
       <footer className="border-t border-white/10 px-5 py-8 sm:px-8">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 text-sm font-bold text-white/45 sm:flex-row sm:items-center sm:justify-between">
-          <span>Xtreme Gym - Ciudad Quesada</span>
+          <span>Xtreme Gym - Ciudad Quesada, Barrio San Pablo</span>
           <span className="inline-flex items-center gap-2">
-            <Star className="h-4 w-4 text-[#d8ff3e]" />
-            Landing premium + app independiente de socios
+            <Star className="h-4 w-4 text-[#f6c400]" />
+            Hábitos, movimiento y progreso
           </span>
         </div>
       </footer>
+
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-black/92 px-3 py-3 backdrop-blur md:hidden">
+        <div className="mx-auto grid max-w-md grid-cols-3 gap-2">
+          <a
+            href={waLink("Hola Xtreme Gym, quiero información para empezar a entrenar.")}
+            className="inline-flex min-h-12 items-center justify-center gap-2 bg-[#f6c400] px-3 text-xs font-black uppercase text-black"
+          >
+            <MessageCircle className="h-4 w-4" />
+            WhatsApp
+          </a>
+          <a
+            href={`tel:${BUSINESS.phone.replace(/\s/g, "")}`}
+            className="inline-flex min-h-12 items-center justify-center gap-2 border border-white/15 bg-white/[0.06] px-3 text-xs font-black uppercase text-white"
+          >
+            <Phone className="h-4 w-4" />
+            Llamar
+          </a>
+          <a
+            href={BUSINESS.maps}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex min-h-12 items-center justify-center gap-2 border border-white/15 bg-white/[0.06] px-3 text-xs font-black uppercase text-white"
+          >
+            <MapPin className="h-4 w-4" />
+            Mapa
+          </a>
+        </div>
+      </div>
     </main>
   );
 }
