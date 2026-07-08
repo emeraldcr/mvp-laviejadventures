@@ -606,6 +606,41 @@ export default function ExtremeGymLandingPage() {
         </div>
       </section>
 
+      <section id="mapa" className="border-t border-white/10 bg-[#070707] px-5 py-16 sm:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.22em] text-[#f6c400]">Ubicación</p>
+              <h2 className="mt-3 text-4xl font-black uppercase leading-none sm:text-5xl">
+                Llegue directo a Xtreme Gym.
+              </h2>
+              <p className="mt-4 max-w-2xl text-base font-semibold leading-7 text-white/58">
+                Estamos en {BUSINESS.location}. Abra el mapa y venga con ganas de moverse.
+              </p>
+            </div>
+            <a
+              href={BUSINESS.maps}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 bg-[#f6c400] px-5 py-3 font-black uppercase text-black transition hover:bg-white"
+            >
+              Cómo llegar
+              <MapPin className="h-4 w-4" />
+            </a>
+          </div>
+
+          <div className="overflow-hidden border border-white/10 bg-black">
+            <iframe
+              title="Mapa de Xtreme Gym en Ciudad Quesada"
+              src="https://www.google.com/maps?q=Xtreme%20Gym%20Ciudad%20Quesada%20Barrio%20San%20Pablo&output=embed"
+              className="h-[420px] w-full border-0 grayscale invert-[.92] contrast-125 md:h-[520px]"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+          </div>
+        </div>
+      </section>
+
       <footer className="border-t border-white/10 px-5 py-8 sm:px-8">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 text-sm font-bold text-white/45 sm:flex-row sm:items-center sm:justify-between">
           <span>Xtreme Gym - Ciudad Quesada, Barrio San Pablo</span>
