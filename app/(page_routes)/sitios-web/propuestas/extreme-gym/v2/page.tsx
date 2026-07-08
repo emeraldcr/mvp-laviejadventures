@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import ExtremeGymCheckout from "../ExtremeGymCheckout";
 import {
   ArrowUpRight,
   CheckCircle2,
@@ -78,9 +79,9 @@ const SCHEDULE = [
 
 function VersionSwitcher() {
   const links = [
-    { href: "/sitios-web/propuestas/extreme-gym", label: "Original" },
-    { href: "/sitios-web/propuestas/extreme-gym/v2", label: "Studio", active: true },
-    { href: "/sitios-web/propuestas/extreme-gym/v3", label: "Neon" },
+    { href: "/sitios-web/propuestas/extreme-gym", label: "V1 Industrial" },
+    { href: "/sitios-web/propuestas/extreme-gym/v2", label: "V2 Studio", active: true },
+    { href: "/sitios-web/propuestas/extreme-gym/v3", label: "V3 Neon" },
   ];
   return (
     <div className="bg-black px-5 py-2 text-white sm:px-8">
@@ -124,6 +125,7 @@ export default function ExtremeGymStudioLanding() {
           <nav className="hidden items-center gap-8 text-sm font-bold text-black/60 md:flex">
             <a href="#zonas" className="transition hover:text-black">Zonas</a>
             <a href="#precios" className="transition hover:text-black">Precios</a>
+            <a href="#inscripcion" className="transition hover:text-black">Inscripción</a>
             <a href="#app" className="transition hover:text-black">App</a>
             <a href="#contacto" className="transition hover:text-black">Contacto</a>
           </nav>
@@ -144,24 +146,24 @@ export default function ExtremeGymStudioLanding() {
               <span className="h-2 w-2 rounded-full bg-[#f6c400]" /> Ciudad Quesada · San Carlos
             </span>
             <h1 className="mt-6 text-5xl font-black uppercase leading-[0.92] tracking-tight sm:text-7xl">
-              Entrena
-              <br />
-              sin{" "}
+              Conviértete en
+              <span className="block">la versión</span>
               <span className="relative inline-block">
-                <span className="relative z-10">límites</span>
+                <span className="relative z-10">más saludable</span>
                 <span className="absolute inset-x-0 bottom-1.5 z-0 h-4 bg-[#f6c400]" />
               </span>
+              <span className="block">de ti</span>
             </h1>
             <p className="mt-6 max-w-md text-lg font-medium leading-relaxed text-black/65">
-              El gimnasio de Ciudad Quesada donde la disciplina se convierte en resultados.
-              Equipo completo, clases y acompañamiento para cada objetivo.
+              Una propuesta clara, cálida y comercial para mostrar precios, clases, formulario,
+              pago por PayPal, app de socios y ubicación en un recorrido elegante.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <a
-                href={waLink("Hola Xtreme Gym, quiero probar una clase.")}
+                href="#inscripcion"
                 className="inline-flex items-center gap-2 rounded-full bg-black px-7 py-3.5 font-black uppercase text-white transition hover:scale-[1.03]"
               >
-                Prueba una clase <ArrowUpRight className="h-4 w-4" />
+                Inscribirme <ArrowUpRight className="h-4 w-4" />
               </a>
               <a
                 href="#precios"
@@ -172,9 +174,9 @@ export default function ExtremeGymStudioLanding() {
             </div>
             <div className="mt-10 flex gap-8">
               {[
-                ["500+", "Socios"],
-                ["10+", "Años"],
-                ["5AM", "Abrimos"],
+                ["₡23K", "Mensual"],
+                ["₡3K", "Día"],
+                ["5AM", "L-V"],
               ].map(([v, l]) => (
                 <div key={l}>
                   <div className="text-3xl font-black">{v}</div>
@@ -185,7 +187,7 @@ export default function ExtremeGymStudioLanding() {
           </div>
 
           <div className="relative">
-            <div className="absolute -right-3 -top-3 bottom-6 left-6 -z-0 rounded-[2rem] bg-[#f6c400]" />
+            <div className="absolute right-0 top-0 bottom-6 left-6 -z-0 rounded-[2rem] bg-[#f6c400]" />
             <div className="relative overflow-hidden rounded-[2rem]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -194,9 +196,9 @@ export default function ExtremeGymStudioLanding() {
                 className="aspect-[4/5] w-full object-cover"
               />
             </div>
-            <div className="absolute -bottom-5 left-1/2 flex -translate-x-1/2 items-center gap-3 rounded-2xl bg-black px-5 py-3 text-white shadow-xl">
+            <div className="absolute -bottom-5 left-1/2 flex max-w-[calc(100%-2rem)] -translate-x-1/2 items-center gap-3 rounded-2xl bg-black px-5 py-3 text-white shadow-xl">
               <Star className="h-5 w-5 fill-[#f6c400] text-[#f6c400]" />
-              <span className="text-sm font-black uppercase">#1 en San Carlos</span>
+              <span className="whitespace-nowrap text-sm font-black uppercase">Xtreme Gym</span>
             </div>
           </div>
         </div>
@@ -277,6 +279,8 @@ export default function ExtremeGymStudioLanding() {
           </div>
         </div>
       </section>
+
+      <ExtremeGymCheckout />
 
       {/* APP */}
       <section id="app" className="mx-auto max-w-6xl px-5 py-20 sm:px-8">

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import ExtremeGymCheckout from "../ExtremeGymCheckout";
 import {
   ArrowRight,
   Clock,
@@ -31,10 +32,10 @@ const waLink = (message: string) =>
   `https://wa.me/${BUSINESS.whatsapp}?text=${encodeURIComponent(message)}`;
 
 const STATS = [
-  { value: "500+", label: "Socios activos" },
-  { value: "10+", label: "Años de experiencia" },
+  { value: "₡23K", label: "Plan mensual" },
+  { value: "₡3K", label: "Pase del día" },
   { value: "4", label: "Zonas de entreno" },
-  { value: "5AM", label: "Abrimos temprano" },
+  { value: "5AM", label: "Lunes a viernes" },
 ];
 
 const ZONES = [
@@ -70,9 +71,9 @@ const GOLD = "#f6c400";
 
 function VersionSwitcher() {
   const links = [
-    { href: "/sitios-web/propuestas/extreme-gym", label: "Original" },
-    { href: "/sitios-web/propuestas/extreme-gym/v2", label: "Studio" },
-    { href: "/sitios-web/propuestas/extreme-gym/v3", label: "Neon", active: true },
+    { href: "/sitios-web/propuestas/extreme-gym", label: "V1 Industrial" },
+    { href: "/sitios-web/propuestas/extreme-gym/v2", label: "V2 Studio" },
+    { href: "/sitios-web/propuestas/extreme-gym/v3", label: "V3 Neon", active: true },
   ];
   return (
     <div className="bg-[#0c0c0c] px-5 py-2 text-white sm:px-8">
@@ -116,6 +117,7 @@ export default function ExtremeGymNeonLanding() {
           <nav className="hidden items-center gap-8 text-sm font-bold text-white/55 md:flex">
             <a href="#zonas" className="transition hover:text-[#f6c400]">Zonas</a>
             <a href="#precios" className="transition hover:text-[#f6c400]">Precios</a>
+            <a href="#inscripcion" className="transition hover:text-[#f6c400]">Inscripción</a>
             <a href="#app" className="transition hover:text-[#f6c400]">App</a>
             <a href="#contacto" className="transition hover:text-[#f6c400]">Contacto</a>
           </nav>
@@ -146,23 +148,23 @@ export default function ExtremeGymNeonLanding() {
             <Sparkles className="h-3.5 w-3.5" /> Ciudad Quesada · San Carlos
           </span>
           <h1 className="mt-6 text-6xl font-black uppercase leading-[0.85] tracking-tighter sm:text-8xl">
-            Supera
+            Versión
             <br />
-            tus{" "}
+            más{" "}
             <span className="bg-gradient-to-r from-[#f6c400] via-[#ffe37a] to-[#f6c400] bg-clip-text text-transparent">
-              límites
+              saludable
             </span>
           </h1>
           <p className="mt-7 max-w-lg text-lg font-medium text-white/65">
-            Disciplina, energía y comunidad. El gimnasio de Ciudad Quesada donde cada
-            repetición te acerca a tu mejor versión.
+            Conviértete en la versión más saludable de ti. Un diseño oscuro, energético
+            y directo para vender planes, clases, app, ubicación y pagos online.
           </p>
           <div className="mt-9 flex flex-wrap gap-3">
             <a
-              href={waLink("Hola Xtreme Gym, quiero probar una clase.")}
+              href="#inscripcion"
               className="group inline-flex items-center gap-2 rounded-sm bg-gradient-to-r from-[#f6c400] to-[#ffd84d] px-8 py-4 font-black uppercase text-black shadow-[0_0_35px_-8px_rgba(246,196,0,.7)] transition hover:brightness-110"
             >
-              Prueba una clase
+              Inscribirme
               <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
             </a>
             <a
@@ -260,6 +262,8 @@ export default function ExtremeGymNeonLanding() {
         </div>
       </section>
 
+      <ExtremeGymCheckout />
+
       {/* APP */}
       <section id="app" className="mx-auto max-w-6xl px-5 py-24 sm:px-8">
         <div className="grid items-center gap-12 lg:grid-cols-2">
@@ -344,6 +348,40 @@ export default function ExtremeGymNeonLanding() {
             >
               <MapPin className="h-4 w-4" /> Cómo llegar
             </a>
+          </div>
+        </div>
+      </section>
+
+      <section id="mapa" className="border-t border-white/10 bg-[#050505] px-5 py-20 sm:px-8">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.22em] text-[#f6c400]">Mapa</p>
+              <h2 className="mt-3 text-4xl font-black uppercase leading-none sm:text-6xl">
+                Entrena en Ciudad Quesada
+              </h2>
+              <p className="mt-4 max-w-xl text-sm font-medium leading-7 text-white/55">
+                Xtreme Gym está en {BUSINESS.location}. Abra el mapa y llegue directo al próximo entreno.
+              </p>
+            </div>
+            <a
+              href={BUSINESS.maps}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 rounded-sm bg-gradient-to-r from-[#f6c400] to-[#ffd84d] px-6 py-3 font-black uppercase text-black transition hover:brightness-110"
+            >
+              Cómo llegar
+              <MapPin className="h-4 w-4" />
+            </a>
+          </div>
+          <div className="overflow-hidden rounded-sm border border-[#f6c400]/30 bg-black shadow-[0_0_45px_-20px_rgba(246,196,0,.7)]">
+            <iframe
+              title="Mapa de Xtreme Gym en Ciudad Quesada"
+              src="https://www.google.com/maps?q=Xtreme%20Gym%20Ciudad%20Quesada%20Barrio%20San%20Pablo&output=embed"
+              className="h-[420px] w-full border-0 grayscale invert-[.92] contrast-125 md:h-[520px]"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
           </div>
         </div>
       </section>
