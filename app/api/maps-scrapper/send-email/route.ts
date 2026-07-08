@@ -1,8 +1,25 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { EMAIL_FROM_DEFAULT } from "@/lib/constants/email";
+import { getDb } from "@/lib/mongo";
 
 export const runtime = "nodejs";
+
+const LEADS_COLLECTION = "maps_scrapper_leads";
+
+// Best-effort: flag the saved lead so the scrapper UI can show an "already
+// emailed" check across sessions. Never block the send if this fails.
+async function markLeadEmailed(businessId: string, to: string) {
+  try {
+    const db = await getDb();
+    const now = new Date();
+    await db
+      .collection(LEADS_COLLECTION)
+      .updateOne({ id: businessId }, { $set: { emailedAt: now, emailedTo: to, updatedAt: now } });
+  } catch (error) {
+    console.error("[maps-scrapper/send-email] no se pudo marcar el lead", error);
+  }
+}
 
 // Cold prospecting replies should land in the sales/admin inbox, not the
 // no-reply transactional sender. Overridable via env if the inbox changes.
@@ -16,6 +33,7 @@ type SendPitchPayload = {
   subject?: string;
   body?: string;
   businessName?: string;
+  businessId?: string;
 };
 
 function escapeHtml(value: string) {
@@ -101,6 +119,11 @@ export async function POST(request: Request) {
       { error: error.message || "No se pudo enviar el correo." },
       { status: 502 },
     );
+  }
+
+  const businessId = payload.businessId?.trim();
+  if (businessId) {
+    await markLeadEmailed(businessId, to);
   }
 
   return NextResponse.json({ sent: true, id: data?.id ?? null });

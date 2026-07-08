@@ -15,7 +15,6 @@ import {
   Phone,
   Search,
   Send,
-  Sparkles,
 } from "lucide-react";
 
 type LatLng = {
@@ -51,6 +50,8 @@ type Business = {
   } | null;
   types: string[];
   location: LatLng | null;
+  emailedAt?: string | null;
+  emailedTo?: string | null;
 };
 
 type SearchResponse = {
@@ -73,11 +74,6 @@ type Pitch = {
     subject: string;
     body: string;
   };
-};
-
-type PitchState = {
-  status: "loading" | "ready" | "error";
-  data?: Pitch;
 };
 
 type EmailDraft = {
@@ -139,6 +135,62 @@ const STATUS_LABELS: Record<string, string> = {
   CLOSED_TEMPORARILY: "Cerrado temporalmente",
   CLOSED_PERMANENTLY: "Cerrado permanentemente",
 };
+
+// Base for the per-business visual proposal pages under /sitios-web/propuestas.
+const PROPOSAL_BASE_URL =
+  "https://www.laviejaadventures.com/sitios-web/propuestas";
+
+// Fixed signature that closes every pitch (matches the winning email).
+const PITCH_SIGNATURE = "--\nAllan Rojas\nSoftware\nTel + 506.6144-7156";
+
+function slugifyBusinessName(name: string) {
+  return name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function buildProposalUrl(name: string) {
+  return `${PROPOSAL_BASE_URL}/${slugifyBusinessName(name) || "negocio"}`;
+}
+
+// Deterministic pitch modeled on Allan's proven email to Xtreme Gym (got a
+// positive reply). No AI: same structure for every lead, editable before send.
+function buildPitchTemplate(business: Pick<Business, "name" | "phone">): Pitch {
+  const name = business.name?.trim() || "su negocio";
+  const proposalUrl = buildProposalUrl(business.name || "");
+
+  const subject = `Propuesta para modernizar la presencia digital de ${name}`;
+
+  const body = [
+    "Hola, espero que se encuentren muy bien.",
+    "",
+    "Mi nombre es Allan Rojas. Soy de San Carlos y trabajo en desarrollo de páginas web, presencia digital y mejora de perfiles de negocios en Google Maps y redes sociales.",
+    "",
+    `Estuve revisando la presencia digital de ${name} y considero que una página web moderna podría ayudarles a mostrar mejor sus servicios, horarios, ubicación, medios de contacto y opciones para nuevos clientes.`,
+    "",
+    `Por iniciativa propia preparé una propuesta visual de cómo podría verse una nueva página web para ${name}, pensada para verse bien en celular, cargar rápido y facilitar que las personas puedan contactarlos, llegar por Google Maps o consultar información sobre sus servicios.`,
+    "",
+    proposalUrl,
+    "",
+    "Además, también podría apoyarles con mejoras en Google Maps y redes sociales para que la información del negocio esté más clara, actualizada y fácil de encontrar.",
+    "",
+    "Me gustaría compartirles la propuesta y conversar unos minutos, sin ningún compromiso, para ver si les puede ser útil.",
+    "",
+    "Muchas gracias por su tiempo.",
+    "",
+    PITCH_SIGNATURE,
+  ].join("\n");
+
+  const whatsapp =
+    `¡Pura vida! Soy Allan Rojas, de San Carlos. Hago páginas web y mejoro perfiles en Google Maps y redes. ` +
+    `Preparé una propuesta visual de una web moderna para ${name}: ${proposalUrl} ` +
+    `¿Le comparto los detalles sin compromiso?`;
+
+  return { whatsapp, email: { subject, body } };
+}
 
 function installGoogleMapsLoader(apiKey: string) {
   const win = window as GoogleMapsWindow;
@@ -226,9 +278,17 @@ export default function MapsScrapperClient({
   const [alreadySavedCount, setAlreadySavedCount] = useState(0);
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState("");
-  const [pitches, setPitches] = useState<Record<string, PitchState>>({});
+  const [view, setView] = useState<"search" | "saved">("search");
+  const [savedBusinesses, setSavedBusinesses] = useState<Business[]>([]);
+  const [savedTotal, setSavedTotal] = useState(0);
+  const [isLoadingSaved, setIsLoadingSaved] = useState(false);
+  const [savedError, setSavedError] = useState("");
   const [emailDrafts, setEmailDrafts] = useState<Record<string, EmailDraft>>({});
   const [sendStates, setSendStates] = useState<Record<string, SendState>>({});
+  const [openEmail, setOpenEmail] = useState<Record<string, boolean>>({});
+  const [emailedOverrides, setEmailedOverrides] = useState<
+    Record<string, { emailed: boolean; to: string }>
+  >({});
   const [copiedKey, setCopiedKey] = useState("");
 
   const hasBrowserMapKey = mapsBrowserKey.length > 0;
@@ -449,9 +509,9 @@ export default function MapsScrapperClient({
     setEmailsFoundCount(0);
     setSavedCount(0);
     setAlreadySavedCount(0);
-    setPitches({});
     setEmailDrafts({});
     setSendStates({});
+    setOpenEmail({});
 
     try {
       const response = await fetch("/api/maps-scrapper/businesses", {
@@ -496,52 +556,91 @@ export default function MapsScrapperClient({
     }
   }, [category, radius, selectedPoint]);
 
-  const generatePitch = useCallback(async (business: Business) => {
-    setPitches((prev) => ({ ...prev, [business.id]: { status: "loading" } }));
+  const loadSaved = useCallback(async () => {
+    setIsLoadingSaved(true);
+    setSavedError("");
 
     try {
-      const response = await fetch("/api/maps-scrapper/pitch", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          business: {
-            name: business.name,
-            address: business.address,
-            types: business.types,
-            rating: business.rating,
-            userRatingCount: business.userRatingCount,
-            hasWebsite: business.hasWebsite,
-            websiteVerdict: business.websiteEvaluation?.verdict ?? null,
-            websiteReasons: business.websiteEvaluation?.reasons ?? [],
-          },
-        }),
-      });
+      const response = await fetch("/api/maps-scrapper/businesses");
+      const payload = (await response.json()) as {
+        businesses?: Business[];
+        savedTotal?: number;
+        error?: string;
+      };
 
-      const payload = (await response.json()) as Pitch;
-
-      if (!response.ok || !payload?.whatsapp) {
-        throw new Error("No se pudo generar el pitch.");
+      if (!response.ok) {
+        throw new Error(payload.error || "No se pudieron cargar los leads guardados.");
       }
 
-      setPitches((prev) => ({
-        ...prev,
-        [business.id]: { status: "ready", data: payload },
-      }));
-      // Seed the editable email draft: keep any address the user already typed,
-      // otherwise prefill the first public email the scraper found.
-      setEmailDrafts((prev) => ({
-        ...prev,
-        [business.id]: {
-          to: prev[business.id]?.to || business.contactIntel?.emails[0] || "",
-          subject: payload.email.subject,
-          body: payload.email.body,
-        },
-      }));
-      setSendStates((prev) => ({ ...prev, [business.id]: { status: "idle" } }));
-    } catch {
-      setPitches((prev) => ({ ...prev, [business.id]: { status: "error" } }));
+      setSavedBusinesses(payload.businesses ?? []);
+      setSavedTotal(payload.savedTotal ?? payload.businesses?.length ?? 0);
+    } catch (error) {
+      setSavedError(error instanceof Error ? error.message : "Error inesperado.");
+    } finally {
+      setIsLoadingSaved(false);
     }
   }, []);
+
+  useEffect(() => {
+    if (view === "saved") {
+      void loadSaved();
+    }
+  }, [view, loadSaved]);
+
+  const isEmailed = useCallback(
+    (business: Business) => {
+      const override = emailedOverrides[business.id];
+      return override ? override.emailed : Boolean(business.emailedAt);
+    },
+    [emailedOverrides],
+  );
+
+  // Open (or close) the editable composer for a lead, seeding it once with the
+  // proven template and the first public email the scraper found.
+  const toggleEmailComposer = useCallback((business: Business) => {
+    const template = buildPitchTemplate(business);
+
+    setEmailDrafts((prev) =>
+      prev[business.id]
+        ? prev
+        : {
+            ...prev,
+            [business.id]: {
+              to:
+                business.contactIntel?.emails[0] ||
+                business.emailedTo ||
+                "",
+              subject: template.email.subject,
+              body: template.email.body,
+            },
+          },
+    );
+    setSendStates((prev) =>
+      prev[business.id] ? prev : { ...prev, [business.id]: { status: "idle" } },
+    );
+    setOpenEmail((prev) => ({ ...prev, [business.id]: !prev[business.id] }));
+  }, []);
+
+  // Manual check: mark/unmark a lead as already emailed and persist it.
+  const setEmailedStatus = useCallback(
+    async (business: Business, emailed: boolean, to = "") => {
+      setEmailedOverrides((prev) => ({
+        ...prev,
+        [business.id]: { emailed, to },
+      }));
+
+      try {
+        await fetch("/api/maps-scrapper/businesses", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: business.id, emailed, emailedTo: to }),
+        });
+      } catch {
+        /* keep the optimistic state; a refresh will reconcile */
+      }
+    },
+    [],
+  );
 
   const updateEmailDraft = useCallback(
     (businessId: string, patch: Partial<EmailDraft>) => {
@@ -574,6 +673,7 @@ export default function MapsScrapperClient({
             to: draft.to,
             subject: draft.subject,
             body: draft.body,
+            businessId,
           }),
         });
 
@@ -584,6 +684,12 @@ export default function MapsScrapperClient({
         }
 
         setSendStates((prev) => ({ ...prev, [businessId]: { status: "sent" } }));
+        // Sending through the app auto-marks the lead as emailed (server also
+        // persists it) so the check shows immediately and across sessions.
+        setEmailedOverrides((prev) => ({
+          ...prev,
+          [businessId]: { emailed: true, to: draft.to },
+        }));
       } catch (error) {
         setSendStates((prev) => ({
           ...prev,
@@ -607,6 +713,8 @@ export default function MapsScrapperClient({
     }
   }, []);
 
+  const displayedBusinesses = view === "saved" ? savedBusinesses : businesses;
+
   useEffect(() => {
     const win = window as GoogleMapsWindow;
 
@@ -615,7 +723,7 @@ export default function MapsScrapperClient({
     });
     businessMarkersRef.current = [];
 
-    if (!mapRef.current || !win.google?.maps || businesses.length === 0) {
+    if (!mapRef.current || !win.google?.maps || displayedBusinesses.length === 0) {
       return;
     }
 
@@ -629,7 +737,7 @@ export default function MapsScrapperClient({
     const bounds = new maps.LatLngBounds();
     bounds.extend(selectedPoint);
 
-    businesses.forEach((business) => {
+    displayedBusinesses.forEach((business) => {
       if (!business.location) {
         return;
       }
@@ -652,7 +760,7 @@ export default function MapsScrapperClient({
     });
 
     mapRef.current.fitBounds(bounds);
-  }, [businesses, selectedPoint]);
+  }, [displayedBusinesses, selectedPoint]);
 
   const csvContent = useMemo(() => {
     const headers = [
@@ -673,7 +781,7 @@ export default function MapsScrapperClient({
       "Types",
     ];
 
-    const rows = businesses.map((business) => [
+    const rows = displayedBusinesses.map((business) => [
       business.name,
       business.phone,
       business.address,
@@ -700,7 +808,7 @@ export default function MapsScrapperClient({
           .join(","),
       )
       .join("\n");
-  }, [businesses]);
+  }, [displayedBusinesses]);
 
   const downloadCsv = useCallback(() => {
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" });
@@ -732,7 +840,7 @@ export default function MapsScrapperClient({
           <button
             type="button"
             onClick={downloadCsv}
-            disabled={businesses.length === 0}
+            disabled={displayedBusinesses.length === 0}
             className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 text-sm font-bold text-slate-800 shadow-sm transition hover:border-teal-500 hover:text-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Download className="h-4 w-4" />
@@ -864,58 +972,148 @@ export default function MapsScrapperClient({
 
           <aside className="flex min-h-[520px] flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
             <div className="border-b border-slate-200 p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h2 className="font-display text-2xl font-black text-slate-950">
-                    Resultados
-                  </h2>
-                  <p className="mt-1 text-sm text-slate-600">
-                    {businesses.length} lugares. {withoutWebsiteCount} sin website,
-                    {" "}
-                    {needsModernizationCount} con website para modernizar,
-                    {" "}
-                    {emailsFoundCount} emails encontrados.
-                  </p>
-                  <p className="mt-1 text-xs font-bold text-slate-500">
-                    Max 10 nuevos por búsqueda · {savedCount} guardados ·{" "}
-                    {alreadySavedCount} ya existían en MongoDB
-                  </p>
-                </div>
-                <span className="rounded-lg bg-amber-100 px-3 py-2 text-sm font-black text-amber-900">
-                  {radius / 1000} km
-                </span>
+              <div className="mb-4 inline-flex rounded-lg border border-slate-200 bg-slate-100 p-1">
+                <button
+                  type="button"
+                  onClick={() => setView("search")}
+                  className={`inline-flex min-h-9 items-center gap-2 rounded-md px-3 text-sm font-black transition ${
+                    view === "search"
+                      ? "bg-white text-teal-800 shadow-sm"
+                      : "text-slate-500 hover:text-slate-800"
+                  }`}
+                >
+                  <Search className="h-4 w-4" />
+                  Búsqueda
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setView("saved")}
+                  className={`inline-flex min-h-9 items-center gap-2 rounded-md px-3 text-sm font-black transition ${
+                    view === "saved"
+                      ? "bg-white text-teal-800 shadow-sm"
+                      : "text-slate-500 hover:text-slate-800"
+                  }`}
+                >
+                  <Building2 className="h-4 w-4" />
+                  Guardados{savedTotal > 0 ? ` (${savedTotal})` : ""}
+                </button>
               </div>
 
-              {searchedTypes.length > 0 && (
-                <p className="mt-3 text-xs font-semibold text-slate-500">
-                  Tipos consultados: {searchedTypes.join(", ")}
-                </p>
-              )}
+              {view === "search" ? (
+                <>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h2 className="font-display text-2xl font-black text-slate-950">
+                        Resultados
+                      </h2>
+                      <p className="mt-1 text-sm text-slate-600">
+                        {businesses.length} lugares. {withoutWebsiteCount} sin website,
+                        {" "}
+                        {needsModernizationCount} con website para modernizar,
+                        {" "}
+                        {emailsFoundCount} emails encontrados.
+                      </p>
+                      <p className="mt-1 text-xs font-bold text-slate-500">
+                        Max 10 nuevos por búsqueda · {savedCount} guardados ·{" "}
+                        {alreadySavedCount} ya existían en MongoDB
+                      </p>
+                    </div>
+                    <span className="rounded-lg bg-amber-100 px-3 py-2 text-sm font-black text-amber-900">
+                      {radius / 1000} km
+                    </span>
+                  </div>
 
-              {searchError && (
-                <p className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-700">
-                  {searchError}
-                </p>
+                  {searchedTypes.length > 0 && (
+                    <p className="mt-3 text-xs font-semibold text-slate-500">
+                      Tipos consultados: {searchedTypes.join(", ")}
+                    </p>
+                  )}
+
+                  {searchError && (
+                    <p className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-700">
+                      {searchError}
+                    </p>
+                  )}
+                </>
+              ) : (
+                <>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h2 className="font-display text-2xl font-black text-slate-950">
+                        Guardados
+                      </h2>
+                      <p className="mt-1 text-sm text-slate-600">
+                        {savedBusinesses.length} leads guardados en MongoDB
+                        {savedTotal > savedBusinesses.length
+                          ? ` (mostrando los ${savedBusinesses.length} más recientes de ${savedTotal})`
+                          : ""}
+                        .
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => void loadSaved()}
+                      disabled={isLoadingSaved}
+                      className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-sm font-bold text-slate-800 shadow-sm transition hover:border-teal-500 hover:text-teal-700 disabled:cursor-not-allowed disabled:opacity-55"
+                    >
+                      {isLoadingSaved ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : null}
+                      Refrescar
+                    </button>
+                  </div>
+
+                  {savedError && (
+                    <p className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-700">
+                      {savedError}
+                    </p>
+                  )}
+                </>
               )}
             </div>
 
             <div className="flex-1 overflow-auto">
-              {businesses.length === 0 ? (
+              {displayedBusinesses.length === 0 ? (
                 <div className="grid h-full min-h-[360px] place-items-center p-8 text-center">
-                  <div>
-                    <MapPin className="mx-auto h-10 w-10 text-teal-700" />
-                    <h3 className="mt-4 text-lg font-black text-slate-950">
-                      Escoja un punto y busque
-                    </h3>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">
-                      Tip local: empiece con 1.5 km en Ciudad Quesada centro y
-                      luego abra el radio. Así no se le baja el río de resultados.
-                    </p>
-                  </div>
+                  {view === "saved" ? (
+                    <div>
+                      {isLoadingSaved ? (
+                        <>
+                          <Loader2 className="mx-auto h-10 w-10 animate-spin text-teal-700" />
+                          <h3 className="mt-4 text-lg font-black text-slate-950">
+                            Cargando guardados...
+                          </h3>
+                        </>
+                      ) : (
+                        <>
+                          <Building2 className="mx-auto h-10 w-10 text-teal-700" />
+                          <h3 className="mt-4 text-lg font-black text-slate-950">
+                            Aún no hay leads guardados
+                          </h3>
+                          <p className="mt-2 text-sm leading-6 text-slate-600">
+                            Cada búsqueda guarda hasta 10 negocios nuevos en
+                            MongoDB. Corra una búsqueda para empezar a llenar
+                            esta lista.
+                          </p>
+                        </>
+                      )}
+                    </div>
+                  ) : (
+                    <div>
+                      <MapPin className="mx-auto h-10 w-10 text-teal-700" />
+                      <h3 className="mt-4 text-lg font-black text-slate-950">
+                        Escoja un punto y busque
+                      </h3>
+                      <p className="mt-2 text-sm leading-6 text-slate-600">
+                        Tip local: empiece con 1.5 km en Ciudad Quesada centro y
+                        luego abra el radio. Así no se le baja el río de resultados.
+                      </p>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="divide-y divide-slate-200">
-                  {businesses.map((business) => (
+                  {displayedBusinesses.map((business) => (
                     <article key={business.id} className="p-4 transition hover:bg-slate-50">
                       <div className="flex items-start justify-between gap-3">
                         <div>
@@ -963,6 +1161,12 @@ export default function MapsScrapperClient({
                         {business.rating && (
                           <span className="rounded bg-amber-100 px-2 py-1 text-amber-900">
                             {business.rating} ({business.userRatingCount ?? 0})
+                          </span>
+                        )}
+                        {isEmailed(business) && (
+                          <span className="inline-flex items-center gap-1 rounded bg-emerald-600 px-2 py-1 text-white">
+                            <Check className="h-3 w-3" />
+                            Email enviado
                           </span>
                         )}
                       </div>
@@ -1046,210 +1250,193 @@ export default function MapsScrapperClient({
                       )}
 
                       {(() => {
-                        const pitch = pitches[business.id];
+                        const template = buildPitchTemplate(business);
+                        const draft = emailDrafts[business.id] ?? {
+                          to:
+                            business.contactIntel?.emails[0] ||
+                            business.emailedTo ||
+                            "",
+                          subject: template.email.subject,
+                          body: template.email.body,
+                        };
+                        const send = sendStates[business.id] ?? {
+                          status: "idle" as const,
+                        };
+                        const detectedEmails = business.contactIntel?.emails ?? [];
+                        const composerOpen = openEmail[business.id] ?? false;
+                        const emailed = isEmailed(business);
+                        const waHref = business.phone
+                          ? `https://wa.me/${business.phone.replace(/\D/g, "")}?text=${encodeURIComponent(template.whatsapp)}`
+                          : "";
+                        const canSend =
+                          /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.to.trim()) &&
+                          draft.subject.trim().length > 0 &&
+                          draft.body.trim().length > 0 &&
+                          send.status !== "sending";
 
                         return (
                           <div className="mt-3">
-                            <button
-                              type="button"
-                              onClick={() => generatePitch(business)}
-                              disabled={pitch?.status === "loading"}
-                              className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-3 text-sm font-black text-violet-800 transition hover:border-violet-400 hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-60"
-                            >
-                              {pitch?.status === "loading" ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
-                                <Sparkles className="h-4 w-4" />
+                            <div className="flex flex-wrap items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => toggleEmailComposer(business)}
+                                className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-3 text-sm font-black text-violet-800 transition hover:border-violet-400 hover:bg-violet-100"
+                              >
+                                <Mail className="h-4 w-4" />
+                                {composerOpen ? "Ocultar email" : "Redactar email"}
+                              </button>
+
+                              {waHref && (
+                                <a
+                                  href={waHref}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-3 text-sm font-black text-green-800 transition hover:border-green-400 hover:bg-green-100"
+                                >
+                                  <MessageCircle className="h-4 w-4" />
+                                  WhatsApp
+                                </a>
                               )}
-                              {pitch?.data ? "Regenerar pitch IA" : "Generar pitch IA"}
-                            </button>
 
-                            {pitch?.status === "error" && (
-                              <p className="mt-2 text-xs font-semibold text-red-600">
-                                No se pudo generar el pitch. Intente de nuevo.
-                              </p>
-                            )}
+                              <label className="ml-auto inline-flex cursor-pointer select-none items-center gap-2 text-sm font-bold text-slate-700">
+                                <input
+                                  type="checkbox"
+                                  checked={emailed}
+                                  onChange={(event) =>
+                                    void setEmailedStatus(
+                                      business,
+                                      event.target.checked,
+                                      draft.to,
+                                    )
+                                  }
+                                  className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                                />
+                                Ya envié el email
+                              </label>
+                            </div>
 
-                            {pitch?.data && (
-                              <div className="mt-3 space-y-3 rounded-lg border border-violet-200 bg-violet-50/60 p-3">
-                                <div>
-                                  <div className="flex items-center justify-between gap-2">
-                                    <span className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wide text-violet-800">
-                                      <MessageCircle className="h-3.5 w-3.5" />
-                                      WhatsApp
-                                    </span>
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        copyText(`${business.id}-wa`, pitch.data!.whatsapp)
-                                      }
-                                      className="inline-flex items-center gap-1 text-xs font-bold text-violet-700 hover:text-violet-900"
-                                    >
-                                      {copiedKey === `${business.id}-wa` ? (
-                                        <Check className="h-3.5 w-3.5" />
-                                      ) : (
-                                        <Copy className="h-3.5 w-3.5" />
-                                      )}
-                                      {copiedKey === `${business.id}-wa` ? "Copiado" : "Copiar"}
-                                    </button>
-                                  </div>
-                                  <p className="mt-1.5 whitespace-pre-line text-sm leading-6 text-slate-700">
-                                    {pitch.data.whatsapp}
-                                  </p>
-                                  {business.phone && (
-                                    <a
-                                      href={`https://wa.me/${business.phone.replace(/\D/g, "")}?text=${encodeURIComponent(pitch.data.whatsapp)}`}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      className="mt-1.5 inline-flex items-center gap-1 text-xs font-black text-green-700 hover:text-green-900"
-                                    >
-                                      Abrir en WhatsApp
-                                      <ExternalLink className="h-3 w-3" />
-                                    </a>
-                                  )}
+                            {composerOpen && (
+                              <div className="mt-3 space-y-2 rounded-lg border border-violet-200 bg-violet-50/60 p-3">
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wide text-violet-800">
+                                    <Mail className="h-3.5 w-3.5" />
+                                    Email
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      copyText(
+                                        `${business.id}-mail`,
+                                        `${draft.subject}\n\n${draft.body}`,
+                                      )
+                                    }
+                                    className="inline-flex items-center gap-1 text-xs font-bold text-violet-700 hover:text-violet-900"
+                                  >
+                                    {copiedKey === `${business.id}-mail` ? (
+                                      <Check className="h-3.5 w-3.5" />
+                                    ) : (
+                                      <Copy className="h-3.5 w-3.5" />
+                                    )}
+                                    {copiedKey === `${business.id}-mail`
+                                      ? "Copiado"
+                                      : "Copiar"}
+                                  </button>
                                 </div>
 
-                                {(() => {
-                                  const draft = emailDrafts[business.id] ?? {
-                                    to: "",
-                                    subject: pitch.data!.email.subject,
-                                    body: pitch.data!.email.body,
-                                  };
-                                  const send = sendStates[business.id] ?? {
-                                    status: "idle" as const,
-                                  };
-                                  const detectedEmails = business.contactIntel?.emails ?? [];
-                                  const canSend =
-                                    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.to.trim()) &&
-                                    draft.subject.trim().length > 0 &&
-                                    draft.body.trim().length > 0 &&
-                                    send.status !== "sending";
-
-                                  return (
-                                    <div className="border-t border-violet-200 pt-3">
-                                      <div className="flex items-center justify-between gap-2">
-                                        <span className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wide text-violet-800">
-                                          <Mail className="h-3.5 w-3.5" />
-                                          Email
-                                        </span>
-                                        <button
-                                          type="button"
-                                          onClick={() =>
-                                            copyText(
-                                              `${business.id}-mail`,
-                                              `${draft.subject}\n\n${draft.body}`,
-                                            )
-                                          }
-                                          className="inline-flex items-center gap-1 text-xs font-bold text-violet-700 hover:text-violet-900"
-                                        >
-                                          {copiedKey === `${business.id}-mail` ? (
-                                            <Check className="h-3.5 w-3.5" />
-                                          ) : (
-                                            <Copy className="h-3.5 w-3.5" />
-                                          )}
-                                          {copiedKey === `${business.id}-mail`
-                                            ? "Copiado"
-                                            : "Copiar"}
-                                        </button>
-                                      </div>
-
-                                      <label className="mt-2 block text-[11px] font-black uppercase tracking-wide text-violet-700">
-                                        Para
-                                      </label>
-                                      <input
-                                        type="email"
-                                        value={draft.to}
-                                        onChange={(event) =>
-                                          updateEmailDraft(business.id, {
-                                            to: event.target.value,
-                                          })
+                                <label className="mt-2 block text-[11px] font-black uppercase tracking-wide text-violet-700">
+                                  Para
+                                </label>
+                                <input
+                                  type="email"
+                                  value={draft.to}
+                                  onChange={(event) =>
+                                    updateEmailDraft(business.id, {
+                                      to: event.target.value,
+                                    })
+                                  }
+                                  placeholder="correo@negocio.com"
+                                  className="mt-1 h-9 w-full rounded-lg border border-violet-200 bg-white px-2 text-sm font-semibold text-slate-900 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100"
+                                />
+                                {detectedEmails.length > 0 && (
+                                  <div className="mt-1.5 flex flex-wrap gap-1.5">
+                                    {detectedEmails.map((email) => (
+                                      <button
+                                        key={email}
+                                        type="button"
+                                        onClick={() =>
+                                          updateEmailDraft(business.id, { to: email })
                                         }
-                                        placeholder="correo@negocio.com"
-                                        className="mt-1 h-9 w-full rounded-lg border border-violet-200 bg-white px-2 text-sm font-semibold text-slate-900 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100"
-                                      />
-                                      {detectedEmails.length > 0 && (
-                                        <div className="mt-1.5 flex flex-wrap gap-1.5">
-                                          {detectedEmails.map((email) => (
-                                            <button
-                                              key={email}
-                                              type="button"
-                                              onClick={() =>
-                                                updateEmailDraft(business.id, { to: email })
-                                              }
-                                              className={`rounded px-2 py-0.5 text-[11px] font-bold ring-1 transition ${
-                                                draft.to === email
-                                                  ? "bg-violet-600 text-white ring-violet-600"
-                                                  : "bg-white text-violet-700 ring-violet-200 hover:bg-violet-100"
-                                              }`}
-                                            >
-                                              {email}
-                                            </button>
-                                          ))}
-                                        </div>
-                                      )}
+                                        className={`rounded px-2 py-0.5 text-[11px] font-bold ring-1 transition ${
+                                          draft.to === email
+                                            ? "bg-violet-600 text-white ring-violet-600"
+                                            : "bg-white text-violet-700 ring-violet-200 hover:bg-violet-100"
+                                        }`}
+                                      >
+                                        {email}
+                                      </button>
+                                    ))}
+                                  </div>
+                                )}
 
-                                      <label className="mt-2 block text-[11px] font-black uppercase tracking-wide text-violet-700">
-                                        Asunto
-                                      </label>
-                                      <input
-                                        type="text"
-                                        value={draft.subject}
-                                        onChange={(event) =>
-                                          updateEmailDraft(business.id, {
-                                            subject: event.target.value,
-                                          })
-                                        }
-                                        className="mt-1 h-9 w-full rounded-lg border border-violet-200 bg-white px-2 text-sm font-black text-slate-800 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100"
-                                      />
+                                <label className="mt-2 block text-[11px] font-black uppercase tracking-wide text-violet-700">
+                                  Asunto
+                                </label>
+                                <input
+                                  type="text"
+                                  value={draft.subject}
+                                  onChange={(event) =>
+                                    updateEmailDraft(business.id, {
+                                      subject: event.target.value,
+                                    })
+                                  }
+                                  className="mt-1 h-9 w-full rounded-lg border border-violet-200 bg-white px-2 text-sm font-black text-slate-800 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100"
+                                />
 
-                                      <label className="mt-2 block text-[11px] font-black uppercase tracking-wide text-violet-700">
-                                        Mensaje
-                                      </label>
-                                      <textarea
-                                        value={draft.body}
-                                        onChange={(event) =>
-                                          updateEmailDraft(business.id, {
-                                            body: event.target.value,
-                                          })
-                                        }
-                                        rows={5}
-                                        className="mt-1 w-full rounded-lg border border-violet-200 bg-white px-2 py-1.5 text-sm leading-6 text-slate-700 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100"
-                                      />
+                                <label className="mt-2 block text-[11px] font-black uppercase tracking-wide text-violet-700">
+                                  Mensaje
+                                </label>
+                                <textarea
+                                  value={draft.body}
+                                  onChange={(event) =>
+                                    updateEmailDraft(business.id, {
+                                      body: event.target.value,
+                                    })
+                                  }
+                                  rows={12}
+                                  className="mt-1 w-full rounded-lg border border-violet-200 bg-white px-2 py-1.5 text-sm leading-6 text-slate-700 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100"
+                                />
 
-                                      <div className="mt-2 flex flex-wrap items-center gap-2">
-                                        <button
-                                          type="button"
-                                          onClick={() => sendPitchEmail(business.id)}
-                                          disabled={!canSend}
-                                          className="inline-flex min-h-9 items-center gap-2 rounded-lg bg-violet-700 px-3 text-sm font-black text-white shadow-sm transition hover:bg-violet-800 disabled:cursor-not-allowed disabled:opacity-55"
-                                        >
-                                          {send.status === "sending" ? (
-                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                          ) : send.status === "sent" ? (
-                                            <Check className="h-4 w-4" />
-                                          ) : (
-                                            <Send className="h-4 w-4" />
-                                          )}
-                                          {send.status === "sending"
-                                            ? "Enviando..."
-                                            : send.status === "sent"
-                                              ? "Enviado"
-                                              : "Enviar email"}
-                                        </button>
-                                        {send.status === "sent" && (
-                                          <span className="text-xs font-bold text-emerald-700">
-                                            Correo enviado a {draft.to}
-                                          </span>
-                                        )}
-                                      </div>
-                                      {send.status === "error" && (
-                                        <p className="mt-1.5 text-xs font-semibold text-red-600">
-                                          {send.message}
-                                        </p>
-                                      )}
-                                    </div>
-                                  );
-                                })()}
+                                <div className="mt-2 flex flex-wrap items-center gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => sendPitchEmail(business.id)}
+                                    disabled={!canSend}
+                                    className="inline-flex min-h-9 items-center gap-2 rounded-lg bg-violet-700 px-3 text-sm font-black text-white shadow-sm transition hover:bg-violet-800 disabled:cursor-not-allowed disabled:opacity-55"
+                                  >
+                                    {send.status === "sending" ? (
+                                      <Loader2 className="h-4 w-4 animate-spin" />
+                                    ) : send.status === "sent" ? (
+                                      <Check className="h-4 w-4" />
+                                    ) : (
+                                      <Send className="h-4 w-4" />
+                                    )}
+                                    {send.status === "sending"
+                                      ? "Enviando..."
+                                      : send.status === "sent"
+                                        ? "Enviado"
+                                        : "Enviar email"}
+                                  </button>
+                                  {send.status === "sent" && (
+                                    <span className="text-xs font-bold text-emerald-700">
+                                      Correo enviado a {draft.to}
+                                    </span>
+                                  )}
+                                </div>
+                                {send.status === "error" && (
+                                  <p className="mt-1.5 text-xs font-semibold text-red-600">
+                                    {send.message}
+                                  </p>
+                                )}
                               </div>
                             )}
                           </div>

@@ -1,11 +1,9 @@
 import { MongoClient, Db } from "mongodb";
 import { DB_NAME } from "@/lib/constants/db";
 
-const uri = process.env.MONGODB_URI!;
-const dbName = process.env.MONGODB_DB || DB_NAME;
-
 declare global {
   var _mongoClient: MongoClient | undefined;
+  var _mongoClientPromise: Promise<MongoClient> | undefined;
 }
 
 function validateMongoUri(connectionUri: string): void {
@@ -36,12 +34,41 @@ function validateMongoUri(connectionUri: string): void {
   }
 }
 
-export async function getDb(): Promise<Db> {
-  if (!global._mongoClient) {
-    validateMongoUri(uri);
-    global._mongoClient = new MongoClient(uri);
-    await global._mongoClient.connect();
+function mongoUri() {
+  const connectionUri = process.env.MONGODB_URI ?? "";
+  validateMongoUri(connectionUri);
+  return connectionUri;
+}
+
+async function connectClient() {
+  const client = new MongoClient(mongoUri(), {
+    maxPoolSize: 10,
+    serverSelectionTimeoutMS: 10_000,
+  });
+  await client.connect();
+  await client.db(process.env.MONGODB_DB || DB_NAME).command({ ping: 1 });
+  return client;
+}
+
+async function getClient() {
+  if (!global._mongoClientPromise) {
+    global._mongoClientPromise = connectClient();
   }
 
-  return global._mongoClient.db(dbName);
+  try {
+    global._mongoClient = await global._mongoClientPromise;
+    await global._mongoClient.db(process.env.MONGODB_DB || DB_NAME).command({ ping: 1 });
+    return global._mongoClient;
+  } catch {
+    await global._mongoClient?.close().catch(() => {});
+    global._mongoClient = undefined;
+    global._mongoClientPromise = connectClient();
+    global._mongoClient = await global._mongoClientPromise;
+    return global._mongoClient;
+  }
+}
+
+export async function getDb(): Promise<Db> {
+  const client = await getClient();
+  return client.db(process.env.MONGODB_DB || DB_NAME);
 }

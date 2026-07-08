@@ -128,8 +128,17 @@ function accuracyPct(e: LeaderboardEntry) {
     : 0;
 }
 
-// Radii
-const RA = { outer: 268, label: 300, r32: 238, r16: 198, qf: 140, sf: 82, finalPt: 46 };
+// Radii tuned for the poster-style circular bracket.
+const RA = { outer: 274, label: 309, r32: 236, r16: 184, qf: 128, sf: 74, finalPt: 52 };
+
+const TEAM_ACCENTS = ["#ff3156", "#ffffff", "#315dff", "#f0b429", "#d5ff3f", "#62ffe6"];
+
+function teamAccent(team: string | null | undefined) {
+  if (!team || !isReal(team)) return "rgba(255,255,255,0.22)";
+  let hash = 0;
+  for (let i = 0; i < team.length; i++) hash = (hash * 31 + team.charCodeAt(i)) >>> 0;
+  return TEAM_ACCENTS[hash % TEAM_ACCENTS.length];
+}
 
 // ─── Main export ──────────────────────────────────────────────────────────────
 
@@ -149,9 +158,9 @@ export function BracketView({
 
   return (
     <section className="grid gap-4">
-      <div className="relative overflow-hidden rounded-2xl border border-[#f0b429]/25 bg-[#04100a] shadow-[0_32px_80px_rgba(0,0,0,0.60)]">
-        <div className="pointer-events-none absolute inset-0 opacity-25 [background-image:linear-gradient(90deg,rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(0deg,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:48px_48px]" />
-        <div className="pointer-events-none absolute inset-0 [background:radial-gradient(ellipse_50%_46%_at_50%_48%,rgba(240,180,41,0.11),transparent_70%),radial-gradient(ellipse_36%_32%_at_22%_18%,rgba(98,255,230,0.08),transparent_68%),radial-gradient(ellipse_32%_30%_at_80%_84%,rgba(213,255,63,0.07),transparent_70%)]" />
+      <div className="relative overflow-hidden rounded-2xl border border-[#f0b429]/20 bg-[#0d0d0b] shadow-[0_32px_90px_rgba(0,0,0,0.68)]">
+        <div className="pointer-events-none absolute inset-0 opacity-30 [background-image:radial-gradient(circle_at_center,rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:8px_8px]" />
+        <div className="pointer-events-none absolute inset-0 [background:radial-gradient(circle_at_50%_50%,rgba(240,180,41,0.18),transparent_25%),radial-gradient(circle_at_50%_50%,rgba(240,180,41,0.10),transparent_42%),radial-gradient(circle_at_50%_50%,transparent_50%,rgba(0,0,0,0.78)_100%)]" />
 
         <div className="relative flex items-center gap-3 border-b border-white/10 bg-black/25 px-4 py-3">
           <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-[#f0b429]/45 bg-[#f0b429] text-[#07110b] shadow-[0_0_18px_rgba(240,180,41,0.26)]">
@@ -165,7 +174,7 @@ export function BracketView({
         </div>
 
         <div className="p-2 sm:p-4">
-          <div className="mx-auto w-full rounded-[1.25rem] border border-white/8 bg-black/18 p-1 shadow-[inset_0_0_50px_rgba(0,0,0,0.35)] sm:p-2" style={{ maxWidth: 700, aspectRatio: "1 / 1" }}>
+          <div className="mx-auto w-full overflow-hidden rounded-[1.25rem] border border-white/8 bg-[#11110f] p-0 shadow-[inset_0_0_70px_rgba(0,0,0,0.62)]" style={{ maxWidth: 700, aspectRatio: "1 / 1" }}>
             <BracketSVG
               byNum={byNum}
               predictions={predictions}
@@ -326,9 +335,9 @@ function BracketSVG({
   const hasRes = (n: number) => gm(n)?.homeFinalScore != null;
   const lineC = (n: number) => {
     if (selected === n) return "rgba(213,255,63,0.95)";
-    return hasRes(n) ? "rgba(240,180,41,0.78)" : "rgba(255,255,255,0.11)";
+    return hasRes(n) ? teamAccent(winnerTeam(gm(n))) : "rgba(255,255,255,0.12)";
   };
-  const lineW = (n: number) => selected === n ? 2.2 : hasRes(n) ? 1.55 : 0.85;
+  const lineW = (n: number) => selected === n ? 2.6 : hasRes(n) ? 2.15 : 0.9;
 
   function connLine(r1: number, a1: number, r2: number, a2: number, matchNum: number) {
     const [x1, y1] = pt(r1, a1);
@@ -340,6 +349,7 @@ function BracketSVG({
         x1={x1} y1={y1} x2={x2} y2={y2}
         stroke={lineC(matchNum)} strokeWidth={lineW(matchNum)}
         strokeLinecap="round"
+        opacity={pending ? 0.58 : 0.9}
         strokeDasharray={pending ? "3 4" : undefined}
       />
     );
@@ -358,8 +368,9 @@ function BracketSVG({
       <line
         key={`entry-${matchNum}-${side}`}
         x1={x1} y1={y1} x2={x2} y2={y2}
-        stroke={selected === matchNum ? "rgba(213,255,63,0.95)" : won ? "rgba(240,180,41,0.82)" : "rgba(255,255,255,0.12)"}
-        strokeWidth={selected === matchNum ? 1.85 : won ? 1.35 : 0.72}
+        stroke={selected === matchNum ? "rgba(213,255,63,0.95)" : won ? teamAccent(side === "home" ? match?.homeTeam : match?.awayTeam) : "rgba(255,255,255,0.12)"}
+        strokeWidth={selected === matchNum ? 2.2 : won ? 1.8 : 0.72}
+        opacity={won || selected === matchNum ? 0.9 : 0.5}
         strokeLinecap="round"
       />
     );
@@ -404,8 +415,14 @@ function BracketSVG({
     <svg viewBox="0 0 700 700" className="h-full w-full">
       <defs>
         <radialGradient id="cg" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#f0b429" stopOpacity="0.28" />
+          <stop offset="0%" stopColor="#f0b429" stopOpacity="0.46" />
+          <stop offset="52%" stopColor="#f0b429" stopOpacity="0.13" />
           <stop offset="100%" stopColor="#f0b429" stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id="bgv" cx="50%" cy="50%" r="61%">
+          <stop offset="0%" stopColor="#242017" />
+          <stop offset="42%" stopColor="#151512" />
+          <stop offset="100%" stopColor="#080908" />
         </radialGradient>
         <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
           <feGaussianBlur stdDeviation="3" result="b" />
@@ -417,16 +434,35 @@ function BracketSVG({
         </filter>
       </defs>
 
+      <rect width={700} height={700} fill="url(#bgv)" />
+      <circle cx={CX} cy={CY} r={328} fill="none" stroke="rgba(255,255,255,0.035)" strokeWidth={1} />
+      {Array.from({ length: 64 }, (_, i) => {
+        const angle = (i + 0.5) * (360 / 64);
+        const [x1, y1] = pt(118, angle);
+        const [x2, y2] = pt(338, angle);
+        return (
+          <line
+            key={`ray-${i}`}
+            x1={x1}
+            y1={y1}
+            x2={x2}
+            y2={y2}
+            stroke="rgba(255,255,255,0.045)"
+            strokeWidth={i % 4 === 0 ? 0.8 : 0.45}
+          />
+        );
+      })}
+
       {/* center ambient */}
-      <circle cx={CX} cy={CY} r={92} fill="url(#cg)" />
-      <circle cx={CX} cy={CY} r={48} fill="none" stroke="rgba(240,180,41,0.16)" strokeWidth={1} />
-      <circle cx={CX} cy={CY} r={72} fill="none" stroke="rgba(213,255,63,0.08)" strokeWidth={0.8} strokeDasharray="4 8" />
+      <circle cx={CX} cy={CY} r={120} fill="url(#cg)" />
+      <circle cx={CX} cy={CY} r={68} fill="none" stroke="rgba(240,180,41,0.32)" strokeWidth={1.2} />
+      <circle cx={CX} cy={CY} r={106} fill="none" stroke="rgba(240,180,41,0.16)" strokeWidth={0.9} />
 
       {/* guide rings */}
       {[RA.outer, RA.r32, RA.r16, RA.qf, RA.sf].map((r) => (
         <circle key={r} cx={CX} cy={CY} r={r}
-          fill="none" stroke={r === RA.outer ? "rgba(240,180,41,0.16)" : "rgba(255,255,255,0.075)"}
-          strokeWidth={r === RA.outer ? 1.2 : 0.95} strokeDasharray={r === RA.outer ? "" : "2 7"} />
+          fill="none" stroke={r === RA.outer ? "rgba(255,255,255,0.08)" : "rgba(240,180,41,0.12)"}
+          strokeWidth={r === RA.outer ? 1 : 0.8} strokeDasharray={r === RA.outer ? "1 11" : "2 12"} />
       ))}
 
       {/* connectors */}
@@ -503,9 +539,6 @@ function BracketSVG({
 
       {/* Final / trophy center */}
       <FinalCenter match={gm(104)} isSelected={selected === 104} onClick={() => onSelect(104)} />
-
-      {/* Stage ring labels */}
-      <StageRingLabels showThirdCaption={!winnerTeam(gm(103))} />
 
       {selectedMatch && (
         <SelectedMatchCallout
@@ -714,9 +747,8 @@ function MatchKnot({
   const winner = winnerTeam(match);
   const hasResult = match?.homeFinalScore != null;
   const hasTeams = match && isReal(match.homeTeam) && isReal(match.awayTeam);
-  const score = hasResult && match ? `${match.homeFinalScore}-${match.awayFinalScore}` : "";
   const clipId = `knotclip-${match?.number ?? `${Math.round(r)}-${Math.round(angle)}`}`;
-  const nodeR = hasResult ? 8.2 : hasTeams ? 6.2 : 4.6;
+  const nodeR = hasResult ? 7.2 : hasTeams ? 5.6 : 4.4;
 
   return (
     <g onClick={onClick} style={{ cursor: "pointer" }} role="button" aria-label={`Partido ${match?.number ?? ""}`}>
@@ -725,8 +757,8 @@ function MatchKnot({
         cx={x}
         cy={y}
         r={nodeR}
-        fill={hasResult ? "rgba(240,180,41,0.22)" : hasTeams ? "rgba(255,255,255,0.38)" : "rgba(255,255,255,0.16)"}
-        stroke={isSelected ? "#d5ff3f" : hasResult ? "rgba(240,180,41,0.65)" : "rgba(255,255,255,0.14)"}
+        fill={hasResult ? "rgba(255,255,255,0.9)" : hasTeams ? "rgba(255,255,255,0.24)" : "rgba(255,255,255,0.14)"}
+        stroke={isSelected ? "#d5ff3f" : hasResult ? teamAccent(winner) : "rgba(255,255,255,0.14)"}
         strokeWidth={isSelected ? 2 : 1}
         filter={hasResult ? "url(#sglow)" : undefined}
       />
@@ -735,7 +767,7 @@ function MatchKnot({
           <clipPath id={clipId}>
             <circle cx={x} cy={y} r={nodeR - 0.8} />
           </clipPath>
-          <g clipPath={`url(#${clipId})`} opacity={0.72}>
+          <g clipPath={`url(#${clipId})`} opacity={0.52} style={{ filter: "grayscale(1)" }}>
             <SvgFlag team={match.homeTeam} x={x - 4.2} y={y} size="xs" />
             <SvgFlag team={match.awayTeam} x={x + 4.2} y={y} size="xs" />
           </g>
@@ -757,20 +789,7 @@ function MatchKnot({
           <g clipPath={`url(#${clipId})`}>
             <SvgFlag team={winner} x={x} y={y} size="xs" />
           </g>
-          <circle cx={x} cy={y} r={nodeR} fill="none" stroke="rgba(240,180,41,0.9)" strokeWidth={1.1} />
-          <text
-            x={x}
-            y={y + nodeR + 8}
-            textAnchor="middle"
-            dominantBaseline="middle"
-            fontSize={6.5}
-            fontWeight="900"
-            fontFamily="Arial, Helvetica, sans-serif"
-            fill="rgba(240,180,41,0.95)"
-            style={{ userSelect: "none", pointerEvents: "none" }}
-          >
-            {score}
-          </text>
+          <circle cx={x} cy={y} r={nodeR} fill="none" stroke={teamAccent(winner)} strokeWidth={1.15} />
         </>
       )}
       {isSelected && (
@@ -788,75 +807,39 @@ function OuterSlot({
 }) {
   const real = isReal(team);
   const [dx, dy] = pt(RA.outer, angle);
-  const [fx, fy] = pt(RA.label - 8, angle);
-  const [lx, ly] = pt(RA.label + 13, angle);
+  const [fx, fy] = pt(RA.label - 4, angle);
 
-  const dotR = real ? 5 : 3.5;
+  const dotR = real ? 4.8 : 3.4;
   const dotFill = !real ? "rgba(255,255,255,0.1)"
-    : won ? "#f0b429"
+    : won ? teamAccent(team)
     : isSelected ? "#d5ff3f"
-    : lost ? "rgba(255,255,255,0.25)"
-    : "rgba(255,255,255,0.55)";
-
-  // text rotation: always readable
-  const isLeft = angle >= 180;
-  const textRot = isLeft ? angle + 90 : angle - 90;
-
-  const textFill = !real ? "rgba(255,255,255,0.18)"
-    : won ? "#f0b429"
-    : lost ? "rgba(255,255,255,0.3)"
-    : "rgba(255,255,255,0.72)";
+    : lost ? "rgba(255,255,255,0.18)"
+    : "rgba(255,255,255,0.52)";
 
   return (
     <g onClick={onClick} style={{ cursor: "pointer" }} role="button" aria-label={team}>
       {/* larger hit area */}
-      <circle cx={dx} cy={dy} r={14} fill="transparent" />
+      <circle cx={fx} cy={fy} r={20} fill="transparent" />
 
       {/* dot */}
       <circle cx={dx} cy={dy} r={dotR}
         fill={dotFill}
-        stroke={won ? "rgba(240,180,41,0.5)" : isSelected ? "rgba(213,255,63,0.5)" : "none"}
-        strokeWidth={1.5}
+        stroke={won ? teamAccent(team) : isSelected ? "rgba(213,255,63,0.75)" : "rgba(255,255,255,0.08)"}
+        strokeWidth={won || isSelected ? 1.8 : 0.8}
         filter={won ? "url(#sglow)" : undefined} />
 
       {real && (
-        <g opacity={lost ? 0.55 : 1}>
+        <g opacity={lost ? 0.34 : 1} style={{ filter: lost ? "grayscale(1)" : undefined }}>
           <circle
             cx={fx}
             cy={fy}
-            r={won || isSelected ? 11 : 10}
-            fill={won ? "rgba(240,180,41,0.18)" : isSelected ? "rgba(213,255,63,0.12)" : "rgba(0,0,0,0.42)"}
-            stroke={won ? "rgba(240,180,41,0.65)" : isSelected ? "rgba(213,255,63,0.42)" : "rgba(255,255,255,0.14)"}
-            strokeWidth={won ? 1.1 : 0.8}
+            r={won || isSelected ? 16 : 14}
+            fill={won ? "rgba(255,255,255,0.92)" : isSelected ? "rgba(213,255,63,0.18)" : "rgba(0,0,0,0.58)"}
+            stroke={won ? teamAccent(team) : isSelected ? "rgba(213,255,63,0.72)" : "rgba(255,255,255,0.18)"}
+            strokeWidth={won || isSelected ? 1.8 : 0.95}
             filter={won ? "url(#sglow)" : undefined}
           />
-          <SvgFlag team={team} x={fx} y={fy} />
-        </g>
-      )}
-
-      {/* team abbreviation */}
-      {real && (
-        <g transform={`rotate(${textRot}, ${lx}, ${ly})`} opacity={lost ? 0.55 : 1}>
-          <rect
-            x={lx - 18}
-            y={ly - 7}
-            width={36}
-            height={14}
-            rx={7}
-            fill={won ? "rgba(240,180,41,0.18)" : "rgba(0,0,0,0.42)"}
-            stroke={won ? "rgba(240,180,41,0.45)" : "rgba(255,255,255,0.14)"}
-            strokeWidth={0.75}
-          />
-          <text
-            x={lx}
-            y={ly}
-            textAnchor="middle" dominantBaseline="middle"
-            fontSize={8.6} fontWeight={won ? "900" : "750"} fontFamily="Arial, Helvetica, sans-serif"
-            fill={textFill}
-            style={{ userSelect: "none", pointerEvents: "none" }}
-          >
-            {teamCode(team)}
-          </text>
+          <SvgFlag team={team} x={fx} y={fy} size="sm" />
         </g>
       )}
     </g>
@@ -877,15 +860,15 @@ function InnerDot({
   const hasTeams = match && isReal(match.homeTeam) && isReal(match.awayTeam);
   const decided = Boolean(hasResult && wt && isReal(wt));
 
-  const fill = decided ? "#f0b429"
+  const fill = decided ? "rgba(255,255,255,0.92)"
     : isSelected ? "#d5ff3f"
-    : hasTeams ? "rgba(255,255,255,0.42)"
-    : "rgba(255,255,255,0.14)";
+    : hasTeams ? "rgba(255,255,255,0.28)"
+    : "rgba(255,255,255,0.12)";
 
   const stroke = isSelected ? "#d5ff3f"
-    : decided ? "#f0b429"
+    : decided ? teamAccent(wt)
     : hasResult ? "rgba(240,180,41,0.45)"
-    : "rgba(255,255,255,0.1)";
+    : "rgba(255,255,255,0.12)";
 
   const clipId = `dotclip-${match?.number ?? `${Math.round(r)}-${Math.round(angle)}`}`;
 
@@ -901,13 +884,13 @@ function InnerDot({
   const [lx, ly] = pt(r + size + 9, angle);
   const isLeft = angle >= 180;
   const anchor = isLeft ? "end" : "start";
-  const showLabel = Boolean(wt && isReal(wt));
+  const showLabel = false;
 
   return (
     <g onClick={onClick} style={{ cursor: "pointer" }}>
-      <circle cx={x} cy={y} r={size + 7} fill="transparent" />
+      <circle cx={x} cy={y} r={size + 9} fill="transparent" />
       <circle cx={x} cy={y} r={size}
-        fill={fill} stroke={stroke} strokeWidth={isSelected ? 2 : 1}
+        fill={fill} stroke={stroke} strokeWidth={isSelected ? 2.3 : decided ? 1.5 : 1}
         filter={decided ? "url(#sglow)" : undefined} />
 
       {!decided && hasTeams && match && (
@@ -915,7 +898,7 @@ function InnerDot({
           <clipPath id={clipId}>
             <circle cx={x} cy={y} r={size - 1.1} />
           </clipPath>
-          <g clipPath={`url(#${clipId})`} opacity={0.74}>
+          <g clipPath={`url(#${clipId})`} opacity={0.54} style={{ filter: "grayscale(1)" }}>
             <SvgFlag team={match.homeTeam} x={x - size * 0.38} y={y} size={size > 10 ? "sm" : "xs"} />
             <SvgFlag team={match.awayTeam} x={x + size * 0.38} y={y} size={size > 10 ? "sm" : "xs"} />
           </g>
@@ -941,7 +924,7 @@ function InnerDot({
             <SvgFlag team={wt} x={x} y={y} size={size > 8 ? "sm" : "xs"} />
           </g>
           <circle cx={x} cy={y} r={size} fill="none"
-            stroke={isSelected ? "#d5ff3f" : "#f0b429"} strokeWidth={1.4} />
+            stroke={isSelected ? "#d5ff3f" : teamAccent(wt)} strokeWidth={1.6} />
         </>
       )}
 
@@ -992,35 +975,40 @@ function FinalCenter({
   return (
     <g onClick={onClick} style={{ cursor: "pointer" }} role="button" aria-label="Final">
       {/* Hit area */}
-      <circle cx={CX} cy={CY} r={36} fill="transparent" />
+      <circle cx={CX} cy={CY} r={52} fill="transparent" />
 
       {/* Outer ring */}
-      <circle cx={CX} cy={CY} r={34}
-        fill="rgba(0,0,0,0.55)"
+      <circle cx={CX} cy={CY} r={48}
+        fill="rgba(0,0,0,0.28)"
         stroke={isSelected ? "#d5ff3f" : hasResult ? "#f0b429" : "rgba(240,180,41,0.35)"}
-        strokeWidth={isSelected ? 2.5 : 1.5}
+        strokeWidth={isSelected ? 2.5 : 1.2}
         filter={hasResult ? "url(#glow)" : undefined} />
-      <circle cx={CX} cy={CY} r={42} fill="none" stroke="rgba(240,180,41,0.14)" strokeWidth={1} />
+      <circle cx={CX} cy={CY} r={66} fill="none" stroke="rgba(240,180,41,0.25)" strokeWidth={1} />
+      <circle cx={CX} cy={CY} r={28} fill="rgba(240,180,41,0.10)" filter="url(#glow)" />
 
       {/* Trophy SVG (scaled inline) */}
-      <g transform={`translate(${CX - 11}, ${CY - 15})`}>
-        <svg width={22} height={30} viewBox="0 0 48 60">
+      <g transform={`translate(${CX - 19}, ${CY - 32})`}>
+        <svg width={38} height={64} viewBox="0 0 48 72">
+          <ellipse cx="24" cy="66" rx="16" ry="4.5" fill="rgba(0,0,0,0.55)" />
           <path d="M10 52h28v8H10z" fill="#7a4d08" />
           <path d="M10 52h28v4H10z" fill="#a06610" />
-          <path d="M10 52L16 30l10 13L24 8l4 26 10-13 8 31z"
-            fill={hasResult ? "#f0b429" : "rgba(240,180,41,0.55)"}
+          <path d="M14 52h20l-3-14H17z" fill="#c17912" />
+          <path d="M8 52L15 31l8 10L24 7l2 34 8-10 6 21z"
+            fill={hasResult ? "#f0b429" : "rgba(240,180,41,0.82)"}
             stroke="#9a5e0a" strokeWidth="2" strokeLinejoin="round" />
-          <circle cx="16" cy="30" r="4" fill={hasResult ? "#d5ff3f" : "rgba(213,255,63,0.5)"} stroke="#9a5e0a" strokeWidth="1.2" />
-          <circle cx="24" cy="8" r="4" fill={hasResult ? "#d5ff3f" : "rgba(213,255,63,0.5)"} stroke="#9a5e0a" strokeWidth="1.2" />
-          <circle cx="32" cy="30" r="4" fill={hasResult ? "#d5ff3f" : "rgba(213,255,63,0.5)"} stroke="#9a5e0a" strokeWidth="1.2" />
+          <path d="M20 12c-6 4-8 12-7 19 2-2 4-5 6-7 0 9 1 16 5 21 4-5 5-12 5-21 2 2 4 5 6 7 1-7-1-15-7-19-1 7-2 13-4 19-2-6-3-12-4-19z"
+            fill="#ffd36a" opacity="0.56" />
+          <circle cx="16" cy="30" r="4" fill={hasResult ? "#fff0a8" : "rgba(255,240,168,0.78)"} stroke="#9a5e0a" strokeWidth="1.2" />
+          <circle cx="24" cy="8" r="4" fill={hasResult ? "#fff0a8" : "rgba(255,240,168,0.78)"} stroke="#9a5e0a" strokeWidth="1.2" />
+          <circle cx="32" cy="30" r="4" fill={hasResult ? "#fff0a8" : "rgba(255,240,168,0.78)"} stroke="#9a5e0a" strokeWidth="1.2" />
         </svg>
       </g>
 
       {/* Winner label below trophy */}
       {wt && isReal(wt) && (
         <>
-          <SvgFlag team={wt} x={CX} y={CY + 18} size="sm" />
-          <text x={CX} y={CY + 31}
+          <SvgFlag team={wt} x={CX} y={CY + 31} size="sm" />
+          <text x={CX} y={CY + 45}
             textAnchor="middle" dominantBaseline="middle"
             fontSize={7.2} fontWeight="900" fontFamily="Arial, Helvetica, sans-serif"
             fill="#f0b429" style={{ userSelect: "none", pointerEvents: "none" }}>
@@ -1031,7 +1019,7 @@ function FinalCenter({
 
       {/* "FINAL" label if no result yet */}
       {!hasResult && (
-        <text x={CX} y={CY + 22}
+        <text x={CX} y={CY + 48}
           textAnchor="middle" dominantBaseline="middle"
           fontSize={6.5} fontWeight="700" fontFamily="Arial, Helvetica, sans-serif"
           fill="rgba(240,180,41,0.5)" style={{ userSelect: "none", pointerEvents: "none" }}>

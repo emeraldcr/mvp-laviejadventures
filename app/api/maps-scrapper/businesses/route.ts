@@ -705,6 +705,89 @@ async function saveLeads(
   return result.upsertedCount + result.modifiedCount;
 }
 
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const limitParam = searchParams.get("limit");
+    const limit = Math.min(
+      Math.max(asNumber(limitParam || undefined, 200), 1),
+      500,
+    );
+
+    const collection = await getLeadCollection();
+    const savedLeads = await collection
+      .find({})
+      .project<Record<string, unknown>>({ _id: 0, searchMeta: 0 })
+      .sort({ updatedAt: -1 })
+      .limit(limit)
+      .toArray();
+
+    return NextResponse.json({
+      businesses: savedLeads,
+      savedTotal: await collection.countDocuments({}),
+    });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "No se pudieron cargar los leads guardados.",
+        businesses: [],
+      },
+      { status: 500 },
+    );
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    const body = await request.json();
+    const id = String(body?.id ?? "").trim();
+
+    if (!id) {
+      return NextResponse.json({ error: "Falta el id del negocio." }, { status: 400 });
+    }
+
+    const emailed = Boolean(body?.emailed);
+    const emailedTo =
+      typeof body?.emailedTo === "string" ? body.emailedTo.trim().toLowerCase() : "";
+
+    const collection = await getLeadCollection();
+    const now = new Date();
+    const result = await collection.updateOne(
+      { id },
+      {
+        $set: emailed
+          ? { emailedAt: now, emailedTo, updatedAt: now }
+          : { emailedAt: null, emailedTo: "", updatedAt: now },
+      },
+    );
+
+    if (result.matchedCount === 0) {
+      return NextResponse.json(
+        { error: "Ese negocio no está guardado en MongoDB." },
+        { status: 404 },
+      );
+    }
+
+    return NextResponse.json({
+      ok: true,
+      emailed,
+      emailedAt: emailed ? now.toISOString() : null,
+      emailedTo: emailed ? emailedTo : "",
+    });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error ? error.message : "No se pudo actualizar el estado.",
+      },
+      { status: 500 },
+    );
+  }
+}
+
 export async function POST(request: Request) {
   const apiKey = getApiKey();
 

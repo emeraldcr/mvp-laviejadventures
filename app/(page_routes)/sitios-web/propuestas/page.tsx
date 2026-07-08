@@ -86,6 +86,14 @@ const PROPOSALS: Proposal[] = [
     icon: Coffee,
   },
   {
+    slug: "lalaland-cafe-jazz",
+    name: "Lalaland Cafe Jazz",
+    category: "Cafe de especialidad",
+    location: "Plaza El Encuentro, Ciudad Quesada",
+    accent: "from-yellow-600 to-stone-900",
+    icon: Coffee,
+  },
+  {
     slug: "soda-lorena",
     name: "Soda Lorena",
     category: "Soda",
