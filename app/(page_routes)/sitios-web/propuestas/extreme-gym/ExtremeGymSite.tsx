@@ -1,920 +1,1365 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  Activity,
   ArrowRight,
+  Award,
+  Bell,
+  CalendarCheck,
+  CalendarClock,
   Check,
-  ChevronDown,
-  Clock,
+  ChevronRight,
+  CreditCard,
+  Delete,
   Dumbbell,
-  Facebook,
   Flame,
-  HeartPulse,
-  Instagram,
-  Mail,
-  MapPin,
-  Menu,
-  Phone,
+  Goal,
+  Loader2,
+  Lock,
+  Medal,
+  QrCode,
+  Ruler,
+  Rocket,
+  ShieldCheck,
+  Sparkles,
   Star,
+  Target,
   Timer,
   Trophy,
+  UserRound,
   Users,
-  X,
+  Video,
   Zap,
 } from "lucide-react";
 
-/* ------------------------------------------------------------------ */
-/*  Datos del negocio — editables para la propuesta                    */
-/* ------------------------------------------------------------------ */
+const STORAGE_KEY = "xtreme-gym-member-name";
+const SESSION_KEY = "xtreme-gym-session";
+const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
-const GYM = {
-  name: "Xtreme Gym",
-  tagline: "Entrena sin límites",
-  city: "Ciudad Quesada, San Carlos",
-  address:
-    "Barrio San Pablo, contiguo a la plaza de deportes, camino a Selva Verde, Buena Vista, Costa Rica",
-  whatsapp: "50688984000",
-  whatsappDisplay: "+506 8898 4000",
-  phoneDisplay: "2461 2005",
-  email: "xtremegymadm@gmail.com",
-  instagram: "https://www.instagram.com/xtremegym_tan/",
-  facebook: "https://www.facebook.com/xtremegym.cr/",
-  maps: "https://maps.app.goo.gl/RxUmrxqqchH5men99",
-  lat: 10.3430360,
-  lng: -84.4288150,
-};
-
-const NAV = [
-  { href: "#inicio", label: "Inicio" },
-  { href: "#nosotros", label: "Nosotros" },
-  { href: "#clases", label: "Clases" },
-  { href: "#horarios", label: "Horarios" },
-  { href: "#planes", label: "Planes" },
-  { href: "#ubicacion", label: "Ubicación" },
-];
-
-const STATS = [
-  { value: "500+", label: "Miembros activos" },
-  { value: "10+", label: "Años de experiencia" },
-  { value: "8", label: "Entrenadores certificados" },
-  { value: "24/7", label: "Acceso a socios Xtreme" },
-];
-
-const FEATURES = [
+const TRAININGS = [
   {
+    id: "fuerza-total",
+    name: "Fuerza Total",
+    coach: "Coach Xtreme",
+    time: "5:30 AM",
+    minutes: 55,
+    intensity: "Pesado",
+    slots: 8,
+    focus: "Pierna, pecho y espalda",
+    color: "from-red-500 to-orange-400",
     icon: Dumbbell,
-    title: "Equipo de primer nivel",
-    text: "Máquinas de fuerza, peso libre y zona de cardio renovada para cada objetivo.",
   },
   {
-    icon: Users,
-    title: "Entrenadores certificados",
-    text: "Acompañamiento personalizado y rutinas diseñadas según tu meta y nivel.",
-  },
-  {
-    icon: HeartPulse,
-    title: "Planes a tu medida",
-    text: "Programas de tonificación, pérdida de grasa, fuerza e hipertrofia.",
-  },
-  {
+    id: "hiit-quemador",
+    name: "HIIT Quemador",
+    coach: "Funcional",
+    time: "6:00 PM",
+    minutes: 35,
+    intensity: "Alta",
+    slots: 12,
+    focus: "Cardio, core y velocidad",
+    color: "from-lime-400 to-emerald-400",
     icon: Zap,
-    title: "Ambiente que motiva",
-    text: "Una comunidad que empuja, con música, energía y disciplina real.",
+  },
+  {
+    id: "glute-lab",
+    name: "Glute Lab",
+    coach: "Zona lower",
+    time: "7:00 PM",
+    minutes: 45,
+    intensity: "Media",
+    slots: 10,
+    focus: "Gluteo, femoral y estabilidad",
+    color: "from-fuchsia-500 to-rose-400",
+    icon: Activity,
+  },
+  {
+    id: "xtreme-core",
+    name: "Xtreme Core",
+    coach: "Circuito",
+    time: "Sabado 8:00 AM",
+    minutes: 40,
+    intensity: "Control",
+    slots: 15,
+    focus: "Abdomen, movilidad y postura",
+    color: "from-sky-400 to-cyan-300",
+    icon: Goal,
   },
 ];
 
-const CLASSES = [
+const GOALS = ["Ganar fuerza", "Bajar grasa", "Ser constante", "Volver al ritmo"];
+
+const ROUTINES = [
   {
-    icon: Dumbbell,
-    name: "Musculación",
-    text: "Zona completa de peso libre y máquinas para fuerza e hipertrofia.",
-    tag: "Todos los niveles",
+    name: "Base Fuerza Xtreme",
+    level: "Intermedio",
+    exercises: ["Sentadilla 4x8", "Press banca 4x8", "Remo 3x10"],
+    video: "Video coach",
   },
   {
-    icon: Flame,
-    name: "Entrenamiento funcional",
-    text: "Circuitos de alta intensidad para quemar grasa y ganar resistencia.",
-    tag: "Alta intensidad",
+    name: "Quemador 30",
+    level: "Alta intensidad",
+    exercises: ["Air bike 8x30s", "Burpees 4x12", "Plancha 3x45s"],
+    video: "Video HIIT",
   },
   {
-    icon: HeartPulse,
-    name: "Cardio & HIIT",
-    text: "Sesiones dinámicas para mejorar tu capacidad cardiovascular.",
-    tag: "Quema calorías",
-  },
-  {
-    icon: Trophy,
-    name: "Preparación física",
-    text: "Planes para atletas y quienes buscan competir o superar marcas.",
-    tag: "Rendimiento",
+    name: "Lower Lab",
+    level: "Control",
+    exercises: ["Hip thrust 4x10", "Peso muerto rumano 3x10", "Abduccion 3x15"],
+    video: "Video tecnica",
   },
 ];
 
-const SCHEDULE = [
-  { day: "Lunes a Viernes", hours: "5:00 a.m. – 10:00 p.m." },
-  { day: "Sábados", hours: "6:00 a.m. – 6:00 p.m." },
-  { day: "Domingos", hours: "7:00 a.m. – 1:00 p.m." },
-  { day: "Feriados", hours: "Horario especial" },
+const REMINDERS = [
+  "Tu clase reservada es en 1 hora.",
+  "No rompas la racha: hoy toca aunque sea suave.",
+  "Tu membresia vence pronto, pasate por recepcion.",
 ];
 
-const PLANS = [
-  {
-    name: "Diario",
-    price: "₡2.500",
-    period: "por día",
-    features: ["Acceso a todo el equipo", "Zona de cardio y pesas", "Sin compromiso"],
-    highlight: false,
-  },
-  {
-    name: "Mensual",
-    price: "₡18.000",
-    period: "por mes",
-    features: [
-      "Acceso ilimitado",
-      "Rutina personalizada",
-      "Asesoría de entrenadores",
-      "Clases funcionales incluidas",
-    ],
-    highlight: true,
-  },
-  {
-    name: "Trimestral",
-    price: "₡45.000",
-    period: "3 meses",
-    features: [
-      "Todo lo del plan mensual",
-      "Evaluación física mensual",
-      "Plan nutricional básico",
-      "Ahorra ₡9.000",
-    ],
-    highlight: false,
-  },
-];
-
-const TRAINERS = [
-  { name: "Coach principal", role: "Fuerza & hipertrofia", img: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600&q=80" },
-  { name: "Entrenador funcional", role: "HIIT & acondicionamiento", img: "https://images.unsplash.com/photo-1594381898411-846e7d193883?w=600&q=80" },
-  { name: "Especialista cardio", role: "Resistencia & pérdida de grasa", img: "https://images.unsplash.com/photo-1546483875-ad9014c88eba?w=600&q=80" },
-];
-
-const GALLERY = [
-  "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&q=80",
-  "https://images.unsplash.com/photo-1637666505879-2b5b6a09f1e5?w=800&q=80",
-  "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800&q=80",
-  "https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=800&q=80",
-  "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=800&q=80",
-  "https://images.unsplash.com/photo-1550345332-09e3ac987658?w=800&q=80",
-];
-
-const TESTIMONIALS = [
-  {
-    name: "Andrés M.",
-    text: "El mejor ambiente de Ciudad Quesada. Los entrenadores te ayudan de verdad y ya veo resultados.",
-  },
-  {
-    name: "Karla V.",
-    text: "Empecé desde cero y me sentí acompañada todo el tiempo. Equipo excelente y muy limpio.",
-  },
-  {
-    name: "José R.",
-    text: "Precios justos y horario amplio. Puedo entrenar temprano antes del trabajo. Recomendadísimo.",
-  },
-];
-
-/* ------------------------------------------------------------------ */
-/*  Helpers                                                            */
-/* ------------------------------------------------------------------ */
-
-const waLink = (msg: string) =>
-  `https://wa.me/${GYM.whatsapp}?text=${encodeURIComponent(msg)}`;
-
-const mapEmbed = `https://www.google.com/maps?q=${GYM.lat},${GYM.lng}&z=16&output=embed`;
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 28 },
-  show: { opacity: 1, y: 0 },
+type Workout = {
+  id: string;
+  trainingId: string;
+  trainingName: string;
+  intensity: string;
+  minutes: number;
+  completedDate: string;
+  completedAt: string;
 };
 
-function Section({
-  id,
-  children,
-  className = "",
+type Member = {
+  memberName: string;
+  normalizedName: string;
+  goal: string;
+  favoriteTraining: string;
+  workouts: Workout[];
+  streak: number;
+  totalWorkouts: number;
+  totalMinutes: number;
+  lastWorkoutDate: string | null;
+  membership: {
+    plan: string;
+    status: "active" | "warning" | "expired";
+    nextBillingDate: string;
+    startedAt: string;
+    daysRemaining: number;
+  };
+  bodyMetrics: BodyMetric[];
+  latestBodyMetric: BodyMetric | null;
+};
+
+type BodyMetric = {
+  id: string;
+  date: string;
+  weightKg: number;
+  waistCm: number;
+  note: string;
+};
+
+type MembersResponse = {
+  member: Member | null;
+  leaderboard: Member[];
+  error?: string;
+};
+
+type ReservationState = Record<
+  string,
+  {
+    reserved: number;
+    capacity: number;
+    remaining: number;
+    isMine: boolean;
+  }
+>;
+
+type ReservationsResponse = {
+  date: string;
+  reservations: ReservationState;
+  error?: string;
+};
+
+type GymStatus = {
+  capacity: number;
+  currentPeople: number;
+  occupancyPct: number;
+  level: string;
+  checkinsToday: number;
+  reservationsToday: number;
+  updatedAt: string;
+};
+
+function todayIso() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function normalizeName(value: string) {
+  return value.trim().replace(/\s+/g, " ");
+}
+
+function getWeekDates() {
+  const today = new Date();
+  const day = today.getDay() || 7;
+  const monday = new Date(today);
+  monday.setHours(0, 0, 0, 0);
+  monday.setDate(today.getDate() - day + 1);
+
+  return Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(monday);
+    date.setDate(monday.getDate() + index);
+    return date.toISOString().slice(0, 10);
+  });
+}
+
+function dayLabel(date: string) {
+  const labels = ["L", "M", "M", "J", "V", "S", "D"];
+  const index = getWeekDates().indexOf(date);
+  return labels[index] ?? "";
+}
+
+function initialMember(name = ""): Member {
+  return {
+    memberName: name,
+    normalizedName: name.toUpperCase(),
+    goal: "",
+    favoriteTraining: "",
+    workouts: [],
+    streak: 0,
+    totalWorkouts: 0,
+    totalMinutes: 0,
+    lastWorkoutDate: null,
+    membership: {
+      plan: "Xtreme Mensual",
+      status: "active",
+      startedAt: todayIso(),
+      nextBillingDate: todayIso(),
+      daysRemaining: 30,
+    },
+    bodyMetrics: [],
+    latestBodyMetric: null,
+  };
+}
+
+const ACHIEVEMENTS: {
+  id: string;
+  name: string;
+  desc: string;
+  icon: typeof Flame;
+  test: (m: Member) => boolean;
+}[] = [
+  { id: "first", name: "Primer paso", desc: "Tu primer entreno marcado", icon: Star, test: (m) => m.totalWorkouts >= 1 },
+  { id: "streak7", name: "En racha", desc: "7 dias seguidos", icon: Flame, test: (m) => m.streak >= 7 },
+  { id: "streak30", name: "Imparable", desc: "30 dias de racha", icon: Rocket, test: (m) => m.streak >= 30 },
+  { id: "variety", name: "Todoterreno", desc: "Prueba las 4 clases", icon: Target, test: (m) => new Set(m.workouts.map((w) => w.trainingId)).size >= 4 },
+  { id: "vet", name: "Veterano", desc: "50 entrenos", icon: Medal, test: (m) => m.totalWorkouts >= 50 },
+  { id: "marathon", name: "Maratonico", desc: "1.000 minutos acumulados", icon: Timer, test: (m) => m.totalMinutes >= 1000 },
+];
+
+function memberCode(key: string) {
+  let hash = 0;
+  for (const char of key) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+  return (hash % 100000000)
+    .toString()
+    .padStart(8, "0")
+    .replace(/(\d{4})(\d{4})/, "$1 $2");
+}
+
+function Barcode({ value }: { value: string }) {
+  const seed = value.replace(/\D/g, "").padEnd(12, "7");
+  const bars = Array.from({ length: 44 }, (_, i) => 1 + ((Number(seed[i % seed.length]) + i) % 4));
+  return (
+    <div className="flex h-14 items-stretch gap-[2px] bg-white px-3 py-2">
+      {bars.map((width, i) => (
+        <span key={i} style={{ width }} className={i % 2 === 0 ? "bg-black" : "bg-white"} />
+      ))}
+    </div>
+  );
+}
+
+async function readJson<T>(response: Response): Promise<T> {
+  const data = (await response.json()) as T & { error?: string };
+  if (!response.ok) throw new Error(data.error ?? "No se pudo conectar con Mongo.");
+  return data;
+}
+
+function StatTile({
+  icon: Icon,
+  label,
+  value,
+  accent,
 }: {
-  id?: string;
-  children: React.ReactNode;
-  className?: string;
+  icon: typeof Flame;
+  label: string;
+  value: string;
+  accent: string;
 }) {
   return (
-    <section id={id} className={`relative px-5 py-20 sm:px-8 md:py-28 ${className}`}>
-      <div className="mx-auto w-full max-w-6xl">{children}</div>
-    </section>
+    <div className="border border-white/10 bg-white/[0.04] p-4">
+      <div className={`mb-4 grid h-10 w-10 place-items-center bg-gradient-to-br ${accent} text-black`}>
+        <Icon className="h-5 w-5" />
+      </div>
+      <div className="text-2xl font-black text-white">{value}</div>
+      <div className="mt-1 text-xs font-bold uppercase tracking-[0.16em] text-white/45">{label}</div>
+    </div>
   );
 }
 
-function Eyebrow({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="inline-flex items-center gap-2 rounded-full border border-red-500/30 bg-red-500/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-red-400">
-      <Flame className="h-3.5 w-3.5" />
-      {children}
-    </span>
+function PinModal({
+  memberName,
+  mode: initialMode,
+  onSuccess,
+  onChangeMember,
+}: {
+  memberName: string;
+  mode: "set" | "verify";
+  onSuccess: () => void;
+  onChangeMember: () => void;
+}) {
+  const [mode, setMode] = useState(initialMode);
+  const [step, setStep] = useState<"enter" | "confirm">("enter");
+  const [firstPin, setFirstPin] = useState("");
+  const [digits, setDigits] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const completePin = useCallback(
+    async (pin: string) => {
+      if (mode === "set" && step === "enter") {
+        setFirstPin(pin);
+        setDigits("");
+        setStep("confirm");
+        return;
+      }
+
+      if (mode === "set" && pin !== firstPin) {
+        setError("Los PIN no coinciden.");
+        setDigits("");
+        setFirstPin("");
+        setStep("enter");
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        const response = await fetch("/api/xtreme/pin", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ memberName, pin, action: mode }),
+        });
+        const data = (await response.json()) as { valid?: boolean; error?: string };
+
+        if (response.status === 409) {
+          setMode("verify");
+          setStep("enter");
+          setDigits("");
+          setError("Ya existe PIN. Ingreselo para entrar.");
+          return;
+        }
+
+        if (!response.ok) throw new Error(data.error ?? "No se pudo validar.");
+        if (mode === "verify" && !data.valid) {
+          setError("PIN incorrecto.");
+          setDigits("");
+          return;
+        }
+
+        onSuccess();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error de conexion.");
+        setDigits("");
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [firstPin, memberName, mode, onSuccess, step],
   );
-}
 
-/* ------------------------------------------------------------------ */
-/*  Componente principal                                              */
-/* ------------------------------------------------------------------ */
-
-export default function ExtremeGymSite() {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
+  const pressDigit = useCallback(
+    (digit: string) => {
+      if (isLoading || digits.length >= 4) return;
+      const next = digits + digit;
+      setDigits(next);
+      setError("");
+      if (next.length === 4) void completePin(next);
+    },
+    [completePin, digits, isLoading],
+  );
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+    function onKeyDown(event: KeyboardEvent) {
+      if (/^\d$/.test(event.key)) {
+        event.preventDefault();
+        pressDigit(event.key);
+      }
+      if (event.key === "Backspace" || event.key === "Delete") {
+        event.preventDefault();
+        setDigits((value) => value.slice(0, -1));
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [pressDigit]);
+
+  const title = mode === "set" ? (step === "enter" ? "Cree su PIN" : "Confirme su PIN") : "Ingrese su PIN";
+  const subtitle =
+    mode === "set"
+      ? "4 digitos para proteger su racha y entrenos"
+      : "Entramos a su perfil Xtreme";
 
   return (
-    <main className="min-h-screen bg-[#0a0a0b] text-neutral-100 selection:bg-red-500/30">
-      {/* ---------------- NAV ---------------- */}
-      <header
-        className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
-          scrolled
-            ? "border-b border-white/10 bg-[#0a0a0b]/90 backdrop-blur-lg"
-            : "bg-transparent"
-        }`}
-      >
-        <nav className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4 sm:px-8">
-          <a href="#inicio" className="flex items-center gap-2 font-black tracking-tight">
-            <span className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br from-red-500 to-orange-500 text-white shadow-lg shadow-red-500/30">
-              <Dumbbell className="h-5 w-5" />
-            </span>
-            <span className="text-lg">
-              XTREME<span className="text-red-500">GYM</span>
-            </span>
-          </a>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 backdrop-blur-md">
+      <div className="w-full max-w-[320px] border border-white/12 bg-[#101010] p-6 text-center shadow-2xl">
+        <div className="mx-auto grid h-16 w-16 place-items-center bg-lime-400 text-black">
+          {mode === "set" ? <ShieldCheck className="h-8 w-8" /> : <Lock className="h-8 w-8" />}
+        </div>
+        <p className="mt-5 text-xs font-black uppercase tracking-[0.26em] text-orange-300">{memberName}</p>
+        <h2 className="mt-2 text-2xl font-black uppercase text-white">{title}</h2>
+        <p className="mt-2 text-sm font-semibold text-white/55">{subtitle}</p>
 
-          <div className="hidden items-center gap-8 md:flex">
-            {NAV.map((n) => (
-              <a
-                key={n.href}
-                href={n.href}
-                className="text-sm font-medium text-neutral-300 transition-colors hover:text-white"
+        <button
+          type="button"
+          onClick={onChangeMember}
+          className="mt-4 border border-white/15 px-3 py-2 text-xs font-black uppercase tracking-wide text-white/70 transition hover:border-lime-300 hover:text-lime-200"
+        >
+          Cambiar usuario
+        </button>
+
+        <div className="mt-7 flex justify-center gap-4">
+          {[0, 1, 2, 3].map((index) => (
+            <span
+              key={index}
+              className={`h-4 w-4 border-2 ${digits.length > index ? "border-lime-300 bg-lime-300" : "border-white/30"}`}
+            />
+          ))}
+        </div>
+
+        <div className="mt-4 min-h-6 text-sm font-bold text-red-300">{error}</div>
+
+        {isLoading ? (
+          <Loader2 className="mx-auto mt-4 h-7 w-7 animate-spin text-lime-300" />
+        ) : (
+          <div className="mt-4 grid grid-cols-3 gap-3">
+            {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((digit) => (
+              <button
+                key={digit}
+                type="button"
+                onClick={() => pressDigit(digit)}
+                className="grid h-14 place-items-center border border-white/10 bg-white/[0.04] text-xl font-black text-white transition hover:border-lime-300 hover:bg-lime-300 hover:text-black"
               >
-                {n.label}
-              </a>
+                {digit}
+              </button>
             ))}
-          </div>
-
-          <a
-            href={waLink(`Hola ${GYM.name}, quiero información sobre las membresías.`)}
-            target="_blank"
-            rel="noreferrer"
-            className="hidden rounded-full bg-gradient-to-r from-red-500 to-orange-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-red-500/30 transition hover:scale-105 md:inline-flex"
-          >
-            Únete hoy
-          </a>
-
-          <button
-            aria-label="Menú"
-            onClick={() => setMenuOpen((v) => !v)}
-            className="rounded-lg border border-white/10 p-2 text-white md:hidden"
-          >
-            {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
-        </nav>
-
-        {menuOpen && (
-          <div className="border-t border-white/10 bg-[#0a0a0b]/95 px-5 py-4 backdrop-blur-lg md:hidden">
-            <div className="flex flex-col gap-1">
-              {NAV.map((n) => (
-                <a
-                  key={n.href}
-                  href={n.href}
-                  onClick={() => setMenuOpen(false)}
-                  className="rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-300 hover:bg-white/5 hover:text-white"
-                >
-                  {n.label}
-                </a>
-              ))}
-              <a
-                href={waLink(`Hola ${GYM.name}, quiero información sobre las membresías.`)}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-2 rounded-full bg-gradient-to-r from-red-500 to-orange-500 px-5 py-3 text-center text-sm font-bold text-white"
-              >
-                Únete hoy
-              </a>
-            </div>
+            <span />
+            <button
+              type="button"
+              onClick={() => pressDigit("0")}
+              className="grid h-14 place-items-center border border-white/10 bg-white/[0.04] text-xl font-black text-white transition hover:border-lime-300 hover:bg-lime-300 hover:text-black"
+            >
+              0
+            </button>
+            <button
+              type="button"
+              onClick={() => setDigits((value) => value.slice(0, -1))}
+              className="grid h-14 place-items-center border border-white/10 bg-white/[0.04] text-white transition hover:border-orange-300 hover:text-orange-200"
+            >
+              <Delete className="h-5 w-5" />
+            </button>
           </div>
         )}
-      </header>
+      </div>
+    </div>
+  );
+}
 
-      {/* ---------------- HERO ---------------- */}
-      <section id="inicio" className="relative flex min-h-screen items-center overflow-hidden">
-        <div className="absolute inset-0">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1600&q=80"
-            alt="Interior de gimnasio"
-            className="h-full w-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0b] via-[#0a0a0b]/85 to-[#0a0a0b]/40" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0b] via-transparent to-[#0a0a0b]/60" />
-        </div>
+export default function ExtremeGymSite() {
+  const [memberNameInput, setMemberNameInput] = useState("");
+  const [memberName, setMemberName] = useState("");
+  const [goal, setGoal] = useState(GOALS[0]);
+  const [member, setMember] = useState<Member | null>(null);
+  const [leaderboard, setLeaderboard] = useState<Member[]>([]);
+  const [pinMode, setPinMode] = useState<"set" | "verify">("verify");
+  const [showPin, setShowPin] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [savingTrainingId, setSavingTrainingId] = useState("");
+  const [reservingTrainingId, setReservingTrainingId] = useState("");
+  const [reservations, setReservations] = useState<ReservationState>({});
+  const [gymStatus, setGymStatus] = useState<GymStatus | null>(null);
+  const [weightKg, setWeightKg] = useState("");
+  const [waistCm, setWaistCm] = useState("");
+  const [metricNote, setMetricNote] = useState("");
+  const [selectedReminder, setSelectedReminder] = useState(REMINDERS[0]);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
 
-        <div className="relative mx-auto w-full max-w-6xl px-5 pt-24 sm:px-8">
-          <motion.div
-            initial="hidden"
-            animate="show"
-            transition={{ staggerChildren: 0.12 }}
-            className="max-w-2xl"
-          >
-            <motion.div variants={fadeUp} transition={{ duration: 0.5 }}>
-              <Eyebrow>{GYM.city}</Eyebrow>
-            </motion.div>
+  const unlocked = Boolean(memberName) && !showPin;
+  const currentMember = member ?? initialMember(memberName);
+  const completedToday = useMemo(() => {
+    const doneIds = new Set(
+      currentMember.workouts
+        .filter((workout) => workout.completedDate === todayIso())
+        .map((workout) => workout.trainingId),
+    );
+    return doneIds;
+  }, [currentMember.workouts]);
 
-            <motion.h1
-              variants={fadeUp}
-              transition={{ duration: 0.5 }}
-              className="mt-6 text-5xl font-black leading-[0.95] tracking-tight sm:text-7xl"
-            >
-              SUPERA TUS
-              <br />
-              <span className="bg-gradient-to-r from-red-500 to-orange-400 bg-clip-text text-transparent">
-                LÍMITES
+  const recentWorkouts = [...currentMember.workouts].reverse().slice(0, 5);
+  const workoutDates = useMemo(
+    () => new Set(currentMember.workouts.map((workout) => workout.completedDate)),
+    [currentMember.workouts],
+  );
+  const weekDates = useMemo(() => getWeekDates(), []);
+  const weekDoneCount = weekDates.filter((date) => workoutDates.has(date)).length;
+  const weeklyGoal = 4;
+  const weeklyProgressPct = Math.min(100, Math.round((weekDoneCount / weeklyGoal) * 100));
+  const level = Math.floor(currentMember.totalWorkouts / 10) + 1;
+  const nextMilestone = level * 10;
+  const milestoneLeft = Math.max(0, nextMilestone - currentMember.totalWorkouts);
+  const achievements = ACHIEVEMENTS.map((a) => ({ ...a, done: a.test(currentMember) }));
+  const unlockedCount = achievements.filter((a) => a.done).length;
+  const accessCode = memberCode(currentMember.normalizedName || memberName.toUpperCase() || "XTREME01");
+  const latestMetric = currentMember.latestBodyMetric;
+  const metricTrend = currentMember.bodyMetrics.slice(-5);
+  const membershipTone =
+    currentMember.membership.status === "expired"
+      ? "border-red-400/40 bg-red-500/10 text-red-200"
+      : currentMember.membership.status === "warning"
+        ? "border-orange-300/40 bg-orange-300/10 text-orange-100"
+        : "border-lime-300/35 bg-lime-300/10 text-lime-100";
+
+  const storeSession = useCallback((name: string) => {
+    window.localStorage.setItem(STORAGE_KEY, name);
+    window.localStorage.setItem(
+      SESSION_KEY,
+      JSON.stringify({ memberName: name, expiresAt: Date.now() + SESSION_TTL_MS }),
+    );
+  }, []);
+
+  const loadMember = useCallback(async (name: string) => {
+    const params = new URLSearchParams({ memberName: name });
+    const response = await fetch(`/api/xtreme/user?${params}`, { cache: "no-store" });
+    const data = await readJson<MembersResponse>(response);
+    setMember(data.member ?? initialMember(name));
+    setGoal(data.member?.goal || GOALS[0]);
+    setLeaderboard(data.leaderboard ?? []);
+    const metric = data.member?.latestBodyMetric;
+    setWeightKg(metric?.weightKg ? String(metric.weightKg) : "");
+    setWaistCm(metric?.waistCm ? String(metric.waistCm) : "");
+  }, []);
+
+  const loadReservations = useCallback(async (name: string) => {
+    const params = new URLSearchParams({ memberName: name, date: todayIso() });
+    const response = await fetch(`/api/xtreme/reservations?${params}`, { cache: "no-store" });
+    const data = await readJson<ReservationsResponse>(response);
+    setReservations(data.reservations ?? {});
+  }, []);
+
+  const loadGymStatus = useCallback(async () => {
+    const response = await fetch("/api/xtreme/status", { cache: "no-store" });
+    const data = await readJson<GymStatus>(response);
+    setGymStatus(data);
+  }, []);
+
+  const startMember = useCallback(
+    async (name: string, allowSession = true) => {
+      const trimmed = normalizeName(name);
+      if (!trimmed) return;
+
+      setError("");
+      setMessage("");
+      setIsLoading(true);
+      setMemberName(trimmed);
+      setMemberNameInput(trimmed);
+
+      try {
+        await loadMember(trimmed);
+        await Promise.all([loadReservations(trimmed), loadGymStatus()]);
+
+        if (allowSession) {
+          try {
+            const raw = window.localStorage.getItem(SESSION_KEY);
+            const parsed = raw ? (JSON.parse(raw) as { memberName?: string; expiresAt?: number }) : null;
+            if (
+              parsed?.memberName?.toUpperCase() === trimmed.toUpperCase() &&
+              typeof parsed.expiresAt === "number" &&
+              parsed.expiresAt > Date.now()
+            ) {
+              setShowPin(false);
+              return;
+            }
+          } catch {}
+        }
+
+        const pinResponse = await fetch(`/api/xtreme/pin?memberName=${encodeURIComponent(trimmed)}`, {
+          cache: "no-store",
+        });
+        const pinData = (await pinResponse.json()) as { hasPinSet?: boolean };
+        setPinMode(pinData.hasPinSet ? "verify" : "set");
+        setShowPin(true);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "No pude cargar Xtreme Gym.");
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [loadGymStatus, loadMember, loadReservations],
+  );
+
+  useEffect(() => {
+    const storedName = normalizeName(window.localStorage.getItem(STORAGE_KEY) ?? "");
+    if (storedName) void startMember(storedName, true);
+    else setIsLoading(false);
+  }, [startMember]);
+
+  async function saveProfile() {
+    const trimmed = normalizeName(memberName);
+    if (!trimmed) return;
+    setError("");
+    setMessage("");
+
+    try {
+      const response = await fetch("/api/xtreme/user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ memberName: trimmed, goal, favoriteTraining: currentMember.favoriteTraining }),
+      });
+      const data = await readJson<MembersResponse>(response);
+      setMember(data.member);
+      setLeaderboard(data.leaderboard ?? []);
+      setMessage("Perfil actualizado. Ahora si, a meterle.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo guardar.");
+    }
+  }
+
+  async function completeTraining(training: (typeof TRAININGS)[number]) {
+    if (!unlocked) return;
+    setError("");
+    setMessage("");
+    setSavingTrainingId(training.id);
+
+    try {
+      const response = await fetch("/api/xtreme/user", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          memberName,
+          trainingId: training.id,
+          trainingName: training.name,
+          intensity: training.intensity,
+          minutes: training.minutes,
+          completedDate: todayIso(),
+        }),
+      });
+      const data = await readJson<MembersResponse>(response);
+      setMember(data.member);
+      setLeaderboard(data.leaderboard ?? []);
+      await loadGymStatus();
+      setMessage(`Registrado: ${training.name}. Racha viva, mae.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo registrar el entreno.");
+    } finally {
+      setSavingTrainingId("");
+    }
+  }
+
+  async function reserveTraining(training: (typeof TRAININGS)[number]) {
+    if (!unlocked) return;
+    setError("");
+    setMessage("");
+    setReservingTrainingId(training.id);
+
+    try {
+      const response = await fetch("/api/xtreme/reservations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          memberName,
+          trainingId: training.id,
+          trainingName: training.name,
+          trainingDate: todayIso(),
+        }),
+      });
+      const data = await readJson<ReservationsResponse>(response);
+      setReservations(data.reservations ?? {});
+      await loadGymStatus();
+      setMessage(`Reservado: ${training.name}. Llegue 5 minutos antes, pura vida.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo reservar.");
+    } finally {
+      setReservingTrainingId("");
+    }
+  }
+
+  async function cancelReservation(training: (typeof TRAININGS)[number]) {
+    if (!unlocked) return;
+    setError("");
+    setMessage("");
+    setReservingTrainingId(training.id);
+
+    try {
+      const response = await fetch("/api/xtreme/reservations", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          memberName,
+          trainingId: training.id,
+          trainingDate: todayIso(),
+        }),
+      });
+      const data = await readJson<ReservationsResponse>(response);
+      setReservations(data.reservations ?? {});
+      await loadGymStatus();
+      setMessage(`Reserva cancelada: ${training.name}.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo cancelar.");
+    } finally {
+      setReservingTrainingId("");
+    }
+  }
+
+  async function saveBodyMetric() {
+    if (!unlocked) return;
+    setError("");
+    setMessage("");
+
+    try {
+      const response = await fetch("/api/xtreme/user", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "bodyMetric",
+          memberName,
+          weightKg: Number(weightKg),
+          waistCm: Number(waistCm),
+          note: metricNote,
+          completedDate: todayIso(),
+        }),
+      });
+      const data = await readJson<MembersResponse>(response);
+      setMember(data.member);
+      setLeaderboard(data.leaderboard ?? []);
+      setMetricNote("");
+      setMessage("Medidas guardadas. Progreso visible, sin cuentos.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudieron guardar las medidas.");
+    }
+  }
+
+  function resetMember() {
+    window.localStorage.removeItem(SESSION_KEY);
+    setShowPin(false);
+    setMemberName("");
+    setMemberNameInput("");
+    setMember(null);
+    setMessage("");
+    setError("");
+  }
+
+  return (
+    <main className="min-h-screen bg-[#090909] text-white selection:bg-lime-300 selection:text-black">
+      {showPin && (
+        <PinModal
+          memberName={memberName}
+          mode={pinMode}
+          onChangeMember={resetMember}
+          onSuccess={() => {
+            storeSession(memberName);
+            setShowPin(false);
+            setMessage("Sesion protegida. Bienvenido a Xtreme.");
+          }}
+        />
+      )}
+
+      <section className="relative overflow-hidden border-b border-white/10 px-5 py-6 sm:px-8">
+        <div className="absolute inset-0 opacity-30 [background:linear-gradient(120deg,rgba(239,68,68,.28),transparent_35%),linear-gradient(300deg,rgba(190,242,100,.22),transparent_42%)]" />
+        <div className="relative mx-auto flex max-w-7xl flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <div className="flex items-center gap-3">
+              <span className="grid h-12 w-12 place-items-center bg-white text-black">
+                <Dumbbell className="h-7 w-7" />
               </span>
-            </motion.h1>
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.24em] text-lime-300">Ciudad Quesada</p>
+                <h1 className="text-3xl font-black uppercase tracking-tight sm:text-5xl">
+                  Xtreme Gym <span className="text-orange-400">Streaks</span>
+                </h1>
+              </div>
+            </div>
+            <p className="mt-4 max-w-2xl text-sm font-semibold text-white/58 sm:text-base">
+              App interna para marcar entrenos, cuidar la racha y ver que clases estan listas hoy.
+              Sin cuento: si lo marca, queda guardado en Mongo con su PIN.
+            </p>
+          </div>
 
-            <motion.p
-              variants={fadeUp}
-              transition={{ duration: 0.5 }}
-              className="mt-6 max-w-lg text-lg text-neutral-300"
+          {!memberName ? (
+            <form
+              className="flex w-full max-w-md gap-2"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void startMember(memberNameInput, false);
+              }}
             >
-              El gimnasio de Ciudad Quesada donde la disciplina se convierte en
-              resultados. Musculación, funcional y clases con entrenadores que te
-              acompañan en cada repetición.
-            </motion.p>
-
-            <motion.div
-              variants={fadeUp}
-              transition={{ duration: 0.5 }}
-              className="mt-8 flex flex-wrap gap-4"
-            >
-              <a
-                href={waLink(`Hola ${GYM.name}, quiero probar una clase.`)}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-red-500 to-orange-500 px-7 py-3.5 font-bold text-white shadow-xl shadow-red-500/30 transition hover:scale-105"
+              <input
+                value={memberNameInput}
+                onChange={(event) => setMemberNameInput(event.target.value)}
+                placeholder="Su nombre"
+                className="min-w-0 flex-1 border border-white/12 bg-black/40 px-4 py-3 font-bold text-white outline-none transition placeholder:text-white/35 focus:border-lime-300"
+              />
+              <button
+                type="submit"
+                className="inline-flex items-center gap-2 bg-lime-300 px-5 py-3 font-black uppercase text-black transition hover:bg-white"
               >
-                Prueba una clase gratis
-                <ArrowRight className="h-4 w-4" />
-              </a>
-              <a
-                href="#planes"
-                className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-7 py-3.5 font-bold text-white backdrop-blur transition hover:bg-white/10"
-              >
-                Ver planes
-              </a>
-            </motion.div>
-          </motion.div>
-        </div>
-
-        <a
-          href="#nosotros"
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 text-neutral-400 transition hover:text-white"
-          aria-label="Bajar"
-        >
-          <ChevronDown className="h-7 w-7 animate-bounce" />
-        </a>
-      </section>
-
-      {/* ---------------- MARQUEE ---------------- */}
-      <div className="border-y border-white/10 bg-red-600/10 py-4">
-        <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-2 px-5 text-sm font-bold uppercase tracking-widest text-neutral-300">
-          {["Fuerza", "•", "Disciplina", "•", "Comunidad", "•", "Resultados", "•", "Energía"].map(
-            (w, i) => (
-              <span key={i} className={w === "•" ? "text-red-500" : ""}>
-                {w}
-              </span>
-            ),
+                Entrar <ArrowRight className="h-4 w-4" />
+              </button>
+            </form>
+          ) : (
+            <div className="flex items-center gap-3 border border-white/12 bg-black/35 px-4 py-3">
+              <UserRound className="h-5 w-5 text-lime-300" />
+              <span className="font-black uppercase">{memberName}</span>
+              <button type="button" onClick={resetMember} className="text-xs font-bold text-white/45 hover:text-white">
+                cambiar
+              </button>
+            </div>
           )}
         </div>
-      </div>
-
-      {/* ---------------- STATS ---------------- */}
-      <Section className="!py-16">
-        <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
-          {STATS.map((s) => (
-            <motion.div
-              key={s.label}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4 }}
-              className="text-center"
-            >
-              <div className="bg-gradient-to-b from-white to-neutral-400 bg-clip-text text-4xl font-black text-transparent sm:text-5xl">
-                {s.value}
-              </div>
-              <div className="mt-2 text-sm text-neutral-400">{s.label}</div>
-            </motion.div>
-          ))}
-        </div>
-      </Section>
-
-      {/* ---------------- NOSOTROS ---------------- */}
-      <Section id="nosotros">
-        <div className="grid items-center gap-12 md:grid-cols-2">
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="relative"
-          >
-            <div className="overflow-hidden rounded-3xl">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=900&q=80"
-                alt="Entrenamiento en Xtreme Gym"
-                className="aspect-[4/5] w-full object-cover"
-              />
-            </div>
-            <div className="absolute -bottom-6 -right-4 rounded-2xl border border-white/10 bg-[#111113] p-5 shadow-2xl sm:-right-6">
-              <div className="flex items-center gap-3">
-                <span className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-red-500 to-orange-500">
-                  <Trophy className="h-5 w-5 text-white" />
-                </span>
-                <div>
-                  <div className="text-lg font-black">#1 en San Carlos</div>
-                  <div className="text-xs text-neutral-400">Comunidad fitness</div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-          >
-            <Eyebrow>Sobre nosotros</Eyebrow>
-            <h2 className="mt-5 text-3xl font-black tracking-tight sm:text-4xl">
-              Más que un gimnasio,
-              <br />
-              una <span className="text-red-500">familia fitness</span>
-            </h2>
-            <p className="mt-5 text-neutral-300">
-              En {GYM.name} creemos que cada persona tiene un potencial extremo por
-              descubrir. Desde principiantes hasta atletas, te damos el equipo, el
-              conocimiento y la energía para transformar tu cuerpo y tu mente.
-            </p>
-            <p className="mt-4 text-neutral-400">
-              Ubicados en el corazón de Ciudad Quesada, somos el punto de encuentro
-              de quienes no se conforman.
-            </p>
-
-            <div className="mt-8 grid gap-4 sm:grid-cols-2">
-              {FEATURES.map((f) => (
-                <div
-                  key={f.title}
-                  className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition hover:border-red-500/40 hover:bg-white/[0.05]"
-                >
-                  <f.icon className="h-6 w-6 text-red-500" />
-                  <h3 className="mt-3 font-bold">{f.title}</h3>
-                  <p className="mt-1.5 text-sm text-neutral-400">{f.text}</p>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        </div>
-      </Section>
-
-      {/* ---------------- CLASES ---------------- */}
-      <Section id="clases" className="bg-[#0d0d0f]">
-        <div className="text-center">
-          <Eyebrow>Disciplinas</Eyebrow>
-          <h2 className="mt-5 text-3xl font-black tracking-tight sm:text-4xl">
-            Entrena a tu <span className="text-red-500">manera</span>
-          </h2>
-          <p className="mx-auto mt-4 max-w-xl text-neutral-400">
-            Programas para cada objetivo, nivel y estilo de vida.
-          </p>
-        </div>
-
-        <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {CLASSES.map((c, i) => (
-            <motion.div
-              key={c.name}
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: i * 0.08 }}
-              className="group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.05] to-transparent p-6"
-            >
-              <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-red-500/10 blur-2xl transition group-hover:bg-red-500/20" />
-              <span className="grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br from-red-500 to-orange-500 shadow-lg shadow-red-500/30">
-                <c.icon className="h-6 w-6 text-white" />
-              </span>
-              <h3 className="mt-4 text-lg font-bold">{c.name}</h3>
-              <p className="mt-2 text-sm text-neutral-400">{c.text}</p>
-              <span className="mt-4 inline-block rounded-full bg-white/5 px-3 py-1 text-xs font-semibold text-red-400">
-                {c.tag}
-              </span>
-            </motion.div>
-          ))}
-        </div>
-      </Section>
-
-      {/* ---------------- HORARIOS ---------------- */}
-      <Section id="horarios">
-        <div className="grid items-center gap-10 md:grid-cols-2">
-          <div>
-            <Eyebrow>Horarios</Eyebrow>
-            <h2 className="mt-5 text-3xl font-black tracking-tight sm:text-4xl">
-              Abierto cuando <span className="text-red-500">tú puedes</span>
-            </h2>
-            <p className="mt-4 text-neutral-400">
-              Horario amplio para que entrenes temprano en la mañana o después del
-              trabajo. Sin excusas.
-            </p>
-            <a
-              href={waLink(`Hola ${GYM.name}, ¿me confirman el horario de hoy?`)}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-6 py-3 font-semibold transition hover:bg-white/10"
-            >
-              <Phone className="h-4 w-4" /> Consultar horario
-            </a>
-          </div>
-
-          <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03]">
-            {SCHEDULE.map((s, i) => (
-              <div
-                key={s.day}
-                className={`flex items-center justify-between px-6 py-5 ${
-                  i !== SCHEDULE.length - 1 ? "border-b border-white/10" : ""
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <Clock className="h-5 w-5 text-red-500" />
-                  <span className="font-semibold">{s.day}</span>
-                </div>
-                <span className="text-sm text-neutral-300">{s.hours}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </Section>
-
-      {/* ---------------- PLANES ---------------- */}
-      <Section id="planes" className="bg-[#0d0d0f]">
-        <div className="text-center">
-          <Eyebrow>Membresías</Eyebrow>
-          <h2 className="mt-5 text-3xl font-black tracking-tight sm:text-4xl">
-            Elige tu <span className="text-red-500">plan</span>
-          </h2>
-          <p className="mx-auto mt-4 max-w-xl text-neutral-400">
-            Precios de referencia. Escríbenos por WhatsApp para promociones y planes
-            anuales.
-          </p>
-        </div>
-
-        <div className="mt-12 grid gap-6 md:grid-cols-3">
-          {PLANS.map((p, i) => (
-            <motion.div
-              key={p.name}
-              initial={{ opacity: 0, y: 28 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: i * 0.08 }}
-              className={`relative flex flex-col rounded-3xl border p-8 ${
-                p.highlight
-                  ? "border-red-500/50 bg-gradient-to-b from-red-500/15 to-transparent shadow-2xl shadow-red-500/10"
-                  : "border-white/10 bg-white/[0.03]"
-              }`}
-            >
-              {p.highlight && (
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-red-500 to-orange-500 px-4 py-1 text-xs font-bold uppercase tracking-wide text-white">
-                  Más popular
-                </span>
-              )}
-              <h3 className="text-lg font-bold text-neutral-200">{p.name}</h3>
-              <div className="mt-4 flex items-end gap-1">
-                <span className="text-4xl font-black">{p.price}</span>
-                <span className="mb-1 text-sm text-neutral-400">/ {p.period}</span>
-              </div>
-              <ul className="mt-6 flex-1 space-y-3">
-                {p.features.map((f) => (
-                  <li key={f} className="flex items-start gap-2.5 text-sm text-neutral-300">
-                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <a
-                href={waLink(`Hola ${GYM.name}, me interesa el plan ${p.name}.`)}
-                target="_blank"
-                rel="noreferrer"
-                className={`mt-8 rounded-full py-3 text-center font-bold transition hover:scale-[1.02] ${
-                  p.highlight
-                    ? "bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-lg shadow-red-500/30"
-                    : "border border-white/20 bg-white/5 text-white hover:bg-white/10"
-                }`}
-              >
-                Empezar ahora
-              </a>
-            </motion.div>
-          ))}
-        </div>
-      </Section>
-
-      {/* ---------------- ENTRENADORES ---------------- */}
-      <Section>
-        <div className="text-center">
-          <Eyebrow>El equipo</Eyebrow>
-          <h2 className="mt-5 text-3xl font-black tracking-tight sm:text-4xl">
-            Entrenadores que te <span className="text-red-500">impulsan</span>
-          </h2>
-        </div>
-        <div className="mt-12 grid gap-6 sm:grid-cols-3">
-          {TRAINERS.map((t, i) => (
-            <motion.div
-              key={t.name}
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: i * 0.08 }}
-              className="group overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03]"
-            >
-              <div className="relative overflow-hidden">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={t.img}
-                  alt={t.name}
-                  className="aspect-[4/5] w-full object-cover transition duration-500 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0b] via-transparent to-transparent" />
-              </div>
-              <div className="p-5">
-                <h3 className="font-bold">{t.name}</h3>
-                <p className="text-sm text-red-400">{t.role}</p>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </Section>
-
-      {/* ---------------- GALERÍA ---------------- */}
-      <Section id="galeria" className="bg-[#0d0d0f]">
-        <div className="text-center">
-          <Eyebrow>Galería</Eyebrow>
-          <h2 className="mt-5 text-3xl font-black tracking-tight sm:text-4xl">
-            Así se vive <span className="text-red-500">Xtreme</span>
-          </h2>
-        </div>
-        <div className="mt-12 grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {GALLERY.map((src, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, scale: 0.94 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: (i % 3) * 0.06 }}
-              className="group overflow-hidden rounded-2xl"
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={src}
-                alt={`Xtreme Gym ${i + 1}`}
-                className="aspect-square w-full object-cover transition duration-500 group-hover:scale-110"
-              />
-            </motion.div>
-          ))}
-        </div>
-      </Section>
-
-      {/* ---------------- TESTIMONIOS ---------------- */}
-      <Section>
-        <div className="text-center">
-          <Eyebrow>Testimonios</Eyebrow>
-          <h2 className="mt-5 text-3xl font-black tracking-tight sm:text-4xl">
-            Lo que dice <span className="text-red-500">nuestra gente</span>
-          </h2>
-        </div>
-        <div className="mt-12 grid gap-6 md:grid-cols-3">
-          {TESTIMONIALS.map((t, i) => (
-            <motion.div
-              key={t.name}
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: i * 0.08 }}
-              className="rounded-3xl border border-white/10 bg-white/[0.03] p-7"
-            >
-              <div className="flex gap-1 text-orange-400">
-                {Array.from({ length: 5 }).map((_, s) => (
-                  <Star key={s} className="h-4 w-4 fill-current" />
-                ))}
-              </div>
-              <p className="mt-4 text-neutral-300">&ldquo;{t.text}&rdquo;</p>
-              <div className="mt-5 flex items-center gap-3">
-                <span className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-red-500 to-orange-500 font-bold text-white">
-                  {t.name.charAt(0)}
-                </span>
-                <span className="font-semibold">{t.name}</span>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </Section>
-
-      {/* ---------------- UBICACIÓN ---------------- */}
-      <Section id="ubicacion" className="bg-[#0d0d0f]">
-        <div className="grid gap-10 md:grid-cols-2">
-          <div>
-            <Eyebrow>Ubicación</Eyebrow>
-            <h2 className="mt-5 text-3xl font-black tracking-tight sm:text-4xl">
-              Visítanos en <span className="text-red-500">Ciudad Quesada</span>
-            </h2>
-
-            <div className="mt-8 space-y-5">
-              <div className="flex items-start gap-4">
-                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white/5">
-                  <MapPin className="h-5 w-5 text-red-500" />
-                </span>
-                <div>
-                  <div className="font-semibold">Dirección</div>
-                  <p className="text-sm text-neutral-400">{GYM.address}</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white/5">
-                  <Phone className="h-5 w-5 text-red-500" />
-                </span>
-                <div>
-                  <div className="font-semibold">Teléfono / WhatsApp</div>
-                  <p className="text-sm text-neutral-400">
-                    Tel: {GYM.phoneDisplay} · WhatsApp: {GYM.whatsappDisplay}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white/5">
-                  <Mail className="h-5 w-5 text-red-500" />
-                </span>
-                <div>
-                  <div className="font-semibold">Correo</div>
-                  <a
-                    href={`mailto:${GYM.email}`}
-                    className="text-sm text-neutral-400 transition hover:text-white"
-                  >
-                    {GYM.email}
-                  </a>
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white/5">
-                  <Timer className="h-5 w-5 text-red-500" />
-                </span>
-                <div>
-                  <div className="font-semibold">Horario</div>
-                  <p className="text-sm text-neutral-400">
-                    Lun–Vie 5am–10pm · Sáb 6am–6pm · Dom 7am–1pm
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-8 flex flex-wrap gap-3">
-              <a
-                href={GYM.maps}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-red-500 to-orange-500 px-6 py-3 font-bold text-white shadow-lg shadow-red-500/30 transition hover:scale-105"
-              >
-                <MapPin className="h-4 w-4" /> Cómo llegar
-              </a>
-              <a
-                href={GYM.instagram}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-6 py-3 font-semibold transition hover:bg-white/10"
-              >
-                <Instagram className="h-4 w-4" /> Instagram
-              </a>
-            </div>
-          </div>
-
-          <div className="overflow-hidden rounded-3xl border border-white/10">
-            <iframe
-              title="Ubicación Xtreme Gym"
-              src={mapEmbed}
-              className="h-full min-h-[340px] w-full"
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-            />
-          </div>
-        </div>
-      </Section>
-
-      {/* ---------------- CTA FINAL ---------------- */}
-      <section className="relative overflow-hidden px-5 py-24 sm:px-8">
-        <div className="absolute inset-0 bg-gradient-to-r from-red-600 to-orange-500" />
-        <div className="absolute inset-0 opacity-20 [background-image:radial-gradient(circle_at_20%_20%,white,transparent_45%)]" />
-        <div className="relative mx-auto max-w-3xl text-center">
-          <h2 className="text-4xl font-black leading-tight text-white sm:text-5xl">
-            Tu mejor versión empieza hoy
-          </h2>
-          <p className="mx-auto mt-4 max-w-xl text-lg text-white/90">
-            Da el primer paso. Escríbenos y reserva tu clase de prueba gratis en{" "}
-            {GYM.name}.
-          </p>
-          <a
-            href={waLink(`Hola ${GYM.name}, quiero mi clase de prueba gratis.`)}
-            target="_blank"
-            rel="noreferrer"
-            className="mt-8 inline-flex items-center gap-2 rounded-full bg-[#0a0a0b] px-8 py-4 text-lg font-bold text-white transition hover:scale-105"
-          >
-            Reserva por WhatsApp
-            <ArrowRight className="h-5 w-5" />
-          </a>
-        </div>
       </section>
 
-      {/* ---------------- FOOTER ---------------- */}
-      <footer className="border-t border-white/10 bg-[#0a0a0b] px-5 py-14 sm:px-8">
-        <div className="mx-auto max-w-6xl">
-          <div className="flex flex-col items-center justify-between gap-8 md:flex-row md:items-start">
-            <div className="max-w-sm text-center md:text-left">
-              <div className="flex items-center justify-center gap-2 font-black md:justify-start">
-                <span className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br from-red-500 to-orange-500 text-white">
-                  <Dumbbell className="h-5 w-5" />
-                </span>
-                <span className="text-lg">
-                  XTREME<span className="text-red-500">GYM</span>
-                </span>
-              </div>
-              <p className="mt-4 text-sm text-neutral-400">
-                {GYM.tagline}. El gimnasio de {GYM.city}.
-              </p>
-              <div className="mt-5 flex justify-center gap-3 md:justify-start">
-                <a
-                  href={GYM.instagram}
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label="Instagram"
-                  className="grid h-10 w-10 place-items-center rounded-full border border-white/10 text-neutral-300 transition hover:border-red-500/40 hover:text-white"
-                >
-                  <Instagram className="h-5 w-5" />
-                </a>
-                <a
-                  href={GYM.facebook}
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label="Facebook"
-                  className="grid h-10 w-10 place-items-center rounded-full border border-white/10 text-neutral-300 transition hover:border-red-500/40 hover:text-white"
-                >
-                  <Facebook className="h-5 w-5" />
-                </a>
-                <a
-                  href={waLink(`Hola ${GYM.name}!`)}
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label="WhatsApp"
-                  className="grid h-10 w-10 place-items-center rounded-full border border-white/10 text-neutral-300 transition hover:border-red-500/40 hover:text-white"
-                >
-                  <Phone className="h-5 w-5" />
-                </a>
-              </div>
+      <section className="mx-auto grid max-w-7xl gap-6 px-5 py-8 sm:px-8 lg:grid-cols-[1.35fr_.65fr]">
+        <div className="space-y-6">
+          {isLoading ? (
+            <div className="grid min-h-[420px] place-items-center border border-white/10 bg-white/[0.03]">
+              <Loader2 className="h-8 w-8 animate-spin text-lime-300" />
             </div>
+          ) : (
+            <>
+              <div className="grid gap-4 sm:grid-cols-4">
+                <StatTile icon={Flame} label="Racha" value={`${currentMember.streak} dias`} accent="from-orange-400 to-red-500" />
+                <StatTile icon={CalendarCheck} label="Entrenos" value={`${currentMember.totalWorkouts}`} accent="from-lime-300 to-emerald-400" />
+                <StatTile icon={Timer} label="Minutos" value={`${currentMember.totalMinutes}`} accent="from-cyan-300 to-sky-500" />
+                <StatTile icon={Trophy} label="Ranking" value={`#${Math.max(1, leaderboard.findIndex((p) => p.normalizedName === currentMember.normalizedName) + 1 || 1)}`} accent="from-yellow-300 to-orange-400" />
+              </div>
 
-            <div className="flex flex-col items-center gap-2 md:items-end">
-              <div className="text-sm font-semibold text-neutral-300">Enlaces</div>
-              {NAV.map((n) => (
-                <a
-                  key={n.href}
-                  href={n.href}
-                  className="text-sm text-neutral-400 transition hover:text-white"
+              <div className="grid gap-4 lg:grid-cols-[1fr_.85fr]">
+                <div className={`border p-5 ${membershipTone}`}>
+                  <div className="flex flex-wrap items-start justify-between gap-4">
+                    <div>
+                      <p className="text-xs font-black uppercase tracking-[0.18em] opacity-75">Membresia</p>
+                      <h2 className="mt-2 text-2xl font-black uppercase">{currentMember.membership.plan}</h2>
+                      <p className="mt-2 text-sm font-bold opacity-75">
+                        Proximo cobro: {currentMember.membership.nextBillingDate}
+                      </p>
+                    </div>
+                    <CreditCard className="h-8 w-8" />
+                  </div>
+                  <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                    <div className="border border-white/10 bg-black/20 p-3">
+                      <p className="text-[11px] font-black uppercase tracking-[0.16em] opacity-60">Estado</p>
+                      <p className="mt-1 font-black uppercase">{currentMember.membership.status}</p>
+                    </div>
+                    <div className="border border-white/10 bg-black/20 p-3">
+                      <p className="text-[11px] font-black uppercase tracking-[0.16em] opacity-60">Dias restantes</p>
+                      <p className="mt-1 font-black">{Math.max(0, currentMember.membership.daysRemaining)}</p>
+                    </div>
+                    <div className="border border-white/10 bg-black/20 p-3">
+                      <p className="text-[11px] font-black uppercase tracking-[0.16em] opacity-60">Plan</p>
+                      <p className="mt-1 font-black">Socio local</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border border-white/10 bg-white/[0.04] p-5">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-xs font-black uppercase tracking-[0.18em] text-cyan-300">Ocupacion ahora</p>
+                      <h2 className="mt-2 text-4xl font-black uppercase">{gymStatus?.level ?? "Cargando"}</h2>
+                    </div>
+                    <Users className="h-8 w-8 text-cyan-300" />
+                  </div>
+                  <div className="mt-5 h-3 border border-white/10 bg-black/45">
+                    <div className="h-full bg-cyan-300 transition-all" style={{ width: `${gymStatus?.occupancyPct ?? 0}%` }} />
+                  </div>
+                  <p className="mt-3 text-sm font-semibold text-white/55">
+                    {gymStatus
+                      ? `${gymStatus.currentPeople}/${gymStatus.capacity} personas estimadas. Reservas hoy: ${gymStatus.reservationsToday}.`
+                      : "Leyendo el gym en vivo."}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid gap-4 lg:grid-cols-[1fr_.85fr_.85fr]">
+                <div className="border border-lime-300/25 bg-lime-300/[0.07] p-5">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-xs font-black uppercase tracking-[0.18em] text-lime-300">
+                        Mision semanal
+                      </p>
+                      <h2 className="mt-2 text-2xl font-black uppercase">
+                        {weekDoneCount}/{weeklyGoal} entrenos
+                      </h2>
+                    </div>
+                    <Flame className="h-8 w-8 text-orange-300" />
+                  </div>
+                  <div className="mt-5 h-3 border border-white/10 bg-black/45">
+                    <div className="h-full bg-lime-300 transition-all" style={{ width: `${weeklyProgressPct}%` }} />
+                  </div>
+                  <p className="mt-3 text-sm font-semibold text-white/55">
+                    {weekDoneCount >= weeklyGoal
+                      ? "Semana cumplida. Ahora va por modo bestia."
+                      : `Faltan ${weeklyGoal - weekDoneCount} para cerrar la semana fuerte.`}
+                  </p>
+                </div>
+
+                <div className="border border-white/10 bg-white/[0.04] p-5">
+                  <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-300">Semana</p>
+                  <div className="mt-4 grid grid-cols-7 gap-2">
+                    {weekDates.map((date) => {
+                      const done = workoutDates.has(date);
+                      return (
+                        <div key={date} className="text-center">
+                          <div
+                            className={`grid aspect-square place-items-center border text-xs font-black ${
+                              done
+                                ? "border-lime-300 bg-lime-300 text-black"
+                                : "border-white/10 bg-black/25 text-white/35"
+                            }`}
+                          >
+                            {done ? <Check className="h-4 w-4" /> : dayLabel(date)}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <p className="mt-3 text-sm font-semibold text-white/45">Vista rapida de constancia.</p>
+                </div>
+
+                <div className="border border-white/10 bg-white/[0.04] p-5">
+                  <p className="text-xs font-black uppercase tracking-[0.18em] text-cyan-300">Nivel</p>
+                  <div className="mt-3 flex items-end gap-3">
+                    <span className="text-5xl font-black text-white">{level}</span>
+                    <span className="pb-2 text-sm font-bold uppercase text-white/45">Xtreme</span>
+                  </div>
+                  <p className="mt-3 text-sm font-semibold text-white/55">
+                    {milestoneLeft === 0
+                      ? "Subio de nivel. Tremendo."
+                      : `${milestoneLeft} entrenos para el nivel ${level + 1}.`}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid gap-6 lg:grid-cols-[.75fr_1.25fr]">
+                <div className="border border-white/10 bg-white/[0.04] p-5">
+                  <div className="flex items-center gap-3">
+                    <Sparkles className="h-5 w-5 text-lime-300" />
+                    <h2 className="text-lg font-black uppercase">Perfil Xtreme</h2>
+                  </div>
+                  <label className="mt-5 block text-xs font-black uppercase tracking-[0.16em] text-white/45">
+                    Meta actual
+                  </label>
+                  <div className="mt-3 grid gap-2">
+                    {GOALS.map((option) => (
+                      <button
+                        key={option}
+                        type="button"
+                        onClick={() => setGoal(option)}
+                        disabled={!unlocked}
+                        className={`flex items-center justify-between border px-4 py-3 text-left font-bold transition ${
+                          goal === option
+                            ? "border-lime-300 bg-lime-300 text-black"
+                            : "border-white/10 bg-black/20 text-white/70 hover:border-white/30"
+                        } disabled:opacity-50`}
+                      >
+                        {option}
+                        {goal === option && <Check className="h-4 w-4" />}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={saveProfile}
+                    disabled={!unlocked}
+                    className="mt-5 w-full bg-white px-4 py-3 font-black uppercase text-black transition hover:bg-lime-300 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    Guardar perfil
+                  </button>
+                  <p className="mt-4 text-sm font-semibold text-white/45">
+                    Favorito: {currentMember.favoriteTraining || "todavia en blanco"}
+                  </p>
+                </div>
+
+                <div className="border border-white/10 bg-white/[0.04] p-5">
+                  <div className="flex flex-wrap items-end justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-300">Hoy disponible</p>
+                      <h2 className="mt-1 text-2xl font-black uppercase">Entrenamientos</h2>
+                    </div>
+                    <p className="text-sm font-semibold text-white/45">{todayIso()}</p>
+                  </div>
+
+                  <div className="mt-5 grid gap-3">
+                    {TRAININGS.map((training) => {
+                      const Icon = training.icon;
+                      const done = completedToday.has(training.id);
+                      const reservation = reservations[training.id] ?? {
+                        reserved: 0,
+                        capacity: training.slots,
+                        remaining: training.slots,
+                        isMine: false,
+                      };
+                      const isFull = reservation.remaining <= 0 && !reservation.isMine;
+                      return (
+                        <div key={training.id} className="grid gap-4 border border-white/10 bg-black/20 p-4 md:grid-cols-[1fr_auto] md:items-center">
+                          <div className="flex gap-4">
+                            <span className={`grid h-14 w-14 shrink-0 place-items-center bg-gradient-to-br ${training.color} text-black`}>
+                              <Icon className="h-7 w-7" />
+                            </span>
+                            <div>
+                              <div className="flex flex-wrap items-center gap-2">
+                                <h3 className="text-lg font-black uppercase">{training.name}</h3>
+                                <span className="bg-white/10 px-2 py-1 text-[11px] font-black uppercase text-white/55">
+                                  {training.intensity}
+                                </span>
+                              </div>
+                              <p className="mt-1 text-sm font-semibold text-white/50">
+                                {training.time} · {training.minutes} min · {training.coach}
+                              </p>
+                              <p className="mt-2 text-sm text-white/64">
+                                {training.focus} · Cupos: {reservation.remaining}/{reservation.capacity}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="grid gap-2 sm:grid-cols-2 md:min-w-[310px]">
+                            <button
+                              type="button"
+                              onClick={() => reservation.isMine ? cancelReservation(training) : reserveTraining(training)}
+                              disabled={!unlocked || Boolean(reservingTrainingId) || isFull}
+                              className={`inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-black uppercase transition ${
+                                reservation.isMine
+                                  ? "border border-lime-300 bg-lime-300/10 text-lime-200 hover:bg-lime-300 hover:text-black"
+                                  : "bg-orange-300 text-black hover:bg-white"
+                              } disabled:cursor-not-allowed disabled:opacity-45`}
+                            >
+                              {reservingTrainingId === training.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : reservation.isMine ? (
+                                <CalendarClock className="h-4 w-4" />
+                              ) : (
+                                <ChevronRight className="h-4 w-4" />
+                              )}
+                              {reservation.isMine ? "Cancelar" : isFull ? "Lleno" : "Reservar"}
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => completeTraining(training)}
+                              disabled={!unlocked || Boolean(savingTrainingId) || done}
+                              className={`inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-black uppercase transition ${
+                                done
+                                  ? "bg-lime-300 text-black"
+                                  : "bg-white text-black hover:bg-lime-300"
+                              } disabled:cursor-not-allowed disabled:opacity-45`}
+                            >
+                              {savingTrainingId === training.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : done ? (
+                                <Check className="h-4 w-4" />
+                              ) : (
+                                <Dumbbell className="h-4 w-4" />
+                              )}
+                              {done ? "Hecho" : "Check-in"}
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              <div className="border border-white/10 bg-white/[0.04] p-5">
+                <div className="flex items-center gap-3">
+                  <Award className="h-5 w-5 text-yellow-300" />
+                  <h2 className="text-lg font-black uppercase">Logros</h2>
+                  <span className="ml-auto text-sm font-black text-white/45">
+                    {unlockedCount}/{achievements.length}
+                  </span>
+                </div>
+                <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {achievements.map((a) => {
+                    const Icon = a.icon;
+                    return (
+                      <div
+                        key={a.id}
+                        className={`flex items-center gap-3 border p-3 ${
+                          a.done ? "border-lime-300/40 bg-lime-300/10" : "border-white/10 bg-black/20"
+                        }`}
+                      >
+                        <span
+                          className={`grid h-11 w-11 shrink-0 place-items-center ${
+                            a.done ? "bg-lime-300 text-black" : "bg-white/10 text-white/40"
+                          }`}
+                        >
+                          {a.done ? <Icon className="h-5 w-5" /> : <Lock className="h-4 w-4" />}
+                        </span>
+                        <div className="min-w-0">
+                          <p
+                            className={`truncate text-sm font-black uppercase ${
+                              a.done ? "text-white" : "text-white/55"
+                            }`}
+                          >
+                            {a.name}
+                          </p>
+                          <p className="text-xs font-semibold text-white/40">{a.desc}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="grid gap-6 lg:grid-cols-[.9fr_1.1fr]">
+                <div className="border border-white/10 bg-white/[0.04] p-5">
+                  <div className="flex items-center gap-3">
+                    <Ruler className="h-5 w-5 text-cyan-300" />
+                    <h2 className="text-lg font-black uppercase">Progreso corporal</h2>
+                  </div>
+                  <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                    <label className="block">
+                      <span className="text-xs font-black uppercase tracking-[0.16em] text-white/45">Peso kg</span>
+                      <input
+                        value={weightKg}
+                        onChange={(event) => setWeightKg(event.target.value)}
+                        inputMode="decimal"
+                        className="mt-2 w-full border border-white/10 bg-black/30 px-3 py-3 font-bold text-white outline-none focus:border-cyan-300"
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="text-xs font-black uppercase tracking-[0.16em] text-white/45">Cintura cm</span>
+                      <input
+                        value={waistCm}
+                        onChange={(event) => setWaistCm(event.target.value)}
+                        inputMode="decimal"
+                        className="mt-2 w-full border border-white/10 bg-black/30 px-3 py-3 font-bold text-white outline-none focus:border-cyan-300"
+                      />
+                    </label>
+                  </div>
+                  <input
+                    value={metricNote}
+                    onChange={(event) => setMetricNote(event.target.value)}
+                    placeholder="Nota opcional"
+                    className="mt-3 w-full border border-white/10 bg-black/30 px-3 py-3 font-bold text-white outline-none placeholder:text-white/30 focus:border-cyan-300"
+                  />
+                  <button
+                    type="button"
+                    onClick={saveBodyMetric}
+                    disabled={!unlocked}
+                    className="mt-3 w-full bg-cyan-300 px-4 py-3 font-black uppercase text-black transition hover:bg-white disabled:opacity-45"
+                  >
+                    Guardar medidas
+                  </button>
+                  <p className="mt-3 text-sm font-semibold text-white/45">
+                    Ultimo registro: {latestMetric ? `${latestMetric.weightKg} kg · ${latestMetric.waistCm} cm` : "sin medidas aun"}
+                  </p>
+                </div>
+
+                <div className="border border-white/10 bg-white/[0.04] p-5">
+                  <div className="flex items-center gap-3">
+                    <Target className="h-5 w-5 text-lime-300" />
+                    <h2 className="text-lg font-black uppercase">Grafica rapida</h2>
+                  </div>
+                  {metricTrend.length ? (
+                    <div className="mt-5 flex h-40 items-end gap-3 border border-white/10 bg-black/25 p-4">
+                      {metricTrend.map((metric) => {
+                        const maxWeight = Math.max(...metricTrend.map((item) => item.weightKg));
+                        const height = Math.max(18, Math.round((metric.weightKg / maxWeight) * 100));
+                        return (
+                          <div key={metric.id} className="flex flex-1 flex-col items-center gap-2">
+                            <div className="w-full bg-lime-300" style={{ height: `${height}%` }} />
+                            <span className="text-[10px] font-bold text-white/45">{metric.date.slice(5)}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="mt-5 grid h-40 place-items-center border border-white/10 bg-black/25 text-sm font-semibold text-white/40">
+                      Guarde su primera medida para ver evolucion.
+                    </div>
+                  )}
+                  <p className="mt-3 text-sm font-semibold text-white/45">
+                    Pensado para peso, medidas y seguimiento simple de recepcion.
+                  </p>
+                </div>
+              </div>
+
+              <div className="border border-white/10 bg-white/[0.04] p-5">
+                <div className="flex items-center gap-3">
+                  <Video className="h-5 w-5 text-orange-300" />
+                  <h2 className="text-lg font-black uppercase">Rutinas guiadas</h2>
+                </div>
+                <div className="mt-5 grid gap-3 md:grid-cols-3">
+                  {ROUTINES.map((routine) => (
+                    <div key={routine.name} className="border border-white/10 bg-black/20 p-4">
+                      <p className="text-xs font-black uppercase tracking-[0.16em] text-orange-300">{routine.level}</p>
+                      <h3 className="mt-2 font-black uppercase">{routine.name}</h3>
+                      <ul className="mt-3 space-y-2 text-sm font-semibold text-white/55">
+                        {routine.exercises.map((exercise) => (
+                          <li key={exercise}>{exercise}</li>
+                        ))}
+                      </ul>
+                      <button
+                        type="button"
+                        className="mt-4 inline-flex items-center gap-2 border border-white/10 px-3 py-2 text-xs font-black uppercase text-white/65 transition hover:border-orange-300 hover:text-orange-200"
+                      >
+                        <Video className="h-4 w-4" />
+                        {routine.video}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+
+          {(message || error) && (
+            <div className={`border px-4 py-3 text-sm font-bold ${error ? "border-red-400/40 bg-red-500/10 text-red-200" : "border-lime-300/40 bg-lime-300/10 text-lime-200"}`}>
+              {error || message}
+            </div>
+          )}
+        </div>
+
+        <aside className="space-y-6">
+          <div className="border border-white/10 bg-gradient-to-br from-lime-300/[0.08] to-orange-400/[0.06] p-5">
+            <div className="flex items-center gap-3">
+              <QrCode className="h-5 w-5 text-lime-300" />
+              <h2 className="text-lg font-black uppercase">Carne digital</h2>
+            </div>
+            {memberName ? (
+              <>
+                <div className="mt-4 border border-white/10 bg-black/40 p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-black uppercase tracking-[0.2em] text-lime-300">
+                        Socio Xtreme
+                      </p>
+                      <p className="mt-1 truncate text-lg font-black uppercase leading-tight">{memberName}</p>
+                    </div>
+                    <span className="shrink-0 border border-lime-300/40 bg-lime-300/10 px-2 py-1 text-[10px] font-black uppercase text-lime-200">
+                      Activo
+                    </span>
+                  </div>
+                  <div className="mt-4">
+                    <Barcode value={accessCode} />
+                  </div>
+                  <p className="mt-2 text-center text-sm font-black tracking-[0.3em] text-white/70">{accessCode}</p>
+                </div>
+                <p className="mt-3 text-xs font-semibold text-white/45">
+                  Mostra este codigo en recepcion para tu check-in.
+                </p>
+              </>
+            ) : (
+              <p className="mt-4 text-sm font-semibold text-white/45">
+                Entra con tu nombre para generar tu carne de acceso.
+              </p>
+            )}
+          </div>
+
+          <div className="border border-white/10 bg-white/[0.04] p-5">
+            <div className="flex items-center gap-3">
+              <Bell className="h-5 w-5 text-yellow-300" />
+              <h2 className="text-lg font-black uppercase">Recordatorios</h2>
+            </div>
+            <div className="mt-4 grid gap-2">
+              {REMINDERS.map((reminder) => (
+                <button
+                  key={reminder}
+                  type="button"
+                  onClick={() => setSelectedReminder(reminder)}
+                  className={`border px-3 py-3 text-left text-sm font-bold transition ${
+                    selectedReminder === reminder
+                      ? "border-yellow-300 bg-yellow-300/10 text-yellow-100"
+                      : "border-white/10 bg-black/20 text-white/55 hover:border-white/25"
+                  }`}
                 >
-                  {n.label}
-                </a>
+                  {reminder}
+                </button>
               ))}
             </div>
+            <button
+              type="button"
+              onClick={() => setMessage(`Recordatorio listo: ${selectedReminder}`)}
+              disabled={!unlocked}
+              className="mt-4 w-full bg-yellow-300 px-4 py-3 font-black uppercase text-black transition hover:bg-white disabled:opacity-45"
+            >
+              Activar aviso
+            </button>
           </div>
 
-          <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-6 text-xs text-neutral-500 sm:flex-row">
-            <span>
-              © {new Date().getFullYear()} {GYM.name}. Todos los derechos reservados.
-            </span>
-            <span>Propuesta de sitio web · demo</span>
+          <div className="border border-white/10 bg-white/[0.04] p-5">
+            <div className="flex items-center gap-3">
+              <Users className="h-5 w-5 text-lime-300" />
+              <h2 className="text-lg font-black uppercase">Invita a un compa</h2>
+            </div>
+            <p className="mt-4 text-sm font-semibold text-white/55">
+              Pase de cortesia para entrenar una vez con usted.
+            </p>
+            <div className="mt-4 border border-lime-300/30 bg-lime-300/10 p-4 text-center">
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-lime-300">Codigo invitado</p>
+              <p className="mt-2 text-2xl font-black tracking-[0.18em] text-white">
+                XT-{accessCode.replace(/\s/g, "").slice(0, 5)}
+              </p>
+            </div>
           </div>
-        </div>
-      </footer>
+
+          <div className="border border-white/10 bg-white/[0.04] p-5">
+            <div className="flex items-center gap-3">
+              <Medal className="h-5 w-5 text-orange-300" />
+              <h2 className="text-lg font-black uppercase">Leaderboard</h2>
+            </div>
+            <div className="mt-5 space-y-3">
+              {leaderboard.length ? (
+                leaderboard.map((entry, index) => (
+                  <div key={entry.normalizedName || entry.memberName} className="flex items-center gap-3 border border-white/10 bg-black/20 p-3">
+                    <span className={`grid h-9 w-9 place-items-center font-black ${index === 0 ? "bg-orange-300 text-black" : "bg-white/10 text-white"}`}>
+                      {index + 1}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-black uppercase">{entry.memberName}</p>
+                      <p className="text-xs font-semibold text-white/45">
+                        {entry.streak} dias · {entry.totalWorkouts} entrenos
+                      </p>
+                    </div>
+                    <Flame className="h-5 w-5 text-orange-300" />
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm font-semibold text-white/45">El ranking aparece cuando alguien marque entrenos.</p>
+              )}
+            </div>
+          </div>
+
+          <div className="border border-white/10 bg-white/[0.04] p-5">
+            <div className="flex items-center gap-3">
+              <Timer className="h-5 w-5 text-cyan-300" />
+              <h2 className="text-lg font-black uppercase">Ultimos registros</h2>
+            </div>
+            <div className="mt-5 space-y-3">
+              {recentWorkouts.length ? (
+                recentWorkouts.map((workout) => (
+                  <div key={workout.id} className="border border-white/10 bg-black/20 p-3">
+                    <p className="font-black uppercase">{workout.trainingName}</p>
+                    <p className="mt-1 text-xs font-semibold text-white/45">
+                      {workout.completedDate} · {workout.minutes} min · {workout.intensity}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm font-semibold text-white/45">
+                  Todavia no hay registros. Primer entreno y arranca la racha, pura vida.
+                </p>
+              )}
+            </div>
+          </div>
+        </aside>
+      </section>
     </main>
   );
 }

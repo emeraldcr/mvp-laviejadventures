@@ -42,7 +42,7 @@ const PROPOSALS: Proposal[] = [
     name: "Xtreme Gym",
     category: "Gimnasio",
     location: "Ciudad Quesada, San Carlos",
-    accent: "from-red-500 to-orange-500",
+    accent: "from-amber-400 to-yellow-500",
     icon: Dumbbell,
   },
   {

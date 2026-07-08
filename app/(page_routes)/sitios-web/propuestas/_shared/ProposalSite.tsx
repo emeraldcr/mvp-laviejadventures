@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
+  Activity,
   Bone,
   Brush,
   CakeSlice,
@@ -14,12 +15,14 @@ import {
   Cookie,
   Croissant,
   Dog,
+  Dumbbell,
   Facebook,
   Fish,
   Flame,
   Gift,
   Heart,
   HeartHandshake,
+  HeartPulse,
   Instagram,
   Leaf,
   Mail,
@@ -41,14 +44,18 @@ import {
   Stethoscope,
   Store,
   Syringe,
+  Trophy,
   Utensils,
   UtensilsCrossed,
+  Users,
   Wheat,
   X,
+  Zap,
 } from "lucide-react";
 import type { BusinessConfig } from "./types";
 
 const ICONS: Record<string, typeof Sparkles> = {
+  Activity,
   ArrowRight,
   Bone,
   Brush,
@@ -58,11 +65,13 @@ const ICONS: Record<string, typeof Sparkles> = {
   Cookie,
   Croissant,
   Dog,
+  Dumbbell,
   Fish,
   Flame,
   Gift,
   Heart,
   HeartHandshake,
+  HeartPulse,
   Leaf,
   Music,
   PawPrint,
@@ -77,9 +86,12 @@ const ICONS: Record<string, typeof Sparkles> = {
   Stethoscope,
   Store,
   Syringe,
+  Trophy,
   Utensils,
   UtensilsCrossed,
+  Users,
   Wheat,
+  Zap,
 };
 
 function Icon({ name, className }: { name: string; className?: string }) {
