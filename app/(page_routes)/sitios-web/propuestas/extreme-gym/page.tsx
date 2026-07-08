@@ -176,7 +176,6 @@ export default function ExtremeGymLandingPage() {
             </Link>
 
             <nav className="hidden items-center gap-7 text-xs font-black uppercase tracking-[0.18em] text-white/58 lg:flex">
-              <a href="#promo" className="transition hover:text-white">Promo</a>
               <a href="#zonas" className="transition hover:text-white">Zonas</a>
               <a href="#planes" className="transition hover:text-white">Precios</a>
               <a href="#adultos" className="transition hover:text-white">Adultos</a>
@@ -199,14 +198,14 @@ export default function ExtremeGymLandingPage() {
                 <MapPin className="h-4 w-4" />
                 {BUSINESS.location}
               </div>
-              <h1 className="mt-7 max-w-4xl text-[2.8rem] font-black uppercase leading-[0.88] tracking-tight min-[420px]:text-5xl sm:text-7xl lg:text-8xl">
-                Entrene fuerte.
-                <span className="block text-[#f6c400]">Viva mejor.</span>
+              <h1 className="mt-7 max-w-4xl text-[2.45rem] font-black uppercase leading-[0.9] tracking-tight min-[420px]:text-5xl sm:text-7xl lg:text-8xl">
+                Conviértete en la versión
+                <span className="block text-[#f6c400]">más saludable de ti.</span>
               </h1>
               <p className="mt-6 max-w-2xl text-lg font-semibold leading-8 text-white/72">
-                Construya hábitos que lo acerquen a una mejor condición física, más energía,
-                mayor salud y a la versión de usted que quiere alcanzar. Cada objetivo es distinto,
-                pero todos comienzan con la decisión de no rendirse.
+                Entrene en un ambiente completo para mejorar condición física, ganar energía
+                y construir hábitos que sí se sostienen. Cada objetivo es distinto, pero todos
+                comienzan con la decisión de moverse.
               </p>
 
               <div className="mt-9 flex flex-wrap gap-3">
@@ -291,59 +290,77 @@ export default function ExtremeGymLandingPage() {
         </div>
       </section>
 
-      <section id="promo" className="px-5 py-20 sm:px-8">
-        <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[.95fr_1.05fr] lg:items-center">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-[#f6c400]">Entrenar acompañado</p>
-            <h2 className="mt-3 text-4xl font-black uppercase leading-none sm:text-6xl">
-              El esfuerzo se sostiene mejor en equipo.
-            </h2>
-            <p className="mt-5 text-base font-semibold leading-8 text-white/62">
-              Entrenar con alguien cercano ayuda a mantener la disciplina, celebrar avances
-              y no abandonar a mitad de camino. Pregunte por beneficios activos para venir
-              con un compa, familiar o esa persona que necesita el empujón.
-            </p>
-            <div className="mt-7 flex flex-wrap gap-3">
-              <a
-                href={waLink("Hola Xtreme Gym, quiero saber si está activa la promo para venir con un amigo.")}
-                className="inline-flex items-center gap-2 bg-white px-5 py-3 font-black uppercase text-black transition hover:bg-[#f6c400]"
-              >
-                Consultar beneficio
-                <MessageCircle className="h-4 w-4" />
-              </a>
+      <section id="planes" className="px-5 py-16 sm:px-8 lg:py-20">
+        <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1.05fr_.95fr] lg:items-center">
+          <div className="relative overflow-hidden border border-white/10 bg-black">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="https://images.unsplash.com/photo-1571902943202-507ec2618e8f?auto=format&fit=crop&w=1500&q=84"
+              alt="Costos Xtreme Gym"
+              className="absolute inset-0 h-full w-full object-cover opacity-34"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-black via-black/78 to-black/38" />
+            <div className="relative p-6 sm:p-9">
+              <div className="inline-flex bg-[#f6c400] px-6 py-3 text-black">
+                <span className="text-5xl font-black uppercase leading-none sm:text-7xl">Costos</span>
+              </div>
+              <p className="mt-3 text-xl font-semibold italic text-white/78">
+                El momento de comenzar es ahora.
+              </p>
+
+              <div className="mt-9 grid gap-4">
+                {COSTS.map((item) => (
+                  <div key={item.period} className="grid gap-2 sm:grid-cols-[150px_1fr] sm:items-center">
+                    <p className="text-xl font-black uppercase italic text-white/80 sm:text-right">{item.period}</p>
+                    <div className="border-2 border-[#f6c400] bg-black/56 px-5 py-3">
+                      <p className="text-4xl font-black uppercase italic leading-none text-white sm:text-5xl">
+                        {item.price}
+                      </p>
+                      <p className="mt-1 text-xs font-black uppercase tracking-[0.18em] text-[#f6c400]">{item.note}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-5">
+                <p className="text-sm font-black uppercase tracking-[0.16em] text-white/65">
+                  Información: {BUSINESS.phone}
+                </p>
                 <a
-                  href={`tel:${BUSINESS.phone.replace(/\s/g, "")}`}
-                  className="inline-flex items-center gap-2 border border-white/15 px-5 py-3 font-black uppercase text-white transition hover:border-white/40"
+                  href={waLink("Hola Xtreme Gym, quiero confirmar costos vigentes: día, semana, quincena o mes.")}
+                  className="inline-flex items-center gap-2 bg-[#f6c400] px-5 py-3 font-black uppercase text-black transition hover:bg-white"
                 >
-                Llamar {BUSINESS.phone}
-                <Phone className="h-4 w-4" />
-              </a>
+                  Confirmar costo
+                  <MessageCircle className="h-4 w-4" />
+                </a>
+              </div>
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            {[
-              ["Para usted", "Cliente regular", "Mantenga su proceso", "Sume constancia"],
-              ["Para su amigo", "Nuevo ingreso", "Empieza acompañado", "Primer paso"],
-            ].map(([title, subtitle, benefit, detail]) => (
-              <article key={title} className="overflow-hidden border border-white/12 bg-white text-black">
-                <div className="bg-black px-5 py-4 text-center text-white">
-                  <p className="text-3xl font-black uppercase text-[#f6c400]">{title}</p>
-                  <p className="text-xs font-black uppercase tracking-[0.16em] text-white/65">{subtitle}</p>
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-[#f6c400]">Membresías</p>
+            <h2 className="mt-3 text-4xl font-black uppercase leading-none sm:text-6xl">
+              Elija el ritmo que puede sostener.
+            </h2>
+            <p className="mt-5 text-base font-semibold leading-8 text-white/62">
+              Día, semana, quincena o mes: lo importante es tomar la decisión y mantenerse activo.
+              Recepción confirma costos, horarios y cualquier promoción vigente antes de matricular.
+            </p>
+            <div className="mt-7 grid gap-3">
+              {PLAN_DETAILS.map((detail) => (
+                <div key={detail} className="flex items-center gap-3 border border-white/10 bg-white/[0.04] p-4">
+                  <CheckCircle2 className="h-5 w-5 text-[#f6c400]" />
+                  <span className="font-bold text-white/72">{detail}</span>
                 </div>
-                <div className="p-6 text-center">
-                  <p className="text-sm font-black uppercase tracking-[0.16em] text-black/50">{benefit}</p>
-                  <p className="mt-4 text-4xl font-black uppercase leading-none">Promo</p>
-                  <p className="mt-2 text-lg font-black uppercase text-[#bd9300]">{detail}</p>
-                  <div className="mx-auto mt-6 grid h-16 w-16 place-items-center border-2 border-[#f6c400]">
-                    <Users className="h-8 w-8" />
-                  </div>
-                  <p className="mt-5 text-sm font-bold text-black/60">
-                    Condiciones vigentes se confirman por WhatsApp o en recepción.
-                  </p>
-                </div>
-              </article>
-            ))}
+              ))}
+            </div>
+            <a
+              href={waLink("Hola Xtreme Gym, quiero empezar. ¿Me confirma costos y requisitos?")}
+              className="mt-7 inline-flex items-center gap-2 bg-white px-5 py-3 font-black uppercase text-black transition hover:bg-[#f6c400]"
+            >
+              Quiero comenzar
+              <ArrowRight className="h-4 w-4" />
+            </a>
           </div>
         </div>
       </section>
@@ -518,81 +535,6 @@ export default function ExtremeGymLandingPage() {
                 <p className="mt-5 font-black uppercase">{label as string}</p>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      <section id="planes" className="px-5 py-20 sm:px-8">
-        <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1.05fr_.95fr] lg:items-center">
-          <div className="relative overflow-hidden border border-white/10 bg-black">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="https://images.unsplash.com/photo-1571902943202-507ec2618e8f?auto=format&fit=crop&w=1500&q=84"
-              alt="Costos Xtreme Gym"
-              className="absolute inset-0 h-full w-full object-cover opacity-34"
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-black via-black/78 to-black/38" />
-            <div className="relative p-6 sm:p-9">
-              <div className="inline-flex bg-[#f6c400] px-6 py-3 text-black">
-                <span className="text-5xl font-black uppercase leading-none sm:text-7xl">Costos</span>
-              </div>
-              <p className="mt-3 text-xl font-semibold italic text-white/78">
-                El momento de comenzar es ahora.
-              </p>
-
-              <div className="mt-9 grid gap-4">
-                {COSTS.map((item) => (
-                  <div key={item.period} className="grid gap-2 sm:grid-cols-[150px_1fr] sm:items-center">
-                    <p className="text-xl font-black uppercase italic text-white/80 sm:text-right">{item.period}</p>
-                    <div className="border-2 border-[#f6c400] bg-black/56 px-5 py-3">
-                      <p className="text-4xl font-black uppercase italic leading-none text-white sm:text-5xl">
-                        {item.price}
-                      </p>
-                      <p className="mt-1 text-xs font-black uppercase tracking-[0.18em] text-[#f6c400]">{item.note}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-5">
-                <p className="text-sm font-black uppercase tracking-[0.16em] text-white/65">
-                  Información: {BUSINESS.phone}
-                </p>
-                <a
-                  href={waLink("Hola Xtreme Gym, quiero confirmar costos vigentes: día, semana, quincena o mes.")}
-                  className="inline-flex items-center gap-2 bg-[#f6c400] px-5 py-3 font-black uppercase text-black transition hover:bg-white"
-                >
-                  Confirmar costo
-                  <MessageCircle className="h-4 w-4" />
-                </a>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-[#f6c400]">Membresías</p>
-            <h2 className="mt-3 text-4xl font-black uppercase leading-none sm:text-6xl">
-              Elija el ritmo que puede sostener.
-            </h2>
-            <p className="mt-5 text-base font-semibold leading-8 text-white/62">
-              Día, semana, quincena o mes: lo importante es tomar la decisión y mantenerse activo.
-              Recepción confirma costos, horarios y cualquier promoción vigente antes de matricular.
-            </p>
-            <div className="mt-7 grid gap-3">
-              {PLAN_DETAILS.map((detail) => (
-                <div key={detail} className="flex items-center gap-3 border border-white/10 bg-white/[0.04] p-4">
-                  <CheckCircle2 className="h-5 w-5 text-[#f6c400]" />
-                  <span className="font-bold text-white/72">{detail}</span>
-                </div>
-              ))}
-            </div>
-            <a
-              href={waLink("Hola Xtreme Gym, quiero empezar. ¿Me confirma costos y requisitos?")}
-              className="mt-7 inline-flex items-center gap-2 bg-white px-5 py-3 font-black uppercase text-black transition hover:bg-[#f6c400]"
-            >
-              Quiero comenzar
-              <ArrowRight className="h-4 w-4" />
-            </a>
           </div>
         </div>
       </section>
