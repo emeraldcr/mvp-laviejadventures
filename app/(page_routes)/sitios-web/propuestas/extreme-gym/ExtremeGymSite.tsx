@@ -247,8 +247,8 @@ const ACHIEVEMENTS: {
   test: (m: Member) => boolean;
 }[] = [
   { id: "first", name: "Primer paso", desc: "Tu primer entreno marcado", icon: Star, test: (m) => m.totalWorkouts >= 1 },
-  { id: "streak7", name: "En racha", desc: "7 dias seguidos", icon: Flame, test: (m) => m.streak >= 7 },
-  { id: "streak30", name: "Imparable", desc: "30 dias de racha", icon: Rocket, test: (m) => m.streak >= 30 },
+  { id: "streak7", name: "En racha", desc: "7 dias seguidos, sin aflojar", icon: Flame, test: (m) => m.streak >= 7 },
+  { id: "streak30", name: "Imparable", desc: "30 dias de racha pura vida", icon: Rocket, test: (m) => m.streak >= 30 },
   { id: "variety", name: "Todoterreno", desc: "Prueba las 4 clases", icon: Target, test: (m) => new Set(m.workouts.map((w) => w.trainingId)).size >= 4 },
   { id: "vet", name: "Veterano", desc: "50 entrenos", icon: Medal, test: (m) => m.totalWorkouts >= 50 },
   { id: "marathon", name: "Maratonico", desc: "1.000 minutos acumulados", icon: Timer, test: (m) => m.totalMinutes >= 1000 },
@@ -293,8 +293,8 @@ function StatTile({
   accent: string;
 }) {
   return (
-    <div className="border border-white/10 bg-white/[0.04] p-4">
-      <div className={`mb-4 grid h-10 w-10 place-items-center bg-gradient-to-br ${accent} text-black`}>
+    <div className="border border-white/10 bg-white/[0.05] p-4 shadow-[0_18px_60px_rgba(0,0,0,.18)] backdrop-blur-sm">
+      <div className={`mb-4 grid h-10 w-10 place-items-center bg-gradient-to-br ${accent} text-black shadow-lg`}>
         <Icon className="h-5 w-5" />
       </div>
       <div className="text-2xl font-black text-white">{value}</div>
@@ -408,7 +408,7 @@ function PinModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 backdrop-blur-md">
       <div className="w-full max-w-[320px] border border-white/12 bg-[#101010] p-6 text-center shadow-2xl">
-        <div className="mx-auto grid h-16 w-16 place-items-center bg-lime-400 text-black">
+        <div className="mx-auto grid h-16 w-16 place-items-center bg-[#d8ff3e] text-black">
           {mode === "set" ? <ShieldCheck className="h-8 w-8" /> : <Lock className="h-8 w-8" />}
         </div>
         <p className="mt-5 text-xs font-black uppercase tracking-[0.26em] text-orange-300">{memberName}</p>
@@ -418,7 +418,7 @@ function PinModal({
         <button
           type="button"
           onClick={onChangeMember}
-          className="mt-4 border border-white/15 px-3 py-2 text-xs font-black uppercase tracking-wide text-white/70 transition hover:border-lime-300 hover:text-lime-200"
+          className="mt-4 border border-white/15 px-3 py-2 text-xs font-black uppercase tracking-wide text-white/70 transition hover:border-[#d8ff3e] hover:text-[#eaff93]"
         >
           Cambiar usuario
         </button>
@@ -427,7 +427,7 @@ function PinModal({
           {[0, 1, 2, 3].map((index) => (
             <span
               key={index}
-              className={`h-4 w-4 border-2 ${digits.length > index ? "border-lime-300 bg-lime-300" : "border-white/30"}`}
+              className={`h-4 w-4 border-2 ${digits.length > index ? "border-[#d8ff3e] bg-[#d8ff3e]" : "border-white/30"}`}
             />
           ))}
         </div>
@@ -435,7 +435,7 @@ function PinModal({
         <div className="mt-4 min-h-6 text-sm font-bold text-red-300">{error}</div>
 
         {isLoading ? (
-          <Loader2 className="mx-auto mt-4 h-7 w-7 animate-spin text-lime-300" />
+          <Loader2 className="mx-auto mt-4 h-7 w-7 animate-spin text-[#d8ff3e]" />
         ) : (
           <div className="mt-4 grid grid-cols-3 gap-3">
             {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((digit) => (
@@ -443,7 +443,7 @@ function PinModal({
                 key={digit}
                 type="button"
                 onClick={() => pressDigit(digit)}
-                className="grid h-14 place-items-center border border-white/10 bg-white/[0.04] text-xl font-black text-white transition hover:border-lime-300 hover:bg-lime-300 hover:text-black"
+                className="grid h-14 place-items-center border border-white/10 bg-white/[0.04] text-xl font-black text-white transition hover:border-[#d8ff3e] hover:bg-[#d8ff3e] hover:text-black"
               >
                 {digit}
               </button>
@@ -452,7 +452,7 @@ function PinModal({
             <button
               type="button"
               onClick={() => pressDigit("0")}
-              className="grid h-14 place-items-center border border-white/10 bg-white/[0.04] text-xl font-black text-white transition hover:border-lime-300 hover:bg-lime-300 hover:text-black"
+              className="grid h-14 place-items-center border border-white/10 bg-white/[0.04] text-xl font-black text-white transition hover:border-[#d8ff3e] hover:bg-[#d8ff3e] hover:text-black"
             >
               0
             </button>
@@ -523,7 +523,7 @@ export default function ExtremeGymSite() {
       ? "border-red-400/40 bg-red-500/10 text-red-200"
       : currentMember.membership.status === "warning"
         ? "border-orange-300/40 bg-orange-300/10 text-orange-100"
-        : "border-lime-300/35 bg-lime-300/10 text-lime-100";
+        : "border-[#d8ff3e]/35 bg-[#d8ff3e]/10 text-[#efffb8]";
 
   const storeSession = useCallback((name: string) => {
     window.localStorage.setItem(STORAGE_KEY, name);
@@ -755,7 +755,7 @@ export default function ExtremeGymSite() {
   }
 
   return (
-    <main className="min-h-screen bg-[#090909] text-white selection:bg-lime-300 selection:text-black">
+    <main className="min-h-screen bg-[#050505] text-white selection:bg-[#d8ff3e] selection:text-black">
       {showPin && (
         <PinModal
           memberName={memberName}
@@ -770,29 +770,43 @@ export default function ExtremeGymSite() {
       )}
 
       <section className="relative overflow-hidden border-b border-white/10 px-5 py-6 sm:px-8">
-        <div className="absolute inset-0 opacity-30 [background:linear-gradient(120deg,rgba(239,68,68,.28),transparent_35%),linear-gradient(300deg,rgba(190,242,100,.22),transparent_42%)]" />
+        <div className="absolute inset-0">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1800&q=80"
+            alt="Entrenamiento funcional Xtreme Gym"
+            className="h-full w-full object-cover opacity-24"
+          />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,#050505_0%,rgba(5,5,5,.88)_48%,rgba(5,5,5,.52)_100%)]" />
+          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#050505] to-transparent" />
+        </div>
         <div className="relative mx-auto flex max-w-7xl flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <div className="flex items-center gap-3">
-              <span className="grid h-12 w-12 place-items-center bg-white text-black">
+              <span className="grid h-12 w-12 place-items-center bg-[#d8ff3e] text-black">
                 <Dumbbell className="h-7 w-7" />
               </span>
               <div>
-                <p className="text-xs font-black uppercase tracking-[0.24em] text-lime-300">Ciudad Quesada</p>
+                <p className="text-xs font-black uppercase tracking-[0.24em] text-[#d8ff3e]">Ciudad Quesada</p>
                 <h1 className="text-3xl font-black uppercase tracking-tight sm:text-5xl">
-                  Xtreme Gym <span className="text-orange-400">Streaks</span>
+                  Xtreme Gym <span className="text-[#d8ff3e]">OS</span>
                 </h1>
               </div>
             </div>
             <p className="mt-4 max-w-2xl text-sm font-semibold text-white/58 sm:text-base">
-              App interna para marcar entrenos, cuidar la racha y ver que clases estan listas hoy.
+              App de socios para reservar cupo, cuidar la racha, ver membresia y medir progreso.
               Sin cuento: si lo marca, queda guardado en Mongo con su PIN.
             </p>
+            <div className="mt-4 flex flex-wrap gap-2 text-[11px] font-black uppercase tracking-[0.14em] text-white/55">
+              <span className="border border-white/10 bg-white/[0.06] px-3 py-2">Reservas reales</span>
+              <span className="border border-white/10 bg-white/[0.06] px-3 py-2">Ocupacion en vivo</span>
+              <span className="border border-white/10 bg-white/[0.06] px-3 py-2">Rachas ticas</span>
+            </div>
           </div>
 
           {!memberName ? (
             <form
-              className="flex w-full max-w-md gap-2"
+              className="flex w-full max-w-md gap-2 border border-white/10 bg-black/40 p-2 backdrop-blur-sm"
               onSubmit={(event) => {
                 event.preventDefault();
                 void startMember(memberNameInput, false);
@@ -802,18 +816,18 @@ export default function ExtremeGymSite() {
                 value={memberNameInput}
                 onChange={(event) => setMemberNameInput(event.target.value)}
                 placeholder="Su nombre"
-                className="min-w-0 flex-1 border border-white/12 bg-black/40 px-4 py-3 font-bold text-white outline-none transition placeholder:text-white/35 focus:border-lime-300"
+                className="min-w-0 flex-1 border border-white/12 bg-black/45 px-4 py-3 font-bold text-white outline-none transition placeholder:text-white/35 focus:border-[#d8ff3e]"
               />
               <button
                 type="submit"
-                className="inline-flex items-center gap-2 bg-lime-300 px-5 py-3 font-black uppercase text-black transition hover:bg-white"
+                className="inline-flex items-center gap-2 bg-[#d8ff3e] px-5 py-3 font-black uppercase text-black transition hover:bg-white"
               >
-                Entrar <ArrowRight className="h-4 w-4" />
+                Entrar seguro <ArrowRight className="h-4 w-4" />
               </button>
             </form>
           ) : (
-            <div className="flex items-center gap-3 border border-white/12 bg-black/35 px-4 py-3">
-              <UserRound className="h-5 w-5 text-lime-300" />
+            <div className="flex items-center gap-3 border border-white/12 bg-black/45 px-4 py-3 backdrop-blur-sm">
+              <UserRound className="h-5 w-5 text-[#d8ff3e]" />
               <span className="font-black uppercase">{memberName}</span>
               <button type="button" onClick={resetMember} className="text-xs font-bold text-white/45 hover:text-white">
                 cambiar
@@ -827,13 +841,13 @@ export default function ExtremeGymSite() {
         <div className="space-y-6">
           {isLoading ? (
             <div className="grid min-h-[420px] place-items-center border border-white/10 bg-white/[0.03]">
-              <Loader2 className="h-8 w-8 animate-spin text-lime-300" />
+              <Loader2 className="h-8 w-8 animate-spin text-[#d8ff3e]" />
             </div>
           ) : (
             <>
               <div className="grid gap-4 sm:grid-cols-4">
                 <StatTile icon={Flame} label="Racha" value={`${currentMember.streak} dias`} accent="from-orange-400 to-red-500" />
-                <StatTile icon={CalendarCheck} label="Entrenos" value={`${currentMember.totalWorkouts}`} accent="from-lime-300 to-emerald-400" />
+                <StatTile icon={CalendarCheck} label="Entrenos" value={`${currentMember.totalWorkouts}`} accent="from-[#d8ff3e] to-emerald-300" />
                 <StatTile icon={Timer} label="Minutos" value={`${currentMember.totalMinutes}`} accent="from-cyan-300 to-sky-500" />
                 <StatTile icon={Trophy} label="Ranking" value={`#${Math.max(1, leaderboard.findIndex((p) => p.normalizedName === currentMember.normalizedName) + 1 || 1)}`} accent="from-yellow-300 to-orange-400" />
               </div>
@@ -866,7 +880,7 @@ export default function ExtremeGymSite() {
                   </div>
                 </div>
 
-                <div className="border border-white/10 bg-white/[0.04] p-5">
+                <div className="border border-white/10 bg-white/[0.05] p-5">
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <p className="text-xs font-black uppercase tracking-[0.18em] text-cyan-300">Ocupacion ahora</p>
@@ -879,17 +893,17 @@ export default function ExtremeGymSite() {
                   </div>
                   <p className="mt-3 text-sm font-semibold text-white/55">
                     {gymStatus
-                      ? `${gymStatus.currentPeople}/${gymStatus.capacity} personas estimadas. Reservas hoy: ${gymStatus.reservationsToday}.`
+                      ? `${gymStatus.currentPeople}/${gymStatus.capacity} personas estimadas. Reservas hoy: ${gymStatus.reservationsToday}. Llegue fino.`
                       : "Leyendo el gym en vivo."}
                   </p>
                 </div>
               </div>
 
               <div className="grid gap-4 lg:grid-cols-[1fr_.85fr_.85fr]">
-                <div className="border border-lime-300/25 bg-lime-300/[0.07] p-5">
+                <div className="border border-[#d8ff3e]/25 bg-[#d8ff3e]/10 p-5">
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <p className="text-xs font-black uppercase tracking-[0.18em] text-lime-300">
+                      <p className="text-xs font-black uppercase tracking-[0.18em] text-[#d8ff3e]">
                         Mision semanal
                       </p>
                       <h2 className="mt-2 text-2xl font-black uppercase">
@@ -899,7 +913,7 @@ export default function ExtremeGymSite() {
                     <Flame className="h-8 w-8 text-orange-300" />
                   </div>
                   <div className="mt-5 h-3 border border-white/10 bg-black/45">
-                    <div className="h-full bg-lime-300 transition-all" style={{ width: `${weeklyProgressPct}%` }} />
+                    <div className="h-full bg-[#d8ff3e] transition-all" style={{ width: `${weeklyProgressPct}%` }} />
                   </div>
                   <p className="mt-3 text-sm font-semibold text-white/55">
                     {weekDoneCount >= weeklyGoal
@@ -918,7 +932,7 @@ export default function ExtremeGymSite() {
                           <div
                             className={`grid aspect-square place-items-center border text-xs font-black ${
                               done
-                                ? "border-lime-300 bg-lime-300 text-black"
+                                ? "border-[#d8ff3e] bg-[#d8ff3e] text-black"
                                 : "border-white/10 bg-black/25 text-white/35"
                             }`}
                           >
@@ -948,7 +962,7 @@ export default function ExtremeGymSite() {
               <div className="grid gap-6 lg:grid-cols-[.75fr_1.25fr]">
                 <div className="border border-white/10 bg-white/[0.04] p-5">
                   <div className="flex items-center gap-3">
-                    <Sparkles className="h-5 w-5 text-lime-300" />
+                    <Sparkles className="h-5 w-5 text-[#d8ff3e]" />
                     <h2 className="text-lg font-black uppercase">Perfil Xtreme</h2>
                   </div>
                   <label className="mt-5 block text-xs font-black uppercase tracking-[0.16em] text-white/45">
@@ -963,7 +977,7 @@ export default function ExtremeGymSite() {
                         disabled={!unlocked}
                         className={`flex items-center justify-between border px-4 py-3 text-left font-bold transition ${
                           goal === option
-                            ? "border-lime-300 bg-lime-300 text-black"
+                            ? "border-[#d8ff3e] bg-[#d8ff3e] text-black"
                             : "border-white/10 bg-black/20 text-white/70 hover:border-white/30"
                         } disabled:opacity-50`}
                       >
@@ -976,7 +990,7 @@ export default function ExtremeGymSite() {
                     type="button"
                     onClick={saveProfile}
                     disabled={!unlocked}
-                    className="mt-5 w-full bg-white px-4 py-3 font-black uppercase text-black transition hover:bg-lime-300 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="mt-5 w-full bg-white px-4 py-3 font-black uppercase text-black transition hover:bg-[#d8ff3e] disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     Guardar perfil
                   </button>
@@ -1019,11 +1033,17 @@ export default function ExtremeGymSite() {
                                 </span>
                               </div>
                               <p className="mt-1 text-sm font-semibold text-white/50">
-                                {training.time} · {training.minutes} min · {training.coach}
+                                {training.time} - {training.minutes} min - {training.coach}
                               </p>
                               <p className="mt-2 text-sm text-white/64">
-                                {training.focus} · Cupos: {reservation.remaining}/{reservation.capacity}
+                                {training.focus} - Cupos: {reservation.remaining}/{reservation.capacity}
                               </p>
+                              <div className="mt-3 h-2 border border-white/10 bg-black/35">
+                                <div
+                                  className="h-full bg-[#d8ff3e] transition-all"
+                                  style={{ width: `${Math.min(100, Math.round((reservation.reserved / reservation.capacity) * 100))}%` }}
+                                />
+                              </div>
                             </div>
                           </div>
 
@@ -1034,7 +1054,7 @@ export default function ExtremeGymSite() {
                               disabled={!unlocked || Boolean(reservingTrainingId) || isFull}
                               className={`inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-black uppercase transition ${
                                 reservation.isMine
-                                  ? "border border-lime-300 bg-lime-300/10 text-lime-200 hover:bg-lime-300 hover:text-black"
+                                  ? "border border-[#d8ff3e] bg-[#d8ff3e]/10 text-[#eaff93] hover:bg-[#d8ff3e] hover:text-black"
                                   : "bg-orange-300 text-black hover:bg-white"
                               } disabled:cursor-not-allowed disabled:opacity-45`}
                             >
@@ -1054,8 +1074,8 @@ export default function ExtremeGymSite() {
                               disabled={!unlocked || Boolean(savingTrainingId) || done}
                               className={`inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-black uppercase transition ${
                                 done
-                                  ? "bg-lime-300 text-black"
-                                  : "bg-white text-black hover:bg-lime-300"
+                                  ? "bg-[#d8ff3e] text-black"
+                                  : "bg-white text-black hover:bg-[#d8ff3e]"
                               } disabled:cursor-not-allowed disabled:opacity-45`}
                             >
                               {savingTrainingId === training.id ? (
@@ -1090,12 +1110,12 @@ export default function ExtremeGymSite() {
                       <div
                         key={a.id}
                         className={`flex items-center gap-3 border p-3 ${
-                          a.done ? "border-lime-300/40 bg-lime-300/10" : "border-white/10 bg-black/20"
+                          a.done ? "border-[#d8ff3e]/40 bg-[#d8ff3e]/10" : "border-white/10 bg-black/20"
                         }`}
                       >
                         <span
                           className={`grid h-11 w-11 shrink-0 place-items-center ${
-                            a.done ? "bg-lime-300 text-black" : "bg-white/10 text-white/40"
+                            a.done ? "bg-[#d8ff3e] text-black" : "bg-white/10 text-white/40"
                           }`}
                         >
                           {a.done ? <Icon className="h-5 w-5" /> : <Lock className="h-4 w-4" />}
@@ -1157,13 +1177,13 @@ export default function ExtremeGymSite() {
                     Guardar medidas
                   </button>
                   <p className="mt-3 text-sm font-semibold text-white/45">
-                    Ultimo registro: {latestMetric ? `${latestMetric.weightKg} kg · ${latestMetric.waistCm} cm` : "sin medidas aun"}
+                    Ultimo registro: {latestMetric ? `${latestMetric.weightKg} kg - ${latestMetric.waistCm} cm` : "sin medidas aun"}
                   </p>
                 </div>
 
                 <div className="border border-white/10 bg-white/[0.04] p-5">
                   <div className="flex items-center gap-3">
-                    <Target className="h-5 w-5 text-lime-300" />
+                    <Target className="h-5 w-5 text-[#d8ff3e]" />
                     <h2 className="text-lg font-black uppercase">Grafica rapida</h2>
                   </div>
                   {metricTrend.length ? (
@@ -1173,7 +1193,7 @@ export default function ExtremeGymSite() {
                         const height = Math.max(18, Math.round((metric.weightKg / maxWeight) * 100));
                         return (
                           <div key={metric.id} className="flex flex-1 flex-col items-center gap-2">
-                            <div className="w-full bg-lime-300" style={{ height: `${height}%` }} />
+                            <div className="w-full bg-[#d8ff3e]" style={{ height: `${height}%` }} />
                             <span className="text-[10px] font-bold text-white/45">{metric.date.slice(5)}</span>
                           </div>
                         );
@@ -1220,16 +1240,16 @@ export default function ExtremeGymSite() {
           )}
 
           {(message || error) && (
-            <div className={`border px-4 py-3 text-sm font-bold ${error ? "border-red-400/40 bg-red-500/10 text-red-200" : "border-lime-300/40 bg-lime-300/10 text-lime-200"}`}>
+            <div className={`border px-4 py-3 text-sm font-bold ${error ? "border-red-400/40 bg-red-500/10 text-red-200" : "border-[#d8ff3e]/40 bg-[#d8ff3e]/10 text-[#eaff93]"}`}>
               {error || message}
             </div>
           )}
         </div>
 
         <aside className="space-y-6">
-          <div className="border border-white/10 bg-gradient-to-br from-lime-300/[0.08] to-orange-400/[0.06] p-5">
+          <div className="border border-white/10 bg-gradient-to-br from-[#d8ff3e]/10 to-orange-400/[0.06] p-5">
             <div className="flex items-center gap-3">
-              <QrCode className="h-5 w-5 text-lime-300" />
+              <QrCode className="h-5 w-5 text-[#d8ff3e]" />
               <h2 className="text-lg font-black uppercase">Carne digital</h2>
             </div>
             {memberName ? (
@@ -1237,12 +1257,12 @@ export default function ExtremeGymSite() {
                 <div className="mt-4 border border-white/10 bg-black/40 p-4">
                   <div className="flex items-center justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="text-[11px] font-black uppercase tracking-[0.2em] text-lime-300">
+                      <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#d8ff3e]">
                         Socio Xtreme
                       </p>
                       <p className="mt-1 truncate text-lg font-black uppercase leading-tight">{memberName}</p>
                     </div>
-                    <span className="shrink-0 border border-lime-300/40 bg-lime-300/10 px-2 py-1 text-[10px] font-black uppercase text-lime-200">
+                    <span className="shrink-0 border border-[#d8ff3e]/40 bg-[#d8ff3e]/10 px-2 py-1 text-[10px] font-black uppercase text-[#eaff93]">
                       Activo
                     </span>
                   </div>
@@ -1295,14 +1315,14 @@ export default function ExtremeGymSite() {
 
           <div className="border border-white/10 bg-white/[0.04] p-5">
             <div className="flex items-center gap-3">
-              <Users className="h-5 w-5 text-lime-300" />
+              <Users className="h-5 w-5 text-[#d8ff3e]" />
               <h2 className="text-lg font-black uppercase">Invita a un compa</h2>
             </div>
             <p className="mt-4 text-sm font-semibold text-white/55">
               Pase de cortesia para entrenar una vez con usted.
             </p>
-            <div className="mt-4 border border-lime-300/30 bg-lime-300/10 p-4 text-center">
-              <p className="text-xs font-black uppercase tracking-[0.2em] text-lime-300">Codigo invitado</p>
+            <div className="mt-4 border border-[#d8ff3e]/30 bg-[#d8ff3e]/10 p-4 text-center">
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-[#d8ff3e]">Codigo invitado</p>
               <p className="mt-2 text-2xl font-black tracking-[0.18em] text-white">
                 XT-{accessCode.replace(/\s/g, "").slice(0, 5)}
               </p>
@@ -1324,7 +1344,7 @@ export default function ExtremeGymSite() {
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-black uppercase">{entry.memberName}</p>
                       <p className="text-xs font-semibold text-white/45">
-                        {entry.streak} dias · {entry.totalWorkouts} entrenos
+                        {entry.streak} dias - {entry.totalWorkouts} entrenos
                       </p>
                     </div>
                     <Flame className="h-5 w-5 text-orange-300" />
@@ -1347,7 +1367,7 @@ export default function ExtremeGymSite() {
                   <div key={workout.id} className="border border-white/10 bg-black/20 p-3">
                     <p className="font-black uppercase">{workout.trainingName}</p>
                     <p className="mt-1 text-xs font-semibold text-white/45">
-                      {workout.completedDate} · {workout.minutes} min · {workout.intensity}
+                      {workout.completedDate} - {workout.minutes} min - {workout.intensity}
                     </p>
                   </div>
                 ))
