@@ -94,6 +94,14 @@ const PROPOSALS: Proposal[] = [
     icon: Coffee,
   },
   {
+    slug: "amarettos-cafe",
+    name: "Amaretto's Cafe",
+    category: "Cafe & reposteria",
+    location: "Ciudad Quesada, San Carlos",
+    accent: "from-orange-700 to-amber-500",
+    icon: Coffee,
+  },
+  {
     slug: "soda-lorena",
     name: "Soda Lorena",
     category: "Soda",

@@ -52,6 +52,7 @@ type Business = {
   location: LatLng | null;
   emailedAt?: string | null;
   emailedTo?: string | null;
+  noImprovementNeededAt?: string | null;
 };
 
 type SearchResponse = {
@@ -278,7 +279,7 @@ export default function MapsScrapperClient({
   const [alreadySavedCount, setAlreadySavedCount] = useState(0);
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState("");
-  const [view, setView] = useState<"search" | "saved">("search");
+  const [view, setView] = useState<"search" | "saved" | "sent" | "no-need">("search");
   const [savedBusinesses, setSavedBusinesses] = useState<Business[]>([]);
   const [savedTotal, setSavedTotal] = useState(0);
   const [isLoadingSaved, setIsLoadingSaved] = useState(false);
@@ -289,6 +290,7 @@ export default function MapsScrapperClient({
   const [emailedOverrides, setEmailedOverrides] = useState<
     Record<string, { emailed: boolean; to: string }>
   >({});
+  const [noImprovementOverrides, setNoImprovementOverrides] = useState<Record<string, boolean>>({});
   const [copiedKey, setCopiedKey] = useState("");
 
   const hasBrowserMapKey = mapsBrowserKey.length > 0;
@@ -582,7 +584,7 @@ export default function MapsScrapperClient({
   }, []);
 
   useEffect(() => {
-    if (view === "saved") {
+    if (view !== "search") {
       void loadSaved();
     }
   }, [view, loadSaved]);
@@ -593,6 +595,14 @@ export default function MapsScrapperClient({
       return override ? override.emailed : Boolean(business.emailedAt);
     },
     [emailedOverrides],
+  );
+
+  const isNoImprovementNeeded = useCallback(
+    (business: Business) => {
+      const override = noImprovementOverrides[business.id];
+      return override ?? Boolean(business.noImprovementNeededAt);
+    },
+    [noImprovementOverrides],
   );
 
   // Open (or close) the editable composer for a lead, seeding it once with the
@@ -637,6 +647,26 @@ export default function MapsScrapperClient({
         });
       } catch {
         /* keep the optimistic state; a refresh will reconcile */
+      }
+    },
+    [],
+  );
+
+  const setNoImprovementStatus = useCallback(
+    async (business: Business, noImprovementNeeded: boolean) => {
+      setNoImprovementOverrides((prev) => ({
+        ...prev,
+        [business.id]: noImprovementNeeded,
+      }));
+
+      try {
+        await fetch("/api/maps-scrapper/businesses", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: business.id, noImprovementNeeded }),
+        });
+      } catch {
+        /* keep optimistic state; refresh will reconcile */
       }
     },
     [],
@@ -713,7 +743,29 @@ export default function MapsScrapperClient({
     }
   }, []);
 
-  const displayedBusinesses = view === "saved" ? savedBusinesses : businesses;
+  const savedPendingBusinesses = useMemo(
+    () =>
+      savedBusinesses.filter(
+        (business) => !isEmailed(business) && !isNoImprovementNeeded(business),
+      ),
+    [isEmailed, isNoImprovementNeeded, savedBusinesses],
+  );
+  const sentBusinesses = useMemo(
+    () => savedBusinesses.filter((business) => isEmailed(business)),
+    [isEmailed, savedBusinesses],
+  );
+  const noNeedBusinesses = useMemo(
+    () => savedBusinesses.filter((business) => isNoImprovementNeeded(business)),
+    [isNoImprovementNeeded, savedBusinesses],
+  );
+  const displayedBusinesses =
+    view === "search"
+      ? businesses
+      : view === "sent"
+        ? sentBusinesses
+        : view === "no-need"
+          ? noNeedBusinesses
+          : savedPendingBusinesses;
 
   useEffect(() => {
     const win = window as GoogleMapsWindow;
@@ -775,6 +827,8 @@ export default function MapsScrapperClient({
       "Emails",
       "Email Sources",
       "External Profiles",
+      "Emailed",
+      "No Improvement Needed",
       "Modernization Score",
       "Modernization Verdict",
       "Modernization Reasons",
@@ -795,6 +849,8 @@ export default function MapsScrapperClient({
         .map(([email, sources]) => `${email}: ${sources.join(" | ")}`)
         .join(" || "),
       business.contactIntel?.externalProfiles.join(" | ") ?? "",
+      isEmailed(business) ? "Yes" : "No",
+      isNoImprovementNeeded(business) ? "Yes" : "No",
       business.websiteEvaluation?.score ?? "",
       business.websiteEvaluation?.verdict ?? "",
       business.websiteEvaluation?.reasons.join(" | ") ?? "",
@@ -808,7 +864,7 @@ export default function MapsScrapperClient({
           .join(","),
       )
       .join("\n");
-  }, [displayedBusinesses]);
+  }, [displayedBusinesses, isEmailed, isNoImprovementNeeded]);
 
   const downloadCsv = useCallback(() => {
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" });
@@ -972,7 +1028,7 @@ export default function MapsScrapperClient({
 
           <aside className="flex min-h-[520px] flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
             <div className="border-b border-slate-200 p-4">
-              <div className="mb-4 inline-flex rounded-lg border border-slate-200 bg-slate-100 p-1">
+              <div className="mb-4 flex flex-wrap gap-1 rounded-lg border border-slate-200 bg-slate-100 p-1">
                 <button
                   type="button"
                   onClick={() => setView("search")}
@@ -995,7 +1051,31 @@ export default function MapsScrapperClient({
                   }`}
                 >
                   <Building2 className="h-4 w-4" />
-                  Guardados{savedTotal > 0 ? ` (${savedTotal})` : ""}
+                  Pendientes{savedPendingBusinesses.length > 0 ? ` (${savedPendingBusinesses.length})` : ""}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setView("sent")}
+                  className={`inline-flex min-h-9 items-center gap-2 rounded-md px-3 text-sm font-black transition ${
+                    view === "sent"
+                      ? "bg-white text-teal-800 shadow-sm"
+                      : "text-slate-500 hover:text-slate-800"
+                  }`}
+                >
+                  <Send className="h-4 w-4" />
+                  Enviados{sentBusinesses.length > 0 ? ` (${sentBusinesses.length})` : ""}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setView("no-need")}
+                  className={`inline-flex min-h-9 items-center gap-2 rounded-md px-3 text-sm font-black transition ${
+                    view === "no-need"
+                      ? "bg-white text-teal-800 shadow-sm"
+                      : "text-slate-500 hover:text-slate-800"
+                  }`}
+                >
+                  <Check className="h-4 w-4" />
+                  No ocupan{noNeedBusinesses.length > 0 ? ` (${noNeedBusinesses.length})` : ""}
                 </button>
               </div>
 
@@ -1040,10 +1120,14 @@ export default function MapsScrapperClient({
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <h2 className="font-display text-2xl font-black text-slate-950">
-                        Guardados
+                        {view === "sent"
+                          ? "Enviados"
+                          : view === "no-need"
+                            ? "No ocupan improvement"
+                            : "Pendientes"}
                       </h2>
                       <p className="mt-1 text-sm text-slate-600">
-                        {savedBusinesses.length} leads guardados en MongoDB
+                        {displayedBusinesses.length} leads en esta pestaña. {savedTotal} guardados en MongoDB
                         {savedTotal > savedBusinesses.length
                           ? ` (mostrando los ${savedBusinesses.length} más recientes de ${savedTotal})`
                           : ""}
@@ -1114,26 +1198,34 @@ export default function MapsScrapperClient({
               ) : (
                 <div className="divide-y divide-slate-200">
                   {displayedBusinesses.map((business) => (
-                    <article key={business.id} className="p-4 transition hover:bg-slate-50">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <h3 className="font-black leading-snug text-slate-950">
+                    <article key={business.id} className="p-3 transition hover:bg-slate-50">
+                      <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_auto]">
+                        <div className="min-w-0">
+                          <h3 className="truncate font-black leading-snug text-slate-950">
                             {business.name}
                           </h3>
-                          <p className="mt-1 text-sm leading-5 text-slate-600">
+                          <p className="mt-1 line-clamp-2 text-sm leading-5 text-slate-600">
                             {business.address || "Sin direccion en Places"}
                           </p>
                         </div>
-                        <a
-                          href={business.googleMapsUri}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-slate-200 text-slate-600 transition hover:border-teal-500 hover:text-teal-700"
-                          aria-label={`Abrir ${business.name} en Google Maps`}
-                          title="Abrir en Google Maps"
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                        </a>
+                        <div className="flex shrink-0 flex-wrap items-center gap-2 xl:justify-end">
+                          {business.phone && (
+                            <span className="inline-flex h-9 items-center gap-2 rounded-lg bg-slate-100 px-3 text-sm font-semibold text-slate-700">
+                              <Phone className="h-4 w-4 text-teal-700" />
+                              {business.phone}
+                            </span>
+                          )}
+                          <a
+                            href={business.googleMapsUri}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-slate-200 text-slate-600 transition hover:border-teal-500 hover:text-teal-700"
+                            aria-label={`Abrir ${business.name} en Google Maps`}
+                            title="Abrir en Google Maps"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </a>
+                        </div>
                       </div>
 
                       <div className="mt-3 flex flex-wrap gap-2 text-xs font-bold">
@@ -1169,14 +1261,13 @@ export default function MapsScrapperClient({
                             Email enviado
                           </span>
                         )}
+                        {isNoImprovementNeeded(business) && (
+                          <span className="inline-flex items-center gap-1 rounded bg-slate-800 px-2 py-1 text-white">
+                            <Check className="h-3 w-3" />
+                            No ocupa improvement
+                          </span>
+                        )}
                       </div>
-
-                      {business.phone && (
-                        <p className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
-                          <Phone className="h-4 w-4 text-teal-700" />
-                          {business.phone}
-                        </p>
-                      )}
 
                       {business.contactIntel &&
                         (business.contactIntel.emails.length > 0 ||
@@ -1265,6 +1356,7 @@ export default function MapsScrapperClient({
                         const detectedEmails = business.contactIntel?.emails ?? [];
                         const composerOpen = openEmail[business.id] ?? false;
                         const emailed = isEmailed(business);
+                        const noImprovementNeeded = isNoImprovementNeeded(business);
                         const waHref = business.phone
                           ? `https://wa.me/${business.phone.replace(/\D/g, "")}?text=${encodeURIComponent(template.whatsapp)}`
                           : "";
@@ -1298,7 +1390,7 @@ export default function MapsScrapperClient({
                                 </a>
                               )}
 
-                              <label className="ml-auto inline-flex cursor-pointer select-none items-center gap-2 text-sm font-bold text-slate-700">
+                              <label className="ml-auto inline-flex cursor-pointer select-none items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700">
                                 <input
                                   type="checkbox"
                                   checked={emailed}
@@ -1312,6 +1404,20 @@ export default function MapsScrapperClient({
                                   className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
                                 />
                                 Ya envié el email
+                              </label>
+                              <label className="inline-flex cursor-pointer select-none items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700">
+                                <input
+                                  type="checkbox"
+                                  checked={noImprovementNeeded}
+                                  onChange={(event) =>
+                                    void setNoImprovementStatus(
+                                      business,
+                                      event.target.checked,
+                                    )
+                                  }
+                                  className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-500"
+                                />
+                                No ocupa improvement
                               </label>
                             </div>
 

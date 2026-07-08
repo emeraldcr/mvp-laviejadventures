@@ -749,20 +749,36 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: "Falta el id del negocio." }, { status: 400 });
     }
 
+    const hasEmailedPatch = Object.prototype.hasOwnProperty.call(body ?? {}, "emailed");
+    const hasNoImprovementPatch = Object.prototype.hasOwnProperty.call(body ?? {}, "noImprovementNeeded");
     const emailed = Boolean(body?.emailed);
+    const noImprovementNeeded = Boolean(body?.noImprovementNeeded);
     const emailedTo =
       typeof body?.emailedTo === "string" ? body.emailedTo.trim().toLowerCase() : "";
 
     const collection = await getLeadCollection();
     const now = new Date();
-    const result = await collection.updateOne(
-      { id },
-      {
-        $set: emailed
-          ? { emailedAt: now, emailedTo, updatedAt: now }
-          : { emailedAt: null, emailedTo: "", updatedAt: now },
-      },
-    );
+    const $set: Record<string, unknown> = { updatedAt: now };
+
+    if (hasEmailedPatch) {
+      Object.assign(
+        $set,
+        emailed
+          ? { emailedAt: now, emailedTo }
+          : { emailedAt: null, emailedTo: "" },
+      );
+    }
+
+    if (hasNoImprovementPatch) {
+      Object.assign(
+        $set,
+        noImprovementNeeded
+          ? { noImprovementNeededAt: now }
+          : { noImprovementNeededAt: null },
+      );
+    }
+
+    const result = await collection.updateOne({ id }, { $set });
 
     if (result.matchedCount === 0) {
       return NextResponse.json(
@@ -774,8 +790,14 @@ export async function PATCH(request: Request) {
     return NextResponse.json({
       ok: true,
       emailed,
-      emailedAt: emailed ? now.toISOString() : null,
+      emailedAt: hasEmailedPatch ? (emailed ? now.toISOString() : null) : undefined,
       emailedTo: emailed ? emailedTo : "",
+      noImprovementNeeded,
+      noImprovementNeededAt: hasNoImprovementPatch
+        ? noImprovementNeeded
+          ? now.toISOString()
+          : null
+        : undefined,
     });
   } catch (error) {
     return NextResponse.json(
