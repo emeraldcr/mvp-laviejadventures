@@ -14,8 +14,10 @@ type CheckoutOption = {
 };
 
 type PayPalConfig = {
-  clientId: string;
+  configured?: boolean;
+  clientId?: string;
   currency: string;
+  message?: string;
 };
 
 declare global {
@@ -157,7 +159,10 @@ export default function ExtremeGymCheckout() {
       .then(async (response) => {
         const data = (await response.json()) as PayPalConfig & { message?: string };
         if (!response.ok) throw new Error(data.message || "No se pudo cargar PayPal.");
-        if (!cancelled) setPaypalConfig(data);
+        if (!cancelled) {
+          setPaypalConfig(data);
+          if (!data.configured) setError(data.message || "PayPal no está configurado.");
+        }
       })
       .catch((err) => {
         if (!cancelled) setError(err instanceof Error ? err.message : "PayPal no está disponible.");
@@ -174,6 +179,7 @@ export default function ExtremeGymCheckout() {
     let cancelled = false;
     const container = paypalRef.current;
     const activePayPalConfig = paypalConfig;
+    const activeClientId = paypalConfig.clientId;
     container.innerHTML = "";
     setStatus("");
     setError("");
@@ -186,7 +192,7 @@ export default function ExtremeGymCheckout() {
             const script = document.createElement("script");
             script.id = "xtreme-paypal-sdk";
             script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(
-              activePayPalConfig.clientId,
+              activeClientId,
             )}&currency=${encodeURIComponent(activePayPalConfig.currency)}&intent=capture`;
             script.onload = () => resolve();
             script.onerror = () => reject(new Error("No se pudo cargar el SDK de PayPal."));

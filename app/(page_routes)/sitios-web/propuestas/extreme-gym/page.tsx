@@ -202,7 +202,7 @@ export default function ExtremeGymLandingPage() {
                 <MapPin className="h-4 w-4" />
                 {BUSINESS.location}
               </div>
-              <h1 className="mt-7 max-w-4xl text-[2.45rem] font-black uppercase leading-[0.9] tracking-tight min-[420px]:text-5xl sm:text-7xl lg:text-8xl">
+              <h1 className="mt-7 max-w-4xl text-[2.45rem] font-black uppercase leading-[0.9] tracking-tight min-[420px]:text-5xl sm:text-6xl lg:text-7xl 2xl:text-8xl">
                 Conviértete en la versión
                 <span className="block text-[#f6c400]">más saludable de ti.</span>
               </h1>
