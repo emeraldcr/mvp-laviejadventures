@@ -63,6 +63,8 @@ export type BusinessConfig = {
   sellingPoints: string[];
   proof: Proof[];
   gallery?: GalleryItem[];
+  galleryTitle?: string;
+  galleryLead?: string;
   testimonials?: Testimonial[];
   schedule?: ScheduleRow[];
   locationTitle: string;

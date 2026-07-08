@@ -26,6 +26,7 @@ import {
   MapPin,
   Menu,
   MessageCircle,
+  Music,
   PawPrint,
   Phone,
   Pizza,
@@ -63,6 +64,7 @@ const ICONS: Record<string, typeof Sparkles> = {
   Heart,
   HeartHandshake,
   Leaf,
+  Music,
   PawPrint,
   Pizza,
   Salad,
@@ -509,12 +511,12 @@ export default function ProposalSite({ config }: { config: BusinessConfig }) {
                 <div>
                   <Eyebrow accent={a}>Galería</Eyebrow>
                   <h2 className="mt-5 text-4xl font-black leading-tight sm:text-5xl">
-                    Una vitrina digital que abre el apetito.
+                    {config.galleryTitle ?? "Una vitrina digital que abre el apetito."}
                   </h2>
                 </div>
                 <p className="max-w-md text-lg leading-8 text-stone-600">
-                  Fotos de referencia, listas para cambiar por imágenes reales del negocio
-                  cuando estén disponibles.
+                  {config.galleryLead ??
+                    "Fotos de referencia, listas para cambiar por imágenes reales del negocio cuando estén disponibles."}
                 </p>
               </div>
               <div className="mt-10 grid auto-rows-[190px] gap-3 md:grid-cols-4 md:auto-rows-[220px]">

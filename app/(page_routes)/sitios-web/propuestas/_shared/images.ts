@@ -17,6 +17,43 @@ export const BREAD = {
   ],
 };
 
+export const LALALAND = {
+  hero: u("1495474472287-4d71bcdd2085", 2200),
+  gallery: [
+    {
+      src: u("1509042239860-f550ce710b93"),
+      alt: "Taza de cafe de especialidad servida en mesa",
+      label: "Cafe de especialidad",
+      wide: true,
+    },
+    {
+      src: u("1511920170033-f8396924c348"),
+      alt: "Interior acogedor de cafeteria",
+      label: "Ambiente para quedarse",
+    },
+    {
+      src: u("1442512595331-e89e73853f31"),
+      alt: "Barista preparando cafe espresso",
+      label: "Barismo",
+    },
+    {
+      src: u("1486427944299-d1955d23e34d"),
+      alt: "Reposteria dulce para acompanar el cafe",
+      label: "Postres",
+    },
+    {
+      src: u("1511192336575-5a79af67a629"),
+      alt: "Musico de jazz tocando saxofon en vivo",
+      label: "Jazz",
+    },
+    {
+      src: u("1517248135467-4c7edcad34c4"),
+      alt: "Mesa de restaurante con luz calida",
+      label: "Cena y encuentros",
+    },
+  ],
+};
+
 export const FOOD = {
   hero: u("1748659118761-44a30b82478c", 2200),
   gallery: [

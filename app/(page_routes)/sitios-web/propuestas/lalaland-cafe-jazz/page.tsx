@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import ProposalSite from "../_shared/ProposalSite";
 import type { BusinessConfig } from "../_shared/types";
-import { COFFEE } from "../_shared/images";
+import { LALALAND } from "../_shared/images";
 
 export const metadata: Metadata = {
   title: "Lalaland Cafe Jazz | Cafe de especialidad en Ciudad Quesada",
@@ -31,9 +31,9 @@ const config: BusinessConfig = {
     page: "#fff9ee",
     pageInk: "#1f1a14",
   },
-  heroImage: COFFEE.hero,
+  heroImage: LALALAND.hero,
   intro:
-    "Cafe de especialidad en Plaza El Encuentro, con ambiente calido, postres, comida y esa vibra tranquila para conversar, trabajar o darse un gustico bien hecho.",
+    "Cafe de especialidad en Plaza El Encuentro, con mesas calidas, postres, comida y una vibra jazz para conversar, trabajar suavecito o darse un gustico bien hecho.",
   offeringsTitle: "Una cafeteria que se vive con todos los sentidos.",
   offeringsLead:
     "La propuesta ordena el menu, los metodos de infusion, la ubicacion y el contacto en una pagina clara, elegante y facil de compartir.",
@@ -57,10 +57,10 @@ const config: BusinessConfig = {
       badge: "Diario",
     },
     {
-      icon: "HeartHandshake",
-      title: "Eventos y comunidad",
-      text: "Espacio familiar, pet friendly y disponible para encuentros especiales con sabor sancarleno.",
-      badge: "Encuentro",
+      icon: "Music",
+      title: "Jazz y encuentros",
+      text: "Una marca con personalidad: cafe, musica, eventos y ratos especiales en un mismo punto.",
+      badge: "Jazz",
     },
   ],
   valueTitle: "Que el mejor cafe de San Carlos tambien se encuentre en Google.",
@@ -77,7 +77,10 @@ const config: BusinessConfig = {
     { value: "El Encuentro", label: "ubicacion reconocible en Ciudad Quesada" },
     { value: "Pet friendly", label: "ambiente familiar con parqueo y WiFi" },
   ],
-  gallery: COFFEE.gallery,
+  gallery: LALALAND.gallery,
+  galleryTitle: "Cafe, musica y mesas que invitan a quedarse.",
+  galleryLead:
+    "Imagenes de referencia pensadas para vender el ambiente de Lalaland: cafe de especialidad, barismo, postres, jazz y encuentros en Plaza El Encuentro.",
   testimonials: [
     {
       name: "Cliente local",
