@@ -23,7 +23,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
   const { lang } = useLanguage();
   const tr = translations[lang].payment;
 
-  const { name, email, phone, tickets, total, date, tourTime, tourPackage, tourSlug, tourName, packagePrice } = orderDetails;
+  const { name, email, phone, tickets, total, date, tourTime, tourPackage, tourSlug, tourName, packagePrice, specialRequests } = orderDetails;
 
   useEffect(() => {
     const existingScript = document.querySelector("#paypal-sdk");
@@ -58,6 +58,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
                 packagePrice,
                 tourSlug,
                 tourName,
+                specialRequests,
               }),
             });
 
@@ -117,7 +118,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
         paypalContainer.innerHTML = "";
       }
     };
-  }, [date, email, name, onSuccess, packagePrice, phone, router, tickets, total, tourName, tourPackage, tourSlug, tourTime, tr.error]);
+  }, [date, email, name, onSuccess, packagePrice, phone, router, specialRequests, tickets, total, tourName, tourPackage, tourSlug, tourTime, tr.error]);
 
   const packageName = tr.packages[tourPackage] ?? tourPackage;
   const displayDate = /^\d{4}-\d{2}-\d{2}$/.test(date)

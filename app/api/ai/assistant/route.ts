@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
-import { getDb } from "@/lib/mongodb";
+import { getDb } from "@/lib/data/mongodb";
 import {
   INITIAL_BOOKING_STATE,
   NEXT_FIELD_PROMPTS,

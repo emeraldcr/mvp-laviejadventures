@@ -89,7 +89,8 @@ const es = {
     privacyLink: "Política de Privacidad",
     proceedBtn: "Proceder a Pago",
     weekdaysOnly: "Solo lunes–viernes",
-    weekendsOnly: "Solo fines de semana",
+    anytime: "Disponible todos los días",
+    crcUnavailable: "CRC según cotización",
     packageAvailabilityWarning:
       "Este paquete no está disponible para la fecha seleccionada. Elige una fecha válida o selecciona otro paquete.",
     packages: {
@@ -366,7 +367,8 @@ const en = {
     privacyLink: "Privacy Policy",
     proceedBtn: "Proceed to Payment",
     weekdaysOnly: "Weekdays only",
-    weekendsOnly: "Weekends only",
+    anytime: "Available every day",
+    crcUnavailable: "CRC by quote",
     packageAvailabilityWarning:
       "This package is not available for the selected date. Choose a valid date or pick another package.",
     packages: {

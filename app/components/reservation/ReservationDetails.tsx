@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { TOUR_INFO } from "@/lib/content/tour-info";
 import { AvailabilityMap, MainTourInfo } from "@/lib/types/index";
+import { TOUR_PACKAGES, isWeekendDate, type TourPackage, type TourTime } from "@/lib/booking/tour-options";
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { format } from "date-fns";
 import { es, enUS } from "date-fns/locale";
@@ -29,17 +30,9 @@ const TIME_SLOTS = [
   { id: "10:00" as const, label: "10:00 AM" },
 ];
 
-export type TourTime = "08:00" | "09:00" | "10:00";
-
 // ---------------------- PACKAGES ----------------------
-export type TourPackage = "basic" | "full-day" | "private";
 
-interface PackageOption {
-  id: TourPackage;
-  priceUSD: number;
-  priceCRC: number | null;
-  availableOn: "weekdays" | "weekends";
-}
+type PackageOption = (typeof TOUR_PACKAGES)[number];
 
 export type TourSummary = {
   id: string;
@@ -48,26 +41,7 @@ export type TourSummary = {
   titleEn: string;
 };
 
-const PACKAGES: PackageOption[] = [
-  {
-    id: "basic",
-    priceUSD: 30,
-    priceCRC: 15000,
-    availableOn: "weekends",
-  },
-  {
-    id: "full-day",
-    priceUSD: 40,
-    priceCRC: 20000,
-    availableOn: "weekends",
-  },
-  {
-    id: "private",
-    priceUSD: 60,
-    priceCRC: null,
-    availableOn: "weekdays",
-  },
-];
+const PACKAGES: PackageOption[] = [...TOUR_PACKAGES];
 
 const PACKAGE_META = {
   basic: {
@@ -310,7 +284,7 @@ export default function ReservationDetails({
   );
   const reservationDateISO = format(reservationDate, "yyyy-MM-dd");
 
-  const isWeekend = reservationDate.getDay() === 0 || reservationDate.getDay() === 6;
+  const isWeekend = isWeekendDate(reservationDate);
   const [tourTime, setTourTime] = useState<TourTime | null>(null);
   const [tourPackage, setTourPackage] = useState<TourPackage | null>(null);
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
@@ -341,9 +315,7 @@ export default function ReservationDetails({
   );
 
   const selectedPackageUnavailable = selectedPackage
-    ? selectedPackage.availableOn === "weekdays"
-      ? isWeekend
-      : !isWeekend
+    ? selectedPackage.availableOn === "weekdays" && isWeekend
     : false;
 
   const effectiveTourPackage = selectedPackageUnavailable ? null : tourPackage;
@@ -607,7 +579,7 @@ export default function ReservationDetails({
               {PACKAGES.map((pkg) => {
                 const isSelected = effectiveTourPackage === pkg.id;
                 const isDisabled =
-                  pkg.availableOn === "weekdays" ? isWeekend : !isWeekend;
+                  pkg.availableOn === "weekdays" && isWeekend;
                 const pkgTr = tr.packages[pkg.id];
                 const pkgMeta = PACKAGE_META[pkg.id];
                 const Icon = pkgMeta.icon;
@@ -638,9 +610,9 @@ export default function ReservationDetails({
                             {tr.weekdaysOnly}
                           </span>
                         )}
-                        {pkg.availableOn === "weekends" && (
+                        {pkg.availableOn === "anytime" && (
                           <span className="inline-block text-xs font-semibold bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-300 rounded px-2 py-0.5">
-                            {tr.weekendsOnly}
+                            {tr.anytime}
                           </span>
                         )}
                       </div>
@@ -658,6 +630,7 @@ export default function ReservationDetails({
                         <div>
                           <p className="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">{tr.priceFrom}</p>
                           <p className="font-bold text-xl text-zinc-900 dark:text-zinc-100">${pkg.priceUSD}</p>
+                          <p className="text-xs text-zinc-500 dark:text-zinc-400">{pkg.priceCRC ? `₡${pkg.priceCRC.toLocaleString("es-CR")}` : tr.crcUnavailable}</p>
                         </div>
                         <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">USD / {tr.perPerson}</p>
                       </div>
