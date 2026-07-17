@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, X, Target, TrendingUp, Clock, ShieldOff, ShieldCheck } from "lucide-react";
+import { Loader2, X, Target, TrendingUp, Clock, ShieldOff, ShieldCheck, Star, MinusCircle } from "lucide-react";
 import { Flag } from "../../components/Flag";
 import { cn, winnerPickText } from "../../utils";
 import type { LeaderboardEntry, BanInfo } from "../adminTypes";
@@ -19,8 +19,10 @@ type PlayerMatchDetail = {
   homeRegulationScore: number | null;
   awayRegulationScore: number | null;
   decisionMethod: "regular" | "extraTime" | "penalties" | null;
-  predictedHome: number;
-  predictedAway: number;
+  actualWinner: "home" | "away" | null;
+  hasPrediction: boolean;
+  predictedHome: number | null;
+  predictedAway: number | null;
   winnerPick: "home" | "away" | null;
   winnerPickMethod: "extraTime" | "penalties" | null;
   points: number | null;
@@ -29,9 +31,28 @@ type PlayerMatchDetail = {
   closed: boolean;
 };
 
+type PlayerStatBetDetail = {
+  questionId: string;
+  matchId: string;
+  matchNumber: number | null;
+  matchLabel: string;
+  question: string;
+  pickedOption: string;
+  correctOption: string | null;
+  resolved: boolean;
+  correct: boolean;
+  points: number;
+};
+
 type PlayerDetailResponse = {
   playerName: string;
   predictions: PlayerMatchDetail[];
+  statBets: PlayerStatBetDetail[];
+  audit: {
+    predictionPoints: number;
+    statPoints: number;
+    totalPoints: number;
+  };
 };
 
 type Props = {
@@ -40,6 +61,14 @@ type Props = {
 };
 
 function PointsBadge({ match }: { match: PlayerMatchDetail }) {
+  if (!match.hasPrediction) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-md border border-[#ff6a3d]/35 bg-[#35130d] px-2 py-0.5 text-xs font-black text-[#ffd2c2]">
+        <MinusCircle className="h-3 w-3" />
+        No apostó · 0pts
+      </span>
+    );
+  }
   if (!match.closed) {
     return (
       <span className="inline-flex items-center gap-1 rounded-md border border-white/12 bg-black/25/5 px-2 py-0.5 text-xs font-black text-white/45">
@@ -57,19 +86,41 @@ function PointsBadge({ match }: { match: PlayerMatchDetail }) {
   }
   if (match.points === null) return null;
 
+  if (match.isExact && match.points === 4) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-md border border-[#9dff34]/35 bg-[#10240b] px-2 py-0.5 text-xs font-black text-[#d5ff3f]">
+        <Target className="h-3 w-3" />
+        Exacto + pase + método · {match.points}pts
+      </span>
+    );
+  }
+  if (match.isExact && match.points === 1 && match.stage !== "group") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-md border border-[#f0b429]/35 bg-[#211707] px-2 py-0.5 text-xs font-black text-[#f0b429]">
+        <Target className="h-3 w-3" />
+        Marcador 90′; falló pase/método · 1pt
+      </span>
+    );
+  }
   if (match.isExact) {
     return (
       <span className="inline-flex items-center gap-1 rounded-md border border-[#9dff34]/35 bg-[#10240b] px-2 py-0.5 text-xs font-black text-[#d5ff3f]">
         <Target className="h-3 w-3" />
-        Exacto · {match.points}pts
+        Marcador exacto · {match.points}pts
       </span>
     );
   }
   if (match.correctOutcome) {
+    const extra =
+      match.points === 3 && match.decisionMethod === "penalties"
+        ? " + pase + penales"
+        : match.points === 2 && match.decisionMethod === "extraTime"
+          ? " + pase + TE"
+          : "";
     return (
       <span className="inline-flex items-center gap-1 rounded-md border border-[#62ffe6]/35 bg-[#071d2a] px-2 py-0.5 text-xs font-black text-[#62ffe6]">
         <TrendingUp className="h-3 w-3" />
-        Resultado · {match.points}pts
+        Resultado{extra} · {match.points}pts
       </span>
     );
   }
@@ -196,6 +247,8 @@ export function PlayerDetailModal({ entry, onClose }: Props) {
   }
 
   const predictions = data?.predictions ?? [];
+  const statBets = data?.statBets ?? [];
+  const auditMatchesLeaderboard = data?.audit.totalPoints === entry.totalPoints;
 
   return (
     <div
@@ -235,6 +288,18 @@ export function PlayerDetailModal({ entry, onClose }: Props) {
           <span className="rounded-lg border border-white/12 bg-black/25/5 px-3 py-1 text-xs font-black text-white/50">
             {entry.scoredPredictions}/{entry.totalPredictions} jugados
           </span>
+          {data?.audit && (
+            <span className={cn(
+              "rounded-lg border px-3 py-1 text-xs font-black",
+              auditMatchesLeaderboard
+                ? "border-emerald-500/30 bg-emerald-950/35 text-emerald-300"
+                : "border-red-500/40 bg-red-950/45 text-red-300"
+            )}>
+              {auditMatchesLeaderboard
+                ? `Verificado: ${data.audit.predictionPoints} partidos + ${data.audit.statPoints} mini-apuestas`
+                : `Diferencia: detalle ${data.audit.totalPoints} vs tabla ${entry.totalPoints}`}
+            </span>
+          )}
         </div>
 
         {/* Ban section */}
@@ -326,19 +391,28 @@ export function PlayerDetailModal({ entry, onClose }: Props) {
             </div>
           ) : error ? (
             <div className="p-6 text-center text-sm font-bold text-[#ffd2c2]">{error}</div>
-          ) : predictions.length === 0 ? (
+          ) : predictions.length === 0 && statBets.length === 0 ? (
             <div className="grid min-h-48 place-items-center p-8">
-              <p className="text-sm font-black text-white/40">Sin predicciones registradas.</p>
+              <p className="text-sm font-black text-white/40">Sin apuestas registradas.</p>
             </div>
           ) : (
-            <ul className="divide-y divide-white/8">
-              {predictions.map((match) => {
+            <div>
+              {predictions.length > 0 && (
+                <>
+                  <div className="border-b border-white/10 bg-black/25 px-5 py-2">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-white/45">
+                      Partidos · aciertos, fallos y puntos
+                    </p>
+                  </div>
+                  <ul className="divide-y divide-white/8">
+                    {predictions.map((match) => {
                 const hasResult = match.homeFinalScore !== null;
                 return (
                   <li key={match.matchId} className={cn(
                     "px-5 py-4",
-                    match.isExact && "bg-[#10240b]/45",
+                    match.hasPrediction && match.isExact && "bg-[#10240b]/45",
                     match.correctOutcome && !match.isExact && "bg-[#071d2a]/45",
+                    !match.hasPrediction && "bg-[#35130d]/20",
                     !match.closed && "bg-black/25"
                   )}>
                     <div className="mb-2 flex items-center justify-between gap-2">
@@ -373,18 +447,25 @@ export function PlayerDetailModal({ entry, onClose }: Props) {
                             </span>
                             </div>
                             {match.decisionMethod && match.decisionMethod !== "regular" && (
-                              <span className="rounded bg-[#d5ff3f]/10 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-[#d5ff3f]">
-                                {finalScoreLabel(match)}
-                              </span>
+                              <>
+                                <span className="rounded bg-[#d5ff3f]/10 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-[#d5ff3f]">
+                                  {finalScoreLabel(match)}
+                                </span>
+                                {match.actualWinner && (
+                                  <span className="text-[9px] font-black uppercase tracking-wide text-white/55">
+                                    Clasificó {match.actualWinner === "home" ? match.homeTeam : match.awayTeam}
+                                  </span>
+                                )}
+                              </>
                             )}
                           </div>
                         ) : (
                           <span className="text-xs font-black text-white/25">vs</span>
                         )}
-                        <div className="flex items-center gap-1 rounded-md border border-slate-200 bg-black/25 px-2 py-0.5">
-                          <span className="text-[10px] font-black text-white/40">pred:</span>
+                        <div className="flex items-center gap-1 rounded-md border border-white/15 bg-black/25 px-2 py-0.5">
+                          <span className="text-[10px] font-black text-white/40">apuesta:</span>
                           <span className="text-[11px] font-black tabular-nums text-white/65">
-                            {match.predictedHome}–{match.predictedAway}
+                            {match.hasPrediction ? `${match.predictedHome}–${match.predictedAway}` : "sin apuesta"}
                           </span>
                           {match.winnerPick && (
                             <span className="rounded bg-[#d5ff3f]/10 px-1 py-0.5 text-[9px] font-black text-[#d5ff3f]">
@@ -401,8 +482,52 @@ export function PlayerDetailModal({ entry, onClose }: Props) {
                     </div>
                   </li>
                 );
-              })}
-            </ul>
+                    })}
+                  </ul>
+                </>
+              )}
+
+              {statBets.length > 0 && (
+                <>
+                  <div className="border-y border-white/10 bg-black/25 px-5 py-2">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-white/45">
+                      Mini-apuestas · incluidas en el total
+                    </p>
+                  </div>
+                  <ul className="divide-y divide-white/8">
+                    {statBets.map((bet) => (
+                      <li key={bet.questionId} className={cn("px-5 py-3", bet.correct ? "bg-[#10240b]/45" : bet.resolved ? "bg-[#35130d]/20" : "bg-black/20")}>
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                          <div className="min-w-0">
+                            <p className="text-[10px] font-black uppercase tracking-wider text-white/35">
+                              {bet.matchNumber ? `#${bet.matchNumber} · ` : ""}{bet.matchLabel}
+                            </p>
+                            <p className="mt-1 text-sm font-black text-white/85">{bet.question}</p>
+                            <p className="mt-1 text-xs font-bold text-white/55">
+                              Apostó: <span className="text-white/85">{bet.pickedOption}</span>
+                              {bet.resolved && !bet.correct && bet.correctOption && (
+                                <> · Correcta: <span className="text-[#d5ff3f]">{bet.correctOption}</span></>
+                              )}
+                            </p>
+                          </div>
+                          <span className={cn(
+                            "inline-flex shrink-0 items-center gap-1 rounded-md border px-2 py-1 text-xs font-black",
+                            bet.correct
+                              ? "border-purple-400/35 bg-purple-950/35 text-purple-300"
+                              : bet.resolved
+                                ? "border-[#ff6a3d]/35 bg-[#35130d] text-[#ffd2c2]"
+                                : "border-white/12 bg-black/25 text-white/45"
+                          )}>
+                            {bet.correct ? <Star className="h-3 w-3" /> : bet.resolved ? <MinusCircle className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
+                            {bet.resolved ? (bet.correct ? `Correcta · ${bet.points}pt${bet.points === 1 ? "" : "s"}` : "Incorrecta · 0pts") : "Pendiente"}
+                          </span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+            </div>
           )}
         </div>
       </div>

@@ -33,7 +33,7 @@ export function AdminLeaderboard({ leaderboard, onPlayerClick }: AdminLeaderboar
           const barWidth = maxPts > 0 ? Math.round((entry.totalPoints / maxPts) * 100) : 0;
           const accuracy =
             entry.scoredPredictions > 0
-              ? Math.round((entry.exactScores / entry.scoredPredictions) * 100)
+              ? Math.round((entry.correctOutcomes / entry.scoredPredictions) * 100)
               : 0;
 
           return (
@@ -110,6 +110,9 @@ export function AdminLeaderboard({ leaderboard, onPlayerClick }: AdminLeaderboar
                     <TrendingUp className="h-3 w-3" />
                     <span className="hidden sm:inline">Result.</span>
                   </span>
+                </th>
+                <th className="px-3 py-3 text-right font-black uppercase tracking-wide text-[#ffb15f]">
+                  Fallos
                 </th>
                 <th className="hidden px-3 py-3 text-right font-black uppercase tracking-wide text-white/40 sm:table-cell">
                   Jugados
@@ -204,6 +207,16 @@ export function AdminLeaderboard({ leaderboard, onPlayerClick }: AdminLeaderboar
                       </span>
                     </td>
 
+                    {/* Incorrect predictions */}
+                    <td className="px-3 py-3 text-right">
+                      <span className={cn(
+                        "font-black tabular-nums",
+                        entry.scoredPredictions - entry.correctOutcomes > 0 ? "text-[#ffb15f]" : "text-white/25"
+                      )}>
+                        {Math.max(entry.scoredPredictions - entry.correctOutcomes, 0)}
+                      </span>
+                    </td>
+
                     {/* Jugados/Scored */}
                     <td className="hidden px-3 py-3 text-right sm:table-cell">
                       <span className="text-xs font-bold tabular-nums text-white/40">
@@ -220,9 +233,10 @@ export function AdminLeaderboard({ leaderboard, onPlayerClick }: AdminLeaderboar
         {/* Legend */}
         <div className="border-t border-white/10 bg-black/25 px-4 py-3">
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs font-bold text-white/40">
-            <span className="flex items-center gap-1"><Target className="h-3 w-3 text-emerald-500" /> Exacto = 3 pts - Exacto + pase = 4 pts</span>
-            <span className="flex items-center gap-1"><TrendingUp className="h-3 w-3 text-sky-500" /> Resultado = 1 pt - Resultado + pase = 2 pts</span>
-            <span className="flex items-center gap-1"><Star className="h-3 w-3 text-purple-400" /> Stat correcta = 1 pt</span>
+            <span className="flex items-center gap-1"><Target className="h-3 w-3 text-emerald-500" /> Exacto = 3 pts · empate exacto + pase + método = 4 pts</span>
+            <span className="flex items-center gap-1"><TrendingUp className="h-3 w-3 text-sky-500" /> Resultado = 1 pt · pase por TE = 2 pts · pase por penales = 3 pts</span>
+            <span className="flex items-center gap-1"><Star className="h-3 w-3 text-purple-400" /> Mini-apuesta correcta = valor configurado</span>
+            <span>Hacé clic en un jugador para auditar cada apuesta y cada punto.</span>
           </div>
         </div>
       </div>

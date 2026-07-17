@@ -3,10 +3,10 @@ import { ObjectId } from "mongodb";
 
 import { getDb } from "@/lib/helpers/mongodb";
 import { COLLECTIONS } from "@/lib/constants/db";
-import type { MundialMatch, MundialStage } from "@/lib/mundial/fixtures";
+import type { MundialMatch } from "@/lib/mundial/fixtures";
 import { serializeLiveMatchStats, type LiveMatchStats } from "@/lib/mundial/live-stats";
 import { propagateKnockoutAdvancement } from "@/lib/mundial/knockout-advance";
-import { computePredictionPoints, computePredictionResult } from "@/lib/mundial/prediction-scoring";
+import { computePredictionResult } from "@/lib/mundial/prediction-scoring";
 
 export const dynamic = "force-dynamic";
 
@@ -276,13 +276,6 @@ function predictionScores(doc: PredictionDoc) {
   return { homeScore: 0, awayScore: 0 };
 }
 
-function computePoints(
-  match: { stage: MundialStage; homeFinalScore: number; awayFinalScore: number; homeRegulationScore?: number | null; awayRegulationScore?: number | null; actualWinner?: WinnerPick; decisionMethod?: MatchDecisionMethod },
-  prediction: { homeScore: number; awayScore: number; winnerPick?: WinnerPick; winnerPickMethod?: "extraTime" | "penalties" | null }
-): number {
-  return computePredictionPoints(match, prediction);
-}
-
 export async function GET() {
   try {
     const db = await getDb();
@@ -420,6 +413,19 @@ export async function GET() {
 
     // Add stat bet points
     for (const bet of statBets) {
+      if (!playerMap.has(bet.normalizedName)) {
+        playerMap.set(bet.normalizedName, {
+          playerName: bet.playerName ?? bet.normalizedName,
+          normalizedName: bet.normalizedName,
+          predictionPoints: 0,
+          statPoints: 0,
+          totalPoints: 0,
+          totalPredictions: 0,
+          scoredPredictions: 0,
+          exactScores: 0,
+          correctOutcomes: 0,
+        });
+      }
       const question = statQuestions.find((q) => q.id === bet.questionId);
       if (!question?.correctOptionId || bet.optionId !== question.correctOptionId) continue;
       const entry = playerMap.get(bet.normalizedName);
