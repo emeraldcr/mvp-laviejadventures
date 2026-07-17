@@ -328,6 +328,8 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
   const tourName: string | null =
     (typeof meta?.tourName === "string" ? meta.tourName : null) ||
     (typeof persistedBooking?.tourName === "string" ? persistedBooking.tourName : null);
+  const specialRequests: string | null =
+    (typeof persistedBooking?.specialRequests === "string" ? persistedBooking.specialRequests : null);
 
   const amountStr =
     capture?.amount?.value ||
@@ -377,6 +379,7 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
     tourSlug,
     tourName,
     packagePrice,
+    specialRequests,
     // Link reservation to the logged-in user
     userId: userId,
     userEmail: userEmail,

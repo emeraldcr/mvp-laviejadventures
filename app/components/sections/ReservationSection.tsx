@@ -20,6 +20,7 @@ type OrderPayload = {
   tourSlug: string;
   tourName: string;
   packagePrice: number;
+  specialRequests?: string;
 };
 
 type Props = {

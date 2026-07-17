@@ -348,6 +348,7 @@ export type BookingRecord = {
   tourSlug?: string | null;
   tourName?: string | null;
   packagePrice: number | null;
+  specialRequests?: string | null;
   userId?: string | null;
   userEmail?: string | null;
   createdAt?: Date;
@@ -443,6 +444,7 @@ export type OrderDetails = {
   tourSlug: string;
   tourName: string;
   packagePrice: number;
+  specialRequests?: string;
 };
 
 export type PaymentModalProps = {
