@@ -130,8 +130,6 @@ export type PredictionsResponse = {
 export type LeaderboardEntry = {
   playerName: string;
   normalizedName: string;
-  predictionPoints: number;
-  statPoints: number;
   totalPoints: number;
   totalPredictions: number;
   scoredPredictions: number;

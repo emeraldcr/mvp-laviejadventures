@@ -89,6 +89,12 @@ export function computePredictionResult(
   if (isExact && isDrawInKnockout && correctWinner && correctMethod) {
     return { points: 4, exactScore: true, correctOutcome: true, kind: "exact" };
   }
+  // Legacy knockout results may have the winner saved but no decision method.
+  // In that incomplete-data case an exact 90' score still earns the standard
+  // 3 points, but no extra tiebreak bonus can be awarded.
+  if (isExact && isDrawInKnockout && correctWinner && match.decisionMethod == null) {
+    return { points: 3, exactScore: true, correctOutcome: true, kind: "exact" };
+  }
   if (isExact && isDrawInKnockout) {
     return { points: 1, exactScore: true, correctOutcome: true, kind: "exact" };
   }

@@ -319,7 +319,6 @@ export function PlayersView({ leaderboard, matches, predictions, playerName, onO
                               />
                             </div>
                             {pending > 0 && <span className="text-[9px] font-black text-white/45 sm:text-[10px]">{pending} pend.</span>}
-                            {entry.statPoints > 0 && <span className="text-[9px] font-black text-purple-300 sm:text-[10px]">+{entry.statPoints} mini</span>}
                           </div>
                         </div>
                       </div>
@@ -373,7 +372,6 @@ export function PlayersView({ leaderboard, matches, predictions, playerName, onO
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs font-bold text-white/60">
             <span className="flex items-center gap-1"><Target className="h-3 w-3 text-[#d5ff3f]" /> Exacto = 3 pts · exacto + pase + método = 4 pts</span>
             <span className="flex items-center gap-1"><TrendingUp className="h-3 w-3 text-[#62ffe6]" /> Resultado = 1 pt · TE = 2 pts · penales = 3 pts</span>
-            <span>Total = partidos + mini-apuestas</span>
             <span>{totalOutcome} resultados acertados entre todos</span>
           </div>
         </div>
@@ -547,7 +545,7 @@ function PlayerPredictionsModal({
             <div className="min-w-0">
               <p className="truncate text-lg font-black uppercase text-white">{entry.playerName}</p>
               <p className="mt-1 text-xs font-black uppercase tracking-[0.16em] text-[#d5ff3f]">
-                {modalPoints} pts de partidos / {entry.statPoints} pts mini-apuestas / {missedPlayedCount} sin pick / {accuracyPct(entry)}% precision
+                {modalPoints} pts auditados / {entry.totalPredictions} picks / {missedPlayedCount} sin pick / {accuracyPct(entry)}% precision
               </p>
             </div>
           </div>

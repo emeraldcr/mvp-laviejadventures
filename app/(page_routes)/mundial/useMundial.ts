@@ -187,8 +187,6 @@ export function useMundial() {
         playerMap.set(key, {
           playerName: pred.playerName,
           normalizedName: key,
-          predictionPoints: 0,
-          statPoints: 0,
           totalPoints: 0,
           totalPredictions: 0,
           scoredPredictions: 0,
@@ -214,8 +212,7 @@ export function useMundial() {
           { homeScore: pred.homeScore, awayScore: pred.awayScore, winnerPick: pred.winnerPick, winnerPickMethod: pred.winnerPickMethod },
         );
         entry.scoredPredictions++;
-        entry.predictionPoints += result.points;
-        entry.totalPoints = entry.predictionPoints;
+        entry.totalPoints += result.points;
         if (result.exactScore) entry.exactScores++;
         if (result.correctOutcome) entry.correctOutcomes++;
       }

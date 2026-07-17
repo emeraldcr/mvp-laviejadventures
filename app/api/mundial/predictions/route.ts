@@ -16,8 +16,6 @@ export const dynamic = "force-dynamic";
 
 const LEGACY_MATCH_ID = "mexico-sudafrica-2026-06-11-13";
 const MAX_SCORE = 30;
-const STAT_QUESTIONS_COLLECTION = "mundial_stat_questions";
-const STAT_BETS_COLLECTION = "mundial_stat_bets";
 
 type WinnerPick = "home" | "away" | null;
 
@@ -82,24 +80,9 @@ type PredictionPayload = {
   locked?: unknown;
 };
 
-type StatQuestionDoc = {
-  id: string;
-  correctOptionId?: string | null;
-  pointValue?: number;
-};
-
-type StatBetDoc = {
-  questionId: string;
-  playerName?: string;
-  normalizedName: string;
-  optionId: string;
-};
-
 type LeaderboardEntry = {
   playerName: string;
   normalizedName: string;
-  predictionPoints: number;
-  statPoints: number;
   totalPoints: number;
   totalPredictions: number;
   scoredPredictions: number;
@@ -246,9 +229,7 @@ function serializePrediction(
 
 function buildLeaderboard(
   predictionDocs: PredictionDoc[],
-  matchesById: Map<string, MundialMatchDoc | MundialMatch>,
-  statQuestions: StatQuestionDoc[],
-  statBets: StatBetDoc[],
+  matchesById: Map<string, MundialMatchDoc | MundialMatch>
 ) {
   const playerMap = new Map<string, LeaderboardEntry>();
 
@@ -258,8 +239,6 @@ function buildLeaderboard(
       playerMap.set(key, {
         playerName: prediction.playerName,
         normalizedName: key,
-        predictionPoints: 0,
-        statPoints: 0,
         totalPoints: 0,
         totalPredictions: 0,
         scoredPredictions: 0,
@@ -292,35 +271,10 @@ function buildLeaderboard(
       );
 
       entry.scoredPredictions++;
-      entry.predictionPoints += result.points;
+      entry.totalPoints += result.points;
       if (result.exactScore) entry.exactScores++;
       if (result.correctOutcome) entry.correctOutcomes++;
     }
-  }
-
-  const questionsById = new Map(statQuestions.map((question) => [question.id, question]));
-  for (const bet of statBets) {
-    if (!playerMap.has(bet.normalizedName)) {
-      playerMap.set(bet.normalizedName, {
-        playerName: bet.playerName ?? bet.normalizedName,
-        normalizedName: bet.normalizedName,
-        predictionPoints: 0,
-        statPoints: 0,
-        totalPoints: 0,
-        totalPredictions: 0,
-        scoredPredictions: 0,
-        exactScores: 0,
-        correctOutcomes: 0,
-      });
-    }
-    const question = questionsById.get(bet.questionId);
-    if (question?.correctOptionId && bet.optionId === question.correctOptionId) {
-      playerMap.get(bet.normalizedName)!.statPoints += question.pointValue ?? 1;
-    }
-  }
-
-  for (const entry of playerMap.values()) {
-    entry.totalPoints = entry.predictionPoints + entry.statPoints;
   }
 
   return [...playerMap.values()].sort(
@@ -489,11 +443,7 @@ export async function GET(req: NextRequest) {
   try {
     const playerName = normalizeName(req.nextUrl.searchParams.get("playerName"));
     const db = await getDb();
-    const [matches, statQuestions, statBets] = await Promise.all([
-      readMatches(db),
-      db.collection<StatQuestionDoc>(STAT_QUESTIONS_COLLECTION).find({}).toArray(),
-      db.collection<StatBetDoc>(STAT_BETS_COLLECTION).find({}).toArray(),
-    ]);
+    const matches = await readMatches(db);
     const now = new Date();
     const matchesById = new Map(matches.map((m) => [m.id, m]));
     const predictions = db.collection<PredictionDoc>(MUNDIAL_PREDICTIONS_COLLECTION);
@@ -505,7 +455,7 @@ export async function GET(req: NextRequest) {
       matches: matches.map((m) => serializeMatch(m, now)),
       predictions: visiblePredictions.map((p) => serializePrediction(p, matchesById, now)),
       players: players.map(serializePlayer),
-      leaderboard: buildLeaderboard(predictionDocs, matchesById, statQuestions, statBets),
+      leaderboard: buildLeaderboard(predictionDocs, matchesById),
     });
   } catch (error) {
     console.error("Failed to load mundial predictions", error);
