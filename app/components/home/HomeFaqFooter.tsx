@@ -89,8 +89,8 @@ function FinalCta() {
     <section className="bg-white px-4 pb-20 dark:bg-[#0b0a09] sm:px-6 md:pb-28 lg:px-8">
       <div className="relative mx-auto max-w-7xl overflow-hidden rounded-[2.5rem]">
         <Image
-          src="/ads/IMG_5668.jpg"
-          alt=""
+          src="/image/IMG_6812.jpg"
+          alt={isEs ? "Cascada El Zafiro en Ciudad Esmeralda" : "El Zafiro Waterfall at Ciudad Esmeralda"}
           fill
           sizes="100vw"
           className="object-cover"
@@ -99,12 +99,12 @@ function FinalCta() {
 
         <div className="relative px-8 py-16 md:px-16 md:py-24">
           <h2 className="font-display max-w-2xl text-balance text-4xl font-bold leading-[1.0] tracking-tight text-white md:text-6xl">
-            {isEs ? "La naturaleza te espera. ¿Cuál experiencia elegís?" : "Nature is waiting. Which experience will you choose?"}
+            {isEs ? "Ciudad Esmeralda te espera. ¿Entramos al cañón?" : "Ciudad Esmeralda is waiting. Ready for the canyon?"}
           </h2>
           <p className="mt-4 max-w-xl text-base leading-relaxed text-white/75 md:text-lg">
             {isEs
-              ? "Cupos limitados por día en cada tour — cañón, pozas, aves, volcanes y más — para cuidar el bosque y darte una experiencia sin multitudes."
-              : "Limited daily spots on every tour — canyon, pools, birds, volcanoes, and more — to protect the forest and keep the experience crowd-free."}
+              ? "Manejamos cupos limitados para cuidar el bosque y vivir el cañón sin multitudes. La salida siempre queda sujeta al clima y al nivel seguro del río."
+              : "We keep groups limited to protect the forest and experience the canyon without crowds. Departures always depend on safe weather and river conditions."}
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
@@ -162,8 +162,8 @@ function HomeFooter() {
             </div>
             <p className="mt-4 max-w-sm text-sm leading-relaxed">
               {isEs
-                ? "Turismo de naturaleza local en San Carlos y Juan Castro Blanco: aves, volcanes dormidos, Ciudad Esmeralda y bosque vivo, operado por gente de la zona."
-                : "Local nature tourism in San Carlos and Juan Castro Blanco: birds, dormant volcanoes, Ciudad Esmeralda, and living forest, run by locals."}
+                ? "Ciudad Esmeralda es nuestra aventura insignia en San Carlos: sendero, río, cañón y pozas turquesa, guiada por gente de la zona."
+                : "Ciudad Esmeralda is our signature San Carlos adventure: trail, river, canyon, and turquoise pools, guided by locals."}
             </p>
           </div>
 

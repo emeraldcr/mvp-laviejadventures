@@ -11,14 +11,14 @@ export type PublicTour = TourSummary & {
   isMain?: boolean;
 };
 
-const STAR_TOUR_SLUGS = new Set(["avistamiento-aves-norteno", "avistamiento-aves"]);
+const STAR_TOUR_SLUGS = new Set(["tour-ciudad-esmeralda", "ciudad-esmeralda"]);
 
 const TOUR_PRIORITY_BY_SLUG: Record<string, number> = {
-  "avistamiento-aves-norteno": 1,
-  "avistamiento-aves": 1,
-  "caminata-volcanes-dormidos": 2,
-  "tour-ciudad-esmeralda": 3,
-  "ciudad-esmeralda": 3,
+  "tour-ciudad-esmeralda": 1,
+  "ciudad-esmeralda": 1,
+  "avistamiento-aves-norteno": 2,
+  "avistamiento-aves": 2,
+  "caminata-volcanes-dormidos": 3,
   "lluvia-en-la-naturaleza": 4,
 };
 
@@ -34,7 +34,31 @@ function prioritizeTours<T extends { slug?: string; priceCRC?: number }>(tours: 
   });
 }
 
+const DEFAULT_CITY_TOUR = {
+  slug: "tour-ciudad-esmeralda",
+  iconName: "Star",
+  titleEs: "Tour Ciudad Esmeralda – Cañón del Río La Vieja",
+  titleEn: "Ciudad Esmeralda Tour – La Vieja River Canyon",
+  descriptionEs:
+    "Caminata por senderos, río y cañón hacia la Cascada El Zafiro y sus pozas naturales.",
+  descriptionEn:
+    "A hike through trails, river, and canyon to El Zafiro Waterfall and its natural pools.",
+  duration: "3-4 horas",
+  difficulty: "Moderado",
+  priceCRC: 25000,
+  location: "Sucre de Ciudad Quesada, San Carlos, Alajuela, Costa Rica",
+  tagEs: "Aventura insignia",
+  tagEn: "Signature adventure",
+  accent: "from-teal-900/40 to-teal-950/60",
+  border: "border-teal-700/30 hover:border-teal-500/60",
+  type: "both",
+  isActive: true,
+  isFeatured: true,
+  isMain: true,
+};
+
 const DEFAULT_TOURS = [
+  DEFAULT_CITY_TOUR,
   {
     slug: "cuadra-tours-aventura",
     iconName: "Bike",
@@ -356,5 +380,12 @@ export async function readPublicTours(): Promise<PublicTour[]> {
       .toArray();
   }
 
-  return prioritizeTours(tours.map((tour) => serializePublicTour(tour as Record<string, unknown>)));
+  const hasCiudadEsmeralda = tours.some((tour) =>
+    ["tour-ciudad-esmeralda", "ciudad-esmeralda"].includes(String(tour.slug ?? "")),
+  );
+  const publicTours = hasCiudadEsmeralda ? tours : [DEFAULT_CITY_TOUR, ...tours];
+
+  return prioritizeTours(
+    publicTours.map((tour) => serializePublicTour(tour as Record<string, unknown>)),
+  );
 }

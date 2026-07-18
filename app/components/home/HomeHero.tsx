@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, CalendarDays, Check, ChevronDown, MapPin, Minus, Plus, ShieldCheck, Star } from "lucide-react";
+import { ArrowRight, CalendarDays, Check, MapPin, Minus, Plus, ShieldCheck, Star } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
 import type { TourSummary } from "@/lib/types/index";
 import { BOOKING_HREF, WHATSAPP_HREF, formatTourPrice, primaryBookingLabel, tourTitle } from "./home-utils";
@@ -17,45 +17,15 @@ const HERO_SLIDES = [
   { src: "/image/IMG_6810.jpg", es: "Río La Vieja", en: "La Vieja River" },
 ];
 
-const FEATURED_HERO_SLIDES = [
-  { src: "/ads/IMG_5668.jpg", es: "Avistamiento de Aves Norteno", en: "Northern Birdwatching" },
-  { src: "/ads/IMG_5666.jpg", es: "Volcanes Dormidos", en: "Dormant Volcanoes" },
-  { src: "/image/IMG_4671.jpg", es: "Ciudad Esmeralda", en: "Ciudad Esmeralda" },
-  { src: "/ads/IMG_5669.jpg", es: "Lluvia en la Naturaleza", en: "Rain in Nature" },
-];
-
 function BookingCard({ tours }: { tours: TourSummary[] }) {
   const { lang } = useLanguage();
   const isEs = lang === "es";
-  const [slug, setSlug] = useState("");
   const [people, setPeople] = useState(2);
-  const tourMenuRef = useRef<HTMLDetailsElement>(null);
-
-  const resolvedSlug = slug || tours[0]?.slug || "";
-  const selectedTour = tours.find((t) => t.slug === resolvedSlug) ?? tours[0];
-
-  useEffect(() => {
-    const handlePointerDown = (event: PointerEvent) => {
-      if (!tourMenuRef.current?.contains(event.target as Node)) {
-        tourMenuRef.current?.removeAttribute("open");
-      }
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") tourMenuRef.current?.removeAttribute("open");
-    };
-
-    document.addEventListener("pointerdown", handlePointerDown);
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("pointerdown", handlePointerDown);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, []);
+  const selectedTour = tours[0];
 
   const handleBook = () => {
-    if (!resolvedSlug) return;
-    window.location.href = `${BOOKING_HREF}?tour=${encodeURIComponent(resolvedSlug)}&pax=${people}`;
+    if (!selectedTour) return;
+    window.location.href = `${BOOKING_HREF}&pax=${people}`;
   };
 
   return (
@@ -67,7 +37,7 @@ function BookingCard({ tours }: { tours: TourSummary[] }) {
               {isEs ? "Reserva rápida" : "Quick booking"}
             </p>
             <h2 className="mt-3 font-display text-3xl font-black leading-none text-white">
-              {isEs ? "Armá tu salida" : "Plan your tour"}
+              {isEs ? "Reservá Ciudad Esmeralda" : "Book Ciudad Esmeralda"}
             </h2>
           </div>
           <span className="rounded-full border border-emerald-300/25 bg-emerald-300/12 px-4 py-2 text-[10px] font-black uppercase tracking-wide text-emerald-200">
@@ -80,13 +50,10 @@ function BookingCard({ tours }: { tours: TourSummary[] }) {
             <span className="block text-[10px] font-bold uppercase tracking-widest text-emerald-200/80">
               {isEs ? "Experiencia" : "Experience"}
             </span>
-          <details ref={tourMenuRef} className="group/tour">
-            <summary
-              className="mt-3 flex min-h-20 w-full cursor-pointer list-none items-center justify-between gap-4 rounded-[1.35rem] border border-white/12 bg-white/[0.08] px-5 py-4 text-left outline-none transition hover:border-emerald-300/45 hover:bg-white/[0.11] group-open/tour:border-emerald-300/70 group-open/tour:bg-emerald-300/10 group-open/tour:shadow-[0_0_0_4px_rgba(52,211,153,0.10)] [&::-webkit-details-marker]:hidden"
-            >
+          <div className="mt-3 flex min-h-20 w-full items-center rounded-[1.35rem] border border-emerald-300/35 bg-emerald-300/10 px-5 py-4">
               <span className="min-w-0">
                 <span className="block truncate text-base font-black text-white">
-                  {selectedTour ? tourTitle(selectedTour, isEs) : isEs ? "Elegí un tour" : "Choose a tour"}
+                  {selectedTour ? tourTitle(selectedTour, isEs) : "Ciudad Esmeralda"}
                 </span>
                 {selectedTour && (
                   <span className="mt-1 block text-xs font-bold uppercase tracking-wide text-emerald-200/75">
@@ -95,65 +62,7 @@ function BookingCard({ tours }: { tours: TourSummary[] }) {
                   </span>
                 )}
               </span>
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/12 bg-black/18 text-white/65 transition group-open/tour:rotate-180 group-open/tour:border-emerald-300/40 group-open/tour:text-emerald-200">
-                <ChevronDown size={15} />
-              </span>
-            </summary>
-
-            <div className="absolute left-0 right-0 top-[calc(100%+0.75rem)] z-30 overflow-hidden rounded-[1.35rem] border border-emerald-300/24 bg-[#101713]/96 p-2 shadow-[0_26px_70px_rgba(0,0,0,0.52)] backdrop-blur-2xl">
-              <div
-                role="listbox"
-                aria-label={isEs ? "Seleccionar experiencia" : "Select experience"}
-                className="max-h-96 overflow-y-auto pr-1 [scrollbar-color:rgba(110,231,183,0.45)_rgba(255,255,255,0.08)] [scrollbar-width:thin]"
-              >
-                {tours.map((tour) => {
-                  const isSelected = tour.slug === resolvedSlug;
-                  return (
-                    <button
-                      key={tour.slug}
-                      type="button"
-                      role="option"
-                      aria-selected={isSelected}
-                      onClick={() => {
-                        setSlug(tour.slug);
-                        tourMenuRef.current?.removeAttribute("open");
-                      }}
-                      className={[
-                        "group flex min-h-20 w-full items-center justify-between gap-4 rounded-2xl px-4 py-4 text-left transition",
-                        isSelected
-                          ? "bg-emerald-300 text-emerald-950"
-                          : "text-white hover:bg-white/[0.08]",
-                      ].join(" ")}
-                      >
-                        <span className="min-w-0">
-                        <span className="block truncate text-base font-black">
-                          {tourTitle(tour, isEs)}
-                        </span>
-                        <span
-                          className={[
-                            "mt-1 block text-[11px] font-bold uppercase tracking-wide",
-                            isSelected ? "text-emerald-950/70" : "text-white/45 group-hover:text-emerald-200/80",
-                          ].join(" ")}
-                        >
-                          {tour.duration || (isEs ? "Experiencia local" : "Local experience")}
-                        </span>
-                      </span>
-                      <span
-                        className={[
-                          "shrink-0 rounded-full px-3 py-1.5 text-xs font-black",
-                          isSelected
-                            ? "bg-emerald-950/10 text-emerald-950"
-                            : "bg-white/[0.08] text-emerald-200",
-                        ].join(" ")}
-                      >
-                        {formatTourPrice(tour, isEs)}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </details>
+          </div>
           </div>
 
           <div>
@@ -209,7 +118,7 @@ export default function HomeHero({ tours }: { tours: TourSummary[] }) {
   const isEs = lang === "es";
   const [current, setCurrent] = useState(0);
 
-  const next = useCallback(() => setCurrent((c) => (c + 1) % FEATURED_HERO_SLIDES.length), []);
+  const next = useCallback(() => setCurrent((c) => (c + 1) % HERO_SLIDES.length), []);
 
   useEffect(() => {
     const id = setInterval(next, SLIDE_DURATION);
@@ -217,13 +126,13 @@ export default function HomeHero({ tours }: { tours: TourSummary[] }) {
   }, [next]);
 
   const trustItems = isEs
-    ? ["Cañón y pozas", "Aves y volcanes", "Guias locales", "Ruta ajustada al clima"]
-    : ["Canyon and pools", "Birds and volcanoes", "Local guides", "Weather-aware route"];
+    ? ["Cañón y pozas turquesa", "Cascada El Zafiro", "Guías locales", "Ruta ajustada al clima"]
+    : ["Canyon and turquoise pools", "El Zafiro Waterfall", "Local guides", "Weather-aware route"];
 
   return (
     <section className="relative flex min-h-[92svh] flex-col overflow-hidden bg-stone-950">
       <div className="absolute inset-0">
-        {FEATURED_HERO_SLIDES.map((slide, index) => (
+        {HERO_SLIDES.map((slide, index) => (
           <div
             key={slide.src}
             className={`absolute inset-0 transition-opacity duration-[1400ms] ease-in-out ${
@@ -261,21 +170,21 @@ export default function HomeHero({ tours }: { tours: TourSummary[] }) {
           <h1 className="font-display max-w-5xl text-balance text-[clamp(2.6rem,5.8vw,5.8rem)] font-black leading-[0.92] tracking-tight text-white">
             {isEs ? (
               <>
-                El verde de la naturaleza te está llamando.{" "}
-                <span className="text-emerald-300">¿Estás listo para sentirlo?</span>
+                Ciudad Esmeralda:{" "}
+                <span className="text-emerald-300">el cañón que tenés que vivir.</span>
               </>
             ) : (
               <>
-                The green of nature is calling.{" "}
-                <span className="text-emerald-300">Are you ready to feel it?</span>
+                Ciudad Esmeralda:{" "}
+                <span className="text-emerald-300">the canyon you have to experience.</span>
               </>
             )}
           </h1>
 
           <p className="mt-6 max-w-2xl text-base leading-relaxed text-white/82 md:text-xl">
             {isEs
-              ? "Cañón, pozas cristalinas, avistamiento de aves, volcanes dormidos y bosque vivo en San Carlos y Juan Castro Blanco — guías locales, grupos pequeños y rutas ajustadas al clima."
-              : "Canyon, crystal pools, birdwatching, dormant volcanoes, and living forest in San Carlos and Juan Castro Blanco — local guides, small groups, and weather-aware routes."}
+              ? "Sendero, río y cañón hasta la Cascada El Zafiro y sus pozas turquesa. Aventura real con guías locales y una ruta que siempre respeta el clima y el nivel del río."
+              : "Trail, river, and canyon to El Zafiro Waterfall and its turquoise pools. A real adventure with local guides and a route that always respects weather and river conditions."}
           </p>
 
           <div className="mt-7 flex flex-wrap items-center gap-3">
@@ -319,10 +228,10 @@ export default function HomeHero({ tours }: { tours: TourSummary[] }) {
       <div className="absolute bottom-7 right-4 z-10 hidden flex-col items-end gap-3 sm:right-8 md:flex">
         <span className="flex items-center gap-1.5 rounded-full bg-black/35 px-3.5 py-1.5 text-[11px] font-semibold text-white/85 backdrop-blur-md">
           <MapPin size={11} className="text-emerald-300" />
-          {isEs ? FEATURED_HERO_SLIDES[current].es : FEATURED_HERO_SLIDES[current].en}
+          {isEs ? HERO_SLIDES[current].es : HERO_SLIDES[current].en}
         </span>
         <div className="flex items-center gap-2">
-          {FEATURED_HERO_SLIDES.map((slide, index) => (
+          {HERO_SLIDES.map((slide, index) => (
             <button
               key={slide.src}
               type="button"

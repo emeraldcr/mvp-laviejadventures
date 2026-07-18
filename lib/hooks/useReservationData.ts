@@ -1,21 +1,21 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { BIRDWATCHING_PACKAGES } from "@/lib/tour-packages";
+import { CIUDAD_ESMERALDA_PACKAGES } from "@/lib/tour-packages";
 import type { TourSummary } from "@/lib/types/index";
 
 export const DEFAULT_BOOKABLE_TOUR: TourSummary = {
-  id: "avistamiento-aves-norteno",
-  slug: "avistamiento-aves-norteno",
-  titleEs: "Avistamiento de Aves Norteno",
-  titleEn: "Northern Birdwatching",
-  descriptionEs: "Observacion guiada de aves con binoculares, senderos de bosque y explicaciones sobre comportamiento, habitat y conservacion.",
-  descriptionEn: "Guided birdwatching with binoculars, forest trails, and insight into behavior, habitats, and conservation.",
-  duration: "2 horas",
-  difficulty: "Facil",
-  priceCRC: 24990,
-  location: "Juan Castro Blanco, Alajuela Norte, Costa Rica",
-  packages: BIRDWATCHING_PACKAGES,
+  id: "tour-ciudad-esmeralda",
+  slug: "tour-ciudad-esmeralda",
+  titleEs: "Tour Ciudad Esmeralda – Cañón del Río La Vieja",
+  titleEn: "Ciudad Esmeralda Tour – La Vieja River Canyon",
+  descriptionEs: "Caminata por senderos, río y cañón hacia la Cascada El Zafiro y sus pozas naturales.",
+  descriptionEn: "A hike through trails, river, and canyon to El Zafiro Waterfall and its natural pools.",
+  duration: "3-4 horas",
+  difficulty: "Moderado",
+  priceCRC: 25000,
+  location: "Sucre de Ciudad Quesada, San Carlos, Alajuela, Costa Rica",
+  packages: CIUDAD_ESMERALDA_PACKAGES,
 };
 
 export function useReservationData() {

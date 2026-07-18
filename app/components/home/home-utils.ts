@@ -2,7 +2,8 @@ import type { TourSummary } from "@/lib/types/index";
 import { CRC_PER_USD } from "@/lib/reservation/packages";
 
 export const WHATSAPP_HREF = "https://wa.me/50662332535";
-export const BOOKING_HREF = "/reservar";
+export const CIUDAD_ESMERALDA_SLUG = "tour-ciudad-esmeralda";
+export const BOOKING_HREF = `/reservar?tour=${CIUDAD_ESMERALDA_SLUG}`;
 export const TOURS_HREF = "/tours";
 
 export function primaryBookingLabel(isEs: boolean): string {
