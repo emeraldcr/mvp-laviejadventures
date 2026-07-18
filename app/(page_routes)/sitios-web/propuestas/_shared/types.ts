@@ -39,6 +39,7 @@ export type Testimonial = { name: string; text: string };
 export type BusinessConfig = {
   slug: string;
   brandIcon: string;
+  brandLogo?: string;
   name: string;
   shortName: string;
   category: string;

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/helpers/mongodb";
 import { recordMundialAnalyticsEvent } from "@/lib/mundial/analytics";
 import { readMundialMatches } from "@/lib/mundial/matches-store";
+import { identitySessionMatches } from "@/lib/mundial/identity";
 
 export const dynamic = "force-dynamic";
 
@@ -134,6 +135,9 @@ export async function POST(req: NextRequest) {
     }
 
     const db = await getDb();
+    if (!(await identitySessionMatches(db, req, playerName))) {
+      return NextResponse.json({ error: "Sesión inválida. Verificá tu cédula y PIN nuevamente." }, { status: 401 });
+    }
     const matches = await readMundialMatches(db);
     const match = matches.find((m) => m.id === matchId);
     if (!match) {

@@ -1,0 +1,16 @@
+{
+  "name": "Jess Music & Sound Systems",
+  "short_name": "Jess Music",
+  "start_url": "/sitios-web/propuestas/grupo-jess",
+  "display": "standalone",
+  "background_color": "#070b20",
+  "theme_color": "#0d61ff",
+  "icons": [
+    {
+      "src": "/propuestas/grupo-jess/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

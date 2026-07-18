@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 230" role="img" aria-labelledby="title desc">
+  <title id="title">Jess Music &amp; Sound Systems</title>
+  <desc id="desc">Identidad de Jess con una nota musical en degradado azul, cian y verde.</desc>
+  <defs>
+    <linearGradient id="jess-gradient" x1="40" y1="20" x2="610" y2="170" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#146cff"/>
+      <stop offset="0.38" stop-color="#2fdcea"/>
+      <stop offset="0.72" stop-color="#85e95c"/>
+      <stop offset="1" stop-color="#eff35c"/>
+    </linearGradient>
+  </defs>
+  <g fill="url(#jess-gradient)">
+    <path d="M78 21h18v91c0 31-18 55-48 55-22 0-37-12-37-28 0-20 20-34 45-34 8 0 15 1 22 4V21zm-20 102c-15 0-27 7-27 16 0 7 8 11 18 11 18 0 29-12 29-28-6-1-12-2-20 1z"/>
+    <path d="M96 22c30 17 51 39 60 66l-16 7c-8-20-23-38-44-50V22z"/>
+    <text x="104" y="151" font-family="Trebuchet MS, Arial Rounded MT Bold, Arial, sans-serif" font-size="145" font-weight="700" letter-spacing="-13">ess</text>
+  </g>
+  <text x="120" y="194" fill="#f4f7ff" font-family="Arial, sans-serif" font-size="25" font-weight="400" letter-spacing=".5">Music &amp; Sound Systems</text>
+  <circle cx="592" cy="83" r="10" fill="none" stroke="#f4f7ff" stroke-width="3"/>
+  <text x="588" y="88" fill="#f4f7ff" font-family="Arial, sans-serif" font-size="13" font-weight="700">R</text>
+</svg>

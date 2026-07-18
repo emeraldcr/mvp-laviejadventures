@@ -6,9 +6,11 @@ import {
   Croissant,
   Dumbbell,
   Fish,
+  Music2,
   PawPrint,
   Pizza,
   Scissors,
+  ShoppingBag,
   Soup,
   UtensilsCrossed,
   Wheat,
@@ -29,6 +31,22 @@ type Proposal = {
 };
 
 const PROPOSALS: Proposal[] = [
+  {
+    slug: "grupo-jess",
+    name: "JESS Music",
+    category: "Instrumentos & audio profesional",
+    location: "Ciudad Quesada, San Carlos",
+    accent: "from-red-600 to-orange-500",
+    icon: Music2,
+  },
+  {
+    slug: "suplidora-belleza-cavas",
+    name: "Suplidora de Belleza Cavas",
+    category: "Suplidora de belleza",
+    location: "San Carlos, Costa Rica",
+    accent: "from-amber-300 to-yellow-700",
+    icon: ShoppingBag,
+  },
   {
     slug: "latina-pizza",
     name: "Latina Pizza",

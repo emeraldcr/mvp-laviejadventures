@@ -7,6 +7,7 @@ import { recordMundialAnalyticsEvent } from "@/lib/mundial/analytics";
 import type { MundialMatch } from "@/lib/mundial/fixtures";
 import { serializeLiveMatchStats, type LiveMatchStats } from "@/lib/mundial/live-stats";
 import { computePredictionResult } from "@/lib/mundial/prediction-scoring";
+import { identitySessionMatches } from "@/lib/mundial/identity";
 import {
   MUNDIAL_PREDICTIONS_COLLECTION,
   readMundialMatches,
@@ -471,6 +472,9 @@ export async function POST(req: NextRequest) {
 
     const fallbackPlayerName = normalizeName(body.playerName);
     const fallbackNormalizedName = normalizeKey(fallbackPlayerName);
+    if (!fallbackNormalizedName || !(await identitySessionMatches(db, req, fallbackPlayerName))) {
+      return NextResponse.json({ error: "Sesión inválida. Verificá tu cédula y PIN nuevamente." }, { status: 401 });
+    }
     if (fallbackNormalizedName) {
       const ban = await isBanned(db, fallbackNormalizedName, null);
       if (ban) return NextResponse.json({ error: "Cuenta suspendida.", banned: true }, { status: 403 });

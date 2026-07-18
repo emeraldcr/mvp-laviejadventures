@@ -44,7 +44,6 @@ export function useMundial() {
   const [success, setSuccess] = useState("");
   const [pinVerifiedPlayers, setPinVerifiedPlayers] = useState<Set<string>>(new Set());
   const [showPinModal, setShowPinModal] = useState(false);
-  const [pinMode, setPinMode] = useState<"set" | "verify">("verify");
   const pinCheckedRef = useRef<Set<string>>(new Set());
   const playerNameRef = useRef("");
   const dataVersionRef = useRef(0);
@@ -423,19 +422,9 @@ export function useMundial() {
       }
     } catch {}
 
-    // No valid session — ask for PIN (set if new, verify if returning)
+    // No valid browser session — the PIN modal resolves the account by cédula.
     pinCheckedRef.current.add(key);
-    void (async () => {
-      try {
-        const r = await fetch(`/api/mundial/pin?playerName=${encodeURIComponent(playerName)}`);
-        const data = (await r.json()) as { hasPinSet: boolean };
-        setPinMode(data.hasPinSet ? "verify" : "set");
-        setShowPinModal(true);
-      } catch {
-        // Network failure — let them through rather than blocking
-        setPinVerifiedPlayers((prev) => { const next = new Set(prev); next.add(key); return next; });
-      }
-    })();
+    setShowPinModal(true);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoading, playerName, showPlayerPicker]);
 
@@ -658,7 +647,6 @@ export function useMundial() {
     openPlayerPicker,
     closePlayerPicker,
     showPinModal,
-    pinMode,
     isAuthenticated,
     onPinSuccess,
     matches: resolvedMatches,

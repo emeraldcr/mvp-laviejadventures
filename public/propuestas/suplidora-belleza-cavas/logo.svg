@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 520" role="img" aria-labelledby="title desc">
+  <title id="title">Suplidora de Belleza Cavas</title>
+  <desc id="desc">Logotipo dorado de Suplidora de Belleza Cavas sobre fondo negro.</desc>
+  <defs>
+    <linearGradient id="gold" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#8f672c"/><stop offset="0.28" stop-color="#fff6a8"/>
+      <stop offset="0.53" stop-color="#c18a36"/><stop offset="0.76" stop-color="#fff19a"/>
+      <stop offset="1" stop-color="#9a6925"/>
+    </linearGradient>
+  </defs>
+  <rect width="900" height="520" rx="42" fill="#030303"/>
+  <path d="M290 137c54-42 137-40 184-15 46 24 99 29 157 8-1 12 1 22 3 29-66 22-123 18-178-5-52-21-107-24-166 9 20-21 41-35 64-43-23 0-45 5-64 17z" fill="url(#gold)"/>
+  <text x="450" y="225" fill="url(#gold)" text-anchor="middle" font-family="Montserrat, Arial, sans-serif" font-size="46" font-weight="500" letter-spacing="8">SUPLIDORA DE BELLEZA</text>
+  <text x="450" y="360" fill="url(#gold)" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="168" letter-spacing="2">CAVAS</text>
+  <path d="M250 382c116 12 271 12 400 0" fill="none" stroke="url(#gold)" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="319" cy="439" r="28" fill="#20c85a"/>
+  <path d="M307 425c-8 8-4 23 8 29 8 4 18 2 24-4l-8-7-5 5c-5-1-10-5-12-10l5-5-7-8h-5z" fill="#fff"/>
+  <text x="360" y="458" fill="url(#gold)" font-family="Montserrat, Arial, sans-serif" font-size="56" font-weight="800">8455-5464</text>
+</svg>

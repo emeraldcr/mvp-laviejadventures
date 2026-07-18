@@ -175,12 +175,21 @@ export default function ProposalSite({ config }: { config: BusinessConfig }) {
         >
           <nav className="mx-auto flex max-w-7xl items-center justify-between px-5 py-3.5 sm:px-8">
             <a href="#inicio" className="group flex items-center gap-3">
-              <span
-                className="grid h-11 w-11 place-items-center rounded-xl shadow-lg transition group-hover:-rotate-3"
-                style={{ background: a.base, color: a.ink }}
-              >
-                <Icon name={config.brandIcon} className="h-5 w-5" />
-              </span>
+              {config.brandLogo ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={config.brandLogo}
+                  alt={`Logo de ${config.name}`}
+                  className="h-12 w-auto max-w-36 object-contain"
+                />
+              ) : (
+                <span
+                  className="grid h-11 w-11 place-items-center rounded-xl shadow-lg transition group-hover:-rotate-3"
+                  style={{ background: a.base, color: a.ink }}
+                >
+                  <Icon name={config.brandIcon} className="h-5 w-5" />
+                </span>
+              )}
               <span className="leading-tight">
                 <span
                   className={cx(
@@ -353,10 +362,22 @@ export default function ProposalSite({ config }: { config: BusinessConfig }) {
                   {config.city}
                 </span>
               </motion.div>
+              {config.brandLogo && (
+                <motion.img
+                  variants={fadeUp}
+                  transition={{ duration: 0.55 }}
+                  src={config.brandLogo}
+                  alt={`Logo de ${config.name}`}
+                  className="mt-7 h-auto w-56 max-w-full object-contain sm:w-72"
+                />
+              )}
               <motion.h1
                 variants={fadeUp}
                 transition={{ duration: 0.55 }}
-                className="mt-6 max-w-4xl text-5xl font-black leading-[0.94] text-white sm:text-7xl lg:text-8xl"
+                className={cx(
+                  "max-w-4xl text-5xl font-black leading-[0.94] text-white sm:text-7xl lg:text-8xl",
+                  config.brandLogo ? "mt-4" : "mt-6",
+                )}
               >
                 {config.shortName}
               </motion.h1>

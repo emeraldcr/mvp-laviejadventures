@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" role="img" aria-label="Jess Music">
+  <defs>
+    <linearGradient id="g" x1="24" y1="18" x2="158" y2="160" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#146cff"/><stop offset=".48" stop-color="#2fdcea"/><stop offset="1" stop-color="#b9ef43"/>
+    </linearGradient>
+  </defs>
+  <rect width="180" height="180" rx="42" fill="#070b20"/>
+  <path fill="url(#g)" d="M78 27h20v86c0 28-19 48-47 48-20 0-34-10-34-25 0-18 19-31 42-31 7 0 13 1 19 3V27zm-20 96c-14 0-23 6-23 14 0 5 7 8 15 8 17 0 28-11 28-25-6 0-11 0-20 3zM98 29c28 16 47 37 55 62l-16 7c-7-18-20-34-39-46V29z"/>
+</svg>

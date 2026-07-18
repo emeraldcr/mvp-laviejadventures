@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/helpers/mongodb";
+import {
+  MUNDIAL_IDENTITIES_COLLECTION,
+  identitySessionMatches,
+  normalizeIdentityNameKey,
+  readIdentitySession,
+  type MundialIdentityDoc,
+} from "@/lib/mundial/identity";
 
 export const dynamic = "force-dynamic";
 
@@ -23,9 +30,10 @@ export async function GET(req: NextRequest) {
     .collection<ProfileDoc>(PROFILES_COLLECTION)
     .findOne({ normalizedName: name });
 
+  const canReadPrivateProfile = await identitySessionMatches(db, req, name);
   return NextResponse.json({
-    email: doc?.email ?? "",
-    phone: doc?.phone ?? "",
+    email: canReadPrivateProfile ? doc?.email ?? "" : "",
+    phone: canReadPrivateProfile ? doc?.phone ?? "" : "",
     avatarDataUrl: doc?.avatarDataUrl ?? null,
   });
 }
@@ -69,7 +77,7 @@ export async function PUT(req: NextRequest) {
   const { normalizedName, playerName, email = "", phone = "" } = body;
   const avatarDataUrl = body.avatarDataUrl;
 
-  if (!normalizedName || !playerName) {
+  if (!normalizedName || !playerName || normalizedName !== normalizeIdentityNameKey(playerName)) {
     return NextResponse.json({ error: "Faltan campos requeridos" }, { status: 400 });
   }
 
@@ -82,13 +90,22 @@ export async function PUT(req: NextRequest) {
   }
 
   const db = await getDb();
+  const session = await readIdentitySession(db, req);
+  if (!session || session.normalizedName !== normalizeIdentityNameKey(playerName)) {
+    return NextResponse.json({ error: "Sesión inválida. Verificá tu cédula y PIN nuevamente." }, { status: 401 });
+  }
+  const identity = await db.collection<MundialIdentityDoc>(MUNDIAL_IDENTITIES_COLLECTION).findOne({ cedulaKey: session.cedulaKey });
+  if (!identity) return NextResponse.json({ error: "Identidad no encontrada." }, { status: 401 });
+  if (email && email.trim().toLowerCase() !== identity.normalizedEmail) {
+    return NextResponse.json({ error: "El correo de respaldo no se cambia desde el perfil." }, { status: 409 });
+  }
   await db.collection<ProfileDoc>(PROFILES_COLLECTION).updateOne(
     { normalizedName },
     {
       $set: {
         normalizedName,
         playerName,
-        email,
+        email: identity.email,
         phone,
         ...(avatarDataUrl !== undefined && { avatarDataUrl }),
         updatedAt: new Date(),

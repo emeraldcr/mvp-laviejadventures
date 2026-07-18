@@ -56,7 +56,6 @@ export default function MundialClient() {
     saveMatch,
     saveDirtyDrafts,
     showPinModal,
-    pinMode,
     onPinSuccess,
     registeredNames,
   } = useMundial();
@@ -112,8 +111,7 @@ export default function MundialClient() {
     if (playerKey) localStorage.setItem(`mundial-profile-banner-${playerKey}`, "1");
   }
 
-  function handlePinSuccess() {
-    const isNew = pinMode === "set";
+  function handlePinSuccess(isNew: boolean) {
     onPinSuccess();
     if (isNew) {
       setProfileIsFirstTime(true);
@@ -413,7 +411,6 @@ export default function MundialClient() {
       {showPinModal && (
         <PinModal
           playerName={playerName}
-          mode={pinMode}
           onSuccess={handlePinSuccess}
           onChangePlayer={openPlayerPicker}
         />
