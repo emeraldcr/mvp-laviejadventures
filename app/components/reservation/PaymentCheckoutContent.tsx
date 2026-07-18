@@ -96,7 +96,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
     paypalLoadError,
     isPaypalLoading: isPayPalSdkLoading,
   } = usePayPalCheckout({
-    enabled: paymentMethod === "paypal" && !checkoutQuote.syncing,
+    enabled: paymentMethod === "paypal" && checkoutQuote.synced && !checkoutQuote.syncing && !checkoutQuote.error,
     orderDetails: checkoutOrderDetails,
     lang,
     errorMessage: tr.error,
@@ -150,9 +150,15 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
   ];
 
 
+  const methodHints: Record<PaymentMethod, string> = {
+    paypal: lang === "es" ? "Confirmación al instante" : "Instant confirmation",
+    whatsapp: lang === "es" ? "Reserva con el equipo" : "Book with the team",
+    sinpe: lang === "es" ? "Transferencia local CR" : "Local CR transfer",
+  };
+
   return (
     <div className="grid gap-5 lg:grid-cols-[minmax(0,0.92fr)_minmax(360px,1.08fr)]">
-      <aside className="space-y-4">
+      <aside className="order-2 space-y-4 lg:order-1">
         <section className="rounded-2xl border border-white/10 bg-zinc-950/45 p-4 shadow-inner shadow-black/20">
           <div className="mb-3 flex items-center gap-2">
             <UserRound className="h-4 w-4 text-teal-300" aria-hidden />
@@ -201,7 +207,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
         </section>
       </aside>
 
-      <section className="rounded-2xl border border-teal-300/20 bg-[radial-gradient(circle_at_top_right,rgba(20,184,166,0.18),transparent_34%),rgba(10,10,12,0.72)] p-4 shadow-2xl shadow-black/30 sm:p-5">
+      <section className="order-1 rounded-2xl border border-teal-300/20 bg-[radial-gradient(circle_at_top_right,rgba(20,184,166,0.18),transparent_34%),rgba(10,10,12,0.72)] p-4 shadow-2xl shadow-black/30 sm:p-5 lg:order-2">
         <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-teal-300/25 bg-teal-400/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-teal-200">
@@ -232,7 +238,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
         </div>
 
         <div
-          className="mb-4 grid grid-cols-3 gap-2 rounded-2xl border border-white/10 bg-white/[0.03] p-1.5"
+          className="mb-4 grid gap-2 sm:grid-cols-3"
           role="tablist"
           aria-label={paymentCopy.paymentTitle}
         >
@@ -246,14 +252,19 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
                 aria-selected={isActive}
                 onClick={() => setPaymentMethod(tab.id)}
                 className={[
-                  "inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-[11px] font-bold uppercase tracking-[0.08em] transition sm:text-xs",
+                  "flex min-h-[4.25rem] flex-col items-start justify-center gap-1 rounded-2xl border px-3 py-2.5 text-left transition",
                   isActive
-                    ? "bg-teal-400/20 text-teal-100 shadow-inner shadow-teal-900/20"
-                    : "text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-200",
+                    ? "border-teal-300/50 bg-teal-400/15 text-teal-50 shadow-inner shadow-teal-900/20"
+                    : "border-white/10 bg-white/[0.03] text-zinc-300 hover:border-white/20 hover:bg-white/[0.05]",
                 ].join(" ")}
               >
-                {tab.icon}
-                <span className="truncate">{tab.label}</span>
+                <span className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-[0.08em]">
+                  {tab.icon}
+                  {tab.label}
+                </span>
+                <span className={`text-[11px] font-medium ${isActive ? "text-teal-100/90" : "text-zinc-500"}`}>
+                  {methodHints[tab.id]}
+                </span>
               </button>
             );
           })}
@@ -263,7 +274,18 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
           {paymentCopy.checkoutHint}
         </div>
 
-        {paymentMethod === "paypal" ? (
+        {checkoutQuote.error ? (
+          <div className="rounded-2xl border border-red-400/30 bg-red-950/40 px-4 py-5 text-center text-sm text-red-100" role="alert">
+            <p className="font-semibold">{checkoutQuote.error}</p>
+            <button
+              type="button"
+              onClick={checkoutQuote.retry}
+              className="mt-3 rounded-full border border-red-200/40 px-4 py-2 text-xs font-black transition hover:bg-red-200/10"
+            >
+              {lang === "es" ? "Validar de nuevo" : "Validate again"}
+            </button>
+          </div>
+        ) : paymentMethod === "paypal" ? (
           <div className="relative min-h-[160px] w-full overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-3">
             {isPaypalLoading && (
               <div

@@ -1,38 +1,9 @@
 import { NextResponse } from "next/server";
-import { parse, isValid } from "date-fns";
-import { es } from "date-fns/locale";
 import { getDb } from "@/lib/helpers/mongodb";
 import { COLLECTIONS } from "@/lib/constants/db";
-import { DEFAULT_AVAILABILITY } from "@/lib/constants/business";
-
-function parseReservationDate(raw: unknown): Date | null {
-  if (typeof raw !== "string" || raw.trim().length === 0) return null;
-
-  const trimmed = raw.trim();
-
-  // Avoid timezone drift for date-only values (e.g. "2026-03-14") which are
-  // parsed as UTC by `new Date(...)` and can shift to the previous day locally.
-  const isoDateOnly = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (isoDateOnly) {
-    const [, yearRaw, monthRaw, dayRaw] = isoDateOnly;
-    const year = Number(yearRaw);
-    const month = Number(monthRaw);
-    const day = Number(dayRaw);
-    const localDate = new Date(year, month - 1, day);
-    if (isValid(localDate)) return localDate;
-  }
-
-  const asDate = new Date(trimmed);
-  if (isValid(asDate)) return asDate;
-
-  const esParsed = parse(trimmed, "EEEE, dd 'de' MMMM 'de' yyyy", new Date(), { locale: es });
-  if (isValid(esParsed)) return esParsed;
-
-  const enParsed = parse(trimmed, "EEEE, MMMM dd, yyyy", new Date());
-  if (isValid(enParsed)) return enParsed;
-
-  return null;
-}
+import { CONFIRMED_RESERVATION_STATUSES, DEFAULT_AVAILABILITY } from "@/lib/constants/business";
+import { normalizeReservationDate } from "@/lib/reservation/dates";
+import { getActiveHeldTicketsForMonth } from "@/lib/reservation/capacity-holds";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -47,7 +18,7 @@ export async function GET(req: Request) {
   const db = await getDb();
   const reservationQuery: Record<string, unknown> = {
     status: {
-      $in: ["COMPLETED", "completed", "confirmed", "CONFIRMED"],
+      $in: [...CONFIRMED_RESERVATION_STATUSES],
     },
   };
 
@@ -62,16 +33,23 @@ export async function GET(req: Request) {
       { projection: { date: 1, tickets: 1, tourSlug: 1 } }
     )
     .toArray();
+  const heldByDay = await getActiveHeldTicketsForMonth({
+    db,
+    tourSlug: tourSlug ?? undefined,
+    year,
+    month,
+  });
 
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const bookedByDay: Record<number, number> = {};
 
   for (const doc of docs) {
-    const date = parseReservationDate(doc.date);
-    if (!date) continue;
-    if (date.getFullYear() !== year || date.getMonth() !== month) continue;
+    const normalizedDate = normalizeReservationDate(doc.date);
+    if (!normalizedDate) continue;
+    const [docYear, docMonth, docDay] = normalizedDate.split("-").map(Number);
+    if (docYear !== year || docMonth !== month + 1) continue;
 
-    const day = date.getDate();
+    const day = docDay;
     const tickets = typeof doc.tickets === "number" ? doc.tickets : Number(doc.tickets ?? 0);
     if (!Number.isFinite(tickets) || tickets <= 0) continue;
 
@@ -85,8 +63,8 @@ export async function GET(req: Request) {
     const isWeekend = date.getDay() === 0 || date.getDay() === 6;
     const capacity = isWeekend ? DEFAULT_AVAILABILITY.WEEKEND : DEFAULT_AVAILABILITY.WEEKDAY;
     const reserved = bookedByDay[day] ?? 0;
-    availability[day] = Math.max(0, capacity - reserved);
+    availability[day] = Math.max(0, capacity - reserved - (heldByDay[day] ?? 0));
   }
 
-  return NextResponse.json({ availability, bookedByDay, tourSlug: tourSlug ?? null });
+  return NextResponse.json({ availability, bookedByDay, heldByDay, tourSlug: tourSlug ?? null });
 }

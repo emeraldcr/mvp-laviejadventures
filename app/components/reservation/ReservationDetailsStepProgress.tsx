@@ -3,11 +3,15 @@ import type { BookingStepId } from "@/lib/reservation/types";
 interface ReservationDetailsStepProgressProps {
   steps: Array<{ id: BookingStepId; label: string }>;
   currentStep: BookingStepId;
+  onStepSelect?: (step: BookingStepId) => void;
+  maxReachableStep?: BookingStepId;
 }
 
 export default function ReservationDetailsStepProgress({
   steps,
   currentStep,
+  onStepSelect,
+  maxReachableStep = currentStep,
 }: ReservationDetailsStepProgressProps) {
   return (
     <div className="mb-4 border-y border-zinc-200 py-3 dark:border-zinc-800" aria-label="Booking progress">
@@ -18,10 +22,23 @@ export default function ReservationDetailsStepProgress({
             {steps.find((step) => step.id === currentStep)?.label}
           </p>
         </div>
-        <div className="grid grid-cols-3 gap-1.5" aria-hidden="true">
-          {steps.map((step) => (
-            <span key={step.id} className={`h-1.5 rounded-full ${currentStep >= step.id ? "bg-emerald-500" : "bg-zinc-200 dark:bg-zinc-700"}`} />
-          ))}
+        <div className="grid grid-cols-3 gap-1.5">
+          {steps.map((step) => {
+            const canJump = step.id <= maxReachableStep && step.id !== currentStep;
+            return (
+              <button
+                key={step.id}
+                type="button"
+                disabled={!canJump}
+                onClick={() => onStepSelect?.(step.id)}
+                aria-label={step.label}
+                aria-current={currentStep === step.id ? "step" : undefined}
+                className={`h-1.5 rounded-full transition ${
+                  currentStep >= step.id ? "bg-emerald-500" : "bg-zinc-200 dark:bg-zinc-700"
+                } ${canJump ? "cursor-pointer hover:opacity-80" : "cursor-default"}`}
+              />
+            );
+          })}
         </div>
       </div>
 
@@ -29,25 +46,40 @@ export default function ReservationDetailsStepProgress({
         {steps.map((step) => {
           const isCurrent = currentStep === step.id;
           const isDone = currentStep > step.id;
+          const canJump = step.id <= maxReachableStep && !isCurrent;
 
           return (
             <div key={step.id} className="flex flex-1 items-center gap-2" aria-current={isCurrent ? "step" : undefined}>
-              <span
+              <button
+                type="button"
+                disabled={!canJump}
+                onClick={() => onStepSelect?.(step.id)}
                 className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-bold transition-colors ${
                   isCurrent
                     ? "border-emerald-400 bg-emerald-500 text-zinc-950"
                     : isDone
-                    ? "border-teal-400 bg-teal-400/20 text-teal-300"
-                    : "border-zinc-700 bg-zinc-900 text-zinc-500"
-                }`}
+                    ? "border-teal-400 bg-teal-400/20 text-teal-700 dark:text-teal-300"
+                    : "border-zinc-300 bg-zinc-100 text-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-500"
+                } ${canJump ? "cursor-pointer hover:scale-105" : "cursor-default"}`}
               >
                 {step.id}
-              </span>
-              <span className={`min-w-0 truncate text-xs font-semibold ${isCurrent ? "text-emerald-700 dark:text-emerald-300" : isDone ? "text-teal-700 dark:text-teal-300" : "text-zinc-500"}`}>
+              </button>
+              <button
+                type="button"
+                disabled={!canJump}
+                onClick={() => onStepSelect?.(step.id)}
+                className={`min-w-0 truncate text-left text-xs font-semibold ${
+                  isCurrent
+                    ? "text-emerald-700 dark:text-emerald-300"
+                    : isDone
+                      ? "text-teal-700 dark:text-teal-300"
+                      : "text-zinc-500"
+                } ${canJump ? "cursor-pointer hover:underline" : "cursor-default"}`}
+              >
                 {step.label}
-              </span>
+              </button>
               {step.id < steps.length && (
-                <span className={`h-px flex-1 ${isDone ? "bg-teal-500/60" : "bg-zinc-800"}`} aria-hidden />
+                <span className={`h-px flex-1 ${isDone ? "bg-teal-500/60" : "bg-zinc-300 dark:bg-zinc-800"}`} aria-hidden />
               )}
             </div>
           );

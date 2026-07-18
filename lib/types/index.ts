@@ -488,6 +488,7 @@ export type SuccessClientProps = {
 };
 
 export type OrderDetails = {
+  bookingAttemptId?: string;
   name: string;
   email: string;
   phone: string;

@@ -49,7 +49,7 @@ function CalendarDayBase({ day }: Props) {
   } = useCalendarContext();
 
   if (day === null) {
-    return <div className="h-16 rounded-xl sm:h-24 lg:h-[104px] xl:h-28" aria-hidden="true" />;
+    return <div className="h-14 rounded-lg sm:h-24 sm:rounded-xl lg:h-[104px] xl:h-28" aria-hidden="true" />;
   }
 
   const past = isPastDay(day);
@@ -115,46 +115,51 @@ function CalendarDayBase({ day }: Props) {
       }
       aria-pressed={selected}
       className={cn(
-        "flex h-16 flex-col overflow-hidden rounded-xl border p-1.5 text-left shadow-sm outline-none transition duration-150 ease-in-out select-none sm:h-24 sm:p-2.5 lg:h-[104px] lg:p-3 xl:h-28 xl:p-3",
+        "flex h-14 flex-col overflow-hidden rounded-lg border p-1 text-left shadow-sm outline-none transition duration-150 ease-in-out select-none sm:h-24 sm:rounded-xl sm:p-2.5 lg:h-[104px] lg:p-3 xl:h-28 xl:p-3",
         hasSlots
-          ? "cursor-pointer hover:scale-105 hover:shadow-md active:scale-95"
+          ? "cursor-pointer hover:scale-[1.03] hover:shadow-md active:scale-95 sm:hover:scale-105"
           : "cursor-not-allowed opacity-60",
         STATUS_CARD_CLASS[status],
-        selected && "ring-2 ring-teal-500"
+        selected && "ring-2 ring-emerald-500 shadow-md shadow-emerald-900/10"
       )}
     >
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between gap-0.5">
         <span
           className={cn(
-            "text-base sm:text-xl font-semibold",
+            "text-sm font-bold sm:text-xl sm:font-semibold",
             past
               ? "text-zinc-500 dark:text-zinc-400"
               : selected
-                ? "text-teal-800 dark:text-teal-100"
+                ? "text-emerald-800 dark:text-emerald-100"
                 : "text-zinc-900 dark:text-zinc-50"
           )}
         >
           {day}
         </span>
 
-        <div className="flex flex-col items-end gap-1">
+        <div className="flex flex-col items-end gap-0.5">
           {today && (
-            <span className="rounded-full bg-teal-600/10 px-1.5 sm:px-2 py-[1px] sm:py-[2px] text-[9px] sm:text-[10px] font-medium text-teal-700 dark:text-teal-300">
+            <span className="rounded-full bg-teal-600/10 px-1 py-[1px] text-[8px] font-bold text-teal-700 dark:text-teal-300 sm:px-2 sm:py-[2px] sm:text-[10px] sm:font-medium">
               {tr.legendToday}
             </span>
           )}
+          {selected && (
+            <span className="rounded-full bg-emerald-500 px-1 py-[1px] text-[8px] font-black text-white sm:hidden">
+              ✓
+            </span>
+          )}
           {!hasSlots && !past && (
-            <span className="rounded-full bg-red-500/10 px-2 py-[2px] text-[10px] font-medium text-red-600 dark:text-red-300">
+            <span className="rounded-full bg-red-500/10 px-1.5 py-[1px] text-[9px] font-medium text-red-600 dark:text-red-300 sm:px-2 sm:py-[2px] sm:text-[10px]">
               x
             </span>
           )}
         </div>
       </div>
 
-      <div className="hidden sm:flex flex-1 items-center justify-center">
+      <div className="hidden flex-1 items-center justify-center sm:flex">
         <span
           className={cn(
-            "text-[11px] sm:text-xs font-semibold text-center leading-tight",
+            "text-center text-[11px] font-semibold leading-tight sm:text-xs",
             STATUS_TEXT_CLASS[status]
           )}
         >
@@ -162,18 +167,18 @@ function CalendarDayBase({ day }: Props) {
         </span>
       </div>
 
-      <div className="sm:hidden flex flex-1 items-center justify-center">
+      <div className="flex flex-1 items-center justify-center sm:hidden">
         <span
           className={cn(
-            "text-[9px] font-semibold text-center leading-tight line-clamp-2",
+            "line-clamp-2 text-center text-[9px] font-semibold leading-tight",
             STATUS_TEXT_CLASS[status]
           )}
         >
-          {compactLabel}
+          {hasSlots ? String(slots) : compactLabel}
         </span>
       </div>
 
-      <div className="mt-1 h-1 w-full rounded-full bg-zinc-200/70 dark:bg-zinc-700/70 overflow-hidden">
+      <div className="mt-0.5 hidden h-1 w-full overflow-hidden rounded-full bg-zinc-200/70 dark:bg-zinc-700/70 sm:mt-1 sm:block">
         <div
           className={cn(
             "h-full rounded-full transition-[width] duration-200",

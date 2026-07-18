@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { trackAnalyticsEvent } from "@/lib/analytics/client";
 import type { OrderDetails } from "@/lib/types/index";
+import { RESERVATION_TRAVELER_DRAFT_KEY } from "@/lib/reservation/constants";
 import { getPayPalLocaleForCountry } from "@/app/components/reservation/paypalLocales";
 import {
   buildBookingAnalyticsMetadata,
@@ -27,6 +28,26 @@ function isConfiguredPayPalClientId(clientId: string | undefined): clientId is s
 
   const normalizedClientId = clientId.trim().toLowerCase();
   return Boolean(normalizedClientId) && !normalizedClientId.startsWith("your-");
+}
+
+function getCheckoutErrorMessage(payload: { code?: string; message?: string }, fallback: string, lang: string) {
+  const isEs = lang === "es";
+  if (payload.code === "capacity") {
+    return isEs
+      ? "Esos cupos se acaban de ocupar. Volvé a la reserva para elegir otra fecha o menos personas."
+      : "Those spots were just taken. Return to booking to choose another date or fewer guests.";
+  }
+  if (payload.code === "total_mismatch") {
+    return isEs
+      ? "El total cambió antes del pago. Volvé a revisar la reserva."
+      : "The total changed before payment. Please review the booking again.";
+  }
+  if (payload.code === "booking_context_missing" || payload.code === "capture_validation_unavailable") {
+    return isEs
+      ? "No pudimos verificar la reserva antes de cobrar. Intentá nuevamente en un momento."
+      : "We couldn't verify the booking before charging. Please try again in a moment.";
+  }
+  return payload.message || fallback;
 }
 
 export function usePayPalCheckout({
@@ -114,6 +135,7 @@ export function usePayPalCheckout({
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
+              bookingAttemptId: orderDetails.bookingAttemptId,
               name: orderDetails.name,
               email: orderDetails.email,
               phone: orderDetails.phone,
@@ -138,7 +160,11 @@ export function usePayPalCheckout({
           const data = await res.json();
 
           if (!res.ok || !data?.orderID) {
-            const reason = data?.message || "PayPal create order response did not include orderID.";
+            const reason = getCheckoutErrorMessage(
+              data ?? {},
+              "PayPal create order response did not include orderID.",
+              lang,
+            );
             const minDate = typeof data?.minBookableDate === "string" ? data.minBookableDate : null;
             alert(minDate ? `${reason} Earliest available date: ${minDate}.` : reason);
             throw new Error(reason);
@@ -173,7 +199,7 @@ export function usePayPalCheckout({
                 reason: output?.message ?? "capture_failed",
               },
             });
-            alert(errorMessage);
+            alert(getCheckoutErrorMessage(output ?? {}, errorMessage, lang));
             return;
           }
 
@@ -187,6 +213,7 @@ export function usePayPalCheckout({
           });
 
           sessionStorage.removeItem("reservationOrderDetails");
+          sessionStorage.removeItem(RESERVATION_TRAVELER_DRAFT_KEY);
           onSuccess(output);
           router.push(`/success?orderId=${output.id}`);
         },

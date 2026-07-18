@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { OrderDetails } from "@/lib/types/index";
 import type { TransportQuoteResult } from "@/lib/reservation/transport";
 
@@ -16,6 +16,7 @@ type CheckoutQuoteState = {
 };
 
 export function useCheckoutQuote(orderDetails: OrderDetails, lang: "es" | "en") {
+  const [requestVersion, setRequestVersion] = useState(0);
   const [state, setState] = useState<CheckoutQuoteState>({
     total: orderDetails.total,
     addonsPricePerPerson: orderDetails.addonsPricePerPerson ?? 0,
@@ -133,7 +134,9 @@ export function useCheckoutQuote(orderDetails: OrderDetails, lang: "es" | "en") 
     orderDetails.tourSlug,
     orderDetails.tourTime,
     orderDetails.total,
+    requestVersion,
   ]);
 
-  return state;
+  const retry = useCallback(() => setRequestVersion((version) => version + 1), []);
+  return useMemo(() => ({ ...state, retry }), [retry, state]);
 }

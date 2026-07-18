@@ -7,10 +7,10 @@ import {
   useMemo,
   useState,
   useEffect,
+  useRef,
   ReactNode,
 } from "react";
 import { AvailabilityMap } from "@/lib/types/index";
-import { generateAvailability } from "@/lib/helpers/availability";
 import { useLanguage } from "@/lib/LanguageContext";
 import { getCostaRicaDateParts, getMinBookableDateInCostaRica, toDateKey } from "@/lib/helpers/costa-rica-time";
 
@@ -19,6 +19,9 @@ type CalendarContextValue = {
   currentMonth: number;
   monthLabel: string;
   availability: AvailabilityMap;
+  availabilityLoading: boolean;
+  availabilityError: string | null;
+  refreshAvailability: () => void;
   selectedDay: number | null;
   selectedDate: Date | null;
   setSelectedDate: (date: Date | null) => void;
@@ -70,12 +73,23 @@ export function CalendarProvider({
   });
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [tickets, setTicketsState] = useState<number>(Math.max(1, initialTickets));
-  const [availabilityOverrides, setAvailabilityOverrides] = useState<Partial<AvailabilityMap>>({});
+  const [availabilityOverrides, setAvailabilityOverrides] = useState<Partial<AvailabilityMap> | null>(null);
+  const [availabilityLoading, setAvailabilityLoading] = useState(true);
+  const [availabilityError, setAvailabilityError] = useState<string | null>(null);
+  const [availabilityRequest, setAvailabilityRequest] = useState(0);
+
+  const refreshAvailability = useCallback(() => {
+    setAvailabilityRequest((request) => request + 1);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
 
     const loadAvailability = async () => {
+      setAvailabilityOverrides(null);
+      setAvailabilityLoading(true);
+      setAvailabilityError(null);
+
       try {
         const params = new URLSearchParams({
           year: String(currentYear),
@@ -87,14 +101,27 @@ export function CalendarProvider({
         }
 
         const res = await fetch(`/api/calendar/availability?${params.toString()}`);
-        if (!res.ok) return;
+        if (!res.ok) throw new Error(`Availability request failed with ${res.status}`);
 
         const data = (await res.json()) as { availability?: AvailabilityMap };
         if (!cancelled) {
-          setAvailabilityOverrides(data.availability ?? {});
+          if (!data.availability || typeof data.availability !== "object") {
+            throw new Error("Availability response is invalid");
+          }
+          setAvailabilityOverrides(data.availability);
         }
       } catch (error) {
         console.error("Failed to load calendar availability:", error);
+        if (!cancelled) {
+          setAvailabilityOverrides(null);
+          setAvailabilityError(
+            lang === "es"
+              ? "No pudimos confirmar los cupos. Intentá de nuevo."
+              : "We couldn't confirm availability. Please try again.",
+          );
+        }
+      } finally {
+        if (!cancelled) setAvailabilityLoading(false);
       }
     };
 
@@ -103,12 +130,18 @@ export function CalendarProvider({
     return () => {
       cancelled = true;
     };
-  }, [currentMonth, currentYear, selectedTourSlug]);
+  }, [availabilityRequest, currentMonth, currentYear, lang, selectedTourSlug]);
 
-  const availability: AvailabilityMap = useMemo(
-    () => generateAvailability(currentYear, currentMonth, availabilityOverrides),
-    [currentYear, currentMonth, availabilityOverrides]
-  );
+  const availability: AvailabilityMap = useMemo(() => {
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    return Object.fromEntries(
+      Array.from({ length: daysInMonth }, (_, index) => {
+        const day = index + 1;
+        const value = availabilityOverrides?.[day];
+        return [day, typeof value === "number" && Number.isFinite(value) ? Math.max(0, value) : 0];
+      }),
+    ) as AvailabilityMap;
+  }, [availabilityOverrides, currentMonth, currentYear]);
 
   const monthLabel = useMemo(
     () =>
@@ -194,6 +227,19 @@ export function CalendarProvider({
     setTicketsState(Math.max(1, count));
   }, []);
 
+  useEffect(() => {
+    if (availabilityLoading || availabilityError || selectedDay == null) return;
+
+    const remaining = availability[selectedDay] ?? 0;
+    if (remaining < 1) {
+      setSelectedDay(null);
+      setTicketsState(1);
+      return;
+    }
+
+    setTicketsState((current) => Math.min(current, remaining));
+  }, [availability, availabilityError, availabilityLoading, selectedDay]);
+
   const changeMonth = useCallback(
     (delta: number) => {
       const d = new Date(currentYear, currentMonth + delta, 1);
@@ -201,7 +247,6 @@ export function CalendarProvider({
       setCurrentMonth(d.getMonth());
       setCurrentYear(d.getFullYear());
       setSelectedDay(null);
-      setTicketsState(1);
     },
     [currentMonth, currentYear]
   );
@@ -209,24 +254,25 @@ export function CalendarProvider({
   const nextMonth = useCallback(() => changeMonth(1), [changeMonth]);
   const prevMonth = useCallback(() => changeMonth(-1), [changeMonth]);
 
+  const findFirstAvailableDay = useCallback(() => {
+    return Object.keys(availability)
+      .map(Number)
+      .filter((d) => availability[d] > 0 && !isPastDay(d))
+      .sort((a, b) => a - b)[0] ?? null;
+  }, [availability, isPastDay]);
+
   const goToToday = useCallback(() => {
     setCurrentMonth(minBookableDate.month - 1);
     setCurrentYear(minBookableDate.year);
     const day = minBookableDate.day;
     const slots = availability[day] ?? 0;
     setSelectedDay(slots > 0 ? day : null);
-    setTicketsState(1);
   }, [availability, minBookableDate.day, minBookableDate.month, minBookableDate.year]);
 
   const goToNextAvailableDay = useCallback(() => {
-    const candidates = Object.keys(availability)
-      .map(Number)
-      .filter((d) => availability[d] > 0 && !isPastDay(d))
-      .sort((a, b) => a - b);
-
-    if (!candidates.length) return;
-    setSelectedDay(candidates[0]);
-  }, [availability, isPastDay]);
+    const nextDay = findFirstAvailableDay();
+    if (nextDay != null) setSelectedDay(nextDay);
+  }, [findFirstAvailableDay]);
 
   useEffect(() => {
     if (!initialDateIso) return;
@@ -239,11 +285,47 @@ export function CalendarProvider({
     setSelectedDate(date);
   }, [initialDateIso, setSelectedDate]);
 
+  const emptyMonthAdvanceRef = useRef(0);
+
+  // Auto-pick the soonest open day; if this month is empty, jump forward a few months.
+  useEffect(() => {
+    if (availabilityLoading || availabilityError) return;
+
+    if (selectedDay != null) {
+      emptyMonthAdvanceRef.current = 0;
+      return;
+    }
+
+    const nextDay = findFirstAvailableDay();
+    if (nextDay != null) {
+      emptyMonthAdvanceRef.current = 0;
+      setSelectedDay(nextDay);
+      return;
+    }
+
+    // No open days left in the visible month — advance automatically (max 3 months).
+    if (emptyMonthAdvanceRef.current >= 3) return;
+    emptyMonthAdvanceRef.current += 1;
+    const next = new Date(currentYear, currentMonth + 1, 1);
+    setCurrentYear(next.getFullYear());
+    setCurrentMonth(next.getMonth());
+  }, [
+    availabilityError,
+    availabilityLoading,
+    currentMonth,
+    currentYear,
+    findFirstAvailableDay,
+    selectedDay,
+  ]);
+
   const value: CalendarContextValue = {
     currentYear,
     currentMonth,
     monthLabel,
     availability,
+    availabilityLoading,
+    availabilityError,
+    refreshAvailability,
     selectedDay,
     selectedDate,
     setSelectedDate,

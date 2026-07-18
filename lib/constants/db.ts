@@ -14,6 +14,7 @@ export const COLLECTIONS = {
   TOURS: "tours",
   LOGIN_LOGS: "login_logs",
   PAYPAL_ORDER_CONTEXTS: "paypal_order_contexts",
+  RESERVATION_CAPACITY_HOLDS: "reservation_capacity_holds",
   RESERVATIONS: "Reservations",
   ANALYTICS_EVENTS: "analytics_events",
   MUNDIAL_ANALYTICS: "mundial_analytics",

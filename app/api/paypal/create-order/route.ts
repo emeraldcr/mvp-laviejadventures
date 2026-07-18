@@ -9,6 +9,9 @@ import {
 import { getDb } from "@/lib/helpers/mongodb";
 import { PAYPAL_CURRENCY, PAYPAL_CUSTOM_ID_MAX_LENGTH } from "@/lib/constants/paypal";
 import { COLLECTIONS } from "@/lib/constants/db";
+import { randomUUID } from "node:crypto";
+import { acquireCapacityHold, releaseCapacityHold } from "@/lib/reservation/capacity-holds";
+import { getRemainingCapacityForTourDate } from "@/lib/reservation/capacity";
 
 import {
   getMinBookableIsoDateInCostaRica,
@@ -24,6 +27,7 @@ import {
 } from "@/lib/reservation/quote";
 
 interface CreateOrderRequest {
+  bookingAttemptId?: string;
   name?: string;
   email?: string;
   phone?: string;
@@ -50,6 +54,7 @@ interface CreateOrderResponse {
 }
 
 export async function POST(req: Request) {
+  let acquiredHold: { id: string; tourSlug?: string; date: string } | null = null;
   try {
     const body: CreateOrderRequest = await req.json();
 
@@ -72,6 +77,7 @@ export async function POST(req: Request) {
       specialRequests,
       language = "es",
       countryCode,
+      bookingAttemptId,
     } = body;
 
     // Basic validation
@@ -125,6 +131,7 @@ export async function POST(req: Request) {
       addonDetails,
       specialRequests,
       language,
+      bookingAttemptId,
     });
 
     const {
@@ -158,6 +165,35 @@ export async function POST(req: Request) {
       );
     }
 
+    const holdId = isValidBookingAttemptId(bookingAttemptId) ? bookingAttemptId : randomUUID();
+    const remainingConfirmedCapacity = await getRemainingCapacityForTourDate({
+      db,
+      tourSlug,
+      date: normalizedDate,
+      includeHolds: false,
+    });
+    const holdAcquired = await acquireCapacityHold({
+      db,
+      holdId,
+      tourSlug,
+      date: normalizedDate,
+      tickets: safeTickets,
+      remainingConfirmedCapacity,
+    });
+    if (!holdAcquired) {
+      return NextResponse.json(
+        {
+          success: false,
+          code: "capacity",
+          message: language === "en"
+            ? "Those spots were just taken. Please choose another date or fewer guests."
+            : "Esos cupos se acaban de ocupar. Elegí otra fecha o menos personas.",
+        },
+        { status: 409 },
+      );
+    }
+    acquiredHold = { id: holdId, tourSlug, date: normalizedDate };
+
     // Custom ID (PayPal limit = 127 chars)
     const custom_id = createCustomId({
       tickets: safeTickets,
@@ -183,6 +219,9 @@ export async function POST(req: Request) {
         "Content-Type": "application/json",
         Authorization: `Bearer ${accessToken}`,
         Prefer: "return=representation",
+        ...(isValidBookingAttemptId(bookingAttemptId)
+          ? { "PayPal-Request-Id": bookingAttemptId }
+          : {}),
       },
       body: JSON.stringify({
         intent: "CAPTURE",
@@ -203,6 +242,8 @@ export async function POST(req: Request) {
     const data: CreateOrderResponse = await res.json();
 
     if (!res.ok || !data.id) {
+      await releaseCapacityHold({ db, holdId, tourSlug, date: normalizedDate });
+      acquiredHold = null;
       console.error("PayPal Create Order Error:", { status: res.status, data });
       return NextResponse.json(
         { success: false, message: "Failed to create PayPal order", error: data },
@@ -211,7 +252,8 @@ export async function POST(req: Request) {
     }
 
     // Save context in database
-    await saveOrderContext(data.id, {
+    const contextSaved = await saveOrderContext(data.id, {
+      bookingAttemptId: holdId,
       name,
       email,
       phone,
@@ -235,10 +277,20 @@ export async function POST(req: Request) {
       ivaRate: ivaRatePercent,
       language: quote.language,
     });
+    if (!contextSaved) {
+      await releaseCapacityHold({ db, holdId, tourSlug, date: normalizedDate });
+      acquiredHold = null;
+      return NextResponse.json(
+        { success: false, message: "Order created but booking context could not be saved" },
+        { status: 503 },
+      );
+    }
 
     const approvalUrl = data.links?.find((link) => link.rel === "approve")?.href;
 
     if (!approvalUrl) {
+      await releaseCapacityHold({ db, holdId, tourSlug, date: normalizedDate });
+      acquiredHold = null;
       console.error("No approval URL returned from PayPal", data);
       return NextResponse.json(
         { success: false, message: "Order created but no approval URL", orderID: data.id },
@@ -255,6 +307,19 @@ export async function POST(req: Request) {
       addonsBreakdown,
     });
   } catch (error: unknown) {
+    if (acquiredHold) {
+      try {
+        const db = await getDb();
+        await releaseCapacityHold({
+          db,
+          holdId: acquiredHold.id,
+          tourSlug: acquiredHold.tourSlug,
+          date: acquiredHold.date,
+        });
+      } catch (releaseError) {
+        console.error("Failed to release PayPal capacity hold:", releaseError);
+      }
+    }
     if (isReservationQuoteError(error)) {
       return NextResponse.json(
         { success: false, message: error.message, code: error.code, ...error.details },
@@ -271,6 +336,10 @@ export async function POST(req: Request) {
       { status: 500 }
     );
   }
+}
+
+function isValidBookingAttemptId(value: unknown): value is string {
+  return typeof value === "string" && /^[a-f0-9-]{36}$/i.test(value);
 }
 
 // ====================== Helper Functions ======================
@@ -368,7 +437,9 @@ async function saveOrderContext(orderId: string, bookingData: any) {
       },
       { upsert: true }
     );
+    return true;
   } catch (err) {
     console.error("Failed to save PayPal order context:", err);
+    return false;
   }
 }

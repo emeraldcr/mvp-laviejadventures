@@ -1,14 +1,14 @@
 "use client";
 
 import { useState, useEffect, useRef, type KeyboardEvent, type RefObject } from "react";
-import { ChevronDown, Check, Search, AlertCircle } from "lucide-react";
+import { ChevronDown, Check, Search } from "lucide-react";
 import { PHONE_COUNTRIES as ALL_PHONE_COUNTRIES } from "@/app/components/reservation/phoneCountries";
 import type { ReservationFormState } from "@/lib/reservation/types";
 
-// ---------------------- SMALL UI COMPONENTS ----------------------
-
 export const FormError = ({ message }: { message: string }) => (
-  <p className="text-red-500 text-sm mt-1">{message}</p>
+  <p className="mt-1.5 flex items-center gap-1 text-xs font-semibold text-red-600 dark:text-red-400">
+    {message}
+  </p>
 );
 
 interface TravelerInputFieldProps {
@@ -25,6 +25,8 @@ interface TravelerInputFieldProps {
   validationMessage: string;
   required?: boolean;
   className?: string;
+  autoComplete?: string;
+  inputMode?: "text" | "email" | "tel" | "search" | "numeric" | "decimal" | "url" | "none";
 }
 
 export const TravelerInputField = ({
@@ -41,31 +43,47 @@ export const TravelerInputField = ({
   validationMessage,
   required = false,
   className = "",
+  autoComplete,
+  inputMode,
 }: TravelerInputFieldProps) => {
   const isTouched = value.trim() !== "";
   const showError = isTouched && !isValid;
+  const showOk = isTouched && isValid;
 
   return (
     <div className={className}>
-      <label htmlFor={id} className="block font-semibold text-lg mb-1">
+      <label htmlFor={id} className="mb-1.5 block text-sm font-bold text-zinc-800 dark:text-zinc-200">
         {label}
+        {required && <span className="ml-1 text-emerald-600">*</span>}
       </label>
-      <input
-        id={id}
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        onBlur={onBlur}
-        onKeyDown={onKeyDown}
-        ref={inputRef}
-        className={`w-full p-3 rounded-lg border focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-zinc-800 ${
-          showError
-            ? "border-red-500"
-            : "border-zinc-300 dark:border-zinc-700"
-        }`}
+      <div className="relative">
+        <input
+          id={id}
+          type={type}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onBlur={onBlur}
+          onKeyDown={onKeyDown}
+          ref={inputRef}
+          autoComplete={autoComplete}
+          inputMode={inputMode}
+          className={`w-full rounded-xl border bg-white px-3 py-3 text-sm font-semibold text-zinc-900 outline-none transition focus:ring-4 dark:bg-zinc-900 dark:text-zinc-50 ${
+            showError
+              ? "border-red-400 focus:border-red-500 focus:ring-red-500/15"
+              : showOk
+                ? "border-emerald-400 focus:border-emerald-500 focus:ring-emerald-500/15"
+                : "border-zinc-300 focus:border-teal-500 focus:ring-teal-500/15 dark:border-zinc-700"
+          }`}
         placeholder={placeholder}
+        maxLength={id === "name" ? 120 : id === "email" ? 254 : undefined}
         required={required}
-      />
+        />
+        {showOk && (
+          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-emerald-500">
+            <Check className="h-4 w-4" aria-hidden />
+          </span>
+        )}
+      </div>
       {showError && <FormError message={validationMessage} />}
     </div>
   );
@@ -85,6 +103,8 @@ interface TravelerPhoneInputProps {
   validationMessage: string;
 }
 
+const QUICK_CODES = ["+506", "+1", "+34", "+52"] as const;
+
 export const TravelerPhoneInput = ({
   phoneCode,
   phoneNumber,
@@ -100,6 +120,7 @@ export const TravelerPhoneInput = ({
 }: TravelerPhoneInputProps) => {
   const isTouched = phoneNumber.trim() !== "";
   const showError = isTouched && !isValid;
+  const showOk = isTouched && isValid;
   const [isCountryOpen, setIsCountryOpen] = useState(false);
   const [countrySearch, setCountrySearch] = useState("");
   const countryPickerRef = useRef<HTMLDivElement | null>(null);
@@ -134,21 +155,43 @@ export const TravelerPhoneInput = ({
 
   return (
     <div className="md:col-span-2">
-      <label htmlFor="phoneNumber" className="block font-semibold text-lg mb-1">
+      <label htmlFor="phoneNumber" className="mb-1.5 block text-sm font-bold text-zinc-800 dark:text-zinc-200">
         {label}
+        <span className="ml-1 text-emerald-600">*</span>
       </label>
-      <div className="grid gap-2 sm:grid-cols-[minmax(210px,0.85fr)_minmax(0,1fr)]">
+
+      <div className="mb-2 flex flex-wrap gap-1.5">
+        {QUICK_CODES.map((code) => {
+          const selected = phoneCode === code;
+          return (
+            <button
+              key={code}
+              type="button"
+              onClick={() => handleCountrySelect(code)}
+              className={`rounded-full border px-2.5 py-1 text-[11px] font-black transition ${
+                selected
+                  ? "border-emerald-500 bg-emerald-500 text-white"
+                  : "border-zinc-300 bg-white text-zinc-700 hover:border-emerald-400 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+              }`}
+            >
+              {code}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="grid gap-2 sm:grid-cols-[minmax(190px,0.9fr)_minmax(0,1fr)]">
         <div ref={countryPickerRef} className="relative">
           <button
             id="phoneCode"
             type="button"
             onClick={() => setIsCountryOpen((prev) => !prev)}
-            className="flex h-12 w-full items-center justify-between gap-2 rounded-lg border border-zinc-300 bg-white px-3 text-left text-sm font-semibold text-zinc-900 transition hover:border-teal-500 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/25 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+            className="flex h-12 w-full items-center justify-between gap-2 rounded-xl border border-zinc-300 bg-white px-3 text-left text-sm font-semibold text-zinc-900 transition hover:border-teal-500 focus:border-teal-500 focus:outline-none focus:ring-4 focus:ring-teal-500/15 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
             aria-haspopup="listbox"
             aria-expanded={isCountryOpen}
           >
             <span className="flex min-w-0 items-center gap-2">
-              <span className="shrink-0 rounded-md bg-zinc-100 px-2 py-1 text-xs font-black text-zinc-700 dark:bg-zinc-700 dark:text-zinc-100">
+              <span className="shrink-0 rounded-md bg-zinc-100 px-2 py-1 text-xs font-black text-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
                 {selectedCountry.flag}
               </span>
               <span className="min-w-0 truncate">{selectedCountry.name}</span>
@@ -210,20 +253,34 @@ export const TravelerPhoneInput = ({
             </div>
           )}
         </div>
-        <input
-          id="phoneNumber"
-          type="tel"
-          value={phoneNumber}
-          onChange={(e) => setPhoneNumber(e.target.value)}
-          onBlur={onBlur}
-          onKeyDown={onKeyDown}
-          ref={inputRef}
-          className={`w-full p-3 rounded-lg border focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-zinc-800 ${
-            showError ? "border-red-500" : "border-zinc-300 dark:border-zinc-700"
-          }`}
+        <div className="relative">
+          <input
+            id="phoneNumber"
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel-national"
+            value={phoneNumber}
+            onChange={(e) => setPhoneNumber(e.target.value)}
+            onBlur={onBlur}
+            onKeyDown={onKeyDown}
+            ref={inputRef}
+            className={`w-full rounded-xl border bg-white px-3 py-3 text-sm font-semibold text-zinc-900 outline-none transition focus:ring-4 dark:bg-zinc-900 dark:text-zinc-50 ${
+              showError
+                ? "border-red-400 focus:border-red-500 focus:ring-red-500/15"
+                : showOk
+                  ? "border-emerald-400 focus:border-emerald-500 focus:ring-emerald-500/15"
+                  : "border-zinc-300 focus:border-teal-500 focus:ring-teal-500/15 dark:border-zinc-700"
+            }`}
           placeholder={placeholder}
+          maxLength={20}
           required
-        />
+          />
+          {showOk && (
+            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-emerald-500">
+              <Check className="h-4 w-4" aria-hidden />
+            </span>
+          )}
+        </div>
       </div>
       {showError && <FormError message={validationMessage} />}
     </div>

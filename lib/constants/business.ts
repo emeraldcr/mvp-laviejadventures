@@ -20,3 +20,17 @@ export const DEFAULT_AVAILABILITY = {
   /** Fines de semana (sábado–domingo) */
   WEEKEND: 50,
 } as const;
+
+/** Estados que consumen cupo real, incluyendo variantes histÃ³ricas. */
+export const CONFIRMED_RESERVATION_STATUSES = [
+  "COMPLETED",
+  "completed",
+  "CONFIRMED",
+  "confirmed",
+  "CAPTURED",
+  "captured",
+  "APPROVED",
+  "approved",
+  "PAID",
+  "paid",
+] as const;

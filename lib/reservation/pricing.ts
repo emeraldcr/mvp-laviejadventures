@@ -23,10 +23,30 @@ export function resolveInitialPackage(
   preferredId?: string | null,
 ): TourPackageOption {
   if (preferredId) {
-    const match = packages.find((pkg) => pkg.id === preferredId);
+    const match = packages.find((pkg) => pkg.id === preferredId || pkg.name === preferredId);
     if (match) return match;
   }
   return packages[0];
+}
+
+/** Best default package: mid-tier if 3+, else cheapest. */
+export function resolveRecommendedPackage(
+  packages: TourPackageOption[],
+  isDisabled?: (pkg: TourPackageOption) => boolean,
+): TourPackageOption | null {
+  if (!packages.length) return null;
+  const open = packages.filter((pkg) => !(isDisabled?.(pkg) ?? false));
+  const pool = open.length > 0 ? open : packages;
+  if (pool.length >= 3) {
+    const sorted = [...pool].sort((a, b) => (a.price ?? 0) - (b.price ?? 0));
+    return sorted[1] ?? sorted[0] ?? null;
+  }
+  return [...pool].sort((a, b) => (a.price ?? 0) - (b.price ?? 0))[0] ?? null;
+}
+
+export function getPackageId(pkg: TourPackageOption | null | undefined): string {
+  if (!pkg) return "";
+  return pkg.id ?? pkg.name ?? "";
 }
 
 export function getPackageDisplayName(pkg: TourPackageOption, isEs: boolean): string {

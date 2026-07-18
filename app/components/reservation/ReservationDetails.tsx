@@ -8,7 +8,13 @@ import { translations } from "@/lib/translations";
 import { MapPin, ShieldCheck } from "lucide-react";
 import { trackAnalyticsEvent } from "@/lib/analytics/client";
 import { TOUR_INFO } from "@/lib/tour-info";
-import { ADDON_OPTIONS, DEFAULT_DEPARTURE_TIMES, getTransportLocationLabel } from "@/lib/reservation/constants";
+import {
+  ADDON_OPTIONS,
+  DEFAULT_DEPARTURE_TIMES,
+  RESERVATION_TRAVELER_DRAFT_KEY,
+  formatDepartureLabel,
+  getTransportLocationLabel,
+} from "@/lib/reservation/constants";
 import {
   buildAddonsBreakdown,
   getAddonsPricePerPerson,
@@ -19,8 +25,10 @@ import {
   getExcludedAddonIds,
   getPackageDepartureTimes,
   getPackageDisplayName,
+  getPackageId,
   getTourPackageOptions,
   resolveInitialPackage,
+  resolveRecommendedPackage,
 } from "@/lib/reservation/pricing";
 import { isPackageAvailableOnDate } from "@/lib/tour-packages";
 import ReservationDetailsStepProgress from "./ReservationDetailsStepProgress";
@@ -62,7 +70,7 @@ export default function ReservationDetails({
   const dateLocale = lang === "es" ? es : enUS;
   const [selectedTourInfo, setSelectedTourInfo] = useState<{ slug: string; tour: MainTourInfo } | null>(null);
   const slots = availability[selectedDate] ?? 0;
-  const isTicketsValid = tickets >= 1 && tickets <= slots;
+  const isTicketsValid = Number.isInteger(tickets) && tickets >= 1 && tickets <= slots;
 
   const reservationDate = new Date(currentYear, currentMonth, selectedDate);
   const reservationDateIso = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(selectedDate).padStart(2, "0")}`;
@@ -82,6 +90,8 @@ export default function ReservationDetails({
     tickets,
   });
   const [currentStep, setCurrentStep] = useState<BookingStepId>(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const submitInFlightRef = useRef(false);
   const currentStepRef = useRef<BookingStepId>(1);
   const stepEnteredAtRef = useRef(0);
   const completedStepsRef = useRef<Set<BookingStepId>>(new Set());
@@ -165,10 +175,37 @@ export default function ReservationDetails({
     return DEFAULT_DEPARTURE_TIMES;
   }, [selectedPackage]);
 
+  const isPackageDisabled = useCallback(
+    (pkg: TourPackageOption) => !isPackageAvailableOnDate(pkg, reservationDateIso),
+    [reservationDateIso],
+  );
+
   useEffect(() => {
-    const resolved = resolveInitialPackage(packageOptions, initialSelectedPackageId);
-    setSelectedPackageId(resolved.id ?? resolved.name);
-  }, [selectedTourSlug, packageOptions, initialSelectedPackageId]);
+    // Prefer URL package, else recommended “popular” package for zero-decision booking.
+    if (initialSelectedPackageId) {
+      const preferred = resolveInitialPackage(packageOptions, initialSelectedPackageId);
+      setSelectedPackageId(getPackageId(preferred));
+      return;
+    }
+    const recommended = resolveRecommendedPackage(packageOptions, isPackageDisabled);
+    const fallback = resolveInitialPackage(packageOptions, null);
+    setSelectedPackageId(getPackageId(recommended ?? fallback));
+  }, [selectedTourSlug, packageOptions, initialSelectedPackageId, isPackageDisabled]);
+
+  // If the current package is closed for the chosen day, jump to recommended open one.
+  useEffect(() => {
+    if (packageOptions.length === 0) return;
+    const current = packageOptions.find((pkg) => getPackageId(pkg) === selectedPackageId) ?? null;
+    if (current && !isPackageDisabled(current)) return;
+
+    const recommended = resolveRecommendedPackage(packageOptions, isPackageDisabled);
+    if (recommended) {
+      setSelectedPackageId(getPackageId(recommended));
+      return;
+    }
+    const firstOpen = packageOptions.find((pkg) => !isPackageDisabled(pkg));
+    if (firstOpen) setSelectedPackageId(getPackageId(firstOpen));
+  }, [isPackageDisabled, packageOptions, selectedPackageId]);
 
   useEffect(() => {
     setSelectedAddons((current) => current.filter((id) => !excludedAddonIds.includes(id)));
@@ -186,10 +223,23 @@ export default function ReservationDetails({
     }
   }, [availableTimeSlots, tourTime]);
 
-  const isPackageDisabled = useCallback(
-    (pkg: TourPackageOption) => !isPackageAvailableOnDate(pkg, reservationDateIso),
-    [reservationDateIso],
-  );
+  // Keep shareable booking URL in sync with live selections (date / pax / package).
+  useEffect(() => {
+    if (typeof window === "undefined" || !selectedTourSlug) return;
+
+    const url = new URL(window.location.href);
+    url.searchParams.set("tour", selectedTourSlug);
+    url.searchParams.set("date", reservationDateIso);
+    if (tickets > 1) url.searchParams.set("pax", String(tickets));
+    else url.searchParams.delete("pax");
+    if (selectedPackageId) url.searchParams.set("package", selectedPackageId);
+    else url.searchParams.delete("package");
+
+    const next = `${url.pathname}${url.search}`;
+    if (`${window.location.pathname}${window.location.search}` !== next) {
+      window.history.replaceState({}, "", next);
+    }
+  }, [reservationDateIso, selectedPackageId, selectedTourSlug, tickets]);
 
   useEffect(() => {
     let isMounted = true;
@@ -300,14 +350,76 @@ export default function ReservationDetails({
   const taxes = Number.isFinite(taxesRaw) ? taxesRaw : 0;
   const totalWithTaxes = Number.isFinite(totalWithTaxesRaw) ? totalWithTaxesRaw : 0;
 
-  const { formState, handleChange, validation } = useReservationForm({
-    name: "",
-    email: "",
-    phoneCode: ALL_PHONE_COUNTRIES[0]?.code ?? "+506",
-    phoneNumber: "",
-    specialRequests: "",
-    agreeTerms: false,
-  });
+  const { formState, setFormState, handleChange, validation } = useReservationForm(
+    {
+      name: "",
+      email: "",
+      phoneCode: ALL_PHONE_COUNTRIES[0]?.code ?? "+506",
+      phoneNumber: "",
+      specialRequests: "",
+      agreeTerms: false,
+    },
+    { storageKey: RESERVATION_TRAVELER_DRAFT_KEY },
+  );
+  const previousReservationDateRef = useRef(reservationDateIso);
+  const hasPrefilledProfileRef = useRef(false);
+
+  useEffect(() => {
+    if (previousReservationDateRef.current === reservationDateIso) return;
+    previousReservationDateRef.current = reservationDateIso;
+    completedStepsRef.current.clear();
+    nextStepFocusRef.current = null;
+    setCurrentStep(1);
+    handleChange("agreeTerms", false);
+  }, [handleChange, reservationDateIso]);
+
+  // Prefill traveler fields from profile when logged in — never overwrite typed draft values.
+  useEffect(() => {
+    if (hasPrefilledProfileRef.current) return;
+    hasPrefilledProfileRef.current = true;
+
+    let cancelled = false;
+
+    fetch("/api/user/profile")
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => {
+        if (cancelled) return;
+        const profile = data?.profile as { name?: string; email?: string; phone?: string } | undefined;
+        if (!profile) return;
+
+        setFormState((prev) => {
+          const next = {
+            ...prev,
+            name: prev.name.trim() ? prev.name : (profile.name ?? prev.name),
+            email: prev.email.trim() ? prev.email : (profile.email ?? prev.email),
+          };
+
+          if (prev.phoneNumber.trim() || !profile.phone?.trim()) return next;
+
+          const normalizedPhone = profile.phone.trim();
+          const matchedCode = ALL_PHONE_COUNTRIES.find((country) =>
+            normalizedPhone.startsWith(country.code),
+          );
+
+          if (matchedCode) {
+            return {
+              ...next,
+              phoneCode: matchedCode.code,
+              phoneNumber: normalizedPhone.slice(matchedCode.code.length).trim(),
+            };
+          }
+
+          return { ...next, phoneNumber: normalizedPhone };
+        });
+      })
+      .catch(() => {
+        // Guest or offline: draft/session storage still handles continuity.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [setFormState]);
 
   const isStep1Valid =
     isTicketsValid &&
@@ -601,13 +713,23 @@ export default function ReservationDetails({
         return;
       }
 
-      if (currentStep === 2 && !isStep2Valid) {
+      if ((currentStep === 2 || targetStep === 3) && !isStep2Valid) {
         trackBlockedStep(targetStep, source);
+        // From step 1 with incomplete traveler data, land on traveler form.
+        if (currentStep === 1 && isStep1Valid) {
+          trackStepCompleted(1, 2, source);
+          nextStepFocusRef.current = 2;
+          setCurrentStep(2);
+          return;
+        }
         guideToStep(2);
         return;
       }
 
       trackStepCompleted(currentStep, targetStep, source);
+      if (currentStep === 1 && targetStep === 3) {
+        completedStepsRef.current.add(2);
+      }
     }
 
     nextStepFocusRef.current = targetStep;
@@ -630,7 +752,9 @@ export default function ReservationDetails({
     }
   }, [currentStep, guideToElement, tourTime]);
 
-  const handleReserve = useCallback(() => {
+  const handleReserve = useCallback((options?: { forceTermsAccepted?: boolean }) => {
+    if (submitInFlightRef.current) return;
+
     const addonValidation = validateSelectedAddons(selectedAddons, addonDetails, lang);
     if (!addonValidation.ok) {
       trackBlockedStep("checkout", "addon_config");
@@ -638,12 +762,21 @@ export default function ReservationDetails({
       return;
     }
 
-    if (!isFormValid || !tourTime || !selectedTour) {
+    const termsOk = options?.forceTermsAccepted || validation.isAgreeTermsValid;
+    const ready = isStep1Valid && isStep2Valid && termsOk && Boolean(tourTime) && Boolean(selectedTour);
+
+    if (!ready) {
       trackBlockedStep("checkout", "checkout_button");
       guideToStep(!isStep1Valid ? 1 : !isStep2Valid ? 2 : 3);
       return;
     }
 
+    if (options?.forceTermsAccepted && !validation.isAgreeTermsValid) {
+      handleChange("agreeTerms", true);
+    }
+
+    submitInFlightRef.current = true;
+    setIsSubmitting(true);
     trackStepCompleted(3, "checkout", "checkout_button");
 
     trackAnalyticsEvent("booking_submitted", {
@@ -652,9 +785,10 @@ export default function ReservationDetails({
         stepLabel: "review",
         tickets,
         tourTime,
-        tourSlug: selectedTour.slug,
+        tourSlug: selectedTour!.slug,
         selectedAddons,
         totalWithTaxes,
+        expressTerms: Boolean(options?.forceTermsAccepted),
       },
     });
 
@@ -663,31 +797,36 @@ export default function ReservationDetails({
       .filter(Boolean)
       .join("\n\nAdd-ons: ");
 
-    onReserve({
-      tickets,
-      date: formattedDate,
-      dateIso: reservationDateIso,
-      total: totalWithTaxes,
-      name: formState.name,
-      email: formState.email,
-      phone: `${formState.phoneCode} ${formState.phoneNumber}`,
-      specialRequests: mergedSpecialRequests,
-      tourTime,
-      packageId: selectedPackage?.id ?? "general-entry",
-      tourPackage: packageLabel,
-      tourSlug: selectedTour.slug,
-      tourName: selectedTourName,
-      packagePrice: packagePriceUSD,
-      addons: selectedAddonObjects.map((a) => (lang === "es" ? a.nameEs : a.nameEn)),
-      addonIds: selectedAddonObjects.map((a) => a.id),
-      addonsPrice: addonsPricePerPerson * tickets,
-      addonsPricePerPerson,
-      addonsBreakdown,
-      transportQuote,
-      addonDetails,
-    });
+    try {
+      onReserve({
+        tickets,
+        date: formattedDate,
+        dateIso: reservationDateIso,
+        total: totalWithTaxes,
+        name: formState.name.trim(),
+        email: formState.email.trim(),
+        phone: `${formState.phoneCode} ${formState.phoneNumber.trim()}`,
+        specialRequests: mergedSpecialRequests,
+        tourTime: tourTime!,
+        packageId: selectedPackage?.id ?? "general-entry",
+        tourPackage: packageLabel,
+        tourSlug: selectedTour!.slug,
+        tourName: selectedTourName,
+        packagePrice: packagePriceUSD,
+        addons: selectedAddonObjects.map((a) => (lang === "es" ? a.nameEs : a.nameEn)),
+        addonIds: selectedAddonObjects.map((a) => a.id),
+        addonsPrice: addonsPricePerPerson * tickets,
+        addonsPricePerPerson,
+        addonsBreakdown,
+        transportQuote,
+        addonDetails,
+      });
+    } catch (error) {
+      submitInFlightRef.current = false;
+      setIsSubmitting(false);
+      throw error;
+    }
   }, [
-    isFormValid,
     tourTime,
     onReserve,
     tickets,
@@ -712,12 +851,47 @@ export default function ReservationDetails({
     guideToStep,
     isStep1Valid,
     isStep2Valid,
+    validation.isAgreeTermsValid,
+    handleChange,
   ]);
 
   const goToNextStep = useCallback(() => {
-    const targetStep = currentStep < 3 ? ((currentStep + 1) as BookingStepId) : currentStep;
-    goToStep(targetStep, "next_button");
-  }, [currentStep, goToStep]);
+    if (currentStep === 1) {
+      // Skip traveler form when draft/profile already filled it in.
+      if (isStep2Valid) {
+        goToStep(3, "skip_prefilled_traveler");
+        return;
+      }
+      goToStep(2, "next_button");
+      return;
+    }
+
+    if (currentStep === 2) {
+      goToStep(3, "next_button");
+    }
+  }, [currentStep, goToStep, isStep2Valid]);
+
+  // When traveler fields *become* complete (not when navigating back), glide to review.
+  const wasStep2ValidRef = useRef(false);
+  useEffect(() => {
+    if (currentStep !== 2) {
+      wasStep2ValidRef.current = isStep2Valid;
+      return;
+    }
+    const becameValid = isStep2Valid && !wasStep2ValidRef.current;
+    wasStep2ValidRef.current = isStep2Valid;
+    if (!becameValid) return;
+
+    const timer = window.setTimeout(() => {
+      goToStep(3, "auto_traveler_complete");
+    }, 320);
+    return () => window.clearTimeout(timer);
+  }, [currentStep, goToStep, isStep2Valid]);
+
+  // One-tap magic: accept terms + pay from sticky bar (no second click).
+  const handleExpressCheckout = useCallback(() => {
+    handleReserve({ forceTermsAccepted: true });
+  }, [handleReserve]);
 
   const handleStep1Enter = useCallback((event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key !== "Enter") return;
@@ -771,13 +945,8 @@ export default function ReservationDetails({
     if (event.key !== "Enter") return;
 
     event.preventDefault();
-    if (!validation.isAgreeTermsValid) {
-      handleChange("agreeTerms", true);
-      return;
-    }
-
-    handleReserve();
-  }, [handleChange, handleReserve, validation.isAgreeTermsValid]);
+    handleReserve({ forceTermsAccepted: true });
+  }, [handleReserve]);
 
   const handleTourTimeSelect = useCallback((slot: TourTime) => {
     setTourTime(slot);
@@ -815,11 +984,8 @@ export default function ReservationDetails({
 
   const handleTicketsChange = useCallback((rawValue: string) => {
     const parsedValue = Number(rawValue);
-    const nextTickets = parsedValue >= 1 && parsedValue <= slots
-      ? parsedValue
-      : parsedValue < 1
-      ? 1
-      : slots;
+    const integerValue = Number.isFinite(parsedValue) ? Math.trunc(parsedValue) : 1;
+    const nextTickets = Math.min(Math.max(integerValue, 1), Math.max(slots, 1));
 
     setTickets(nextTickets);
     trackAnalyticsEvent("booking_selection_changed", {
@@ -897,7 +1063,43 @@ export default function ReservationDetails({
     [tr.steps.schedule, tr.steps.traveler, tr.steps.review],
   );
 
-  const stickySecondaryLabel = `${formattedDate} · ${tickets} ${lang === "es" ? "pax" : "pax"} · ${packageLabel}`;
+  const stickySecondaryLabel = [
+    formattedDate,
+    tourTime ? formatDepartureLabel(tourTime) : null,
+    `${tickets} pax`,
+    packageLabel,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+  const step1ContinueLabel = isStep2Valid
+    ? lang === "es" ? "Confirmar en 1 toque" : "Confirm in 1 tap"
+    : lang === "es" ? "Siguiente · mis datos" : "Next · my details";
+
+  const stickyLabel =
+    currentStep === 1
+      ? step1ContinueLabel
+      : currentStep === 2
+        ? lang === "es" ? "Revisar" : "Review"
+        : isSubmitting
+          ? lang === "es" ? "Procesando…" : "Processing…"
+          : validation.isAgreeTermsValid
+            ? `${tr.proceedBtn} · $${totalWithTaxes.toFixed(0)}`
+            : lang === "es"
+              ? `Aceptar y pagar · $${totalWithTaxes.toFixed(0)}`
+              : `Accept & pay · $${totalWithTaxes.toFixed(0)}`;
+
+  // Auto-accept path hint when traveler draft is already complete.
+  const prefilledBanner =
+    currentStep === 1 && isStep1Valid && isStep2Valid
+      ? lang === "es"
+        ? "✨ Modo exprés: un toque y pasás a pagar."
+        : "✨ Express mode: one tap and you go pay."
+      : currentStep === 2 && isStep2Valid
+        ? lang === "es"
+          ? "Datos listos — llevándote a revisar…"
+          : "Details ready — taking you to review…"
+        : null;
 
   const handlePackageSelect = useCallback((packageId: string) => {
     setSelectedPackageId(packageId);
@@ -914,20 +1116,66 @@ export default function ReservationDetails({
 
   return (
     <div className="pb-32 md:pb-4">
-      <div className={`mb-3 flex items-center gap-2.5 rounded-xl border border-zinc-200 bg-white p-2.5 dark:border-zinc-700 dark:bg-zinc-900/60 ${!selectedTour ? "ring-2 ring-amber-300/70" : ""}`}>
+      <div className={`mb-3 flex items-center gap-2.5 rounded-xl border p-2.5 ${
+        isStep1Valid
+          ? "border-emerald-200 bg-gradient-to-r from-emerald-50 to-white dark:border-emerald-800/40 dark:from-emerald-950/30 dark:to-zinc-900/60"
+          : `border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900/60 ${!selectedTour ? "ring-2 ring-amber-300/70" : ""}`
+      }`}>
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-300">
           <MapPin className="h-4 w-4" aria-hidden />
         </span>
         <div className="min-w-0 flex-1">
           <h3 className="truncate text-sm font-black leading-tight text-zinc-900 dark:text-zinc-50">{selectedTourName}</h3>
-          <p className="truncate text-xs font-semibold capitalize text-zinc-500 dark:text-zinc-400">{formattedDate}</p>
+          <p className="truncate text-xs font-semibold capitalize text-zinc-500 dark:text-zinc-400">
+            {formattedDate}
+            {tourTime ? ` · ${formatDepartureLabel(tourTime)}` : ""}
+            {` · ${tickets} pax`}
+          </p>
         </div>
-        <span className="shrink-0 rounded-full border border-teal-200 bg-teal-50 px-2.5 py-0.5 text-xs font-black text-teal-800 dark:border-teal-700 dark:bg-teal-950/30 dark:text-teal-300">
-          ${packagePriceUSD} / {tr.perPerson}
-        </span>
+        <div className="shrink-0 text-right">
+          <p className="text-[10px] font-bold uppercase tracking-wide text-zinc-500">
+            {isStep1Valid ? (lang === "es" ? "Listo" : "Ready") : (lang === "es" ? "Est." : "Est.")}
+          </p>
+          <p className="text-sm font-black text-emerald-700 dark:text-emerald-300">
+            ${totalWithTaxes.toFixed(0)}
+          </p>
+        </div>
       </div>
 
-      <ReservationDetailsStepProgress steps={wizardSteps} currentStep={currentStep} />
+      {prefilledBanner && (
+        <div className="mb-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800 dark:border-emerald-800/50 dark:bg-emerald-950/25 dark:text-emerald-200">
+          {prefilledBanner}
+        </div>
+      )}
+
+      <ReservationDetailsStepProgress
+        steps={wizardSteps}
+        currentStep={currentStep}
+        maxReachableStep={
+          currentStep === 1
+            ? isStep1Valid
+              ? isStep2Valid
+                ? 3
+                : 2
+              : 1
+            : currentStep === 2
+              ? isStep2Valid
+                ? 3
+                : 2
+              : 3
+        }
+        onStepSelect={(step) => {
+          if (step < currentStep) {
+            setCurrentStep(step);
+            return;
+          }
+          if (currentStep === 1 && step === 3 && isStep1Valid && isStep2Valid) {
+            goToStep(3, "progress_skip");
+            return;
+          }
+          goToStep(step, "progress");
+        }}
+      />
 
       {currentStep === 1 && (
         <ReservationDetailsStep1
@@ -947,6 +1195,10 @@ export default function ReservationDetails({
           packagePriceUSD={packagePriceUSD}
           packageLabel={packageLabel}
           reservationDateIso={reservationDateIso}
+          estimatedTotal={totalWithTaxes}
+          continueLabel={step1ContinueLabel}
+          expressReady={isStep1Valid && isStep2Valid}
+          travelerReady={isStep2Valid}
           onPackageSelect={handlePackageSelect}
           isPackageDisabled={isPackageDisabled}
           onTourTimeSelect={handleTourTimeSelect}
@@ -954,7 +1206,7 @@ export default function ReservationDetails({
           onStep1Enter={handleStep1Enter}
           onAddonToggle={handleAddonToggle}
           onAddonDetailsChange={setAddonDetails}
-          onContinue={() => goToStep(2, "continue_button")}
+          onContinue={goToNextStep}
           canContinue={isStep1Valid}
           transportQuote={transportQuote}
           transportLoading={transportLoading}
@@ -1002,6 +1254,7 @@ export default function ReservationDetails({
             basePriceUSD={packagePriceUSD}
             tourTime={tourTime}
             tickets={tickets}
+            formattedDate={formattedDate}
             selectedAddons={selectedAddons}
             addonDetails={addonDetails}
             transportQuote={transportQuote}
@@ -1014,6 +1267,7 @@ export default function ReservationDetails({
             localizedCancellationPolicy={localizedCancellationPolicy}
             onTermsChange={(accepted) => handleChange("agreeTerms", accepted)}
             onTermsEnter={handleTermsEnter}
+            onEditStep={(step) => setCurrentStep(step)}
             tr={tr}
             lang={lang}
           />
@@ -1028,12 +1282,16 @@ export default function ReservationDetails({
             </button>
             <button
               type="button"
-              onClick={handleReserve}
-              disabled={!isFormValid}
+              onClick={handleExpressCheckout}
+              disabled={!isStep1Valid || !isStep2Valid || isSubmitting}
               className="inline-flex flex-[2] min-h-12 items-center justify-center gap-2 rounded-full bg-emerald-600 px-6 py-3 font-black text-white shadow-lg transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <ShieldCheck className="h-5 w-5" aria-hidden />
-              {tr.proceedBtn} · ${totalWithTaxes.toFixed(2)}
+              {validation.isAgreeTermsValid
+                ? `${tr.proceedBtn} · $${totalWithTaxes.toFixed(2)}`
+                : lang === "es"
+                  ? `Aceptar y pagar · $${totalWithTaxes.toFixed(0)}`
+                  : `Accept & pay · $${totalWithTaxes.toFixed(0)}`}
             </button>
           </div>
 
@@ -1047,20 +1305,19 @@ export default function ReservationDetails({
 
       <BookingStickyBar
         lang={lang}
-        label={
-          currentStep === 1
-            ? lang === "es" ? "Continuar" : "Continue"
-            : currentStep === 2
-              ? lang === "es" ? "Revisar" : "Review"
-              : tr.proceedBtn
-        }
+        label={stickyLabel}
         secondaryLabel={stickySecondaryLabel}
         total={totalWithTaxes}
-        disabled={currentStep === 1 ? !isStep1Valid : currentStep === 2 ? !isStep2Valid : !isFormValid}
+        disabled={
+          isSubmitting ||
+          (currentStep === 1
+            ? !isStep1Valid
+            : currentStep === 2
+              ? !isStep2Valid
+              : !isStep1Valid || !isStep2Valid)
+        }
         onBack={currentStep > 1 ? () => setCurrentStep((currentStep - 1) as BookingStepId) : undefined}
-        onAction={currentStep === 3
-          ? handleReserve
-          : () => goToStep((currentStep + 1) as BookingStepId, "sticky_bar")}
+        onAction={currentStep === 3 ? handleExpressCheckout : goToNextStep}
       />
     </div>
   );

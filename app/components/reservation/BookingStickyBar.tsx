@@ -38,20 +38,23 @@ export default function BookingStickyBar({
         )}
         <div className="min-w-0 flex-1">
           {secondaryLabel && (
-            <p className="truncate text-[11px] font-semibold text-stone-500">{secondaryLabel}</p>
+            <p className="truncate text-[11px] font-semibold text-stone-500 dark:text-stone-400">{secondaryLabel}</p>
           )}
-          <p className="text-sm font-black text-stone-900">
+          <p className="text-sm font-black text-stone-900 dark:text-stone-50">
             {isEs ? "Total est." : "Est. total"}{" "}
-            <span className="text-emerald-700">${total.toFixed(2)}</span>
+            <span className="text-emerald-700 dark:text-emerald-300">${total.toFixed(2)}</span>
+          </p>
+          <p className="text-[10px] font-medium text-stone-400 dark:text-stone-500">
+            {isEs ? "IVA incluido" : "Tax included"}
           </p>
         </div>
         <button
           type="button"
           disabled={disabled}
           onClick={onAction}
-          className="inline-flex min-h-12 max-w-[9.5rem] shrink-0 items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-black text-white shadow-sm transition hover:bg-emerald-500 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex min-h-12 max-w-[12.5rem] shrink-0 items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2.5 text-[13px] font-black leading-tight text-white shadow-sm transition hover:bg-emerald-500 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 sm:max-w-none sm:px-5 sm:text-sm"
         >
-          <span className="truncate">{label}</span>
+          <span className="line-clamp-2 text-left sm:truncate sm:text-center">{label}</span>
           <ArrowRight className="shrink-0" size={15} />
         </button>
       </div>

@@ -4,6 +4,7 @@ import { ADDON_DATA } from "./addons";
 
 export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const PHONE_NUMBER_REGEX = /^[\d\s().-]{6,20}$/;
+export const RESERVATION_TRAVELER_DRAFT_KEY = "reservationTravelerDraft";
 
 export const DEFAULT_DEPARTURE_TIMES = ["08:00", "09:00", "10:00"];
 

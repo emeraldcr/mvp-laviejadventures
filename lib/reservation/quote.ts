@@ -13,9 +13,12 @@ import {
   getPackageLabel,
   resolveReservationPackage,
 } from "./packages";
+import { DEFAULT_DEPARTURE_TIMES } from "./constants";
+import { getPackageDepartureTimes } from "./pricing";
 import type { ReservationAddonDetails } from "./types";
 
 export type ReservationQuoteInput = {
+  bookingAttemptId?: string;
   name?: string;
   email?: string;
   phone?: string;
@@ -55,6 +58,9 @@ export type ReservationQuote = {
 
 export type ReservationQuoteErrorCode =
   | "invalid_tickets"
+  | "invalid_contact"
+  | "invalid_time"
+  | "invalid_request"
   | "invalid_date"
   | "package_unavailable"
   | "package_schedule"
@@ -95,8 +101,26 @@ export function requiredReservationFieldsPresent(input: ReservationQuoteInput, o
 
 export async function quoteReservation(db: Db, input: ReservationQuoteInput): Promise<ReservationQuote> {
   const safeTickets = Number(input.tickets);
-  if (!Number.isFinite(safeTickets) || safeTickets < 1) {
+  if (!Number.isInteger(safeTickets) || safeTickets < 1) {
     throw new ReservationQuoteError("invalid_tickets", "Invalid ticket quantity");
+  }
+
+  const normalizedName = String(input.name ?? "").trim();
+  const normalizedEmail = String(input.email ?? "").trim();
+  const normalizedPhoneDigits = String(input.phone ?? "").replace(/\D/g, "");
+  if (
+    normalizedName.length < 2 ||
+    normalizedName.length > 120 ||
+    normalizedEmail.length > 254 ||
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail) ||
+    normalizedPhoneDigits.length < 6 ||
+    normalizedPhoneDigits.length > 15
+  ) {
+    throw new ReservationQuoteError("invalid_contact", "Invalid traveler contact details");
+  }
+
+  if (typeof input.specialRequests === "string" && input.specialRequests.length > 2000) {
+    throw new ReservationQuoteError("invalid_request", "Special requests are too long");
   }
 
   const normalizedDate = normalizeReservationDate(input.date, input.dateIso);
@@ -140,10 +164,21 @@ export async function quoteReservation(db: Db, input: ReservationQuoteInput): Pr
     });
   }
 
+  const selectedTime = String(input.tourTime ?? "").trim();
+  const packageTimes = getPackageDepartureTimes(selectedPackage);
+  const allowedTimes = packageTimes.length > 0 ? packageTimes : DEFAULT_DEPARTURE_TIMES;
+  if (!selectedTime || !allowedTimes.includes(selectedTime)) {
+    throw new ReservationQuoteError("invalid_time", "Selected departure time is not available", 400, {
+      selectedTime,
+      allowedTimes,
+    });
+  }
+
   const remainingCapacity = await getRemainingCapacityForTourDate({
     db,
     tourSlug: input.tourSlug,
     date: normalizedDate,
+    excludeHoldId: input.bookingAttemptId,
   });
 
   if (safeTickets > remainingCapacity) {

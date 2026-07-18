@@ -19,6 +19,9 @@ export default function CalendarSection({ className }: Props) {
     selectedDay,
     getSlotsForDay,
     goToNextAvailableDay,
+    availabilityLoading,
+    availabilityError,
+    refreshAvailability,
   } = useCalendarContext();
 
   const { lang } = useLanguage();
@@ -55,20 +58,43 @@ export default function CalendarSection({ className }: Props) {
     <section className={cn("flex items-start px-1 sm:px-2", className)}>
       <div className="w-full">
         <div className="space-y-4">
+          {(availabilityLoading || availabilityError) && (
+            <div
+              className={`mx-2 mt-3 flex items-center justify-between gap-3 rounded-xl border px-3 py-3 text-sm sm:mx-4 ${
+                availabilityError
+                  ? "border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-200"
+                  : "border-teal-200 bg-teal-50 text-teal-900 dark:border-teal-800 dark:bg-teal-950/30 dark:text-teal-200"
+              }`}
+              role={availabilityError ? "alert" : "status"}
+            >
+              <span className="font-semibold">
+                {availabilityError ?? (lang === "es" ? "Confirmando cupos reales…" : "Checking live availability…")}
+              </span>
+              {availabilityError && (
+                <button
+                  type="button"
+                  onClick={refreshAvailability}
+                  className="shrink-0 rounded-lg border border-current px-3 py-2 text-xs font-black"
+                >
+                  {lang === "es" ? "Reintentar" : "Retry"}
+                </button>
+              )}
+            </div>
+          )}
           <div className="w-full">
             <Calendar />
           </div>
 
-          <div className="mx-2 flex flex-col items-start justify-between gap-2 rounded-xl border bg-zinc-50 px-3 py-2.5 shadow-sm dark:bg-zinc-900/40 sm:mx-4 sm:flex-row sm:items-center">
-            <p className="text-xs text-zinc-600 dark:text-zinc-300">
+          <div className="mx-2 flex flex-col items-start justify-between gap-2 rounded-xl border border-emerald-200/70 bg-emerald-50/70 px-3 py-2.5 shadow-sm dark:border-emerald-800/40 dark:bg-emerald-950/20 sm:mx-4 sm:flex-row sm:items-center">
+            <p className="text-xs font-semibold text-zinc-700 dark:text-zinc-200">
               {summaryText}
             </p>
 
-            <div className="flex w-full sm:w-auto gap-2">
+            <div className="flex w-full gap-2 sm:w-auto">
               <button
                 type="button"
                 onClick={goToNextAvailableDay}
-                className="flex-1 sm:flex-none whitespace-nowrap rounded-full border border-zinc-300 dark:border-zinc-600 px-3 py-1.5 text-[11px] sm:text-xs font-medium text-zinc-800 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
+                className="flex-1 whitespace-nowrap rounded-lg border border-zinc-300 bg-white px-3 py-2 text-[11px] font-bold text-zinc-800 transition hover:bg-zinc-100 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800 sm:flex-none sm:text-xs"
               >
                 {tr.nextAvailable}
               </button>
@@ -76,7 +102,7 @@ export default function CalendarSection({ className }: Props) {
                 type="button"
                 onClick={scrollToDetails}
                 disabled={!selectedDate}
-                className="flex-1 rounded-lg border border-teal-500/50 px-3 py-2 text-[11px] font-bold text-teal-700 transition enabled:hover:bg-teal-500/10 disabled:cursor-not-allowed disabled:opacity-40 dark:text-teal-300 lg:hidden"
+                className="flex-1 rounded-lg bg-emerald-600 px-3 py-2 text-[11px] font-black text-white transition enabled:hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-40 lg:hidden"
               >
                 {tr.continueToDetails}
               </button>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { OrderDetails } from "@/lib/types/index";
 import type { LocalPaymentMethod } from "@/lib/reservation/checkout-messages";
 
@@ -14,6 +14,7 @@ export function usePendingBooking(orderDetails: OrderDetails, lang: "es" | "en")
   const [reservationId, setReservationId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const saveInFlightRef = useRef(false);
   const isEs = lang === "es";
   const bookingIdentity = [
     orderDetails.name,
@@ -33,6 +34,7 @@ export function usePendingBooking(orderDetails: OrderDetails, lang: "es" | "en")
     setReservationId(null);
     setSaveError(null);
     setIsSaving(false);
+    saveInFlightRef.current = false;
   }, [bookingIdentity]);
 
   const savePendingBooking = useCallback(
@@ -40,7 +42,9 @@ export function usePendingBooking(orderDetails: OrderDetails, lang: "es" | "en")
       if (referenceCode) {
         return { referenceCode, reservationId };
       }
+      if (saveInFlightRef.current) return null;
 
+      saveInFlightRef.current = true;
       setIsSaving(true);
       setSaveError(null);
 
@@ -87,6 +91,7 @@ export function usePendingBooking(orderDetails: OrderDetails, lang: "es" | "en")
         );
         return null;
       } finally {
+        saveInFlightRef.current = false;
         setIsSaving(false);
       }
     },

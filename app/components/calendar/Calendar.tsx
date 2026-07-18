@@ -51,20 +51,20 @@ function CalendarBase() {
   }, [currentMonth, currentYear]);
 
   return (
-    <section className="mt-4 w-full px-3 sm:px-5 lg:px-6 xl:px-8" id="calendar">
+    <section className="mt-2 w-full px-2 sm:mt-4 sm:px-5 lg:px-6 xl:px-8" id="calendar">
       {/* Header: month + nav */}
-      <div className="mb-4 sm:mb-5 space-y-2">
+      <div className="mb-3 space-y-1.5 sm:mb-5 sm:space-y-2">
         <div className="flex items-center justify-between gap-2">
           <button
             type="button"
             onClick={prevMonth}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 transition"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-zinc-200 transition hover:bg-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700"
             aria-label={tr.prevMonthAria}
           >
             <span aria-hidden>‹</span>
           </button>
 
-          <h2 className="flex-1 text-center text-lg sm:text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
+          <h2 className="flex-1 text-center text-base font-bold text-zinc-900 dark:text-zinc-50 sm:text-2xl sm:font-semibold">
             {monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1)}{" "}
             {currentYear}
           </h2>
@@ -72,14 +72,14 @@ function CalendarBase() {
           <button
             type="button"
             onClick={nextMonth}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 transition"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-zinc-200 transition hover:bg-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700"
             aria-label={tr.nextMonthAria}
           >
             <span aria-hidden>›</span>
           </button>
         </div>
 
-        <p className="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400">
+        <p className="text-[11px] text-zinc-500 dark:text-zinc-400 sm:text-xs">
           {selectedDay
             ? tr.selectedDateHint
             : tr.idleHint}
@@ -87,11 +87,11 @@ function CalendarBase() {
       </div>
 
       {/* Weekday labels + grid */}
-      <div className="grid grid-cols-7 gap-x-1.5 gap-y-2 sm:gap-2.5 md:gap-3 xl:gap-3.5">
+      <div className="grid grid-cols-7 gap-x-1 gap-y-1.5 sm:gap-x-1.5 sm:gap-y-2 md:gap-3 xl:gap-3.5">
         {tr.weekdays.map((lbl) => (
           <div
             key={lbl}
-            className="text-center text-[11px] sm:text-xs font-medium uppercase tracking-wide text-zinc-500"
+            className="text-center text-[10px] font-medium uppercase tracking-wide text-zinc-500 sm:text-xs"
           >
             {lbl}
           </div>

@@ -16,7 +16,14 @@ import type { ReservationAddonDetails } from "@/lib/reservation/types";
 
 type PendingPaymentMethod = "whatsapp" | "sinpe";
 
+type PendingReservationDocument = {
+  _id?: string;
+  referenceCode?: string;
+  [key: string]: unknown;
+};
+
 interface PendingBookingRequest {
+  bookingAttemptId?: string;
   name?: string;
   email?: string;
   phone?: string;
@@ -62,6 +69,7 @@ export async function POST(req: Request) {
       specialRequests,
       language = "es",
       paymentMethod = "whatsapp",
+      bookingAttemptId,
     } = body;
 
     if (!requiredReservationFieldsPresent({ name, email, phone, tickets, date, tourPackage, tourName }, { requireTourName: true })) {
@@ -94,11 +102,29 @@ export async function POST(req: Request) {
     const safePaymentMethod: PendingPaymentMethod =
       paymentMethod === "sinpe" ? "sinpe" : "whatsapp";
 
+    const db = await getDb();
+    const safeAttemptId = typeof bookingAttemptId === "string" && /^[a-f0-9-]{36}$/i.test(bookingAttemptId)
+      ? bookingAttemptId
+      : null;
+    const pendingId = safeAttemptId ? `pending:${safeAttemptId}` : null;
+    const reservations = db.collection<PendingReservationDocument>(COLLECTIONS.RESERVATIONS);
+
+    if (pendingId) {
+      const existing = await reservations.findOne({ _id: pendingId });
+      if (existing?.referenceCode) {
+        return NextResponse.json({
+          success: true,
+          reservationId: pendingId,
+          referenceCode: String(existing.referenceCode),
+          reused: true,
+        });
+      }
+    }
+
     const referenceCode = buildReservationReferenceCode(
-      `${email}-${normalizedDate}-${tourSlug ?? tourName}-${Date.now()}`,
+      safeAttemptId ?? `${email}-${normalizedDate}-${tourSlug ?? tourName}-${Date.now()}`,
     );
 
-    const db = await getDb();
     const quote = await quoteReservation(db, {
       name,
       email,
@@ -118,7 +144,8 @@ export async function POST(req: Request) {
       language,
     });
 
-    const result = await db.collection(COLLECTIONS.RESERVATIONS).insertOne({
+    const reservationDocument = {
+      ...(pendingId ? { _id: pendingId } : {}),
       orderId: null,
       captureId: null,
       referenceCode,
@@ -150,11 +177,24 @@ export async function POST(req: Request) {
       ivaRate: quote.ivaRatePercent,
       language: quote.language,
       createdAt: new Date(),
-    });
+    };
+
+    let reservationId: string;
+    try {
+      const result = await reservations.insertOne(reservationDocument);
+      reservationId = result.insertedId.toString();
+    } catch (error) {
+      const mongoError = error as { code?: number };
+      if (!pendingId || mongoError.code !== 11000) throw error;
+
+      const existing = await reservations.findOne({ _id: pendingId });
+      if (!existing?.referenceCode) throw error;
+      reservationId = pendingId;
+    }
 
     return NextResponse.json({
       success: true,
-      reservationId: result.insertedId.toString(),
+      reservationId,
       referenceCode,
     });
   } catch (error: unknown) {

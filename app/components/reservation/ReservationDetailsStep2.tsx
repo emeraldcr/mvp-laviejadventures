@@ -71,12 +71,17 @@ export default function ReservationDetailsStep2({
       >
         <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
           <h3 className="text-sm font-black text-zinc-900 dark:text-zinc-50">{tr.travelerTitle}</h3>
-          {!isStep2Valid && (
+          {isStep2Valid ? (
+            <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 dark:border-emerald-800/50 dark:bg-emerald-950/30 dark:text-emerald-300">
+              {lang === "es" ? "Listo para revisar" : "Ready to review"}
+            </span>
+          ) : (
             <span className="flex items-center gap-1 text-xs font-medium text-amber-700 dark:text-amber-400">
               <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden /> {tr.indicators.completeTravelerData}
             </span>
           )}
         </div>
+
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           <TravelerInputField
             id="name"
@@ -89,6 +94,7 @@ export default function ReservationDetailsStep2({
             placeholder={tr.namePlaceholder}
             isValid={validation.isNameValid}
             validationMessage={tr.nameRequired}
+            autoComplete="name"
             required
           />
           <TravelerInputField
@@ -103,6 +109,8 @@ export default function ReservationDetailsStep2({
             placeholder={tr.emailPlaceholder}
             isValid={validation.isEmailValid}
             validationMessage={tr.emailInvalid}
+            autoComplete="email"
+            inputMode="email"
             required
           />
           <TravelerPhoneInput
@@ -119,7 +127,7 @@ export default function ReservationDetailsStep2({
             validationMessage={tr.phoneInvalid}
           />
           <div className="md:col-span-2">
-            <label htmlFor="specialRequests" className="mb-1.5 block text-sm font-bold">
+            <label htmlFor="specialRequests" className="mb-1.5 block text-sm font-bold text-zinc-800 dark:text-zinc-200">
               {lang === "es" ? "¿Necesitas algo extra?" : "Need anything extra?"}
               <span className="ml-2 text-xs font-normal text-zinc-500">
                 {lang === "es" ? "opcional" : "optional"}
@@ -131,7 +139,8 @@ export default function ReservationDetailsStep2({
               onChange={(event) => onSpecialRequestsChange(event.target.value)}
               onBlur={() => onFieldBlur("specialRequests")}
               rows={2}
-              className="w-full rounded-xl border border-zinc-300 bg-white p-3 text-zinc-900 outline-none transition focus:border-teal-500 focus:ring-4 focus:ring-teal-500/15 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+              maxLength={2000}
+              className="w-full rounded-xl border border-zinc-300 bg-white p-3 text-sm font-semibold text-zinc-900 outline-none transition focus:border-teal-500 focus:ring-4 focus:ring-teal-500/15 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
               placeholder={
                 lang === "es"
                   ? "Ej: transporte desde hotel, comida vegetariana, cumpleaños, guia privado, fotos..."

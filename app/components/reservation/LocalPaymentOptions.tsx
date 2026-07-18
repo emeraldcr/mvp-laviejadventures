@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { Building2, CheckCircle2, Copy, MessageCircle, Smartphone } from "lucide-react";
 import { trackAnalyticsEvent } from "@/lib/analytics/client";
 import {
-  RESERVATION_WHATSAPP_PHONE,
   buildReservationWhatsAppHref,
   type LocalPaymentMethod,
 } from "@/lib/reservation/checkout-messages";
@@ -48,7 +47,6 @@ export default function LocalPaymentOptions({
 }: Props) {
   const isEs = lang === "es";
   const [copied, setCopied] = useState(false);
-  const sinpeInitializedRef = useRef(false);
 
   const whatsappHref = useMemo(
     () =>
@@ -59,17 +57,6 @@ export default function LocalPaymentOptions({
       }),
     [lang, orderDetails, packageLabel, referenceCode, timeLabel],
   );
-
-  useEffect(() => {
-    if (method !== "sinpe" || sinpeInitializedRef.current) return;
-    sinpeInitializedRef.current = true;
-
-    trackAnalyticsEvent("sinpe_checkout_selected", {
-      metadata: analyticsMetadata,
-    });
-
-    void savePendingBooking("sinpe");
-  }, [analyticsMetadata, method, savePendingBooking]);
 
   const handleWhatsAppClick = async () => {
     const saved = await savePendingBooking("whatsapp");
@@ -107,6 +94,11 @@ export default function LocalPaymentOptions({
     }
   };
 
+  const handleSinpeStart = async () => {
+    trackAnalyticsEvent("sinpe_checkout_selected", { metadata: analyticsMetadata });
+    await savePendingBooking("sinpe");
+  };
+
   if (method === "whatsapp") {
     return (
       <div className="space-y-4">
@@ -141,16 +133,11 @@ export default function LocalPaymentOptions({
           </div>
         )}
 
-        <a
-          href={whatsappHref}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={(event) => {
-            event.preventDefault();
-            void handleWhatsAppClick();
-          }}
+        <button
+          type="button"
+          onClick={() => void handleWhatsAppClick()}
+          disabled={isSaving}
           className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#25D366] px-5 py-3.5 text-sm font-bold text-white shadow-lg shadow-emerald-900/30 transition hover:bg-[#1ebe5d] disabled:cursor-not-allowed disabled:opacity-60"
-          aria-disabled={isSaving}
         >
           <MessageCircle className="h-5 w-5" aria-hidden />
           {isSaving
@@ -160,7 +147,7 @@ export default function LocalPaymentOptions({
             : isEs
               ? "Confirmar por WhatsApp"
               : "Confirm via WhatsApp"}
-        </a>
+        </button>
       </div>
     );
   }
@@ -172,6 +159,19 @@ export default function LocalPaymentOptions({
           ? "Pagá con SINPE Móvil o transferencia bancaria. Usá la referencia en el detalle del pago y envianos el comprobante por WhatsApp para confirmar."
           : "Pay with SINPE Móvil or bank transfer. Use the reference in the payment detail and send us the receipt on WhatsApp to confirm."}
       </div>
+
+      {!referenceCode && (
+        <button
+          type="button"
+          onClick={() => void handleSinpeStart()}
+          disabled={isSaving}
+          className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-teal-500 px-5 py-3.5 text-sm font-black text-white transition hover:bg-teal-400 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {isSaving
+            ? isEs ? "Generando referencia…" : "Generating reference…"
+            : isEs ? "Generar referencia de pago" : "Generate payment reference"}
+        </button>
+      )}
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
@@ -249,10 +249,14 @@ export default function LocalPaymentOptions({
       )}
 
       <a
-        href={`https://wa.me/${RESERVATION_WHATSAPP_PHONE}`}
+        href={referenceCode ? whatsappHref : "#"}
         target="_blank"
         rel="noopener noreferrer"
-        onClick={() => {
+        onClick={(event) => {
+          if (!referenceCode) {
+            event.preventDefault();
+            return;
+          }
           trackAnalyticsEvent("whatsapp_checkout_click", {
             metadata: {
               ...analyticsMetadata,
@@ -262,7 +266,8 @@ export default function LocalPaymentOptions({
             },
           });
         }}
-        className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-[#25D366]/40 bg-[#25D366]/15 px-5 py-3 text-sm font-bold text-[#9ef0b8] transition hover:bg-[#25D366]/25"
+        aria-disabled={!referenceCode}
+        className={`inline-flex w-full items-center justify-center gap-2 rounded-full border border-[#25D366]/40 bg-[#25D366]/15 px-5 py-3 text-sm font-bold text-[#9ef0b8] transition hover:bg-[#25D366]/25 ${!referenceCode ? "cursor-not-allowed opacity-45" : ""}`}
       >
         <MessageCircle className="h-5 w-5" aria-hidden />
         {isEs ? "Enviar comprobante por WhatsApp" : "Send receipt on WhatsApp"}
