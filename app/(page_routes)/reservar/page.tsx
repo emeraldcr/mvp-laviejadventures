@@ -9,7 +9,6 @@ import { useLanguage } from "@/lib/LanguageContext";
 import { useTheme } from "@/lib/ThemeContext";
 import { useReservationData } from "@/lib/hooks/useReservationData";
 import BookingSection from "@/app/components/sections/BookingSection";
-import { MobileBottomNav } from "@/app/components/navigation/SiteNavigation";
 import { getTourImage } from "@/lib/tour-display";
 import { formatTourPrice } from "@/app/components/home/home-utils";
 
@@ -146,24 +145,24 @@ export default function ReservarPage() {
               priority
             />
           )}
-          <div className="relative mx-auto flex max-w-7xl flex-col gap-4 px-4 py-6 md:flex-row md:items-center md:justify-between md:px-8 md:py-8">
+          <div className="relative mx-auto flex max-w-7xl flex-col gap-3 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-8 md:py-8">
             <div>
-              <p className="mb-2 text-xs font-bold uppercase tracking-[0.25em] text-emerald-700 dark:text-emerald-300">
+              <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300 md:mb-2 md:text-xs md:tracking-[0.25em]">
                 {isEs ? "Reserva en línea" : "Book online"}
               </p>
-              <h1 className="text-balance text-2xl font-black leading-tight text-stone-950 dark:text-stone-50 md:text-3xl">
+              <h1 className="text-balance text-xl font-black leading-tight text-stone-950 dark:text-stone-50 sm:text-2xl md:text-3xl">
                 {hasTourFromUrl
                   ? isEs ? "Elegí fecha, paquete y listo." : "Pick date, package, and go."
                   : isEs ? "Reservá tu aventura." : "Book your adventure."}
               </h1>
               {activeTour && (
-                <p className="mt-2 text-sm font-semibold text-stone-600 dark:text-stone-300">
+                <p className="mt-1 text-xs font-semibold text-stone-600 dark:text-stone-300 md:mt-2 md:text-sm">
                   {isEs ? "Desde" : "From"} {formatTourPrice(activeTour, isEs)} / {isEs ? "persona" : "person"}
                 </p>
               )}
             </div>
 
-            <div className="w-full rounded-2xl border border-stone-200 bg-white p-3 shadow-sm dark:border-white/10 dark:bg-stone-900 md:max-w-sm">
+            <div className="w-full rounded-xl border border-stone-200 bg-white p-2.5 shadow-sm dark:border-white/10 dark:bg-stone-900 md:max-w-sm md:rounded-2xl md:p-3">
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300">
                   {hasTourFromUrl ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Compass className="h-3.5 w-3.5" />}
@@ -206,7 +205,6 @@ export default function ReservarPage() {
         </section>
 
         <BookingSection selectedTourSlug={bookingTourSlug} initialPackageId={urlParams.package} />
-        <MobileBottomNav />
       </main>
     </CalendarProvider>
   );

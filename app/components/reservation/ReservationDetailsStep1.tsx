@@ -149,7 +149,7 @@ export default function ReservationDetailsStep1({
               {tr.numPeople}
             </label>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
             <button
               type="button"
               onClick={() => onTicketsChange(String(tickets - 1))}

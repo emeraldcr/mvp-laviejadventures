@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 
 type Props = {
   lang: "es" | "en";
@@ -8,6 +8,7 @@ type Props = {
   total: number;
   disabled?: boolean;
   onAction: () => void;
+  onBack?: () => void;
   secondaryLabel?: string;
 };
 
@@ -17,13 +18,24 @@ export default function BookingStickyBar({
   total,
   disabled,
   onAction,
+  onBack,
   secondaryLabel,
 }: Props) {
   const isEs = lang === "es";
 
   return (
-    <div className="fixed inset-x-0 bottom-[calc(4.25rem+env(safe-area-inset-bottom,0px))] z-40 border-t border-stone-200 bg-white/95 px-3 py-3 shadow-[0_-12px_40px_rgba(0,0,0,0.12)] backdrop-blur-xl md:hidden">
-      <div className="mx-auto flex max-w-lg items-center gap-3">
+    <div className="fixed inset-x-0 bottom-0 z-50 border-t border-stone-200 bg-white/95 px-3 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] shadow-[0_-12px_40px_rgba(0,0,0,0.12)] backdrop-blur-xl dark:border-white/10 dark:bg-stone-950/95 md:hidden">
+      <div className="mx-auto flex max-w-lg items-center gap-2.5">
+        {onBack && (
+          <button
+            type="button"
+            onClick={onBack}
+            className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-stone-300 bg-white text-stone-700 transition active:scale-95 dark:border-white/15 dark:bg-stone-900 dark:text-stone-200"
+            aria-label={isEs ? "Volver al paso anterior" : "Back to previous step"}
+          >
+            <ArrowLeft size={18} />
+          </button>
+        )}
         <div className="min-w-0 flex-1">
           {secondaryLabel && (
             <p className="truncate text-[11px] font-semibold text-stone-500">{secondaryLabel}</p>
@@ -37,10 +49,10 @@ export default function BookingStickyBar({
           type="button"
           disabled={disabled}
           onClick={onAction}
-          className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full bg-emerald-600 px-5 py-2.5 text-sm font-black text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex min-h-12 max-w-[9.5rem] shrink-0 items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-black text-white shadow-sm transition hover:bg-emerald-500 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {label}
-          <ArrowRight size={15} />
+          <span className="truncate">{label}</span>
+          <ArrowRight className="shrink-0" size={15} />
         </button>
       </div>
     </div>

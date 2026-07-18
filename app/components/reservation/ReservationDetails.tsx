@@ -913,7 +913,7 @@ export default function ReservationDetails({
   }, [getAnalyticsBookingSnapshot, stepLabels]);
 
   return (
-    <div className="pb-24 md:pb-4">
+    <div className="pb-32 md:pb-4">
       <div className={`mb-3 flex items-center gap-2.5 rounded-xl border border-zinc-200 bg-white p-2.5 dark:border-zinc-700 dark:bg-zinc-900/60 ${!selectedTour ? "ring-2 ring-amber-300/70" : ""}`}>
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-300">
           <MapPin className="h-4 w-4" aria-hidden />
@@ -1045,34 +1045,23 @@ export default function ReservationDetails({
         </>
       )}
 
-      {currentStep < 3 && (
-        <BookingStickyBar
-          lang={lang}
-          label={
-            currentStep === 1
-              ? lang === "es" ? "Continuar" : "Continue"
-              : lang === "es" ? "Revisar" : "Review"
-          }
-          secondaryLabel={stickySecondaryLabel}
-          total={totalWithTaxes}
-          disabled={currentStep === 1 ? !isStep1Valid : !isStep2Valid}
-          onAction={() => goToStep((currentStep + 1) as BookingStepId, "sticky_bar")}
-        />
-      )}
-
-      {currentStep === 3 && (
-        <div className="md:hidden">
-          <button
-            type="button"
-            onClick={handleReserve}
-            disabled={!isFormValid}
-            className="fixed inset-x-3 bottom-[calc(4.25rem+env(safe-area-inset-bottom,0px))] z-40 inline-flex min-h-12 w-[calc(100%-1.5rem)] items-center justify-center gap-2 rounded-full bg-emerald-600 px-6 py-3 font-black text-white shadow-lg disabled:opacity-50"
-          >
-            <ShieldCheck className="h-5 w-5" aria-hidden />
-            {tr.proceedBtn} · ${totalWithTaxes.toFixed(2)}
-          </button>
-        </div>
-      )}
+      <BookingStickyBar
+        lang={lang}
+        label={
+          currentStep === 1
+            ? lang === "es" ? "Continuar" : "Continue"
+            : currentStep === 2
+              ? lang === "es" ? "Revisar" : "Review"
+              : tr.proceedBtn
+        }
+        secondaryLabel={stickySecondaryLabel}
+        total={totalWithTaxes}
+        disabled={currentStep === 1 ? !isStep1Valid : currentStep === 2 ? !isStep2Valid : !isFormValid}
+        onBack={currentStep > 1 ? () => setCurrentStep((currentStep - 1) as BookingStepId) : undefined}
+        onAction={currentStep === 3
+          ? handleReserve
+          : () => goToStep((currentStep + 1) as BookingStepId, "sticky_bar")}
+      />
     </div>
   );
 }

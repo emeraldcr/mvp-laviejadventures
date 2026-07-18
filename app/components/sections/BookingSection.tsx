@@ -14,19 +14,19 @@ export default function BookingSection({ selectedTourSlug, initialPackageId }: P
   const { lang } = useLanguage();
 
   return (
-    <section id="booking" className="relative overflow-hidden bg-[#f4f1ea] pt-6 dark:bg-[#0b0a09]">
-      <div className="relative z-10 container mx-auto px-3 py-5 md:px-8 md:py-8">
-        <div className="mx-auto mb-6 max-w-5xl rounded-2xl border border-stone-200 bg-white px-5 py-5 shadow-sm dark:border-white/10 dark:bg-stone-900 sm:px-6">
+    <section id="booking" className="relative overflow-hidden bg-[#f4f1ea] pt-2 dark:bg-[#0b0a09] md:pt-6">
+      <div className="relative z-10 container mx-auto px-3 py-3 md:px-8 md:py-8">
+        <div className="mx-auto mb-3 max-w-5xl px-1 py-2 sm:mb-6 sm:rounded-2xl sm:border sm:border-stone-200 sm:bg-white sm:px-6 sm:py-5 sm:shadow-sm sm:dark:border-white/10 sm:dark:bg-stone-900">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.24em] text-emerald-700 dark:text-emerald-300">
                 {lang === "es" ? "Fecha" : "Date"}
               </p>
-              <h2 className="mt-2 text-2xl font-black text-stone-950 dark:text-stone-50">
+              <h2 className="mt-1 text-xl font-black text-stone-950 dark:text-stone-50 sm:mt-2 sm:text-2xl">
                 {lang === "es" ? "Escogé el día de tu aventura" : "Pick your adventure day"}
               </h2>
             </div>
-            <p className="max-w-xl text-sm leading-6 text-stone-600 dark:text-stone-300">
+            <p className="hidden max-w-xl text-sm leading-6 text-stone-600 dark:text-stone-300 sm:block">
               {lang === "es"
                 ? "Tocá una fecha disponible. Después elegís paquete, hora y personas en 3 pasos rápidos."
                 : "Tap an available date. Then choose package, time, and guests in 3 quick steps."}
@@ -39,7 +39,7 @@ export default function BookingSection({ selectedTourSlug, initialPackageId }: P
             <div className="rounded-2xl border border-stone-200 bg-white pb-4 shadow-sm dark:border-white/10 dark:bg-stone-900 lg:sticky lg:top-20">
               <CalendarSection />
             </div>
-            <div className="rounded-2xl border border-stone-200 bg-white p-3 shadow-sm dark:border-white/10 dark:bg-stone-900 sm:p-4">
+            <div className="min-w-0 rounded-2xl border border-stone-200 bg-white p-3 shadow-sm dark:border-white/10 dark:bg-stone-900 sm:p-4">
               <Suspense fallback={<ReservationFallback />}>
                 <ReservationSection
                   preselectedTourSlug={selectedTourSlug}

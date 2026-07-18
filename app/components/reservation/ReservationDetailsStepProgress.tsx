@@ -10,8 +10,22 @@ export default function ReservationDetailsStepProgress({
   currentStep,
 }: ReservationDetailsStepProgressProps) {
   return (
-    <div className="mb-8 border-y border-zinc-200 py-3 dark:border-zinc-800" aria-label="Booking progress">
-      <div className="flex items-center gap-2">
+    <div className="mb-4 border-y border-zinc-200 py-3 dark:border-zinc-800" aria-label="Booking progress">
+      <div className="sm:hidden">
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <p className="text-sm font-black text-zinc-900 dark:text-zinc-50">{currentStep} / {steps.length}</p>
+          <p className="min-w-0 truncate text-sm font-bold text-emerald-700 dark:text-emerald-300">
+            {steps.find((step) => step.id === currentStep)?.label}
+          </p>
+        </div>
+        <div className="grid grid-cols-3 gap-1.5" aria-hidden="true">
+          {steps.map((step) => (
+            <span key={step.id} className={`h-1.5 rounded-full ${currentStep >= step.id ? "bg-emerald-500" : "bg-zinc-200 dark:bg-zinc-700"}`} />
+          ))}
+        </div>
+      </div>
+
+      <div className="hidden items-center gap-2 sm:flex">
         {steps.map((step) => {
           const isCurrent = currentStep === step.id;
           const isDone = currentStep > step.id;
@@ -29,7 +43,7 @@ export default function ReservationDetailsStepProgress({
               >
                 {step.id}
               </span>
-              <span className={`hidden min-w-0 truncate text-xs font-semibold sm:inline ${isCurrent ? "text-emerald-300" : isDone ? "text-teal-300" : "text-zinc-500"}`}>
+              <span className={`min-w-0 truncate text-xs font-semibold ${isCurrent ? "text-emerald-700 dark:text-emerald-300" : isDone ? "text-teal-700 dark:text-teal-300" : "text-zinc-500"}`}>
                 {step.label}
               </span>
               {step.id < steps.length && (

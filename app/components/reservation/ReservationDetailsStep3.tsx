@@ -61,13 +61,13 @@ export default function ReservationDetailsStep3({
   return (
     <>
       <div ref={reviewSectionRef} className="mb-6 rounded-xl bg-zinc-100 p-4 dark:bg-zinc-800">
-        <div className="mb-2 flex justify-between"><span>{tr.tourLabel}</span><span className="font-medium">{selectedTourName}</span></div>
-        <div className="mb-2 flex justify-between">
+        <div className="mb-2 grid grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] gap-3"><span>{tr.tourLabel}</span><span className="text-right font-medium break-words">{selectedTourName}</span></div>
+        <div className="mb-2 grid grid-cols-[minmax(0,1fr)_auto] gap-3">
           <span>{packageLabel}</span>
-          <span className="font-medium">${basePriceUSD} / {tr.perPerson}</span>
+          <span className="text-right font-medium">${basePriceUSD} / {tr.perPerson}</span>
         </div>
-        <div className="mb-2 flex justify-between"><span>{tr.tourTimeTitle}</span><span>{tourTime ?? "—"}</span></div>
-        <div className="mb-2 flex justify-between">
+        <div className="mb-2 grid grid-cols-[minmax(0,1fr)_auto] gap-3"><span>{tr.tourTimeTitle}</span><span className="text-right">{tourTime ?? "—"}</span></div>
+        <div className="mb-2 grid grid-cols-[minmax(0,1fr)_auto] gap-3">
           <span>{lang === "es" ? "Personas" : "People"}</span>
           <span>{tickets}</span>
         </div>
@@ -110,9 +110,9 @@ export default function ReservationDetailsStep3({
             })}
           </div>
         )}
-        <div className="mb-2 flex justify-between"><span>{tr.subtotalLabel}</span><span>${subtotal.toFixed(2)}</span></div>
-        <div className="mb-2 flex justify-between"><span>{tr.taxes} ({ivaRatePercent}%)</span><span>${taxes.toFixed(2)}</span></div>
-        <div className="flex justify-between border-t border-zinc-300 pt-2 text-lg font-bold dark:border-zinc-700"><span>{tr.total}</span><span>${totalWithTaxes.toFixed(2)}</span></div>
+        <div className="mb-2 grid grid-cols-[minmax(0,1fr)_auto] gap-3"><span>{tr.subtotalLabel}</span><span>${subtotal.toFixed(2)}</span></div>
+        <div className="mb-2 grid grid-cols-[minmax(0,1fr)_auto] gap-3"><span>{tr.taxes} ({ivaRatePercent}%)</span><span>${taxes.toFixed(2)}</span></div>
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 border-t border-zinc-300 pt-2 text-lg font-bold dark:border-zinc-700"><span>{tr.total}</span><span>${totalWithTaxes.toFixed(2)}</span></div>
       </div>
 
       <div className="mb-6">

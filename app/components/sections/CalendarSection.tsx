@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useCalendarContext } from "@/lib/CalendarContext";
 import Calendar from "@/app/components/calendar/Calendar";
 import { format } from "date-fns";
@@ -24,6 +24,7 @@ export default function CalendarSection({ className }: Props) {
   const { lang } = useLanguage();
   const tr = translations[lang].calendar;
   const dateLocale = lang === "es" ? es : enUS;
+  const previousSelectedDay = useRef(selectedDay);
 
   const summaryText = selectedDate
     ? `${tr.chosenPrefix} ${format(
@@ -41,6 +42,15 @@ export default function CalendarSection({ className }: Props) {
     details.scrollIntoView({ behavior: "smooth", block: "start" });
   }, []);
 
+  useEffect(() => {
+    const dateChanged = selectedDay !== null && selectedDay !== previousSelectedDay.current;
+    previousSelectedDay.current = selectedDay;
+    if (!dateChanged || !window.matchMedia("(max-width: 1023px)").matches) return;
+
+    const timer = window.setTimeout(scrollToDetails, 120);
+    return () => window.clearTimeout(timer);
+  }, [selectedDay, scrollToDetails]);
+
   return (
     <section className={cn("flex items-start px-1 sm:px-2", className)}>
       <div className="w-full">
@@ -49,7 +59,7 @@ export default function CalendarSection({ className }: Props) {
             <Calendar />
           </div>
 
-          <div className="mx-2 sm:mx-4 rounded-2xl border bg-zinc-50 dark:bg-zinc-900/40 px-3 py-2.5 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+          <div className="mx-2 flex flex-col items-start justify-between gap-2 rounded-xl border bg-zinc-50 px-3 py-2.5 shadow-sm dark:bg-zinc-900/40 sm:mx-4 sm:flex-row sm:items-center">
             <p className="text-xs text-zinc-600 dark:text-zinc-300">
               {summaryText}
             </p>
@@ -66,7 +76,7 @@ export default function CalendarSection({ className }: Props) {
                 type="button"
                 onClick={scrollToDetails}
                 disabled={!selectedDate}
-                className="flex-1 lg:hidden rounded-full border border-teal-500/50 px-3 py-1.5 text-[11px] font-semibold text-teal-300 enabled:hover:bg-teal-500/10 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                className="flex-1 rounded-lg border border-teal-500/50 px-3 py-2 text-[11px] font-bold text-teal-700 transition enabled:hover:bg-teal-500/10 disabled:cursor-not-allowed disabled:opacity-40 dark:text-teal-300 lg:hidden"
               >
                 {tr.continueToDetails}
               </button>
