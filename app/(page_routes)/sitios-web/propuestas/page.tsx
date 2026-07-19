@@ -34,7 +34,7 @@ const PROPOSALS: Proposal[] = [
   {
     slug: "grupo-jess",
     name: "JESS Music",
-    category: "Instrumentos & audio profesional",
+    category: "Ecosistema musical · tienda, academia, banda y eventos",
     location: "Ciudad Quesada, San Carlos",
     accent: "from-red-600 to-orange-500",
     icon: Music2,
