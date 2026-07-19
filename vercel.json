@@ -1,4 +1,11 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "git": {
+    "deploymentEnabled": {
+      "*": false,
+      "master": true
+    }
+  },
   "framework": "nextjs",
   "buildCommand": "next build",
   "installCommand": "npm ci",
@@ -64,6 +71,5 @@
         }
       ]
     }
-  ],
-  "ignoreCommand": "if [ \"$VERCEL_ENV\" = \"preview\" ]; then exit 0; else exit 1; fi"
+  ]
 }

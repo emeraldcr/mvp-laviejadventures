@@ -46,3 +46,4 @@ skills-lock.json
 py/*
 .chrome-admin-debug/*
 .chrome-debug/*
+.env*.local
