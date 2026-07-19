@@ -34,10 +34,10 @@ function BookingCard({ tours }: { tours: TourSummary[] }) {
         <div className="mb-7 flex items-start justify-between gap-4">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.24em] text-emerald-200/80">
-              {isEs ? "Reserva rápida" : "Quick booking"}
+              {isEs ? "Reservá al toque" : "Book in a minute"}
             </p>
             <h2 className="mt-3 font-display text-3xl font-black leading-none text-white">
-              {isEs ? "Reservá Ciudad Esmeralda" : "Book Ciudad Esmeralda"}
+              {isEs ? "Ciudad Esmeralda te espera" : "Ciudad Esmeralda is waiting"}
             </h2>
           </div>
           <span className="rounded-full border border-emerald-300/25 bg-emerald-300/12 px-4 py-2 text-[10px] font-black uppercase tracking-wide text-emerald-200">
@@ -126,8 +126,8 @@ export default function HomeHero({ tours }: { tours: TourSummary[] }) {
   }, [next]);
 
   const trustItems = isEs
-    ? ["Cañón y pozas turquesa", "Cascada El Zafiro", "Guías locales", "Ruta ajustada al clima"]
-    : ["Canyon and turquoise pools", "El Zafiro Waterfall", "Local guides", "Weather-aware route"];
+    ? ["Cañón y pozas turquesa", "Cascada El Zafiro", "Guías de la zona", "Si el río crece, no arriesgamos"]
+    : ["Canyon and turquoise pools", "El Zafiro Waterfall", "Local guides", "If the river rises, we don't risk it"];
 
   return (
     <section className="relative flex min-h-[92svh] flex-col overflow-hidden bg-stone-950">
@@ -171,20 +171,20 @@ export default function HomeHero({ tours }: { tours: TourSummary[] }) {
             {isEs ? (
               <>
                 Ciudad Esmeralda:{" "}
-                <span className="text-emerald-300">el cañón que tenés que vivir.</span>
+                <span className="text-emerald-300">metete al cañón, mae.</span>
               </>
             ) : (
               <>
                 Ciudad Esmeralda:{" "}
-                <span className="text-emerald-300">the canyon you have to experience.</span>
+                <span className="text-emerald-300">get into the canyon.</span>
               </>
             )}
           </h1>
 
           <p className="mt-6 max-w-2xl text-base leading-relaxed text-white/82 md:text-xl">
             {isEs
-              ? "Sendero, río y cañón hasta la Cascada El Zafiro y sus pozas turquesa. Aventura real con guías locales y una ruta que siempre respeta el clima y el nivel del río."
-              : "Trail, river, and canyon to El Zafiro Waterfall and its turquoise pools. A real adventure with local guides and a route that always respects weather and river conditions."}
+              ? "Sendero, río y cañón hasta la Cascada El Zafiro y las pozas turquesa. Guías de San Carlos, grupos chicos, y si el clima o el río se ponen bravos, ajustamos la ruta. Seguridad primero, pura vida después."
+              : "Trail, river, and canyon to El Zafiro Waterfall and the turquoise pools. San Carlos guides, small groups — and if weather or the river get rough, we adjust. Safety first, pura vida next."}
           </p>
 
           <div className="mt-7 flex flex-wrap items-center gap-3">
@@ -202,7 +202,7 @@ export default function HomeHero({ tours }: { tours: TourSummary[] }) {
               className="inline-flex min-h-14 items-center gap-2 rounded-full border border-white/25 bg-white/8 px-6 py-4 text-sm font-bold text-white backdrop-blur-md transition-all hover:border-white/50 hover:bg-white/14"
             >
               <ShieldCheck size={17} className="text-emerald-300" />
-              {isEs ? "Hablar con un guía" : "Talk to a guide"}
+              {isEs ? "Escribile a un guía" : "Message a guide"}
             </a>
           </div>
 
@@ -247,7 +247,7 @@ export default function HomeHero({ tours }: { tours: TourSummary[] }) {
 
       <div className="absolute bottom-7 left-1/2 z-10 hidden -translate-x-1/2 items-center gap-2 rounded-full border border-white/12 bg-black/20 px-4 py-2 text-[11px] font-bold uppercase tracking-widest text-white/60 backdrop-blur-md lg:flex">
         <CalendarDays size={13} className="text-emerald-300" />
-        {isEs ? "Cupos limitados por día" : "Limited daily spots"}
+        {isEs ? "Cupos limitados · cuidamos el bosque" : "Limited spots · we protect the forest"}
       </div>
     </section>
   );

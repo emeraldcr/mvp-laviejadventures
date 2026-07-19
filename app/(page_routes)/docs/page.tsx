@@ -19,41 +19,41 @@ import Link from "next/link";
 const steps = {
   es: [
     {
-      title: "Explora los tours",
+      title: "Mirate los tours",
       description:
-        "Visita la sección de Tours para conocer las experiencias, duración, horarios y el tipo de aventura que mejor encaja contigo.",
+        "En Tours ves duración, nivel y qué se siente cada salida. Si no sabés si el cañón te da, empezá por algo más suave o preguntá.",
       href: "/tours",
       cta: "Ver tours",
       icon: Compass,
     },
     {
-      title: "Usa el asistente IA para reservar más rápido",
+      title: "O chateá con la IA",
       description:
-        "Entra a la sección AI para escribir tu solicitud como en un chat. El asistente te guía paso a paso y responde dudas antes de confirmar la reserva.",
+        "En AI escribís como en WhatsApp: fecha, grupo, dudas. Te guía paso a paso antes de pagar.",
       href: "/ai",
-      cta: "Abrir asistente IA",
+      cta: "Abrir asistente",
       icon: Sparkles,
     },
     {
-      title: "Selecciona fecha y paquete",
+      title: "Elegí fecha y paquete",
       description:
-        "Desde la página principal, usa el calendario para elegir una fecha disponible y luego el paquete del tour que deseas reservar.",
+        "En Reservar marcás un día con cupo y el paquete que te calza (esencial, día completo o privado).",
       href: "/reservar",
       cta: "Ir a reservar",
       icon: CalendarCheck2,
     },
     {
-      title: "Completa tus datos y paga",
+      title: "Datos y pago",
       description:
-        "Llena la información del viajero principal, revisa el resumen y finaliza de forma segura con PayPal.",
-      href: "/",
-      cta: "Comenzar reserva",
+        "Nombre, correo, teléfono, revisás el resumen y pagás con PayPal. Confirmación al correo.",
+      href: "/reservar",
+      cta: "Empezar reserva",
       icon: CreditCard,
     },
     {
-      title: "Consulta ubicación, clima y soporte",
+      title: "Ubicación, clima y WhatsApp",
       description:
-        "Antes de viajar, revisa la info general, el clima y contáctanos por WhatsApp para coordinar cualquier detalle.",
+        "Antes de salir, mirá Info y Tiempo. Si el río viene alto o te perdés en el mapa, escribinos.",
       href: "/info",
       cta: "Ver información",
       icon: Map,
@@ -61,41 +61,41 @@ const steps = {
   ],
   en: [
     {
-      title: "Explore tours",
+      title: "Browse the tours",
       description:
-        "Visit the Tours section to compare experiences, duration, schedules, and choose the adventure that fits you best.",
+        "On Tours you'll see duration, level, and what each day feels like. Not sure about the canyon? Start gentler or ask us.",
       href: "/tours",
       cta: "View tours",
       icon: Compass,
     },
     {
-      title: "Use the AI assistant for faster booking",
+      title: "Or chat with the AI",
       description:
-        "Open the AI section and write naturally like in a chat. The assistant guides you step by step and answers key questions before checkout.",
+        "In AI you write like a normal message: date, group, questions. It walks you through before you pay.",
       href: "/ai",
-      cta: "Open AI assistant",
+      cta: "Open assistant",
       icon: Sparkles,
     },
     {
       title: "Pick date and package",
       description:
-        "From the home page, use the booking calendar to select an available date and then choose your preferred tour package.",
+        "On Book, choose a day with space and the package that fits (essential, full-day, or private).",
       href: "/reservar",
       cta: "Go to booking",
       icon: CalendarCheck2,
     },
     {
-      title: "Fill in details and pay",
+      title: "Details and pay",
       description:
-        "Complete the lead traveler information, review your booking summary, and securely finish payment with PayPal.",
-      href: "/",
+        "Name, email, phone, check the summary, pay with PayPal. Confirmation hits your inbox.",
+      href: "/reservar",
       cta: "Start booking",
       icon: CreditCard,
     },
     {
-      title: "Check location, weather, and support",
+      title: "Location, weather, WhatsApp",
       description:
-        "Before your trip, review key info, weather updates, and contact us on WhatsApp for help with logistics.",
+        "Before you drive, check Info and Weather. River high or map confusing? Message us.",
       href: "/info",
       cta: "View info",
       icon: Map,
@@ -108,23 +108,23 @@ const tools = {
     {
       title: "Dashboard de reservas",
       description:
-        "En el dashboard puedes revisar tus reservas, confirmar estado de pago y tener a mano la información clave para el día del tour.",
+        "Tus reservas, el estado del pago y lo que necesitás el día del tour, en un solo lugar.",
       href: "/dashboard",
       cta: "Abrir dashboard",
       icon: LayoutDashboard,
     },
     {
-      title: "Portal B2B para operadores",
+      title: "Portal B2B (operadores)",
       description:
-        "Si trabajas como aliado comercial, entra al portal B2B para gestionar reservas de clientes, ver tours disponibles y dar seguimiento a tu operación.",
+        "Si trabajás con agencias o grupos, acá manejás reservas de clientes y el catálogo de tours.",
       href: "/b2b/login",
-      cta: "Entrar al portal B2B",
+      cta: "Entrar al B2B",
       icon: Building2,
     },
     {
-      title: "Asistente IA de reservas",
+      title: "Asistente IA",
       description:
-        "Chatea con la IA para resolver dudas y completar fecha, horario, paquete y datos del viajero en una sola conversación.",
+        "Fecha, horario, paquete y datos del viajero en una charla. Ideal si no querés pelear con formularios largos.",
       href: "/ai",
       cta: "Ir a AI",
       icon: Sparkles,
@@ -132,9 +132,9 @@ const tools = {
     {
       title: "Preguntas frecuentes",
       description:
-        "Revisa respuestas rápidas sobre pagos, políticas, horarios, qué llevar al tour y otros temas comunes antes de reservar.",
+        "Pagos, qué llevar, cancelación y otras dudas de antes de meterse al río.",
       href: "/preguntas-frecuentes",
-      cta: "Ir a preguntas frecuentes",
+      cta: "Ver preguntas",
       icon: CircleHelp,
     },
   ],
@@ -142,31 +142,31 @@ const tools = {
     {
       title: "Booking dashboard",
       description:
-        "Use the dashboard to review your reservations, confirm payment status, and keep essential details ready for your tour day.",
+        "Your bookings, payment status, and what you need on tour day — one place.",
       href: "/dashboard",
       cta: "Open dashboard",
       icon: LayoutDashboard,
     },
     {
-      title: "B2B operator portal",
+      title: "B2B portal (operators)",
       description:
-        "If you're a commercial partner, log into the B2B portal to manage client bookings, browse available tours, and track operations.",
+        "If you work with agencies or groups, manage client bookings and the tour catalog here.",
       href: "/b2b/login",
-      cta: "Go to B2B portal",
+      cta: "Go to B2B",
       icon: Building2,
     },
     {
-      title: "AI booking assistant",
+      title: "AI assistant",
       description:
-        "Chat with AI to get quick answers and complete your booking details in one guided conversation.",
+        "Date, time, package, and traveler details in one chat. Handy if you hate long forms.",
       href: "/ai",
       cta: "Open AI",
       icon: Sparkles,
     },
     {
-      title: "Frequently asked questions",
+      title: "FAQ",
       description:
-        "Find quick answers about payments, policies, schedules, what to bring, and other common topics before booking.",
+        "Payments, what to pack, cancellation, and other pre-river questions.",
       href: "/preguntas-frecuentes",
       cta: "View FAQs",
       icon: CircleHelp,
@@ -189,12 +189,12 @@ export default function DocsPage() {
           {lang === "es" ? "Centro de ayuda" : "Help center"}
         </p>
         <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white md:text-4xl">
-          {lang === "es" ? "Cómo usar La Vieja Adventures" : "How to use La Vieja Adventures"}
+          {lang === "es" ? "Cómo se usa el sitio (sin enredo)" : "How the site works (no fuss)"}
         </h1>
         <p className="mt-3 max-w-3xl text-zinc-700 dark:text-zinc-300">
           {lang === "es"
-            ? "Sigue esta guía rápida para encontrar tu tour ideal, reservar en minutos y prepararte para tu aventura en Costa Rica."
-            : "Follow this quick guide to find your ideal tour, book in minutes, and get ready for your Costa Rica adventure."}
+            ? "Elegí tour, fecha y pagá. Abajo tenés el mapa corto de cada sección y a dónde ir si te trabás."
+            : "Pick a tour, a date, and pay. Below is the short map of each section — and where to go if you get stuck."}
         </p>
       </section>
 

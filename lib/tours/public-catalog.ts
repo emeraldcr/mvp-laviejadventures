@@ -40,15 +40,15 @@ const DEFAULT_CITY_TOUR = {
   titleEs: "Tour Ciudad Esmeralda – Cañón del Río La Vieja",
   titleEn: "Ciudad Esmeralda Tour – La Vieja River Canyon",
   descriptionEs:
-    "Caminata por senderos, río y cañón hacia la Cascada El Zafiro y sus pozas naturales.",
+    "Sendero, río y cañón hasta la Cascada El Zafiro y las pozas turquesa. Pierna y ganas; el río manda si el clima se pone bravo.",
   descriptionEn:
-    "A hike through trails, river, and canyon to El Zafiro Waterfall and its natural pools.",
+    "Trail, river, and canyon to El Zafiro Waterfall and turquoise pools. Needs legs — and if the river says no, we listen.",
   duration: "3-4 horas",
   difficulty: "Moderado",
   priceCRC: 25000,
   location: "Sucre de Ciudad Quesada, San Carlos, Alajuela, Costa Rica",
-  tagEs: "Aventura insignia",
-  tagEn: "Signature adventure",
+  tagEs: "La de la casa",
+  tagEn: "House favorite",
   accent: "from-teal-900/40 to-teal-950/60",
   border: "border-teal-700/30 hover:border-teal-500/60",
   type: "both",
@@ -65,9 +65,9 @@ const DEFAULT_TOURS = [
     titleEs: "Cuadra-Tours Aventura",
     titleEn: "ATV Adventure Tours",
     descriptionEs:
-      "Recorre senderos exclusivos en cuadra, atravesando bosques, fincas y miradores naturales de la zona norte.",
+      "Cuadra por senderos privados: bosque, finca, barro en temporada y miradores del valle. Inducción incluida si es tu primera vez.",
     descriptionEn:
-      "Ride exclusive ATV trails through forests, farms and natural viewpoints of the northern zone.",
+      "ATV on private trails: forest, farm, mud in green season, and valley viewpoints. Induction included if you're new to it.",
     duration: "1.5 – 2 horas",
     difficulty: "Intermedio",
     priceCRC: 19990,
@@ -86,9 +86,9 @@ const DEFAULT_TOURS = [
     titleEs: "Cascadas Secretas del Río La Vieja",
     titleEn: "Secret Waterfalls of La Vieja River",
     descriptionEs:
-      "Caminata guiada hacia hermosas cascadas escondidas, perfectas para fotografías y para conectar con la naturaleza.",
+      "Caminata suave a cascadas escondidas y pozas frescas. Buena para fotos y para quien no quiere un cañón tan exigente.",
     descriptionEn:
-      "Guided hike to beautiful hidden waterfalls, perfect for photography and connecting with nature.",
+      "Easy-paced hike to hidden falls and cool pools. Great for photos and for anyone who doesn't want a full canyon day.",
     duration: "2 – 3 horas",
     difficulty: "Moderado",
     priceCRC: 19990,
@@ -107,9 +107,9 @@ const DEFAULT_TOURS = [
     titleEs: "Tour Gastronómico Local",
     titleEn: "Local Gastronomic Tour",
     descriptionEs:
-      "Una experiencia culinaria completa probando platillos tradicionales preparados por cocineros locales.",
+      "Comida de la zona, hecha por gente de acá: platillos ticos, historias de la mesa y un ritmo más pausado.",
     descriptionEn:
-      "A complete culinary experience tasting traditional dishes prepared by local cooks.",
+      "Local food, cooked by locals: tico dishes, stories from the table, and a slower pace.",
     duration: "1.5 horas",
     difficulty: "Fácil",
     priceCRC: 24990,
@@ -128,9 +128,9 @@ const DEFAULT_TOURS = [
     titleEs: "Lluvia en la Naturaleza",
     titleEn: "Rain in Nature",
     descriptionEs:
-      "Explora el bosque bajo la magia de la lluvia con equipo especial. Una experiencia sensorial inolvidable.",
+      "Salir al bosque cuando llueve, con equipo para no sufrir. Olor a tierra, sonido de agua y cero prisa.",
     descriptionEn:
-      "Explore the forest in the magic of the rain with special gear. An unforgettable sensory experience.",
+      "Into the forest when it rains, with gear so you don't suffer. Wet earth, water sounds, no rush.",
     duration: "1 hora",
     difficulty: "Fácil",
     priceCRC: 19990,
@@ -149,14 +149,14 @@ const DEFAULT_TOURS = [
     titleEs: "Avistamiento de Aves",
     titleEn: "Northern Birdwatching",
     descriptionEs:
-      "Observa especies únicas del corredor biológico del Parque Nacional del Agua Juan Castro Blanco.",
+      "Madrugada o mañana en el corredor del Juan Castro Blanco: aves de verdad, guías que conocen los cantos y ritmo calmado.",
     descriptionEn:
-      "Observe unique species from the biological corridor of Juan Castro Blanco National Water Park.",
+      "Dawn or morning in the Juan Castro Blanco corridor: real birds, guides who know the calls, easy pace.",
     duration: "2 horas",
     difficulty: "Fácil",
     priceCRC: 22990,
-    tagEs: "Tour estrella",
-    tagEn: "Star tour",
+    tagEs: "Aves",
+    tagEn: "Birds",
     accent: "from-lime-900/40 to-lime-950/60",
     border: "border-lime-700/30 hover:border-lime-500/60",
     type: "public",
@@ -170,9 +170,9 @@ const DEFAULT_TOURS = [
     titleEs: "Tour Nocturno La Vieja Adventures",
     titleEn: "La Vieja Adventures Night Tour",
     descriptionEs:
-      "Descubre la vida nocturna del bosque: insectos, anfibios, mamíferos y sonidos de la montaña.",
+      "Cuando se apaga el día: ranas, insectos, rastros y el ruido del bosque de noche. Linterna y curiosidad.",
     descriptionEn:
-      "Discover the nightlife of the forest: insects, amphibians, mammals and mountain sounds.",
+      "After dark: frogs, insects, tracks, and forest noise at night. Flashlight and curiosity required.",
     duration: "1.5 horas",
     difficulty: "Fácil",
     priceCRC: 22990,

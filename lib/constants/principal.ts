@@ -4,79 +4,90 @@ export const principalContent = {
   es: {
     header: {
       exploreGroup: "Explorar",
-      forecast: "Pronostico",
+      forecast: "Pronóstico",
       dashboard: "Dashboard",
-      logout: "Cerrar sesion",
-      userMenuAria: "Menu de usuario",
-      toggleMenuAria: "Abrir o cerrar menu",
+      logout: "Cerrar sesión",
+      userMenuAria: "Menú de usuario",
+      toggleMenuAria: "Abrir o cerrar menú",
     },
     hero: {
-  errorLoadingImages: "Error al cargar las imágenes",
-  loadingImages: "Cargando imágenes...",
-  previousImageAria: "Imagen anterior",
-  nextImageAria: "Imagen siguiente",
-  goToSlideAria: "Ir a imagen {slide}",
-  scrollToToursAria: "Ir a los tours",
-  scrollToMainAria: "Ir al contenido principal",
-  locationBadge: "San Carlos · Costa Rica",
-  title: "El Cañón te Espera. Reserva Hoy.",
-  subtitle: "Tours guiados · Grupos pequeños · Desde $30",
-  socialProof: "4.9 · +500 aventureros · Guías locales certificados",
-  trustItems: ["Cancelación gratis 48h", "Pago 100% seguro", "Confirmación inmediata"] as readonly string[],
-},
-
-tours: {
-  eyebrow: "Elige tu próxima aventura",
-  title: "Nuestras Experiencias",
-  subtitle: "Desde emocionantes descensos en cañones hasta caminatas tranquilas en la selva, encuentra la aventura perfecta para ti.",
-},
+      errorLoadingImages: "No se pudieron cargar las fotos",
+      loadingImages: "Cargando fotos...",
+      previousImageAria: "Foto anterior",
+      nextImageAria: "Foto siguiente",
+      goToSlideAria: "Ir a la foto {slide}",
+      scrollToToursAria: "Ir a los tours",
+      scrollToMainAria: "Ir al contenido principal",
+      locationBadge: "San Carlos · Costa Rica",
+      title: "El cañón te está esperando. ¿Entramos?",
+      subtitle: "Tours con guías de la zona · Grupos chicos · Desde $30",
+      socialProof: "4.9 · +500 personas que ya se metieron al río · Guías locales",
+      trustItems: [
+        "Cancelás gratis hasta 48 h antes",
+        "Pago seguro",
+        "Confirmación al toque",
+      ] as readonly string[],
+    },
+    tours: {
+      eyebrow: "¿Qué te late más?",
+      title: "Nuestras experiencias",
+      subtitle:
+        "Del cañón con agua hasta la caminata tranquila en el bosque: acá hay para el que quiere adrenalina y para el que quiere aire fresco sin apuros.",
+    },
     conversion: {
-      title: "Preguntas frecuentes",
-      subtitle: "Respuestas rapidas para planear tu aventura con mas confianza.",
+      title: "Preguntas que nos hacen seguido",
+      subtitle: "Lo que la gente quiere saber antes de meterse al río o al bosque.",
       faqs: [
-  {
-    question: "¿Puedo cambiar la fecha de mi tour después de reservar?",
-    answer: "Sí, puedes solicitar el cambio de fecha con al menos 48 horas de anticipación. Nuestro equipo te ayudará a reprogramar según la disponibilidad disponible.",
-  },
-  {
-    question: "¿Cuál es el tour más recomendado para principiantes?",
-    answer: "Los tours más adecuados para principiantes son **Cascadas Secretas**, **Lluvia en la Naturaleza** y el **Tour Gastronómico**. Son de baja o moderada intensidad y no requieren experiencia previa.",
-  },
-  {
-    question: "¿Qué pasa si llueve el día del tour?",
-    answer: "La mayoría de nuestros tours operan con lluvia ligera. En caso de tormenta fuerte, te contactaremos con anticipación para ofrecerte una fecha alternativa o cambiar a otra actividad segura.",
-  },
-  {
-    question: "¿Qué debo llevar al tour?",
-    answer: "Depende del tour, pero en general recomendamos: ropa cómoda, zapatos que se puedan mojar, traje de baño, toalla, repelente, protector solar y una muda de ropa. Te enviaremos una lista específica al confirmar tu reserva.",
-  },
-  {
-    question: "¿Hay edad mínima para participar?",
-    answer: "La mayoría de los tours permiten desde los 10-12 años acompañados por un adulto. Los tours extremos como Rapel y Cuatrimotos tienen edad mínima de 14 y 16 años respectivamente.",
-  },
-  {
-    question: "¿El transporte está incluido?",
-    answer: "No, el transporte no está incluido. Podemos ayudarte a coordinar un traslado privado desde tu hotel por un costo adicional.",
-  },
-  {
-    question: "¿Cuál es la política de cancelación?",
-    answer: "Tienes cancelación gratuita hasta 48 horas antes del tour. Cancelaciones con menos de 48 horas no tienen reembolso.",
-  }
-],
+        {
+          question: "¿Puedo cambiar la fecha después de reservar?",
+          answer:
+            "Sí. Avisanos con al menos 48 horas y te ayudamos a reprogramar según lo que haya disponible. Sin drama.",
+        },
+        {
+          question: "¿Cuál tour conviene si soy principiante?",
+          answer:
+            "Si venís más suave, **Cascadas Secretas**, **Lluvia en la Naturaleza** o el **Tour Gastronómico** son buena entrada. Baja o media intensidad, sin pedirte experiencia previa. Ciudad Esmeralda ya pide más pierna y ganas.",
+        },
+        {
+          question: "¿Qué pasa si llueve el día del tour?",
+          answer:
+            "Con lluvia liviana casi siempre salimos igual — en la zona eso es parte del paisaje. Si se pone feo de verdad (tormenta fuerte o río crecido), te escribimos con tiempo para cambiar fecha o pasar a otra actividad segura. Seguridad primero, siempre.",
+        },
+        {
+          question: "¿Qué llevo al tour?",
+          answer:
+            "En general: ropa cómoda, zapatos que se puedan mojar, traje de baño, toalla, repelente, bloqueador y una muda seca. Según el tour te mandamos la lista exacta al confirmar.",
+        },
+        {
+          question: "¿Hay edad mínima?",
+          answer:
+            "La mayoría de tours reciben desde 10–12 años con un adulto. Los más exigentes (rapel, cuatrimotos) piden 14 y 16 años respectivamente. Si tenés dudas con peques o adultos mayores, escribí y te decimos con honestidad.",
+        },
+        {
+          question: "¿El transporte viene incluido?",
+          answer:
+            "No está incluido en el tour. Si necesitás traslado desde el hotel, lo coordinamos aparte por un costo adicional.",
+        },
+        {
+          question: "¿Cómo es la cancelación?",
+          answer:
+            "Cancelás gratis hasta 48 horas antes. Con menos de 48 horas no hay reembolso. Si el clima o el río no dan, nosotros te reprogramamos o te ofrecemos alternativa segura.",
+        },
+      ],
     },
     booking: {
-      loading: "Preparando tu panel de reserva...",
-      eyebrow: "Crea una nueva reserva",
-      title: "Tu proximo tour empieza aqui",
+      loading: "Preparando tu reserva...",
+      eyebrow: "Nueva reserva",
+      title: "Tu próximo tour arranca acá",
       description:
-        "Elige la fecha, completa tus detalles y si tienes dudas usa el boton de AI para resolver todo al instante.",
+        "Elegí fecha, dejá tus datos y si te trabás en algo, usá el botón de AI o escribinos por WhatsApp.",
       steps: {
-        date: "Paso 1 - Fecha",
-        details: "Paso 2 - Detalles",
+        date: "Paso 1 · Fecha",
+        details: "Paso 2 · Detalles",
       },
     },
     errors: {
-      criticalFallback: "Error critico: no se pudo cargar el motor de reservas.",
+      criticalFallback: "Uy, algo falló al cargar las reservas. Recargá la página o escribinos por WhatsApp.",
     },
   },
   en: {
@@ -89,57 +100,83 @@ tours: {
       toggleMenuAria: "Toggle menu",
     },
     hero: {
-      errorLoadingImages: "Error loading images",
-      loadingImages: "Loading images...",
+      errorLoadingImages: "Couldn't load the photos",
+      loadingImages: "Loading photos...",
       previousImageAria: "Previous image",
       nextImageAria: "Next image",
       goToSlideAria: "Go to slide {slide}",
       scrollToToursAria: "Scroll to tours",
       scrollToMainAria: "Scroll to main content",
       locationBadge: "San Carlos · Costa Rica",
-      title: "The Canyon is Calling. Book Today.",
-      subtitle: "Guided tours · Small groups · From $30",
-      socialProof: "4.9 · 500+ adventurers · Certified local guides",
-      trustItems: ["Free cancellation 48h", "100% secure payment", "Instant confirmation"] as readonly string[],
+      title: "The canyon is waiting. Ready to go in?",
+      subtitle: "Local guides · Small groups · From $30",
+      socialProof: "4.9 · 500+ people who already got wet · Local guides",
+      trustItems: [
+        "Free cancel up to 48h",
+        "Secure payment",
+        "Quick confirmation",
+      ] as readonly string[],
     },
     tours: {
-      eyebrow: "Explore first",
-      title: "Choose your ideal adventure",
+      eyebrow: "What sounds good?",
+      title: "Our experiences",
+      subtitle:
+        "From a full canyon day to a calm forest walk — something for the adrenaline crowd and for those who just want fresh air without the rush.",
     },
     conversion: {
-      title: "Frequently Asked Questions",
-      subtitle: "Quick answers to help you plan your adventure with confidence.",
+      title: "Questions we get all the time",
+      subtitle: "What people ask before they hit the river or the trail.",
       faqs: [
         {
           question: "Can I change my date after booking?",
           answer:
-            "Yes, our team helps you reschedule based on availability so you never miss the experience.",
+            "Yes. Give us at least 48 hours' notice and we'll help you rebook based on what's open. No stress.",
         },
         {
           question: "Which tour is best for beginners?",
           answer:
-            "Use the AI button in booking and it will suggest the best option by duration and intensity.",
+            "If you want something gentler, **Secret Waterfalls**, **Rain in Nature**, or the **Food Tour** are solid starts. Lower or medium intensity, no prior experience needed. Ciudad Esmeralda asks for more legs and energy.",
         },
         {
           question: "What if it rains?",
           answer:
-            "We monitor weather constantly and notify you in advance with safe alternatives.",
+            "Light rain is normal here and we usually still go out. If a real storm hits or the river rises, we'll message you early with a new date or a safer option. Safety first, always.",
+        },
+        {
+          question: "What should I bring?",
+          answer:
+            "In general: comfy clothes, shoes that can get wet, swimsuit, towel, repellent, sunscreen, and a dry change. We'll send the exact list when you confirm.",
+        },
+        {
+          question: "Is there a minimum age?",
+          answer:
+            "Most tours welcome ages 10–12+ with an adult. More demanding ones (canyon rappel, ATVs) need 14 and 16. Not sure about kids or older guests? Message us and we'll be straight with you.",
+        },
+        {
+          question: "Is transport included?",
+          answer:
+            "Not in the tour price. Need a hotel transfer? We can arrange it separately for an extra fee.",
+        },
+        {
+          question: "What's the cancellation policy?",
+          answer:
+            "Free cancel up to 48 hours before. Inside 48 hours, no refund. If weather or the river make it unsafe, we rebook you or offer a safer alternative.",
         },
       ],
     },
     booking: {
-      loading: "Preparing your booking panel...",
-      eyebrow: "Make a new reservation",
+      loading: "Getting your booking ready...",
+      eyebrow: "New booking",
       title: "Your next tour starts here",
       description:
-        "Pick your date, complete your details, and use the AI button whenever you need instant help.",
+        "Pick a date, add your details, and if you get stuck, use the AI button or WhatsApp us.",
       steps: {
-        date: "Step 1 - Date",
-        details: "Step 2 - Details",
+        date: "Step 1 · Date",
+        details: "Step 2 · Details",
       },
     },
     errors: {
-      criticalFallback: "Critical error: cannot load the booking engine.",
+      criticalFallback: "Something went wrong loading bookings. Refresh or WhatsApp us.",
     },
   },
 } as const satisfies Record<Lang, object>;

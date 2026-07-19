@@ -19,9 +19,9 @@ const bricolage = Bricolage_Grotesque({
 });
 
 export const metadata: Metadata = {
-  title: "La Vieja Adventures | Avistamiento de Aves Norteno San Carlos Costa Rica",
+  title: "La Vieja Adventures | Cañón, río y bosque en San Carlos, Costa Rica",
   description:
-    "La Vieja Adventures | Avistamiento de aves, volcanes dormidos, Ciudad Esmeralda y naturaleza en San Carlos y Juan Castro Blanco",
+    "Tours con guías locales en San Carlos: Ciudad Esmeralda, cascadas, aves, ATV y más en la ribera del Río La Vieja y Juan Castro Blanco. Seguridad primero, pura vida después.",
 };
 export default function RootLayout({
   children,

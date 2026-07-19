@@ -91,7 +91,7 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
     return `/reservar?tour=${encodeURIComponent(tour.slug)}${packageParam}`;
   };
 
-  const heroImage = BIRDWATCHING_GALLERY[0] ?? "/ads/IMG_5668.jpg";
+  const heroImage = BIRDWATCHING_GALLERY[0] ?? "/image/IMG_6810.jpg";
   const title = tour.titleEs || "Avistamiento de Aves";
 
   useEffect(() => {

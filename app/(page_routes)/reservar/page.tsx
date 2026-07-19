@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, CheckCircle2, Compass, Moon, Sun } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, Compass, Info, Moon, Sun } from "lucide-react";
 import { CalendarProvider } from "@/lib/CalendarContext";
 import { useLanguage } from "@/lib/LanguageContext";
 import { useTheme } from "@/lib/ThemeContext";
@@ -33,9 +33,10 @@ export default function ReservarPage() {
   const { tours } = useReservationData();
   const [urlParams, setUrlParams] = useState<UrlBookingParams>(DEFAULT_URL_PARAMS);
   const [selectedTourSlug, setSelectedTourSlug] = useState("");
+  const [showAllTours, setShowAllTours] = useState(false);
   const [hasReadUrl, setHasReadUrl] = useState(false);
   const isEs = lang === "es";
-  const hasTourFromUrl = urlParams.tour.length > 0;
+  const hasTourFromUrl = urlParams.tour.length > 0 && !showAllTours;
 
   const activeTour = useMemo(
     () => (selectedTourSlug ? tours.find((tour) => tour.slug === selectedTourSlug) ?? null : tours[0] ?? null),
@@ -173,12 +174,23 @@ export default function ReservarPage() {
                     <span>{isEs ? "Tour" : "Tour"}</span>
                   </div>
                   {hasTourFromUrl && (
-                    <Link
-                      href="/reservar"
-                      className="shrink-0 rounded-full border border-stone-300 px-2.5 py-1 text-[11px] font-bold text-stone-700 transition hover:border-emerald-500 dark:border-white/15 dark:text-stone-200 dark:hover:border-emerald-300/60"
-                    >
-                      {isEs ? "Ver todos" : "See all"}
-                    </Link>
+                    <div className="flex items-center gap-1.5">
+                      <Link
+                        href={`/tour/${encodeURIComponent(activeTour?.slug ?? selectedTourSlug)}`}
+                        className="inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-full border border-emerald-600 bg-emerald-50 px-3 py-1 text-[11px] font-black text-emerald-800 transition hover:bg-emerald-100 dark:border-emerald-400/60 dark:bg-emerald-950/40 dark:text-emerald-300 dark:hover:bg-emerald-950/70"
+                      >
+                        <Info className="h-3.5 w-3.5" />
+                        {isEs ? "Ver info" : "Tour info"}
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => setShowAllTours(true)}
+                        className="inline-flex min-h-8 shrink-0 items-center gap-1 rounded-full border border-stone-300 px-3 py-1 text-[11px] font-bold text-stone-700 transition hover:border-emerald-500 dark:border-white/15 dark:text-stone-200 dark:hover:border-emerald-300/60"
+                      >
+                        {isEs ? "Otros tours" : "Other tours"}
+                        <ArrowRight className="h-3 w-3" />
+                      </button>
+                    </div>
                   )}
                 </div>
 
@@ -208,42 +220,52 @@ export default function ReservarPage() {
                       const selected = (activeTour?.slug ?? "") === tour.slug;
                       const title = isEs ? tour.titleEs : tour.titleEn;
                       return (
-                        <button
-                          key={tour.slug}
-                          type="button"
-                          onClick={() => {
-                            setSelectedTourSlug(tour.slug);
-                            document.getElementById("booking")?.scrollIntoView({ behavior: "smooth", block: "start" });
-                          }}
-                          className={`group relative w-[9.5rem] shrink-0 overflow-hidden rounded-xl border-2 text-left transition ${
-                            selected
-                              ? "border-emerald-500 shadow-md shadow-emerald-900/10"
-                              : "border-stone-200 hover:border-emerald-400 dark:border-white/15 dark:hover:border-emerald-400/60"
-                          }`}
-                        >
-                          <div className="relative h-16 w-full">
-                            <Image
-                              src={getTourImage(tour.slug)}
-                              alt={title}
-                              fill
-                              sizes="152px"
-                              className="object-cover transition group-hover:scale-105"
-                            />
-                            {selected && (
-                              <span className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white">
-                                <CheckCircle2 className="h-3.5 w-3.5" />
-                              </span>
-                            )}
-                          </div>
-                          <div className="space-y-0.5 bg-white p-2 dark:bg-stone-950">
-                            <p className="line-clamp-2 text-[11px] font-black leading-snug text-stone-900 dark:text-stone-50">
-                              {title}
-                            </p>
-                            <p className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300">
-                              {formatTourPrice(tour, isEs)}
-                            </p>
-                          </div>
-                        </button>
+                        <div key={tour.slug} className="w-[9.5rem] shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedTourSlug(tour.slug);
+                              setUrlParams((current) => ({ ...current, tour: tour.slug }));
+                              setShowAllTours(false);
+                              document.getElementById("booking")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                            }}
+                            className={`group relative w-full overflow-hidden rounded-xl border-2 text-left transition ${
+                              selected
+                                ? "border-emerald-500 shadow-md shadow-emerald-900/10"
+                                : "border-stone-200 hover:border-emerald-400 dark:border-white/15 dark:hover:border-emerald-400/60"
+                            }`}
+                          >
+                            <div className="relative h-16 w-full">
+                              <Image
+                                src={getTourImage(tour.slug)}
+                                alt={title}
+                                fill
+                                sizes="152px"
+                                className="object-cover transition group-hover:scale-105"
+                              />
+                              {selected && (
+                                <span className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white">
+                                  <CheckCircle2 className="h-3.5 w-3.5" />
+                                </span>
+                              )}
+                            </div>
+                            <div className="space-y-0.5 bg-white p-2 dark:bg-stone-950">
+                              <p className="line-clamp-2 text-[11px] font-black leading-snug text-stone-900 dark:text-stone-50">
+                                {title}
+                              </p>
+                              <p className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300">
+                                {formatTourPrice(tour, isEs)}
+                              </p>
+                            </div>
+                          </button>
+                          <Link
+                            href={`/tour/${encodeURIComponent(tour.slug)}`}
+                            className="mt-1.5 inline-flex min-h-8 w-full items-center justify-center gap-1.5 rounded-lg border border-stone-300 bg-white px-2 text-[10px] font-black text-stone-700 transition hover:border-emerald-500 hover:text-emerald-800 dark:border-white/15 dark:bg-stone-950 dark:text-stone-200 dark:hover:border-emerald-400"
+                          >
+                            <Info className="h-3 w-3" />
+                            {isEs ? "Ver información" : "View details"}
+                          </Link>
+                        </div>
                       );
                     })}
                   </div>

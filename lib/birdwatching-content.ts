@@ -32,8 +32,6 @@ function img(id: string) {
   return `https://images.unsplash.com/photo-${id}?q=80&w=1200&auto=format&fit=crop`;
 }
 
-const LOCAL = (path: string) => path;
-
 export const BIRDWATCHING_VIDEOS: BirdVideo[] = [
   {
     youtubeId: "Oy2Hm2g6PJQ",
@@ -58,35 +56,18 @@ export const BIRDWATCHING_VIDEOS: BirdVideo[] = [
 ];
 
 export const BIRDWATCHING_GALLERY: string[] = [
-  LOCAL("/ads/IMG_5668.jpg"),
-  LOCAL("/ads/IMG_5666.jpg"),
-  LOCAL("/ads/IMG_5667.jpg"),
-  LOCAL("/image/IMG_4671.jpg"),
-  LOCAL("/image/IMG_4257.jpg"),
-  LOCAL("/image/IMG_4376.jpg"),
-  LOCAL("/image/IMG_4389.jpg"),
-  LOCAL("/image/IMG_4514.jpg"),
-  LOCAL("/image/IMG_4522.jpg"),
-  LOCAL("/image/IMG_4523.jpg"),
-  LOCAL("/image/IMG_4575.jpg"),
-  LOCAL("/image/IMG_4812.jpg"),
-  LOCAL("/image/IMG_4917.jpg"),
-  LOCAL("/image/IMG_4943.jpg"),
-  LOCAL("/image/IMG_4952.jpg"),
-  LOCAL("/image/IMG_5585.jpg"),
-  LOCAL("/image/IMG_5592.jpg"),
-  LOCAL("/image/IMG_5645.jpg"),
-  LOCAL("/image/IMG_5686.jpg"),
-  LOCAL("/image/IMG_6028.jpg"),
-  LOCAL("/image/IMG_6805.jpg"),
-  LOCAL("/image/IMG_6806.jpg"),
-  LOCAL("/image/IMG_6809.jpg"),
-  LOCAL("/image/IMG_6810.jpg"),
   img("1550853024-fae8cd4be47f"),
   img("1550994439-a879aabe0386"),
   img("1682788820676-2d68c93d3346"),
   img("1444464666168-49d633b86797"),
   img("1516467508483-a7213fe4af05"),
+  img("1604584494301-cdf0b1e2e8b1"),
+  img("1598304843779-6d0f0c8e2f1a"),
+  img("1507003211169-0a1dd7228f2d"),
+  img("1518791841217-8f162f1e9881"),
+  img("1548199973-03cce0bbc87b"),
+  img("1552728080-b9123d1349a7"),
+  img("1558618666-fcd25c85cd64"),
 ];
 
 export const BIRDWATCHING_SPECIES: BirdSpecies[] = [

@@ -9,6 +9,7 @@ import { useReservationData } from "@/lib/hooks/useReservationData";
 import HomeNav from "@/app/components/home/HomeNav";
 import HomeHero from "@/app/components/home/HomeHero";
 import FeaturedStory from "@/app/components/home/FeaturedStory";
+import ToursShowcase from "@/app/components/home/ToursShowcase";
 import HomeFaqFooter from "@/app/components/home/HomeFaqFooter";
 
 export default function Home(): JSX.Element {
@@ -19,6 +20,9 @@ export default function Home(): JSX.Element {
     ["tour-ciudad-esmeralda", "ciudad-esmeralda"].includes(tour.slug),
   );
   const featuredTours = ciudadEsmeralda ? [ciudadEsmeralda] : [];
+  const otherTours = tours
+    .filter((tour) => !["tour-ciudad-esmeralda", "ciudad-esmeralda"].includes(tour.slug))
+    .slice(0, 3);
 
   return (
     <ErrorBoundary
@@ -32,6 +36,7 @@ export default function Home(): JSX.Element {
         <HomeNav />
         <HomeHero tours={featuredTours} />
         <FeaturedStory tours={featuredTours} />
+        {otherTours.length > 0 && <ToursShowcase tours={otherTours} />}
         <HomeFaqFooter tours={featuredTours} />
       </main>
     </ErrorBoundary>

@@ -10,64 +10,64 @@ const faqItems = {
     {
       question: "¿Cómo reservo un tour?",
       answer:
-        "Puedes reservar desde la página principal seleccionando fecha, paquete y completando el pago en línea. Si prefieres, primero revisa la guía completa en la sección de Docs.",
+        "Entrá a Reservar, elegí fecha y paquete, y pagás en línea. Si preferís ir más despacio, mirá primero la Guía (Docs) o escribinos por WhatsApp y te armamos el plan.",
     },
     {
       question: "¿Dónde veo mis reservas confirmadas?",
       answer:
-        "Después de reservar, puedes consultar tu información en el dashboard. Ahí verás el estado de tus reservas y los datos clave para tu visita.",
+        "En el dashboard, después de iniciar sesión. Ahí está el estado del pago y los datos que necesitás el día del tour.",
     },
     {
-      question: "¿Qué incluye el Portal B2B?",
+      question: "¿Qué es el portal B2B?",
       answer:
-        "El portal B2B permite a operadores y agencias gestionar reservas de clientes, consultar tours disponibles y dar seguimiento operativo de su cuenta.",
+        "Es para operadores y agencias aliadas: reservan para sus clientes, ven tours y dan seguimiento a su cuenta. Si sos operador y no tenés acceso, escribinos.",
     },
     {
-      question: "¿Qué métodos de pago aceptan?",
+      question: "¿Cómo se paga?",
       answer:
-        "Las reservas en línea se procesan de forma segura con PayPal, incluyendo tarjetas compatibles dentro de su plataforma.",
+        "Online con PayPal (incluye tarjetas que PayPal acepte). El pago va seguro; no pedimos datos de tarjeta por WhatsApp.",
     },
     {
-      question: "¿Qué debo llevar el día del tour?",
+      question: "¿Qué llevo el día del tour?",
       answer:
-        "Te recomendamos ropa cómoda, zapatos con buen agarre, hidratación, protector solar, repelente y una muda extra según el tipo de actividad.",
+        "Ropa cómoda, zapatos con agarre, agua, bloqueador, repelente y una muda seca. Según el tour te mandamos la lista exacta al confirmar.",
     },
     {
-      question: "¿Cómo recibo ayuda rápida?",
+      question: "¿Necesito ayuda ya?",
       answer:
-        "Puedes escribirnos por WhatsApp para dudas de disponibilidad, transporte, políticas o recomendaciones antes de tu viaje.",
+        "WhatsApp es lo más rápido: cupos, clima, transporte o si no sabés si el cañón te calza. Preferimos decirte la verdad antes de que reserves.",
     },
   ],
   en: [
     {
       question: "How do I book a tour?",
       answer:
-        "You can book from the home page by selecting a date, package, and completing online payment. You can also review the full guide in the Docs section first.",
+        "Go to Book, pick date and package, and pay online. Prefer a slower path? Check the Docs guide first, or WhatsApp us and we'll sort a plan.",
     },
     {
-      question: "Where can I see my confirmed bookings?",
+      question: "Where do I see confirmed bookings?",
       answer:
-        "After booking, you can check your information in the dashboard, including reservation status and key details for your visit.",
+        "In the dashboard after you sign in — payment status and the details you need on tour day.",
     },
     {
-      question: "What is included in the B2B Portal?",
+      question: "What's the B2B portal?",
       answer:
-        "The B2B portal allows operators and agencies to manage client bookings, browse available tours, and track account operations.",
+        "For partner operators and agencies: book for clients, browse tours, and track the account. Operator without access? Message us.",
     },
     {
-      question: "What payment methods do you accept?",
+      question: "How do I pay?",
       answer:
-        "Online reservations are securely processed with PayPal, including compatible card options available in their platform.",
+        "Online with PayPal (including cards PayPal accepts). Secure checkout — we never ask for card numbers over WhatsApp.",
     },
     {
       question: "What should I bring on tour day?",
       answer:
-        "We recommend comfortable clothing, good-grip shoes, water, sunscreen, repellent, and an extra change of clothes depending on the activity.",
+        "Comfy clothes, good-grip shoes, water, sunscreen, repellent, and a dry change. We'll send the exact list when you confirm.",
     },
     {
-      question: "How can I get quick support?",
+      question: "Need help now?",
       answer:
-        "You can message us on WhatsApp for availability, transport, policy, or recommendation questions before your trip.",
+        "WhatsApp is fastest: availability, weather, transport, or whether the canyon fits you. We'd rather be honest before you book.",
     },
   ],
 } as const;
@@ -86,12 +86,12 @@ export default function PreguntasFrecuentesPage() {
           {lang === "es" ? "Preguntas frecuentes" : "Frequently asked questions"}
         </p>
         <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white md:text-4xl">
-          {lang === "es" ? "Resolvemos tus dudas" : "Answers to common questions"}
+          {lang === "es" ? "Lo que la gente pregunta de verdad" : "What people actually ask"}
         </h1>
         <p className="mt-3 max-w-3xl text-zinc-700 dark:text-zinc-300">
           {lang === "es"
-            ? "Aquí encontrarás respuestas rápidas sobre reservas, pagos, dashboard, portal B2B y preparación para tu aventura."
-            : "Find quick answers about bookings, payments, dashboard access, the B2B portal, and getting ready for your adventure."}
+            ? "Reservas, pagos, dashboard, B2B y qué meter en la mochila. Si no está acá, WhatsApp y te respondemos en tico, sin script."
+            : "Bookings, payments, dashboard, B2B, and what to pack. Missing something? WhatsApp us — plain talk, no script."}
         </p>
       </section>
 

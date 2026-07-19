@@ -20,39 +20,39 @@ export default function FeaturedStory({ tours }: Props) {
 
   const inclusions = isEs
     ? [
-        "Sendero, río y cañón en una sola ruta",
-        "Cascada El Zafiro y pozas turquesa",
-        "Guía local y briefing de seguridad",
-        "Ruta ajustada al clima y nivel del río",
+        "Sendero, río y cañón en la misma salida",
+        "Cascada El Zafiro y pozas de color turquesa",
+        "Guía de la zona y charla de seguridad sin rodeos",
+        "Si el río o el clima cambian, la ruta también",
       ]
     : [
-        "Trail, river, and canyon in one route",
+        "Trail, river, and canyon in one outing",
         "El Zafiro Waterfall and turquoise pools",
-        "Local guide and safety briefing",
-        "Route adapted to weather and river conditions",
+        "Local guide and a straight safety talk",
+        "If river or weather changes, so does the route",
       ];
 
   const steps = [
     {
       num: "01",
-      title: isEs ? "Elegí fecha y personas" : "Choose date and guests",
+      title: isEs ? "Elegí día y cuántos van" : "Pick the day and who's coming",
       body: isEs
-        ? "Ciudad Esmeralda ya viene seleccionada: solo indicá cuándo y cuántos vienen."
-        : "Ciudad Esmeralda is already selected: just tell us when and how many are coming.",
+        ? "Ciudad Esmeralda ya está armada: solo decinos cuándo y de cuántos es el grupo."
+        : "Ciudad Esmeralda is ready to go — just tell us when and how many.",
     },
     {
       num: "02",
-      title: isEs ? "Confirmá tu reserva" : "Confirm your booking",
+      title: isEs ? "Confirmá y listo" : "Confirm and you're set",
       body: isEs
-        ? "Fecha, personas y pago seguro. Confirmación inmediata al correo."
-        : "Date, guests, and secure payment. Instant confirmation by email.",
+        ? "Pago seguro y el correo de confirmación te llega al toque."
+        : "Secure payment, and the confirmation email lands right away.",
     },
     {
       num: "03",
-      title: isEs ? "Viví Ciudad Esmeralda" : "Experience Ciudad Esmeralda",
+      title: isEs ? "Al cañón" : "Into the canyon",
       body: isEs
-        ? "Llegás con guías locales, equipo listo y una ruta pensada para tu grupo y el clima del día."
-        : "Arrive with local guides, gear ready, and a route tailored to your group and the day's weather.",
+        ? "Llegás, saludás al guía y entran al bosque. El ritmo y la ruta van con tu grupo y con lo que diga el río ese día."
+        : "You arrive, meet the guide, and head into the forest. Pace and route follow your group and what the river allows that day.",
     },
   ];
 
@@ -73,7 +73,7 @@ export default function FeaturedStory({ tours }: Props) {
 
             <span className="absolute left-6 top-6 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-4 py-2 text-xs font-bold text-stone-900 shadow-lg backdrop-blur-sm">
               <Sparkles size={13} className="text-amber-500" />
-              {isEs ? "Experiencia insignia" : "Signature experience"}
+              {isEs ? "La de la casa" : "Our house favorite"}
             </span>
 
             <div className="absolute -bottom-6 right-4 w-56 rounded-2xl bg-white p-4 shadow-[0_20px_60px_rgba(0,0,0,0.15)] dark:bg-stone-900 dark:shadow-[0_20px_60px_rgba(0,0,0,0.5)] dark:ring-1 dark:ring-white/10 sm:right-8 sm:w-64">
@@ -84,8 +84,8 @@ export default function FeaturedStory({ tours }: Props) {
               </span>
               <p className="mt-2 text-xs leading-relaxed text-stone-600 dark:text-stone-300">
                 {isEs
-                  ? "“El cañón y las pozas turquesa nos dejaron con ganas de volver.”"
-                  : "“The canyon and turquoise pools made us want to come back.”"}
+                  ? "“Salimos mojados, cansados y ya queriendo volver. Las pozas se ven de mentira.”"
+                  : "“We left wet, tired, and already wanting to come back. Those pools look unreal.”"}
               </p>
               <p className="mt-2 text-[11px] font-bold text-stone-900 dark:text-stone-100">— María F.</p>
             </div>
@@ -96,12 +96,12 @@ export default function FeaturedStory({ tours }: Props) {
               {isEs ? "San Carlos · Juan Castro Blanco" : "San Carlos · Juan Castro Blanco"}
             </p>
             <h2 className="font-display text-balance text-4xl font-bold leading-[1.02] tracking-tight text-stone-900 dark:text-stone-50 md:text-5xl">
-              {isEs ? "Ciudad Esmeralda: del sendero a la Cascada El Zafiro" : "Ciudad Esmeralda: from the trail to El Zafiro Waterfall"}
+              {isEs ? "Del sendero a la Cascada El Zafiro" : "From the trail to El Zafiro Waterfall"}
             </h2>
             <p className="mt-5 max-w-lg text-base leading-relaxed text-stone-600 dark:text-stone-300 md:text-lg">
               {isEs
-                ? "Nuestra experiencia insignia combina sendero, río y cañón en una aventura que exige buena condición física. Acá la seguridad manda: si el clima o el río cambian, la ruta también."
-                : "Our signature experience combines trail, river, and canyon in an adventure that requires good physical condition. Safety comes first: if weather or river conditions change, so does the route."}
+                ? "Esta es la salida que más nos piden: pie en el barro, agua en las botas y el cañón abriéndose hasta la cascada. No es un paseo de foto fácil — pedís pierna — y si el clima se pone feo, no insistimos. El río manda."
+                : "This is the day people ask for most: mud on the boots, water in the shoes, and the canyon opening up to the falls. Not a casual photo stroll — it needs legs — and if weather turns nasty, we don't push. The river decides."}
             </p>
 
             <ul className="mt-7 grid gap-3 sm:grid-cols-2">
@@ -118,13 +118,13 @@ export default function FeaturedStory({ tours }: Props) {
             <div className="mt-8 flex flex-wrap items-center gap-5">
               <div>
                 <span className="block text-xs font-medium uppercase tracking-widest text-stone-400 dark:text-stone-500">
-                  {isEs ? "Experiencia destacada" : "Featured experience"}
+                  {isEs ? "La que más se vive" : "The one people live"}
                 </span>
                 <span className="font-display text-3xl font-bold text-stone-900 dark:text-stone-50">
                   1
                 </span>
                 <span className="ml-1.5 text-sm text-stone-500 dark:text-stone-400">
-                  {isEs ? "aventura insignia" : "signature adventure"}
+                  {isEs ? "cañón, una ruta" : "canyon, one route"}
                 </span>
               </div>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-stone-100 px-3.5 py-2 text-xs font-semibold text-stone-600 dark:bg-stone-800 dark:text-stone-300">
@@ -143,9 +143,10 @@ export default function FeaturedStory({ tours }: Props) {
               </Link>
               <Link
                 href={TOURS_HREF}
-                className="inline-flex items-center gap-2 rounded-full border border-stone-300 px-7 py-3.5 text-sm font-bold text-stone-800 transition-colors hover:border-emerald-600 hover:text-emerald-700 dark:border-stone-600 dark:text-stone-200 dark:hover:border-emerald-400 dark:hover:text-emerald-300"
+                className="group inline-flex items-center gap-2 rounded-full border-2 border-emerald-600 px-7 py-3.5 text-sm font-black text-emerald-800 transition-all hover:-translate-y-0.5 hover:bg-emerald-50 dark:border-emerald-400 dark:text-emerald-300 dark:hover:bg-emerald-950/40"
               >
-                {isEs ? "Ver otros tours" : "See other tours"}
+                {isEs ? "Explorar otros tours" : "Explore other tours"}
+                <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
               </Link>
             </div>
           </div>
@@ -154,10 +155,10 @@ export default function FeaturedStory({ tours }: Props) {
         <div className="mt-24 md:mt-32">
           <div className="mb-10 text-center">
             <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em] text-emerald-700 dark:text-emerald-300">
-              {isEs ? "Así de fácil" : "This easy"}
+              {isEs ? "Sin enredo" : "No fuss"}
             </p>
             <h2 className="font-display text-3xl font-bold tracking-tight text-stone-900 dark:text-stone-50 md:text-4xl">
-              {isEs ? "De tu pantalla al bosque en tres pasos" : "From your screen to the forest in three steps"}
+              {isEs ? "De la reserva al cañón en tres pasos" : "From booking to canyon in three steps"}
             </h2>
           </div>
 

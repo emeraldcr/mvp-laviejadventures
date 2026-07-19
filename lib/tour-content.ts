@@ -1,3 +1,5 @@
+import { getTourGallery } from "@/lib/tour-display";
+
 // Rich, per-tour editorial content for the public tour detail pages.
 // Keyed by tour slug. This layer is additive: it does NOT touch the Mongo
 // tour documents used for booking/pricing. It only enriches what a visitor
@@ -29,12 +31,6 @@ export type TourContent = {
   faqs: TourFaq[];
   gallery: string[];
 };
-
-// Build a stable Unsplash CDN url from a photo id. All ids below were verified
-// to return 200 before being committed.
-function img(id: string) {
-  return `https://images.unsplash.com/photo-${id}?q=80&w=1400&auto=format&fit=crop`;
-}
 
 export const TOUR_CONTENT: Record<string, TourContent> = {
   "cuadra-tours-aventura": {
@@ -84,7 +80,7 @@ export const TOUR_CONTENT: Record<string, TourContent> = {
       { q: "¿Me voy a mojar o ensuciar?", a: "Casi seguro, sobre todo en temporada verde. Traé cambio de ropa y zapatos que puedan ensuciarse." },
       { q: "¿Qué pasa si llueve?", a: "El tour opera con lluvia normal; solo se suspende o reprograma ante condiciones inseguras." },
     ],
-    gallery: [img("1533246696441-571a1d6d1281"), img("1781714098388-cca9b228d5cc"), img("1769052346677-8ead8d92e64d")],
+    gallery: getTourGallery("cuadra-tours-aventura"),
   },
 
   "cascadas-secretas-rio-la-vieja": {
@@ -133,7 +129,7 @@ export const TOUR_CONTENT: Record<string, TourContent> = {
       { q: "¿Es difícil la caminata?", a: "Es de dificultad moderada, con tramos cortos de subida. Vamos a ritmo relajado con varias paradas." },
       { q: "¿Sirve para niños?", a: "Sí, es una de nuestras opciones más familiares siempre que los niños caminen acompañados." },
     ],
-    gallery: [img("1580259679654-9276b39fd2d5"), img("1669694841884-95d35a6bc287"), img("1611222566512-cb8dd8e689e5")],
+    gallery: getTourGallery("cascadas-secretas-rio-la-vieja"),
   },
 
   "tour-gastronomico-local": {
@@ -178,7 +174,7 @@ export const TOUR_CONTENT: Record<string, TourContent> = {
       { q: "¿Cuánta comida es?", a: "Suficiente para quedar satisfecho; es una degustación de varios platillos, no un solo plato." },
       { q: "¿Es apto para niños?", a: "Totalmente. Es una de nuestras experiencias más tranquilas y familiares." },
     ],
-    gallery: [img("1621295239171-6f95272fdf45"), img("1630527910939-275499aa3650"), img("1721314678207-8b7bd43e677b")],
+    gallery: getTourGallery("tour-gastronomico-local"),
   },
 
   "lluvia-en-la-naturaleza": {
@@ -224,7 +220,7 @@ export const TOUR_CONTENT: Record<string, TourContent> = {
       { q: "¿Me voy a mojar?", a: "Sí, esa es la idea. Te damos equipo para lluvia pero conviene traer cambio seco." },
       { q: "¿Es peligroso caminar con lluvia?", a: "No en condiciones normales. Ante tormenta eléctrica se suspende por seguridad." },
     ],
-    gallery: [img("1630574232726-fc3ea90637b8"), img("1500354960738-4c480ed785bc"), img("1604956080929-0aaf39237d5c")],
+    gallery: getTourGallery("lluvia-en-la-naturaleza"),
   },
 
   "avistamiento-aves": {
@@ -289,7 +285,7 @@ export const TOUR_CONTENT: Record<string, TourContent> = {
       { q: "¿Dónde es el punto de encuentro?", a: "En la zona de Juan Castro Blanco / San Carlos. Te enviamos la ubicación exacta y coordenadas al confirmar la reserva." },
       { q: "¿Puedo combinar con otro tour el mismo día?", a: "Sí, muchos visitantes hacen aves al amanecer y otro tour por la tarde. Escribinos por WhatsApp y armamos el itinerario." },
     ],
-    gallery: [img("1550853024-fae8cd4be47f"), img("1550994439-a879aabe0386"), img("1682788820676-2d68c93d3346")],
+    gallery: getTourGallery("avistamiento-aves"),
   },
 
   "tour-nocturno-la-vieja": {
@@ -336,7 +332,7 @@ export const TOUR_CONTENT: Record<string, TourContent> = {
       { q: "¿Qué animales podría ver?", a: "Ranas de colores, insectos, arañas, a veces serpientes inofensivas y mamíferos pequeños. Varía cada noche." },
       { q: "¿Necesito linterna propia?", a: "Es recomendable llevar una frontal, aunque el guía siempre lleva iluminación." },
     ],
-    gallery: [img("1631006860710-3f270ead6c51"), img("1592148923625-ca39edb0ccbb"), img("1584468247714-715aea60d3e0")],
+    gallery: getTourGallery("tour-nocturno-la-vieja"),
   },
 
   "rapel-canon-del-rio": {
@@ -384,7 +380,7 @@ export const TOUR_CONTENT: Record<string, TourContent> = {
       { q: "¿Y si me da miedo la altura?", a: "Es normal. El guía va contigo en cada tramo y avanzás a tu ritmo. Muchos superan el vértigo en el primer descenso." },
       { q: "¿Hay peso o edad mínima?", a: "Sí, aplican límites de edad, peso y condición física por seguridad. Consultanos antes de reservar." },
     ],
-    gallery: [img("1621693113354-8b32a9e0ba39"), img("1600198718659-01e18c32e13c"), img("1704386596483-ea345dfa9034")],
+    gallery: getTourGallery("rapel-canon-del-rio"),
   },
 
   "caminata-volcanes-dormidos": {
@@ -432,55 +428,56 @@ export const TOUR_CONTENT: Record<string, TourContent> = {
       { q: "¿Cómo es el clima allá arriba?", a: "Fresco y cambiante. Puede llover y bajar la temperatura; traé chaqueta impermeable y algo abrigado." },
       { q: "¿Hay dónde comer?", a: "No hay servicios dentro de la ruta: traé tu propia merienda y suficiente agua." },
     ],
-    gallery: [img("1543321600-62c7a3591b69"), img("1532885399978-d1721c804f3e"), img("1639977699853-02edebe51348")],
+    gallery: getTourGallery("caminata-volcanes-dormidos"),
   },
 
   "tour-ciudad-esmeralda": {
-    tagline: "El clásico de La Vieja: senderos, río y cañón hasta la Cascada El Zafiro",
+    tagline: "El clásico de la casa: sendero, río y cañón hasta El Zafiro",
     overview: [
-      "Nuestra experiencia insignia. El Tour Ciudad Esmeralda te lleva a recorrer 3.5 km por senderos, río y cañón dentro del Cañón del Río La Vieja, hasta llegar a la imponente Cascada El Zafiro, con sus pozas de agua turquesa.",
-      "Un guía profesional bilingüe te acompaña durante las 3 a 4 horas de recorrido, interpretando la naturaleza, cuidando la seguridad del grupo y marcando los mejores puntos para fotos y para nadar.",
-      "Es la mezcla perfecta de caminata, agua y aventura: exigente lo justo para sentir que lo lograste, y espectacular de principio a fin.",
+      "Unos 3.5 km entre sendero, río y cañón en el Río La Vieja, hasta la Cascada El Zafiro y las pozas turquesa. No es un paseo de pasarela: te mojás, subís y bajás, y salís con las botas cansadas.",
+      "El guía (español e inglés) va con el grupo todo el rato: seguridad, ritmo y los mejores parches para foto o chapuzón cuando el caudal da.",
+      "Si el clima se pone feo o el río crece, no arriesgamos: se ajusta la ruta o se reprograma. Acá el río manda.",
     ],
     highlights: [
-      "Recorrido de 3.5 km por senderos, río y cañón",
-      "Cascada El Zafiro y sus pozas turquesa",
-      "Guía profesional bilingüe (español/inglés)",
+      "3.5 km de sendero, río y cañón",
+      "Cascada El Zafiro y pozas turquesa",
+      "Guía local bilingüe",
       "Equipo de seguridad incluido",
-      "Paisajes de aventura de principio a fin",
+      "Ruta que se adapta al clima y al nivel del río",
     ],
     itinerary: [
-      { time: "0:00", title: "Bienvenida y briefing", description: "Registro, equipo de seguridad y charla del recorrido." },
-      { time: "0:20", title: "Senderos y bosque", description: "Inicio de la caminata por senderos hacia el cañón." },
-      { time: "1:15", title: "Río y cañón", description: "Tramos junto al río y dentro del cañón, con paradas fotográficas." },
-      { time: "2:00", title: "Cascada El Zafiro", description: "Llegada a la cascada y tiempo para nadar en las pozas." },
-      { time: "3:00", title: "Regreso", description: "Retorno hacia el punto de partida." },
+      { time: "0:00", title: "Bienvenida y charla de seguridad", description: "Registro, equipo y sin rodeos: cómo va el día y qué cuida el guía." },
+      { time: "0:20", title: "Al bosque", description: "Entramos al sendero rumbo al cañón." },
+      { time: "1:15", title: "Río y cañón", description: "Tramos junto al agua y dentro del cañón; paradas cuando vale la pena." },
+      { time: "2:00", title: "Cascada El Zafiro", description: "Llegada a la cascada y rato de poza si el caudal está bien." },
+      { time: "3:00", title: "Regreso", description: "De vuelta al punto de partida, mojados y contentos." },
     ],
     included: [
-      "Acceso a las instalaciones y áreas del recorrido",
-      "Guía profesional bilingüe (español e inglés)",
-      "Recorrido de 3.5 km hasta la Cascada El Zafiro",
-      "Equipo de seguridad durante toda la experiencia",
+      "Acceso al recorrido",
+      "Guía bilingüe (español e inglés)",
+      "Ruta de ~3.5 km hasta El Zafiro",
+      "Equipo de seguridad",
     ],
-    notIncluded: ["Transporte hacia/desde el punto de encuentro", "Alimentos y bebidas no especificadas", "Fotografías profesionales", "Propinas"],
+    notIncluded: ["Transporte al punto de encuentro", "Comida y bebida", "Fotos profesionales", "Propinas"],
     whatToBring: [
-      "Zapatos con buen agarre para agua y sendero",
+      "Zapatos con agarre para agua y piedra",
       "Traje de baño y toalla",
-      "Cambio de ropa seca",
+      "Muda seca",
       "Bloqueador biodegradable y repelente",
-      "Agua y snack",
+      "Agua y un snack",
     ],
     goodToKnow: [
-      "Recomendado para adultos en buena condición física.",
-      "Si tenés una condición médica, contactanos antes de reservar.",
-      "Cancelaciones con al menos 48 horas de anticipación aplican para reembolso completo.",
+      "Para gente en buena condición física; si tenés duda, escribinos antes.",
+      "Condición médica o peques: consultanos con honestidad.",
+      "Cancelás con 48 h o más: reembolso completo según política.",
     ],
     faqs: [
-      { q: "¿Cuánto dura el tour?", a: "Entre 3 y 4 horas, incluyendo la caminata, el tiempo en la cascada y el regreso." },
-      { q: "¿Necesito saber nadar?", a: "No es obligatorio, pero saber nadar te permite disfrutar mejor las pozas. Hay áreas seguras para todos." },
-      { q: "¿Es apto para niños?", a: "Por la exigencia del recorrido está recomendado para adultos y jóvenes en buena condición física. Consultanos para casos familiares." },
+      { q: "¿Cuánto dura?", a: "Entre 3 y 4 horas: caminata, cascada y regreso." },
+      { q: "¿Hay que saber nadar?", a: "No es obligatorio. Saber nadar ayuda en las pozas; el guía marca zonas seguras." },
+      { q: "¿Sirve para niños?", a: "Por la exigencia va mejor para adultos y jóvenes en forma. Familias: preguntá y te decimos con claridad." },
     ],
-    gallery: [img("1580259679654-9276b39fd2d5"), img("1611222566512-cb8dd8e689e5"), img("1669694841884-95d35a6bc287")],
+    // Keep the existing local Ciudad Esmeralda set (do not replace with stock/Unsplash).
+    gallery: getTourGallery("tour-ciudad-esmeralda"),
   },
 };
 

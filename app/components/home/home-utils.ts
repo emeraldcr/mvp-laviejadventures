@@ -7,7 +7,7 @@ export const BOOKING_HREF = `/reservar?tour=${CIUDAD_ESMERALDA_SLUG}`;
 export const TOURS_HREF = "/tours";
 
 export function primaryBookingLabel(isEs: boolean): string {
-  return isEs ? "Reservar ahora" : "Book now";
+  return isEs ? "Quiero ir" : "I want in";
 }
 
 export function compactBookingLabel(isEs: boolean): string {
