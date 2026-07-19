@@ -92,7 +92,7 @@ export function verifyLegacyPin(pin: string, normalizedName: string, storedHash:
 
 export async function ensureIdentityIndexes(db: Db) {
   await Promise.all([
-    db.collection(MundialIdentityDoc>(MUNDIAL_IDENTITIES_COLLECTION).createIndex({ cedulaKey: 1 }, { unique: true }),
+    db.collection<MundialIdentityDoc>(MUNDIAL_IDENTITIES_COLLECTION).createIndex({ cedulaKey: 1 }, { unique: true }),
     db.collection<MundialIdentityDoc>(MUNDIAL_IDENTITIES_COLLECTION).createIndex({ normalizedName: 1 }, { unique: true }),
     db.collection<MundialIdentityDoc>(MUNDIAL_IDENTITIES_COLLECTION).createIndex({ normalizedEmail: 1 }),
     db.collection<SessionDoc>(MUNDIAL_SESSIONS_COLLECTION).createIndex({ tokenHash: 1 }, { unique: true }),

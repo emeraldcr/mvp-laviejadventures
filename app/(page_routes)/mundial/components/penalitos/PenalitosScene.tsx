@@ -216,9 +216,9 @@ function makeBallTexture() {
 // Stadium dressing
 // ------------------------------------------------------------------
 function Stadium() {
-  const crowdTex = useMemo(makeCrowdTexture, []);
-  const glowTex = useMemo(makeGlowTexture, []);
-  const skyTex = useMemo(makeSkyTexture, []);
+  const crowdTex = useMemo(() => makeCrowdTexture(), []);
+  const glowTex = useMemo(() => makeGlowTexture(), []);
+  const skyTex = useMemo(() => makeSkyTexture(), []);
 
   return (
     <group>
@@ -331,9 +331,11 @@ function CrowdFlashes() {
 
 // Scrolling LED ad boards behind the goal line
 function AdBoards() {
-  const tex = useMemo(makeAdTexture, []);
+  const tex = useMemo(() => makeAdTexture(), []);
+  const texRef = useRef(tex);
   useFrame((_, delta) => {
-    tex.offset.x = (tex.offset.x + delta * 0.045) % 1;
+    const currentTexture = texRef.current;
+    currentTexture.offset.x = (currentTexture.offset.x + delta * 0.045) % 1;
   });
   const board = (
     <meshBasicMaterial map={tex} toneMapped={false} />
@@ -357,7 +359,7 @@ function AdBoards() {
 }
 
 function Pitch() {
-  const grassTex = useMemo(makeGrassTexture, []);
+  const grassTex = useMemo(() => makeGrassTexture(), []);
   return (
     <mesh rotation-x={-Math.PI / 2} position={[0, 0, 2]} receiveShadow>
       <planeGeometry args={[28, 22]} />
@@ -409,7 +411,7 @@ function Goal({ netRef }: { netRef: React.RefObject<THREE.Mesh | null> }) {
       }),
     [],
   );
-  const netTex = useMemo(makeNetTexture, []);
+  const netTex = useMemo(() => makeNetTexture(), []);
   const netMat = useMemo(() => {
     const t = netTex.clone();
     t.repeat.set(11, 6);
@@ -634,7 +636,7 @@ function Athlete({ refs, kit }: { refs: AthleteRefs; kit: AthleteKit }) {
 // Ball + FX
 // ------------------------------------------------------------------
 function SoccerBall({ meshRef }: { meshRef: React.RefObject<THREE.Mesh | null> }) {
-  const texture = useMemo(makeBallTexture, []);
+  const texture = useMemo(() => makeBallTexture(), []);
   return (
     <mesh ref={meshRef} position={[BALL_START.x, BALL_START.y, BALL_START.z]} castShadow>
       <sphereGeometry args={[0.11, 28, 28]} />
