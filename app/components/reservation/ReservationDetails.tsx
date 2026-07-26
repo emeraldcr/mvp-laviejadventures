@@ -43,7 +43,7 @@ import type {
 import useReservationForm from "../../hooks/useReservationForm";
 import { PHONE_COUNTRIES as ALL_PHONE_COUNTRIES } from "@/app/components/reservation/phoneCountries";
 import { resolveSelectedTourSlug, getDefaultMainTourInfo } from "./reservationDetails.helpers";
-import ReservationDetailsStep1 from "./ReservationDetailsStep1";
+import ReservationDetailsStep1Guided, { type ChoiceStep } from "./ReservationDetailsStep1Guided";
 import ReservationDetailsStep2 from "./ReservationDetailsStep2";
 import type { MainTourInfo, TourPackageOption } from "@/lib/types/index";
 import { useTransportQuote } from "./hooks/useTransportQuote";
@@ -90,6 +90,7 @@ export default function ReservationDetails({
     tickets,
   });
   const [currentStep, setCurrentStep] = useState<BookingStepId>(1);
+  const [choiceStep, setChoiceStep] = useState<ChoiceStep>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const submitInFlightRef = useRef(false);
   const currentStepRef = useRef<BookingStepId>(1);
@@ -857,9 +858,8 @@ export default function ReservationDetails({
 
   const goToNextStep = useCallback(() => {
     if (currentStep === 1) {
-      // Skip traveler form when draft/profile already filled it in.
-      if (isStep2Valid) {
-        goToStep(3, "skip_prefilled_traveler");
+      if (choiceStep < 3) {
+        setChoiceStep((choiceStep + 1) as ChoiceStep);
         return;
       }
       goToStep(2, "next_button");
@@ -869,24 +869,7 @@ export default function ReservationDetails({
     if (currentStep === 2) {
       goToStep(3, "next_button");
     }
-  }, [currentStep, goToStep, isStep2Valid]);
-
-  // When traveler fields *become* complete (not when navigating back), glide to review.
-  const wasStep2ValidRef = useRef(false);
-  useEffect(() => {
-    if (currentStep !== 2) {
-      wasStep2ValidRef.current = isStep2Valid;
-      return;
-    }
-    const becameValid = isStep2Valid && !wasStep2ValidRef.current;
-    wasStep2ValidRef.current = isStep2Valid;
-    if (!becameValid) return;
-
-    const timer = window.setTimeout(() => {
-      goToStep(3, "auto_traveler_complete");
-    }, 320);
-    return () => window.clearTimeout(timer);
-  }, [currentStep, goToStep, isStep2Valid]);
+  }, [choiceStep, currentStep, goToStep]);
 
   // One-tap magic: accept terms + pay from sticky bar (no second click).
   const handleExpressCheckout = useCallback(() => {
@@ -1078,7 +1061,9 @@ export default function ReservationDetails({
 
   const stickyLabel =
     currentStep === 1
-      ? step1ContinueLabel
+      ? choiceStep < 3
+        ? lang === "es" ? "Continuar" : "Continue"
+        : step1ContinueLabel
       : currentStep === 2
         ? lang === "es" ? "Revisar" : "Review"
         : isSubmitting
@@ -1178,7 +1163,9 @@ export default function ReservationDetails({
       />
 
       {currentStep === 1 && (
-        <ReservationDetailsStep1
+        <ReservationDetailsStep1Guided
+          choiceStep={choiceStep}
+          onChoiceStepChange={setChoiceStep}
           scheduleSectionRef={scheduleSectionRef}
           ticketsInputRef={ticketsInputRef}
           tourTime={tourTime}
@@ -1192,13 +1179,10 @@ export default function ReservationDetails({
           selectedAddons={selectedAddons}
           addonDetails={addonDetails}
           addonsPricePerPerson={addonsPricePerPerson}
-          packagePriceUSD={packagePriceUSD}
           packageLabel={packageLabel}
           reservationDateIso={reservationDateIso}
           estimatedTotal={totalWithTaxes}
           continueLabel={step1ContinueLabel}
-          expressReady={isStep1Valid && isStep2Valid}
-          travelerReady={isStep2Valid}
           onPackageSelect={handlePackageSelect}
           isPackageDisabled={isPackageDisabled}
           onTourTimeSelect={handleTourTimeSelect}
@@ -1311,12 +1295,20 @@ export default function ReservationDetails({
         disabled={
           isSubmitting ||
           (currentStep === 1
-            ? !isStep1Valid
+            ? choiceStep === 1
+              ? !selectedPackage
+              : !isStep1Valid
             : currentStep === 2
               ? !isStep2Valid
               : !isStep1Valid || !isStep2Valid)
         }
-        onBack={currentStep > 1 ? () => setCurrentStep((currentStep - 1) as BookingStepId) : undefined}
+        onBack={
+          currentStep === 1 && choiceStep > 1
+            ? () => setChoiceStep((choiceStep - 1) as ChoiceStep)
+            : currentStep > 1
+              ? () => setCurrentStep((currentStep - 1) as BookingStepId)
+              : undefined
+        }
         onAction={currentStep === 3 ? handleExpressCheckout : goToNextStep}
       />
     </div>
