@@ -9,6 +9,16 @@
   "framework": "nextjs",
   "buildCommand": "next build",
   "installCommand": "npm ci",
+  "crons": [
+    {
+      "path": "/api/scores/cron/sync",
+      "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/scores/cron/reminders",
+      "schedule": "*/15 * * * *"
+    }
+  ],
   "redirects": [
     {
       "source": "/:path*",

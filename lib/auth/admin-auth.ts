@@ -2,9 +2,17 @@ import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 import { NextRequest } from "next/server";
 import { ADMIN_COOKIE_NAME as ADMIN_COOKIE_NAME_CONST, TOKEN_EXPIRY } from "@/lib/constants/auth";
+import { resolveRuntimeSecret } from "@/lib/security/runtime-secret";
 
-const ADMIN_JWT_SECRET = process.env.ADMIN_JWT_SECRET || process.env.B2B_JWT_SECRET || "admin-secret-change-in-production";
 export const ADMIN_COOKIE_NAME = ADMIN_COOKIE_NAME_CONST;
+
+function adminJwtSecret(): string {
+  return resolveRuntimeSecret(
+    "ADMIN_JWT_SECRET",
+    process.env.ADMIN_JWT_SECRET,
+    process.env.B2B_JWT_SECRET || "development-only-admin-secret"
+  );
+}
 
 export interface AdminTokenPayload {
   id: string;
@@ -12,12 +20,12 @@ export interface AdminTokenPayload {
 }
 
 export function signAdminToken(payload: AdminTokenPayload): string {
-  return jwt.sign(payload, ADMIN_JWT_SECRET, { expiresIn: TOKEN_EXPIRY });
+  return jwt.sign(payload, adminJwtSecret(), { expiresIn: TOKEN_EXPIRY });
 }
 
 export function verifyAdminToken(token: string): AdminTokenPayload | null {
   try {
-    return jwt.verify(token, ADMIN_JWT_SECRET) as AdminTokenPayload;
+    return jwt.verify(token, adminJwtSecret()) as AdminTokenPayload;
   } catch {
     return null;
   }

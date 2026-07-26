@@ -9,7 +9,9 @@
     "build:cloudflare": "npx @cloudflare/next-on-pages@latest",
     "preview": "npx wrangler pages dev .next",
     "lint": "eslint . --ext .ts,.tsx",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test:scores": "node --experimental-strip-types scripts/test-scores-scoring.mjs && node --experimental-strip-types scripts/test-scores-rules.mjs && node --experimental-strip-types scripts/test-scores-secrets.mjs && node --experimental-strip-types scripts/test-scores-privacy.mjs",
+    "test:scores:e2e": "node scripts/test-scores-e2e.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.100.1",
