@@ -1,0 +1,14 @@
+:root {
+  --lva-turquoise: #00c4b0;
+  --lva-warm-black: #2e2a25;
+  --lva-white: #ffffff;
+  --lva-mist: #f3fbf9;
+  --lva-turquoise-soft: #d9f7f3;
+  --lva-stone: #706b65;
+  --lva-warning: #f3a712;
+  --lva-font-display: "BurfordBase", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --lva-font-body: "Segoe UI", Arial, sans-serif;
+  --lva-radius-sm: 8px;
+  --lva-radius-md: 16px;
+  --lva-shadow-soft: 0 12px 32px rgb(46 42 37 / 12%);
+}

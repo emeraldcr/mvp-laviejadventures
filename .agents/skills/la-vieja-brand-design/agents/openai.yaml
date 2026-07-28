@@ -1,0 +1,8 @@
+﻿interface:
+  display_name: "Diseño de Marca La Vieja"
+  short_description: "Diseños fieles a la marca La Vieja"
+  icon_small: "./assets/logos/logo-primary-dark.jpg"
+  icon_large: "./assets/logos/logo-primary-dark.jpg"
+  brand_color: "#00C4B0"
+  default_prompt: "Use $la-vieja-brand-design para crear una pieza visual de La Vieja Adventures con el logo y la guía oficial."
+

@@ -2,7 +2,11 @@
 
 # dependencies
 /node_modules
-.agents/
+.agents/*
+!.agents/skills/
+.agents/skills/*
+!.agents/skills/la-vieja-brand-design/
+!.agents/skills/la-vieja-brand-design/**
 /.pnp
 .pnp.*
 .yarn/*
