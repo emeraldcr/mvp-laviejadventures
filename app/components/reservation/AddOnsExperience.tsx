@@ -202,20 +202,20 @@ export default function AddOnsExperience({
                 <p className="mt-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">{description}</p>
               </div>
 
-              <div className="mt-4 flex items-end justify-between gap-3">
-                <div>
+              <div className="mt-4 grid gap-3">
+                <div className="min-w-0">
                   <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-zinc-400">{priceDisplay.note}</p>
-                  <p className={`text-2xl font-black ${priceDisplay.muted ? "text-zinc-500 dark:text-zinc-400" : "text-zinc-950 dark:text-zinc-50"}`}>
+                  <p className={`break-words text-xl font-black leading-tight ${priceDisplay.muted ? "text-zinc-500 dark:text-zinc-400" : "text-zinc-950 dark:text-zinc-50"}`}>
                     {priceDisplay.value}
                   </p>
                 </div>
-                <div className="flex flex-wrap justify-end gap-2">
+                <div className="flex w-full flex-wrap gap-2">
                   {addon.configurable && canSelect ? (
                     <>
                       <button
                         type="button"
                         onClick={() => openConfigurator(addon)}
-                        className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-zinc-950 px-4 text-sm font-black text-white transition hover:bg-emerald-700 dark:bg-zinc-100 dark:text-zinc-950"
+                        className="inline-flex h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl bg-zinc-950 px-4 text-sm font-black text-white transition hover:bg-[#087d72] dark:bg-zinc-100 dark:text-zinc-950"
                         aria-label={lang === "es" ? `Configurar ${name}` : `Configure ${name}`}
                       >
                         {selected ? <Pencil className="h-4 w-4" aria-hidden /> : <Plus className="h-4 w-4" aria-hidden />}
@@ -239,7 +239,7 @@ export default function AddOnsExperience({
                       type="button"
                       onClick={() => handleAddonAction(addon)}
                       aria-pressed={selected}
-                      className={`inline-flex h-11 items-center justify-center gap-2 rounded-xl px-4 text-sm font-black transition ${
+                      className={`inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl px-4 text-sm font-black transition ${
                         selected
                           ? "border border-red-200 bg-white text-red-600 hover:bg-red-50 dark:border-red-900 dark:bg-zinc-900 dark:text-red-300"
                           : "bg-zinc-950 text-white hover:bg-emerald-700 dark:bg-zinc-100 dark:text-zinc-950"
@@ -255,7 +255,7 @@ export default function AddOnsExperience({
                   ) : (
                     <Link
                       href="/reservar"
-                      className="flex h-11 items-center justify-center rounded-xl bg-zinc-950 px-3 text-sm font-black text-white transition hover:bg-emerald-700 dark:bg-zinc-100 dark:text-zinc-950"
+                      className="flex h-11 w-full items-center justify-center rounded-xl bg-zinc-950 px-3 text-sm font-black text-white transition hover:bg-[#087d72] dark:bg-zinc-100 dark:text-zinc-950"
                     >
                       {addon.priceStatus === "quote"
                         ? (lang === "es" ? "Solicitar" : "Request")

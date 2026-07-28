@@ -1,6 +1,7 @@
 "use client";
 
 import React, { Suspense } from "react";
+import { CalendarDays } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
 import { useCalendarContext } from "@/lib/CalendarContext";
 import CalendarSection from "@/app/components/sections/CalendarSection";
@@ -13,7 +14,7 @@ type Props = {
 
 export default function BookingSection({ selectedTourSlug, initialPackageId }: Props) {
   const { lang } = useLanguage();
-  const { selectedDay } = useCalendarContext();
+  const { selectedDay, selectDay } = useCalendarContext();
 
   return (
     <section
@@ -42,22 +43,36 @@ export default function BookingSection({ selectedTourSlug, initialPackageId }: P
             <div
               className={`mx-auto grid items-start gap-3 lg:gap-5 xl:gap-6 ${
                 selectedDay
-                  ? "max-w-[1560px] lg:grid-cols-[minmax(520px,0.45fr)_minmax(0,0.55fr)]"
+                  ? "max-w-5xl"
                   : "max-w-2xl"
               }`}
             >
-              <div className="rounded-2xl border border-stone-200 bg-white pb-3 shadow-sm dark:border-white/10 dark:bg-stone-900 lg:sticky lg:top-20 lg:pb-4">
-                <CalendarSection />
-              </div>
+              {!selectedDay && (
+                <div className="rounded-2xl border border-stone-200 bg-white pb-3 shadow-sm dark:border-white/10 dark:bg-stone-900 lg:pb-4">
+                  <CalendarSection />
+                </div>
+              )}
 
               {selectedDay && (
-                <div className="min-w-0 rounded-2xl border border-stone-200 bg-white p-2.5 shadow-sm dark:border-white/10 dark:bg-stone-900 sm:p-4">
-                  <Suspense fallback={<ReservationFallback />}>
-                    <ReservationSection
-                      preselectedTourSlug={selectedTourSlug}
-                      preselectedPackageId={initialPackageId}
-                    />
-                  </Suspense>
+                <div className="min-w-0">
+                  <div className="mb-3 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => selectDay(null)}
+                      className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-stone-300 bg-white px-3 text-xs font-black text-stone-700 transition hover:border-[#00C4B0] hover:text-[#087d72] dark:border-white/15 dark:bg-stone-900 dark:text-stone-200"
+                    >
+                      <CalendarDays className="h-4 w-4" aria-hidden />
+                      {lang === "es" ? "Cambiar fecha" : "Change date"}
+                    </button>
+                  </div>
+                  <div className="rounded-2xl border border-stone-200 bg-white p-2.5 shadow-sm dark:border-white/10 dark:bg-stone-900 sm:p-4">
+                    <Suspense fallback={<ReservationFallback />}>
+                      <ReservationSection
+                        preselectedTourSlug={selectedTourSlug}
+                        preselectedPackageId={initialPackageId}
+                      />
+                    </Suspense>
+                  </div>
                 </div>
               )}
             </div>
