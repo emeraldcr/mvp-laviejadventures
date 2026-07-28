@@ -1,196 +1,94 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, CalendarDays, Check, MapPin, Minus, Plus, ShieldCheck, Star } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowRight,
+  Clock3,
+  MapPin,
+  MessageCircle,
+  ShieldCheck,
+  Users,
+} from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
-import type { TourSummary } from "@/lib/types/index";
-import { BOOKING_HREF, WHATSAPP_HREF, formatTourPrice, primaryBookingLabel, tourTitle } from "./home-utils";
+import { BOOKING_HREF, WHATSAPP_HREF, primaryBookingLabel } from "./home-utils";
 
-const SLIDE_DURATION = 6500;
+const HERO_VIDEO_SOURCE =
+  "https://pixabay.com/videos/canyoning-waterfall-sport-adventure-158719/";
 
-const HERO_SLIDES = [
-  { src: "/image/IMG_4671.jpg", es: "Cañón Ciudad Esmeralda", en: "Ciudad Esmeralda Canyon" },
-  { src: "/image/IMG_6812.jpg", es: "Cascada El Zafiro", en: "El Zafiro Waterfall" },
-  { src: "/image/IMG_4257.jpg", es: "Pozas cristalinas", en: "Crystal pools" },
-  { src: "/image/IMG_6810.jpg", es: "Río La Vieja", en: "La Vieja River" },
-];
-
-function BookingCard({ tours }: { tours: TourSummary[] }) {
+export default function HomeHero() {
   const { lang } = useLanguage();
   const isEs = lang === "es";
-  const [people, setPeople] = useState(2);
-  const selectedTour = tours[0];
 
-  const handleBook = () => {
-    if (!selectedTour) return;
-    window.location.href = `${BOOKING_HREF}&pax=${people}`;
-  };
+  const facts = isEs
+    ? [
+        { icon: MapPin, value: "San Carlos", label: "Ribera del Río La Vieja" },
+        { icon: Users, value: "Grupos guiados", label: "Aventura acompañada" },
+        { icon: Clock3, value: "Naturaleza real", label: "Cañón, bosque y río" },
+        { icon: ShieldCheck, value: "Seguridad primero", label: "Ruta según condiciones" },
+      ]
+    : [
+        { icon: MapPin, value: "San Carlos", label: "La Vieja River region" },
+        { icon: Users, value: "Guided groups", label: "Accompanied adventure" },
+        { icon: Clock3, value: "Real nature", label: "Canyon, forest and river" },
+        { icon: ShieldCheck, value: "Safety first", label: "Route follows conditions" },
+      ];
 
   return (
-    <aside className="w-full max-w-[520px] rounded-[2.4rem] border border-white/16 bg-black/28 p-5 shadow-[0_34px_110px_rgba(0,0,0,0.46)] backdrop-blur-2xl">
-      <div className="rounded-[1.85rem] border border-white/10 bg-white/[0.08] p-7">
-        <div className="mb-7 flex items-start justify-between gap-4">
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-emerald-200/80">
-              {isEs ? "Reservá al toque" : "Book in a minute"}
-            </p>
-            <h2 className="mt-3 font-display text-3xl font-black leading-none text-white">
-              {isEs ? "Ciudad Esmeralda te espera" : "Ciudad Esmeralda is waiting"}
-            </h2>
-          </div>
-          <span className="rounded-full border border-emerald-300/25 bg-emerald-300/12 px-4 py-2 text-[10px] font-black uppercase tracking-wide text-emerald-200">
-            {isEs ? "Online" : "Online"}
+    <section className="relative min-h-[100svh] overflow-hidden bg-[#2E2A25] text-white">
+      <video
+        className="absolute inset-0 h-full w-full object-cover"
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="metadata"
+        poster="/image/IMG_4946.JPG"
+        aria-hidden="true"
+      >
+        <source src="/hero/canyoning-costa-rica-mobile.mp4" type="video/mp4" />
+      </video>
+
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(10,12,11,.52)_0%,rgba(8,10,9,.12)_33%,rgba(7,9,8,.55)_72%,rgba(6,7,6,.96)_100%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,transparent_10%,rgba(0,0,0,.22)_72%)]" />
+      <div className="pointer-events-none absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-black/28 to-transparent" />
+
+      <div className="relative mx-auto flex min-h-[100svh] w-full max-w-[1600px] flex-col px-4 pb-5 pt-28 sm:px-7 md:pt-32 lg:px-10">
+        <div className="flex items-center justify-between gap-4">
+          <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/25 px-4 py-2 text-[10px] font-extrabold uppercase tracking-[0.2em] backdrop-blur-md sm:text-xs">
+            <MapPin size={13} className="text-[#00C4B0]" />
+            {isEs ? "San Carlos · Costa Rica" : "San Carlos · Costa Rica"}
+          </span>
+          <span className="hidden items-center gap-2 rounded-full border border-[#00C4B0]/40 bg-black/25 px-4 py-2 text-[10px] font-extrabold uppercase tracking-[0.2em] text-white/90 backdrop-blur-md sm:inline-flex">
+            <span className="h-2 w-2 animate-pulse rounded-full bg-[#00C4B0]" />
+            {isEs ? "Aventura guiada" : "Guided adventure"}
           </span>
         </div>
 
-        <div className="space-y-6">
-          <div className="relative">
-            <span className="block text-[10px] font-bold uppercase tracking-widest text-emerald-200/80">
-              {isEs ? "Experiencia" : "Experience"}
-            </span>
-          <div className="mt-3 flex min-h-20 w-full items-center rounded-[1.35rem] border border-emerald-300/35 bg-emerald-300/10 px-5 py-4">
-              <span className="min-w-0">
-                <span className="block truncate text-base font-black text-white">
-                  {selectedTour ? tourTitle(selectedTour, isEs) : "Ciudad Esmeralda"}
-                </span>
-                {selectedTour && (
-                  <span className="mt-1 block text-xs font-bold uppercase tracking-wide text-emerald-200/75">
-                    {isEs ? "Desde" : "From"} {formatTourPrice(selectedTour, isEs)}
-                    {selectedTour.duration ? ` · ${selectedTour.duration}` : ""}
-                  </span>
-                )}
-              </span>
-          </div>
-          </div>
-
-          <div>
-            <span className="block text-[10px] font-bold uppercase tracking-widest text-emerald-200/80">
-            {isEs ? "Personas" : "Guests"}
-            </span>
-            <div className="mt-3 flex h-20 items-center justify-between rounded-[1.35rem] border border-white/12 bg-white/[0.08] px-4">
-            <button
-              type="button"
-              onClick={() => setPeople((p) => Math.max(1, p - 1))}
-              aria-label={isEs ? "Menos personas" : "Fewer guests"}
-              className="flex h-12 w-12 items-center justify-center rounded-full border border-white/20 text-white/75 transition hover:border-emerald-300/50 hover:bg-emerald-300/10 hover:text-white"
-            >
-              <Minus size={16} />
-            </button>
-            <span className="min-w-[2rem] text-center text-3xl font-black tabular-nums text-white">
-              {people}
-            </span>
-            <button
-              type="button"
-              onClick={() => setPeople((p) => Math.min(30, p + 1))}
-              aria-label={isEs ? "Más personas" : "More guests"}
-              className="flex h-12 w-12 items-center justify-center rounded-full border border-white/20 text-white/75 transition hover:border-emerald-300/50 hover:bg-emerald-300/10 hover:text-white"
-            >
-              <Plus size={16} />
-            </button>
-            </div>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={handleBook}
-          className="group mt-7 flex h-16 w-full items-center justify-center gap-2 rounded-[1.35rem] bg-emerald-400 px-8 text-sm font-black uppercase tracking-wide text-emerald-950 shadow-[0_22px_55px_rgba(16,185,129,0.26)] transition-all hover:-translate-y-0.5 hover:bg-white"
-        >
-          {primaryBookingLabel(isEs)}
-          <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
-        </button>
-
-        {selectedTour?.duration && (
-          <p className="mt-5 text-center text-sm font-semibold text-white/55">
-            {selectedTour.duration}
-            {selectedTour.difficulty ? ` - ${selectedTour.difficulty}` : ""}
+        <div className="flex flex-1 flex-col items-center justify-center pb-28 pt-12 text-center sm:pb-32">
+          <p className="mb-4 flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.32em] text-white/80 sm:text-xs">
+            <span className="h-px w-8 bg-[#00C4B0]" />
+            {isEs ? "Cañón · río · bosque" : "Canyon · river · forest"}
+            <span className="h-px w-8 bg-[#00C4B0]" />
           </p>
-        )}
-      </div>
-    </aside>
-  );
-}
 
-export default function HomeHero({ tours }: { tours: TourSummary[] }) {
-  const { lang } = useLanguage();
-  const isEs = lang === "es";
-  const [current, setCurrent] = useState(0);
-
-  const next = useCallback(() => setCurrent((c) => (c + 1) % HERO_SLIDES.length), []);
-
-  useEffect(() => {
-    const id = setInterval(next, SLIDE_DURATION);
-    return () => clearInterval(id);
-  }, [next]);
-
-  const trustItems = isEs
-    ? ["Cañón y pozas turquesa", "Cascada El Zafiro", "Guías de la zona", "Si el río crece, no arriesgamos"]
-    : ["Canyon and turquoise pools", "El Zafiro Waterfall", "Local guides", "If the river rises, we don't risk it"];
-
-  return (
-    <section className="relative flex min-h-[92svh] flex-col overflow-hidden bg-stone-950">
-      <div className="absolute inset-0">
-        {HERO_SLIDES.map((slide, index) => (
-          <div
-            key={slide.src}
-            className={`absolute inset-0 transition-opacity duration-[1400ms] ease-in-out ${
-              index === current ? "opacity-100" : "opacity-0"
-            }`}
-          >
-            <Image
-              src={slide.src}
-              alt={isEs ? slide.es : slide.en}
-              fill
-              priority={index === 0}
-              sizes="100vw"
-              className={`object-cover ${index === current ? "animate-[lva-kenburns_9s_ease-out_forwards]" : ""}`}
-            />
-          </div>
-        ))}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/50" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_22%_48%,rgba(16,185,129,0.24),transparent_28%),linear-gradient(90deg,rgba(0,0,0,0.72),rgba(0,0,0,0.24)_48%,rgba(0,0,0,0.04))]" />
-      </div>
-
-      <div className="relative mx-auto flex w-full max-w-[1520px] flex-1 items-center px-4 pb-10 pt-24 sm:px-6 md:pb-12 md:pt-28 lg:px-8">
-        <div className="grid w-full items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(430px,520px)] xl:gap-16">
-        <div>
-          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 backdrop-blur-md">
-            <span className="flex items-center gap-0.5 text-amber-400">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Star key={i} size={12} className="fill-current" />
-              ))}
+          <h1 className="max-w-[1300px] font-display text-[clamp(3.5rem,10.7vw,10.5rem)] font-black uppercase leading-[0.78] tracking-[-0.075em] drop-shadow-[0_8px_30px_rgba(0,0,0,.42)]">
+            {isEs ? "ENTRE AL" : "ENTER THE"}
+            <span className="mt-2 block text-[#00C4B0]">
+              {isEs ? "CAÑÓN." : "CANYON."}
             </span>
-            <span className="text-xs font-semibold text-white/90">
-              4.9 - {isEs ? "+500 aventureros felices" : "+500 happy adventurers"}
-            </span>
-          </div>
-
-          <h1 className="font-display max-w-5xl text-balance text-[clamp(2.6rem,5.8vw,5.8rem)] font-black leading-[0.92] tracking-tight text-white">
-            {isEs ? (
-              <>
-                Ciudad Esmeralda:{" "}
-                <span className="text-emerald-300">metete al cañón, mae.</span>
-              </>
-            ) : (
-              <>
-                Ciudad Esmeralda:{" "}
-                <span className="text-emerald-300">get into the canyon.</span>
-              </>
-            )}
           </h1>
 
-          <p className="mt-6 max-w-2xl text-base leading-relaxed text-white/82 md:text-xl">
+          <p className="mt-7 max-w-2xl text-balance text-sm font-semibold leading-relaxed text-white/85 sm:text-base md:text-lg">
             {isEs
-              ? "Sendero, río y cañón hasta la Cascada El Zafiro y las pozas turquesa. Guías de San Carlos, grupos chicos, y si el clima o el río se ponen bravos, ajustamos la ruta. Seguridad primero, pura vida después."
-              : "Trail, river, and canyon to El Zafiro Waterfall and the turquoise pools. San Carlos guides, small groups — and if weather or the river get rough, we adjust. Safety first, pura vida next."}
+              ? "Ciudad Esmeralda se vive con los pies en el río y la mirada arriba. Guías locales, equipo y una ruta que siempre se ajusta al clima."
+              : "Experience Ciudad Esmeralda with your feet in the river and your eyes up. Local guides, proper gear, and a route that always follows the weather."}
           </p>
 
-          <div className="mt-7 flex flex-wrap items-center gap-3">
+          <div className="mt-7 flex flex-col items-center gap-3 sm:flex-row">
             <Link
               href={BOOKING_HREF}
-              className="group inline-flex min-h-14 items-center gap-2 rounded-full bg-emerald-400 px-7 py-4 text-sm font-black uppercase tracking-wide text-emerald-950 shadow-[0_20px_55px_rgba(52,211,153,0.28)] transition-all hover:-translate-y-0.5 hover:bg-white"
+              className="group inline-flex min-h-14 items-center justify-center gap-3 rounded-full bg-[#00C4B0] px-7 text-xs font-black uppercase tracking-[0.12em] text-[#17211f] shadow-[0_18px_50px_rgba(0,196,176,.28)] transition hover:-translate-y-0.5 hover:bg-white"
             >
               {primaryBookingLabel(isEs)}
               <ArrowRight size={17} className="transition-transform group-hover:translate-x-1" />
@@ -199,56 +97,53 @@ export default function HomeHero({ tours }: { tours: TourSummary[] }) {
               href={WHATSAPP_HREF}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex min-h-14 items-center gap-2 rounded-full border border-white/25 bg-white/8 px-6 py-4 text-sm font-bold text-white backdrop-blur-md transition-all hover:border-white/50 hover:bg-white/14"
+              className="inline-flex min-h-14 items-center justify-center gap-3 rounded-full border border-white/30 bg-black/22 px-7 text-xs font-black uppercase tracking-[0.12em] text-white backdrop-blur-md transition hover:border-white/60 hover:bg-white/12"
             >
-              <ShieldCheck size={17} className="text-emerald-300" />
-              {isEs ? "Escribile a un guía" : "Message a guide"}
+              <MessageCircle size={17} />
+              {isEs ? "Hablar con un guía" : "Talk to a guide"}
             </a>
           </div>
+        </div>
 
-          <div className="mt-5 hidden flex-wrap items-center gap-x-5 gap-y-2 sm:flex">
-            {trustItems.map((item) => (
-              <span key={item} className="flex items-center gap-1.5 text-xs font-medium text-white/70">
-                <Check size={13} className="text-emerald-300" />
-                {item}
-              </span>
+        <div className="absolute inset-x-4 bottom-5 hidden overflow-hidden rounded-[1.6rem] border border-white/15 bg-black/46 shadow-[0_24px_80px_rgba(0,0,0,.34)] backdrop-blur-xl sm:inset-x-7 sm:block lg:inset-x-10">
+          <div className="grid sm:grid-cols-[1.35fr_repeat(3,1fr)]">
+            <div className="flex min-h-24 items-center justify-between gap-5 border-b border-white/12 p-5 sm:border-b-0 sm:border-r sm:p-6">
+              <div>
+                <p className="text-sm font-bold leading-relaxed text-white/82">
+                  {isEs
+                    ? "Aventura brava. Decisiones responsables."
+                    : "Bold adventure. Responsible decisions."}
+                </p>
+                <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.15em] text-[#00C4B0]">
+                  {isEs ? "El río manda, nosotros lo respetamos" : "The river leads, we respect it"}
+                </p>
+              </div>
+              <ArrowDown size={18} className="hidden shrink-0 text-[#00C4B0] md:block" />
+            </div>
+            {facts.slice(1).map(({ icon: Icon, value, label }) => (
+              <div
+                key={value}
+                className="hidden min-h-24 items-center gap-3 border-r border-white/12 p-5 last:border-r-0 sm:flex lg:p-6"
+              >
+                <Icon size={18} className="shrink-0 text-[#00C4B0]" />
+                <div className="min-w-0">
+                  <strong className="block text-xs font-black uppercase tracking-wide">{value}</strong>
+                  <span className="mt-1 block text-[10px] font-semibold text-white/55">{label}</span>
+                </div>
+              </div>
             ))}
           </div>
-
-          <div className="mt-8 lg:hidden">
-            <BookingCard tours={tours} />
-          </div>
-        </div>
-        <div className="hidden justify-self-end lg:block">
-          <BookingCard tours={tours} />
-        </div>
         </div>
       </div>
 
-      <div className="absolute bottom-7 right-4 z-10 hidden flex-col items-end gap-3 sm:right-8 md:flex">
-        <span className="flex items-center gap-1.5 rounded-full bg-black/35 px-3.5 py-1.5 text-[11px] font-semibold text-white/85 backdrop-blur-md">
-          <MapPin size={11} className="text-emerald-300" />
-          {isEs ? HERO_SLIDES[current].es : HERO_SLIDES[current].en}
-        </span>
-        <div className="flex items-center gap-2">
-          {HERO_SLIDES.map((slide, index) => (
-            <button
-              key={slide.src}
-              type="button"
-              onClick={() => setCurrent(index)}
-              aria-label={`${isEs ? "Ir a imagen" : "Go to image"} ${index + 1}`}
-              className={`h-1.5 rounded-full transition-all duration-300 ${
-                index === current ? "w-7 bg-emerald-300" : "w-1.5 bg-white/40 hover:bg-white/70"
-              }`}
-            />
-          ))}
-        </div>
-      </div>
-
-      <div className="absolute bottom-7 left-1/2 z-10 hidden -translate-x-1/2 items-center gap-2 rounded-full border border-white/12 bg-black/20 px-4 py-2 text-[11px] font-bold uppercase tracking-widest text-white/60 backdrop-blur-md lg:flex">
-        <CalendarDays size={13} className="text-emerald-300" />
-        {isEs ? "Cupos limitados · cuidamos el bosque" : "Limited spots · we protect the forest"}
-      </div>
+      <a
+        href={HERO_VIDEO_SOURCE}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="absolute right-5 top-24 z-10 hidden text-[8px] font-bold uppercase tracking-[0.15em] text-white/40 transition hover:text-white/75 lg:block"
+      >
+        Video: Pixabay
+      </a>
     </section>
   );
 }

@@ -598,6 +598,11 @@ function AddonPricePreview({
                 ? (lang === "es" ? `Total vehículo $${transportQuote.total}` : `Vehicle total $${transportQuote.total}`)
                 : (lang === "es" ? "Traslado compartido" : "Shared shuttle")}
             </p>
+            <p className="pt-1 text-xs font-semibold text-amber-700 dark:text-amber-300">
+              {lang === "es"
+                ? "Estimación sujeta a confirmación con Allan o Verónica."
+                : "Estimate subject to confirmation with Allan or Verónica."}
+            </p>
           </div>
         )}
         {transportConfigured && !transportLoading && !transportQuote && !transportError && (

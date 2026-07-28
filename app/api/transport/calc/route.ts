@@ -37,7 +37,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Could not resolve one or more reference points" }, { status: 400 });
     }
 
-    const result = calculateTransportCost({ pickupCoords, dropoffCoords, transportType, pax });
+    const result = calculateTransportCost({
+      pickupCoords,
+      dropoffCoords,
+      transportType,
+      pax,
+      pickupRefId: pickup?.type === "ref" ? pickup.id ?? null : null,
+      dropoffRefId: dropoff?.type === "ref" ? dropoff.id ?? null : null,
+    });
 
     return NextResponse.json({ ok: true, result, pickup: pickupCoords, dropoff: dropoffCoords });
   } catch (err) {

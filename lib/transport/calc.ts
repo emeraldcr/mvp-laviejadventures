@@ -77,13 +77,68 @@ export function priceForDistanceUSD(distanceKm: number, opts?: { ratePerKm?: num
   return Math.round(raw);
 }
 
+type RouteVehicleRates = {
+  car: number;
+  minibus: number;
+};
+
+// Market-based one-way estimates to/from La Vieja Adventures.
+// `car` covers 1–4 passengers; `minibus` covers 5–15 passengers.
+const FIXED_ROUTE_TOTALS_USD: Record<string, RouteVehicleRates> = {
+  "hotel-san-vicente|la-vieja-adventures": { car: 25, minibus: 70 },
+  "la-vieja-adventures|san-vicente": { car: 25, minibus: 70 },
+  "la-vieja-adventures|san-carlos": { car: 60, minibus: 110 },
+  "ciudad-quesada|la-vieja-adventures": { car: 70, minibus: 120 },
+  "hotel-ciudad-quesada|la-vieja-adventures": { car: 70, minibus: 120 },
+  "hotel-airbnb|la-vieja-adventures": { car: 70, minibus: 120 },
+  "la-fortuna|la-vieja-adventures": { car: 100, minibus: 160 },
+  "hotel-la-fortuna-central|la-vieja-adventures": { car: 100, minibus: 160 },
+  "hotel-arenal-area|la-vieja-adventures": { car: 120, minibus: 180 },
+  "hotel-san-jose-airport|la-vieja-adventures": { car: 200, minibus: 300 },
+  "la-vieja-adventures|san-jose": { car: 220, minibus: 330 },
+  "guanacaste-liberia|la-vieja-adventures": { car: 250, minibus: 370 },
+  "guanacaste-tamarindo|la-vieja-adventures": { car: 350, minibus: 500 },
+  "guanacaste-playa-hermosa|la-vieja-adventures": { car: 320, minibus: 470 },
+  "la-vieja-adventures|limon-puerto": { car: 300, minibus: 440 },
+  "la-vieja-adventures|limon-cahuita": { car: 340, minibus: 490 },
+  "la-vieja-adventures|limon-puerto-viejo": { car: 390, minibus: 560 },
+  "la-vieja-adventures|puntarenas-puerto": { car: 220, minibus: 330 },
+  "la-vieja-adventures|puntarenas-uvita": { car: 420, minibus: 600 },
+  "la-vieja-adventures|puntarenas-dominical": { car: 380, minibus: 550 },
+  "la-vieja-adventures|perez-zeledon": { car: 380, minibus: 550 },
+};
+
+function fixedRoutePrice(pickupRefId?: string | null, dropoffRefId?: string | null, pax = 1) {
+  if (!pickupRefId || !dropoffRefId) return null;
+  const routeKey = [pickupRefId, dropoffRefId].sort().join("|");
+  const rates = FIXED_ROUTE_TOTALS_USD[routeKey];
+  if (!rates) return null;
+
+  const passengerCount = Math.max(1, pax);
+  if (passengerCount <= 4) return rates.car;
+
+  // From 5 to 15 passengers, quote one full minibus even when the group
+  // does not use every seat. Larger groups require another minibus block.
+  const minibusCount = Math.ceil(passengerCount / 15);
+  return rates.minibus * minibusCount;
+}
+
 export function calculateTransportCost(params: {
   pickupCoords: { lat: number; lng: number } | null;
   dropoffCoords: { lat: number; lng: number } | null;
   transportType: "private" | "shared";
   pax?: number;
+  pickupRefId?: string | null;
+  dropoffRefId?: string | null;
 }) {
-  const { pickupCoords, dropoffCoords, transportType, pax = 1 } = params;
+  const {
+    pickupCoords,
+    dropoffCoords,
+    transportType,
+    pax = 1,
+    pickupRefId,
+    dropoffRefId,
+  } = params;
 
   // Decide which two points to measure between. If both provided, use distance between them.
   // If only pickup provided, treat dropoff as destination (caller should provide destination coords if needed).
@@ -93,7 +148,8 @@ export function calculateTransportCost(params: {
   const b = dropoffCoords ?? pickupCoords!;
 
   const distanceKm = haversineDistanceKm(a.lat, a.lng, b.lat, b.lng);
-  const base = priceForDistanceUSD(distanceKm);
+  const routePrice = fixedRoutePrice(pickupRefId, dropoffRefId, pax);
+  const base = routePrice ?? priceForDistanceUSD(distanceKm);
 
   // Price components: treat pickup and dropoff as separate legs if both provided
   const legs = (pickupCoords && dropoffCoords) ? 1 : 1; // current model: single leg between points
@@ -106,13 +162,13 @@ export function calculateTransportCost(params: {
       basePrice: base,
       legs,
       total,
-      perPerson: Math.round(total / Math.max(1, pax)),
+      perPerson: Number((total / Math.max(1, pax)).toFixed(2)),
       type: "private",
     };
   }
 
   // shared
-  const perPersonShared = Math.round(total / Math.max(1, pax));
+  const perPersonShared = Number((total / Math.max(1, pax)).toFixed(2));
   return {
     distanceKm: Number(distanceKm.toFixed(2)),
     basePrice: base,

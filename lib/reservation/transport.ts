@@ -40,6 +40,9 @@ export const TRANSPORT_PICKUP_OPTIONS = [
   { id: "puntarenas-puerto", labelEs: "Puerto de Puntarenas", labelEn: "Puntarenas Port", region: "puntarenas", distance: 220 },
   { id: "puntarenas-uvita", labelEs: "Uvita, Puntarenas", labelEn: "Uvita, Puntarenas", region: "puntarenas", distance: 340 },
   { id: "puntarenas-dominical", labelEs: "Dominical, Puntarenas", labelEn: "Dominical, Puntarenas", region: "puntarenas", distance: 310 },
+
+  // Zona Sur
+  { id: "perez-zeledon", labelEs: "Pérez Zeledón", labelEn: "Pérez Zeledón", region: "south", distance: 300 },
   
   // San Vicente
   { id: "hotel-san-vicente", labelEs: "Hotel - San Vicente", labelEn: "Hotel - San Vicente", region: "local", distance: 15 },

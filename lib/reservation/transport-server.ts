@@ -30,5 +30,7 @@ export async function quoteTransportAddon(
     dropoffCoords,
     transportType,
     pax: Math.max(1, pax),
+    pickupRefId: pickup.id,
+    dropoffRefId: dropoff.id,
   }) as TransportQuoteResult;
 }

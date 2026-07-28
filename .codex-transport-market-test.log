@@ -1,0 +1,179 @@
+
+> nextjs@0.1.0 dev
+> next dev --hostname 127.0.0.1
+
+▲ Next.js 16.2.10 (Turbopack)
+- Local:         http://127.0.0.1:3000
+- Network:       http://127.0.0.1:3000
+- Environments: .env.local, .env
+✓ Ready in 514ms
+Creating turbopack project {
+  dir: 'C:\\Users\\aroja\\Documents\\Github\\mvp-laviejadventures',
+  testMode: true
+}
+- Experiments (use with caution):
+  · optimizePackageImports
+  ✓ turbopackFileSystemCacheForBuild
+
+[browser] Uncaught Error: Internal Next.js error: Router action dispatched before initialization.
+[browser] Uncaught Error: Internal Next.js error: Router action dispatched before initialization.
+[browser] Uncaught Error: Internal Next.js error: Router action dispatched before initialization.
+ GET /reservar?tour=tour-ciudad-esmeralda&date=2026-07-28&pax=2&package=paquete-privado 200 in 1122ms (next.js: 423ms, application-code: 699ms)
+ GET /api/user/profile 401 in 65ms (next.js: 57ms, application-code: 9ms)
+ POST /api/transport/calc 200 in 32ms (next.js: 26ms, application-code: 6ms)
+ POST /api/transport/calc 200 in 6ms (next.js: 2ms, application-code: 4ms)
+ POST /api/transport/calc 200 in 6ms (next.js: 2ms, application-code: 4ms)
+ POST /api/transport/calc 200 in 6ms (next.js: 1938µs, application-code: 5ms)
+ POST /api/transport/calc 200 in 5ms (next.js: 1553µs, application-code: 3ms)
+ POST /api/transport/calc 200 in 4ms (next.js: 1273µs, application-code: 3ms)
+ POST /api/transport/calc 200 in 5ms (next.js: 1460µs, application-code: 3ms)
+ POST /api/transport/calc 200 in 6ms (next.js: 2ms, application-code: 3ms)
+ POST /api/transport/calc 200 in 5ms (next.js: 1416µs, application-code: 3ms)
+ POST /api/transport/calc 200 in 5ms (next.js: 1803µs, application-code: 3ms)
+ POST /api/transport/calc 200 in 5ms (next.js: 1551µs, application-code: 3ms)
+ POST /api/transport/calc 200 in 5ms (next.js: 1417µs, application-code: 3ms)
+ POST /api/transport/calc 200 in 4ms (next.js: 1420µs, application-code: 3ms)
+ POST /api/transport/calc 200 in 4ms (next.js: 1287µs, application-code: 3ms)
+ POST /api/transport/calc 200 in 6ms (next.js: 1852µs, application-code: 4ms)
+ POST /api/transport/calc 200 in 4ms (next.js: 1420µs, application-code: 3ms)
+ POST /api/transport/calc 200 in 4ms (next.js: 1197µs, application-code: 3ms)
+ POST /api/transport/calc 200 in 5ms (next.js: 1540µs, application-code: 3ms)
+ POST /api/transport/calc 200 in 5ms (next.js: 1370µs, application-code: 4ms)
+ POST /api/transport/calc 200 in 4ms (next.js: 1333µs, application-code: 3ms)
+ POST /api/transport/calc 200 in 4ms (next.js: 1322µs, application-code: 3ms)
+ POST /api/transport/calc 200 in 4ms (next.js: 1322µs, application-code: 3ms)
+ POST /api/transport/calc 200 in 6ms (next.js: 1855µs, application-code: 4ms)
+ POST /api/transport/calc 200 in 5ms (next.js: 1322µs, application-code: 3ms)
+ POST /api/transport/calc 200 in 6ms (next.js: 2ms, application-code: 4ms)
+ POST /api/transport/calc 200 in 4ms (next.js: 1321µs, application-code: 3ms)
+ POST /api/transport/calc 200 in 4ms (next.js: 1276µs, application-code: 3ms)
+ POST /api/transport/calc 200 in 5ms (next.js: 1539µs, application-code: 3ms)
+ POST /api/transport/calc 200 in 4ms (next.js: 1587µs, application-code: 3ms)
+ POST /api/transport/calc 200 in 4ms (next.js: 1138µs, application-code: 3ms)
+ POST /api/transport/calc 200 in 4ms (next.js: 1368µs, application-code: 3ms)
+ POST /api/transport/calc 200 in 4ms (next.js: 1183µs, application-code: 3ms)
+ POST /api/transport/calc 200 in 4ms (next.js: 1445µs, application-code: 3ms)
+ POST /api/transport/calc 200 in 4ms (next.js: 1312µs, application-code: 3ms)
+ POST /api/transport/calc 200 in 4ms (next.js: 1081µs, application-code: 3ms)
+ POST /api/transport/calc 200 in 4ms (next.js: 1189µs, application-code: 3ms)
+ POST /api/transport/calc 200 in 5ms (next.js: 2ms, application-code: 3ms)
+ POST /api/transport/calc 200 in 5ms (next.js: 1356µs, application-code: 3ms)
+ POST /api/transport/calc 200 in 4ms (next.js: 1219µs, application-code: 3ms)
+ POST /api/transport/calc 200 in 4ms (next.js: 1381µs, application-code: 3ms)
+ POST /api/transport/calc 200 in 5ms (next.js: 1470µs, application-code: 3ms)
+ POST /api/transport/calc 200 in 4ms (next.js: 1294µs, application-code: 3ms)
+ POST /api/transport/calc 200 in 4ms (next.js: 1332µs, application-code: 3ms)
+ POST /api/transport/calc 200 in 4ms (next.js: 1222µs, application-code: 3ms)
+ POST /api/transport/calc 200 in 5ms (next.js: 1566µs, application-code: 3ms)
+ POST /api/analytics/events 200 in 30.0s (next.js: 318ms, application-code: 29.7s)
+analytics events api error Error: querySrv ETIMEOUT _mongodb._tcp.atlas-blue-ridge.jwlcge9.mongodb.net
+    at ignore-listed frames {
+  errno: undefined,
+  code: 'ETIMEOUT',
+  syscall: 'querySrv',
+  hostname: '_mongodb._tcp.atlas-blue-ridge.jwlcge9.mongodb.net'
+}
+Public IVA settings GET error Error: querySrv ETIMEOUT _mongodb._tcp.atlas-blue-ridge.jwlcge9.mongodb.net
+    at ignore-listed frames {
+  errno: undefined,
+  code: 'ETIMEOUT',
+  syscall: 'querySrv',
+  hostname: '_mongodb._tcp.atlas-blue-ridge.jwlcge9.mongodb.net'
+}
+ GET /api/settings/iva 200 in 67s (next.js: 2ms, application-code: 67s)
+GET /api/tours error: Error: querySrv ETIMEOUT _mongodb._tcp.atlas-blue-ridge.jwlcge9.mongodb.net
+    at ignore-listed frames {
+  errno: undefined,
+  code: 'ETIMEOUT',
+  syscall: 'querySrv',
+  hostname: '_mongodb._tcp.atlas-blue-ridge.jwlcge9.mongodb.net'
+}
+⨯ Error: querySrv ETIMEOUT _mongodb._tcp.atlas-blue-ridge.jwlcge9.mongodb.net
+    at ignore-listed frames {
+  errno: undefined,
+  code: 'ETIMEOUT',
+  syscall: 'querySrv',
+  hostname: '_mongodb._tcp.atlas-blue-ridge.jwlcge9.mongodb.net'
+}
+ GET /api/tours 500 in 97s (next.js: 95ms, application-code: 97s)
+ GET /api/calendar/availability?year=2026&month=6&tourSlug=tour-ciudad-esmeralda 500 in 97s (next.js: 35ms, application-code: 97s)
+GET /api/tours/main error: Error: querySrv ETIMEOUT _mongodb._tcp.atlas-blue-ridge.jwlcge9.mongodb.net
+    at ignore-listed frames {
+  errno: undefined,
+  code: 'ETIMEOUT',
+  syscall: 'querySrv',
+  hostname: '_mongodb._tcp.atlas-blue-ridge.jwlcge9.mongodb.net'
+}
+analytics events api error Error: querySrv ETIMEOUT _mongodb._tcp.atlas-blue-ridge.jwlcge9.mongodb.net
+    at ignore-listed frames {
+  errno: undefined,
+  code: 'ETIMEOUT',
+  syscall: 'querySrv',
+  hostname: '_mongodb._tcp.atlas-blue-ridge.jwlcge9.mongodb.net'
+}
+Public IVA settings GET error Error: querySrv ETIMEOUT _mongodb._tcp.atlas-blue-ridge.jwlcge9.mongodb.net
+    at ignore-listed frames {
+  errno: undefined,
+  code: 'ETIMEOUT',
+  syscall: 'querySrv',
+  hostname: '_mongodb._tcp.atlas-blue-ridge.jwlcge9.mongodb.net'
+}
+ GET /api/tours/main?slug=tour-ciudad-esmeralda 500 in 99s (next.js: 26ms, application-code: 99s)
+ POST /api/analytics/events 500 in 84s (next.js: 2ms, application-code: 84s)
+ GET /api/settings/iva 200 in 99s (next.js: 62ms, application-code: 99s)
+GET /api/tours error: Error: querySrv ETIMEOUT _mongodb._tcp.atlas-blue-ridge.jwlcge9.mongodb.net
+    at ignore-listed frames {
+  errno: undefined,
+  code: 'ETIMEOUT',
+  syscall: 'querySrv',
+  hostname: '_mongodb._tcp.atlas-blue-ridge.jwlcge9.mongodb.net'
+}
+ GET /api/tours 500 in 43s (next.js: 2ms, application-code: 43s)
+analytics events api error Error: querySrv ETIMEOUT _mongodb._tcp.atlas-blue-ridge.jwlcge9.mongodb.net
+    at ignore-listed frames {
+  errno: undefined,
+  code: 'ETIMEOUT',
+  syscall: 'querySrv',
+  hostname: '_mongodb._tcp.atlas-blue-ridge.jwlcge9.mongodb.net'
+}
+⨯ Error: querySrv ETIMEOUT _mongodb._tcp.atlas-blue-ridge.jwlcge9.mongodb.net
+    at ignore-listed frames {
+  errno: undefined,
+  code: 'ETIMEOUT',
+  syscall: 'querySrv',
+  hostname: '_mongodb._tcp.atlas-blue-ridge.jwlcge9.mongodb.net'
+}
+ POST /api/analytics/events 500 in 89s (next.js: 3ms, application-code: 89s)
+ GET /api/calendar/availability?year=2026&month=6&tourSlug=tour-ciudad-esmeralda 500 in 91s (next.js: 3ms, application-code: 91s)
+analytics events api error Error: querySrv ETIMEOUT _mongodb._tcp.atlas-blue-ridge.jwlcge9.mongodb.net
+    at ignore-listed frames {
+  errno: undefined,
+  code: 'ETIMEOUT',
+  syscall: 'querySrv',
+  hostname: '_mongodb._tcp.atlas-blue-ridge.jwlcge9.mongodb.net'
+}
+ POST /api/analytics/events 500 in 91s (next.js: 3ms, application-code: 91s)
+GET /api/tours/main error: Error: querySrv ETIMEOUT _mongodb._tcp.atlas-blue-ridge.jwlcge9.mongodb.net
+    at ignore-listed frames {
+  errno: undefined,
+  code: 'ETIMEOUT',
+  syscall: 'querySrv',
+  hostname: '_mongodb._tcp.atlas-blue-ridge.jwlcge9.mongodb.net'
+}
+ GET /api/tours/main?slug=tour-ciudad-esmeralda 500 in 94s (next.js: 8ms, application-code: 94s)
+analytics events api error Error: querySrv ETIMEOUT _mongodb._tcp.atlas-blue-ridge.jwlcge9.mongodb.net
+    at ignore-listed frames {
+  errno: undefined,
+  code: 'ETIMEOUT',
+  syscall: 'querySrv',
+  hostname: '_mongodb._tcp.atlas-blue-ridge.jwlcge9.mongodb.net'
+}
+ POST /api/analytics/events 500 in 95s (next.js: 8ms, application-code: 95s)
+analytics events api error Error: querySrv ETIMEOUT _mongodb._tcp.atlas-blue-ridge.jwlcge9.mongodb.net
+    at ignore-listed frames {
+  errno: undefined,
+  code: 'ETIMEOUT',
+  syscall: 'querySrv',
+  hostname: '_mongodb._tcp.atlas-blue-ridge.jwlcge9.mongodb.net'
+}
+ POST /api/analytics/events 500 in 98s (next.js: 3ms, application-code: 98s)

@@ -34,7 +34,7 @@ export default function Home(): JSX.Element {
     >
       <main className="min-h-screen overflow-x-hidden bg-[#FAF9F6] font-sans text-stone-900 dark:bg-[#0b0a09] dark:text-stone-100">
         <HomeNav />
-        <HomeHero tours={featuredTours} />
+        <HomeHero />
         <FeaturedStory tours={featuredTours} />
         {otherTours.length > 0 && <ToursShowcase tours={otherTours} />}
         <HomeFaqFooter tours={featuredTours} />
