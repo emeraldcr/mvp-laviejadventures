@@ -274,7 +274,11 @@ export function CalendarProvider({
     if (nextDay != null) setSelectedDay(nextDay);
   }, [findFirstAvailableDay]);
 
+  const initialDateAppliedRef = useRef(false);
+
   useEffect(() => {
+    if (initialDateAppliedRef.current) return;
+    initialDateAppliedRef.current = true;
     if (!initialDateIso) return;
     const match = initialDateIso.trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
     if (!match) return;
@@ -284,39 +288,6 @@ export function CalendarProvider({
     date.setHours(0, 0, 0, 0);
     setSelectedDate(date);
   }, [initialDateIso, setSelectedDate]);
-
-  const emptyMonthAdvanceRef = useRef(0);
-
-  // Auto-pick the soonest open day; if this month is empty, jump forward a few months.
-  useEffect(() => {
-    if (availabilityLoading || availabilityError) return;
-
-    if (selectedDay != null) {
-      emptyMonthAdvanceRef.current = 0;
-      return;
-    }
-
-    const nextDay = findFirstAvailableDay();
-    if (nextDay != null) {
-      emptyMonthAdvanceRef.current = 0;
-      setSelectedDay(nextDay);
-      return;
-    }
-
-    // No open days left in the visible month — advance automatically (max 3 months).
-    if (emptyMonthAdvanceRef.current >= 3) return;
-    emptyMonthAdvanceRef.current += 1;
-    const next = new Date(currentYear, currentMonth + 1, 1);
-    setCurrentYear(next.getFullYear());
-    setCurrentMonth(next.getMonth());
-  }, [
-    availabilityError,
-    availabilityLoading,
-    currentMonth,
-    currentYear,
-    findFirstAvailableDay,
-    selectedDay,
-  ]);
 
   const value: CalendarContextValue = {
     currentYear,

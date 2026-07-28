@@ -13,9 +13,6 @@ import {
 import { useLanguage } from "@/lib/LanguageContext";
 import { BOOKING_HREF, WHATSAPP_HREF, primaryBookingLabel } from "./home-utils";
 
-const HERO_VIDEO_SOURCE =
-  "https://pixabay.com/videos/canyoning-waterfall-sport-adventure-158719/";
-
 export default function HomeHero() {
   const { lang } = useLanguage();
   const isEs = lang === "es";
@@ -43,10 +40,10 @@ export default function HomeHero() {
         loop
         playsInline
         preload="metadata"
-        poster="/image/IMG_4946.JPG"
+        poster="/hero/ciudad-esmeralda-poster.jpg"
         aria-hidden="true"
       >
-        <source src="/hero/canyoning-costa-rica-mobile.mp4" type="video/mp4" />
+        <source src="/hero/ciudad-esmeralda-hero.mp4" type="video/mp4" />
       </video>
 
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(10,12,11,.52)_0%,rgba(8,10,9,.12)_33%,rgba(7,9,8,.55)_72%,rgba(6,7,6,.96)_100%)]" />
@@ -136,14 +133,6 @@ export default function HomeHero() {
         </div>
       </div>
 
-      <a
-        href={HERO_VIDEO_SOURCE}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="absolute right-5 top-24 z-10 hidden text-[8px] font-bold uppercase tracking-[0.15em] text-white/40 transition hover:text-white/75 lg:block"
-      >
-        Video: Pixabay
-      </a>
     </section>
   );
 }

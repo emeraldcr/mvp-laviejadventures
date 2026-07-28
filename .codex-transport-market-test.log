@@ -195,3 +195,516 @@ analytics events api error Error: querySrv ETIMEOUT _mongodb._tcp.atlas-blue-rid
   105 |
   106 |         const data = (await res.json()) as { availability?: AvailabilityMap };
   107 |         if (!cancelled) { (lib/contexts/CalendarContext.tsx:114:17)
+⨯ Error: querySrv ETIMEOUT _mongodb._tcp.atlas-blue-ridge.jwlcge9.mongodb.net
+    at ignore-listed frames {
+  errno: undefined,
+  code: 'ETIMEOUT',
+  syscall: 'querySrv',
+  hostname: '_mongodb._tcp.atlas-blue-ridge.jwlcge9.mongodb.net'
+}
+ GET /api/calendar/availability?year=2026&month=6&tourSlug=tour-ciudad-esmeralda 500 in 44s (next.js: 1808µs, application-code: 44s)
+[browser] Failed to load calendar availability: Error: Availability request failed with 500
+    at CalendarProvider.useEffect.loadAvailability (lib/contexts/CalendarContext.tsx:104:28)
+  102 |
+  103 |         const res = await fetch(`/api/calendar/availability?${params.toString()}`);
+> 104 |         if (!res.ok) throw new Error(`Availability request failed with ${res.status}`);
+      |                            ^
+  105 |
+  106 |         const data = (await res.json()) as { availability?: AvailabilityMap };
+  107 |         if (!cancelled) { (lib/contexts/CalendarContext.tsx:114:17)
+✓ Compiled in 207ms
+ GET /reservar?tour=tour-ciudad-esmeralda&date=2026-07-28&pax=2&package=private-package 200 in 121ms (next.js: 50ms, application-code: 71ms)
+⨯ ./app/(page_routes)/reservar/page.tsx:11:1
+Module not found: Can't resolve '@/app/components/sections/BookingSection'
+  [90m 9 |[0m [36mimport[0m { useTheme } [36mfrom[0m [32m"@/lib/ThemeContext"[0m;
+  [90m10 |[0m [36mimport[0m { useReservationData } [36mfrom[0m [32m"@/lib/hooks/useReservationData"[0m;
+[31m[1m>[0m [90m11 |[0m [36mimport[0m [33mBookingSection[0m [36mfrom[0m [32m"@/app/components/sections/BookingSection"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m12 |[0m [36mimport[0m { getTourImage } [36mfrom[0m [32m"@/lib/tour-display"[0m;
+  [90m13 |[0m [36mimport[0m { formatTourPrice } [36mfrom[0m [32m"@/app/components/home/home-utils"[0m;
+  [90m14 |[0m
+
+Import map: aliased to relative './app/components/sections/BookingSection' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./app/(page_routes)/reservar/page.tsx [Client Component Browser]
+    ./app/(page_routes)/reservar/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/(page_routes)/reservar/page.tsx [Client Component SSR]
+    ./app/(page_routes)/reservar/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./app/(page_routes)/reservar/page.tsx:11:1
+Module not found: Can't resolve '@/app/components/sections/BookingSection'
+  [90m 9 |[0m [36mimport[0m { useTheme } [36mfrom[0m [32m"@/lib/ThemeContext"[0m;
+  [90m10 |[0m [36mimport[0m { useReservationData } [36mfrom[0m [32m"@/lib/hooks/useReservationData"[0m;
+[31m[1m>[0m [90m11 |[0m [36mimport[0m [33mBookingSection[0m [36mfrom[0m [32m"@/app/components/sections/BookingSection"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m12 |[0m [36mimport[0m { getTourImage } [36mfrom[0m [32m"@/lib/tour-display"[0m;
+  [90m13 |[0m [36mimport[0m { formatTourPrice } [36mfrom[0m [32m"@/app/components/home/home-utils"[0m;
+  [90m14 |[0m
+
+Import map: aliased to relative './app/components/sections/BookingSection' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./app/(page_routes)/reservar/page.tsx [Client Component Browser]
+    ./app/(page_routes)/reservar/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/(page_routes)/reservar/page.tsx [Client Component SSR]
+    ./app/(page_routes)/reservar/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./app/(page_routes)/reservar/page.tsx:11:1
+Module not found: Can't resolve '@/app/components/sections/BookingSection'
+  [90m 9 |[0m [36mimport[0m { useTheme } [36mfrom[0m [32m"@/lib/ThemeContext"[0m;
+  [90m10 |[0m [36mimport[0m { useReservationData } [36mfrom[0m [32m"@/lib/hooks/useReservationData"[0m;
+[31m[1m>[0m [90m11 |[0m [36mimport[0m [33mBookingSection[0m [36mfrom[0m [32m"@/app/components/sections/BookingSection"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m12 |[0m [36mimport[0m { getTourImage } [36mfrom[0m [32m"@/lib/tour-display"[0m;
+  [90m13 |[0m [36mimport[0m { formatTourPrice } [36mfrom[0m [32m"@/app/components/home/home-utils"[0m;
+  [90m14 |[0m
+
+Import map: aliased to relative './app/components/sections/BookingSection' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./app/(page_routes)/reservar/page.tsx [Client Component Browser]
+    ./app/(page_routes)/reservar/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/(page_routes)/reservar/page.tsx [Client Component SSR]
+    ./app/(page_routes)/reservar/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./app/(page_routes)/reservar/page.tsx:11:1
+Module not found: Can't resolve '@/app/components/sections/BookingSection'
+  [90m 9 |[0m [36mimport[0m { useTheme } [36mfrom[0m [32m"@/lib/ThemeContext"[0m;
+  [90m10 |[0m [36mimport[0m { useReservationData } [36mfrom[0m [32m"@/lib/hooks/useReservationData"[0m;
+[31m[1m>[0m [90m11 |[0m [36mimport[0m [33mBookingSection[0m [36mfrom[0m [32m"@/app/components/sections/BookingSection"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m12 |[0m [36mimport[0m { getTourImage } [36mfrom[0m [32m"@/lib/tour-display"[0m;
+  [90m13 |[0m [36mimport[0m { formatTourPrice } [36mfrom[0m [32m"@/app/components/home/home-utils"[0m;
+  [90m14 |[0m
+
+Import map: aliased to relative './app/components/sections/BookingSection' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./app/(page_routes)/reservar/page.tsx [Client Component Browser]
+    ./app/(page_routes)/reservar/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/(page_routes)/reservar/page.tsx [Client Component SSR]
+    ./app/(page_routes)/reservar/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./app/(page_routes)/reservar/page.tsx:11:1
+Module not found: Can't resolve '@/app/components/sections/BookingSection'
+  [90m 9 |[0m [36mimport[0m { useTheme } [36mfrom[0m [32m"@/lib/ThemeContext"[0m;
+  [90m10 |[0m [36mimport[0m { useReservationData } [36mfrom[0m [32m"@/lib/hooks/useReservationData"[0m;
+[31m[1m>[0m [90m11 |[0m [36mimport[0m [33mBookingSection[0m [36mfrom[0m [32m"@/app/components/sections/BookingSection"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m12 |[0m [36mimport[0m { getTourImage } [36mfrom[0m [32m"@/lib/tour-display"[0m;
+  [90m13 |[0m [36mimport[0m { formatTourPrice } [36mfrom[0m [32m"@/app/components/home/home-utils"[0m;
+  [90m14 |[0m
+
+Import map: aliased to relative './app/components/sections/BookingSection' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./app/(page_routes)/reservar/page.tsx [Client Component Browser]
+    ./app/(page_routes)/reservar/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/(page_routes)/reservar/page.tsx [Client Component SSR]
+    ./app/(page_routes)/reservar/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./app/(page_routes)/reservar/page.tsx:11:1
+Module not found: Can't resolve '@/app/components/sections/BookingSection'
+  [90m 9 |[0m [36mimport[0m { useTheme } [36mfrom[0m [32m"@/lib/ThemeContext"[0m;
+  [90m10 |[0m [36mimport[0m { useReservationData } [36mfrom[0m [32m"@/lib/hooks/useReservationData"[0m;
+[31m[1m>[0m [90m11 |[0m [36mimport[0m [33mBookingSection[0m [36mfrom[0m [32m"@/app/components/sections/BookingSection"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m12 |[0m [36mimport[0m { getTourImage } [36mfrom[0m [32m"@/lib/tour-display"[0m;
+  [90m13 |[0m [36mimport[0m { formatTourPrice } [36mfrom[0m [32m"@/app/components/home/home-utils"[0m;
+  [90m14 |[0m
+
+Import map: aliased to relative './app/components/sections/BookingSection' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./app/(page_routes)/reservar/page.tsx [Client Component Browser]
+    ./app/(page_routes)/reservar/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/(page_routes)/reservar/page.tsx [Client Component SSR]
+    ./app/(page_routes)/reservar/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./app/(page_routes)/reservar/page.tsx:11:1
+Module not found: Can't resolve '@/app/components/sections/BookingSection'
+  [90m 9 |[0m [36mimport[0m { useTheme } [36mfrom[0m [32m"@/lib/ThemeContext"[0m;
+  [90m10 |[0m [36mimport[0m { useReservationData } [36mfrom[0m [32m"@/lib/hooks/useReservationData"[0m;
+[31m[1m>[0m [90m11 |[0m [36mimport[0m [33mBookingSection[0m [36mfrom[0m [32m"@/app/components/sections/BookingSection"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m12 |[0m [36mimport[0m { getTourImage } [36mfrom[0m [32m"@/lib/tour-display"[0m;
+  [90m13 |[0m [36mimport[0m { formatTourPrice } [36mfrom[0m [32m"@/app/components/home/home-utils"[0m;
+  [90m14 |[0m
+
+Import map: aliased to relative './app/components/sections/BookingSection' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./app/(page_routes)/reservar/page.tsx [Client Component Browser]
+    ./app/(page_routes)/reservar/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/(page_routes)/reservar/page.tsx [Client Component SSR]
+    ./app/(page_routes)/reservar/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./app/(page_routes)/reservar/page.tsx:11:1
+Module not found: Can't resolve '@/app/components/sections/BookingSection'
+  [90m 9 |[0m [36mimport[0m { useTheme } [36mfrom[0m [32m"@/lib/ThemeContext"[0m;
+  [90m10 |[0m [36mimport[0m { useReservationData } [36mfrom[0m [32m"@/lib/hooks/useReservationData"[0m;
+[31m[1m>[0m [90m11 |[0m [36mimport[0m [33mBookingSection[0m [36mfrom[0m [32m"@/app/components/sections/BookingSection"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m12 |[0m [36mimport[0m { getTourImage } [36mfrom[0m [32m"@/lib/tour-display"[0m;
+  [90m13 |[0m [36mimport[0m { formatTourPrice } [36mfrom[0m [32m"@/app/components/home/home-utils"[0m;
+  [90m14 |[0m
+
+Import map: aliased to relative './app/components/sections/BookingSection' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./app/(page_routes)/reservar/page.tsx [Client Component Browser]
+    ./app/(page_routes)/reservar/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/(page_routes)/reservar/page.tsx [Client Component SSR]
+    ./app/(page_routes)/reservar/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./app/(page_routes)/reservar/page.tsx:11:1
+Module not found: Can't resolve '@/app/components/sections/BookingSection'
+  [90m 9 |[0m [36mimport[0m { useTheme } [36mfrom[0m [32m"@/lib/ThemeContext"[0m;
+  [90m10 |[0m [36mimport[0m { useReservationData } [36mfrom[0m [32m"@/lib/hooks/useReservationData"[0m;
+[31m[1m>[0m [90m11 |[0m [36mimport[0m [33mBookingSection[0m [36mfrom[0m [32m"@/app/components/sections/BookingSection"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m12 |[0m [36mimport[0m { getTourImage } [36mfrom[0m [32m"@/lib/tour-display"[0m;
+  [90m13 |[0m [36mimport[0m { formatTourPrice } [36mfrom[0m [32m"@/app/components/home/home-utils"[0m;
+  [90m14 |[0m
+
+Import map: aliased to relative './app/components/sections/BookingSection' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./app/(page_routes)/reservar/page.tsx [Client Component Browser]
+    ./app/(page_routes)/reservar/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/(page_routes)/reservar/page.tsx [Client Component SSR]
+    ./app/(page_routes)/reservar/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./app/(page_routes)/reservar/page.tsx:11:1
+Module not found: Can't resolve '@/app/components/sections/BookingSection'
+  [90m 9 |[0m [36mimport[0m { useTheme } [36mfrom[0m [32m"@/lib/ThemeContext"[0m;
+  [90m10 |[0m [36mimport[0m { useReservationData } [36mfrom[0m [32m"@/lib/hooks/useReservationData"[0m;
+[31m[1m>[0m [90m11 |[0m [36mimport[0m [33mBookingSection[0m [36mfrom[0m [32m"@/app/components/sections/BookingSection"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m12 |[0m [36mimport[0m { getTourImage } [36mfrom[0m [32m"@/lib/tour-display"[0m;
+  [90m13 |[0m [36mimport[0m { formatTourPrice } [36mfrom[0m [32m"@/app/components/home/home-utils"[0m;
+  [90m14 |[0m
+
+Import map: aliased to relative './app/components/sections/BookingSection' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./app/(page_routes)/reservar/page.tsx [Client Component Browser]
+    ./app/(page_routes)/reservar/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/(page_routes)/reservar/page.tsx [Client Component SSR]
+    ./app/(page_routes)/reservar/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./app/(page_routes)/reservar/page.tsx:11:1
+Module not found: Can't resolve '@/app/components/sections/BookingSection'
+  [90m 9 |[0m [36mimport[0m { useTheme } [36mfrom[0m [32m"@/lib/ThemeContext"[0m;
+  [90m10 |[0m [36mimport[0m { useReservationData } [36mfrom[0m [32m"@/lib/hooks/useReservationData"[0m;
+[31m[1m>[0m [90m11 |[0m [36mimport[0m [33mBookingSection[0m [36mfrom[0m [32m"@/app/components/sections/BookingSection"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m12 |[0m [36mimport[0m { getTourImage } [36mfrom[0m [32m"@/lib/tour-display"[0m;
+  [90m13 |[0m [36mimport[0m { formatTourPrice } [36mfrom[0m [32m"@/app/components/home/home-utils"[0m;
+  [90m14 |[0m
+
+Import map: aliased to relative './app/components/sections/BookingSection' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./app/(page_routes)/reservar/page.tsx [Client Component Browser]
+    ./app/(page_routes)/reservar/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/(page_routes)/reservar/page.tsx [Client Component SSR]
+    ./app/(page_routes)/reservar/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./app/(page_routes)/reservar/page.tsx:11:1
+Module not found: Can't resolve '@/app/components/sections/BookingSection'
+  [90m 9 |[0m [36mimport[0m { useTheme } [36mfrom[0m [32m"@/lib/ThemeContext"[0m;
+  [90m10 |[0m [36mimport[0m { useReservationData } [36mfrom[0m [32m"@/lib/hooks/useReservationData"[0m;
+[31m[1m>[0m [90m11 |[0m [36mimport[0m [33mBookingSection[0m [36mfrom[0m [32m"@/app/components/sections/BookingSection"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m12 |[0m [36mimport[0m { getTourImage } [36mfrom[0m [32m"@/lib/tour-display"[0m;
+  [90m13 |[0m [36mimport[0m { formatTourPrice } [36mfrom[0m [32m"@/app/components/home/home-utils"[0m;
+  [90m14 |[0m
+
+Import map: aliased to relative './app/components/sections/BookingSection' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./app/(page_routes)/reservar/page.tsx [Client Component Browser]
+    ./app/(page_routes)/reservar/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/(page_routes)/reservar/page.tsx [Client Component SSR]
+    ./app/(page_routes)/reservar/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+✓ Compiled in 277ms
+⨯ ./app/(page_routes)/reservar/page.tsx:11:1
+Module not found: Can't resolve '@/app/components/sections/BookingSection'
+  [90m 9 |[0m [36mimport[0m { useTheme } [36mfrom[0m [32m"@/lib/ThemeContext"[0m;
+  [90m10 |[0m [36mimport[0m { useReservationData } [36mfrom[0m [32m"@/lib/hooks/useReservationData"[0m;
+[31m[1m>[0m [90m11 |[0m [36mimport[0m [33mBookingSection[0m [36mfrom[0m [32m"@/app/components/sections/BookingSection"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m12 |[0m [36mimport[0m { getTourImage } [36mfrom[0m [32m"@/lib/tour-display"[0m;
+  [90m13 |[0m [36mimport[0m { formatTourPrice } [36mfrom[0m [32m"@/app/components/home/home-utils"[0m;
+  [90m14 |[0m
+
+Import map: aliased to relative './app/components/sections/BookingSection' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./app/(page_routes)/reservar/page.tsx [Client Component Browser]
+    ./app/(page_routes)/reservar/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/(page_routes)/reservar/page.tsx [Client Component SSR]
+    ./app/(page_routes)/reservar/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+[browser] ./app/(page_routes)/reservar/page.tsx:11:1
+Module not found: Can't resolve '@/app/components/sections/BookingSection'
+   9 | import { useTheme } from "@/lib/ThemeContext";
+  10 | import { useReservationData } from "@/lib/hooks/useReservationData";
+> 11 | import BookingSection from "@/app/components/sections/BookingSection";
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  12 | import { getTourImage } from "@/lib/tour-display";
+  13 | import { formatTourPrice } from "@/app/components/home/home-utils";
+  14 |
+
+Import map: aliased to relative './app/components/sections/BookingSection' inside of [project]/
+
+Import traces:
+  Client Component Browser:
+    ./app/(page_routes)/reservar/page.tsx [Client Component Browser]
+    ./app/(page_routes)/reservar/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/(page_routes)/reservar/page.tsx [Client Component SSR]
+    ./app/(page_routes)/reservar/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found 
+ GET /reservar?tour=tour-ciudad-esmeralda&date=2026-07-28&pax=2&package=private-package 500 in 325ms (next.js: 165ms, application-code: 160ms)
+⨯ ./app/(page_routes)/reservar/page.tsx:11:1
+Module not found: Can't resolve '@/app/components/sections/BookingSection'
+  [90m 9 |[0m [36mimport[0m { useTheme } [36mfrom[0m [32m"@/lib/ThemeContext"[0m;
+  [90m10 |[0m [36mimport[0m { useReservationData } [36mfrom[0m [32m"@/lib/hooks/useReservationData"[0m;
+[31m[1m>[0m [90m11 |[0m [36mimport[0m [33mBookingSection[0m [36mfrom[0m [32m"@/app/components/sections/BookingSection"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m12 |[0m [36mimport[0m { getTourImage } [36mfrom[0m [32m"@/lib/tour-display"[0m;
+  [90m13 |[0m [36mimport[0m { formatTourPrice } [36mfrom[0m [32m"@/app/components/home/home-utils"[0m;
+  [90m14 |[0m
+
+Import map: aliased to relative './app/components/sections/BookingSection' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./app/(page_routes)/reservar/page.tsx [Client Component Browser]
+    ./app/(page_routes)/reservar/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/(page_routes)/reservar/page.tsx [Client Component SSR]
+    ./app/(page_routes)/reservar/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+[browser] ./app/(page_routes)/reservar/page.tsx:11:1
+Module not found: Can't resolve '@/app/components/sections/BookingSection'
+   9 | import { useTheme } from "@/lib/ThemeContext";
+  10 | import { useReservationData } from "@/lib/hooks/useReservationData";
+> 11 | import BookingSection from "@/app/components/sections/BookingSection";
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  12 | import { getTourImage } from "@/lib/tour-display";
+  13 | import { formatTourPrice } from "@/app/components/home/home-utils";
+  14 |
+
+Import map: aliased to relative './app/components/sections/BookingSection' inside of [project]/
+
+Import traces:
+  Client Component Browser:
+    ./app/(page_routes)/reservar/page.tsx [Client Component Browser]
+    ./app/(page_routes)/reservar/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/(page_routes)/reservar/page.tsx [Client Component SSR]
+    ./app/(page_routes)/reservar/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found 
+ GET /reservar?tour=tour-ciudad-esmeralda&date=2026-07-28&pax=2&package=private-package 500 in 22ms (next.js: 9ms, application-code: 14ms)
+⨯ ./app/(page_routes)/reservar/page.tsx:11:1
+Module not found: Can't resolve '@/app/components/sections/BookingSection'
+  [90m 9 |[0m [36mimport[0m { useTheme } [36mfrom[0m [32m"@/lib/ThemeContext"[0m;
+  [90m10 |[0m [36mimport[0m { useReservationData } [36mfrom[0m [32m"@/lib/hooks/useReservationData"[0m;
+[31m[1m>[0m [90m11 |[0m [36mimport[0m [33mBookingSection[0m [36mfrom[0m [32m"@/app/components/sections/BookingSection"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m12 |[0m [36mimport[0m { getTourImage } [36mfrom[0m [32m"@/lib/tour-display"[0m;
+  [90m13 |[0m [36mimport[0m { formatTourPrice } [36mfrom[0m [32m"@/app/components/home/home-utils"[0m;
+  [90m14 |[0m
+
+Import map: aliased to relative './app/components/sections/BookingSection' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./app/(page_routes)/reservar/page.tsx [Client Component Browser]
+    ./app/(page_routes)/reservar/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/(page_routes)/reservar/page.tsx [Client Component SSR]
+    ./app/(page_routes)/reservar/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./app/(page_routes)/reservar/page.tsx:11:1
+Module not found: Can't resolve '@/app/components/sections/BookingSection'
+  [90m 9 |[0m [36mimport[0m { useTheme } [36mfrom[0m [32m"@/lib/ThemeContext"[0m;
+  [90m10 |[0m [36mimport[0m { useReservationData } [36mfrom[0m [32m"@/lib/hooks/useReservationData"[0m;
+[31m[1m>[0m [90m11 |[0m [36mimport[0m [33mBookingSection[0m [36mfrom[0m [32m"@/app/components/sections/BookingSection"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m12 |[0m [36mimport[0m { getTourImage } [36mfrom[0m [32m"@/lib/tour-display"[0m;
+  [90m13 |[0m [36mimport[0m { formatTourPrice } [36mfrom[0m [32m"@/app/components/home/home-utils"[0m;
+  [90m14 |[0m
+
+Import map: aliased to relative './app/components/sections/BookingSection' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./app/(page_routes)/reservar/page.tsx [Client Component Browser]
+    ./app/(page_routes)/reservar/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/(page_routes)/reservar/page.tsx [Client Component SSR]
+    ./app/(page_routes)/reservar/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+ GET /reservar?tour=tour-ciudad-esmeralda&date=2026-07-28&pax=2&package=private-package 500 in 40ms (next.js: 12ms, application-code: 28ms)
+ GET /reservar?tour=tour-ciudad-esmeralda&date=2026-07-28&pax=2&package=private-package 500 in 96ms (next.js: 78ms, application-code: 18ms)
+ POST /api/analytics/events 500 in 22ms (next.js: 8ms, application-code: 14ms)
+✓ Compiled in 456ms
+[browser] Uncaught Error: ./app/(page_routes)/reservar/page.tsx:11:1
+Module not found: Can't resolve '@/app/components/sections/BookingSection'
+   9 | import { useTheme } from "@/lib/ThemeContext";
+  10 | import { useReservationData } from "@/lib/hooks/useReservationData";
+> 11 | import BookingSection from "@/app/components/sections/BookingSection";
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  12 | import { getTourImage } from "@/lib/tour-display";
+  13 | import { formatTourPrice } from "@/app/components/home/home-utils";
+  14 |
+
+Import map: aliased to relative './app/components/sections/BookingSection' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./app/(page_routes)/reservar/page.tsx [Client Component Browser]
+    ./app/(page_routes)/reservar/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/(page_routes)/reservar/page.tsx [Client Component SSR]
+    ./app/(page_routes)/reservar/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+    at <unknown> (Error: ./app/(page_routes)/reservar/page.tsx:11:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (Error: (./app/(page_routes)/reservar/page.tsx:11:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload when ./node_modules/.pnpm/next@16.2.10_@babel+core@7._5c607d5a842f8065d15620f625dc6761/node_modules/next/dist/shared/lib/router/router.js changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 250ms
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload when ./node_modules/.pnpm/next@16.2.10_@babel+core@7._5c607d5a842f8065d15620f625dc6761/node_modules/next/dist/shared/lib/router/router.js changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload when ./node_modules/.pnpm/next@16.2.10_@babel+core@7._5c607d5a842f8065d15620f625dc6761/node_modules/next/dist/shared/lib/router/router.js changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET /reservar?tour=tour-ciudad-esmeralda&date=2026-07-28&pax=2&package=private-package 200 in 65ms (next.js: 8ms, application-code: 58ms)
+ GET /api/user/profile 401 in 100ms (next.js: 85ms, application-code: 15ms)
+ GET /api/user/profile 401 in 20ms (next.js: 3ms, application-code: 17ms)
+[?25h

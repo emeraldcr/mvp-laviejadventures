@@ -10,9 +10,10 @@ type Props = {
   day: number | null;
 };
 
-type Status = "past" | "soldout" | "last" | "few" | "many";
+type Status = "loading" | "past" | "soldout" | "last" | "few" | "many";
 
 const STATUS_CARD_CLASS: Record<Status, string> = {
+  loading: "bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700",
   past: "bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700",
   soldout: "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-700",
   last: "bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-700",
@@ -21,6 +22,7 @@ const STATUS_CARD_CLASS: Record<Status, string> = {
 };
 
 const STATUS_TEXT_CLASS: Record<Status, string> = {
+  loading: "text-zinc-400 dark:text-zinc-500",
   past: "text-zinc-500 dark:text-zinc-400",
   soldout: "text-red-600 dark:text-red-300",
   last: "text-amber-700 dark:text-amber-200",
@@ -29,6 +31,7 @@ const STATUS_TEXT_CLASS: Record<Status, string> = {
 };
 
 const STATUS_BAR_CLASS: Record<Status, string> = {
+  loading: "bg-zinc-300 dark:bg-zinc-700",
   past: "bg-zinc-400",
   soldout: "bg-red-400",
   last: "bg-amber-500",
@@ -46,6 +49,7 @@ function CalendarDayBase({ day }: Props) {
     isToday,
     getSlotsForDay,
     maxSlots,
+    availabilityLoading,
   } = useCalendarContext();
 
   if (day === null) {
@@ -56,18 +60,21 @@ function CalendarDayBase({ day }: Props) {
   const today = isToday(day);
   const slots = getSlotsForDay(day);
 
-  const hasSlots = slots > 0 && !past;
+  const hasSlots = slots > 0 && !past && !availabilityLoading;
   const selected = selectedDay === day;
 
   let status: Status = "soldout";
-  if (past) status = "past";
+  if (availabilityLoading) status = "loading";
+  else if (past) status = "past";
   else if (slots === 0) status = "soldout";
   else if (slots === 1) status = "last";
   else if (slots <= 5) status = "few";
   else status = "many";
 
   const labelText =
-    status === "past"
+    status === "loading"
+      ? " "
+      : status === "past"
       ? tr.statusPast
       : status === "soldout"
         ? tr.statusSoldOut
@@ -78,7 +85,9 @@ function CalendarDayBase({ day }: Props) {
             : tr.statusMany.replace("{slots}", String(slots));
 
   const compactLabel =
-    status === "past"
+    status === "loading"
+      ? " "
+      : status === "past"
       ? tr.statusPast
       : status === "soldout"
         ? tr.statusSoldOut
@@ -96,7 +105,7 @@ function CalendarDayBase({ day }: Props) {
     selectDay(day);
   };
 
-  const isDisabled = !hasSlots;
+  const isDisabled = availabilityLoading || !hasSlots;
 
   return (
     <button
@@ -174,7 +183,7 @@ function CalendarDayBase({ day }: Props) {
             STATUS_TEXT_CLASS[status]
           )}
         >
-          {hasSlots ? String(slots) : compactLabel}
+          {availabilityLoading ? "" : hasSlots ? String(slots) : compactLabel}
         </span>
       </div>
 
