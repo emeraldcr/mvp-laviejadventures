@@ -18,6 +18,7 @@ export interface AddOnData {
   price: number;
   priceNoteEs: string;
   priceNoteEn: string;
+  priceStatus: "fixed" | "estimated" | "quote";
   configurable?: boolean;
 }
 
@@ -32,6 +33,7 @@ export const ADDON_DATA: AddOnData[] = [
     price: 18,
     priceNoteEs: "por persona, desde",
     priceNoteEn: "per person, from",
+    priceStatus: "fixed",
     configurable: true,
   },
   {
@@ -44,6 +46,7 @@ export const ADDON_DATA: AddOnData[] = [
     price: 35,
     priceNoteEs: "por persona",
     priceNoteEn: "per person",
+    priceStatus: "fixed",
   },
   {
     id: "alojamiento",
@@ -55,6 +58,7 @@ export const ADDON_DATA: AddOnData[] = [
     price: 55,
     priceNoteEs: "por persona/noche, desde",
     priceNoteEn: "per person/night, from",
+    priceStatus: "estimated",
     configurable: true,
   },
   {
@@ -67,6 +71,7 @@ export const ADDON_DATA: AddOnData[] = [
     price: 30,
     priceNoteEs: "por persona, desde",
     priceNoteEn: "per person, from",
+    priceStatus: "estimated",
     configurable: true,
   },
   {
@@ -79,6 +84,55 @@ export const ADDON_DATA: AddOnData[] = [
     price: 20,
     priceNoteEs: "por persona",
     priceNoteEn: "per person",
+    priceStatus: "fixed",
+  },
+  {
+    id: "video-aventura",
+    category: "media",
+    nameEs: "Video de la aventura",
+    nameEn: "Adventure video",
+    descriptionEs: "Solicitud de video corto editado con los mejores momentos del grupo.",
+    descriptionEn: "Request a short edited video featuring your group’s best moments.",
+    price: 0,
+    priceNoteEs: "cotización según cobertura",
+    priceNoteEn: "quote based on coverage",
+    priceStatus: "quote",
+  },
+  {
+    id: "guia-naturalista",
+    category: "service",
+    nameEs: "Guía naturalista o bilingüe",
+    nameEn: "Naturalist or bilingual guide",
+    descriptionEs: "Guía especializado para observación de aves, interpretación natural o atención bilingüe.",
+    descriptionEn: "Specialized guide for birdwatching, nature interpretation, or bilingual service.",
+    price: 0,
+    priceNoteEs: "sujeto a disponibilidad",
+    priceNoteEn: "subject to availability",
+    priceStatus: "quote",
+  },
+  {
+    id: "celebracion",
+    category: "service",
+    nameEs: "Cumpleaños o celebración",
+    nameEn: "Birthday or celebration",
+    descriptionEs: "Coordinación de detalle especial, decoración sencilla, queque o brindis para el grupo.",
+    descriptionEn: "Coordination of a special detail, simple decoration, cake, or group toast.",
+    price: 0,
+    priceNoteEs: "cotización personalizada",
+    priceNoteEn: "custom quote",
+    priceStatus: "quote",
+  },
+  {
+    id: "itinerario-personalizado",
+    category: "service",
+    nameEs: "Itinerario personalizado",
+    nameEn: "Custom itinerary",
+    descriptionEs: "Coordinación de varios tours, transporte y hospedaje para grupos o viajes de varios días.",
+    descriptionEn: "Coordination of multiple tours, transportation, and lodging for groups or multi-day trips.",
+    price: 0,
+    priceNoteEs: "coordinación con el equipo",
+    priceNoteEn: "team-assisted planning",
+    priceStatus: "quote",
   },
 ];
 

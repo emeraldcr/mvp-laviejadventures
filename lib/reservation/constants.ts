@@ -1,4 +1,15 @@
-import { Camera, Home, Route, UtensilsCrossed, Users, type LucideIcon } from "lucide-react";
+import {
+  Bird,
+  CakeSlice,
+  Camera,
+  Clapperboard,
+  Home,
+  Map,
+  Route,
+  UtensilsCrossed,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 import type { AddOnOption } from "./types";
 import { ADDON_DATA } from "./addons";
 
@@ -20,6 +31,10 @@ const ADDON_ICONS: Record<string, LucideIcon> = {
   alojamiento: Home,
   transporte: Route,
   fotos: Camera,
+  "video-aventura": Clapperboard,
+  "guia-naturalista": Bird,
+  celebracion: CakeSlice,
+  "itinerario-personalizado": Map,
 };
 
 export const ADDON_OPTIONS: AddOnOption[] = ADDON_DATA.map((addon) => ({

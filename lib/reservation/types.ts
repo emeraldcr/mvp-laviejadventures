@@ -23,6 +23,7 @@ export interface AddOnOption {
   price: number;
   priceNoteEs: string;
   priceNoteEn: string;
+  priceStatus: "fixed" | "estimated" | "quote";
   configurable?: boolean;
   icon: LucideIcon;
 }

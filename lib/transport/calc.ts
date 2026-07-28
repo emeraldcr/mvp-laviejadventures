@@ -96,7 +96,7 @@ const FIXED_ROUTE_TOTALS_USD: Record<string, RouteVehicleRates> = {
   "hotel-arenal-area|la-vieja-adventures": { car: 120, minibus: 180 },
   "hotel-san-jose-airport|la-vieja-adventures": { car: 200, minibus: 300 },
   "la-vieja-adventures|san-jose": { car: 220, minibus: 330 },
-  "guanacaste-liberia|la-vieja-adventures": { car: 250, minibus: 370 },
+  "guanacaste-liberia|la-vieja-adventures": { car: 300, minibus: 450 },
   "guanacaste-tamarindo|la-vieja-adventures": { car: 350, minibus: 500 },
   "guanacaste-playa-hermosa|la-vieja-adventures": { car: 320, minibus: 470 },
   "la-vieja-adventures|limon-puerto": { car: 300, minibus: 440 },
@@ -105,7 +105,7 @@ const FIXED_ROUTE_TOTALS_USD: Record<string, RouteVehicleRates> = {
   "la-vieja-adventures|puntarenas-puerto": { car: 220, minibus: 330 },
   "la-vieja-adventures|puntarenas-uvita": { car: 420, minibus: 600 },
   "la-vieja-adventures|puntarenas-dominical": { car: 380, minibus: 550 },
-  "la-vieja-adventures|perez-zeledon": { car: 380, minibus: 550 },
+  "la-vieja-adventures|perez-zeledon": { car: 300, minibus: 450 },
 };
 
 function fixedRoutePrice(pickupRefId?: string | null, dropoffRefId?: string | null, pax = 1) {

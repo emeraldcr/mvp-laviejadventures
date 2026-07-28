@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Check, MapPin, SlidersHorizontal, X } from "lucide-react";
+import { MapPin, Pencil, Plus, Trash2, X } from "lucide-react";
 import {
   ADDON_OPTIONS,
   TRANSPORT_DROPOFF_OPTIONS,
@@ -42,14 +42,6 @@ type AddOnsExperienceProps = {
   transportPreview?: boolean;
 };
 
-const CATEGORY_LABELS: Record<AddOnOption["category"], { es: string; en: string }> = {
-  food: { es: "Comida", en: "Food" },
-  lodging: { es: "Hospedaje", en: "Lodging" },
-  transport: { es: "Transporte", en: "Transport" },
-  service: { es: "Servicio", en: "Service" },
-  media: { es: "Fotos", en: "Photos" },
-};
-
 export default function AddOnsExperience({
   lang,
   selectedAddons,
@@ -67,7 +59,20 @@ export default function AddOnsExperience({
   const canSelect = Boolean(onAddonToggle);
   const [expanded, setExpanded] = useState(!defaultCollapsed);
   const [activeAddonId, setActiveAddonId] = useState<string | null>(null);
-  const visibleAddons = ADDON_OPTIONS.filter((addon) => !excludedAddonIds.includes(addon.id));
+  const addonPriority = [
+    "transporte",
+    "almuerzo",
+    "guia-privado",
+    "fotos",
+    "alojamiento",
+    "video-aventura",
+    "guia-naturalista",
+    "celebracion",
+    "itinerario-personalizado",
+  ];
+  const visibleAddons = ADDON_OPTIONS
+    .filter((addon) => !excludedAddonIds.includes(addon.id))
+    .sort((a, b) => addonPriority.indexOf(a.id) - addonPriority.indexOf(b.id));
   const activeAddon = useMemo(
     () => ADDON_OPTIONS.find((addon) => addon.id === activeAddonId) ?? null,
     [activeAddonId],
@@ -78,8 +83,11 @@ export default function AddOnsExperience({
   };
 
   const openConfigurator = (addon: AddOnOption) => {
-    if (addon.id === "transporte" && !addonDetails.pickupLocation) {
-      updateDetails(getDefaultTransportDetails());
+    if (addon.id === "transporte") {
+      updateDetails({
+        ...(!addonDetails.pickupLocation ? getDefaultTransportDetails() : {}),
+        transportType: "private",
+      });
     }
     if (addon.id === "alojamiento" && !addonDetails.lodgingType) {
       updateDetails(getDefaultLodgingDetails());
@@ -132,7 +140,17 @@ export default function AddOnsExperience({
 
       {expanded && (
       <div className="border-t border-zinc-200 px-4 pb-4 pt-3 dark:border-zinc-700 sm:px-5 sm:pb-5">
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+      <div className="mb-4 flex flex-col gap-2 rounded-xl bg-zinc-50 px-3 py-3 text-xs font-semibold text-zinc-600 dark:bg-zinc-950/50 dark:text-zinc-300 sm:flex-row sm:items-center sm:justify-between">
+        <span>
+          {lang === "es"
+            ? "Agregá solo lo que necesitás. Las solicitudes por cotizar no se cobran en línea."
+            : "Add only what you need. Quote requests are not charged online."}
+        </span>
+        <span className="shrink-0 text-[#087d72] dark:text-[#63e5d8]">
+          {lang === "es" ? "Sin cargos ocultos" : "No hidden charges"}
+        </span>
+      </div>
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
         {visibleAddons.map((addon) => {
           const selected = selectedAddons.includes(addon.id);
           const Icon = addon.icon;
@@ -151,7 +169,8 @@ export default function AddOnsExperience({
           return (
             <article
               key={addon.id}
-              className={`flex min-h-[190px] flex-col rounded-2xl border p-4 transition-all ${
+              data-addon-id={addon.id}
+              className={`flex min-h-[168px] flex-col rounded-2xl border p-4 transition-colors ${
                 selected
                   ? "border-emerald-500 bg-emerald-50 shadow-lg shadow-emerald-500/10 dark:bg-emerald-950/25"
                   : "border-zinc-200 bg-zinc-50 hover:border-emerald-300 dark:border-zinc-700 dark:bg-zinc-950/35"
@@ -163,8 +182,18 @@ export default function AddOnsExperience({
                 }`}>
                   <Icon className="h-5 w-5" aria-hidden />
                 </span>
-                <span className="rounded-full border border-zinc-200 bg-white px-2.5 py-1 text-[11px] font-black uppercase tracking-[0.14em] text-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
-                  {CATEGORY_LABELS[addon.category][lang]}
+                <span className={`rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] ${
+                  addon.priceStatus === "fixed"
+                    ? "border-[#00C4B0]/30 bg-[#00C4B0]/10 text-[#087d72] dark:text-[#63e5d8]"
+                    : addon.priceStatus === "estimated"
+                      ? "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-300"
+                      : "border-zinc-300 bg-white text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
+                }`}>
+                  {addon.priceStatus === "fixed"
+                    ? (lang === "es" ? "Tarifa definida" : "Set rate")
+                    : addon.priceStatus === "estimated"
+                      ? (lang === "es" ? "Estimado" : "Estimate")
+                      : (lang === "es" ? "Por cotizar" : "Request quote")}
                 </span>
               </div>
 
@@ -180,37 +209,57 @@ export default function AddOnsExperience({
                     {priceDisplay.value}
                   </p>
                 </div>
-                <div className="flex gap-2">
-                  {addon.configurable && (
-                    <button
-                      type="button"
-                      onClick={() => openConfigurator(addon)}
-                      className="flex h-11 w-11 items-center justify-center rounded-xl border border-zinc-300 bg-white text-zinc-700 transition hover:border-emerald-500 hover:text-emerald-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
-                      aria-label={lang === "es" ? `Configurar ${name}` : `Configure ${name}`}
-                    >
-                      <SlidersHorizontal className="h-4 w-4" aria-hidden />
-                    </button>
-                  )}
-                  {canSelect && (
+                <div className="flex flex-wrap justify-end gap-2">
+                  {addon.configurable && canSelect ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => openConfigurator(addon)}
+                        className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-zinc-950 px-4 text-sm font-black text-white transition hover:bg-emerald-700 dark:bg-zinc-100 dark:text-zinc-950"
+                        aria-label={lang === "es" ? `Configurar ${name}` : `Configure ${name}`}
+                      >
+                        {selected ? <Pencil className="h-4 w-4" aria-hidden /> : <Plus className="h-4 w-4" aria-hidden />}
+                        {selected
+                          ? (lang === "es" ? "Editar" : "Edit")
+                          : (lang === "es" ? "Configurar" : "Configure")}
+                      </button>
+                      {selected && canSelect && (
+                        <button
+                          type="button"
+                          onClick={() => onAddonToggle?.(addon.id)}
+                          className="flex h-11 w-11 items-center justify-center rounded-xl border border-red-200 bg-white text-red-600 transition hover:bg-red-50 dark:border-red-900 dark:bg-zinc-900 dark:text-red-300"
+                          aria-label={lang === "es" ? `Quitar ${name}` : `Remove ${name}`}
+                        >
+                          <Trash2 className="h-4 w-4" aria-hidden />
+                        </button>
+                      )}
+                    </>
+                  ) : canSelect ? (
                     <button
                       type="button"
                       onClick={() => handleAddonAction(addon)}
                       aria-pressed={selected}
-                      className={`flex h-11 min-w-11 items-center justify-center rounded-xl px-3 font-black transition ${
+                      className={`inline-flex h-11 items-center justify-center gap-2 rounded-xl px-4 text-sm font-black transition ${
                         selected
-                          ? "bg-emerald-600 text-white hover:bg-emerald-500"
+                          ? "border border-red-200 bg-white text-red-600 hover:bg-red-50 dark:border-red-900 dark:bg-zinc-900 dark:text-red-300"
                           : "bg-zinc-950 text-white hover:bg-emerald-700 dark:bg-zinc-100 dark:text-zinc-950"
                       }`}
                     >
-                      {selected ? <Check className="h-4 w-4" aria-hidden /> : addon.configurable ? <SlidersHorizontal className="h-4 w-4" aria-hidden /> : "+"}
+                      {selected ? <Trash2 className="h-4 w-4" aria-hidden /> : <Plus className="h-4 w-4" aria-hidden />}
+                      {selected
+                        ? (lang === "es" ? "Quitar" : "Remove")
+                        : addon.priceStatus === "quote"
+                          ? (lang === "es" ? "Solicitar" : "Request")
+                          : (lang === "es" ? "Agregar" : "Add")}
                     </button>
-                  )}
-                  {!canSelect && !addon.configurable && (
+                  ) : (
                     <Link
                       href="/reservar"
                       className="flex h-11 items-center justify-center rounded-xl bg-zinc-950 px-3 text-sm font-black text-white transition hover:bg-emerald-700 dark:bg-zinc-100 dark:text-zinc-950"
                     >
-                      {lang === "es" ? "Reservar" : "Book"}
+                      {addon.priceStatus === "quote"
+                        ? (lang === "es" ? "Solicitar" : "Request")
+                        : (lang === "es" ? "Reservar" : "Book")}
                     </Link>
                   )}
                 </div>
@@ -265,6 +314,14 @@ function getAddonPriceDisplay({
   transportPreview: boolean;
 }) {
   const priceNote = lang === "es" ? addon.priceNoteEs : addon.priceNoteEn;
+
+  if (addon.priceStatus === "quote") {
+    return {
+      note: priceNote,
+      value: lang === "es" ? "Por cotizar" : "Request quote",
+      muted: true,
+    };
+  }
 
   if (addon.id === "alojamiento") {
     if (!isLodgingConfigComplete(addonDetails) && !selected) {
@@ -457,20 +514,11 @@ function AddonModal({
 
         {addon.id === "transporte" && (
           <div className="grid gap-4 sm:grid-cols-2">
-            <OptionSelect
-              label={lang === "es" ? "Tipo de transporte" : "Transport type"}
-              value={details.transportType ?? "private"}
-              onChange={(value) => updateDetails({ transportType: value as ReservationAddonDetails["transportType"] })}
-              options={[
-                ["private", lang === "es" ? "Privado 4x4" : "Private 4x4"],
-                ["shared", lang === "es" ? "Compartido" : "Shared shuttle"],
-              ]}
-            />
-            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-semibold text-emerald-900 dark:border-emerald-900/60 dark:bg-emerald-950/25 dark:text-emerald-200">
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-semibold text-emerald-900 dark:border-emerald-900/60 dark:bg-emerald-950/25 dark:text-emerald-200 sm:col-span-2">
               <MapPin className="mb-1 h-4 w-4" aria-hidden />
               {lang === "es"
-                ? "Primero elegí pickup y drop-off; el precio se calcula con la ruta."
-                : "Choose pickup and drop-off first; price is calculated from the route."}
+                ? "Asignamos carro para 1–4 personas o buseta para 5–15, según el grupo."
+                : "We assign a car for 1–4 guests or a minibus for 5–15."}
             </div>
             <OptionSelect
               label={lang === "es" ? "Pickup" : "Pickup"}
@@ -532,7 +580,9 @@ function AddonModal({
             >
               {selected
                 ? (lang === "es" ? "Guardar cambios" : "Save changes")
-                : (lang === "es" ? "Agregar con este precio" : "Add at this price")}
+                : addon.priceStatus === "fixed"
+                  ? (lang === "es" ? "Agregar extra" : "Add extra")
+                  : (lang === "es" ? "Agregar estimación" : "Add estimate")}
             </button>
           ) : (
             <Link
@@ -618,7 +668,9 @@ function AddonPricePreview({
     return (
       <div className="mt-5 rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/60">
         <p className="text-[11px] font-black uppercase tracking-[0.14em] text-zinc-400">
-          {lang === "es" ? "Precio estimado" : "Estimated price"}
+          {addon.priceStatus === "fixed"
+            ? (lang === "es" ? "Tarifa definida" : "Set rate")
+            : (lang === "es" ? "Precio estimado" : "Estimated price")}
         </p>
         <p className="mt-2 text-3xl font-black text-zinc-950 dark:text-zinc-50">
           ${configuredPrice}
@@ -626,6 +678,11 @@ function AddonPricePreview({
         </p>
         <p className="mt-1 text-sm font-medium text-zinc-500">
           {details.lodgingNights ?? 1} {lang === "es" ? "noche(s)" : "night(s)"} · {details.lodgingType}
+        </p>
+        <p className="pt-1 text-xs font-semibold text-amber-700 dark:text-amber-300">
+          {lang === "es"
+            ? "Estimación sujeta a confirmación con Allan o Verónica."
+            : "Estimate subject to confirmation with Allan or Verónica."}
         </p>
       </div>
     );
@@ -635,7 +692,9 @@ function AddonPricePreview({
     return (
       <div className="mt-5 rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/60">
         <p className="text-[11px] font-black uppercase tracking-[0.14em] text-zinc-400">
-          {lang === "es" ? "Precio estimado" : "Estimated price"}
+          {addon.priceStatus === "fixed"
+            ? (lang === "es" ? "Tarifa definida" : "Set rate")
+            : (lang === "es" ? "Precio estimado" : "Estimated price")}
         </p>
         <p className="mt-2 text-3xl font-black text-zinc-950 dark:text-zinc-50">
           ${configuredPrice}

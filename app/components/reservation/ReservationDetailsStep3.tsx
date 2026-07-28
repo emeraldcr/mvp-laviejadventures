@@ -161,7 +161,9 @@ export default function ReservationDetailsStep3({
                       {isEs ? addon.nameEs : addon.nameEn}
                     </span>
                     <span className="shrink-0 font-bold">
-                      +${displayPrice} / {tr.perPerson}
+                      {addon.priceStatus === "quote"
+                        ? (isEs ? "Cotización separada" : "Separate quote")
+                        : `+$${displayPrice} / ${tr.perPerson}`}
                     </span>
                   </div>
                   {isTransport && transportLoading && (
