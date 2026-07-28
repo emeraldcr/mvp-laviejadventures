@@ -177,3 +177,21 @@ analytics events api error Error: querySrv ETIMEOUT _mongodb._tcp.atlas-blue-rid
   hostname: '_mongodb._tcp.atlas-blue-ridge.jwlcge9.mongodb.net'
 }
  POST /api/analytics/events 500 in 98s (next.js: 3ms, application-code: 98s)
+[browser] Failed to load calendar availability: Error: Availability request failed with 500
+    at CalendarProvider.useEffect.loadAvailability (lib/contexts/CalendarContext.tsx:104:28)
+  102 |
+  103 |         const res = await fetch(`/api/calendar/availability?${params.toString()}`);
+> 104 |         if (!res.ok) throw new Error(`Availability request failed with ${res.status}`);
+      |                            ^
+  105 |
+  106 |         const data = (await res.json()) as { availability?: AvailabilityMap };
+  107 |         if (!cancelled) { (lib/contexts/CalendarContext.tsx:114:17)
+[browser] Failed to load calendar availability: Error: Availability request failed with 500
+    at CalendarProvider.useEffect.loadAvailability (lib/contexts/CalendarContext.tsx:104:28)
+  102 |
+  103 |         const res = await fetch(`/api/calendar/availability?${params.toString()}`);
+> 104 |         if (!res.ok) throw new Error(`Availability request failed with ${res.status}`);
+      |                            ^
+  105 |
+  106 |         const data = (await res.json()) as { availability?: AvailabilityMap };
+  107 |         if (!cancelled) { (lib/contexts/CalendarContext.tsx:114:17)
