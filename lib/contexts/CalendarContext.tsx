@@ -274,18 +274,19 @@ export function CalendarProvider({
     if (nextDay != null) setSelectedDay(nextDay);
   }, [findFirstAvailableDay]);
 
-  const initialDateAppliedRef = useRef(false);
+  const appliedInitialDateRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (initialDateAppliedRef.current) return;
-    initialDateAppliedRef.current = true;
     if (!initialDateIso) return;
-    const match = initialDateIso.trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    const normalizedInitialDate = initialDateIso.trim();
+    if (appliedInitialDateRef.current === normalizedInitialDate) return;
+    const match = normalizedInitialDate.match(/^(\d{4})-(\d{2})-(\d{2})$/);
     if (!match) return;
 
     const [, yearRaw, monthRaw, dayRaw] = match;
     const date = new Date(Number(yearRaw), Number(monthRaw) - 1, Number(dayRaw));
     date.setHours(0, 0, 0, 0);
+    appliedInitialDateRef.current = normalizedInitialDate;
     setSelectedDate(date);
   }, [initialDateIso, setSelectedDate]);
 

@@ -47,6 +47,11 @@ import ReservationDetailsStep1Guided, { type ChoiceStep } from "./ReservationDet
 import ReservationDetailsStep2 from "./ReservationDetailsStep2";
 import type { MainTourInfo, TourPackageOption } from "@/lib/types/index";
 import { useTransportQuote } from "./hooks/useTransportQuote";
+import {
+  AI_BOOKING_HANDOFF_KEY,
+  AI_BOOKING_HANDOFF_VERSION,
+  type AIBookingHandoff,
+} from "@/lib/ai-assistant/shared";
 
 // ---------------------- MAIN COMPONENT ----------------------
 
@@ -183,8 +188,12 @@ export default function ReservationDetails({
 
   useEffect(() => {
     // Prefer URL package, else recommended “popular” package for zero-decision booking.
-    if (initialSelectedPackageId) {
-      const preferred = resolveInitialPackage(packageOptions, initialSelectedPackageId);
+    const packageFromUrl = typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search).get("package")
+      : null;
+    const requestedPackageId = packageFromUrl || initialSelectedPackageId;
+    if (requestedPackageId) {
+      const preferred = resolveInitialPackage(packageOptions, requestedPackageId);
       setSelectedPackageId(getPackageId(preferred));
       return;
     }
@@ -195,7 +204,7 @@ export default function ReservationDetails({
 
   // If the current package is closed for the chosen day, jump to recommended open one.
   useEffect(() => {
-    if (packageOptions.length === 0) return;
+    if (packageOptions.length === 0 || !selectedPackageId) return;
     const current = packageOptions.find((pkg) => getPackageId(pkg) === selectedPackageId) ?? null;
     if (current && !isPackageDisabled(current)) return;
 
@@ -226,15 +235,14 @@ export default function ReservationDetails({
 
   // Keep shareable booking URL in sync with live selections (date / pax / package).
   useEffect(() => {
-    if (typeof window === "undefined" || !selectedTourSlug) return;
+    if (typeof window === "undefined" || !selectedTourSlug || !selectedPackageId) return;
 
     const url = new URL(window.location.href);
     url.searchParams.set("tour", selectedTourSlug);
     url.searchParams.set("date", reservationDateIso);
     if (tickets > 1) url.searchParams.set("pax", String(tickets));
     else url.searchParams.delete("pax");
-    if (selectedPackageId) url.searchParams.set("package", selectedPackageId);
-    else url.searchParams.delete("package");
+    url.searchParams.set("package", selectedPackageId);
 
     const next = `${url.pathname}${url.search}`;
     if (`${window.location.pathname}${window.location.search}` !== next) {
@@ -351,7 +359,7 @@ export default function ReservationDetails({
   const taxes = Number.isFinite(taxesRaw) ? taxesRaw : 0;
   const totalWithTaxes = Number.isFinite(totalWithTaxesRaw) ? totalWithTaxesRaw : 0;
 
-  const { formState, setFormState, handleChange, validation } = useReservationForm(
+  const { formState, isHydrated: isTravelerDraftHydrated, setFormState, handleChange, validation } = useReservationForm(
     {
       name: "",
       email: "",
@@ -364,6 +372,65 @@ export default function ReservationDetails({
   );
   const previousReservationDateRef = useRef(reservationDateIso);
   const hasPrefilledProfileRef = useRef(false);
+  const hasAppliedPrefillRef = useRef(false);
+  const hasResumedProgressRef = useRef(false);
+
+  useEffect(() => {
+    if (hasAppliedPrefillRef.current || !isTravelerDraftHydrated || availableTimeSlots.length === 0) return;
+
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const raw = sessionStorage.getItem(AI_BOOKING_HANDOFF_KEY);
+      const parsedHandoff = raw ? JSON.parse(raw) as AIBookingHandoff : null;
+      const handoff = parsedHandoff?.version === AI_BOOKING_HANDOFF_VERSION && parsedHandoff.state
+        ? parsedHandoff
+        : null;
+      if (raw && !handoff) {
+        sessionStorage.removeItem(AI_BOOKING_HANDOFF_KEY);
+      }
+
+      const requestedTime = (params.get("time") ?? params.get("tourTime") ?? handoff?.state.tourTime ?? "").trim();
+      if (requestedTime && availableTimeSlots.includes(requestedTime)) {
+        setTourTime(requestedTime);
+      }
+
+      const requestedPhone = (params.get("phone") ?? handoff?.state.phone ?? "").trim();
+      const requestedPhoneNumber = (params.get("phoneNumber") ?? "").trim();
+      const phoneMatch = requestedPhone.match(/^(\+\d{1,4})[\s-]*(.*)$/);
+      const requestedAddonIds = (params.get("addons") ?? params.get("addonIds") ?? "")
+        .split(",")
+        .map((value) => value.trim())
+        .filter((value) => ADDON_OPTIONS.some((addon) => addon.id === value));
+      if (requestedAddonIds.length > 0) setSelectedAddons(requestedAddonIds);
+
+      const addonDetailsParam = params.get("addonDetails");
+      if (addonDetailsParam) {
+        try {
+          const parsedDetails = JSON.parse(addonDetailsParam) as ReservationAddonDetails;
+          if (parsedDetails && typeof parsedDetails === "object") setAddonDetails(parsedDetails);
+        } catch {
+          // Ignore malformed optional add-on data and keep the configurator usable.
+        }
+      }
+
+      setFormState((current) => ({
+        ...current,
+        name: params.get("name")?.trim() || current.name || handoff?.state.name || "",
+        email: params.get("email")?.trim() || current.email || handoff?.state.email || "",
+        phoneCode: params.get("phoneCode")?.trim() || phoneMatch?.[1] || current.phoneCode,
+        phoneNumber: requestedPhoneNumber || phoneMatch?.[2] || requestedPhone || current.phoneNumber,
+        specialRequests: params.get("specialRequests")?.trim() || current.specialRequests || handoff?.state.specialRequests || "",
+        agreeTerms: ["1", "true", "yes"].includes((params.get("terms") ?? "").toLowerCase())
+          ? true
+          : current.agreeTerms,
+      }));
+      if (raw) sessionStorage.removeItem(AI_BOOKING_HANDOFF_KEY);
+      hasAppliedPrefillRef.current = true;
+    } catch {
+      sessionStorage.removeItem(AI_BOOKING_HANDOFF_KEY);
+      hasAppliedPrefillRef.current = true;
+    }
+  }, [availableTimeSlots, isTravelerDraftHydrated, setFormState]);
 
   useEffect(() => {
     if (previousReservationDateRef.current === reservationDateIso) return;
@@ -854,6 +921,70 @@ export default function ReservationDetails({
     isStep2Valid,
     validation.isAgreeTermsValid,
     handleChange,
+  ]);
+
+  useEffect(() => {
+    if (
+      hasResumedProgressRef.current ||
+      !hasAppliedPrefillRef.current ||
+      !isTravelerDraftHydrated ||
+      !selectedTour ||
+      !selectedPackage ||
+      !selectedPackageId ||
+      (initialSelectedPackageId &&
+        getPackageId(selectedPackage) !== getPackageId(resolveInitialPackage(packageOptions, initialSelectedPackageId))) ||
+      transportLoading
+    ) return;
+
+    const addonValidation = validateSelectedAddons(selectedAddons, addonDetails, lang);
+    hasResumedProgressRef.current = true;
+
+    if (!isStep1Valid) {
+      setCurrentStep(1);
+      setChoiceStep(!tourTime || !isTicketsValid ? 2 : 1);
+      return;
+    }
+    if (!addonValidation.ok || (transportQuoteEnabled && (!transportQuote || transportError))) {
+      setCurrentStep(1);
+      setChoiceStep(3);
+      return;
+    }
+    if (!isStep2Valid) {
+      completedStepsRef.current.add(1);
+      setCurrentStep(2);
+      return;
+    }
+    if (!validation.isAgreeTermsValid) {
+      completedStepsRef.current.add(1);
+      completedStepsRef.current.add(2);
+      setCurrentStep(3);
+      return;
+    }
+
+    completedStepsRef.current.add(1);
+    completedStepsRef.current.add(2);
+    completedStepsRef.current.add(3);
+    handleReserve();
+  }, [
+    addonDetails,
+    handleReserve,
+    isStep1Valid,
+    isStep2Valid,
+    isTicketsValid,
+    isTravelerDraftHydrated,
+    lang,
+    selectedAddons,
+    initialSelectedPackageId,
+    packageOptions,
+    selectedPackageId,
+    selectedPackage,
+    selectedTour,
+    tourTime,
+    transportError,
+    transportLoading,
+    transportQuote,
+    transportQuoteEnabled,
+    validation.isAgreeTermsValid,
   ]);
 
   const goToNextStep = useCallback(() => {

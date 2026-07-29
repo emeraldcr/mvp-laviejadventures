@@ -24,6 +24,12 @@ const DEFAULT_URL_PARAMS: UrlBookingParams = {
   package: "",
 };
 
+const PACKAGE_QUERY_ALIASES: Record<string, string> = {
+  "essential-package": "paquete-esencial",
+  "lunch-package": "paquete-con-almuerzo",
+  "private-package": "paquete-privado",
+};
+
 export default function ReservarPage() {
   const { lang, toggle } = useLanguage();
   const { theme, toggle: toggleTheme } = useTheme();
@@ -43,13 +49,16 @@ export default function ReservarPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tourFromUrl = params.get("tour")?.trim() ?? "";
-    const paxRaw = Number(params.get("pax"));
+    const paxRaw = Number(params.get("pax") ?? params.get("tickets"));
 
     setUrlParams({
       tour: tourFromUrl,
       pax: Number.isFinite(paxRaw) && paxRaw >= 1 ? Math.min(20, Math.round(paxRaw)) : 2,
       date: params.get("date")?.trim() ?? "",
-      package: params.get("package")?.trim() ?? "",
+      package: (() => {
+        const value = params.get("package")?.trim() ?? "";
+        return PACKAGE_QUERY_ALIASES[value] ?? value;
+      })(),
     });
     if (tourFromUrl) setSelectedTourSlug(tourFromUrl);
     setHasReadUrl(true);
@@ -69,6 +78,16 @@ export default function ReservarPage() {
       window.history.replaceState({}, "", next);
     }
   }, [selectedTourSlug]);
+
+  if (!hasReadUrl) {
+    return (
+      <main className="grid min-h-screen place-items-center bg-[#FAF9F6] dark:bg-[#0b0a09]">
+        <p className="text-sm font-bold text-stone-600 dark:text-stone-300">
+          {isEs ? "Preparando su reserva…" : "Preparing your booking…"}
+        </p>
+      </main>
+    );
+  }
 
   return (
     <CalendarProvider

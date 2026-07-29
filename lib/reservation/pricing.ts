@@ -23,8 +23,41 @@ export function resolveInitialPackage(
   preferredId?: string | null,
 ): TourPackageOption {
   if (preferredId) {
-    const match = packages.find((pkg) => pkg.id === preferredId || pkg.name === preferredId);
+    const knownAliases: Record<string, string[]> = {
+      "essential-package": ["essential-package", "paquete-esencial"],
+      "paquete-esencial": ["essential-package", "paquete-esencial"],
+      "lunch-package": ["lunch-package", "paquete-con-almuerzo"],
+      "paquete-con-almuerzo": ["lunch-package", "paquete-con-almuerzo"],
+      "private-package": ["private-package", "paquete-privado"],
+      "paquete-privado": ["private-package", "paquete-privado"],
+    };
+    const acceptedIds = knownAliases[preferredId] ?? [preferredId];
+    const match = packages.find((pkg) =>
+      (pkg.id && acceptedIds.includes(pkg.id)) || pkg.name === preferredId,
+    );
     if (match) return match;
+
+    const normalize = (value: string) => value
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/\p{Diacritic}/gu, "")
+      .replace(/[_\s]+/g, "-");
+    const preferred = normalize(preferredId);
+    const tier =
+      /\b(private|privado)\b/.test(preferred) ? "private" :
+      /\b(lunch|almuerzo|full-day|completo)\b/.test(preferred) ? "lunch" :
+      /\b(essential|esencial|basic|basico|standard|estandar)\b/.test(preferred) ? "essential" :
+      null;
+
+    if (tier) {
+      const tierMatch = packages.find((pkg) => {
+        const text = normalize([pkg.id, pkg.name, pkg.nameEs].filter(Boolean).join(" "));
+        if (tier === "private") return /\b(private|privado)\b/.test(text) || pkg.groupTour === false;
+        if (tier === "lunch") return /\b(lunch|almuerzo|full-day|completo)\b/.test(text);
+        return /\b(essential|esencial|basic|basico|standard|estandar)\b/.test(text);
+      });
+      if (tierMatch) return tierMatch;
+    }
   }
   return packages[0];
 }

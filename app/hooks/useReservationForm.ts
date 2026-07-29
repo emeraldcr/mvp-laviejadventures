@@ -4,6 +4,7 @@ import { EMAIL_REGEX, PHONE_NUMBER_REGEX } from "@/lib/reservation/constants";
 
 interface UseReservationFormReturn {
   formState: ReservationFormState;
+  isHydrated: boolean;
   setFormState: Dispatch<SetStateAction<ReservationFormState>>;
   handleChange: (key: keyof ReservationFormState, value: string | boolean) => void;
   validation: {
@@ -19,14 +20,21 @@ const useReservationForm = (
   options: { storageKey?: string } = {},
 ): UseReservationFormReturn => {
   const [formState, setFormState] = useState<ReservationFormState>(initialState);
+  const [isHydrated, setIsHydrated] = useState(false);
   const { storageKey } = options;
 
   useEffect(() => {
-    if (!storageKey) return;
+    if (!storageKey) {
+      setIsHydrated(true);
+      return;
+    }
 
     try {
       const stored = sessionStorage.getItem(storageKey);
-      if (!stored) return;
+      if (!stored) {
+        setIsHydrated(true);
+        return;
+      }
       const parsed = JSON.parse(stored) as Partial<ReservationFormState>;
       setFormState((current) => ({
         ...current,
@@ -39,6 +47,8 @@ const useReservationForm = (
       }));
     } catch {
       sessionStorage.removeItem(storageKey);
+    } finally {
+      setIsHydrated(true);
     }
   }, [storageKey]);
 
@@ -80,7 +90,7 @@ const useReservationForm = (
     };
   }, [formState]);
 
-  return { formState, setFormState, handleChange, validation };
+  return { formState, isHydrated, setFormState, handleChange, validation };
 };
 
 export default useReservationForm;
