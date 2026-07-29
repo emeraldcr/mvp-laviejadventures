@@ -1,5 +1,5 @@
 import { Resend } from "resend";
-import { EMAIL_FROM_DEFAULT } from "@/lib/constants/email";
+import { getEmailFrom } from "@/lib/constants/email";
 
 function escapeHtml(value: string) {
   return value.replace(/[&<>'"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[char] ?? char);
@@ -19,7 +19,7 @@ export async function sendMundialPinConfiguredEmail(params: {
   const resend = new Resend(apiKey);
   const name = escapeHtml(params.playerName);
   const { error } = await resend.emails.send({
-    from: process.env.SMTP_FROM ?? EMAIL_FROM_DEFAULT,
+    from: getEmailFrom(),
     to: params.email,
     subject: params.migrated ? "Tu acceso a la quiniela fue protegido" : "Tu PIN de la quiniela fue configurado",
     html: `

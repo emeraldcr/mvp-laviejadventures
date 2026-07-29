@@ -7,6 +7,8 @@
 .agents/skills/*
 !.agents/skills/la-vieja-brand-design/
 !.agents/skills/la-vieja-brand-design/**
+!.agents/skills/la-vieja-vero-assistant/
+!.agents/skills/la-vieja-vero-assistant/**
 /.pnp
 .pnp.*
 .yarn/*

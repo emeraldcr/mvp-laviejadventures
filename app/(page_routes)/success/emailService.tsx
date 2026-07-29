@@ -1,6 +1,7 @@
 // app/payment/success/emailService.ts
 import { Resend } from "resend";
 import type { SendEmailParams } from "@/lib/types/types";
+import { getEmailFrom } from "@/lib/constants/email";
 
 export async function sendConfirmationEmail(params: SendEmailParams) {
   const apiKey = process.env.RESEND_API_KEY;
@@ -11,9 +12,7 @@ export async function sendConfirmationEmail(params: SendEmailParams) {
 
   const resend = new Resend(apiKey);
   const adminEmail = process.env.RESERVATION_CC || "ciudadesmeraldacr@gmail.com";
-  const from =
-    process.env.SMTP_FROM ||
-    `"La Vieja Adventures" <noreply@laviejaadventures.com>`;
+  const from = getEmailFrom();
 
   const html = createMailBody(params);
 

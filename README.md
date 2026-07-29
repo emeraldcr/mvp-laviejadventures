@@ -92,7 +92,7 @@ NEXT_PUBLIC_PAYPAL_MODE=sandbox
 
 # Email (Resend or SMTP)
 RESEND_API_KEY= # if using Resend
-SMTP_FROM="La Vieja Adventures <noreply@example.com>"
+SMTP_FROM="La Vieja Adventures <noreply@laviejaadventures.com>"
 
 # Analytics / Ads (client-side IDs)
 NEXT_PUBLIC_GOOGLE_ADS_ID=G-XXXXXXXXXX

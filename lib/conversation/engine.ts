@@ -1,8 +1,12 @@
 import type { Collection, Db } from "mongodb";
 import { COLLECTIONS } from "@/lib/constants/db";
+import { sendConversationFollowupEmail } from "@/lib/email/conversation-followup-email";
 import { isDateOnOrAfterMinBookableInCostaRica } from "@/lib/helpers/costa-rica-time";
+import { interpretWithOpenAI } from "./ai";
 import type {
+  ConversationFaq,
   ConversationInputType,
+  ConversationMessage,
   ConversationReservation,
   ConversationResponse,
   ConversationSession,
@@ -11,12 +15,14 @@ import type {
 } from "./types";
 
 const SESSION_TTL_DAYS = 30;
-const STEP_SEED_VERSION = 3;
+const STEP_SEED_VERSION = 4;
+const FAQ_SEED_VERSION = 1;
 let setupPromise: Promise<void> | null = null;
 
 const EMPTY_RESERVATION: ConversationReservation = {
   tour: null,
   date: null,
+  time: null,
   people: null,
   ages: [],
   fitness: null,
@@ -57,7 +63,18 @@ const STEP_SEEDS: Omit<ConversationStep, "updatedAt">[] = [
     id: "reservation_date",
     message: "¿Para qué fecha desea reservar? Selecciónela en el calendario.",
     kind: "input",
-    capture: { path: "reservation.date", type: "date", next: "reservation_people", invalidMessage: "Esa fecha no está disponible. Seleccione otra fecha válida en el calendario." },
+    capture: { path: "reservation.date", type: "date", next: "reservation_time", invalidMessage: "Esa fecha no está disponible. Seleccione otra fecha válida en el calendario." },
+    active: true,
+  },
+  {
+    id: "reservation_time",
+    message: "¿Qué horario prefiere? La disponibilidad final se confirma antes del pago.",
+    kind: "menu",
+    options: [
+      { key: "A", label: "8:00 a. m.", next: "reservation_people", set: { path: "reservation.time", value: "08:00" } },
+      { key: "B", label: "9:00 a. m.", next: "reservation_people", set: { path: "reservation.time", value: "09:00" } },
+      { key: "C", label: "10:00 a. m.", next: "reservation_people", set: { path: "reservation.time", value: "10:00" } },
+    ],
     active: true,
   },
   {
@@ -143,7 +160,7 @@ const STEP_SEEDS: Omit<ConversationStep, "updatedAt">[] = [
     kind: "menu",
     options: [
       { key: "A", label: "Confirmar y continuar", next: "reservation_ready" },
-      { key: "B", label: "Comenzar de nuevo", next: "reservation_tour" },
+      { key: "B", label: "Comenzar de nuevo", next: "reservation_tour", resetReservation: true },
       { key: "C", label: "Hablar con un agente", next: "human_ready" },
     ],
     active: true,
@@ -161,14 +178,22 @@ const STEP_SEEDS: Omit<ConversationStep, "updatedAt">[] = [
     message: "¡Claro! 😊 ¿Qué desea saber?",
     kind: "menu",
     options: [
-      { key: "A", label: "¿Qué debo llevar?", next: "faq_what_to_bring" },
-      { key: "B", label: "¿Cuánto dura?", next: "faq_duration" },
-      { key: "C", label: "¿Cuánto cuesta?", next: "faq_price" },
-      { key: "D", label: "¿Dónde están ubicados?", next: "faq_location" },
-      { key: "E", label: "¿Qué pasa si llueve?", next: "faq_weather" },
-      { key: "F", label: "¿Pueden ir niños?", next: "faq_children" },
+      { key: "A", label: "¿Qué debo llevar?", next: "questions_menu", faqId: "what-to-bring" },
+      { key: "B", label: "¿Cuánto dura?", next: "questions_menu", faqId: "duration" },
+      { key: "C", label: "¿Cuánto cuesta?", next: "questions_menu", faqId: "price" },
+      { key: "D", label: "¿Dónde están ubicados?", next: "questions_menu", faqId: "location" },
+      { key: "E", label: "¿Qué pasa si llueve?", next: "questions_menu", faqId: "weather" },
+      { key: "F", label: "¿Pueden ir niños?", next: "questions_menu", faqId: "children" },
+      { key: "H", label: "Escribir otra pregunta", next: "questions_freeform" },
       { key: "G", label: "Volver al menú principal", next: "first" },
     ],
+    active: true,
+  },
+  {
+    id: "questions_freeform",
+    message: "Escriba su pregunta con confianza. Primero revisaré la información verificada de La Vieja y, si hace falta, usaré IA.",
+    kind: "input",
+    capture: { path: "faq.query", type: "text", min: 3, max: 500, next: "questions_menu" },
     active: true,
   },
   {
@@ -237,12 +262,86 @@ const STEP_SEEDS: Omit<ConversationStep, "updatedAt">[] = [
   },
 ];
 
+const FAQ_SEEDS: Omit<ConversationFaq, "updatedAt">[] = [
+  {
+    id: "what-to-bring",
+    question: "¿Qué debo llevar?",
+    answer: "Traiga ropa para mojar, zapatos cerrados con buen agarre, cambio de ropa, toalla, agua, bloqueador y repelente.",
+    keywords: ["llevar", "llevo", "ropa", "zapatos", "calzado", "toalla", "bloqueador", "repelente", "equipo"],
+    category: "preparation",
+    priority: 90,
+    active: true,
+  },
+  {
+    id: "duration",
+    question: "¿Cuánto dura el tour?",
+    answer: "Ciudad Esmeralda dura aproximadamente de 3 a 4 horas, según el ritmo del grupo y las condiciones seguras.",
+    keywords: ["duracion", "dura", "horas", "tiempo", "tarda"],
+    category: "duration",
+    priority: 80,
+    active: true,
+  },
+  {
+    id: "price",
+    question: "¿Cuánto cuesta?",
+    answer: "El precio depende del tour, paquete, fecha, personas y extras. El configurador oficial muestra la tarifa vigente antes del pago.",
+    keywords: ["precio", "cuesta", "costo", "tarifa", "valor", "pago", "pagar"],
+    category: "price",
+    priority: 100,
+    active: true,
+  },
+  {
+    id: "location",
+    question: "¿Dónde están ubicados?",
+    answer: "Estamos en Sucre de San Carlos, Alajuela. En Google Maps o Waze puede buscar “La Vieja Adventures”.",
+    keywords: ["ubicacion", "ubicados", "donde", "direccion", "llegar", "waze", "maps", "sucre"],
+    category: "location",
+    priority: 80,
+    active: true,
+  },
+  {
+    id: "weather",
+    question: "¿Qué pasa si llueve?",
+    answer: "Seguridad primero: con lluvia fuerte, río crecido o terreno inestable no se ingresa al cañón. El equipo evalúa y propone reprogramar o una alternativa segura.",
+    keywords: ["lluvia", "llueve", "clima", "rio", "crecido", "tormenta", "seguridad"],
+    category: "weather",
+    priority: 120,
+    active: true,
+  },
+  {
+    id: "children",
+    question: "¿Pueden ir niños?",
+    answer: "Depende de la edad, condición física y experiencia. Para Ciudad Esmeralda el equipo debe revisar el grupo antes de aceptar la solicitud.",
+    keywords: ["ninos", "ninas", "menor", "menores", "edad", "familia", "hijos"],
+    category: "children",
+    priority: 110,
+    active: true,
+  },
+  {
+    id: "transport",
+    question: "¿Necesito vehículo 4x4 o hay transporte?",
+    answer: "La necesidad de transporte depende del punto de salida y del tour. Indíquenos si llega por cuenta propia o si requiere coordinación; el equipo confirmará la opción disponible.",
+    keywords: ["transporte", "carro", "vehiculo", "4x4", "bus", "recoger", "traslado"],
+    category: "transport",
+    priority: 75,
+    active: true,
+  },
+];
+
 function sessions(db: Db): Collection<ConversationSession> {
   return db.collection<ConversationSession>(COLLECTIONS.CONVERSATION_SESSIONS);
 }
 
 function steps(db: Db): Collection<ConversationStep> {
   return db.collection<ConversationStep>(COLLECTIONS.CONVERSATION_STEPS);
+}
+
+function faqs(db: Db): Collection<ConversationFaq> {
+  return db.collection<ConversationFaq>(COLLECTIONS.CONVERSATION_FAQS);
+}
+
+function messages(db: Db): Collection<ConversationMessage> {
+  return db.collection<ConversationMessage>(COLLECTIONS.CONVERSATION_MESSAGES);
 }
 
 async function setup(db: Db) {
@@ -253,6 +352,10 @@ async function setup(db: Db) {
         sessions(db).createIndex({ sessionId: 1 }, { unique: true, name: "unique_conversation_session" }),
         sessions(db).createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0, name: "conversation_session_ttl" }),
         sessions(db).createIndex({ status: 1, updatedAt: -1 }, { name: "status_updated" }),
+        faqs(db).createIndex({ id: 1 }, { unique: true, name: "unique_faq_id" }),
+        faqs(db).createIndex({ active: 1, keywords: 1, priority: -1 }, { name: "active_faq_keywords" }),
+        messages(db).createIndex({ sessionId: 1, createdAt: 1 }, { name: "session_timeline" }),
+        messages(db).createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0, name: "conversation_message_ttl" }),
       ]);
       const now = new Date();
       const existing = await steps(db)
@@ -267,6 +370,24 @@ async function setup(db: Db) {
             updateOne: {
               filter: { id: step.id },
               update: { $set: { ...step, seedVersion: STEP_SEED_VERSION, updatedAt: now } },
+              upsert: true,
+            },
+          })),
+          { ordered: false },
+        );
+      }
+      const existingFaqs = await faqs(db)
+        .find({ id: { $in: FAQ_SEEDS.map((faq) => faq.id) } })
+        .project<{ id: string; seedVersion?: number }>({ id: 1, seedVersion: 1 })
+        .toArray();
+      const faqVersions = new Map(existingFaqs.map((faq) => [faq.id, faq.seedVersion ?? 0]));
+      const pendingFaqs = FAQ_SEEDS.filter((faq) => (faqVersions.get(faq.id) ?? 0) < FAQ_SEED_VERSION);
+      if (pendingFaqs.length > 0) {
+        await faqs(db).bulkWrite(
+          pendingFaqs.map((faq) => ({
+            updateOne: {
+              filter: { id: faq.id },
+              update: { $set: { ...faq, seedVersion: FAQ_SEED_VERSION, updatedAt: now } },
               upsert: true,
             },
           })),
@@ -366,9 +487,212 @@ function response(step: ConversationStep, session: ConversationSession, reply = 
   };
 }
 
+const RESERVATION_FLOW: Array<{ step: string; field: keyof ConversationReservation }> = [
+  { step: "reservation_tour", field: "tour" },
+  { step: "reservation_date", field: "date" },
+  { step: "reservation_time", field: "time" },
+  { step: "reservation_people", field: "people" },
+  { step: "reservation_ages", field: "ages" },
+  { step: "reservation_fitness", field: "fitness" },
+  { step: "reservation_package", field: "package" },
+  { step: "reservation_transport", field: "transport" },
+  { step: "reservation_lunch", field: "lunch" },
+  { step: "reservation_name", field: "name" },
+  { step: "reservation_email", field: "email" },
+  { step: "reservation_phone", field: "phone" },
+];
+
+function fieldIsComplete(reservation: ConversationReservation, field: keyof ConversationReservation) {
+  const value = reservation[field];
+  if (field === "ages") {
+    return Array.isArray(value)
+      && value.length > 0
+      && value.length === reservation.people
+      && value.every((age) => Number.isInteger(age) && age >= 0 && age <= 100);
+  }
+  return value != null && value !== "";
+}
+
+async function nextMissingReservationStep(db: Db, session: ConversationSession, startStep = "reservation_tour") {
+  const startIndex = Math.max(0, RESERVATION_FLOW.findIndex(({ step }) => step === startStep));
+  for (const item of RESERVATION_FLOW.slice(startIndex)) {
+    if (!fieldIsComplete(session.reservation, item.field)) return getStep(db, item.step);
+  }
+  return getStep(db, "reservation_review");
+}
+
+function normalizeSearchText(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase()
+    .replace(/[^\p{Letter}\p{Number}+]/gu, " ")
+    .split(/\s+/)
+    .filter((token) => token.length >= 3);
+}
+
+async function findFaq(db: Db, query: string) {
+  const tokens = normalizeSearchText(query);
+  if (tokens.length === 0) return null;
+  const candidates = await faqs(db)
+    .find({ active: true, keywords: { $in: tokens } })
+    .sort({ priority: -1 })
+    .limit(12)
+    .toArray();
+  return candidates
+    .map((faq) => ({
+      faq,
+      score: faq.keywords.reduce((total, keyword) => total + (tokens.includes(keyword) ? 1 : 0), 0),
+    }))
+    .sort((a, b) => b.score - a.score || b.faq.priority - a.faq.priority)
+    .at(0)?.faq ?? null;
+}
+
+function validEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) && value.length <= 254;
+}
+
+function validPhone(value: string) {
+  const digits = value.replace(/\D/g, "");
+  return digits.length >= 8 && digits.length <= 15;
+}
+
+function applyReservationPatch(session: ConversationSession, patch: Partial<ConversationReservation>) {
+  const recovered: string[] = [];
+  const reservation = session.reservation;
+  const set = <K extends keyof ConversationReservation>(field: K, value: ConversationReservation[K]) => {
+    reservation[field] = value;
+    recovered.push(field);
+  };
+
+  const tourAliases: Record<string, string> = {
+    "ciudad-esmeralda": "tour-ciudad-esmeralda",
+    "pozas-cristalinas": "cascadas-secretas-rio-la-vieja",
+    "cloud-forest-explorer": "caminata-volcanes-dormidos",
+  };
+  const packageAliases: Record<string, string> = {
+    "paquete-esencial": "essential-package",
+    "paquete-con-almuerzo": "lunch-package",
+    "paquete-privado": "private-package",
+  };
+  const normalizedTour = tourAliases[patch.tour ?? ""] ?? patch.tour;
+  const normalizedPackage = packageAliases[patch.package ?? ""] ?? patch.package;
+  const rawTime = patch.time as string | null | undefined;
+  const normalizedTime = rawTime === "8:00" ? "08:00" : rawTime === "9:00" ? "09:00" : rawTime;
+  const normalizedTransport = ["yes", "si", "sí", "true"].includes(patch.transport ?? "") ? "required"
+    : ["no", "false"].includes(patch.transport ?? "") ? "self" : patch.transport;
+  const normalizedLunch = ["si", "sí", "true", "included"].includes(patch.lunch ?? "") ? "yes"
+    : ["false", "none"].includes(patch.lunch ?? "") ? "no" : patch.lunch;
+
+  if (["tour-ciudad-esmeralda", "cascadas-secretas-rio-la-vieja", "caminata-volcanes-dormidos"].includes(normalizedTour ?? "")) set("tour", normalizedTour!);
+  if (patch.date && isDateOnOrAfterMinBookableInCostaRica(patch.date)) set("date", patch.date);
+  if (normalizedTime && ["08:00", "09:00", "10:00"].includes(normalizedTime)) {
+    set("time", normalizedTime as ConversationReservation["time"]);
+  }
+  if (Number.isInteger(patch.people) && patch.people! >= 1 && patch.people! <= 20) set("people", patch.people!);
+  if (Array.isArray(patch.ages) && patch.ages.length > 0 && patch.ages.every((age) => Number.isInteger(age) && age >= 0 && age <= 100)) set("ages", patch.ages);
+  if (patch.fitness && ["active", "moderate", "needs-review"].includes(patch.fitness)) set("fitness", patch.fitness);
+  if (normalizedPackage && ["essential-package", "lunch-package", "private-package"].includes(normalizedPackage)) set("package", normalizedPackage);
+  if (normalizedTransport && ["required", "self"].includes(normalizedTransport)) set("transport", normalizedTransport);
+  if (normalizedLunch && ["yes", "no"].includes(normalizedLunch)) set("lunch", normalizedLunch);
+  if (patch.name && patch.name.trim().length >= 2 && patch.name.length <= 120) set("name", patch.name.trim());
+  if (patch.email && validEmail(patch.email)) set("email", patch.email.trim().toLowerCase());
+  if (patch.phone && validPhone(patch.phone)) set("phone", patch.phone.trim());
+
+  if (reservation.package === "lunch-package" && reservation.lunch !== "yes") set("lunch", "yes");
+  if (reservation.people && reservation.ages.length !== reservation.people) reservation.ages = [];
+  if (reservation.name) session.customer.name = reservation.name;
+  if (reservation.phone) session.customer.phone = reservation.phone;
+  return [...new Set(recovered)];
+}
+
+async function saveTurn(
+  db: Db,
+  sessionId: string,
+  stepId: string,
+  userContent: string,
+  assistantContent: string,
+  source: ConversationMessage["source"],
+) {
+  const createdAt = new Date();
+  const expiresAt = expiryDate();
+  try {
+    await messages(db).insertMany([
+      { sessionId, role: "user", content: userContent, source, stepId, createdAt, expiresAt },
+      { sessionId, role: "assistant", content: assistantContent, source, stepId, createdAt: new Date(createdAt.getTime() + 1), expiresAt },
+    ]);
+  } catch (error) {
+    console.error("[conversation/messages]", error);
+  }
+}
+
+async function notifyHumanFollowup(db: Db, session: ConversationSession) {
+  if (session.status !== "human_requested") return;
+  const attemptedAt = new Date();
+  const claimed = await sessions(db).findOneAndUpdate(
+    {
+      sessionId: session.sessionId,
+      createdAt: session.createdAt,
+      status: "human_requested",
+      $or: [
+        { humanNotification: { $exists: false } },
+        { "humanNotification.status": "failed" },
+      ],
+    },
+    {
+      $set: {
+        humanNotification: {
+          status: "sending",
+          attemptedAt,
+        },
+      },
+    },
+    { returnDocument: "after" },
+  );
+  if (!claimed) return;
+
+  const result = await sendConversationFollowupEmail(claimed);
+  if (result.sent) {
+    await sessions(db).updateOne(
+      { sessionId: session.sessionId, createdAt: session.createdAt },
+      {
+        $set: {
+          humanNotification: {
+            status: "sent",
+            attemptedAt,
+            sentAt: new Date(),
+            resendId: result.id,
+          },
+        },
+      },
+    );
+    return;
+  }
+
+  await sessions(db).updateOne(
+    { sessionId: session.sessionId, createdAt: session.createdAt },
+    {
+      $set: {
+        humanNotification: {
+          status: "failed",
+          attemptedAt,
+          error: result.reason.slice(0, 300),
+        },
+      },
+    },
+  );
+}
+
 export async function runConversation(
   db: Db,
-  input: { sessionId: string; message?: string; optionKey?: string; reset?: boolean },
+  input: {
+    sessionId: string;
+    message?: string;
+    optionKey?: string;
+    reset?: boolean;
+    prefill?: Partial<ConversationReservation>;
+    requestId?: string;
+  },
 ): Promise<ConversationResponse> {
   await setup(db);
   const collection = sessions(db);
@@ -376,39 +700,182 @@ export async function runConversation(
   if (!session || input.reset) {
     session = createSession(input.sessionId);
     await collection.replaceOne({ sessionId: input.sessionId }, session, { upsert: true });
+    if (input.reset) await messages(db).deleteMany({ sessionId: input.sessionId });
+  } else if (session.reservation.time === undefined) {
+    session.reservation.time = null;
   }
 
   let currentStep = await getStep(db, session.currentStep);
-  if (!input.message && !input.optionKey) return response(currentStep, session);
+  const recoveredFields = input.prefill ? applyReservationPatch(session, input.prefill) : [];
+  if (recoveredFields.length > 0) {
+    currentStep = await nextMissingReservationStep(db, session);
+    session.currentStep = currentStep.id;
+    session.status = "active";
+    session.updatedAt = new Date();
+    session.expiresAt = expiryDate();
+    await collection.replaceOne({ sessionId: session.sessionId }, session, { upsert: true });
+  }
+  if (!input.message && !input.optionKey) {
+    await notifyHumanFollowup(db, session);
+    const notificationState = session.status === "human_requested"
+      ? await collection.findOne({ sessionId: session.sessionId }, { projection: { humanNotification: 1 } })
+      : null;
+    const history = (await messages(db)
+      .find({ sessionId: session.sessionId })
+      .sort({ createdAt: -1 })
+      .limit(60)
+      .project<Pick<ConversationMessage, "role" | "content">>({ _id: 0, role: 1, content: 1 })
+      .toArray())
+      .reverse();
+    return {
+      ...response(currentStep, session),
+      recoveredFields,
+      history,
+      humanNotificationStatus: notificationState?.humanNotification?.status,
+    };
+  }
 
   let nextStepId: string | null = null;
-  if (currentStep.kind === "menu" || currentStep.kind === "terminal") {
+  let replyOverride: string | null = null;
+  let answerSource: ConversationMessage["source"] = "state-machine";
+  const userContent = (input.message ?? input.optionKey ?? "").trim();
+  const messageTokens = normalizeSearchText(userContent);
+  const requestsHuman = !currentStep.id.startsWith("human_")
+    && messageTokens.some((token) => ["agente", "persona", "humano", "asesor"].includes(token));
+
+  if (requestsHuman) {
+    nextStepId = session.customer.name ? "human_phone" : "human_name";
+    replyOverride = "Con gusto. Guardé lo que llevamos y le ayudo a dejar el contacto para el equipo.";
+  } else if (currentStep.kind === "menu" || currentStep.kind === "terminal") {
     const selected = currentStep.options?.find(
       (option) => option.key.toUpperCase() === (input.optionKey ?? input.message ?? "").trim().toUpperCase(),
     );
     if (!selected) {
-      return response(currentStep, session, "No logré entender esa opción 😅 Seleccione una de las opciones disponibles.");
+      const faq = await findFaq(db, userContent);
+      if (faq) {
+        currentStep = await getStep(db, "questions_menu");
+        nextStepId = currentStep.id;
+        replyOverride = faq.answer;
+        answerSource = "mongodb-faq";
+      } else {
+        const tokens = normalizeSearchText(userContent);
+        if (tokens.length <= 2 && tokens.some((token) => ["reservar", "reserva", "cotizar"].includes(token))) {
+          currentStep = await nextMissingReservationStep(db, session);
+          nextStepId = currentStep.id;
+          replyOverride = "¡Con gusto! Retomemos justo en el primer dato que hace falta.";
+        } else if (tokens.some((token) => ["agente", "persona", "humano", "asesor"].includes(token))) {
+          currentStep = await getStep(db, session.customer.name ? "human_phone" : "human_name");
+          nextStepId = currentStep.id;
+        } else {
+          const faqContext = await faqs(db).find({ active: true }).sort({ priority: -1 }).limit(12).toArray();
+          const interpreted = await interpretWithOpenAI({
+            message: userContent,
+            currentStep: currentStep.id,
+            reservation: session.reservation,
+            faqs: faqContext,
+          });
+          if (!interpreted) {
+            replyOverride = "No logré ubicar esa consulta todavía. Puede elegir una opción o pedir hablar con el equipo.";
+          } else {
+            answerSource = "openai";
+            recoveredFields.push(...applyReservationPatch(session, interpreted.fields as Partial<ConversationReservation>));
+            replyOverride = interpreted.reply || null;
+            if (interpreted.intent === "booking") currentStep = await nextMissingReservationStep(db, session);
+            else if (interpreted.intent === "human") currentStep = await getStep(db, session.customer.name ? "human_phone" : "human_name");
+            else if (interpreted.intent === "question") currentStep = await getStep(db, "questions_menu");
+            nextStepId = currentStep.id;
+          }
+        }
+      }
+    } else {
+      if (selected.faqId) {
+        const faq = await faqs(db).findOne({ id: selected.faqId, active: true });
+        if (faq) {
+          replyOverride = faq.answer;
+          answerSource = "mongodb-faq";
+        }
+      }
+      if (selected.resetReservation) {
+        session.reservation = { ...EMPTY_RESERVATION, ages: [] };
+        session.status = "active";
+      }
+      if (selected.set) {
+        setByPath(session, selected.set.path, selected.set.value);
+        if (selected.set.path === "reservation.package" && selected.set.value === "lunch-package") {
+          session.reservation.lunch = "yes";
+        }
+      }
+      nextStepId = selected.next;
     }
-    if (selected.set) setByPath(session, selected.set.path, selected.set.value);
-    nextStepId = selected.next;
   } else if (currentStep.kind === "input" && currentStep.capture) {
-    const parsed = parseInput(currentStep.capture.type, input.message ?? "", currentStep, session);
-    if (parsed === null) {
-      return response(currentStep, session, currentStep.capture.invalidMessage ?? "Ese dato no parece válido. Inténtelo nuevamente.");
+    if (currentStep.id === "questions_freeform") {
+      const faq = await findFaq(db, userContent);
+      currentStep = await getStep(db, "questions_menu");
+      nextStepId = currentStep.id;
+      if (faq) {
+        replyOverride = faq.answer;
+        answerSource = "mongodb-faq";
+      } else {
+        const faqContext = await faqs(db).find({ active: true }).sort({ priority: -1 }).limit(12).toArray();
+        const interpreted = await interpretWithOpenAI({
+          message: userContent,
+          currentStep: "questions_freeform",
+          reservation: session.reservation,
+          faqs: faqContext,
+        });
+        replyOverride = interpreted?.reply || "Esa consulta necesita confirmación del equipo para no inventarle información.";
+        answerSource = interpreted ? "openai" : "state-machine";
+      }
+    } else {
+      const parsed = parseInput(currentStep.capture.type, input.message ?? "", currentStep, session);
+      if (parsed === null) {
+        const invalidReply = currentStep.capture.invalidMessage ?? "Ese dato no parece válido. Inténtelo nuevamente.";
+        await saveTurn(db, session.sessionId, currentStep.id, userContent, invalidReply, "state-machine");
+        return { ...response(currentStep, session, invalidReply), answerSource: "state-machine" };
+      }
+      setByPath(session, currentStep.capture.path, parsed);
+      if (currentStep.capture.path === "reservation.name") session.customer.name = String(parsed);
+      if (currentStep.capture.path === "reservation.phone") session.customer.phone = String(parsed);
+      if (currentStep.capture.path === "reservation.people" && session.reservation.ages.length !== Number(parsed)) {
+        session.reservation.ages = [];
+      }
+      if (currentStep.capture.path === "reservation.people" && Number(parsed) > 12) {
+        replyOverride = "Para un grupo así de bonito —ya eso parece paseo de toda la familia— el equipo prepara una atención personalizada.";
+        nextStepId = session.customer.name ? "human_phone" : "human_name";
+      } else {
+        nextStepId = currentStep.capture.next;
+      }
     }
-    setByPath(session, currentStep.capture.path, parsed);
-    if (currentStep.capture.path === "reservation.name") session.customer.name = String(parsed);
-    if (currentStep.capture.path === "reservation.phone") session.customer.phone = String(parsed);
-    nextStepId = currentStep.capture.next;
   }
 
-  if (!nextStepId) return response(currentStep, session);
+  if (!nextStepId) {
+    const fallback = replyOverride ?? currentStep.message;
+    await saveTurn(db, session.sessionId, currentStep.id, userContent, fallback, answerSource);
+    return { ...response(currentStep, session, fallback), answerSource };
+  }
   currentStep = await getStep(db, nextStepId);
+  if (currentStep.id.startsWith("reservation_") && !["reservation_review", "reservation_ready"].includes(currentStep.id)) {
+    currentStep = await nextMissingReservationStep(db, session, currentStep.id);
+  }
+  if (currentStep.id === "human_name" && session.customer.name) currentStep = await getStep(db, "human_phone");
+  if (currentStep.id === "human_phone" && session.customer.phone) currentStep = await getStep(db, "human_ready");
   session.currentStep = currentStep.id;
-  if (currentStep.statusOnEnter) session.status = currentStep.statusOnEnter;
+  session.status = currentStep.statusOnEnter ?? "active";
+  session.lastRequestId = input.requestId ?? null;
   session.updatedAt = new Date();
   session.expiresAt = expiryDate();
 
   await collection.replaceOne({ sessionId: session.sessionId }, session, { upsert: true });
-  return response(currentStep, session);
+  await notifyHumanFollowup(db, session);
+  const notificationState = session.status === "human_requested"
+    ? await collection.findOne({ sessionId: session.sessionId }, { projection: { humanNotification: 1 } })
+    : null;
+  const finalReply = replyOverride ?? currentStep.message;
+  await saveTurn(db, session.sessionId, currentStep.id, userContent, finalReply, answerSource);
+  return {
+    ...response(currentStep, session, finalReply),
+    answerSource,
+    recoveredFields: [...new Set(recoveredFields)],
+    humanNotificationStatus: notificationState?.humanNotification?.status,
+  };
 }

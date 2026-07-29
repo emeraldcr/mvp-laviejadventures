@@ -1,0 +1,4 @@
+interface:
+  display_name: "Vero Assistant"
+  short_description: "Motor hibrido de reservas y atencion de Vero"
+  default_prompt: "Use $la-vieja-vero-assistant para mejorar o revisar el asistente Vero, su flujo de reservas y sus integraciones."

@@ -7,6 +7,10 @@
  */
 export const EMAIL_FROM_DEFAULT = '"La Vieja Adventures" <noreply@laviejaadventures.com>';
 
+export function getEmailFrom(): string {
+  return process.env.SMTP_FROM?.trim() || EMAIL_FROM_DEFAULT;
+}
+
 /**
  * URL base de la aplicación en producción.
  * Puede sobreescribirse con la variable de entorno APP_BASE_URL.

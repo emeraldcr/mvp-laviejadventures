@@ -21,6 +21,8 @@ export const COLLECTIONS = {
   HERO_SLOGANS: "hero_slogans",
   CONVERSATION_STEPS: "conversation_steps",
   CONVERSATION_SESSIONS: "conversation_sessions",
+  CONVERSATION_FAQS: "conversation_faqs",
+  CONVERSATION_MESSAGES: "conversation_messages",
   STORE_PRODUCTS: "store_products",
   STORE_SETTINGS: "store_settings",
   DJ_TRACKS: "dj_tracks",
