@@ -14,7 +14,6 @@ import { usePathname } from "next/navigation";
 import {
   Bot,
   CalendarCheck,
-  ChevronDown,
   CloudSun,
   Compass,
   GalleryHorizontal,

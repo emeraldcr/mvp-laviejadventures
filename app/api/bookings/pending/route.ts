@@ -62,7 +62,6 @@ export async function POST(req: Request) {
       tourPackage,
       tourSlug,
       tourName,
-      packagePrice,
       addons,
       addonIds,
       addonDetails,

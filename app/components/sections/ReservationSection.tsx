@@ -3,7 +3,6 @@
 import { useCalendarContext } from "@/lib/CalendarContext";
 import ReservationDetails from "@/app/components/reservation/ReservationDetails";
 import { useLanguage } from "@/lib/LanguageContext";
-import { translations } from "@/lib/translations";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useReservationData, DEFAULT_BOOKABLE_TOUR } from "@/lib/hooks/useReservationData";
 
@@ -50,7 +49,6 @@ export default function ReservationSection({ className, preselectedTourSlug, pre
   } = useCalendarContext();
 
   const { lang } = useLanguage();
-  const tr = translations[lang];
   const { tours, ivaRatePercent } = useReservationData();
   const router = useRouter();
   const searchParams = useSearchParams();

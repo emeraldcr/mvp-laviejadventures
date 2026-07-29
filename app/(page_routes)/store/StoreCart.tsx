@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowRight, BadgeCheck, Clock3, MessageCircle, Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react";
 import type { Lang } from "@/lib/LanguageContext";
 import type { StoreCatalogSettings } from "@/lib/hooks/useStoreProducts";
-import { currency, formatProductPrice, type Product } from "./store-data";
+import { currency, type Product } from "./store-data";
 import { StoreCartUpsell, StoreFreeShippingBar } from "./StoreConversionBlocks";
 import { buildSingleProductWhatsAppHref, trackStoreAction } from "./store-conversion";
 

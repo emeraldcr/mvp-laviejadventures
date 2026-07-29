@@ -1,6 +1,6 @@
 "use client";
 
-import React, { JSX } from "react";
+import { JSX } from "react";
 import ErrorBoundary from "@/lib/contexts/ErrorBoundary";
 import { useLanguage } from "@/lib/LanguageContext";
 import { principalContent } from "@/lib/constants/principal";

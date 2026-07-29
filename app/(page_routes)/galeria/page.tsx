@@ -1,4 +1,3 @@
-import React from "react";
 import { getImages } from "@/lib/helpers/getImages";
 import { GaleriaContent } from "./GaleriaContent";
 

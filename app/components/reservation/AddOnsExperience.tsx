@@ -33,7 +33,6 @@ type AddOnsExperienceProps = {
   addonDetails: ReservationAddonDetails;
   onAddonToggle?: (addonId: string) => void;
   onAddonDetailsChange?: (details: ReservationAddonDetails) => void;
-  showReserveLink?: boolean;
   excludedAddonIds?: string[];
   defaultCollapsed?: boolean;
   transportQuote?: TransportQuoteResult | null;
@@ -48,7 +47,6 @@ export default function AddOnsExperience({
   addonDetails,
   onAddonToggle,
   onAddonDetailsChange,
-  showReserveLink = false,
   excludedAddonIds = [],
   defaultCollapsed = true,
   transportQuote = null,
@@ -281,7 +279,6 @@ export default function AddOnsExperience({
           transportQuote={transportQuote}
           transportLoading={transportLoading}
           transportError={transportError}
-          transportPreview={transportPreview || activeAddon.id === "transporte"}
           onSelect={() => {
             if (!selectedAddons.includes(activeAddon.id)) {
               onAddonToggle?.(activeAddon.id);
@@ -412,7 +409,6 @@ function AddonModal({
   transportQuote,
   transportLoading,
   transportError,
-  transportPreview,
 }: {
   addon: AddOnOption;
   lang: Lang;
@@ -425,7 +421,6 @@ function AddonModal({
   transportQuote: TransportQuoteResult | null;
   transportLoading: boolean;
   transportError: string | null;
-  transportPreview: boolean;
 }) {
   const name = lang === "es" ? addon.nameEs : addon.nameEn;
   const transportConfigured = addon.id === "transporte" && isTransportConfigComplete(details);

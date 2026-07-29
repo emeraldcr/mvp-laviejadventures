@@ -1,6 +1,4 @@
-export const WEATHER_MESSAGE_MODEL = "claude-haiku-4-5";
 export const WEATHER_MESSAGE_MAX_TOKENS = 120;
-export const WEATHER_MESSAGE_TEMPERATURE = 1;
 
 export const WEATHER_MESSAGE_CACHE_HEADERS = {
   "Cache-Control": "no-store, no-cache, must-revalidate",

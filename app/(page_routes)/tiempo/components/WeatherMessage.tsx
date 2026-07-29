@@ -3,7 +3,7 @@
 /**
  * WeatherMessage
  * Displays a unique AI-generated funny comment based on current weather.
- * Fetches a fresh message from Anthropic every time the parent triggers a refresh.
+ * Fetches a fresh message from OpenAI every time the parent triggers a refresh.
  */
 import { useEffect, useState } from "react";
 import type { WeatherSnapshot } from "@/lib/helpers/weatherMessageHelpers";

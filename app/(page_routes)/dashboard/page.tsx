@@ -17,7 +17,7 @@ import {
     Sparkles,
     User,
 } from "lucide-react";
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useLanguage } from "@/lib/LanguageContext";
 import { useSession, signIn } from "next-auth/react";
 import LogoutButton from "@/app/components/auth/LogoutButton";

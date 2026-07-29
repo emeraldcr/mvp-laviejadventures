@@ -4,7 +4,6 @@ import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { ArrowLeft, Bot, SendHorizonal } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import type { OrderDetails } from "@/lib/types/index";
 import {
   FIELD_LABELS,
   INITIAL_BOOKING_STATE,
@@ -15,15 +14,7 @@ import {
   type ChatMessage,
 } from "@/lib/ai-assistant/shared";
 
-const PACKAGE_PRICE_USD: Record<NonNullable<BookingState["tourPackage"]>, number> = {
-  basic: 30,
-  "full-day": 40,
-  private: 60,
-};
-
-const TAX_RATE = 0.13;
 const AI_BOOKING_SESSION_KEY = "aiBookingConversationState";
-const RESERVATION_RETURN_KEY = "reservationReturnPath";
 const PERSIST_DEBOUNCE_MS = 250;
 const REQUEST_HISTORY_LIMIT = 6;
 
@@ -68,7 +59,6 @@ export default function AIAssistantClient() {
   const [guidedText, setGuidedText] = useState("");
   const [guidedPhoneCountryCode, setGuidedPhoneCountryCode] = useState<(typeof PHONE_COUNTRY_OPTIONS)[number]["value"]>("+506");
   const [guidedPhone, setGuidedPhone] = useState("");
-  const [hasPendingCheckout, setHasPendingCheckout] = useState(false);
 
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
   const hasRedirectedRef = useRef(false);
@@ -103,47 +93,7 @@ export default function AIAssistantClient() {
     return () => window.clearTimeout(timeout);
   }, [input, messages, missingFields, state]);
 
-  useEffect(() => {
-    const storedOrder = sessionStorage.getItem("reservationOrderDetails");
-    setHasPendingCheckout(Boolean(storedOrder));
-  }, [missingFields, messages]);
-
-  const buildOrderDetails = useCallback((bookingState: BookingState): OrderDetails | null => {
-    if (
-      !bookingState.date ||
-      !bookingState.tourTime ||
-      !bookingState.tourPackage ||
-      !bookingState.tickets ||
-      !bookingState.name ||
-      !bookingState.email ||
-      !bookingState.phone
-    ) {
-      return null;
-    }
-
-    const packagePrice = PACKAGE_PRICE_USD[bookingState.tourPackage];
-    const subtotal = bookingState.tickets * packagePrice;
-
-    return {
-      name: bookingState.name,
-      email: bookingState.email,
-      phone: bookingState.phone,
-      tickets: bookingState.tickets,
-      date: bookingState.date,
-      dateIso: bookingState.date,
-      tourTime: bookingState.tourTime,
-      tourPackage: bookingState.tourPackage,
-      tourSlug: "tour-ciudad-esmeralda",
-      tourName: "Tour Ciudad Esmeralda",
-      packagePrice,
-      total: Number((subtotal * (1 + TAX_RATE)).toFixed(2)),
-    };
-  }, []);
-
   const redirectToReservation = useCallback((bookingState: BookingState) => {
-    const orderDetails = buildOrderDetails(bookingState);
-    if (!orderDetails) return;
-
     const payload: PersistedAIState = {
       messages,
       state: bookingState,
@@ -152,11 +102,13 @@ export default function AIAssistantClient() {
     };
 
     sessionStorage.setItem(AI_BOOKING_SESSION_KEY, JSON.stringify(payload));
-    sessionStorage.setItem("reservationOrderDetails", JSON.stringify(orderDetails));
-    sessionStorage.setItem(RESERVATION_RETURN_KEY, "/ai");
     hasRedirectedRef.current = true;
-    router.push("/reservation");
-  }, [buildOrderDetails, input, messages, missingFields, router]);
+    const params = new URLSearchParams();
+    if (bookingState.date) params.set("date", bookingState.date);
+    if (bookingState.tickets) params.set("pax", String(bookingState.tickets));
+    if (bookingState.tourPackage) params.set("package", bookingState.tourPackage);
+    router.push(`/reservar?${params.toString()}`);
+  }, [input, messages, missingFields, router]);
 
   useEffect(() => {
     const container = messagesContainerRef.current;
@@ -255,28 +207,15 @@ export default function AIAssistantClient() {
               <Bot size={20} />
             </span>
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-zinc-400">AI booking copilot</p>
-              <h1 className="text-xl font-semibold md:text-2xl">Asistente /ai para reservas</h1>
+              <p className="text-xs uppercase tracking-[0.2em] text-[#63e5d8]">Guía digital La Vieja</p>
+              <h1 className="text-xl font-semibold md:text-2xl">Pregunte, planee y pase a reservar</h1>
             </div>
           </div>
 
           <p className="mb-5 text-sm text-zinc-300">
-            Conversá como en ChatGPT/Grok: escribí libremente y el bot recolecta datos de tu reserva,
-            aunque mandés todo junto. También responde dudas rápidas del tour.
+            Conversá con libertad: el asistente organiza los datos y luego abre el configurador oficial,
+            donde se validan cupos, paquete y precio antes de pagar.
           </p>
-
-          {hasPendingCheckout && missingFields.length === 0 && (
-            <div className="mb-5 flex items-center justify-between gap-3 rounded-2xl border border-emerald-500/25 bg-emerald-500/10 p-3">
-              <p className="text-sm text-emerald-100">Tu reserva ya está lista. Podés seguir conversando o ir directo al pago.</p>
-              <button
-                type="button"
-                onClick={() => redirectToReservation(state)}
-                className="shrink-0 rounded-lg bg-emerald-500 px-3 py-2 text-xs font-semibold text-zinc-950 hover:bg-emerald-400"
-              >
-                Ir a pagar
-              </button>
-            </div>
-          )}
 
           <div
             ref={messagesContainerRef}

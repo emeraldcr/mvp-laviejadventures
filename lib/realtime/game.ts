@@ -1,5 +1,5 @@
 import type { Db } from "mongodb";
-import { notifyLiveGameChanged, getViewerCount } from "../realtime/online-game";
+import { notifyLiveGameChanged } from "../realtime/online-game";
 
 export const GAME_COLLECTION = "ghost_game_state";
 

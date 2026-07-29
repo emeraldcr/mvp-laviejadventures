@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense } from "react";
+import { Suspense } from "react";
 import { CalendarDays } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
 import { useCalendarContext } from "@/lib/CalendarContext";

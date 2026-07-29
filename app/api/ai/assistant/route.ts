@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import {
   INITIAL_BOOKING_STATE,
   NEXT_FIELD_PROMPTS,
@@ -9,8 +9,6 @@ import {
   type BookingState,
   type ChatMessage,
 } from "@/lib/ai-assistant/shared";
-
-const client = new Anthropic();
 
 type AssistantPayload = {
   messages?: ChatMessage[];
@@ -44,13 +42,8 @@ const DEFAULT_RESULT: AssistantResult = {
 };
 
 const AI_HEADERS = { "Cache-Control": "no-store" };
-const MODEL_NAME = "claude-haiku-4-5";
+const MODEL_NAME = process.env.OPENAI_MODEL?.trim() || "gpt-5.6-luna";
 const MODEL_CACHE_TTL_MS = 1000 * 60 * 10;
-const PACKAGE_PRICE_USD: Record<NonNullable<BookingState["tourPackage"]>, number> = {
-  basic: 30,
-  "full-day": 40,
-  private: 60,
-};
 const modelResponseCache = new Map<string, CachedResult>();
 const DATE_PATTERN_ISO = /\b(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})\b/;
 const DATE_PATTERN_DMY = /\b(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})\b/;
@@ -91,7 +84,8 @@ const FAQ_ENTRIES: FaqEntry[] = [
   },
   {
     keywords: ["precio", "costo", "tarifa", "cuanto cuesta"],
-    answer: `Los paquetes cuestan basic ($${PACKAGE_PRICE_USD.basic}), full-day ($${PACKAGE_PRICE_USD["full-day"]}) y private ($${PACKAGE_PRICE_USD.private}) por persona antes de IVA.`,
+    answer:
+      "El precio final depende del tour, paquete, fecha, cantidad de personas y extras. Te ayudo a reunir los datos y el configurador oficial confirma la tarifa vigente antes de pagar.",
   },
   {
     keywords: ["paquete", "plan", "opcion", "opciones", "diferencia"],
@@ -120,6 +114,9 @@ Reglas de negocio:
 - Paquetes válidos: ${TOUR_PACKAGE_OPTIONS.join(", ")}.
 - Campos requeridos para confirmar: ${REQUIRED_BOOKING_FIELDS.join(", ")}.
 - Campo opcional: specialRequests.
+- Nunca inventes disponibilidad, precios, certificaciones ni condiciones del río.
+- La cotización y disponibilidad finales se confirman en el configurador oficial.
+- Si hay lluvia fuerte, río crecido o terreno inestable, priorizá seguridad y recomendá validar con el equipo.
 
 Información de apoyo (FAQ):
 - Ubicación: Sucre de Ciudad Quesada, Costa Rica.
@@ -338,12 +335,6 @@ function inferFromLatestMessage(state: BookingState, latestUserMessage: string):
   });
 }
 
-function inferFromConversation(state: BookingState, messages: ChatMessage[]): BookingState {
-  return messages
-    .filter((message) => message.role === "user")
-    .reduce((acc, message) => inferFromLatestMessage(acc, message.content), state);
-}
-
 function normalizeState(state: BookingState): BookingState {
   const validTourTime = TOUR_TIME_OPTIONS.includes(state.tourTime as (typeof TOUR_TIME_OPTIONS)[number]) ? state.tourTime : null;
   const validPackage = TOUR_PACKAGE_OPTIONS.includes(state.tourPackage as (typeof TOUR_PACKAGE_OPTIONS)[number]) ? state.tourPackage : null;
@@ -470,23 +461,39 @@ export async function POST(req: NextRequest) {
     const cached = modelResponseCache.get(cacheKey);
     if (cached && cached.expiresAt > Date.now()) {
       return NextResponse.json(cached.value, {
-        headers: { ...AI_HEADERS, "X-AI-Mode": "anthropic-cache-hit" },
+        headers: { ...AI_HEADERS, "X-AI-Mode": "openai-cache-hit" },
       });
     }
     if (cached && cached.expiresAt <= Date.now()) modelResponseCache.delete(cacheKey);
 
-    const response = await client.messages.create({
+    const apiKey = process.env.OPENAI_API_KEY?.trim();
+    if (!apiKey) {
+      const missingFields = getMissingFields(inferredState);
+      return NextResponse.json(
+        {
+          reply: buildLocalReply(inferredState, latestUserMessage),
+          updatedState: inferredState,
+          missingFields,
+          readyToBook: missingFields.length === 0,
+        } satisfies AssistantResult,
+        { headers: { ...AI_HEADERS, "X-AI-Mode": "openai-unconfigured" } },
+      );
+    }
+
+    const client = new OpenAI({ apiKey });
+    const response = await client.responses.create({
       model: MODEL_NAME,
-      max_tokens: 320,
-      temperature: 0.3,
-      system: buildSystemPrompt(inferredState),
-      messages: (messages.length ? messages : [{ role: "user", content: latestUserMessage } satisfies ChatMessage]).slice(-6).map((msg) => ({
+      instructions: buildSystemPrompt(inferredState),
+      input: (messages.length ? messages : [{ role: "user", content: latestUserMessage } satisfies ChatMessage]).slice(-6).map((msg) => ({
         role: msg.role,
         content: msg.content,
       })),
+      max_output_tokens: 500,
+      reasoning: { effort: "low" },
+      text: { verbosity: "low" },
     });
 
-    const text = response.content[0]?.type === "text" ? response.content[0].text : "";
+    const text = response.output_text;
     const parsed = parseJsonFromText(text);
 
     if (!parsed) {
@@ -502,7 +509,7 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json(sanitizedResult, {
-      headers: { ...AI_HEADERS, "X-AI-Mode": "anthropic" },
+      headers: { ...AI_HEADERS, "X-AI-Mode": "openai" },
     });
   } catch (error) {
     console.error("[ai/assistant]", error);

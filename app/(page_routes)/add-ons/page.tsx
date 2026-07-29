@@ -88,7 +88,6 @@ export default function AddOnsPage() {
           lang={lang}
           selectedAddons={[]}
           addonDetails={{}}
-          showReserveLink
         />
       </div>
     </main>

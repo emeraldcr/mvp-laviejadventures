@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 
-const client = new Anthropic();
-
-const SLOGAN_MODEL = "claude-haiku-4-5-20251001";
+const SLOGAN_MODEL =
+  process.env.OPENAI_SLOGAN_MODEL?.trim() ||
+  process.env.OPENAI_MODEL?.trim() ||
+  "gpt-5.6-luna";
 const USER_PROMPT = "Genera un slogan fresco y único para hoy.";
 
 const SYSTEM_PROMPT = `Eres el copywriter creativo de La Vieja Adventures, un tour de cañón en Ciudad Esmeralda sobre el Río La Vieja en San Carlos, Costa Rica. El lugar está dentro de la cuenca del Parque Nacional del Agua Juan Castro Blanco: bosque tropical exuberante, cañones de agua cristalina, cascadas, biodiversidad espectacular y una experiencia de aventura pura e irrepetible.
@@ -65,31 +66,34 @@ function extractJsonPayload(rawText: string): HeroSloganPayload {
 }
 
 export async function GET() {
+  const apiKey = process.env.OPENAI_API_KEY?.trim();
+  if (!apiKey) {
+    return NextResponse.json(getFallbackSlogan(), {
+      headers: { "X-AI-Mode": "openai-unconfigured" },
+    });
+  }
+
   try {
-    const message = await client.messages.create({
+    const client = new OpenAI({ apiKey });
+    const response = await client.responses.create({
       model: SLOGAN_MODEL,
-      max_tokens: 120,
-      temperature: 1,
-      system: SYSTEM_PROMPT,
-      messages: [
-        {
-          role: "user",
-          content: USER_PROMPT,
-        },
-      ],
+      instructions: SYSTEM_PROMPT,
+      input: USER_PROMPT,
+      max_output_tokens: 120,
+      reasoning: { effort: "low" },
+      text: { verbosity: "low" },
     });
 
-    const contentText = message.content
-      .map((item) => (item.type === "text" ? item.text : ""))
-      .join("\n")
-      .trim();
+    const parsed = extractJsonPayload(response.output_text);
 
-    const parsed = extractJsonPayload(contentText);
-
-    return NextResponse.json(parsed);
+    return NextResponse.json(parsed, {
+      headers: { "X-AI-Mode": "openai" },
+    });
   } catch {
     const fallback = getFallbackSlogan();
 
-    return NextResponse.json(fallback);
+    return NextResponse.json(fallback, {
+      headers: { "X-AI-Mode": "fallback" },
+    });
   }
 }

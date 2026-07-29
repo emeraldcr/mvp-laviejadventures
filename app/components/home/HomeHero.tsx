@@ -4,6 +4,7 @@ import Link from "next/link";
 import {
   ArrowDown,
   ArrowRight,
+  Bot,
   Clock3,
   MapPin,
   MessageCircle,
@@ -65,14 +66,14 @@ export default function HomeHero() {
         <div className="flex flex-1 flex-col items-center justify-center pb-28 pt-12 text-center sm:pb-32">
           <p className="mb-4 flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.32em] text-white/80 sm:text-xs">
             <span className="h-px w-8 bg-[#00C4B0]" />
-            {isEs ? "Cañón · río · bosque" : "Canyon · river · forest"}
+            {isEs ? "Cañón del Río La Vieja" : "La Vieja River Canyon"}
             <span className="h-px w-8 bg-[#00C4B0]" />
           </p>
 
           <h1 className="max-w-[1300px] font-display text-[clamp(3.5rem,10.7vw,10.5rem)] font-black uppercase leading-[0.78] tracking-[-0.075em] drop-shadow-[0_8px_30px_rgba(0,0,0,.42)]">
-            {isEs ? "ENTRE AL" : "ENTER THE"}
+            {isEs ? "CIUDAD" : "EMERALD"}
             <span className="mt-2 block text-[#00C4B0]">
-              {isEs ? "CAÑÓN." : "CANYON."}
+              {isEs ? "ESMERALDA" : "CITY"}
             </span>
           </h1>
 
@@ -82,7 +83,7 @@ export default function HomeHero() {
               : "Experience Ciudad Esmeralda with your feet in the river and your eyes up. Local guides, proper gear, and a route that always follows the weather."}
           </p>
 
-          <div className="mt-7 flex flex-col items-center gap-3 sm:flex-row">
+          <div className="mt-7 flex flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
             <Link
               href={BOOKING_HREF}
               className="group inline-flex min-h-14 items-center justify-center gap-3 rounded-full bg-[#00C4B0] px-7 text-xs font-black uppercase tracking-[0.12em] text-[#17211f] shadow-[0_18px_50px_rgba(0,196,176,.28)] transition hover:-translate-y-0.5 hover:bg-white"
@@ -99,6 +100,13 @@ export default function HomeHero() {
               <MessageCircle size={17} />
               {isEs ? "Hablar con un guía" : "Talk to a guide"}
             </a>
+            <Link
+              href="/ai?from=hero"
+              className="inline-flex min-h-14 items-center justify-center gap-3 rounded-full border border-[#00C4B0]/60 bg-[#00C4B0]/12 px-7 text-xs font-black uppercase tracking-[0.12em] text-[#79f4e7] backdrop-blur-md transition hover:-translate-y-0.5 hover:border-[#00C4B0] hover:bg-[#00C4B0]/22"
+            >
+              <Bot size={17} aria-hidden />
+              {isEs ? "Hablar con la IA" : "Talk to AI"}
+            </Link>
           </div>
         </div>
 

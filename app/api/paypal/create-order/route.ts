@@ -344,16 +344,6 @@ function isValidBookingAttemptId(value: unknown): value is string {
 
 // ====================== Helper Functions ======================
 
-function getPackageLabel(tourPackage: string | undefined, selectedPackage: any, language: string): string {
-  if (tourPackage === "basic") return "Paquete Básico";
-  if (tourPackage === "full-day") return "Día Completo con Almuerzo";
-  if (tourPackage === "private") return "Tour Privado";
-
-  return language === "en"
-    ? selectedPackage.name
-    : selectedPackage.nameEs || selectedPackage.name;
-}
-
 function createCustomId(data: Record<string, any>): string {
   const payload = JSON.stringify(data);
   if (payload.length <= PAYPAL_CUSTOM_ID_MAX_LENGTH) return payload;

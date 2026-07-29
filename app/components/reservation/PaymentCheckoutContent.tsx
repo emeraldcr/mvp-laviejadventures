@@ -55,17 +55,10 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
     tickets,
     total: initialTotal,
     date,
-    dateIso,
     tourTime,
-    packageId,
     tourPackage,
-    tourSlug,
     tourName,
     packagePrice,
-    addons,
-    addonIds,
-    addonDetails,
-    specialRequests,
   } = orderDetails;
 
   const checkoutQuote = useCheckoutQuote(orderDetails, lang);

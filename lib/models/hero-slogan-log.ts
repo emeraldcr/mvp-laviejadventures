@@ -23,7 +23,7 @@ export async function createHeroSloganLog(log: HeroSloganLog) {
 export async function listHeroSloganLogs(limit = 200) {
   const collection = await getHeroSloganCollection();
   const docs = await collection
-    .find({ model: /^claude/i })
+    .find({ model: /^(?:claude|gpt-)/i })
     .sort({ createdAt: -1 })
     .limit(limit * 3)
     .toArray();

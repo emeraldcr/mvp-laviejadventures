@@ -338,7 +338,7 @@ export default function B2BAdminPage() {
     const seen = new Set<string>();
 
     return heroSlogans
-      .filter((slogan) => slogan.model?.toLowerCase().startsWith("claude"))
+      .filter((slogan) => /^(?:claude|gpt-)/i.test(slogan.model ?? ""))
       .filter((slogan) => {
         const key = `${(slogan.es ?? "").trim().toLowerCase()}|${(slogan.en ?? "").trim().toLowerCase()}`;
         if (seen.has(key)) return false;
@@ -988,7 +988,7 @@ export default function B2BAdminPage() {
 
       <section className="mt-6 rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
         <h2 className="mb-1 text-xl font-semibold">Slogans guardados en MongoDB ({uniqueHeroSlogans.length})</h2>
-        <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-300">Historial de slogans generados con Claude en el hero. Los fallbacks y repetidos se ocultan; ya no se guardan nuevos slogans.</p>
+        <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-300">Historial de slogans generados con IA en el hero. Los fallbacks y repetidos se ocultan; ya no se guardan nuevos slogans.</p>
 
         <div className="max-h-96 overflow-auto">
           <table className="w-full text-sm">
@@ -1011,7 +1011,7 @@ export default function B2BAdminPage() {
               ))}
               {uniqueHeroSlogans.length === 0 && (
                 <tr>
-                  <td className="py-4 text-zinc-600 dark:text-zinc-300" colSpan={4}>No hay slogans de Claude guardados todavía.</td>
+                  <td className="py-4 text-zinc-600 dark:text-zinc-300" colSpan={4}>No hay slogans de IA guardados todavía.</td>
                 </tr>
               )}
             </tbody>
