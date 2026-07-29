@@ -1,5 +1,6 @@
 import type { Collection, Db } from "mongodb";
 import { COLLECTIONS } from "@/lib/constants/db";
+import { isDateOnOrAfterMinBookableInCostaRica } from "@/lib/helpers/costa-rica-time";
 import type {
   ConversationInputType,
   ConversationReservation,
@@ -10,7 +11,7 @@ import type {
 } from "./types";
 
 const SESSION_TTL_DAYS = 30;
-const STEP_SEED_VERSION = 2;
+const STEP_SEED_VERSION = 3;
 let setupPromise: Promise<void> | null = null;
 
 const EMPTY_RESERVATION: ConversationReservation = {
@@ -54,9 +55,9 @@ const STEP_SEEDS: Omit<ConversationStep, "updatedAt">[] = [
   },
   {
     id: "reservation_date",
-    message: "¿Para qué fecha desea reservar? Use el formato AAAA-MM-DD.",
+    message: "¿Para qué fecha desea reservar? Selecciónela en el calendario.",
     kind: "input",
-    capture: { path: "reservation.date", type: "date", next: "reservation_people", invalidMessage: "Esa fecha no me calza 😅 Escríbala como AAAA-MM-DD y que no sea una fecha pasada." },
+    capture: { path: "reservation.date", type: "date", next: "reservation_people", invalidMessage: "Esa fecha no está disponible. Seleccione otra fecha válida en el calendario." },
     active: true,
   },
   {
@@ -344,11 +345,7 @@ function parseInput(type: ConversationInputType, raw: string, step: Conversation
     return valid && (!session.reservation.people || ages.length === session.reservation.people) ? ages : null;
   }
   if (type === "date") {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
-    const parsed = new Date(`${value}T12:00:00-06:00`);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return !Number.isNaN(parsed.getTime()) && parsed >= today ? value : null;
+    return isDateOnOrAfterMinBookableInCostaRica(value) ? value : null;
   }
   return null;
 }

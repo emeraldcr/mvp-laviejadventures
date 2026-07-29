@@ -8,9 +8,24 @@ import { useRouter } from "next/navigation";
 import { AI_BOOKING_HANDOFF_KEY, createAIBookingHandoff, type BookingState, type ChatMessage } from "@/lib/ai-assistant/shared";
 import { RESERVATION_TRAVELER_DRAFT_KEY } from "@/lib/reservation/constants";
 import type { ConversationResponse, PublicConversationStep } from "@/lib/conversation/types";
+import { getMinBookableIsoDateInCostaRica, isDateOnOrAfterMinBookableInCostaRica } from "@/lib/helpers/costa-rica-time";
 
 const CONVERSATION_SESSION_KEY = "veroConversationSessionId";
 const CONVERSATION_MESSAGES_KEY = "veroConversationMessages";
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+function dedupeMessages(messages: ChatMessage[]) {
+  return messages.filter((message, index) => {
+    const previous = messages[index - 1];
+    return !previous || previous.role !== message.role || previous.content.trim() !== message.content.trim();
+  });
+}
+
+function appendUniqueMessage(messages: ChatMessage[], message: ChatMessage) {
+  const previous = messages.at(-1);
+  if (previous?.role === message.role && previous.content.trim() === message.content.trim()) return messages;
+  return [...messages, message];
+}
 
 function getSessionId() {
   const existing = localStorage.getItem(CONVERSATION_SESSION_KEY);
@@ -34,12 +49,16 @@ export default function AIAssistantClient() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [inputError, setInputError] = useState("");
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
+  const requestInFlightRef = useRef(false);
 
   const applyResponse = useCallback((data: ConversationResponse, includeReply = true) => {
     setConversation(data);
     setStep(data.step);
-    if (includeReply) setMessages((current) => [...current, { role: "assistant", content: data.reply }]);
+    if (includeReply) {
+      setMessages((current) => appendUniqueMessage(current, { role: "assistant", content: data.reply }));
+    }
   }, []);
 
   const requestConversation = useCallback(async (id: string, payload: { message?: string; optionKey?: string; reset?: boolean } = {}) => {
@@ -47,6 +66,7 @@ export default function AIAssistantClient() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ sessionId: id, ...payload }),
+      signal: AbortSignal.timeout(15_000),
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error ?? "No se pudo recuperar la conversación.");
@@ -58,7 +78,7 @@ export default function AIAssistantClient() {
     setSessionId(id);
     try {
       const stored = sessionStorage.getItem(CONVERSATION_MESSAGES_KEY);
-      if (stored) setMessages(JSON.parse(stored) as ChatMessage[]);
+      if (stored) setMessages(dedupeMessages(JSON.parse(stored) as ChatMessage[]));
     } catch {
       sessionStorage.removeItem(CONVERSATION_MESSAGES_KEY);
     }
@@ -75,24 +95,29 @@ export default function AIAssistantClient() {
   }, [messages, loading]);
 
   const send = useCallback(async (payload: { message?: string; optionKey?: string }, visibleText: string) => {
-    if (!sessionId || loading) return;
+    if (!sessionId || requestInFlightRef.current) return;
+    requestInFlightRef.current = true;
     setLoading(true);
     setError("");
-    setMessages((current) => [...current, { role: "user", content: visibleText }]);
+    setInputError("");
+    setStep(null);
+    setMessages((current) => appendUniqueMessage(current, { role: "user", content: visibleText }));
     setInput("");
     try {
       applyResponse(await requestConversation(sessionId, payload));
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "No se pudo continuar.");
     } finally {
+      requestInFlightRef.current = false;
       setLoading(false);
     }
-  }, [applyResponse, loading, requestConversation, sessionId]);
+  }, [applyResponse, requestConversation, sessionId]);
 
   const resetConversation = useCallback(async () => {
     if (!sessionId || loading) return;
     setLoading(true);
     setError("");
+    setInputError("");
     setMessages([]);
     sessionStorage.removeItem(CONVERSATION_MESSAGES_KEY);
     try {
@@ -143,7 +168,12 @@ export default function AIAssistantClient() {
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const value = input.trim();
-    if (value) void send({ message: value }, value);
+    const validationError = validateInput(step, value, conversation);
+    if (validationError) {
+      setInputError(validationError);
+      return;
+    }
+    void send({ message: value }, value);
   };
 
   const reservation = conversation?.reservation;
@@ -162,6 +192,7 @@ export default function AIAssistantClient() {
     step?.inputType === "email" ? "nombre@correo.com" :
     step?.inputType === "phone" ? "+506 8888-9999" :
     step?.inputType === "integer" ? "Cantidad de personas" : "Escriba su respuesta";
+  const minBookableDate = useMemo(() => getMinBookableIsoDateInCostaRica(), []);
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#2E2A25] text-white">
@@ -255,24 +286,75 @@ export default function AIAssistantClient() {
                   <div className="flex gap-3"><Headphones className="mt-0.5 h-5 w-5 text-[#087d72]" /><div><p className="font-black">El equipo puede continuar con usted</p><p className="mt-1 text-sm text-stone-600">Su solicitud quedó guardada. Para atención inmediata, abra WhatsApp.</p><a href="https://wa.me/50662332535" target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#00C4B0] px-4 py-2 text-xs font-black text-[#173d38]"><MessageCircle className="h-4 w-4" /> Abrir WhatsApp <ArrowUpRight className="h-3.5 w-3.5" /></a></div></div>
                 </div>
               )}
-              {loading && <div className="mt-5 flex items-center gap-2 text-xs font-bold text-stone-400"><span className="h-2 w-2 animate-bounce rounded-full bg-[#00C4B0]" /><span className="h-2 w-2 animate-bounce rounded-full bg-[#00C4B0] [animation-delay:120ms]" /><span className="h-2 w-2 animate-bounce rounded-full bg-[#00C4B0] [animation-delay:240ms]" /><span className="ml-1">Vero prepara el siguiente paso…</span></div>}
+              {loading && (
+                <div aria-live="polite" className="mt-5 flex items-center gap-2">
+                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#2E2A25] text-[9px] font-black text-[#74e3d7]">V</span>
+                  <div className="flex flex-wrap items-center gap-1.5 rounded-2xl rounded-bl-md border border-stone-200 bg-white px-3 py-2 shadow-sm">
+                    {["Revisando", "Ordenando", "Listo"].map((label, index) => (
+                      <span key={label} className="animate-pulse rounded-full bg-[#D9F7F3] px-2.5 py-1 text-[9px] font-black uppercase tracking-wide text-[#087d72]" style={{ animationDelay: `${index * 180}ms` }}>
+                        {label}
+                      </span>
+                    ))}
+                    <span className="sr-only">Vero está preparando el siguiente paso.</span>
+                  </div>
+                </div>
+              )}
               {error && <p role="alert" className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">{error}</p>}
             </div>
           </div>
 
           <div className="border-t border-stone-200 bg-white px-4 py-3 md:px-7 md:py-4">
             {step?.kind === "input" ? (
-              <form onSubmit={onSubmit} className="mx-auto flex max-w-3xl items-end gap-2">
-                <label className="flex-1"><span className="mb-1.5 block text-[10px] font-black uppercase tracking-[0.14em] text-stone-500">Su respuesta</span><input
-                  type={step.inputType === "date" ? "date" : step.inputType === "integer" ? "number" : step.inputType === "phone" ? "tel" : step.inputType === "email" ? "email" : "text"}
-                  min={step.inputType === "integer" ? 1 : undefined}
-                  inputMode={step.inputType === "integer" ? "numeric" : step.inputType === "phone" ? "tel" : step.inputType === "email" ? "email" : "text"}
-                  autoComplete={step.inputType === "phone" ? "tel" : step.inputType === "email" ? "email" : step.id.includes("name") ? "name" : "off"}
-                  value={input} onChange={(event) => setInput(event.target.value)} placeholder={inputHint} autoFocus
-                  className="h-12 w-full rounded-2xl border border-stone-300 bg-[#FAF9F6] px-4 text-sm font-medium outline-none transition focus:border-[#00C4B0] focus:bg-white focus:ring-4 focus:ring-[#00C4B0]/10"
-                /></label>
-                <button type="submit" disabled={loading || !input.trim()} className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#00C4B0] text-[#173d38] shadow-[0_8px_20px_rgba(0,196,176,0.25)] transition hover:-translate-y-0.5 disabled:opacity-40" aria-label="Enviar respuesta"><SendHorizonal className="h-4 w-4" /></button>
-              </form>
+              <div className="mx-auto max-w-3xl">
+                {step.inputType === "integer" && (
+                  <div className="mb-2 flex flex-wrap gap-1.5" aria-label="Cantidades frecuentes">
+                    {[1, 2, 3, 4, 5, 6].map((count) => (
+                      <button key={count} type="button" disabled={loading} onClick={() => void send({ message: String(count) }, `${count} ${count === 1 ? "persona" : "personas"}`)} className="min-w-11 rounded-full border border-stone-200 bg-[#F7F5F0] px-3 py-2 text-xs font-black text-stone-700 transition hover:-translate-y-0.5 hover:border-[#00C4B0] hover:bg-[#D9F7F3] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00C4B0]">
+                        {count}
+                      </button>
+                    ))}
+                    <span className="self-center px-1 text-[10px] font-bold text-stone-400">o escriba otra cantidad</span>
+                  </div>
+                )}
+                <form onSubmit={onSubmit} noValidate className="grid grid-cols-[minmax(0,1fr)_3rem] items-end gap-2">
+                  <label className="min-w-0">
+                    <span className="mb-1.5 block text-[10px] font-black uppercase tracking-[0.14em] text-stone-500">
+                      {step.inputType === "email" ? "Correo electrónico" : step.inputType === "phone" ? "Teléfono" : step.inputType === "ages" ? "Edades" : "Su respuesta"}
+                    </span>
+                    <input
+                      type={step.inputType === "date" ? "date" : step.inputType === "integer" ? "number" : step.inputType === "phone" ? "tel" : step.inputType === "email" ? "email" : "text"}
+                      lang={step.inputType === "date" ? "es-CR" : undefined}
+                      required
+                      min={step.inputType === "integer" ? "1" : step.inputType === "date" ? minBookableDate : undefined}
+                      max={step.inputType === "integer" ? "20" : undefined}
+                      step={step.inputType === "integer" ? "1" : undefined}
+                      maxLength={step.inputType === "email" ? 254 : step.inputType === "phone" ? 24 : step.inputType === "text" ? 120 : undefined}
+                      pattern={step.inputType === "phone" ? "[+0-9()\\s-]{8,24}" : undefined}
+                      inputMode={step.inputType === "integer" || step.inputType === "ages" ? "numeric" : step.inputType === "phone" ? "tel" : step.inputType === "email" ? "email" : "text"}
+                      autoCapitalize={step.inputType === "email" ? "none" : undefined}
+                      spellCheck={step.inputType === "email" ? false : undefined}
+                      autoComplete={step.inputType === "phone" ? "tel" : step.inputType === "email" ? "email" : step.id.includes("name") ? "name" : "off"}
+                      value={input}
+                      onChange={(event) => {
+                        setInput(event.target.value);
+                        if (inputError) setInputError("");
+                      }}
+                      placeholder={inputHint}
+                      autoFocus
+                      aria-invalid={Boolean(inputError)}
+                      aria-describedby={inputError ? "vero-input-error" : undefined}
+                      className={`h-12 w-full rounded-2xl border bg-[#FAF9F6] px-4 text-sm font-medium outline-none transition focus:bg-white focus:ring-4 ${inputError ? "border-red-400 focus:border-red-500 focus:ring-red-100" : "border-stone-300 focus:border-[#00C4B0] focus:ring-[#00C4B0]/10"}`}
+                    />
+                  </label>
+                  <button type="submit" disabled={loading || !input.trim()} className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#00C4B0] text-[#173d38] shadow-[0_8px_20px_rgba(0,196,176,0.25)] transition hover:-translate-y-0.5 disabled:opacity-40" aria-label="Enviar respuesta"><SendHorizonal className="h-4 w-4" /></button>
+                </form>
+                {step.inputType === "date" && !inputError && (
+                  <p className="mt-2 text-xs font-medium text-stone-500">
+                    {input ? `Fecha seleccionada: ${formatSelectedDate(input)}` : "Toque el campo para abrir el calendario."}
+                  </p>
+                )}
+                {inputError && <p id="vero-input-error" role="alert" className="mt-2 text-xs font-bold text-red-600">{inputError}</p>}
+              </div>
             ) : (
               <div className="mx-auto flex max-w-3xl items-center justify-between gap-4 text-xs text-stone-500"><p>Seleccione una opción para continuar.</p><button type="button" onClick={() => void resetConversation()} disabled={loading} className="font-bold text-[#087d72] hover:underline">Empezar de nuevo</button></div>
             )}
@@ -291,4 +373,63 @@ function SummaryItem({ icon, label, value }: { icon: ReactNode; label: string; v
       <div className="min-w-0"><p className="text-[10px] font-bold uppercase tracking-wide text-stone-500">{label}</p><p className={`truncate text-xs font-bold ${value ? "text-stone-200" : "text-stone-600"}`}>{value || "Pendiente"}</p></div>
     </div>
   );
+}
+
+function validateInput(step: PublicConversationStep | null, value: string, conversation: ConversationResponse | null) {
+  if (!value) return "Complete este dato para continuar.";
+  if (!step?.inputType) return null;
+
+  if (step.inputType === "email") {
+    return value.length <= 254 && EMAIL_PATTERN.test(value)
+      ? null
+      : "Escriba un correo válido, por ejemplo: nombre@correo.com.";
+  }
+
+  if (step.inputType === "phone") {
+    const digits = value.replace(/\D/g, "");
+    return digits.length >= 8 && digits.length <= 15
+      ? null
+      : "El teléfono debe tener entre 8 y 15 dígitos.";
+  }
+
+  if (step.inputType === "integer") {
+    const amount = Number(value);
+    return Number.isInteger(amount) && amount >= 1 && amount <= 20
+      ? null
+      : "Seleccione o escriba una cantidad entre 1 y 20 personas.";
+  }
+
+  if (step.inputType === "date") {
+    return isDateOnOrAfterMinBookableInCostaRica(value)
+      ? null
+      : "Seleccione una fecha válida disponible desde hoy.";
+  }
+
+  if (step.inputType === "ages") {
+    const ages = value.split(/[\s,;]+/).filter(Boolean).map(Number);
+    if (!ages.length || ages.some((age) => !Number.isInteger(age) || age < 0 || age > 100)) {
+      return "Escriba edades válidas entre 0 y 100, separadas por comas.";
+    }
+    const people = conversation?.reservation.people;
+    return people && ages.length !== people
+      ? `Necesito ${people} ${people === 1 ? "edad" : "edades"}, una por cada persona.`
+      : null;
+  }
+
+  if (step.inputType === "text" && value.length < 2) {
+    return "Escriba al menos dos caracteres.";
+  }
+
+  return null;
+}
+
+function formatSelectedDate(isoDate: string) {
+  const [year, month, day] = isoDate.split("-").map(Number);
+  if (!year || !month || !day) return isoDate;
+  return new Intl.DateTimeFormat("es-CR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(Date.UTC(year, month - 1, day)));
 }
