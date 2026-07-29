@@ -8,6 +8,7 @@ import { useReservationData } from "@/lib/hooks/useReservationData";
 
 import HomeNav from "@/app/components/home/HomeNav";
 import HomeHero from "@/app/components/home/HomeHero";
+import HomeConversionRail from "@/app/components/home/HomeConversionRail";
 import FeaturedStory from "@/app/components/home/FeaturedStory";
 import ToursShowcase from "@/app/components/home/ToursShowcase";
 import HomeFaqFooter from "@/app/components/home/HomeFaqFooter";
@@ -35,6 +36,7 @@ export default function Home(): JSX.Element {
       <main className="min-h-screen overflow-x-hidden bg-[#FAF9F6] font-sans text-stone-900 dark:bg-[#0b0a09] dark:text-stone-100">
         <HomeNav />
         <HomeHero />
+        <HomeConversionRail />
         <FeaturedStory tours={featuredTours} />
         {otherTours.length > 0 && <ToursShowcase tours={otherTours} />}
         <HomeFaqFooter tours={featuredTours} />

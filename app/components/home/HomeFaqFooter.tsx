@@ -260,7 +260,7 @@ function MobileStickyCta({ tours }: { tours: TourSummary[] }) {
         </div>
         <Link
           href={BOOKING_HREF}
-          className="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-600/25"
+          className="inline-flex items-center gap-2 rounded-full bg-[#00C4B0] px-6 py-3 text-sm font-black text-[#17211f] shadow-lg shadow-[#00C4B0]/25"
         >
           {primaryBookingLabel(isEs)}
           <ArrowRight size={15} />

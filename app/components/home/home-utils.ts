@@ -7,11 +7,11 @@ export const BOOKING_HREF = `/reservar?tour=${CIUDAD_ESMERALDA_SLUG}`;
 export const TOURS_HREF = "/tours";
 
 export function primaryBookingLabel(isEs: boolean): string {
-  return isEs ? "Quiero ir" : "I want in";
+  return isEs ? "Ver fechas y reservar" : "See dates and book";
 }
 
 export function compactBookingLabel(isEs: boolean): string {
-  return isEs ? "Reservar" : "Book";
+  return isEs ? "Reservar ahora" : "Book now";
 }
 
 type PricePair = {

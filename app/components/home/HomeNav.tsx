@@ -152,7 +152,7 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
 
             <Link
               href={BOOKING_HREF}
-              className="ml-1 inline-flex items-center gap-2 rounded-full bg-emerald-400 px-5 py-2.5 text-sm font-black text-emerald-950 shadow-[0_14px_36px_rgba(52,211,153,0.25)] transition-all hover:-translate-y-0.5 hover:bg-white"
+              className="ml-1 inline-flex items-center gap-2 rounded-full bg-[#00C4B0] px-5 py-2.5 text-sm font-black text-[#17211f] shadow-[0_14px_36px_rgba(0,196,176,0.28)] transition-all hover:-translate-y-0.5 hover:bg-white"
             >
               {compactBookingLabel(isEs)}
               <ArrowRight size={15} />
@@ -234,7 +234,7 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
             <Link
               href={BOOKING_HREF}
               onClick={() => setMenuOpen(false)}
-              className="flex items-center justify-center gap-2 rounded-full bg-emerald-600 py-4 text-base font-bold text-white shadow-lg shadow-emerald-600/25"
+              className="flex items-center justify-center gap-2 rounded-full bg-[#00C4B0] py-4 text-base font-black text-[#17211f] shadow-lg shadow-[#00C4B0]/25"
             >
               {primaryBookingLabel(isEs)}
               <ArrowRight size={17} />
