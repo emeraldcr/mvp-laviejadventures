@@ -20,6 +20,15 @@
 
 Crear índices únicos para IDs, índices de consulta y TTL para sesiones e historial.
 
+## Base de conocimiento del sitio
+
+- `site_knowledge`: copy público, contenido editorial de tours y FAQ del sitio, con fuente, idioma, keywords, prioridad y versión.
+- `lib/knowledge/site-knowledge.ts` siembra contenido estructurado desde `lib/translations.ts`, `lib/tour-content.ts` y `lib/site-faqs.ts`.
+- Mantener un documento por sección, tour o FAQ para evitar blobs imposibles de recuperar.
+- Conservar `data` estructurado además del texto normalizado; `content` sirve para contexto y `keywords` para recuperación barata.
+- Buscar por keywords y prioridad antes de OpenAI. Enviar solo documentos relevantes, nunca toda la página en cada llamada.
+- Las colecciones operativas (`tours`, `store_products`, `hero_slogans`) siguen siendo su propia fuente de verdad; no duplicar datos vivos de precio, inventario o disponibilidad.
+
 ## Campos de reserva
 
 Conservar `tour`, `date`, `time`, `people`, `ages`, `fitness`, `package`, `transport`, `lunch`, `name`, `email` y `phone`.

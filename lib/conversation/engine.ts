@@ -2,7 +2,10 @@ import type { Collection, Db } from "mongodb";
 import { COLLECTIONS } from "@/lib/constants/db";
 import { sendConversationFollowupEmail } from "@/lib/email/conversation-followup-email";
 import { isDateOnOrAfterMinBookableInCostaRica } from "@/lib/helpers/costa-rica-time";
-import { interpretWithOpenAI } from "./ai";
+import { searchSiteKnowledge, setupSiteKnowledge } from "@/lib/knowledge/site-knowledge";
+import { getTourContent } from "@/lib/tour-content";
+import { readPublicTours } from "@/lib/tours/public-catalog";
+import { interpretWithOpenAI, type AssistantTourKnowledge } from "./ai";
 import type {
   ConversationFaq,
   ConversationInputType,
@@ -474,7 +477,49 @@ function parseInput(type: ConversationInputType, raw: string, step: Conversation
 async function getStep(db: Db, id: string) {
   const step = await steps(db).findOne({ id, active: true });
   if (!step) throw new Error(`Conversation step not found: ${id}`);
+  if (id === "reservation_tour") {
+    const tours = await readPublicTours();
+    step.options = tours.slice(0, 24).map((tour, index) => ({
+      key: String.fromCharCode(65 + index),
+      label: tour.titleEs,
+      next: "reservation_date",
+      set: { path: "reservation.tour", value: tour.slug },
+    }));
+  }
   return step;
+}
+
+async function getTourKnowledge(): Promise<AssistantTourKnowledge[]> {
+  const tours = await readPublicTours();
+  return tours.map((tour) => {
+    const content = getTourContent(tour.slug);
+    return {
+      slug: tour.slug,
+      title: tour.titleEs,
+      aliases: [tour.titleEn, tour.tagEs, tour.tagEn].filter((value): value is string => Boolean(value)),
+      description: tour.descriptionEs ?? "",
+      duration: tour.duration,
+      difficulty: tour.difficulty,
+      location: tour.location,
+      inclusions: [...(tour.inclusions ?? []), ...(content?.included ?? [])],
+      exclusions: [...(tour.exclusions ?? []), ...(content?.notIncluded ?? [])],
+      restrictions: tour.restrictions,
+      cancellationPolicy: tour.cancellationPolicy,
+      packages: (tour.packages ?? []).map((pkg) => ({
+        id: pkg.id,
+        name: pkg.nameEs ?? pkg.name,
+        description: pkg.descriptionEs,
+        includes: pkg.includes ?? [],
+        departureTimes: pkg.departureTimes ?? [],
+        scheduleNote: pkg.scheduleNote,
+      })),
+      highlights: content?.highlights ?? [],
+      itinerary: content?.itinerary ?? [],
+      whatToBring: content?.whatToBring ?? [],
+      goodToKnow: content?.goodToKnow ?? [],
+      faqs: (content?.faqs ?? []).map((faq) => ({ question: faq.q, answer: faq.a })),
+    };
+  });
 }
 
 function response(step: ConversationStep, session: ConversationSession, reply = step.message): ConversationResponse {
@@ -557,7 +602,11 @@ function validPhone(value: string) {
   return digits.length >= 8 && digits.length <= 15;
 }
 
-function applyReservationPatch(session: ConversationSession, patch: Partial<ConversationReservation>) {
+function applyReservationPatch(
+  session: ConversationSession,
+  patch: Partial<ConversationReservation>,
+  validTourSlugs: Set<string>,
+) {
   const recovered: string[] = [];
   const reservation = session.reservation;
   const set = <K extends keyof ConversationReservation>(field: K, value: ConversationReservation[K]) => {
@@ -584,7 +633,7 @@ function applyReservationPatch(session: ConversationSession, patch: Partial<Conv
   const normalizedLunch = ["si", "sí", "true", "included"].includes(patch.lunch ?? "") ? "yes"
     : ["false", "none"].includes(patch.lunch ?? "") ? "no" : patch.lunch;
 
-  if (["tour-ciudad-esmeralda", "cascadas-secretas-rio-la-vieja", "caminata-volcanes-dormidos"].includes(normalizedTour ?? "")) set("tour", normalizedTour!);
+  if (normalizedTour && validTourSlugs.has(normalizedTour)) set("tour", normalizedTour);
   if (patch.date && isDateOnOrAfterMinBookableInCostaRica(patch.date)) set("date", patch.date);
   if (normalizedTime && ["08:00", "09:00", "10:00"].includes(normalizedTime)) {
     set("time", normalizedTime as ConversationReservation["time"]);
@@ -695,6 +744,9 @@ export async function runConversation(
   },
 ): Promise<ConversationResponse> {
   await setup(db);
+  await setupSiteKnowledge(db);
+  const tourKnowledge = await getTourKnowledge();
+  const validTourSlugs = new Set(tourKnowledge.map((tour) => tour.slug));
   const collection = sessions(db);
   let session = await collection.findOne({ sessionId: input.sessionId }) as ConversationSession | null;
   if (!session || input.reset) {
@@ -706,7 +758,9 @@ export async function runConversation(
   }
 
   let currentStep = await getStep(db, session.currentStep);
-  const recoveredFields = input.prefill ? applyReservationPatch(session, input.prefill) : [];
+  const recoveredFields = input.prefill
+    ? applyReservationPatch(session, input.prefill, validTourSlugs)
+    : [];
   if (recoveredFields.length > 0) {
     currentStep = await nextMissingReservationStep(db, session);
     session.currentStep = currentStep.id;
@@ -768,17 +822,24 @@ export async function runConversation(
           nextStepId = currentStep.id;
         } else {
           const faqContext = await faqs(db).find({ active: true }).sort({ priority: -1 }).limit(12).toArray();
+          const siteKnowledge = await searchSiteKnowledge(db, userContent);
           const interpreted = await interpretWithOpenAI({
             message: userContent,
             currentStep: currentStep.id,
             reservation: session.reservation,
             faqs: faqContext,
+            tours: tourKnowledge,
+            siteKnowledge,
           });
           if (!interpreted) {
             replyOverride = "No logré ubicar esa consulta todavía. Puede elegir una opción o pedir hablar con el equipo.";
           } else {
             answerSource = "openai";
-            recoveredFields.push(...applyReservationPatch(session, interpreted.fields as Partial<ConversationReservation>));
+            recoveredFields.push(...applyReservationPatch(
+              session,
+              interpreted.fields as Partial<ConversationReservation>,
+              validTourSlugs,
+            ));
             replyOverride = interpreted.reply || null;
             if (interpreted.intent === "booking") currentStep = await nextMissingReservationStep(db, session);
             else if (interpreted.intent === "human") currentStep = await getStep(db, session.customer.name ? "human_phone" : "human_name");
@@ -817,11 +878,14 @@ export async function runConversation(
         answerSource = "mongodb-faq";
       } else {
         const faqContext = await faqs(db).find({ active: true }).sort({ priority: -1 }).limit(12).toArray();
+        const siteKnowledge = await searchSiteKnowledge(db, userContent);
         const interpreted = await interpretWithOpenAI({
           message: userContent,
           currentStep: "questions_freeform",
           reservation: session.reservation,
           faqs: faqContext,
+          tours: tourKnowledge,
+          siteKnowledge,
         });
         replyOverride = interpreted?.reply || "Esa consulta necesita confirmación del equipo para no inventarle información.";
         answerSource = interpreted ? "openai" : "state-machine";

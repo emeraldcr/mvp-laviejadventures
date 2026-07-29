@@ -23,6 +23,7 @@ export const COLLECTIONS = {
   CONVERSATION_SESSIONS: "conversation_sessions",
   CONVERSATION_FAQS: "conversation_faqs",
   CONVERSATION_MESSAGES: "conversation_messages",
+  SITE_KNOWLEDGE: "site_knowledge",
   STORE_PRODUCTS: "store_products",
   STORE_SETTINGS: "store_settings",
   DJ_TRACKS: "dj_tracks",

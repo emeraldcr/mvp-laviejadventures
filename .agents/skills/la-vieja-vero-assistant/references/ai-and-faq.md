@@ -26,6 +26,14 @@ La salida incluye intención, respuesta y todos los campos de reserva con `null`
 
 El prompt debe fijar ustedeo, fecha de Costa Rica, datos existentes, FAQ recuperadas y prohibición de inventar precio, cupos, seguridad, clima, pago o confirmación.
 
+### Alcance del catálogo
+
+- Cargar los tours públicos activos desde la colección `tours`; no mantener un enum manual de tres tours.
+- Generar las opciones de selección con `slug` y `titleEs` del catálogo activo.
+- Enriquecer el contexto verificado con `lib/tour-content.ts`: descripción, dificultad, duración, ubicación, inclusiones, exclusiones, restricciones, paquetes, salidas, itinerario, preparación, políticas y FAQ por tour.
+- Structured Outputs puede devolver un `slug`, pero el motor debe aceptarlo solo si existe en el conjunto activo recuperado de MongoDB.
+- Mantener la búsqueda de FAQ por keywords antes de enviar el catálogo a OpenAI.
+
 ## Fallback
 
 - Sin clave o con timeout: continuar con árbol, FAQ y humano.
