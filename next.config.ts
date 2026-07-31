@@ -23,6 +23,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "avatars.githubusercontent.com" }, // GitHub profile pictures
       { protocol: "https", hostname: "*.googleusercontent.com" },
       { protocol: "https", hostname: "images.unsplash.com" }, // Store product reference photos
+      { protocol: "https", hostname: "upload.wikimedia.org" }, // Licensed bird reference photography
     ],
   },
 

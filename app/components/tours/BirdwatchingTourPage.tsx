@@ -34,6 +34,7 @@ import { WHATSAPP_HREF } from "@/app/components/home/home-utils";
 import {
   BIRDWATCHING_GALLERY,
   BIRDWATCHING_HABITATS,
+  BIRDWATCHING_IMAGE_CREDITS,
   BIRDWATCHING_LEARNING,
   BIRDWATCHING_SPECIES,
   BIRDWATCHING_STATS,
@@ -398,7 +399,7 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
         <div className="mx-auto max-w-7xl px-4 md:px-8">
           <SectionHeading icon={<Expand className="h-6 w-6" />} title="Galería de la experiencia" />
           <p className="mt-3 max-w-2xl text-base text-zinc-400">
-            Fotos reales del corredor, senderos, amaneceres y momentos de observación. Tocá cualquier imagen para verla en grande.
+            Fotografías de referencia de las especies que buscamos en el corredor. Tocá cualquier imagen para verla en grande; la fauna silvestre nunca se garantiza.
           </p>
 
           <div className="mt-10 columns-2 gap-3 sm:columns-3 lg:columns-4">
@@ -411,7 +412,7 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
               >
                 <Image
                   src={image}
-                  alt={`Galería aves ${index + 1}`}
+                  alt={BIRDWATCHING_SPECIES[index]?.commonName ?? `Ave del corredor ${index + 1}`}
                   fill
                   sizes="(min-width:1024px) 25vw, 50vw"
                   className="object-cover transition duration-500 group-hover:scale-105"
@@ -420,6 +421,16 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
               </button>
             ))}
           </div>
+          <p className="mt-5 text-xs leading-relaxed text-zinc-500">
+            Fotografías con licencia abierta vía Wikimedia Commons. {BIRDWATCHING_IMAGE_CREDITS.map((credit, index) => (
+              <span key={credit.source}>
+                {index > 0 ? " · " : ""}
+                <a href={credit.source} target="_blank" rel="noopener noreferrer" className="underline decoration-white/20 underline-offset-2 hover:text-emerald-200">
+                  {credit.author} ({credit.license})
+                </a>
+              </span>
+            ))}
+          </p>
         </div>
       </section>
 

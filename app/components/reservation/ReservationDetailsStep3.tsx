@@ -236,7 +236,7 @@ export default function ReservationDetailsStep3({
           />
           <span className="text-sm leading-relaxed text-zinc-800 dark:text-zinc-200">
             <span className="mb-1 block text-xs font-black uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
-              {isEs ? "Último paso (o usá el botón de abajo)" : "Last step (or use the button below)"}
+              {isEs ? "Último paso · confirme antes de pagar" : "Last step · confirm before payment"}
             </span>
             {tr.agreeText}
             <Link
@@ -260,9 +260,7 @@ export default function ReservationDetailsStep3({
             </Link>
             .
             <span className="mt-2 block text-xs font-semibold text-zinc-500">
-              {isEs
-                ? "Tip: el botón «Aceptar y pagar» lo hace todo de una."
-                : "Tip: the “Accept & pay” button does it all in one tap."}
+              {isEs ? "Después de marcar esta casilla, podrá continuar al pago." : "After checking this box, you can continue to payment."}
             </span>
           </span>
         </label>

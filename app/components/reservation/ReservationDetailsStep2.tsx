@@ -63,14 +63,18 @@ export default function ReservationDetailsStep2({
     <>
       <div
         ref={travelerSectionRef}
-        className={`mb-3 rounded-2xl border bg-white p-3 shadow-sm transition-all dark:bg-zinc-900/70 sm:p-4 ${
+        className={`mb-4 rounded-3xl border bg-white p-5 shadow-sm transition-all dark:bg-zinc-900/70 sm:p-7 ${
           !isStep2Valid
             ? "border-amber-300 ring-2 ring-amber-300/35 dark:border-amber-600"
             : "border-zinc-200 dark:border-zinc-700"
         }`}
       >
-        <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
-          <h3 className="text-sm font-black text-zinc-900 dark:text-zinc-50">{tr.travelerTitle}</h3>
+        <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-[#087d72] dark:text-[#66ddcf]">{lang === "es" ? "Paso 2 de 3" : "Step 2 of 3"}</p>
+            <h3 className="mt-2 text-2xl font-black text-zinc-900 dark:text-zinc-50 sm:text-3xl">{tr.travelerTitle}</h3>
+            <p className="mt-2 max-w-xl text-sm leading-6 text-zinc-500">{lang === "es" ? "Usaremos estos datos para coordinar su visita y enviar la confirmación." : "We use these details to coordinate your visit and send confirmation."}</p>
+          </div>
           {isStep2Valid ? (
             <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 dark:border-emerald-800/50 dark:bg-emerald-950/30 dark:text-emerald-300">
               {lang === "es" ? "Listo para revisar" : "Ready to review"}
@@ -82,7 +86,7 @@ export default function ReservationDetailsStep2({
           )}
         </div>
 
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
           <TravelerInputField
             id="name"
             label={tr.fullName}

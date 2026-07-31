@@ -28,8 +28,23 @@ export type BirdTestimonial = {
   origin: string;
 };
 
+const LICENSED_BIRD_IMAGES: Record<string, string> = {
+  "1550853024-fae8cd4be47f": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/Keel-billed_toucan_%28Ramphastos_sulfuratus_sulfuratus%29_on_foxtail_palm_%28Wodyetia_bifurcata%29_Cayo.jpg/1920px-Keel-billed_toucan_%28Ramphastos_sulfuratus_sulfuratus%29_on_foxtail_palm_%28Wodyetia_bifurcata%29_Cayo.jpg",
+  "1516467508483-a7213fe4af05": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Pteroglossus_torquatus_Costa_Rica.jpg/1920px-Pteroglossus_torquatus_Costa_Rica.jpg",
+  "1444464666168-49d633b86797": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Amazonian_Motmot_%28Momotus_momota%29_%2838484878185%29.jpg/1920px-Amazonian_Motmot_%28Momotus_momota%29_%2838484878185%29.jpg",
+  "1550994439-a879aabe0386": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Montezuma_oropendola_%28Psarocolius_montezuma%29_on_wild_papaya_Orange_Walk.jpg/1920px-Montezuma_oropendola_%28Psarocolius_montezuma%29_on_wild_papaya_Orange_Walk.jpg",
+  "1682788820676-2d68c93d3346": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Rufous-tailed_Hummingbird_%2854567044907%29.jpg/1920px-Rufous-tailed_Hummingbird_%2854567044907%29.jpg",
+  "1604584494301-cdf0b1e2e8b1": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/Clay-coloured_thrush_%28Turdus_grayi_megas%29_Palopo.jpg/1920px-Clay-coloured_thrush_%28Turdus_grayi_megas%29_Palopo.jpg",
+  "1598304843779-6d0f0c8e2f1a": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/Ramphocelus_passerinii_%28male%29.jpg/1920px-Ramphocelus_passerinii_%28male%29.jpg",
+  "1507003211169-0a1dd7228f2d": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Blue-gray_tanager_%2803108%292.jpg/1920px-Blue-gray_tanager_%2803108%292.jpg",
+  "1518791841217-8f162f1e9881": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/Great_kiskadee_%2870240%29.jpg/1920px-Great_kiskadee_%2870240%29.jpg",
+  "1548199973-03cce0bbc87b": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/White-collared_swift_%28Streptoprocne_zonaris_altissima%29_in_flight_Caldas.jpg/1920px-White-collared_swift_%28Streptoprocne_zonaris_altissima%29_in_flight_Caldas.jpg",
+  "1552728080-b9123d1349a7": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Chamaepetes_unicolor_San_Gerardo_01.jpg/1920px-Chamaepetes_unicolor_San_Gerardo_01.jpg",
+  "1558618666-fcd25c85cd64": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/32/Hoffmann%27s_Woodpecker.jpg/1920px-Hoffmann%27s_Woodpecker.jpg",
+};
+
 function img(id: string) {
-  return `https://images.unsplash.com/photo-${id}?q=80&w=1200&auto=format&fit=crop`;
+  return LICENSED_BIRD_IMAGES[id] ?? `https://images.unsplash.com/photo-${id}?q=80&w=1200&auto=format&fit=crop`;
 }
 
 export const BIRDWATCHING_VIDEOS: BirdVideo[] = [
@@ -57,10 +72,10 @@ export const BIRDWATCHING_VIDEOS: BirdVideo[] = [
 
 export const BIRDWATCHING_GALLERY: string[] = [
   img("1550853024-fae8cd4be47f"),
+  img("1516467508483-a7213fe4af05"),
+  img("1444464666168-49d633b86797"),
   img("1550994439-a879aabe0386"),
   img("1682788820676-2d68c93d3346"),
-  img("1444464666168-49d633b86797"),
-  img("1516467508483-a7213fe4af05"),
   img("1604584494301-cdf0b1e2e8b1"),
   img("1598304843779-6d0f0c8e2f1a"),
   img("1507003211169-0a1dd7228f2d"),
@@ -69,6 +84,21 @@ export const BIRDWATCHING_GALLERY: string[] = [
   img("1552728080-b9123d1349a7"),
   img("1558618666-fcd25c85cd64"),
 ];
+
+export const BIRDWATCHING_IMAGE_CREDITS = [
+  { author: "Charles J. Sharp", license: "CC BY-SA 4.0", source: "https://commons.wikimedia.org/wiki/File:Keel-billed_toucan_(Ramphastos_sulfuratus_sulfuratus)_on_foxtail_palm_(Wodyetia_bifurcata)_Cayo.jpg" },
+  { author: "LG Nyqvist", license: "CC BY-SA 4.0", source: "https://commons.wikimedia.org/wiki/File:Pteroglossus_torquatus_Costa_Rica.jpg" },
+  { author: "Bernard Dupont", license: "CC BY-SA 2.0", source: "https://commons.wikimedia.org/wiki/File:Amazonian_Motmot_(Momotus_momota)_(38484878185).jpg" },
+  { author: "Charles J. Sharp", license: "CC BY-SA 4.0", source: "https://commons.wikimedia.org/wiki/File:Montezuma_oropendola_(Psarocolius_montezuma)_on_wild_papaya_Orange_Walk.jpg" },
+  { author: "Andy Morffew", license: "CC BY 2.0", source: "https://commons.wikimedia.org/wiki/File:Rufous-tailed_Hummingbird_(54567044907).jpg" },
+  { author: "Charles J. Sharp", license: "CC BY-SA 4.0", source: "https://commons.wikimedia.org/wiki/File:Clay-coloured_thrush_(Turdus_grayi_megas)_Palopo.jpg" },
+  { author: "Hans Hillewaert", license: "CC BY-SA 3.0", source: "https://commons.wikimedia.org/wiki/File:Ramphocelus_passerinii_(male).jpg" },
+  { author: "Rhododendrites", license: "CC BY-SA 4.0", source: "https://commons.wikimedia.org/wiki/File:Blue-gray_tanager_(03108)2.jpg" },
+  { author: "Rhododendrites", license: "CC BY-SA 4.0", source: "https://commons.wikimedia.org/wiki/File:Great_kiskadee_(70240).jpg" },
+  { author: "Charles J. Sharp", license: "CC BY-SA 4.0", source: "https://commons.wikimedia.org/wiki/File:White-collared_swift_(Streptoprocne_zonaris_altissima)_in_flight_Caldas.jpg" },
+  { author: "Cephas", license: "CC BY-SA 4.0", source: "https://commons.wikimedia.org/wiki/File:Chamaepetes_unicolor_San_Gerardo_01.jpg" },
+  { author: "Johnathan Nightingale", license: "CC BY-SA 3.0", source: "https://commons.wikimedia.org/wiki/File:Hoffmann%27s_Woodpecker.jpg" },
+] as const;
 
 export const BIRDWATCHING_SPECIES: BirdSpecies[] = [
   {

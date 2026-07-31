@@ -54,8 +54,8 @@ export default function CalendarSection({ className }: Props) {
   }, [selectedDay, scrollToDetails]);
 
   return (
-    <section className={cn("flex items-start px-1 sm:px-2", className)}>
-      <div className="w-full">
+    <section className={cn("flex min-w-0 items-start overflow-hidden px-1 sm:px-2", className)}>
+      <div className="min-w-0 w-full">
         <div className="space-y-4">
           {availabilityError && (
             <div
@@ -81,11 +81,11 @@ export default function CalendarSection({ className }: Props) {
               {summaryText}
             </p>
 
-            <div className="flex w-full gap-2 sm:w-auto">
+            <div className="flex min-w-0 w-full gap-2 sm:w-auto">
               <button
                 type="button"
                 onClick={goToNextAvailableDay}
-                className="flex-1 whitespace-nowrap rounded-lg border border-zinc-300 bg-white px-3 py-2 text-[11px] font-bold text-zinc-800 transition hover:bg-zinc-100 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800 sm:flex-none sm:text-xs"
+                className="min-w-0 flex-1 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-[11px] font-bold leading-tight text-zinc-800 transition hover:bg-zinc-100 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800 sm:flex-none sm:whitespace-nowrap sm:text-xs"
               >
                 {tr.nextAvailable}
               </button>

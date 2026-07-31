@@ -116,6 +116,9 @@ export default function ReservationDetails({
   const selectedTour = tours.find((tour) => tour.slug === selectedTourSlug) ?? tours[0] ?? null;
   const packageOptions = useMemo(() => getTourPackageOptions(selectedTour), [selectedTour]);
   const [selectedPackageId, setSelectedPackageId] = useState("");
+  const [hasConfirmedPackage, setHasConfirmedPackage] = useState(false);
+  const [hasConfirmedTime, setHasConfirmedTime] = useState(false);
+  const [hasConfirmedTickets, setHasConfirmedTickets] = useState(false);
   const selectedPackage = useMemo(
     () => packageOptions.find((pkg) => pkg.id === selectedPackageId) ?? packageOptions[0] ?? null,
     [packageOptions, selectedPackageId],
@@ -224,12 +227,6 @@ export default function ReservationDetails({
   useEffect(() => {
     if (tourTime && !availableTimeSlots.includes(tourTime)) {
       setTourTime(null);
-    }
-  }, [availableTimeSlots, tourTime]);
-
-  useEffect(() => {
-    if (!tourTime && availableTimeSlots.length > 0) {
-      setTourTime(availableTimeSlots[0]);
     }
   }, [availableTimeSlots, tourTime]);
 
@@ -420,9 +417,8 @@ export default function ReservationDetails({
         phoneCode: params.get("phoneCode")?.trim() || phoneMatch?.[1] || current.phoneCode,
         phoneNumber: requestedPhoneNumber || phoneMatch?.[2] || requestedPhone || current.phoneNumber,
         specialRequests: params.get("specialRequests")?.trim() || current.specialRequests || handoff?.state.specialRequests || "",
-        agreeTerms: ["1", "true", "yes"].includes((params.get("terms") ?? "").toLowerCase())
-          ? true
-          : current.agreeTerms,
+        // Terms always require an explicit action in this page. Never trust a URL.
+        agreeTerms: false,
       }));
       if (raw) sessionStorage.removeItem(AI_BOOKING_HANDOFF_KEY);
       hasAppliedPrefillRef.current = true;
@@ -438,6 +434,11 @@ export default function ReservationDetails({
     completedStepsRef.current.clear();
     nextStepFocusRef.current = null;
     setCurrentStep(1);
+    setChoiceStep(1);
+    setTourTime(null);
+    setHasConfirmedPackage(false);
+    setHasConfirmedTime(false);
+    setHasConfirmedTickets(false);
     handleChange("agreeTerms", false);
   }, [handleChange, reservationDateIso]);
 
@@ -492,6 +493,9 @@ export default function ReservationDetails({
   const isStep1Valid =
     isTicketsValid &&
     tourTime !== null &&
+    hasConfirmedPackage &&
+    hasConfirmedTime &&
+    hasConfirmedTickets &&
     Boolean(selectedTour) &&
     Boolean(selectedPackage) &&
     !isPackageDisabled(selectedPackage);
@@ -936,35 +940,11 @@ export default function ReservationDetails({
       transportLoading
     ) return;
 
-    const addonValidation = validateSelectedAddons(selectedAddons, addonDetails, lang);
     hasResumedProgressRef.current = true;
-
-    if (!isStep1Valid) {
-      setCurrentStep(1);
-      setChoiceStep(!tourTime || !isTicketsValid ? 2 : 1);
-      return;
-    }
-    if (!addonValidation.ok || (transportQuoteEnabled && (!transportQuote || transportError))) {
-      setCurrentStep(1);
-      setChoiceStep(3);
-      return;
-    }
-    if (!isStep2Valid) {
-      completedStepsRef.current.add(1);
-      setCurrentStep(2);
-      return;
-    }
-    if (!validation.isAgreeTermsValid) {
-      completedStepsRef.current.add(1);
-      completedStepsRef.current.add(2);
-      setCurrentStep(3);
-      return;
-    }
-
-    completedStepsRef.current.add(1);
-    completedStepsRef.current.add(2);
-    completedStepsRef.current.add(3);
-    handleReserve();
+    // A fresh visit always follows the guided sequence. Prefilled values may be
+    // displayed as suggestions, but only direct user actions unlock each choice.
+    setCurrentStep(1);
+    setChoiceStep(1);
   }, [
     addonDetails,
     handleReserve,
@@ -989,8 +969,19 @@ export default function ReservationDetails({
 
   const goToNextStep = useCallback(() => {
     if (currentStep === 1) {
-      if (choiceStep < 3) {
-        setChoiceStep((choiceStep + 1) as ChoiceStep);
+      if (choiceStep === 1) {
+        if (!hasConfirmedPackage) return;
+        setChoiceStep(2);
+        return;
+      }
+      if (choiceStep === 2) {
+        if (!tourTime || !hasConfirmedTime) return;
+        setChoiceStep(3);
+        return;
+      }
+      if (choiceStep === 3) {
+        if (!isTicketsValid || !hasConfirmedTickets) return;
+        setChoiceStep(4);
         return;
       }
       goToStep(2, "next_button");
@@ -1000,12 +991,16 @@ export default function ReservationDetails({
     if (currentStep === 2) {
       goToStep(3, "next_button");
     }
-  }, [choiceStep, currentStep, goToStep]);
-
-  // One-tap magic: accept terms + pay from sticky bar (no second click).
-  const handleExpressCheckout = useCallback(() => {
-    handleReserve({ forceTermsAccepted: true });
-  }, [handleReserve]);
+  }, [
+    choiceStep,
+    currentStep,
+    goToStep,
+    hasConfirmedPackage,
+    hasConfirmedTickets,
+    hasConfirmedTime,
+    isTicketsValid,
+    tourTime,
+  ]);
 
   const handleStep1Enter = useCallback((event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key !== "Enter") return;
@@ -1064,6 +1059,7 @@ export default function ReservationDetails({
 
   const handleTourTimeSelect = useCallback((slot: TourTime) => {
     setTourTime(slot);
+    setHasConfirmedTime(true);
     step1FieldFocusRef.current = "tickets";
     trackAnalyticsEvent("booking_selection_changed", {
       metadata: {
@@ -1102,6 +1098,7 @@ export default function ReservationDetails({
     const nextTickets = Math.min(Math.max(integerValue, 1), Math.max(slots, 1));
 
     setTickets(nextTickets);
+    setHasConfirmedTickets(true);
     trackAnalyticsEvent("booking_selection_changed", {
       metadata: {
         step: 1,
@@ -1179,46 +1176,31 @@ export default function ReservationDetails({
 
   const stickySecondaryLabel = [
     formattedDate,
-    tourTime ? formatDepartureLabel(tourTime) : null,
-    `${tickets} pax`,
-    packageLabel,
+    hasConfirmedTime && tourTime ? formatDepartureLabel(tourTime) : null,
+    hasConfirmedTickets ? `${tickets} pax` : null,
+    hasConfirmedPackage ? packageLabel : null,
   ]
     .filter(Boolean)
     .join(" · ");
 
-  const step1ContinueLabel = isStep2Valid
-    ? lang === "es" ? "Confirmar en 1 toque" : "Confirm in 1 tap"
-    : lang === "es" ? "Siguiente · mis datos" : "Next · my details";
+  const step1ContinueLabel = lang === "es" ? "Siguiente · mis datos" : "Next · my details";
 
   const stickyLabel =
     currentStep === 1
-      ? choiceStep < 3
+      ? choiceStep < 4
         ? lang === "es" ? "Continuar" : "Continue"
         : step1ContinueLabel
       : currentStep === 2
         ? lang === "es" ? "Revisar" : "Review"
         : isSubmitting
           ? lang === "es" ? "Procesando…" : "Processing…"
-          : validation.isAgreeTermsValid
+        : validation.isAgreeTermsValid
             ? `${tr.proceedBtn} · $${totalWithTaxes.toFixed(0)}`
-            : lang === "es"
-              ? `Aceptar y pagar · $${totalWithTaxes.toFixed(0)}`
-              : `Accept & pay · $${totalWithTaxes.toFixed(0)}`;
-
-  // Auto-accept path hint when traveler draft is already complete.
-  const prefilledBanner =
-    currentStep === 1 && isStep1Valid && isStep2Valid
-      ? lang === "es"
-        ? "✨ Modo exprés: un toque y pasás a pagar."
-        : "✨ Express mode: one tap and you go pay."
-      : currentStep === 2 && isStep2Valid
-        ? lang === "es"
-          ? "Datos listos — llevándote a revisar…"
-          : "Details ready — taking you to review…"
-        : null;
+            : lang === "es" ? "Acepte los términos" : "Accept the terms";
 
   const handlePackageSelect = useCallback((packageId: string) => {
     setSelectedPackageId(packageId);
+    setHasConfirmedPackage(true);
     trackAnalyticsEvent("booking_selection_changed", {
       metadata: {
         step: 1,
@@ -1245,7 +1227,7 @@ export default function ReservationDetails({
           <p className="truncate text-xs font-semibold capitalize text-zinc-500 dark:text-zinc-400">
             {formattedDate}
             {tourTime ? ` · ${formatDepartureLabel(tourTime)}` : ""}
-            {` · ${tickets} pax`}
+            {hasConfirmedTickets ? ` · ${tickets} pax` : ` · ${lang === "es" ? "personas por elegir" : "guests to choose"}`}
           </p>
         </div>
         <div className="shrink-0 text-right">
@@ -1257,12 +1239,6 @@ export default function ReservationDetails({
           </p>
         </div>
       </div>
-
-      {prefilledBanner && (
-        <div className="mb-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800 dark:border-emerald-800/50 dark:bg-emerald-950/25 dark:text-emerald-200">
-          {prefilledBanner}
-        </div>
-      )}
 
       <ReservationDetailsStepProgress
         steps={wizardSteps}
@@ -1302,6 +1278,9 @@ export default function ReservationDetails({
           tourTime={tourTime}
           availableTimeSlots={availableTimeSlots}
           isTicketsValid={isTicketsValid}
+          hasConfirmedPackage={hasConfirmedPackage}
+          hasConfirmedTime={hasConfirmedTime}
+          hasConfirmedTickets={hasConfirmedTickets}
           tickets={tickets}
           slots={slots}
           packages={packageOptions}
@@ -1310,7 +1289,7 @@ export default function ReservationDetails({
           selectedAddons={selectedAddons}
           addonDetails={addonDetails}
           addonsPricePerPerson={addonsPricePerPerson}
-          packageLabel={packageLabel}
+          packageLabel={hasConfirmedPackage ? packageLabel : (lang === "es" ? "Paquete por elegir" : "Package to choose")}
           reservationDateIso={reservationDateIso}
           estimatedTotal={totalWithTaxes}
           continueLabel={step1ContinueLabel}
@@ -1397,16 +1376,14 @@ export default function ReservationDetails({
             </button>
             <button
               type="button"
-              onClick={handleExpressCheckout}
-              disabled={!isStep1Valid || !isStep2Valid || isSubmitting}
-              className="inline-flex flex-[2] min-h-12 items-center justify-center gap-2 rounded-full bg-emerald-600 px-6 py-3 font-black text-white shadow-lg transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
+              onClick={() => handleReserve()}
+              disabled={!isFormValid || isSubmitting}
+              className="inline-flex flex-[2] min-h-14 items-center justify-center gap-2 rounded-full bg-[#00C4B0] px-6 py-3 font-black text-[#17322f] shadow-lg shadow-[#00C4B0]/15 transition hover:bg-[#66ddcf] disabled:cursor-not-allowed disabled:opacity-50"
             >
               <ShieldCheck className="h-5 w-5" aria-hidden />
               {validation.isAgreeTermsValid
                 ? `${tr.proceedBtn} · $${totalWithTaxes.toFixed(2)}`
-                : lang === "es"
-                  ? `Aceptar y pagar · $${totalWithTaxes.toFixed(0)}`
-                  : `Accept & pay · $${totalWithTaxes.toFixed(0)}`}
+                : lang === "es" ? "Acepte los términos para continuar" : "Accept the terms to continue"}
             </button>
           </div>
 
@@ -1427,11 +1404,15 @@ export default function ReservationDetails({
           isSubmitting ||
           (currentStep === 1
             ? choiceStep === 1
-              ? !selectedPackage
-              : !isStep1Valid
+              ? !selectedPackage || !hasConfirmedPackage
+              : choiceStep === 2
+                ? !tourTime || !hasConfirmedTime
+                : choiceStep === 3
+                  ? !isTicketsValid || !hasConfirmedTickets
+                  : !isStep1Valid
             : currentStep === 2
               ? !isStep2Valid
-              : !isStep1Valid || !isStep2Valid)
+              : !isFormValid)
         }
         onBack={
           currentStep === 1 && choiceStep > 1
@@ -1440,7 +1421,7 @@ export default function ReservationDetails({
               ? () => setCurrentStep((currentStep - 1) as BookingStepId)
               : undefined
         }
-        onAction={currentStep === 3 ? handleExpressCheckout : goToNextStep}
+        onAction={currentStep === 3 ? () => handleReserve() : goToNextStep}
       />
     </div>
   );

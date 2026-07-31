@@ -2,7 +2,7 @@
 
 /**
  * WeatherMessage
- * Displays a unique AI-generated funny comment based on current weather.
+ * Displays a short, practical guide note based on current weather.
  * Fetches a fresh message from OpenAI every time the parent triggers a refresh.
  */
 import { useEffect, useState } from "react";
@@ -35,14 +35,14 @@ export default function WeatherMessage({ snap }: Props) {
   if (!snap && !message) return null;
 
   return (
-    <div className="rounded-2xl border border-white/8 bg-white/[0.02] px-5 py-4">
+    <div className="rounded-3xl border border-[#00C4B0]/20 bg-[#00C4B0]/[0.06] px-5 py-5">
       <p className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold mb-2">
-        El pronóstico del humor
+        Nota de nuestros guías
       </p>
       {snap && !message ? (
         <div className="h-5 w-3/4 rounded bg-white/5 animate-pulse" />
       ) : message ? (
-        <p className="text-sm text-zinc-300 leading-relaxed italic">{message}</p>
+        <p className="text-sm text-zinc-200 leading-6">{message}</p>
       ) : null}
     </div>
   );

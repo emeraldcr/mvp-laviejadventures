@@ -8,6 +8,7 @@ import { getPackageDisplayName } from "@/lib/reservation/pricing";
 type Props = {
   packages: TourPackageOption[];
   selectedPackageId: string;
+  hasConfirmedSelection?: boolean;
   onSelect: (packageId: string) => void;
   lang: "es" | "en";
   dateIso?: string;
@@ -17,6 +18,7 @@ type Props = {
 export default function PackagePicker({
   packages,
   selectedPackageId,
+  hasConfirmedSelection = false,
   onSelect,
   lang,
   isPackageDisabled,
@@ -38,15 +40,24 @@ export default function PackagePicker({
   if (packages.length <= 1) {
     const pkg = packages[0];
     if (!pkg) return null;
+    const id = pkg.id ?? pkg.name;
     return (
-      <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-sm dark:border-emerald-800/50 dark:bg-emerald-950/20">
-        <span className="font-bold text-emerald-900 dark:text-emerald-200">
+      <button
+        type="button"
+        onClick={() => onSelect(id!)}
+        className={`flex min-h-32 w-full items-center justify-between gap-4 rounded-3xl border-2 p-5 text-left transition ${
+          hasConfirmedSelection
+            ? "border-[#00C4B0] bg-[#00C4B0]/10 shadow-lg shadow-[#00C4B0]/10"
+            : "border-zinc-200 bg-white hover:border-[#00C4B0] dark:border-zinc-700 dark:bg-zinc-950/40"
+        }`}
+      >
+        <span className="font-black text-zinc-900 dark:text-zinc-100">
           {getPackageDisplayName(pkg, isEs)}
         </span>
-        <span className="ml-2 font-black text-emerald-800 dark:text-emerald-300">
+        <span className="shrink-0 text-xl font-black text-[#087d72] dark:text-[#66ddcf]">
           ${pkg.price} / {isEs ? "persona" : "person"}
         </span>
-      </div>
+      </button>
     );
   }
 
@@ -58,7 +69,7 @@ export default function PackagePicker({
     >
       {packages.map((pkg) => {
         const id = pkg.id ?? pkg.name;
-        const selected = selectedPackageId === id;
+        const selected = hasConfirmedSelection && selectedPackageId === id;
         const disabled = isPackageDisabled?.(pkg) ?? false;
         const recommended = !disabled && id === recommendedId;
 
@@ -69,14 +80,14 @@ export default function PackagePicker({
             disabled={disabled}
             onClick={() => onSelect(id!)}
             className={[
-              "relative flex min-h-[5.75rem] flex-col rounded-xl border-2 p-3 text-left transition-all",
+              "relative flex min-h-44 flex-col rounded-3xl border-2 p-5 text-left transition-all",
               disabled
                 ? "cursor-not-allowed border-zinc-200 bg-zinc-100 opacity-50 dark:border-zinc-700 dark:bg-zinc-900"
                 : selected
-                  ? "border-emerald-500 bg-emerald-50 shadow-md shadow-emerald-900/10 dark:border-emerald-500 dark:bg-emerald-950/30"
+                  ? "border-[#00C4B0] bg-[#00C4B0]/10 shadow-lg shadow-[#00C4B0]/15 dark:border-[#00C4B0] dark:bg-[#00C4B0]/10"
                   : recommended
-                    ? "border-amber-300/80 bg-white hover:border-emerald-400 dark:border-amber-700/50 dark:bg-zinc-950/40"
-                    : "border-zinc-200 bg-white hover:border-emerald-400 dark:border-zinc-700 dark:bg-zinc-950/40",
+                    ? "border-amber-300/80 bg-white hover:border-[#00C4B0] dark:border-amber-700/50 dark:bg-zinc-950/40"
+                    : "border-zinc-200 bg-white hover:border-[#00C4B0] dark:border-zinc-700 dark:bg-zinc-950/40",
             ].join(" ")}
           >
             {recommended && !selected && (
@@ -90,15 +101,15 @@ export default function PackagePicker({
                 <Check size={12} />
               </span>
             )}
-            <p className={`pr-6 text-sm font-black leading-snug text-zinc-900 dark:text-zinc-50 ${recommended && !selected ? "mt-4" : ""}`}>
+            <p className={`pr-6 text-lg font-black leading-snug text-zinc-900 dark:text-zinc-50 ${recommended && !selected ? "mt-4" : ""}`}>
               {getPackageDisplayName(pkg, isEs)}
             </p>
-            <p className="mt-1 text-lg font-black text-emerald-700 dark:text-emerald-300">
+            <p className="mt-2 text-2xl font-black text-[#087d72] dark:text-[#66ddcf]">
               ${pkg.price}
               <span className="text-xs font-semibold text-zinc-500"> / {isEs ? "pax" : "pax"}</span>
             </p>
             {(pkg.descriptionEs || pkg.descriptionEn) && (
-              <p className="mt-1.5 line-clamp-2 flex-1 text-[11px] leading-relaxed text-zinc-500 dark:text-zinc-400">
+              <p className="mt-3 line-clamp-3 flex-1 text-sm leading-6 text-zinc-500 dark:text-zinc-400">
                 {isEs ? pkg.descriptionEs ?? pkg.descriptionEn : pkg.descriptionEn ?? pkg.descriptionEs}
               </p>
             )}

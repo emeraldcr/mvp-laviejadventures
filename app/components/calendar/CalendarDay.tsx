@@ -124,7 +124,7 @@ function CalendarDayBase({ day }: Props) {
       }
       aria-pressed={selected}
       className={cn(
-        "flex h-14 flex-col overflow-hidden rounded-lg border p-1 text-left shadow-sm outline-none transition duration-150 ease-in-out select-none sm:h-24 sm:rounded-xl sm:p-2.5 lg:h-[104px] lg:p-3 xl:h-28 xl:p-3",
+        "flex h-14 min-w-0 w-full flex-col overflow-hidden rounded-lg border p-1 text-left shadow-sm outline-none transition duration-150 ease-in-out select-none sm:h-24 sm:rounded-xl sm:p-2.5 lg:h-[104px] lg:p-3 xl:h-28 xl:p-3",
         hasSlots
           ? "cursor-pointer hover:scale-[1.03] hover:shadow-md active:scale-95 sm:hover:scale-105"
           : "cursor-not-allowed opacity-60",

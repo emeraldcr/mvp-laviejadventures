@@ -21,13 +21,13 @@ export default function BookingSection({ selectedTourSlug, initialPackageId }: P
       id="booking"
       className="relative min-h-[calc(100svh-4rem)] overflow-hidden bg-[#f4f1ea] dark:bg-[#0b0a09]"
     >
-      <div className="container relative z-10 mx-auto px-3 py-6 md:px-8 md:py-10">
+      <div className="container relative z-10 mx-auto px-3 py-6 md:px-8 md:py-12">
         {selectedTourSlug ? (
           <>
             {!selectedDay && (
               <div className="mx-auto mb-5 max-w-xl text-center md:mb-7">
                 <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300">
-                  {lang === "es" ? "Paso 1" : "Step 1"}
+                  {lang === "es" ? "Paso 1 de 3 · Disponibilidad" : "Step 1 of 3 · Availability"}
                 </p>
                 <h1 className="mt-2 text-2xl font-black text-stone-950 dark:text-white sm:text-3xl">
                   {lang === "es" ? "Elegí una fecha" : "Choose a date"}
@@ -43,7 +43,7 @@ export default function BookingSection({ selectedTourSlug, initialPackageId }: P
             <div
               className={`mx-auto grid items-start gap-3 lg:gap-5 xl:gap-6 ${
                 selectedDay
-                  ? "max-w-5xl"
+                  ? "max-w-6xl"
                   : "max-w-2xl"
               }`}
             >
@@ -65,7 +65,7 @@ export default function BookingSection({ selectedTourSlug, initialPackageId }: P
                       {lang === "es" ? "Cambiar fecha" : "Change date"}
                     </button>
                   </div>
-                  <div className="rounded-2xl border border-stone-200 bg-white p-2.5 shadow-sm dark:border-white/10 dark:bg-stone-900 sm:p-4">
+                  <div className="rounded-[2rem] border border-stone-200 bg-white p-3 shadow-xl shadow-stone-900/5 dark:border-white/10 dark:bg-stone-900 sm:p-6">
                     <Suspense fallback={<ReservationFallback />}>
                       <ReservationSection
                         preselectedTourSlug={selectedTourSlug}
