@@ -16,6 +16,17 @@ function statusLabel(product: Product, lang: Lang) {
   return lang === "es" ? "Vista previa" : "Preview";
 }
 
+const categoryLabels: Record<Product["category"], { es: string; en: string }> = {
+  apparel: { es: "Ropa", en: "Apparel" },
+  footwear: { es: "Calzado", en: "Footwear" },
+  accessories: { es: "Accesorios", en: "Accessories" },
+  packs: { es: "Bolsos", en: "Bags" },
+  essentials: { es: "Esenciales", en: "Essentials" },
+  hydration: { es: "Hidratación", en: "Hydration" },
+  safety: { es: "Seguridad", en: "Safety" },
+  camping: { es: "Camping", en: "Camping" },
+};
+
 export function StoreProductCard({
   product,
   lang,
@@ -34,7 +45,7 @@ export function StoreProductCard({
   return (
     <article
       id={`product-${product.slug}`}
-      className="group scroll-mt-28 overflow-hidden rounded-[1.75rem] border border-[#2E2A25]/10 bg-white shadow-[0_20px_65px_rgba(46,42,37,0.09)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_28px_80px_rgba(46,42,37,0.14)]"
+      className="group flex h-full scroll-mt-28 flex-col overflow-hidden rounded-[1.75rem] border border-[#2E2A25]/10 bg-white shadow-[0_20px_65px_rgba(46,42,37,0.09)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_28px_80px_rgba(46,42,37,0.14)]"
     >
       <div className="relative aspect-[4/5] overflow-hidden bg-[#DCD8D0]">
         <Image
@@ -49,7 +60,7 @@ export function StoreProductCard({
             {statusLabel(product, lang)}
           </span>
           <span className="rounded-full bg-[#00C4B0] px-3 py-1.5 text-[0.68rem] font-extrabold uppercase tracking-[0.13em] text-[#17322E]">
-            {product.tag[lang]}
+            {categoryLabels[product.category][lang]}
           </span>
         </div>
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#2E2A25]/80 to-transparent px-5 pb-5 pt-16">
@@ -59,7 +70,7 @@ export function StoreProductCard({
         </div>
       </div>
 
-      <div className="p-5 sm:p-6">
+      <div className="flex flex-1 flex-col p-5 sm:p-6">
         <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#0C766C]">
           {product.brand ?? "La Vieja Adventures"}
         </p>
@@ -86,34 +97,36 @@ export function StoreProductCard({
           </div>
         )}
 
-        <p className="mt-5 flex items-start gap-2 rounded-2xl bg-[#E7FAF6] px-3.5 py-3 text-xs font-bold leading-5 text-[#24534D]">
-          <Check size={15} className="mt-0.5 shrink-0 text-[#08796D]" />
-          {isEs
-            ? "Talla, color, precio y fecha se confirman antes de comprar."
-            : "Size, color, price, and timing are confirmed before purchase."}
-        </p>
+        <div className="mt-auto pt-5">
+          <p className="flex items-start gap-2 rounded-2xl bg-[#E7FAF6] px-3.5 py-3 text-xs font-bold leading-5 text-[#24534D]">
+            <Check size={15} className="mt-0.5 shrink-0 text-[#08796D]" />
+            {isEs
+              ? "Talla, color, precio y fecha se confirman antes de comprar."
+              : "Size, color, price, and timing are confirmed before purchase."}
+          </p>
 
-        <div className="mt-5 grid gap-2.5 sm:grid-cols-2">
-          <button
-            type="button"
-            onClick={() => onAdd(product.id)}
-            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#00C4B0] px-4 py-3 text-sm font-black text-[#17322E] transition hover:bg-[#20D9C5] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#08796D]"
-          >
-            <Plus size={16} />
-            {isEs ? "Agregar a mi lista" : "Add to my list"}
-          </button>
-          <a
-            href={whatsappHref}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() =>
-              trackStoreAction("collection_whatsapp_click", { slug: product.slug })
-            }
-            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-[#2E2A25]/20 px-4 py-3 text-center text-sm font-black text-[#2E2A25] transition hover:border-[#08796D] hover:bg-[#E7FAF6] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#08796D]"
-          >
-            <MessageCircle size={16} />
-            {isEs ? "Consultar" : "Ask us"}
-          </a>
+          <div className="mt-5 grid gap-2.5 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={() => onAdd(product.id)}
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#00C4B0] px-4 py-3 text-sm font-black text-[#17322E] transition hover:bg-[#20D9C5] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#08796D]"
+            >
+              <Plus size={16} />
+              {isEs ? "Agregar a mi lista" : "Add to my list"}
+            </button>
+            <a
+              href={whatsappHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() =>
+                trackStoreAction("collection_whatsapp_click", { slug: product.slug })
+              }
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-[#2E2A25]/20 px-4 py-3 text-center text-sm font-black text-[#2E2A25] transition hover:border-[#08796D] hover:bg-[#E7FAF6] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#08796D]"
+            >
+              <MessageCircle size={16} />
+              {isEs ? "Consultar" : "Ask us"}
+            </a>
+          </div>
         </div>
       </div>
     </article>

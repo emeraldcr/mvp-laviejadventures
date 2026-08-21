@@ -104,19 +104,36 @@ export default function StorePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [cartOpen, setCartOpen] = useState(false);
   const [toastProduct, setToastProduct] = useState<Product | null>(null);
-  const [cart, setCart] = useState<CartItem[]>(() => {
-    if (typeof window === "undefined") return [];
-    try {
-      const stored = window.localStorage.getItem(CART_STORAGE_KEY);
-      return stored ? (JSON.parse(stored) as CartItem[]) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cartHydrated, setCartHydrated] = useState(false);
 
   useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(CART_STORAGE_KEY);
+      const parsed = stored ? (JSON.parse(stored) as unknown) : [];
+      if (Array.isArray(parsed)) {
+        setCart(
+          parsed.filter(
+            (item): item is CartItem =>
+              typeof item === "object" &&
+              item !== null &&
+              typeof (item as CartItem).productId === "string" &&
+              Number.isInteger((item as CartItem).quantity) &&
+              (item as CartItem).quantity > 0,
+          ),
+        );
+      }
+    } catch {
+      setCart([]);
+    } finally {
+      setCartHydrated(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!cartHydrated) return;
     window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
-  }, [cart]);
+  }, [cart, cartHydrated]);
 
   useEffect(() => {
     if (products.length === 0) return;
@@ -714,11 +731,11 @@ export default function StorePage() {
               ? `Abrir lista con ${cartCount} artículos`
               : `Open list with ${cartCount} items`
           }
-          className="fixed bottom-[calc(5.25rem+env(safe-area-inset-bottom,0px))] right-4 z-40 inline-flex min-h-12 items-center gap-2 rounded-full bg-[#2E2A25] px-5 text-sm font-black text-white shadow-[0_16px_45px_rgba(46,42,37,0.35)] transition hover:-translate-y-0.5 md:bottom-7 md:right-7"
+          className="fixed bottom-[calc(5.25rem+env(safe-area-inset-bottom,0px))] right-3 z-40 inline-flex h-12 w-12 items-center justify-center gap-2 rounded-full bg-[#2E2A25] p-0 text-sm font-black text-white shadow-[0_16px_45px_rgba(46,42,37,0.35)] transition hover:-translate-y-0.5 md:bottom-7 md:right-7 md:h-auto md:w-auto md:min-h-12 md:px-5"
         >
           <ShoppingBag size={17} className="text-[#41E3D2]" />
-          {isEs ? "Mi lista" : "My list"}
-          <span className="rounded-full bg-[#00C4B0] px-2 py-0.5 text-xs text-[#17322E]">
+          <span className="hidden md:inline">{isEs ? "Mi lista" : "My list"}</span>
+          <span className="absolute -right-1 -top-1 grid min-h-5 min-w-5 place-items-center rounded-full bg-[#00C4B0] px-1 text-[0.65rem] text-[#17322E] md:static md:block md:min-h-0 md:min-w-0 md:px-2 md:py-0.5 md:text-xs">
             {cartCount}
           </span>
         </button>

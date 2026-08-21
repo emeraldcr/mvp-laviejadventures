@@ -4,17 +4,25 @@ import { useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
+  ArrowLeft,
   ArrowRight,
+  Binoculars,
   CornerDownRight,
+  Droplets,
   LayoutPanelTop,
   MapPin,
+  Mountain,
   ParkingCircle,
   Printer,
   Ruler,
   Signpost,
+  TreePine,
   UtensilsCrossed,
+  Waves,
 } from "lucide-react";
+import { create as createQrMatrix } from "qrcode";
 import { useLanguage } from "@/lib/LanguageContext";
+import SignProposals from "@/app/components/rotulos/SignProposals";
 
 /** Tipo de cambio referencial, solo para leer el presupuesto en dólares. */
 const CRC_PER_USD = 505;
@@ -59,7 +67,7 @@ const SOCIALS = [
   },
 ];
 
-type Brand = "lva" | "organics";
+type Brand = "lva" | "lva-turquoise";
 
 type Panel = {
   /** Línea corta arriba del título. */
@@ -74,7 +82,9 @@ type Panel = {
   /** Distancia o referencia impresa en el rótulo. */
   distance?: string;
   brands: Brand[];
-  arrow?: "right" | "down-right";
+  arrow?: "left" | "right" | "down-right";
+  /** Pictograma de norma: se decodifica antes de leer una sola letra. */
+  pictogram: "canon" | "cascada" | "rio" | "comida" | "parqueo" | "mirador";
   /** Fotos que se recortan en diagonal dentro del borde interno. */
   photos: string[];
   /** Precio de la lámina en colones. */
@@ -115,9 +125,10 @@ const ROTULOS: Rotulo[] = [
           es: "Entre aquí: cañón, cascadas y café orgánico",
           en: "Turn in here: canyon, waterfalls & organic coffee",
         },
-        brands: ["lva", "organics"],
+        brands: ["lva", "lva-turquoise"],
         arrow: "right",
-        photos: ["/image/IMG_4671.jpg", "/image/IMG_6810.jpg", "/image/IMG_4257.jpg"],
+        pictogram: "canon",
+        photos: ["/image/IMG_4946.JPG"],
         price: 50000,
       },
     ],
@@ -142,12 +153,13 @@ const ROTULOS: Rotulo[] = [
         titleEn: "Your adventure starts in 300 m",
         subtitle: "Cañón del Río La Vieja",
         cta: {
-          es: "Baje la velocidad: la entrada es a la derecha",
-          en: "Slow down: the entrance is on your right",
+          es: "Baje la velocidad: la entrada es a la izquierda",
+          en: "Slow down: the entrance is on your left",
         },
         distance: "300 m",
         brands: ["lva"],
-        arrow: "right",
+        arrow: "left",
+        pictogram: "rio",
         photos: ["/image/IMG_4200.jpg", "/image/IMG_5592.jpg"],
         price: 50000,
       },
@@ -178,6 +190,7 @@ const ROTULOS: Rotulo[] = [
         },
         brands: ["lva"],
         arrow: "right",
+        pictogram: "cascada",
         photos: ["/image/IMG_4376.jpg", "/image/IMG_4210.jpg"],
         price: 50000,
       },
@@ -208,6 +221,7 @@ const ROTULOS: Rotulo[] = [
         },
         brands: ["lva"],
         arrow: "down-right",
+        pictogram: "comida",
         photos: ["/image/IMG_5686.jpg", "/image/IMG_6812.jpg"],
         price: 50000,
       },
@@ -238,6 +252,7 @@ const ROTULOS: Rotulo[] = [
         },
         brands: ["lva"],
         arrow: "right",
+        pictogram: "parqueo",
         photos: ["/image/IMG_4523.jpg", "/image/IMG_2443.jpg"],
         price: 50000,
       },
@@ -267,6 +282,7 @@ const ROTULOS: Rotulo[] = [
         },
         brands: ["lva"],
         arrow: "right",
+        pictogram: "canon",
         photos: ["/image/IMG_4671.jpg"],
         price: 25000,
       },
@@ -280,6 +296,7 @@ const ROTULOS: Rotulo[] = [
         },
         brands: ["lva"],
         arrow: "right",
+        pictogram: "mirador",
         photos: ["/image/IMG_4257.jpg"],
         price: 25000,
       },
@@ -330,21 +347,29 @@ function formatUSD(value: number) {
   }).format(value);
 }
 
-/** Dónde arranca el bloque de fotos (%) y cuánto se inclina la diagonal. */
-const PHOTO_START = 34;
-const PHOTO_SKEW = 16;
+/** Cuánto se inclina el corte diagonal entre el borde de arriba y el de abajo. */
+const PHOTO_SKEW = 14;
 
 /**
- * Recorte diagonal de cada foto: la imagen va a sangre con object-cover
- * (se expande y se corta, nunca se deforma) y solo se muestra su banda.
+ * Bandas diagonales a sangre: las fotos ocupan la lámina entera y solo se ven
+ * cortadas, nunca deformadas. Encima van los módulos de vidrio, así que la
+ * imagen se sigue leyendo debajo del texto.
  */
-function diagonalClip(index: number, total: number) {
-  const span = (100 - PHOTO_START) / total;
-  const topStart = PHOTO_START + span * index;
-  const topEnd = index === total - 1 ? 102 : topStart + span;
-  const bottomStart = topStart - PHOTO_SKEW;
+function diagonalBand(index: number, total: number) {
+  const span = 100 / total;
+  const topStart = index === 0 ? -2 : span * index;
+  const topEnd = index === total - 1 ? 102 : span * (index + 1);
+  const bottomStart = index === 0 ? -2 : topStart - PHOTO_SKEW;
   const bottomEnd = index === total - 1 ? 102 : topEnd - PHOTO_SKEW;
   return `polygon(${topStart}% -2%, ${topEnd}% -2%, ${bottomEnd}% 102%, ${bottomStart}% 102%)`;
+}
+
+/** Filo blanco entre banda y banda, como el corte del vinil. */
+function diagonalEdge(index: number, total: number) {
+  const cut = (100 / total) * (index + 1);
+  return `polygon(${cut}% -2%, ${cut + 0.9}% -2%, ${cut + 0.9 - PHOTO_SKEW}% 102%, ${
+    cut - PHOTO_SKEW
+  }% 102%)`;
 }
 
 const PHOTO_FOCUS = ["center 40%", "center 55%", "center 30%"];
@@ -357,7 +382,214 @@ function SocialMark({ path, className }: { path: string; className?: string }) {
   );
 }
 
-/** Vista previa de una lámina, tal y como iría rotulada e impresa. */
+/** El QR manda a la pagina. Calculo puro: mismo resultado en server y cliente. */
+const QR_TARGET = `https://${BUSINESS.web}`;
+
+const QR = (() => {
+  const { modules } = createQrMatrix(QR_TARGET, { errorCorrectionLevel: "M" });
+  const { size, data } = modules;
+  let path = "";
+  for (let y = 0; y < size; y += 1) {
+    for (let x = 0; x < size; x += 1) {
+      if (data[y * size + x]) path += `M${x} ${y}h1v1h-1z`;
+    }
+  }
+  return { size, path };
+})();
+
+/** Negro sobre blanco y con margen: asi es como de verdad escanea un telefono. */
+function QrCode({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox={`-2 -2 ${QR.size + 4} ${QR.size + 4}`}
+      shapeRendering="crispEdges"
+      className={className}
+      role="img"
+      aria-label={`Codigo QR a ${BUSINESS.web}`}
+    >
+      <rect x={-2} y={-2} width={QR.size + 4} height={QR.size + 4} fill="#ffffff" />
+      <path d={QR.path} fill="#052e16" />
+    </svg>
+  );
+}
+
+/**
+ * El portal de entrada se consulta con el carro lento o detenido. Puede usar
+ * una sola foto amplia, más aire y datos completos sin copiar el formato de
+ * los anticipos que se leen a velocidad.
+ */
+function EntranceSignPanel({ panel, eager }: { panel: Panel; eager?: boolean }) {
+  const Arrow = ARROWS[panel.arrow ?? "right"];
+
+  return (
+    <div className="relative flex-1 overflow-hidden rounded-[22px] border-[6px] border-white/95 bg-[#2E2A25] p-1.5 shadow-[0_24px_54px_-20px_rgba(0,0,0,0.95)]">
+      <div className="relative flex min-h-[840px] overflow-hidden rounded-[14px] border-2 border-[#00C4B0]/80 sm:min-h-[760px] lg:min-h-[690px]">
+        <Image
+          src={panel.photos[0]}
+          alt=""
+          fill
+          sizes="(max-width: 1024px) 94vw, 1180px"
+          priority={eager}
+          className="object-cover brightness-[1.08] saturate-[1.08]"
+          style={{ objectPosition: "48% 50%" }}
+        />
+
+        {/* El degradado cambia de dirección para conservar la toma en cada formato. */}
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(46,42,37,0.32)_0%,rgba(46,42,37,0.08)_27%,rgba(46,42,37,0.52)_58%,rgba(46,42,37,0.86)_86%)] lg:hidden" />
+        <div className="absolute inset-0 hidden bg-[linear-gradient(90deg,rgba(46,42,37,0.84)_0%,rgba(46,42,37,0.58)_43%,rgba(46,42,37,0.16)_73%,rgba(46,42,37,0.02)_100%)] lg:block" />
+        <div className="absolute inset-x-0 bottom-0 h-[40%] bg-gradient-to-t from-[#2E2A25]/72 to-transparent" />
+
+        <div className="relative flex w-full flex-col p-3 min-[380px]:p-5 sm:p-7 lg:p-9">
+          {/* La flecha queda absoluta para no empujar los logos fuera del centro. */}
+          <div className="relative flex min-h-[104px] items-start justify-center sm:min-h-[132px]">
+            <div className="flex items-center gap-3 min-[380px]:gap-4 sm:gap-5">
+              {panel.brands.map((brand) => (
+                <Image
+                  key={brand}
+                  src={brand === "lva" ? "/logo2.jpg" : "/logo1.jpg"}
+                  alt={
+                    brand === "lva"
+                      ? "La Vieja Adventures, logo oscuro"
+                      : "La Vieja Adventures, logo turquesa"
+                  }
+                  width={128}
+                  height={128}
+                  className="h-16 w-16 rounded-xl border-[3px] border-white object-cover shadow-xl shadow-black/60 min-[380px]:h-20 min-[380px]:w-20 sm:h-28 sm:w-28 lg:h-32 lg:w-32"
+                />
+              ))}
+            </div>
+
+            {panel.arrow ? (
+              <Arrow
+                className="absolute right-0 top-[70px] h-8 w-8 text-white drop-shadow-[0_3px_8px_rgba(0,0,0,0.75)] min-[380px]:top-1 min-[380px]:h-9 min-[380px]:w-9 sm:h-14 sm:w-14 lg:h-16 lg:w-16"
+                strokeWidth={3.25}
+                aria-hidden
+              />
+            ) : null}
+          </div>
+
+          <div className="mt-5 max-w-[680px] rounded-2xl bg-[#2E2A25]/52 p-4 shadow-lg shadow-black/25 backdrop-blur-md sm:p-5 lg:mt-3 lg:max-w-[59%] lg:rounded-2xl lg:bg-[#2E2A25]/38 lg:p-5 lg:shadow-lg lg:backdrop-blur-md">
+            {panel.kicker ? (
+              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#7DE7DC] min-[380px]:text-xs min-[380px]:tracking-[0.2em] sm:text-sm">
+                {panel.kicker}
+              </p>
+            ) : null}
+            <p className="mt-2 text-2xl font-black uppercase leading-[0.94] tracking-tight text-white drop-shadow-[0_2px_7px_rgba(0,0,0,0.65)] min-[380px]:text-3xl sm:text-4xl lg:text-5xl">
+              {panel.title}
+            </p>
+            <p className="mt-2 text-xs font-bold uppercase tracking-[0.02em] text-[#A8F0E8] min-[380px]:text-sm min-[380px]:tracking-[0.08em] sm:text-base lg:text-lg">
+              {panel.titleEn}
+            </p>
+            {panel.subtitle ? (
+              <p className="mt-2 text-sm font-black uppercase tracking-[0.06em] text-white/90 min-[380px]:text-base min-[380px]:tracking-[0.12em] lg:text-lg">
+                {panel.subtitle}
+              </p>
+            ) : null}
+
+            <p className="mt-5 block w-full max-w-2xl rounded-lg bg-[#F5C518] px-3 py-3 text-base font-black uppercase leading-tight tracking-tight text-[#2E2A25] shadow-lg shadow-black/25 min-[380px]:inline-block min-[380px]:w-auto min-[380px]:px-4 min-[380px]:text-lg sm:text-xl lg:text-2xl">
+              {panel.cta.es}
+            </p>
+            <p className="mt-2 break-words text-xs font-semibold italic text-white/90 min-[380px]:text-sm sm:text-base lg:text-lg">
+              {panel.cta.en}
+            </p>
+          </div>
+
+          {/* Sin truncate: sitio, teléfonos y usuario quedan completos. */}
+          <div className="mt-7 grid grid-cols-1 items-center gap-5 rounded-2xl border border-white/25 bg-[#2E2A25]/58 p-3 shadow-2xl shadow-black/45 backdrop-blur-lg min-[380px]:p-5 sm:grid-cols-[minmax(0,1fr)_auto] lg:mt-auto lg:p-6">
+            <div className="min-w-0">
+              <p className="break-all text-lg font-black leading-none tracking-[-0.04em] text-white min-[380px]:break-words min-[380px]:text-[clamp(1.35rem,4vw,2.75rem)] lg:whitespace-nowrap">
+                {BUSINESS.web}
+              </p>
+
+              <div className="mt-3 grid gap-1 lg:grid-cols-2 lg:gap-5">
+                <p className="text-base font-black leading-tight text-white sm:text-xl lg:text-2xl">
+                  WhatsApp {BUSINESS.whatsapp}
+                </p>
+                <p className="text-base font-black leading-tight text-white sm:text-xl lg:text-2xl">
+                  Tel. {BUSINESS.phone}
+                </p>
+              </div>
+
+              <p className="mt-2 break-all text-[10px] font-semibold text-[#A8F0E8] min-[380px]:break-words min-[380px]:text-xs sm:text-base">
+                {BUSINESS.email}
+              </p>
+
+              <div className="mt-4 flex flex-wrap items-center gap-1 border-t border-white/15 pt-4 min-[380px]:gap-1.5 sm:gap-2.5">
+                {SOCIALS.map((social) => (
+                  <span
+                    key={social.label}
+                    title={`${social.label} ${social.handle}`}
+                    className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-[#2E2A25] shadow-sm min-[380px]:h-7 min-[380px]:w-7 sm:h-10 sm:w-10"
+                  >
+                    <SocialMark path={social.path} className="h-3.5 w-3.5 min-[380px]:h-4 min-[380px]:w-4 sm:h-6 sm:w-6" />
+                  </span>
+                ))}
+                <span className="basis-full break-words text-xs font-black uppercase tracking-[0.1em] text-white sm:text-sm md:ml-1 md:basis-auto">
+                  {BUSINESS.handle}
+                </span>
+              </div>
+            </div>
+
+            <div className="mx-auto flex shrink-0 flex-col items-center gap-2 rounded-xl bg-white p-3 shadow-xl shadow-black/40">
+              <QrCode className="h-36 w-36 lg:h-40 lg:w-40" />
+              <span className="text-[10px] font-black uppercase leading-none tracking-[0.12em] text-[#2E2A25] lg:text-xs">
+                Escanee &middot; Scan
+              </span>
+            </div>
+
+            <p className="border-t border-white/15 pt-3 text-[10px] font-semibold leading-relaxed text-white/70 sm:col-span-2 sm:text-xs">
+              Tours sujetos al clima, nivel del río y valoración del guía &middot; Tours subject
+              to weather, river level and guide assessment.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Tintes de vidrio. Se conserva el código de color de la señalización (verde
+ * destino, azul distancia, amarillo acción) pero translúcido, para que la foto
+ * siga viéndose debajo. El gris muy transparente es el que sostiene las letras.
+ */
+const GLASS = {
+  gray: "rgba(24,24,27,0.42)",
+  green: "rgba(15,122,61,0.44)",
+  blue: "rgba(11,78,162,0.46)",
+  yellow: "rgba(245,197,24,0.80)",
+  yellowEdge: "rgba(138,107,0,0.7)",
+};
+
+/** Vidrio: desenfoque, borde claro y brillo interno arriba. */
+const GLASS_BASE =
+  "rounded-xl border border-white/30 backdrop-blur-md shadow-[inset_0_1px_0_rgba(255,255,255,0.28),0_10px_30px_-16px_rgba(0,0,0,0.8)]";
+
+/** Sombra de texto: lo que hace legible una letra blanca sobre foto. */
+const TEXT_SHADOW = "drop-shadow-[0_2px_6px_rgba(0,0,0,0.75)]";
+
+const ARROWS = {
+  left: ArrowLeft,
+  right: ArrowRight,
+  "down-right": CornerDownRight,
+};
+
+/** Pictogramas de norma: se decodifican antes de leer una sola letra. */
+const PICTOGRAMS = {
+  canon: Mountain,
+  cascada: Droplets,
+  rio: Waves,
+  comida: UtensilsCrossed,
+  parqueo: ParkingCircle,
+  mirador: Binoculars,
+  sendero: TreePine,
+};
+
+/**
+ * Vista previa de una lámina: la foto va a sangre en toda la lámina y los
+ * módulos flotan encima en vidrio. Se mantiene la división en módulos de las
+ * propuestas — cada uno dice una sola cosa — pero ahora se ve la imagen debajo.
+ */
 function SignPanel({
   panel,
   large,
@@ -368,167 +600,216 @@ function SignPanel({
   /** Solo la primera lámina de la página: evita el aviso de LCP. */
   eager?: boolean;
 }) {
-  const Arrow = panel.arrow === "down-right" ? CornerDownRight : ArrowRight;
+  const Arrow = ARROWS[panel.arrow ?? "right"];
+  const Picto = PICTOGRAMS[panel.pictogram];
 
   return (
-    <div
-      className={`relative flex-1 overflow-hidden rounded-2xl border-[5px] border-white/90 bg-[linear-gradient(150deg,#065f46,#047857_45%,#064e3b)] p-1 shadow-[0_18px_40px_-18px_rgba(0,0,0,0.9)] ${
-        large ? "min-h-[350px]" : "min-h-[300px]"
-      }`}
-    >
-      {/* Borde interno: todo lo que va adentro se recorta contra este marco. */}
-      <div className="relative h-full overflow-hidden rounded-xl border border-white/35">
-        <div className="absolute inset-0">
-          {panel.photos.map((photo, index) => (
-            <div
-              key={photo}
-              className="absolute inset-0"
-              style={{ clipPath: diagonalClip(index, panel.photos.length) }}
-            >
-              <Image
-                src={photo}
-                alt=""
-                fill
-                sizes="(max-width: 1024px) 92vw, 46vw"
-                priority={eager && index === 0}
-                className="scale-[1.08] object-cover"
-                style={{ objectPosition: PHOTO_FOCUS[index % PHOTO_FOCUS.length] }}
-              />
-            </div>
-          ))}
-          {/* Filo blanco de la diagonal, como el corte del vinil. */}
+    <div className="relative w-full overflow-hidden rounded-2xl border-[6px] border-white/90 bg-emerald-950 shadow-[0_24px_50px_-20px_rgba(0,0,0,0.95)]">
+      {/* Foto a sangre: ocupa la lámina entera, cortada en diagonal. */}
+      <div className="absolute inset-0">
+        {panel.photos.map((photo, index) => (
           <div
+            key={photo}
+            className="absolute inset-0"
+            style={{ clipPath: diagonalBand(index, panel.photos.length) }}
+          >
+            <Image
+              src={photo}
+              alt=""
+              fill
+              sizes="(max-width: 1024px) 94vw, 60vw"
+              priority={eager && index === 0}
+              className="scale-[1.05] object-cover"
+              style={{ objectPosition: PHOTO_FOCUS[index % PHOTO_FOCUS.length] }}
+            />
+          </div>
+        ))}
+        {panel.photos.slice(0, -1).map((photo, index) => (
+          <div
+            key={`edge-${photo}`}
             className="absolute inset-0 bg-white/70"
-            style={{
-              clipPath: `polygon(${PHOTO_START}% -2%, ${PHOTO_START + 1.2}% -2%, ${
-                PHOTO_START + 1.2 - PHOTO_SKEW
-              }% 102%, ${PHOTO_START - PHOTO_SKEW}% 102%)`,
-            }}
+            style={{ clipPath: diagonalEdge(index, panel.photos.length) }}
           />
-          <div className="absolute inset-0 bg-[linear-gradient(100deg,#064e3b_0%,rgba(6,78,59,0.97)_30%,rgba(6,78,59,0.55)_46%,rgba(6,78,59,0.12)_62%,rgba(2,44,34,0.45)_100%)]" />
+        ))}
+        {/* Velo suave: apenas lo justo para que el vidrio tenga sobre qué apoyarse. */}
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,32,24,0.28)_0%,rgba(3,32,24,0.12)_38%,rgba(3,32,24,0.42)_100%)]" />
+      </div>
+
+      <div className="relative flex flex-col gap-2 p-2">
+        {/* MÓDULO 1 · marca: los logos flotan sobre la foto, sin taparla. */}
+        <div className="flex items-start justify-between gap-3 p-1">
+          <div className="flex items-center gap-3">
+            {panel.brands.map((brand) => (
+              <Image
+                key={brand}
+                src={brand === "lva" ? "/logo2.jpg" : "/logo1.jpg"}
+                alt={brand === "lva" ? "La Vieja Adventures" : "La Vieja Organics"}
+                width={large ? 150 : 116}
+                height={large ? 150 : 116}
+                className="rounded-2xl border-[3px] border-white/90 object-cover shadow-2xl shadow-black/70"
+              />
+            ))}
+          </div>
+          {panel.kicker ? (
+            <span
+              className={`${GLASS_BASE} rounded-full px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.2em] text-white md:text-xs`}
+              style={{ backgroundColor: GLASS.gray }}
+            >
+              {panel.kicker}
+            </span>
+          ) : null}
         </div>
 
-        <div className="relative flex h-full flex-col justify-between p-4">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex items-center gap-2">
-              {panel.brands.map((brand) => (
-                <Image
-                  key={brand}
-                  src={brand === "lva" ? "/logo2.jpg" : "/logo1.jpg"}
-                  alt={brand === "lva" ? "La Vieja Adventures" : "La Vieja Organics"}
-                  width={large ? 58 : 44}
-                  height={large ? 58 : 44}
-                  className="rounded-lg border border-white/60 object-cover shadow-md shadow-black/50"
-                />
-              ))}
-            </div>
-            {panel.distance ? (
-              <span className="rounded-full border border-white/70 bg-black/35 px-3 py-1 text-xs font-black tracking-wide text-white backdrop-blur-sm">
-                {panel.distance}
-              </span>
-            ) : null}
-          </div>
-
-          <div className="mt-3 max-w-[70%]">
-            {panel.kicker ? (
-              <p className="text-[10px] font-black uppercase tracking-[0.24em] text-emerald-200/90">
-                {panel.kicker}
-              </p>
-            ) : null}
+        {/* MÓDULO 2 · destino: el renglón que se lee de lejos, con pictograma. */}
+        <div
+          className={`${GLASS_BASE} flex items-center gap-4 px-4 py-3`}
+          style={{ backgroundColor: GLASS.green }}
+        >
+          <Picto
+            className={`shrink-0 text-white ${TEXT_SHADOW} ${
+              large ? "h-20 w-20" : "h-14 w-14"
+            }`}
+            strokeWidth={2.5}
+            aria-hidden
+          />
+          <div className="min-w-0 flex-1">
             <p
-              className={`mt-1 font-black uppercase leading-[0.95] tracking-tight text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.5)] ${
-                large ? "text-2xl md:text-3xl" : "text-lg md:text-xl"
+              className={`font-black uppercase leading-[0.92] tracking-tight text-white ${TEXT_SHADOW} ${
+                large ? "text-4xl md:text-6xl" : "text-2xl md:text-4xl"
               }`}
             >
               {panel.title}
             </p>
-            {/* Bilingüe sutil: el inglés va debajo, más chico y menos peso. */}
+            {/* Bilingüe sutil: el inglés va debajo, más chico y con menos peso. */}
             <p
-              className={`mt-0.5 font-semibold uppercase tracking-[0.16em] text-emerald-100/70 ${
-                large ? "text-xs md:text-sm" : "text-[9px] md:text-[10px]"
+              className={`mt-1.5 font-semibold uppercase tracking-[0.16em] text-white/80 ${TEXT_SHADOW} ${
+                large ? "text-base md:text-lg" : "text-[11px] md:text-sm"
               }`}
             >
               {panel.titleEn}
             </p>
             {panel.subtitle ? (
               <p
-                className={`mt-1.5 font-bold uppercase tracking-[0.18em] text-emerald-100/90 ${
-                  large ? "text-sm" : "text-[10px] md:text-xs"
+                className={`mt-2 border-t border-white/30 pt-2 font-black uppercase tracking-[0.14em] text-white ${TEXT_SHADOW} ${
+                  large ? "text-xl md:text-2xl" : "text-sm md:text-lg"
                 }`}
               >
                 {panel.subtitle}
               </p>
             ) : null}
+          </div>
+        </div>
 
+        {/* MÓDULO 3 · flecha y distancia en azul, acción en amarillo. */}
+        <div className="flex gap-2">
+          <div
+            className={`${GLASS_BASE} flex shrink-0 flex-col items-center justify-center px-4 py-3`}
+            style={{ backgroundColor: GLASS.blue }}
+          >
+            <Arrow
+              className={`text-white ${TEXT_SHADOW} ${large ? "h-24 w-24" : "h-16 w-16"}`}
+              strokeWidth={3.5}
+              aria-hidden
+            />
+            {panel.distance ? (
+              <span
+                className={`mt-1 font-black leading-none text-white ${TEXT_SHADOW} ${
+                  large ? "text-3xl" : "text-xl"
+                }`}
+              >
+                {panel.distance}
+              </span>
+            ) : null}
+          </div>
+
+          <div
+            className={`${GLASS_BASE} flex min-w-0 flex-1 flex-col justify-center px-4 py-3`}
+            style={{ backgroundColor: GLASS.yellow, borderColor: GLASS.yellowEdge }}
+          >
             <p
-              className={`mt-3 inline-block rounded-md bg-amber-300 px-2 py-1 font-black uppercase leading-tight tracking-tight text-emerald-950 ${
-                large ? "text-sm md:text-base" : "text-[11px] md:text-xs"
+              className={`font-black uppercase leading-tight tracking-tight text-zinc-900 ${
+                large ? "text-2xl md:text-3xl" : "text-base md:text-xl"
               }`}
             >
               {panel.cta.es}
             </p>
             <p
-              className={`mt-1 font-semibold italic text-white/80 ${
-                large ? "text-xs md:text-sm" : "text-[9px] md:text-[10px]"
+              className={`mt-1 font-bold italic leading-tight text-zinc-900/75 ${
+                large ? "text-base" : "text-[11px] md:text-sm"
               }`}
             >
               {panel.cta.en}
             </p>
           </div>
+        </div>
 
-          {/* Faja de contacto: lo que la gente anota o busca después. */}
-          <div className="mt-4 rounded-lg border border-white/25 bg-black/45 px-3 py-2 backdrop-blur-sm">
-            <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <p
-                  className={`truncate font-black tracking-tight text-white ${
-                    large ? "text-base" : "text-xs md:text-sm"
-                  }`}
-                >
-                  {BUSINESS.web}
-                </p>
-                <p
-                  className={`mt-0.5 truncate font-bold text-emerald-100/90 ${
-                    large ? "text-sm" : "text-[10px] md:text-xs"
-                  }`}
-                >
-                  WhatsApp {BUSINESS.whatsapp} &middot; Tel {BUSINESS.phone}
-                </p>
-                <p
-                  className={`mt-0.5 truncate text-emerald-100/70 ${
-                    large ? "text-xs" : "text-[9px] md:text-[10px]"
-                  }`}
-                >
-                  {BUSINESS.email}
-                </p>
-              </div>
-              {panel.arrow ? (
-                <Arrow
-                  className={`shrink-0 text-white ${large ? "h-9 w-9" : "h-7 w-7"}`}
-                  strokeWidth={3}
-                  aria-hidden
-                />
-              ) : null}
-            </div>
+        {/* MÓDULO 4 · contacto y QR sobre gris muy transparente. */}
+        <div
+          className={`${GLASS_BASE} flex flex-wrap items-stretch gap-3 p-3`}
+          style={{ backgroundColor: GLASS.gray }}
+        >
+          <div className="flex min-w-[200px] flex-1 flex-col justify-center">
+            <p
+              className={`truncate font-black leading-none tracking-tight text-white ${TEXT_SHADOW} ${
+                large ? "text-3xl md:text-4xl" : "text-xl md:text-2xl"
+              }`}
+            >
+              {BUSINESS.web}
+            </p>
+            <p
+              className={`mt-2.5 truncate font-black leading-tight text-white ${TEXT_SHADOW} ${
+                large ? "text-2xl md:text-3xl" : "text-lg md:text-xl"
+              }`}
+            >
+              WhatsApp {BUSINESS.whatsapp}
+            </p>
+            <p
+              className={`truncate font-black leading-tight text-white ${TEXT_SHADOW} ${
+                large ? "text-2xl md:text-3xl" : "text-lg md:text-xl"
+              }`}
+            >
+              Tel. {BUSINESS.phone}
+            </p>
+            <p
+              className={`mt-1 truncate font-semibold text-emerald-50/85 ${TEXT_SHADOW} ${
+                large ? "text-base" : "text-xs md:text-sm"
+              }`}
+            >
+              {BUSINESS.email}
+            </p>
 
-            <div className="mt-2 flex items-center gap-2 border-t border-white/15 pt-2">
+            <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-white/25 pt-3">
               {SOCIALS.map((social) => (
                 <span
                   key={social.label}
                   title={`${social.label} ${social.handle}`}
-                  className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-emerald-950 shadow-sm"
+                  className={`flex items-center justify-center rounded-full bg-white text-emerald-950 shadow-lg shadow-black/40 ${
+                    large ? "h-11 w-11" : "h-9 w-9"
+                  }`}
                 >
-                  <SocialMark path={social.path} className="h-3.5 w-3.5" />
+                  <SocialMark path={social.path} className={large ? "h-6 w-6" : "h-5 w-5"} />
                 </span>
               ))}
               <span
-                className={`ml-1 truncate font-black uppercase tracking-[0.12em] text-white ${
-                  large ? "text-xs" : "text-[9px] md:text-[10px]"
+                className={`ml-1 truncate font-black uppercase tracking-[0.12em] text-white ${TEXT_SHADOW} ${
+                  large ? "text-lg" : "text-sm"
                 }`}
               >
                 {BUSINESS.handle}
               </span>
             </div>
+          </div>
+
+          {/* El QR sí va opaco: sobre vidrio o foto sencillamente no escanea. */}
+          <div className="mx-auto flex shrink-0 flex-col items-center gap-1.5 rounded-xl bg-white p-2.5 shadow-xl shadow-black/50">
+            <QrCode className={large ? "h-48 w-48" : "h-36 w-36"} />
+            <span
+              className={`font-black uppercase leading-none tracking-[0.1em] text-emerald-950 ${
+                large ? "text-sm" : "text-xs"
+              }`}
+            >
+              Escanee &middot; Scan
+            </span>
           </div>
         </div>
       </div>
@@ -613,8 +894,8 @@ export default function RotulosPage() {
         </div>
       </header>
 
-      <section className="mx-auto w-full max-w-7xl px-4 pb-16 md:px-8">
-        <div className="grid gap-6 lg:grid-cols-2">
+      <section className="mx-auto w-full max-w-7xl px-2 pb-16 sm:px-4 md:px-8">
+        <div className="grid gap-8">
           {ROTULOS.map((rotulo) => {
             const meta = KIND_META[rotulo.kind];
             const Icon = meta.icon;
@@ -651,18 +932,36 @@ export default function RotulosPage() {
                   </button>
                 </div>
 
-                <div className="flex flex-col gap-3 bg-zinc-950/40 p-5 sm:flex-row">
-                  {rotulo.panels.map((panel, index) => (
-                    <SignPanel
-                      key={`${rotulo.id}-${index}`}
-                      panel={panel}
-                      large={rotulo.kind === "entrada"}
-                      eager={rotulo.id === 1}
-                    />
-                  ))}
-                </div>
+                <div
+                  className={`grid gap-5 ${
+                    rotulo.kind === "entrada"
+                      ? "p-2 min-[380px]:p-3 sm:p-5"
+                      : "p-5 lg:grid-cols-[minmax(0,1.5fr)_minmax(260px,0.6fr)]"
+                  }`}
+                >
+                  <div
+                    className={`flex flex-col gap-4 rounded-2xl bg-zinc-950/40 xl:flex-row ${
+                      rotulo.kind === "entrada" ? "p-1 min-[380px]:p-2 sm:p-4" : "p-4"
+                    }`}
+                  >
+                    {rotulo.panels.map((panel, index) =>
+                      rotulo.kind === "entrada" ? (
+                        <EntranceSignPanel
+                          key={`${rotulo.id}-${index}`}
+                          panel={panel}
+                          eager={rotulo.id === 1}
+                        />
+                      ) : (
+                        <SignPanel
+                          key={`${rotulo.id}-${index}`}
+                          panel={panel}
+                          eager={rotulo.id === 1}
+                        />
+                      ),
+                    )}
+                  </div>
 
-                <div className="flex flex-1 flex-col gap-3 px-5 py-4">
+                  <div className="flex flex-1 flex-col gap-3">
                   <div className="flex flex-wrap items-center gap-2">
                     <span
                       className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-bold ${meta.tone}`}
@@ -712,6 +1011,7 @@ export default function RotulosPage() {
                     </div>
                     <div className="text-2xl font-black tracking-tight text-white">
                       {price(subtotal)}
+                    </div>
                     </div>
                   </div>
                 </div>
@@ -763,7 +1063,9 @@ export default function RotulosPage() {
           </table>
         </div>
 
-        <p className="mt-6 text-center text-xs text-zinc-500">
+        <SignProposals lang={lang} />
+
+        <p className="mt-10 text-center text-xs text-zinc-500">
           {BUSINESS.name} &middot; {BUSINESS.place} &middot; {BUSINESS.web}
         </p>
       </section>
