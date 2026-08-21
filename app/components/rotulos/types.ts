@@ -50,7 +50,7 @@ export type Panel = {
   brands: Brand[];
   arrow?: ArrowKey;
   pictogram: PictogramKey;
-  /** Fotos que se recortan en diagonal dentro del borde interno. */
+  /** Fotografías del destino: una principal y, cuando existe, una secundaria. */
   photos: string[];
   /** Precio de la lámina en colones. */
   price: number;

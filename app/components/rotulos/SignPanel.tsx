@@ -1,244 +1,162 @@
 import Image from "next/image";
-import QrCode from "./QrCode";
-import SocialMark from "./SocialMark";
-import {
-  ARROWS,
-  BUSINESS,
-  GLASS,
-  GLASS_BASE,
-  PHOTO_FOCUS,
-  PICTOGRAMS,
-  SOCIALS,
-  TEXT_SHADOW,
-} from "./constants";
-import { diagonalBand, diagonalEdge } from "./helpers";
-import type { Panel } from "./types";
+import { ARROWS, PICTOGRAMS } from "./constants";
+import type { Panel, RotuloKind } from "./types";
 
-/**
- * Vista previa de una lámina: la foto va a sangre en toda la lámina y los
- * módulos flotan encima en vidrio. Se mantiene la división en módulos de las
- * propuestas — cada uno dice una sola cosa — pero ahora se ve la imagen debajo.
- */
-export default function SignPanel({
-  panel,
-  large,
-  eager,
-}: {
+type SignPanelProps = {
   panel: Panel;
+  kind: Exclude<RotuloKind, "entrada">;
   large?: boolean;
   /** Solo la primera lámina de la página: evita el aviso de LCP. */
   eager?: boolean;
-}) {
+};
+
+const SIGN_THEME: Record<
+  Exclude<RotuloKind, "entrada">,
+  { background: string; accent: string; eyebrow: string }
+> = {
+  anticipo: { background: "#5C3B1E", accent: "#F5C518", eyebrow: "Destino turístico" },
+  destino: { background: "#0B4EA2", accent: "#F5C518", eyebrow: "Servicios" },
+  indicador: { background: "#2E2A25", accent: "#00C4B0", eyebrow: "Orientación interna" },
+  par: { background: "#2E2A25", accent: "#00C4B0", eyebrow: "La Vieja Adventures" },
+};
+
+/**
+ * Lámina de carretera con dos zonas claras: la fotografía conserva todo el
+ * protagonismo y la información crítica descansa sobre un fondo sólido.
+ * El mensaje promocional completo vive en la ficha, no encima de la imagen.
+ */
+export default function SignPanel({ panel, kind, large, eager }: SignPanelProps) {
   const Arrow = ARROWS[panel.arrow ?? "right"];
   const Picto = PICTOGRAMS[panel.pictogram];
+  const theme = SIGN_THEME[kind];
+  const logo = panel.brands[0] === "lva-turquoise" ? "/logo1.jpg" : "/logo2.jpg";
 
   return (
-    <div className="relative w-full overflow-hidden rounded-2xl border-[6px] border-white/90 bg-emerald-950 shadow-[0_24px_50px_-20px_rgba(0,0,0,0.95)]">
-      {/* Foto a sangre: ocupa la lámina entera, cortada en diagonal. */}
-      <div className="absolute inset-0">
-        {panel.photos.map((photo, index) => (
-          <div
-            key={photo}
-            className="absolute inset-0"
-            style={{ clipPath: diagonalBand(index, panel.photos.length) }}
-          >
-            <Image
-              src={photo}
-              alt=""
-              fill
-              sizes="(max-width: 1024px) 94vw, 60vw"
-              priority={eager && index === 0}
-              className="scale-[1.05] object-cover"
-              style={{ objectPosition: PHOTO_FOCUS[index % PHOTO_FOCUS.length] }}
-            />
-          </div>
-        ))}
-        {panel.photos.slice(0, -1).map((photo, index) => (
-          <div
-            key={`edge-${photo}`}
-            className="absolute inset-0 bg-white/70"
-            style={{ clipPath: diagonalEdge(index, panel.photos.length) }}
-          />
-        ))}
-        {/* Velo suave: apenas lo justo para que el vidrio tenga sobre qué apoyarse. */}
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,32,24,0.28)_0%,rgba(3,32,24,0.12)_38%,rgba(3,32,24,0.42)_100%)]" />
-      </div>
-
-      <div className="relative flex flex-col gap-2 p-2">
-        {/* MÓDULO 1 · marca: los logos flotan sobre la foto, sin taparla. */}
-        <div className="flex items-start justify-between gap-3 p-1">
-          <div className="flex items-center gap-3">
-            {panel.brands.map((brand) => (
+    <div
+      className={`relative flex min-w-0 flex-1 flex-col overflow-hidden border-[6px] border-white bg-[#2E2A25] shadow-[0_24px_50px_-20px_rgba(0,0,0,0.95)] ${
+        large
+          ? "aspect-[4/5] min-[520px]:aspect-[4/3] lg:aspect-[16/10]"
+          : "aspect-[4/5] min-h-[480px] sm:aspect-[4/3] xl:aspect-[4/5]"
+      }`}
+    >
+      <div className="relative min-h-0 flex-[1.35] overflow-hidden bg-zinc-800">
+        <div
+          className={`grid h-full gap-1 bg-white ${
+            panel.photos.length > 1
+              ? "grid-cols-[minmax(0,1.7fr)_minmax(90px,0.7fr)]"
+              : "grid-cols-1"
+          }`}
+        >
+          {panel.photos.slice(0, 2).map((photo, index) => (
+            <div key={photo} className="relative min-h-0 overflow-hidden bg-zinc-800">
               <Image
-                key={brand}
-                src={brand === "lva" ? "/logo2.jpg" : "/logo1.jpg"}
-                alt={brand === "lva" ? "La Vieja Adventures" : "La Vieja Organics"}
-                width={large ? 150 : 116}
-                height={large ? 150 : 116}
-                className="rounded-2xl border-[3px] border-white/90 object-cover shadow-2xl shadow-black/70"
+                src={photo}
+                alt=""
+                fill
+                sizes={
+                  large
+                    ? index === 0
+                      ? "(max-width: 1024px) 70vw, 700px"
+                      : "(max-width: 1024px) 28vw, 280px"
+                    : "(max-width: 1280px) 46vw, 360px"
+                }
+                priority={eager && index === 0}
+                className="object-cover saturate-[1.04]"
+                style={{ objectPosition: index === 0 ? "center 48%" : "center 42%" }}
               />
-            ))}
-          </div>
-          {panel.kicker ? (
-            <span
-              className={`${GLASS_BASE} rounded-full px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.2em] text-white md:text-xs`}
-              style={{ backgroundColor: GLASS.gray }}
-            >
-              {panel.kicker}
-            </span>
-          ) : null}
+            </div>
+          ))}
         </div>
 
-        {/* MÓDULO 2 · destino: el renglón que se lee de lejos, con pictograma. */}
-        <div
-          className={`${GLASS_BASE} flex items-center gap-4 px-4 py-3`}
-          style={{ backgroundColor: GLASS.green }}
-        >
-          <Picto
-            className={`shrink-0 text-white ${TEXT_SHADOW} ${
-              large ? "h-20 w-20" : "h-14 w-14"
+        {panel.kicker ? (
+          <div
+            className="absolute left-3 top-3 max-w-[70%] border-l-4 bg-[#2E2A25]/92 px-3 py-2 text-[10px] font-black uppercase tracking-[0.17em] text-white shadow-xl backdrop-blur-sm sm:text-xs"
+            style={{ borderColor: theme.accent }}
+          >
+            {panel.kicker}
+          </div>
+        ) : null}
+      </div>
+
+      <div
+        className="relative flex min-h-0 flex-1 flex-col px-4 py-3 text-white sm:px-5 sm:py-4"
+        style={{ backgroundColor: theme.background }}
+      >
+        <div className="absolute inset-x-0 top-0 h-1.5" style={{ backgroundColor: theme.accent }} />
+
+        <div className="flex min-h-0 flex-1 items-center gap-3 sm:gap-4">
+          <div
+            className={`flex shrink-0 items-center justify-center border-2 border-white/75 ${
+              large ? "h-16 w-16 sm:h-20 sm:w-20" : "h-14 w-14 sm:h-16 sm:w-16"
             }`}
-            strokeWidth={2.5}
-            aria-hidden
-          />
+          >
+            <Picto
+              className={large ? "h-11 w-11 sm:h-14 sm:w-14" : "h-10 w-10 sm:h-11 sm:w-11"}
+              strokeWidth={2.25}
+              aria-hidden
+            />
+          </div>
+
           <div className="min-w-0 flex-1">
+            <p className="text-[9px] font-black uppercase tracking-[0.18em] text-white/70 sm:text-[10px]">
+              {theme.eyebrow}
+            </p>
             <p
-              className={`font-black uppercase leading-[0.92] tracking-tight text-white ${TEXT_SHADOW} ${
-                large ? "text-4xl md:text-6xl" : "text-2xl md:text-4xl"
+              className={`mt-1 font-black uppercase leading-[0.9] tracking-[-0.035em] text-white ${
+                large
+                  ? "text-[clamp(1.5rem,4.4vw,4.2rem)]"
+                  : "text-[clamp(1.45rem,3vw,2.6rem)]"
               }`}
             >
               {panel.title}
             </p>
-            {/* Bilingüe sutil: el inglés va debajo, más chico y con menos peso. */}
             <p
-              className={`mt-1.5 font-semibold uppercase tracking-[0.16em] text-white/80 ${TEXT_SHADOW} ${
-                large ? "text-base md:text-lg" : "text-[11px] md:text-sm"
+              className={`mt-1.5 font-bold uppercase leading-tight tracking-[0.06em] text-white/75 ${
+                large
+                  ? "text-[clamp(0.68rem,1.3vw,1.05rem)]"
+                  : "text-[10px] sm:text-xs"
               }`}
             >
               {panel.titleEn}
             </p>
             {panel.subtitle ? (
-              <p
-                className={`mt-2 border-t border-white/30 pt-2 font-black uppercase tracking-[0.14em] text-white ${TEXT_SHADOW} ${
-                  large ? "text-xl md:text-2xl" : "text-sm md:text-lg"
-                }`}
-              >
+              <p className="mt-2 border-t border-white/25 pt-2 text-[10px] font-bold uppercase leading-tight tracking-[0.08em] text-white/90 sm:text-xs">
                 {panel.subtitle}
               </p>
             ) : null}
           </div>
-        </div>
 
-        {/* MÓDULO 3 · flecha y distancia en azul, acción en amarillo. */}
-        <div className="flex gap-2">
-          <div
-            className={`${GLASS_BASE} flex shrink-0 flex-col items-center justify-center px-4 py-3`}
-            style={{ backgroundColor: GLASS.blue }}
-          >
+          <div className="flex shrink-0 flex-col items-center justify-center self-stretch border-l border-white/25 pl-3 sm:pl-4">
             <Arrow
-              className={`text-white ${TEXT_SHADOW} ${large ? "h-24 w-24" : "h-16 w-16"}`}
-              strokeWidth={3.5}
+              className={large ? "h-16 w-16 sm:h-24 sm:w-24" : "h-14 w-14 sm:h-16 sm:w-16"}
+              strokeWidth={3.4}
               aria-hidden
             />
             {panel.distance ? (
               <span
-                className={`mt-1 font-black leading-none text-white ${TEXT_SHADOW} ${
-                  large ? "text-3xl" : "text-xl"
+                className={`mt-1 font-black leading-none ${
+                  large ? "text-2xl sm:text-4xl" : "text-xl sm:text-2xl"
                 }`}
+                style={{ color: theme.accent }}
               >
                 {panel.distance}
               </span>
             ) : null}
           </div>
-
-          <div
-            className={`${GLASS_BASE} flex min-w-0 flex-1 flex-col justify-center px-4 py-3`}
-            style={{ backgroundColor: GLASS.yellow, borderColor: GLASS.yellowEdge }}
-          >
-            <p
-              className={`font-black uppercase leading-tight tracking-tight text-zinc-900 ${
-                large ? "text-2xl md:text-3xl" : "text-base md:text-xl"
-              }`}
-            >
-              {panel.cta.es}
-            </p>
-            <p
-              className={`mt-1 font-bold italic leading-tight text-zinc-900/75 ${
-                large ? "text-base" : "text-[11px] md:text-sm"
-              }`}
-            >
-              {panel.cta.en}
-            </p>
-          </div>
         </div>
 
-        {/* MÓDULO 4 · contacto y QR sobre gris muy transparente. */}
-        <div
-          className={`${GLASS_BASE} flex flex-wrap items-stretch gap-3 p-3`}
-          style={{ backgroundColor: GLASS.gray }}
-        >
-          <div className="flex min-w-[200px] flex-1 flex-col justify-center">
-            <p
-              className={`truncate font-black leading-none tracking-tight text-white ${TEXT_SHADOW} ${
-                large ? "text-3xl md:text-4xl" : "text-xl md:text-2xl"
-              }`}
-            >
-              {BUSINESS.web}
-            </p>
-            <p
-              className={`mt-2.5 truncate font-black leading-tight text-white ${TEXT_SHADOW} ${
-                large ? "text-2xl md:text-3xl" : "text-lg md:text-xl"
-              }`}
-            >
-              WhatsApp {BUSINESS.whatsapp}
-            </p>
-            <p
-              className={`truncate font-black leading-tight text-white ${TEXT_SHADOW} ${
-                large ? "text-2xl md:text-3xl" : "text-lg md:text-xl"
-              }`}
-            >
-              Tel. {BUSINESS.phone}
-            </p>
-            <p
-              className={`mt-1 truncate font-semibold text-emerald-50/85 ${TEXT_SHADOW} ${
-                large ? "text-base" : "text-xs md:text-sm"
-              }`}
-            >
-              {BUSINESS.email}
-            </p>
-
-            <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-white/25 pt-3">
-              {SOCIALS.map((social) => (
-                <span
-                  key={social.label}
-                  title={`${social.label} ${social.handle}`}
-                  className={`flex items-center justify-center rounded-full bg-white text-emerald-950 shadow-lg shadow-black/40 ${
-                    large ? "h-11 w-11" : "h-9 w-9"
-                  }`}
-                >
-                  <SocialMark path={social.path} className={large ? "h-6 w-6" : "h-5 w-5"} />
-                </span>
-              ))}
-              <span
-                className={`ml-1 truncate font-black uppercase tracking-[0.12em] text-white ${TEXT_SHADOW} ${
-                  large ? "text-lg" : "text-sm"
-                }`}
-              >
-                {BUSINESS.handle}
-              </span>
-            </div>
-          </div>
-
-          {/* El QR sí va opaco: sobre vidrio o foto sencillamente no escanea. */}
-          <div className="mx-auto flex shrink-0 flex-col items-center gap-1.5 rounded-xl bg-white p-2.5 shadow-xl shadow-black/50">
-            <QrCode className={large ? "h-48 w-48" : "h-36 w-36"} />
-            <span
-              className={`font-black uppercase leading-none tracking-[0.1em] text-emerald-950 ${
-                large ? "text-sm" : "text-xs"
-              }`}
-            >
-              Escanee &middot; Scan
-            </span>
+        <div className="mt-2 flex items-center justify-between gap-3 border-t border-white/20 pt-2">
+          <p className="text-[9px] font-black uppercase tracking-[0.14em] text-white/75 sm:text-[10px]">
+            laviejaadventures.com
+          </p>
+          <div className="shrink-0 bg-white p-1">
+            <Image
+              src={logo}
+              alt="La Vieja Adventures"
+              width={large ? 42 : 34}
+              height={large ? 42 : 34}
+              className="h-auto w-8 object-contain sm:w-10"
+            />
           </div>
         </div>
       </div>

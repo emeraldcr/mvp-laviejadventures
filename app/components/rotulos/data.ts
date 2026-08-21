@@ -86,7 +86,7 @@ export const ROTULOS: Rotulo[] = [
         kicker: "Vuelta Chicharronera",
         title: "Cascadas y pozas a la vuelta",
         titleEn: "Waterfalls & pools around the bend",
-        subtitle: "Tours guiados todo el año",
+        subtitle: "Operación según clima y nivel del río",
         cta: {
           es: "No siga de largo: el cañón está aquí cerquita",
           en: "Do not drive past: the canyon is right here",
@@ -200,7 +200,7 @@ export const ROTULOS: Rotulo[] = [
         brands: ["lva"],
         arrow: "right",
         pictogram: "mirador",
-        photos: ["/image/IMG_4257.jpg"],
+        photos: ["/image/IMG_39145.jpg"],
         price: 25000,
       },
     ],

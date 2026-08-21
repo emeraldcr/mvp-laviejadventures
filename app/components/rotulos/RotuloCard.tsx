@@ -67,12 +67,12 @@ export default function RotuloCard({
         className={`grid gap-5 ${
           rotulo.kind === "entrada"
             ? "p-2 min-[380px]:p-3 sm:p-5"
-            : "p-5 lg:grid-cols-[minmax(0,1.5fr)_minmax(260px,0.6fr)]"
+            : "p-4 sm:p-5 lg:grid-cols-[minmax(0,1.85fr)_minmax(250px,0.5fr)]"
         }`}
       >
         <div
           className={`flex flex-col gap-4 rounded-2xl bg-zinc-950/40 xl:flex-row ${
-            rotulo.kind === "entrada" ? "p-1 min-[380px]:p-2 sm:p-4" : "p-4"
+            rotulo.kind === "entrada" ? "p-1 min-[380px]:p-2 sm:p-4" : "p-2 sm:p-4"
           }`}
         >
           {rotulo.panels.map((panel, index) =>
@@ -86,6 +86,8 @@ export default function RotuloCard({
               <SignPanel
                 key={`${rotulo.id}-${index}`}
                 panel={panel}
+                kind={rotulo.kind}
+                large={rotulo.kind !== "par"}
                 eager={eager}
               />
             ),

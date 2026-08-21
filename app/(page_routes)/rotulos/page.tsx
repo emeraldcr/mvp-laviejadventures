@@ -49,7 +49,24 @@ export default function RotulosPage() {
         t={t}
       />
 
-      <section className="mx-auto w-full max-w-7xl px-2 pb-16 sm:px-4 md:px-8">
+      <section className="mx-auto w-full max-w-[1500px] px-2 pb-16 sm:px-4 md:px-8">
+        <div className="py-8 sm:py-10">
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-[#00C4B0]">
+            Sistema de señalización · La Vieja Adventures
+          </p>
+          <h1 className="mt-2 max-w-4xl text-3xl font-black tracking-[-0.04em] text-white sm:text-5xl">
+            Rótulos claros, memorables y fáciles de leer en movimiento
+          </h1>
+          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-400 sm:text-base">
+            Fotografías despejadas, mensajes cortos y direcciones dominantes. Cada formato se
+            adapta al momento real de lectura: carretera, entrada o circulación interna.
+          </p>
+          <div className="mt-5 flex flex-wrap gap-2 text-[11px] font-black uppercase tracking-[0.12em] text-zinc-200">
+            <span className="border border-white/15 bg-white/5 px-3 py-2">Foto protagonista</span>
+            <span className="border border-white/15 bg-white/5 px-3 py-2">Mensaje corto</span>
+            <span className="border border-white/15 bg-white/5 px-3 py-2">Dirección visible</span>
+          </div>
+        </div>
         <div className="grid gap-8">
           {ROTULOS.map((rotulo, index) => (
             <RotuloCard

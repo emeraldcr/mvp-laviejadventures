@@ -79,6 +79,11 @@
   background-size: 18px 18px;
 }
 
+.menuOverlay {
+  background:
+    linear-gradient(180deg, rgb(46 42 37 / 82%) 0%, rgb(46 42 37 / 62%) 42%, rgb(46 42 37 / 92%) 100%);
+}
+
 .photoOverlay {
   background:
     linear-gradient(90deg, rgb(18 17 14 / 96%) 0%, rgb(18 17 14 / 88%) 50%, rgb(18 17 14 / 56%) 100%),
@@ -173,7 +178,8 @@
   :global(html[data-cafeteria-print="frias"] [data-sign-id]:not([data-sign-id="frias"])),
   :global(html[data-cafeteria-print="comidas"] [data-sign-id]:not([data-sign-id="comidas"])),
   :global(html[data-cafeteria-print="sinpe"] [data-sign-id]:not([data-sign-id="sinpe"])),
-  :global(html[data-cafeteria-print="proposito"] [data-sign-id]:not([data-sign-id="proposito"])) {
+  :global(html[data-cafeteria-print="proposito"] [data-sign-id]:not([data-sign-id="proposito"])),
+  :global(html[data-cafeteria-print="legal"] [data-sign-id]:not([data-sign-id="legal"])) {
     display: none !important;
   }
 
@@ -182,7 +188,8 @@
   :global(html[data-cafeteria-print="frias"] [data-sign-id="frias"]),
   :global(html[data-cafeteria-print="comidas"] [data-sign-id="comidas"]),
   :global(html[data-cafeteria-print="sinpe"] [data-sign-id="sinpe"]),
-  :global(html[data-cafeteria-print="proposito"] [data-sign-id="proposito"]) {
+  :global(html[data-cafeteria-print="proposito"] [data-sign-id="proposito"]),
+  :global(html[data-cafeteria-print="legal"] [data-sign-id="legal"]) {
     break-after: auto;
     page-break-after: auto;
   }
