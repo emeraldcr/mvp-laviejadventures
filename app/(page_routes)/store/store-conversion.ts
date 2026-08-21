@@ -1,23 +1,9 @@
-import { currency } from "./store-data";
 import type { Product } from "./store-data";
-import type { CartLine } from "./StoreCart";
-import type { StoreCatalogSettings } from "@/lib/hooks/useStoreProducts";
 
-export const LOW_STOCK_THRESHOLD = 5;
-
-export function getMinProductPrice(products: Product[]) {
-  if (products.length === 0) return null;
-  return Math.min(...products.map((product) => product.price));
-}
-
-export function isLowStock(product: Pick<Product, "inStock" | "stockCount">) {
-  return (
-    product.inStock &&
-    product.stockCount != null &&
-    product.stockCount > 0 &&
-    product.stockCount <= LOW_STOCK_THRESHOLD
-  );
-}
+type CartLine = Product & {
+  quantity: number;
+  lineTotal: number;
+};
 
 export function getStoreOrigin() {
   if (typeof window === "undefined") return "";
@@ -42,6 +28,8 @@ export function filterProductsByQuery(products: Product[], query: string, lang: 
       product.useCase[lang],
       product.tag[lang],
       product.brand ?? "",
+      ...product.optionsEs,
+      ...product.optionsEn,
       product.slug,
       product.category,
     ]
@@ -52,28 +40,9 @@ export function filterProductsByQuery(products: Product[], query: string, lang: 
   });
 }
 
-export function computeShipping(subtotal: number, settings: StoreCatalogSettings) {
-  if (subtotal <= 0) return 0;
-  if (
-    settings.freeShippingThresholdUSD > 0 &&
-    subtotal >= settings.freeShippingThresholdUSD
-  ) {
-    return 0;
-  }
-  return settings.shippingFeeUSD;
-}
-
-export function getFreeShippingProgress(subtotal: number, settings: StoreCatalogSettings) {
-  const threshold = settings.freeShippingThresholdUSD;
-  if (threshold <= 0) return null;
-  const remaining = Math.max(0, threshold - subtotal);
-  const progress = Math.min(100, (subtotal / threshold) * 100);
-  return { threshold, remaining, progress, unlocked: remaining <= 0 };
-}
-
 export function buildCartWhatsAppHref(
   cartDetails: CartLine[],
-  total: number,
+  _total: number,
   lang: "es" | "en",
   phone: string,
 ) {
@@ -83,14 +52,14 @@ export function buildCartWhatsAppHref(
   const message = encodeURIComponent(
     `${
       isEs
-        ? "Hola La Vieja Adventures 👋 Quiero confirmar este pedido de la tienda:"
-        : "Hi La Vieja Adventures 👋 I'd like to confirm this store order:"
-    }\n\n${lines}\n\n${isEs ? "Total estimado" : "Estimated total"}: ${currency.format(total)}\n${
+        ? "Hola La Vieja Adventures 👋 Quiero consultar estas opciones de la colección outdoor:"
+        : "Hi La Vieja Adventures 👋 I'd like to ask about these outdoor collection options:"
+    }\n\n${lines}\n\n${
       isEs ? "Catálogo" : "Catalog"
     }: ${storeLink}\n\n${
       isEs
-        ? "¿Me confirman stock, envío y forma de pago? ¡Pura vida!"
-        : "Can you confirm stock, shipping, and payment options? Thanks!"
+        ? "¿Me confirman opciones de talla y color, precio, disponibilidad y fecha? Entiendo que esta lista no reserva ni genera un cobro. ¡Pura vida!"
+        : "Can you confirm size and color options, price, availability, and timing? I understand this list does not reserve anything or create a charge. Thanks!"
     }`,
   );
   return `https://wa.me/${phone}?text=${message}`;
@@ -103,18 +72,17 @@ export function buildSingleProductWhatsAppHref(
   quantity = 1,
 ) {
   const isEs = lang === "es";
-  const lineTotal = product.price * quantity;
   const message = encodeURIComponent(
     `${
       isEs
-        ? "Hola La Vieja Adventures 👋 Me interesa este producto:"
-        : "Hi La Vieja Adventures 👋 I'm interested in this product:"
-    }\n\n• ${product.name[lang]} x${quantity}\n${isEs ? "Precio ref." : "Ref. price"}: ${currency.format(lineTotal)}\n${
+        ? "Hola La Vieja Adventures 👋 Me interesa esta familia de la colección outdoor:"
+        : "Hi La Vieja Adventures 👋 I'm interested in this outdoor collection family:"
+    }\n\n• ${product.name[lang]} x${quantity}\n${
       isEs ? "Ver en tienda" : "View in store"
     }: ${productStoreUrl(product.slug)}\n\n${
       isEs
-        ? "¿Está disponible? ¿Cómo coordinamos envío o retiro en San Carlos?"
-        : "Is it available? How can we arrange shipping or pickup in San Carlos?"
+        ? "¿Qué estilos, tallas, colores, precio y fecha están confirmados?"
+        : "Which styles, sizes, colors, price, and timing are confirmed?"
     }`,
   );
   return `https://wa.me/${phone}?text=${message}`;
