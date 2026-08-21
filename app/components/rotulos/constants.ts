@@ -14,15 +14,40 @@ import {
   Waves,
   type LucideIcon,
 } from "lucide-react";
-import type { ArrowKey, Copy, PictogramKey, RotuloKind, Social } from "./types";
 
-/** Tipo de cambio referencial, solo para leer el presupuesto en dólares. */
+import type {
+  ArrowKey,
+  Copy,
+  PictogramKey,
+  RotuloKind,
+  Social,
+} from "./types";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CONFIGURACIÓN GENERAL
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Tipo de cambio referencial CRC/USD.
+ *
+ * Se utiliza únicamente para mostrar equivalencias aproximadas del presupuesto
+ * en dólares. No debe interpretarse como un tipo de cambio oficial o bancario.
+ */
 export const CRC_PER_USD = 505;
 
-/** Datos que van impresos en cada lámina. Un solo lugar para corregirlos. */
+// ─────────────────────────────────────────────────────────────────────────────
+// INFORMACIÓN DE LA EMPRESA
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Información de contacto que puede imprimirse en las distintas láminas.
+ *
+ * Mantener estos datos centralizados permite actualizar toda la señalización
+ * desde un único punto.
+ */
 export const BUSINESS = {
   name: "La Vieja Adventures",
-  place: "Sucre de Ciudad Quesada, San Carlos",
+  place: "Sucre, San Carlos, Alajuela, Costa Rica",
   web: "www.laviejaadventures.com",
   email: "info@laviejaadventures.com",
   whatsapp: "6233-2535",
@@ -30,10 +55,24 @@ export const BUSINESS = {
   handle: "@laviejaadventures",
 };
 
-/** El QR manda a la pagina. */
+/**
+ * Destino del código QR.
+ *
+ * El código QR dirige al sitio web oficial de La Vieja Adventures.
+ */
 export const QR_TARGET = `https://${BUSINESS.web}`;
 
-/** Marcas de redes: lucide no trae TikTok ni X, se usan los paths de la página /info. */
+// ─────────────────────────────────────────────────────────────────────────────
+// REDES SOCIALES
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Redes sociales de La Vieja Adventures.
+ *
+ * Lucide no incluye todos los logotipos de redes sociales, por lo que se
+ * utilizan paths SVG personalizados para mantener una presentación visual
+ * consistente.
+ */
 export const SOCIALS: Social[] = [
   {
     label: "Instagram",
@@ -62,45 +101,100 @@ export const SOCIALS: Social[] = [
   },
 ];
 
-/** Categoría de rótulo: ícono, etiqueta bilingüe y color de la píldora. */
+// ─────────────────────────────────────────────────────────────────────────────
+// CATEGORÍAS DE SEÑALIZACIÓN
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Configuración visual y semántica de cada categoría de señal.
+ *
+ * Cada categoría define:
+ * - Ícono identificador.
+ * - Nombre en español e inglés.
+ * - Estilo cromático de la etiqueta.
+ */
 export const KIND_META: Record<
   RotuloKind,
-  { icon: LucideIcon; label: Copy; tone: string }
+  {
+    icon: LucideIcon;
+    label: Copy;
+    tone: string;
+  }
 > = {
   entrada: {
     icon: Signpost,
-    label: { es: "Entrada principal", en: "Main entrance" },
-    tone: "border-emerald-300/40 bg-emerald-400/10 text-emerald-200",
+    label: {
+      es: "Entrada principal",
+      en: "Main Entrance",
+    },
+    tone:
+      "border-emerald-300/40 bg-emerald-400/10 text-emerald-200",
   },
+
   anticipo: {
     icon: Ruler,
-    label: { es: "Anticipo en ruta", en: "Advance warning" },
-    tone: "border-sky-300/40 bg-sky-400/10 text-sky-200",
+    label: {
+      es: "Señal preventiva",
+      en: "Advance Warning",
+    },
+    tone:
+      "border-sky-300/40 bg-sky-400/10 text-sky-200",
   },
+
   destino: {
     icon: UtensilsCrossed,
-    label: { es: "Destino", en: "Destination" },
-    tone: "border-amber-300/40 bg-amber-400/10 text-amber-200",
+    label: {
+      es: "Destino",
+      en: "Destination",
+    },
+    tone:
+      "border-amber-300/40 bg-amber-400/10 text-amber-200",
   },
+
   indicador: {
     icon: ParkingCircle,
-    label: { es: "Indicador interno", en: "Internal wayfinding" },
-    tone: "border-violet-300/40 bg-violet-400/10 text-violet-200",
+    label: {
+      es: "Orientación interna",
+      en: "Internal Wayfinding",
+    },
+    tone:
+      "border-violet-300/40 bg-violet-400/10 text-violet-200",
   },
+
   par: {
     icon: MapPin,
-    label: { es: "Par de láminas", en: "Panel pair" },
-    tone: "border-rose-300/40 bg-rose-400/10 text-rose-200",
+    label: {
+      es: "Conjunto de señales",
+      en: "Sign Set",
+    },
+    tone:
+      "border-rose-300/40 bg-rose-400/10 text-rose-200",
   },
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// FLECHAS DE DIRECCIÓN
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Íconos utilizados para indicar la dirección de desplazamiento.
+ */
 export const ARROWS: Record<ArrowKey, LucideIcon> = {
   left: ArrowLeft,
   right: ArrowRight,
   "down-right": CornerDownRight,
 };
 
-/** Pictogramas de norma: se decodifican antes de leer una sola letra. */
+// ─────────────────────────────────────────────────────────────────────────────
+// PICTOGRAMAS
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Pictogramas utilizados en la señalización.
+ *
+ * Permiten identificar rápidamente cada atractivo, servicio o destino antes
+ * de que la persona necesite leer el texto.
+ */
 export const PICTOGRAMS: Record<PictogramKey, LucideIcon> = {
   canon: Mountain,
   cascada: Droplets,
@@ -111,39 +205,100 @@ export const PICTOGRAMS: Record<PictogramKey, LucideIcon> = {
   sendero: TreePine,
 };
 
-// ── Vidrio y recorte de fotos ────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// FOTOGRAFÍAS Y COMPOSICIÓN
+// ─────────────────────────────────────────────────────────────────────────────
 
-/** Cuánto se inclina el corte diagonal entre el borde de arriba y el de abajo. */
+/**
+ * Inclinación del corte diagonal aplicado a las franjas fotográficas.
+ *
+ * El valor determina el desplazamiento horizontal entre el borde superior
+ * y el borde inferior del recorte.
+ */
 export const PHOTO_SKEW = 14;
 
-/** Encuadre de cada banda diagonal, en orden. */
-export const PHOTO_FOCUS = ["center 40%", "center 55%", "center 30%"];
+/**
+ * Punto de enfoque de cada franja fotográfica, en orden de aparición.
+ *
+ * Esto permite mantener visible la zona más importante de cada fotografía
+ * incluso cuando se utilizan recortes diagonales.
+ */
+export const PHOTO_FOCUS = [
+  "center 40%",
+  "center 55%",
+  "center 30%",
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// EFECTO DE VIDRIO
+// ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Tintes de vidrio. Se conserva el código de color de la señalización (verde
- * destino, azul distancia, amarillo acción) pero translúcido, para que la foto
- * siga viéndose debajo. El gris muy transparente es el que sostiene las letras.
+ * Colores translúcidos utilizados en las superficies con efecto de vidrio.
+ *
+ * Se mantiene una jerarquía cromática intuitiva:
+ *
+ * - Gris: soporte neutro para información y texto.
+ * - Verde: destinos y orientación.
+ * - Azul: servicios e información.
+ * - Amarillo: advertencias, acciones o elementos de alta atención.
+ *
+ * La transparencia permite conservar la fotografía de fondo sin comprometer
+ * la legibilidad del contenido.
  */
 export const GLASS = {
-  gray: "rgba(24,24,27,0.42)",
-  green: "rgba(15,122,61,0.44)",
-  blue: "rgba(11,78,162,0.46)",
-  yellow: "rgba(245,197,24,0.80)",
-  yellowEdge: "rgba(138,107,0,0.7)",
+  gray: "rgba(24, 24, 27, 0.42)",
+  green: "rgba(15, 122, 61, 0.44)",
+  blue: "rgba(11, 78, 162, 0.46)",
+  yellow: "rgba(245, 197, 24, 0.80)",
+  yellowEdge: "rgba(138, 107, 0, 0.70)",
 };
 
-/** Vidrio: desenfoque, borde claro y brillo interno arriba. */
+/**
+ * Estilo base para superficies con efecto de vidrio.
+ *
+ * Incluye:
+ * - Borde claro translúcido.
+ * - Desenfoque del fondo.
+ * - Brillo interior superior.
+ * - Sombra exterior para separar la información de la fotografía.
+ */
 export const GLASS_BASE =
-  "rounded-xl border border-white/30 backdrop-blur-md shadow-[inset_0_1px_0_rgba(255,255,255,0.28),0_10px_30px_-16px_rgba(0,0,0,0.8)]";
-
-/** Sombra de texto: lo que hace legible una letra blanca sobre foto. */
-export const TEXT_SHADOW = "drop-shadow-[0_2px_6px_rgba(0,0,0,0.75)]";
+  "rounded-xl border border-white/30 backdrop-blur-md " +
+  "shadow-[inset_0_1px_0_rgba(255,255,255,0.28),0_10px_30px_-16px_rgba(0,0,0,0.8)]";
 
 /**
- * Colores de norma, no de marca: son los que la gente ya sabe leer sin pensar.
- * Verde destino y azul servicios vienen del Manual Centroamericano (SIECA) y de
- * la Convencion de Viena; el cafe de atractivo turistico es el mismo que usan
- * MUTCD (EE.UU.), Reino Unido, Alemania y Mexico.
+ * Sombra aplicada al texto blanco sobre fotografías.
+ *
+ * Aumenta el contraste y mantiene la lectura en zonas claras, oscuras
+ * o visualmente complejas.
+ */
+export const TEXT_SHADOW =
+  "drop-shadow-[0_2px_6px_rgba(0,0,0,0.75)]";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PALETA DE SEÑALIZACIÓN
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Paleta funcional para la señalización.
+ *
+ * Estos colores cumplen una función informativa independiente de la identidad
+ * visual de La Vieja Adventures:
+ *
+ * - Verde: destinos y orientación.
+ * - Azul: servicios e información.
+ * - Café: atractivos turísticos y naturales.
+ * - Amarillo: advertencias y elementos de alta atención.
+ * - Madera: elementos decorativos o de integración con el entorno natural.
+ *
+ * La paleta busca mantener una lectura rápida, alto contraste y coherencia
+ * visual en entornos naturales.
+ *
+ * Nota:
+ * Si las señales se instalarán en una vía pública, sus dimensiones, colores,
+ * símbolos, ubicación y demás especificaciones deberán validarse según la
+ * normativa vial vigente aplicable en Costa Rica.
  */
 export const SIGN_COLORS = {
   green: "#0F7A3D",
@@ -151,4 +306,4 @@ export const SIGN_COLORS = {
   brown: "#5C3B1E",
   yellow: "#F5C518",
   wood: "#2A1E14",
-};
+} as const;

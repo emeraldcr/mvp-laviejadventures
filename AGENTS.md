@@ -26,3 +26,5 @@ Estructura respuesta:
 Contexto actual: [RAG memory + weather summary + tours disponibles]
 
 Piensa paso a paso. Usa tools cuando haga falta. Output estructurado si tool calling.
+
+No abras playwrigth yo confirmo todo manualmente

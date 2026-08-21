@@ -1,5 +1,3 @@
-"use client";
-
 import type { ComponentType } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -9,7 +7,6 @@ import {
   CupSoda,
   Eye,
   HandCoins,
-  Printer,
   Sandwich,
   Smartphone,
   Snowflake,
@@ -20,6 +17,7 @@ import {
   Zap,
   type LucideIcon,
 } from "lucide-react";
+import PrintButton from "./PrintButton";
 import styles from "./CafeteriaSigns.module.css";
 
 const SINPE_PHONE = "6233-2535";
@@ -120,7 +118,7 @@ function MenuArtwork() {
       <div className="absolute inset-0 flex flex-col p-[clamp(1.1rem,4vw,2.8rem)]">
         <div className="relative z-10 flex items-start justify-between gap-3">
           <ArtworkBrand />
-          <SignCode>C-01</SignCode>
+          <SignCode dark>C-01</SignCode>
         </div>
 
         <div className="relative z-10 mt-auto pt-5">
@@ -192,12 +190,12 @@ function HotDrinksArtwork() {
           </div>
 
           <div className="min-w-0">
-            <p className="text-[clamp(0.55rem,1.4vw,0.78rem)] font-black uppercase tracking-[0.25em] text-[#008D80]">
+            <p className="text-[clamp(0.55rem,1.4vw,0.78rem)] font-black uppercase tracking-[0.25em] text-[#006F65]">
               Bebidas calientes
             </p>
             <h2 className="mt-2 font-display text-[clamp(2.1rem,7vw,5rem)] font-black uppercase leading-[0.83] tracking-[-0.055em]">
               Calientito
-              <span className="block text-[#008D80]">cae bien</span>
+              <span className="block text-[#006F65]">cae bien</span>
             </h2>
           </div>
         </div>
@@ -293,7 +291,7 @@ function FoodArtwork() {
       <div className="absolute inset-0 flex flex-col p-[clamp(1.1rem,4vw,2.8rem)]">
         <div className="relative z-10 flex items-start justify-between gap-3">
           <ArtworkBrand />
-          <SignCode>C-04</SignCode>
+          <SignCode dark>C-04</SignCode>
         </div>
 
         <div className="relative z-10 mt-auto pt-4">
@@ -320,7 +318,7 @@ function FoodArtwork() {
                 <p className="mt-3 break-words font-display text-[clamp(0.78rem,2.7vw,1.55rem)] font-black uppercase leading-[0.9] tracking-[-0.03em]">
                   {food.name}
                 </p>
-                <p className="mt-2 text-[clamp(0.48rem,1.1vw,0.64rem)] font-bold uppercase tracking-[0.08em] text-[#2E2A25]/55">
+                <p className="mt-2 text-[clamp(0.48rem,1.1vw,0.64rem)] font-bold uppercase tracking-[0.08em] text-[#2E2A25]/70">
                   Opciones por definir
                 </p>
                 <div className="mt-3">
@@ -352,28 +350,28 @@ function SinpeArtwork() {
           <div
             className={`${styles.qrPlaceholder} flex aspect-square flex-col items-center justify-center border-[3px] border-dashed border-[#2E2A25]/25 bg-[#F3FBF9] p-3 text-center`}
           >
-            <Smartphone className="h-[30%] w-[30%] text-[#008D80]" strokeWidth={1.8} aria-hidden />
+            <Smartphone className="h-[30%] w-[30%] text-[#006F65]" strokeWidth={1.8} aria-hidden />
             <p className="mt-3 text-[clamp(0.58rem,1.45vw,0.78rem)] font-black uppercase tracking-[0.12em]">
               QR pendiente
             </p>
-            <p className="mt-1 max-w-32 text-[clamp(0.48rem,1vw,0.6rem)] font-semibold leading-tight text-[#2E2A25]/55">
+            <p className="mt-1 max-w-32 text-[clamp(0.48rem,1vw,0.6rem)] font-semibold leading-tight text-[#2E2A25]/70">
               Se genera cuando estén confirmados los datos
             </p>
           </div>
 
           <div className="min-w-0">
-            <p className="text-[clamp(0.54rem,1.35vw,0.75rem)] font-black uppercase tracking-[0.25em] text-[#008D80]">
+            <p className="text-[clamp(0.54rem,1.35vw,0.75rem)] font-black uppercase tracking-[0.25em] text-[#006F65]">
               Pague aquí
             </p>
             <h2 className="mt-2 font-display text-[clamp(2.2rem,7.5vw,5.4rem)] font-black uppercase leading-[0.8] tracking-[-0.055em]">
               SINPE
-              <span className="block text-[#008D80]">Móvil</span>
+              <span className="block text-[#006F65]">Móvil</span>
             </h2>
             <p className="mt-[clamp(0.8rem,2.4vw,1.5rem)] font-display text-[clamp(1.25rem,4vw,2.6rem)] font-black tracking-[-0.035em]">
               {SINPE_PHONE}
             </p>
             <div className="mt-3 border-l-4 border-[#F3A712] bg-[#F7F0E5] px-3 py-2">
-              <p className="text-[clamp(0.48rem,1.05vw,0.62rem)] font-black uppercase tracking-[0.14em] text-[#2E2A25]/55">
+              <p className="text-[clamp(0.48rem,1.05vw,0.62rem)] font-black uppercase tracking-[0.14em] text-[#2E2A25]/70">
                 Verifique que aparezca
               </p>
               <p className="mt-1 text-[clamp(0.68rem,1.7vw,0.92rem)] font-black uppercase">
@@ -385,7 +383,7 @@ function SinpeArtwork() {
 
         <div className="flex items-center justify-between gap-3 border-t-2 border-[#2E2A25] pt-3">
           <div className="flex items-center gap-2 text-[clamp(0.53rem,1.2vw,0.68rem)] font-black uppercase tracking-[0.12em]">
-            <HandCoins className="h-4 w-4 text-[#008D80]" aria-hidden />
+            <HandCoins className="h-4 w-4 text-[#006F65]" aria-hidden />
             Gracias por su compra · Pura vida
           </div>
           <span className="bg-[#F3A712] px-2.5 py-1 text-[clamp(0.48rem,1.1vw,0.62rem)] font-black uppercase tracking-[0.14em]">
@@ -524,21 +522,9 @@ const SIGNS: SignDefinition[] = [
   },
 ];
 
-function printSigns(target: SignId | "all") {
-  const root = document.documentElement;
-  root.dataset.cafeteriaPrint = target;
-
-  const cleanup = () => {
-    delete root.dataset.cafeteriaPrint;
-  };
-
-  window.addEventListener("afterprint", cleanup, { once: true });
-  window.requestAnimationFrame(() => window.print());
-}
-
 export default function CafeteriaSigns() {
   return (
-    <main className={styles.page}>
+    <main className={styles.page} lang="es">
       <header
         className={`${styles.screenOnly} sticky top-0 z-40 border-b border-white/10 bg-[#171512]/90 backdrop-blur-xl`}
       >
@@ -554,19 +540,13 @@ export default function CafeteriaSigns() {
             <span className="truncate text-sm font-black sm:text-base">Rótulos de cafetería</span>
           </Link>
 
-          <button
-            type="button"
-            onClick={() => printSigns("all")}
-            className="inline-flex shrink-0 items-center gap-2 rounded-full border border-[#00C4B0]/50 bg-[#00C4B0]/10 px-3 py-2 text-xs font-black text-[#8EF2E6] transition hover:bg-[#00C4B0]/20 sm:px-4 sm:text-sm"
-          >
-            <Printer className="h-4 w-4" aria-hidden />
-            <span className="hidden sm:inline">Imprimir los 6</span>
-            <span className="sm:hidden">Imprimir</span>
-          </button>
+          <PrintButton target="all" variant="header" />
         </div>
       </header>
 
-      <div className="mx-auto w-full max-w-7xl px-3 pb-20 pt-8 sm:px-5 md:px-8 md:pt-12">
+      <div
+        className={`${styles.pageInner} mx-auto max-w-7xl px-3 pb-20 pt-8 sm:px-5 md:px-8 md:pt-12`}
+      >
         <section className={`${styles.screenOnly} grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-end`}>
           <div>
             <p className="text-xs font-black uppercase tracking-[0.25em] text-[#76EBDE]">
@@ -634,7 +614,7 @@ export default function CafeteriaSigns() {
                     </div>
 
                     <div className="border-t border-white/10 pt-4">
-                      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/40">
+                      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/55">
                         Ubicación sugerida
                       </p>
                       <p className="mt-1.5 text-sm font-semibold leading-relaxed text-white/75">
@@ -656,14 +636,7 @@ export default function CafeteriaSigns() {
                       </ul>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => printSigns(sign.id)}
-                      className="mt-auto inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#00C4B0] px-4 py-3 text-sm font-black text-[#17332F] transition hover:bg-[#39D6C5]"
-                    >
-                      <Printer className="h-4 w-4" aria-hidden />
-                      Imprimir este rótulo
-                    </button>
+                    <PrintButton target={sign.id} variant="card" />
                   </aside>
                 </div>
               </article>
