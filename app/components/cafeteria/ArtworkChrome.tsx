@@ -121,16 +121,8 @@ export function PriceTag({
  * (o los dos tamaños) alineado a la derecha. Es el formato de pizarra de barra
  * de toda la vida, el que la gente ya sabe leer.
  */
-export function MenuRow({
-  item,
-  dark = false,
-  showAllergens = true,
-}: {
-  item: MenuItem;
-  dark?: boolean;
-  showAllergens?: boolean;
-}) {
-  const allergens = showAllergens ? allergenLabel(item.allergens) : null;
+export function MenuRow({ item, dark = false }: { item: MenuItem; dark?: boolean }) {
+  const allergens = allergenLabel(item.allergens);
 
   return (
     <div className="flex items-baseline gap-2">

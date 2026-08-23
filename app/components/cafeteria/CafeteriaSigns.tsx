@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, Languages, TriangleAlert } from "lucide-react";
+import { ArrowLeft, Calculator, Languages, TriangleAlert } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
 import PrintButton from "./PrintButton";
 import { SIGNS } from "./data";
@@ -45,6 +45,13 @@ export default function CafeteriaSigns() {
           </Link>
 
           <div className="flex shrink-0 items-center gap-2">
+            <Link
+              href="/cafeteria/pos"
+              className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/5 px-3 py-2 text-xs font-black text-white transition hover:border-[#00C4B0]/60 hover:text-[#8EF2E6]"
+            >
+              <Calculator className="h-4 w-4" aria-hidden />
+              <span className="hidden sm:inline">{t("Caja", "Register")}</span>
+            </Link>
             <button
               type="button"
               onClick={toggle}

@@ -32,4 +32,7 @@ export const COLLECTIONS = {
   MUNDIAL_RECOVERY_TICKETS: "mundial_recovery_tickets",
   MUNDIAL_PREMIUM: "mundial_premium",
   MUNDIAL_PREMIUM_PREDICTIONS: "mundial_premium_predictions",
+  BOT_AGENTS: "bot_agents",
+  BOT_ACTIVITY: "bot_activity",
+  BOT_APPROVALS: "bot_approvals",
 } as const;

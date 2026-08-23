@@ -1,5 +1,5 @@
 import { ALLERGEN_LABELS } from "./constants";
-import type { Allergen, Copy, Lang, MenuItem } from "./types";
+import type { Allergen, Lang, MenuItem } from "./types";
 
 /**
  * Colones con separador de miles en punto, como se escribe en Costa Rica:
@@ -11,7 +11,7 @@ export function formatCRC(value: number) {
 }
 
 /** El precio más barato de un renglón: sirve para los "desde ₡X" del menú. */
-export function itemFrom(item: MenuItem) {
+function itemFrom(item: MenuItem) {
   return item.prices ? item.prices.small : (item.price ?? 0);
 }
 
@@ -32,11 +32,6 @@ export function allergenLabel(allergens: Allergen[] | undefined) {
       return es === en ? es : `${es}/${en}`;
     })
     .join(" · ");
-}
-
-/** Devuelve el lado del texto bilingüe que toca. */
-export function pick(copy: Copy, lang: Lang) {
-  return copy[lang];
 }
 
 /** Atajo para textos sueltos de interfaz: t("español", "english"). */
