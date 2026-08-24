@@ -31,6 +31,15 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+
+  // /api/bots/investigate reads this repo's own app/ and lib/ source at
+  // runtime (see lib/bots/repo-knowledge.ts) to ground bot discussions in
+  // real code. Next's tracer only bundles files reachable via static
+  // imports, so these runtime fs reads need to be force-included or the
+  // route would find nothing once deployed as a serverless function.
+  outputFileTracingIncludes: {
+    "/api/bots/investigate": ["./app/**/*.{ts,tsx,js,jsx,json,md,mdx,css}", "./lib/**/*.{ts,tsx,js,jsx,json,md,mdx,css}"],
+  },
   // REMOVE this entirely (deprecated/no longer valid in 16.x)
   // eslint: { ignoreDuringBuilds: true },
 

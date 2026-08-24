@@ -11,6 +11,9 @@ export type Copy = { es: string; en: string };
 /** El plan se cotiza en colones; el dólar es solo referencia de lectura. */
 export type Currency = "crc" | "usd";
 
+/** Tamaño físico de trabajo; debe confirmarse con el proveedor antes de fabricar. */
+export type PanelSizeKey = "grande" | "mediano" | "pequeno";
+
 /** Las dos versiones del logo que se pueden rotular. */
 export type Brand = "lva" | "lva-turquoise";
 
@@ -36,6 +39,8 @@ export type Social = {
 };
 
 export type Panel = {
+  /** Medida de trabajo usada para solicitar cotizaciones. */
+  size: PanelSizeKey;
   /** Línea corta arriba del título. */
   kicker?: string;
   /** Título rotulado, en español: es el que se lee desde la calle. */

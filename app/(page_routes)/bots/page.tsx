@@ -4,9 +4,26 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Stars, Text, Float, Trail, Sparkles } from '@react-three/drei';
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
-import { Loader2, LogIn, LogOut, Pause, Play, Radio, ShieldAlert, Skull, X } from 'lucide-react';
+import {
+  ChevronDown,
+  ChevronRight,
+  Loader2,
+  LogIn,
+  LogOut,
+  Mic,
+  MicOff,
+  Pause,
+  Play,
+  Radio,
+  ShieldAlert,
+  Skull,
+  Users,
+  Volume2,
+  VolumeX,
+  X,
+} from 'lucide-react';
 import { SEED_CATALOG, colorForRole } from '@/lib/bots/seed-catalog';
-import type { Agent, AgentStatus, ActivityEvent, Approval, PreferredModel } from '@/lib/bots/types';
+import type { Agent, AgentStatus, ActivityEvent, Approval, Discussion, PreferredModel } from '@/lib/bots/types';
 
 // ───────────────────────────────────────────────
 // Status metadata driving color + motion everywhere
@@ -39,6 +56,77 @@ async function parseJsonSafe(res: Response) {
     return {};
   }
 }
+
+// ───────────────────────────────────────────────
+// Voice command parsing — "<agent name or role>, <instruction>"
+// ───────────────────────────────────────────────
+const VOICE_WAKE_WORDS = new Set(['hey', 'ok', 'okay', 'yo']);
+
+function stripWakeWord(text: string): string {
+  const words = text.trim().split(/\s+/);
+  if (words.length > 1 && VOICE_WAKE_WORDS.has(words[0].toLowerCase())) {
+    return words.slice(1).join(' ');
+  }
+  return text.trim();
+}
+
+function parseVoiceCommand(rawTranscript: string, agents: Agent[]): { agent: Agent | null; instruction: string } {
+  const cleaned = stripWakeWord(rawTranscript);
+  const lower = cleaned.toLowerCase();
+
+  const candidates: { agent: Agent; phrase: string }[] = [];
+  for (const agent of agents) {
+    const phrases = new Set([
+      agent.name.toLowerCase(),
+      agent.role.toLowerCase(),
+      agent.name.toLowerCase().replace(/\s*bot$/, ''),
+    ]);
+    for (const phrase of phrases) {
+      if (phrase) candidates.push({ agent, phrase });
+    }
+  }
+  candidates.sort((a, b) => b.phrase.length - a.phrase.length);
+
+  for (const { agent, phrase } of candidates) {
+    if (lower === phrase || lower.startsWith(`${phrase},`) || lower.startsWith(`${phrase} `)) {
+      const rest = cleaned
+        .slice(phrase.length)
+        .replace(/^[,:]\s*/, '')
+        .replace(/^(please|can you|could you)\s+/i, '')
+        .trim();
+      return { agent, instruction: rest };
+    }
+  }
+
+  return { agent: null, instruction: cleaned };
+}
+
+// Minimal ambient typing for the (non-standard, Chrome/Edge-only) Web Speech API.
+interface SpeechRecognitionAlternative {
+  transcript: string;
+}
+interface SpeechRecognitionResultLike {
+  isFinal: boolean;
+  0: SpeechRecognitionAlternative;
+}
+interface SpeechRecognitionEventLike {
+  resultIndex: number;
+  results: ArrayLike<SpeechRecognitionResultLike>;
+}
+interface SpeechRecognitionErrorEventLike {
+  error: string;
+}
+interface SpeechRecognitionLike {
+  lang: string;
+  interimResults: boolean;
+  continuous: boolean;
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEventLike) => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+}
+type SpeechRecognitionConstructor = new () => SpeechRecognitionLike;
 
 // ───────────────────────────────────────────────
 // Central Neural Core (the living brain)
@@ -279,6 +367,31 @@ export default function GrokArmyVisualization() {
   const [chatLog, setChatLog] = useState<Record<string, { role: 'user' | 'agent'; content: string }[]>>({});
   const [actionBusy, setActionBusy] = useState(false);
 
+  const [investigatePanelOpen, setInvestigatePanelOpen] = useState(false);
+  const [investigateAgentIds, setInvestigateAgentIds] = useState<string[]>([]);
+  const [investigateTopic, setInvestigateTopic] = useState('');
+  const [investigateRounds, setInvestigateRounds] = useState(4);
+  const [investigateBusy, setInvestigateBusy] = useState(false);
+  const [investigateError, setInvestigateError] = useState('');
+  const [discussions, setDiscussions] = useState<Discussion[]>([]);
+  const [expandedDiscussionId, setExpandedDiscussionId] = useState<string | null>(null);
+
+  const [voiceSupported, setVoiceSupported] = useState(false);
+  const [listening, setListening] = useState(false);
+  const [liveTranscript, setLiveTranscript] = useState('');
+  const [voiceStatus, setVoiceStatus] = useState('');
+  const [ttsEnabled, setTtsEnabled] = useState(false);
+  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
+  const agentsRef = useRef<Agent[]>([]);
+  const selectedIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    agentsRef.current = agents;
+  }, [agents]);
+  useEffect(() => {
+    selectedIdRef.current = selectedId;
+  }, [selectedId]);
+
   const handleUnauthorized = useCallback(() => {
     setIsLoggedIn(false);
     setAgents([]);
@@ -433,10 +546,10 @@ export default function GrokArmyVisualization() {
     }
   }
 
-  async function sendChat(agent: Agent) {
-    const message = chatDraft.trim();
+  async function sendChat(agent: Agent, messageOverride?: string) {
+    const message = (messageOverride ?? chatDraft).trim();
     if (!message) return;
-    setChatDraft('');
+    if (messageOverride === undefined) setChatDraft('');
     setChatLog((prev) => ({
       ...prev,
       [agent.id]: [...(prev[agent.id] ?? []), { role: 'user', content: message }],
@@ -455,6 +568,10 @@ export default function GrokArmyVisualization() {
         ...prev,
         [agent.id]: [...(prev[agent.id] ?? []), { role: 'agent', content: reply }],
       }));
+      if (res.ok && ttsEnabled && typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(new SpeechSynthesisUtterance(reply));
+      }
       await fetchAll();
     } finally {
       setChatBusy(false);
@@ -490,6 +607,144 @@ export default function GrokArmyVisualization() {
       setStopBusy(false);
     }
   }
+
+  const fetchDiscussions = useCallback(async () => {
+    try {
+      const res = await fetch('/api/bots/investigate', { cache: 'no-store' });
+      if (res.status === 401) return handleUnauthorized();
+      const data = await parseJsonSafe(res);
+      if (res.ok) setDiscussions(data.discussions ?? []);
+    } catch {
+      // swallow — the panel just stays empty, roster/activity polling will surface real errors
+    }
+  }, [handleUnauthorized]);
+
+  function toggleInvestigateAgent(id: string) {
+    setInvestigateAgentIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  }
+
+  async function startInvestigation() {
+    const topic = investigateTopic.trim();
+    if (investigateAgentIds.length === 0) {
+      setInvestigateError('Select at least one agent.');
+      return;
+    }
+    if (!topic) {
+      setInvestigateError('Give the investigation a topic.');
+      return;
+    }
+    setInvestigateBusy(true);
+    setInvestigateError('');
+    try {
+      const res = await fetch('/api/bots/investigate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ agentIds: investigateAgentIds, topic, rounds: investigateRounds }),
+      });
+      if (res.status === 401) return handleUnauthorized();
+      const data = await parseJsonSafe(res);
+      if (!res.ok) {
+        setInvestigateError(data.error || 'Investigation failed.');
+        return;
+      }
+      setDiscussions((prev) => [data.discussion, ...prev]);
+      setExpandedDiscussionId(data.discussion.id);
+      setInvestigateTopic('');
+      await fetchAll();
+    } catch {
+      setInvestigateError('Connection to Command lost mid-investigation.');
+    } finally {
+      setInvestigateBusy(false);
+    }
+  }
+
+  useEffect(() => {
+    const SpeechRecognitionCtor =
+      (window as unknown as { SpeechRecognition?: SpeechRecognitionConstructor; webkitSpeechRecognition?: SpeechRecognitionConstructor })
+        .SpeechRecognition ??
+      (window as unknown as { webkitSpeechRecognition?: SpeechRecognitionConstructor }).webkitSpeechRecognition;
+    setVoiceSupported(Boolean(SpeechRecognitionCtor));
+  }, []);
+
+  function startListening() {
+    const SpeechRecognitionCtor =
+      (window as unknown as { SpeechRecognition?: SpeechRecognitionConstructor; webkitSpeechRecognition?: SpeechRecognitionConstructor })
+        .SpeechRecognition ??
+      (window as unknown as { webkitSpeechRecognition?: SpeechRecognitionConstructor }).webkitSpeechRecognition;
+    if (!SpeechRecognitionCtor) {
+      setVoiceStatus('Voice control needs Chrome or Edge.');
+      return;
+    }
+
+    const recognition = new SpeechRecognitionCtor();
+    recognition.lang = 'en-US';
+    recognition.interimResults = true;
+    recognition.continuous = false;
+
+    recognition.onresult = (event) => {
+      let finalTranscript = '';
+      let interim = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i];
+        if (result.isFinal) finalTranscript += result[0].transcript;
+        else interim += result[0].transcript;
+      }
+      setLiveTranscript(finalTranscript || interim);
+
+      if (finalTranscript.trim()) {
+        const { agent, instruction } = parseVoiceCommand(finalTranscript.trim(), agentsRef.current);
+        const target = agent ?? agentsRef.current.find((a) => a.id === selectedIdRef.current) ?? null;
+
+        if (!target) {
+          setVoiceStatus(
+            agentsRef.current.length === 0
+              ? 'No agents hired yet — hire one first.'
+              : "Didn't catch who — say an agent's name first, e.g. \"CEO Bot, ...\"."
+          );
+          return;
+        }
+
+        setSelectedId(target.id);
+        if (!instruction) {
+          setVoiceStatus(`Selected ${target.name}. Say a command.`);
+          return;
+        }
+        if (target.status === 'paused') {
+          setVoiceStatus(`${target.name} is paused — resume before sending.`);
+          return;
+        }
+        setVoiceStatus(`→ ${target.name}: "${instruction}"`);
+        void sendChat(target, instruction);
+      }
+    };
+
+    recognition.onerror = (event) => {
+      setVoiceStatus(event.error === 'not-allowed' ? 'Microphone access denied.' : `Voice error: ${event.error}`);
+      setListening(false);
+    };
+
+    recognition.onend = () => {
+      setListening(false);
+      recognitionRef.current = null;
+    };
+
+    recognitionRef.current = recognition;
+    setLiveTranscript('');
+    setVoiceStatus('Listening…');
+    setListening(true);
+    recognition.start();
+  }
+
+  function stopListening() {
+    recognitionRef.current?.stop();
+    setListening(false);
+  }
+
+  useEffect(() => {
+    if (listening || !voiceStatus) return;
+    const timeout = window.setTimeout(() => setVoiceStatus(''), 4000);
+    return () => window.clearTimeout(timeout);
+  }, [voiceStatus, listening]);
 
   const selectedAgent = useMemo(() => agents.find((a) => a.id === selectedId) ?? null, [agents, selectedId]);
   const activeCount = agents.filter((a) => a.status !== 'idle' && a.status !== 'paused').length;
@@ -562,6 +817,15 @@ export default function GrokArmyVisualization() {
           + Hire agent
         </button>
         <button
+          onClick={() => {
+            setInvestigatePanelOpen((v) => !v);
+            void fetchDiscussions();
+          }}
+          className="pointer-events-auto flex items-center gap-1 rounded-lg bg-purple-500/90 hover:bg-purple-400 text-slate-950 text-xs font-semibold px-3 py-2 transition"
+        >
+          <Users className="h-3.5 w-3.5" /> Investigate
+        </button>
+        <button
           onClick={() => emergencyStop(false)}
           disabled={stopBusy}
           className="pointer-events-auto flex items-center gap-1 rounded-lg bg-red-500/90 hover:bg-red-400 disabled:opacity-50 text-white text-xs font-semibold px-3 py-2 transition"
@@ -576,12 +840,50 @@ export default function GrokArmyVisualization() {
           <Play className="h-3.5 w-3.5" /> Resume all
         </button>
         <button
+          onClick={() => setTtsEnabled((v) => !v)}
+          title={ttsEnabled ? 'Voice replies on' : 'Voice replies off'}
+          className={`pointer-events-auto flex items-center gap-1 rounded-lg text-xs font-semibold px-3 py-2 transition ${
+            ttsEnabled
+              ? 'bg-cyan-500/90 hover:bg-cyan-400 text-slate-950'
+              : 'bg-black/40 border border-slate-700 hover:border-slate-500 text-slate-300'
+          }`}
+        >
+          {ttsEnabled ? <Volume2 className="h-3.5 w-3.5" /> : <VolumeX className="h-3.5 w-3.5" />}
+        </button>
+        <button
+          onClick={() => (listening ? stopListening() : startListening())}
+          disabled={!voiceSupported}
+          title={voiceSupported ? "Say \"<agent name>, <instruction>\"" : 'Voice control needs Chrome or Edge'}
+          className={`pointer-events-auto flex items-center gap-1 rounded-lg text-xs font-semibold px-3 py-2 transition disabled:opacity-40 ${
+            listening
+              ? 'bg-red-500/90 hover:bg-red-400 text-white animate-pulse'
+              : 'bg-black/40 border border-slate-700 hover:border-cyan-500 text-slate-300'
+          }`}
+        >
+          {listening ? <MicOff className="h-3.5 w-3.5" /> : <Mic className="h-3.5 w-3.5" />}
+          {listening ? 'Listening…' : 'Voice'}
+        </button>
+        <button
           onClick={handleLogout}
           className="pointer-events-auto flex items-center gap-1 rounded-lg bg-black/40 border border-slate-700 hover:border-slate-500 text-slate-300 text-xs px-3 py-2 transition"
         >
           <LogOut className="h-3.5 w-3.5" /> Sign out
         </button>
       </div>
+
+      {/* Voice status */}
+      {(listening || voiceStatus) && (
+        <div className="absolute top-24 left-1/2 -translate-x-1/2 pointer-events-none max-w-md w-full px-4">
+          <div className="bg-black/60 backdrop-blur-md border border-cyan-500/30 rounded-xl px-4 py-2 text-center">
+            {listening && (
+              <p className="text-xs text-cyan-300 flex items-center justify-center gap-1.5">
+                <Mic className="h-3 w-3 animate-pulse" /> {liveTranscript || 'Listening…'}
+              </p>
+            )}
+            {voiceStatus && !listening && <p className="text-xs text-slate-300">{voiceStatus}</p>}
+          </div>
+        </div>
+      )}
 
       {/* Roster + activity feed (left) */}
       <div className="absolute left-6 top-28 bottom-24 w-72 flex flex-col gap-3 pointer-events-auto">
@@ -704,6 +1006,130 @@ export default function GrokArmyVisualization() {
         </div>
       )}
 
+      {/* Investigation room: agents read the repo and discuss it with each other */}
+      {investigatePanelOpen && (
+        <div className="absolute inset-0 bg-black/70 flex items-center justify-center pointer-events-auto z-20">
+          <div className="w-full max-w-2xl max-h-[85vh] overflow-y-auto bg-slate-950 border border-purple-500/30 rounded-2xl p-5">
+            <div className="flex items-center justify-between mb-1">
+              <h2 className="text-lg font-bold text-purple-300 flex items-center gap-2">
+                <Users className="h-4 w-4" /> Investigation room
+              </h2>
+              <button onClick={() => setInvestigatePanelOpen(false)} className="text-slate-400 hover:text-white">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <p className="text-xs text-slate-500 mb-4">
+              Agents read this repo&apos;s real source (app/, lib/) and take turns discussing it. They only
+              analyze and advise — acting on a finding still goes through the normal commit → PR → approval flow.
+            </p>
+
+            <div className="rounded-xl border border-slate-800 p-3 space-y-3">
+              <div>
+                <p className="text-[10px] uppercase tracking-widest text-slate-500 mb-1.5">Participants</p>
+                {agents.length === 0 ? (
+                  <p className="text-xs text-slate-500">Hire at least one agent first.</p>
+                ) : (
+                  <div className="flex flex-wrap gap-1.5">
+                    {agents.map((agent) => {
+                      const active = investigateAgentIds.includes(agent.id);
+                      return (
+                        <button
+                          key={agent.id}
+                          onClick={() => toggleInvestigateAgent(agent.id)}
+                          disabled={agent.status === 'paused'}
+                          className={`text-[11px] rounded-full px-2.5 py-1 border transition disabled:opacity-40 ${
+                            active
+                              ? 'border-purple-400 bg-purple-500/20 text-purple-200'
+                              : 'border-slate-700 text-slate-400 hover:border-slate-500'
+                          }`}
+                        >
+                          {agent.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              <input
+                value={investigateTopic}
+                onChange={(e) => setInvestigateTopic(e.target.value)}
+                placeholder='Topic — e.g. "find bugs in the reservation capacity logic"'
+                className="w-full rounded-lg bg-slate-900 border border-slate-700 px-2.5 py-1.5 text-xs text-white focus:border-purple-500 outline-none"
+              />
+
+              <div className="flex items-center gap-3">
+                <label className="text-[11px] text-slate-400 flex items-center gap-2">
+                  Rounds
+                  <input
+                    type="number"
+                    min={1}
+                    max={6}
+                    value={investigateRounds}
+                    onChange={(e) => setInvestigateRounds(Math.min(6, Math.max(1, Number(e.target.value) || 1)))}
+                    className="w-14 rounded-lg bg-slate-900 border border-slate-700 px-2 py-1 text-xs text-white focus:border-purple-500 outline-none"
+                  />
+                </label>
+                <button
+                  disabled={investigateBusy}
+                  onClick={startInvestigation}
+                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-purple-500/90 hover:bg-purple-400 disabled:opacity-50 text-slate-950 text-xs font-semibold py-1.5"
+                >
+                  {investigateBusy ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" /> Investigating…
+                    </>
+                  ) : (
+                    'Start investigation'
+                  )}
+                </button>
+              </div>
+              {investigateError && <p className="text-xs text-red-400">{investigateError}</p>}
+            </div>
+
+            <div className="mt-4">
+              <p className="text-[10px] uppercase tracking-widest text-slate-500 mb-2">Past investigations</p>
+              {discussions.length === 0 && <p className="text-xs text-slate-500">None yet.</p>}
+              <div className="space-y-2">
+                {discussions.map((d) => {
+                  const expanded = expandedDiscussionId === d.id;
+                  return (
+                    <div key={d.id} className="rounded-lg border border-slate-800">
+                      <button
+                        onClick={() => setExpandedDiscussionId(expanded ? null : d.id)}
+                        className="w-full flex items-center justify-between px-3 py-2 text-left"
+                      >
+                        <div className="min-w-0">
+                          <p className="text-xs text-slate-200 truncate">{d.topic}</p>
+                          <p className="text-[10px] text-slate-500 mt-0.5">
+                            {d.participantNames.join(', ')} · {d.status} · {timeAgo(d.createdAt)}
+                          </p>
+                        </div>
+                        {expanded ? (
+                          <ChevronDown className="h-3.5 w-3.5 text-slate-500 shrink-0" />
+                        ) : (
+                          <ChevronRight className="h-3.5 w-3.5 text-slate-500 shrink-0" />
+                        )}
+                      </button>
+                      {expanded && (
+                        <div className="px-3 pb-3 space-y-2 border-t border-slate-800 pt-2">
+                          {d.turns.map((turn, i) => (
+                            <div key={i} className="text-xs">
+                              <span className="text-purple-300 font-semibold">{turn.agentName}: </span>
+                              <span className="text-slate-300">{turn.content}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Agent detail / chat panel */}
       {selectedAgent && (
         <div className="absolute right-6 bottom-24 w-96 max-h-[60vh] bg-black/60 backdrop-blur-md border border-cyan-500/20 rounded-xl p-4 pointer-events-auto flex flex-col">
@@ -798,7 +1224,7 @@ export default function GrokArmyVisualization() {
           <span className="text-cyan-400">●</span> Central Core: Grok Orchestrator
         </div>
         <div className="bg-black/40 backdrop-blur-md border border-cyan-500/20 rounded-xl px-5 py-3 text-sm text-slate-300">
-          Drag to rotate • Scroll to zoom • Click an agent
+          Drag to rotate • Scroll to zoom • Click an agent{voiceSupported ? ' • Voice: "<agent>, <instruction>"' : ''}
         </div>
       </div>
     </div>

@@ -61,6 +61,7 @@ export type ActivityType =
   | "deploy"
   | "paused"
   | "resumed"
+  | "discussion"
   | "error";
 
 export interface ActivityDoc {
@@ -118,4 +119,47 @@ export interface SeedRole {
   description: string;
   defaultModel: PreferredModel;
   tasks: string[];
+}
+
+export type DiscussionStatus = "running" | "completed" | "error";
+
+export interface DiscussionTurnDoc {
+  agentId: string;
+  agentName: string;
+  content: string;
+  createdAt: Date;
+}
+
+export interface DiscussionTurn {
+  agentId: string;
+  agentName: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface DiscussionDoc {
+  _id?: ObjectId;
+  topic: string;
+  participantIds: string[];
+  participantNames: string[];
+  repoContext: string;
+  turns: DiscussionTurnDoc[];
+  status: DiscussionStatus;
+  error?: string;
+  requestedBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Discussion {
+  id: string;
+  topic: string;
+  participantIds: string[];
+  participantNames: string[];
+  turns: DiscussionTurn[];
+  status: DiscussionStatus;
+  error?: string;
+  requestedBy: string;
+  createdAt: string;
+  updatedAt: string;
 }

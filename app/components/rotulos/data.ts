@@ -1,8 +1,13 @@
+import { TIER_PRICE } from "./pricing";
 import type { Rotulo } from "./types";
 
 /**
  * Los seis rótulos del plan, en el orden en que se encuentran manejando desde
  * Ciudad Quesada. Cambiar aquí cambia las láminas, la tabla y el total.
+ *
+ * Referencia preliminar en adhesivo impreso: las láminas completas usan el
+ * tamaño "grande" y las dos piezas de R-06 el tamaño "pequeño". Medidas y
+ * montos deben confirmarse con tres cotizaciones del mismo alcance.
  */
 export const ROTULOS: Rotulo[] = [
   {
@@ -20,6 +25,7 @@ export const ROTULOS: Rotulo[] = [
     },
     panels: [
       {
+        size: "grande",
         kicker: "Bienvenidos · Welcome",
         title: "La Vieja Adventures",
         titleEn: "Cañón del Río La Vieja",
@@ -32,7 +38,7 @@ export const ROTULOS: Rotulo[] = [
         arrow: "right",
         pictogram: "canon",
         photos: ["/image/IMG_4946.JPG"],
-        price: 50000,
+        price: TIER_PRICE.grande,
       },
     ],
   },
@@ -51,6 +57,7 @@ export const ROTULOS: Rotulo[] = [
     },
     panels: [
       {
+        size: "grande",
         kicker: "Puente La Vieja",
         title: "Su aventura empieza en 300 m",
         titleEn: "Your adventure starts in 300 m",
@@ -64,7 +71,7 @@ export const ROTULOS: Rotulo[] = [
         arrow: "left",
         pictogram: "rio",
         photos: ["/image/IMG_4200.jpg", "/image/IMG_5592.jpg"],
-        price: 50000,
+        price: TIER_PRICE.grande,
       },
     ],
   },
@@ -83,6 +90,7 @@ export const ROTULOS: Rotulo[] = [
     },
     panels: [
       {
+        size: "grande",
         kicker: "Vuelta Chicharronera",
         title: "Cascadas y pozas a la vuelta",
         titleEn: "Waterfalls & pools around the bend",
@@ -95,7 +103,7 @@ export const ROTULOS: Rotulo[] = [
         arrow: "right",
         pictogram: "cascada",
         photos: ["/image/IMG_4376.jpg", "/image/IMG_4210.jpg"],
-        price: 50000,
+        price: TIER_PRICE.grande,
       },
     ],
   },
@@ -114,6 +122,7 @@ export const ROTULOS: Rotulo[] = [
     },
     panels: [
       {
+        size: "grande",
         kicker: "Restaurante y Mirador",
         title: "Coma con vista al cañón",
         titleEn: "Eat with a canyon view",
@@ -126,7 +135,7 @@ export const ROTULOS: Rotulo[] = [
         arrow: "down-right",
         pictogram: "comida",
         photos: ["/image/IMG_5686.jpg", "/image/IMG_6812.jpg"],
-        price: 50000,
+        price: TIER_PRICE.grande,
       },
     ],
   },
@@ -145,6 +154,7 @@ export const ROTULOS: Rotulo[] = [
     },
     panels: [
       {
+        size: "grande",
         kicker: "Parqueo · Parking",
         title: "Recepción",
         titleEn: "Check-in & tours",
@@ -157,7 +167,7 @@ export const ROTULOS: Rotulo[] = [
         arrow: "right",
         pictogram: "parqueo",
         photos: ["/image/IMG_4523.jpg", "/image/IMG_2443.jpg"],
-        price: 50000,
+        price: TIER_PRICE.grande,
       },
     ],
   },
@@ -167,8 +177,8 @@ export const ROTULOS: Rotulo[] = [
     name: "Anticipos Lajas + CQ",
     kind: "par",
     placement: {
-      es: "Lajas y Ciudad Quesada (dos láminas de media)",
-      en: "Lajas and Ciudad Quesada (two half-size panels)",
+      es: "Lajas y Ciudad Quesada (dos láminas pequeñas)",
+      en: "Lajas and Ciudad Quesada (two small panels)",
     },
     purpose: {
       es: "Dos anticipos lejanos: siembran la marca desde antes de la ruta.",
@@ -176,6 +186,7 @@ export const ROTULOS: Rotulo[] = [
     },
     panels: [
       {
+        size: "pequeno",
         kicker: "Lajas",
         title: "El cañón lo espera",
         titleEn: "The canyon is waiting",
@@ -187,9 +198,10 @@ export const ROTULOS: Rotulo[] = [
         arrow: "right",
         pictogram: "canon",
         photos: ["/image/IMG_4671.jpg"],
-        price: 25000,
+        price: TIER_PRICE.pequeno,
       },
       {
+        size: "pequeno",
         kicker: "Ciudad Quesada",
         title: "Cañón del Río La Vieja",
         titleEn: "La Vieja River Canyon",
@@ -201,7 +213,7 @@ export const ROTULOS: Rotulo[] = [
         arrow: "right",
         pictogram: "mirador",
         photos: ["/image/IMG_39145.jpg"],
-        price: 25000,
+        price: TIER_PRICE.pequeno,
       },
     ],
   },

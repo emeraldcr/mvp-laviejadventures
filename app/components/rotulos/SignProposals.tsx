@@ -15,13 +15,13 @@ export default function SignProposals({ lang }: { lang: Lang }) {
       </p>
       <h2 className="mt-3 text-3xl font-black tracking-tight text-white md:text-4xl">
         {lang === "es"
-          ? "Seis formatos probados en carretera"
-          : "Six formats proven on the road"}
+          ? "Seis formatos visuales de referencia"
+          : "Six visual reference formats"}
       </h2>
       <p className="mt-4 max-w-3xl text-sm leading-relaxed text-zinc-300 md:text-base">
         {lang === "es"
-          ? "El rótulo que le pasaron funciona por una razón: está dividido en módulos y cada módulo dice una sola cosa. Abajo están ese formato y cinco más que usan los sistemas de señalización del mundo, con la nota de para cuál de sus seis puntos sirve cada uno."
-          : "The sign you were sent works for one reason: it is split into modules and each module says exactly one thing. Below is that format plus five more drawn from signage systems around the world, noting which of your six spots each one fits."}
+          ? "Estas referencias ayudan a comparar jerarquía, color y cantidad de información. Son propuestas visuales: su material, medida y ubicación final todavía deben validarse antes de producir."
+          : "These references help compare hierarchy, color and information density. They are visual proposals: final material, size and placement must still be validated before production."}
       </p>
 
       <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -66,8 +66,8 @@ export default function SignProposals({ lang }: { lang: Lang }) {
                     ? "Recomendado"
                     : "Recommended"
                   : lang === "es"
-                    ? "Alternativa oficial"
-                    : "Official alternative"}
+                    ? "Referencia visual"
+                    : "Visual reference"}
               </span>
             </div>
 
@@ -110,8 +110,8 @@ export default function SignProposals({ lang }: { lang: Lang }) {
           <li>
             <span className="font-black">R-02 y R-03 · </span>
             {lang === "es"
-              ? "Café turístico (P-A), o el formato MOPT de la foto (P-B) si van dentro del derecho de vía. Sin foto, sin QR, sin redes: destino, flecha y distancia."
-              : "Brown tourist sign (P-A), or the MOPT format from the photo (P-B) if they sit inside the right-of-way. No photo, no QR, no socials: destination, arrow, distance."}
+              ? "Café turístico (P-A), o el formato vial modular de la foto (P-B) después de validar ubicación y permisos aplicables. Sin foto, sin QR, sin redes: destino, flecha y distancia."
+              : "Brown tourist sign (P-A), or the modular road-style format from the photo (P-B) after validating location and applicable permits. No photo, no QR, no socials: destination, arrow, distance."}
           </li>
           <li>
             <span className="font-black">R-04 · </span>
@@ -134,8 +134,8 @@ export default function SignProposals({ lang }: { lang: Lang }) {
         </ul>
         <p className="mt-4 border-t border-emerald-200/20 pt-3 text-xs leading-relaxed text-emerald-100/80">
           {lang === "es"
-            ? "Dos cosas antes de mandar a hacer nada: rotular dentro del derecho de vía de una ruta nacional requiere permiso del MOPT (Ley General de Caminos Públicos 5060 y el reglamento de publicidad exterior), así que conviene consultarlo; y pida la lámina retrorreflectiva por escrito en la cotización, porque es lo primero que el rotulero abarata."
-            : "Two things before ordering anything: signage inside a national route right-of-way needs MOPT approval (Public Roads Act 5060 and the outdoor advertising regulation), so check first; and put the retroreflective sheeting in writing on the quote, because it is the first thing a sign maker cheapens."}
+            ? "Antes de mandar a fabricar, valide con MOPT o la municipalidad, según corresponda, si la ubicación, el diseño o la instalación requieren permiso. Además, deje por escrito en cada cotización el material reflectivo solicitado para comparar exactamente el mismo alcance."
+            : "Before production, validate with MOPT or the municipality, as applicable, whether the location, design or installation requires a permit. Also state the requested reflective material in writing on every quote so all companies price the same scope."}
         </p>
       </div>
     </section>

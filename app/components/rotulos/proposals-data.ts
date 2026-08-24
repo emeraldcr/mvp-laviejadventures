@@ -38,17 +38,17 @@ export const PROPOSALS: Proposal[] = [
     id: "P-B",
     variant: "mopt",
     name: {
-      es: "MOPT dividido con franja de distancia",
-      en: "MOPT banded sign with distance strip",
+      es: "Formato vial modular con franja de distancia",
+      en: "Modular road-style sign with distance strip",
     },
     reference: {
-      es: "El que le pasaron: norma MOPT / SIECA, con bloque de marca patrocinadora",
-      en: "The one you were sent: MOPT / SIECA standard, with a sponsor brand block",
+      es: "Referencia inspirada en señalización vial modular, con un bloque de marca separado",
+      en: "Reference inspired by modular road signage, with a separate brand block",
     },
     slots: "R-02 · R-03",
     why: {
-      es: "Exactamente el formato de la foto: franja azul con flecha y kilometraje, bloque de marca en amarillo y panel verde de destino. Se ve oficial porque lo es, y esa autoridad prestada le da confianza al turista. Ojo: el bloque amarillo funciona porque el color pega contra el verde, no por llevar mucha información.",
-      en: "Exactly the format in the photo: blue strip with arrow and distance, yellow brand block, green destination panel. It looks official because it is, and that borrowed authority reassures visitors. The yellow block works because of the color contrast, not because it holds lots of information.",
+      es: "Toma de la foto la franja azul con flecha y distancia, el bloque amarillo de marca y el panel verde de destino. Su lenguaje vial puede resultar familiar, pero esta propuesta visual no representa aprobación institucional ni sustituye especificaciones o permisos aplicables.",
+      en: "It takes the blue arrow-and-distance strip, yellow brand block and green destination panel from the photo. Its road-sign language may feel familiar, but this visual proposal does not represent institutional approval or replace applicable specifications or permits.",
     },
     specs: [
       {
@@ -60,8 +60,8 @@ export const PROPOSALS: Proposal[] = [
         en: "Green destination, blue distance, yellow brand. No gradients, no shadows.",
       },
       {
-        es: "Sobre ruta nacional necesita permiso del MOPT dentro del derecho de vía.",
-        en: "On a national route it needs MOPT approval inside the right-of-way.",
+        es: "Valide ubicación, diseño y permiso aplicable con MOPT o la municipalidad antes de producir.",
+        en: "Validate location, design and applicable permits with MOPT or the municipality before production.",
       },
     ],
     recommended: false,
@@ -120,8 +120,8 @@ export const PROPOSALS: Proposal[] = [
         en: "Independent white tiles: swap one without remaking the whole sign.",
       },
       {
-        es: "Pictogramas de norma (cubiertos, mirador), no íconos de moda.",
-        en: "Standard pictograms (cutlery, lookout), not trendy icons.",
+        es: "Pictogramas viales conocidos (cubiertos, mirador), no íconos de moda.",
+        en: "Familiar road pictograms (cutlery, lookout), not trendy icons.",
       },
       {
         es: "Máximo cuatro placas por rótulo.",

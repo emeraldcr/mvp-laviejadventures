@@ -35,4 +35,5 @@ export const COLLECTIONS = {
   BOT_AGENTS: "bot_agents",
   BOT_ACTIVITY: "bot_activity",
   BOT_APPROVALS: "bot_approvals",
+  BOT_DISCUSSIONS: "bot_discussions",
 } as const;
