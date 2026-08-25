@@ -65,8 +65,8 @@ export default function FlyersPage() {
           </h1>
           <p className="mt-4 text-sm leading-relaxed text-zinc-300 sm:text-base">
             {t(
-              'Diez publicaciones listas en formato cuadrado 1080 × 1080. Active "Editar objetos" en cualquier tarjeta para mover, redimensionar, agregar texto o íconos y borrar — igual que en el editor de rótulos.',
-              'Ten ready-to-post square 1080 × 1080 flyers. Turn on "Edit objects" on any card to move, resize, add text or icons, and delete — the same editor used for the road signs.',
+              'Diez publicaciones listas en formato vertical 2:3. Descargue cada una en alta calidad con el botón "Descargar HQ", o active "Editar objetos" para mover, redimensionar, agregar texto o íconos y borrar — igual que en el editor de rótulos.',
+              'Ten ready-to-post vertical 2:3 flyers. Download each one in high quality with the "Download HQ" button, or turn on "Edit objects" to move, resize, add text or icons, and delete — the same editor used for the road signs.',
             )}
           </p>
         </div>
