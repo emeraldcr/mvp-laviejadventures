@@ -2,12 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import MovableGroup from "./MovableGroup";
+import TextEffectsToolbar from "./TextEffectsToolbar";
 import {
   INSERTABLE_ICON_OPTIONS,
   InsertedElementArtwork,
   TEXT_STYLE_OPTIONS,
   getInsertedElementLabel,
   localizeInsertableLabel,
+  resolveTextFontFamily,
 } from "./insertableCatalog";
 import { useEditableSignCanvas } from "./canvasContext";
 import {
@@ -16,6 +18,7 @@ import {
   type AddedTextElement,
   type AddedTextStyle,
   type InsertableIconKey,
+  type TextFontFamily,
 } from "./types";
 
 function AddedTextInspector({
@@ -39,6 +42,28 @@ function AddedTextInspector({
   const updateStyle = (style: AddedTextStyle) => {
     updateAddedElement({ ...element, style });
     announce(lang === "es" ? "Estilo de texto actualizado." : "Text style updated.");
+  };
+
+  const bold = element.bold ?? true;
+  const italic = element.italic === true;
+  const underline = element.underline === true;
+  const fontFamily = resolveTextFontFamily(element);
+
+  const toggleBold = () => {
+    updateAddedElement({ ...element, bold: !bold });
+    announce(lang === "es" ? "Negrita actualizada." : "Bold updated.");
+  };
+  const toggleItalic = () => {
+    updateAddedElement({ ...element, italic: !italic });
+    announce(lang === "es" ? "Cursiva actualizada." : "Italic updated.");
+  };
+  const toggleUnderline = () => {
+    updateAddedElement({ ...element, underline: !underline });
+    announce(lang === "es" ? "Subrayado actualizado." : "Underline updated.");
+  };
+  const updateFontFamily = (value: TextFontFamily) => {
+    updateAddedElement({ ...element, fontFamily: value });
+    announce(lang === "es" ? "Tipografía actualizada." : "Typography updated.");
   };
 
   return (
@@ -71,6 +96,18 @@ function AddedTextInspector({
           ))}
         </select>
       </label>
+
+      <TextEffectsToolbar
+        lang={lang}
+        bold={bold}
+        italic={italic}
+        underline={underline}
+        fontFamily={fontFamily}
+        onToggleBold={toggleBold}
+        onToggleItalic={toggleItalic}
+        onToggleUnderline={toggleUnderline}
+        onFontFamilyChange={updateFontFamily}
+      />
     </div>
   );
 }

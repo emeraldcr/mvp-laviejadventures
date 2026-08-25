@@ -22,10 +22,28 @@ export type PixelTranslation = {
   y: number;
 };
 
+/** Tipografías disponibles para el texto agregado: las dos fuentes que ya carga el sitio, más una monoespaciada del sistema. */
+export type TextFontFamily = "display" | "sans" | "mono";
+
+/**
+ * Formato de un campo de texto ya incluido en el rótulo (kicker, título,
+ * subtítulo, llamado a la acción). `content` reemplaza la palabra original
+ * del plan; sin definir, conserva el texto de `data.ts`.
+ */
+export type StoredTextFormat = {
+  content?: string;
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+  fontFamily?: TextFontFamily;
+};
+
 export type StoredGroupLayout = {
   anchor: NormalizedCenterAnchor;
   scale: number;
   hidden?: boolean;
+  /** Solo presente en grupos que envuelven un campo de texto propio del rótulo. */
+  text?: StoredTextFormat;
 };
 
 export type AddedTextStyle = "title" | "subtitle" | "label" | "cta";
@@ -52,6 +70,12 @@ export type AddedTextElement = {
   kind: "text";
   text: string;
   style: AddedTextStyle;
+  /** Sin definir se trata como `true`: así se ve igual el texto ya guardado antes de este campo existir. */
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+  /** Sin definir usa la fuente por defecto del estilo (ver `resolveTextFontFamily`). */
+  fontFamily?: TextFontFamily;
 };
 
 export type AddedIconElement = {

@@ -1,8 +1,10 @@
 import type { CSSProperties } from "react";
 import Image from "next/image";
-import { ARROWS, PHOTO_FOCUS, PICTOGRAMS } from "./constants";
+import { ARROWS, BUSINESS, PHOTO_FOCUS, PICTOGRAMS } from "./constants";
+import BuiltInText from "./layout-editor/BuiltInText";
 import EditableSignCanvas from "./layout-editor/EditableSignCanvas";
 import MovableGroup from "./layout-editor/MovableGroup";
+import QrCode from "./QrCode";
 import { diagonalBand, diagonalEdge } from "./helpers";
 import { PANEL_SIZE_SPECS } from "./measurements";
 import { AmenityRow, GroundShadow, LeafShape, LeafSprig, SignPosts, WaveSeam } from "./SignChrome";
@@ -44,6 +46,8 @@ export default function SignPanel({ panel, kind, large, eager }: SignPanelProps)
   const hasPhotos = panel.photos.length > 0;
   const brandForward = panel.brandForward === true;
   const showAmenities = kind === "destino" || kind === "indicador";
+  /** QR solo donde la gente ya está detenida o caminando: parqueo y orientación interna, no en carretera. */
+  const showQr = kind === "destino" || kind === "indicador";
   /** Sin foto, el ícono/título/flecha son todo el diseño: deben llenar la lámina, no flotar en el centro. */
   const boosted = large || !hasPhotos;
   const aspectClass =
@@ -183,16 +187,31 @@ export default function SignPanel({ panel, kind, large, eager }: SignPanelProps)
               <LeafShape className="absolute -bottom-8 left-4 h-20 w-16 rotate-[-22deg] text-white xl:h-36 xl:w-28" />
             </div>
 
-            {!hasPhotos && panel.kicker ? (
+            {kind === "distancia" ? (
               <MovableGroup
+                groupId="brand-badge"
+                label={{ es: "Logo", en: "Logo" }}
+                className="absolute right-3 top-3 z-10 shrink-0 rounded-md bg-white p-1 shadow-lg sm:right-4 sm:top-4 xl:right-6 xl:top-6"
+              >
+                <Image
+                  src={logo}
+                  alt="La Vieja Adventures"
+                  width={large ? 42 : 34}
+                  height={large ? 42 : 34}
+                  className="h-auto w-7 object-contain sm:w-8 xl:w-10"
+                />
+              </MovableGroup>
+            ) : null}
+
+            {!hasPhotos && panel.kicker ? (
+              <BuiltInText
                 groupId="kicker"
                 label={{ es: "Encabezado", en: "Eyebrow" }}
-                className="relative z-10 mb-4 w-fit max-w-full self-start xl:mb-5 2xl:mb-7"
-              >
-                <p className="text-xs font-black uppercase tracking-[0.22em] text-white/75 xl:text-base 2xl:text-lg">
-                  {panel.kicker}
-                </p>
-              </MovableGroup>
+                text={panel.kicker}
+                defaultFontFamily="sans"
+                className="text-xs uppercase tracking-[0.22em] text-white/75 xl:text-base 2xl:text-lg"
+                movableClassName="relative z-10 mb-4 w-fit max-w-full self-start xl:mb-5 2xl:mb-7"
+              />
             ) : null}
 
             {brandForward ? (
@@ -211,27 +230,51 @@ export default function SignPanel({ panel, kind, large, eager }: SignPanelProps)
                   />
                 </MovableGroup>
 
-                <MovableGroup
-                  groupId="copy"
-                  label={{ es: "Nombre y detalles", en: "Name and details" }}
-                  className="relative z-10 col-span-2 row-start-2 min-w-0 self-center [container-type:inline-size] lg:col-span-1 lg:col-start-2 lg:row-start-1 print:col-span-1 print:col-start-2 print:row-start-1"
-                >
-                  <p className="text-xs font-black uppercase tracking-[0.2em] text-white/75 sm:text-sm xl:text-base 2xl:text-lg">
-                    {theme.eyebrow}
-                  </p>
-                  <p className="mt-1 break-words text-[clamp(2.2rem,5.2cqw,6.5rem)] font-black uppercase leading-[0.84] tracking-[-0.045em] text-white">
-                    {panel.title}
-                  </p>
-                  <p className="mt-2 text-[clamp(0.72rem,1.35cqw,1.45rem)] font-bold uppercase leading-tight tracking-[0.08em] text-white/75">
-                    {panel.titleEn}
-                  </p>
+                <div className="relative z-10 col-span-2 row-start-2 min-w-0 self-center [container-type:inline-size] lg:col-span-1 lg:col-start-2 lg:row-start-1 print:col-span-1 print:col-start-2 print:row-start-1">
+                  <BuiltInText
+                    groupId="copy-eyebrow"
+                    label={{ es: "Categoría", en: "Category label" }}
+                    text={theme.eyebrow}
+                    defaultFontFamily="sans"
+                    className="text-xs uppercase tracking-[0.2em] text-white/75 sm:text-sm xl:text-base 2xl:text-lg"
+                    movableClassName="w-fit max-w-full"
+                  />
+                  <BuiltInText
+                    groupId="copy-title"
+                    label={{ es: "Título", en: "Title" }}
+                    text={panel.title}
+                    defaultFontFamily="sans"
+                    className="break-words text-[clamp(2.2rem,5.2cqw,6.5rem)] uppercase leading-[0.84] tracking-[-0.045em] text-white"
+                    movableClassName="mt-1 w-fit max-w-full"
+                  />
+                  <BuiltInText
+                    groupId="copy-title-en"
+                    label={{ es: "Título en inglés", en: "English title" }}
+                    text={panel.titleEn}
+                    defaultFontFamily="sans"
+                    className="text-[clamp(0.72rem,1.35cqw,1.45rem)] uppercase leading-tight tracking-[0.08em] text-white/75"
+                    movableClassName="mt-2 w-fit max-w-full"
+                  />
                   {panel.subtitle ? (
-                    <p className="mt-3 border-t-2 border-white/30 pt-3 text-[clamp(0.74rem,1.3cqw,1.4rem)] font-black uppercase leading-tight tracking-[0.07em] text-white xl:mt-5 xl:pt-5">
-                      {panel.subtitle}
-                    </p>
+                    <BuiltInText
+                      groupId="copy-subtitle"
+                      label={{ es: "Subtítulo", en: "Subtitle" }}
+                      text={panel.subtitle}
+                      defaultFontFamily="sans"
+                      className="border-t-2 border-white/30 pt-3 text-[clamp(0.74rem,1.3cqw,1.4rem)] uppercase leading-tight tracking-[0.07em] text-white xl:pt-5"
+                      movableClassName="mt-3 w-fit max-w-full xl:mt-5"
+                    />
                   ) : null}
-                  {showAmenities ? <AmenityRow className="mt-3 xl:mt-4" /> : null}
-                </MovableGroup>
+                  {showAmenities ? (
+                    <MovableGroup
+                      groupId="copy-amenities"
+                      label={{ es: "Comodidades", en: "Amenities" }}
+                      className="mt-3 w-fit max-w-full xl:mt-4"
+                    >
+                      <AmenityRow />
+                    </MovableGroup>
+                  ) : null}
+                </div>
 
                 <MovableGroup
                   groupId="direction"
@@ -276,16 +319,21 @@ export default function SignPanel({ panel, kind, large, eager }: SignPanelProps)
                   </MovableGroup>
                 ) : null}
 
-                <MovableGroup
-                  groupId="copy"
-                  label={{ es: "Nombre y detalles", en: "Name and details" }}
-                  className="relative z-10 min-w-0 flex-1"
-                >
-                  <p className="text-[9px] font-black uppercase tracking-[0.18em] text-white/70 sm:text-[10px] xl:text-xs 2xl:text-sm">
-                    {theme.eyebrow}
-                  </p>
-                  <p
-                    className={`mt-1 font-black uppercase leading-[0.9] tracking-[-0.035em] text-white ${
+                <div className="relative z-10 min-w-0 flex-1">
+                  <BuiltInText
+                    groupId="copy-eyebrow"
+                    label={{ es: "Categoría", en: "Category label" }}
+                    text={theme.eyebrow}
+                    defaultFontFamily="sans"
+                    className="text-[9px] uppercase tracking-[0.18em] text-white/70 sm:text-[10px] xl:text-xs 2xl:text-sm"
+                    movableClassName="w-fit max-w-full"
+                  />
+                  <BuiltInText
+                    groupId="copy-title"
+                    label={{ es: "Título", en: "Title" }}
+                    text={panel.title}
+                    defaultFontFamily="sans"
+                    className={`uppercase leading-[0.9] tracking-[-0.035em] text-white ${
                       hasPhotos
                         ? large
                           ? "text-[clamp(1.8rem,4.1cqw,4.75rem)]"
@@ -294,25 +342,40 @@ export default function SignPanel({ panel, kind, large, eager }: SignPanelProps)
                           ? "text-[clamp(2.3rem,5.4cqw,6rem)]"
                           : "text-[clamp(1.9rem,4.4cqw,4.6rem)]"
                     }`}
-                  >
-                    {panel.title}
-                  </p>
-                  <p
-                    className={`mt-1.5 font-bold uppercase leading-tight tracking-[0.06em] text-white/75 ${
+                    movableClassName="mt-1 w-fit max-w-full"
+                  />
+                  <BuiltInText
+                    groupId="copy-title-en"
+                    label={{ es: "Título en inglés", en: "English title" }}
+                    text={panel.titleEn}
+                    defaultFontFamily="sans"
+                    className={`uppercase leading-tight tracking-[0.06em] text-white/75 ${
                       boosted
                         ? "text-[clamp(0.7rem,1.2cqw,1.2rem)]"
                         : "text-[10px] sm:text-xs xl:text-sm 2xl:text-base"
                     }`}
-                  >
-                    {panel.titleEn}
-                  </p>
+                    movableClassName="mt-1.5 w-fit max-w-full"
+                  />
                   {panel.subtitle ? (
-                    <p className="mt-2 border-t border-white/25 pt-2 text-[10px] font-bold uppercase leading-tight tracking-[0.08em] text-white/90 sm:text-xs xl:mt-3 xl:pt-3 xl:text-base 2xl:mt-4 2xl:pt-4 2xl:text-lg">
-                      {panel.subtitle}
-                    </p>
+                    <BuiltInText
+                      groupId="copy-subtitle"
+                      label={{ es: "Subtítulo", en: "Subtitle" }}
+                      text={panel.subtitle}
+                      defaultFontFamily="sans"
+                      className="border-t border-white/25 pt-2 text-[10px] uppercase leading-tight tracking-[0.08em] text-white/90 sm:text-xs xl:pt-3 xl:text-base 2xl:pt-4 2xl:text-lg"
+                      movableClassName="mt-2 w-fit max-w-full xl:mt-3"
+                    />
                   ) : null}
-                  {showAmenities ? <AmenityRow className="mt-2 xl:mt-3" /> : null}
-                </MovableGroup>
+                  {showAmenities ? (
+                    <MovableGroup
+                      groupId="copy-amenities"
+                      label={{ es: "Comodidades", en: "Amenities" }}
+                      className="mt-2 w-fit max-w-full xl:mt-3"
+                    >
+                      <AmenityRow />
+                    </MovableGroup>
+                  ) : null}
+                </div>
 
                 <MovableGroup
                   groupId="direction"
@@ -354,34 +417,60 @@ export default function SignPanel({ panel, kind, large, eager }: SignPanelProps)
             {kind !== "distancia" ? (
               <div
                 className={`relative mt-2 flex items-center gap-3 border-t border-white/20 pt-2 xl:mt-3 xl:pt-3 2xl:mt-5 2xl:pt-4 ${
-                  brandForward ? "justify-center" : "justify-between"
+                  brandForward && !showQr ? "justify-center" : "justify-between"
                 }`}
               >
-                <MovableGroup
-                  groupId="footer-site"
-                  label={{ es: "Sitio web", en: "Website" }}
-                  className={`relative z-10 font-black uppercase text-white/75 ${
+                <div
+                  className={`relative z-10 min-w-0 uppercase leading-tight text-white/75 ${
                     brandForward
-                      ? "text-xs tracking-[0.18em] sm:text-sm xl:text-lg 2xl:text-xl"
-                      : "text-[9px] tracking-[0.14em] sm:text-[10px] xl:text-xs 2xl:text-sm"
+                      ? "text-xs sm:text-sm xl:text-lg 2xl:text-xl"
+                      : "text-[9px] sm:text-[10px] xl:text-xs 2xl:text-sm"
                   }`}
                 >
-                  laviejaadventures.com
-                </MovableGroup>
-                {!brandForward ? (
-                  <MovableGroup
-                    groupId="footer-logo"
-                    label={{ es: "Logo del pie", en: "Footer logo" }}
-                    className="relative z-10 shrink-0 bg-white p-1"
-                  >
-                    <Image
-                      src={logo}
-                      alt="La Vieja Adventures"
-                      width={large ? 42 : 34}
-                      height={large ? 42 : 34}
-                      className="h-auto w-8 object-contain sm:w-10 xl:w-12 2xl:w-14"
-                    />
-                  </MovableGroup>
+                  <BuiltInText
+                    groupId="footer-site"
+                    label={{ es: "Sitio web", en: "Website" }}
+                    text={BUSINESS.web.replace(/^www\./, "")}
+                    defaultFontFamily="sans"
+                    className={`truncate ${brandForward ? "tracking-[0.18em]" : "tracking-[0.14em]"}`}
+                    movableClassName="w-fit max-w-full"
+                  />
+                  <BuiltInText
+                    groupId="footer-whatsapp"
+                    label={{ es: "WhatsApp", en: "WhatsApp" }}
+                    text={`WhatsApp ${BUSINESS.whatsapp}`}
+                    defaultFontFamily="sans"
+                    className="truncate normal-case tracking-normal text-white/60"
+                    movableClassName="mt-0.5 w-fit max-w-full"
+                  />
+                </div>
+                {!brandForward || showQr ? (
+                  <div className="relative z-10 flex shrink-0 items-center gap-2">
+                    {!brandForward ? (
+                      <MovableGroup
+                        groupId="footer-logo"
+                        label={{ es: "Logo del pie", en: "Footer logo" }}
+                        className="relative z-10 shrink-0 bg-white p-1"
+                      >
+                        <Image
+                          src={logo}
+                          alt="La Vieja Adventures"
+                          width={large ? 42 : 34}
+                          height={large ? 42 : 34}
+                          className="h-auto w-8 object-contain sm:w-10 xl:w-12 2xl:w-14"
+                        />
+                      </MovableGroup>
+                    ) : null}
+                    {showQr ? (
+                      <MovableGroup
+                        groupId="footer-qr"
+                        label={{ es: "Código QR de WhatsApp", en: "WhatsApp QR code" }}
+                        className="relative z-10 shrink-0 bg-white p-1"
+                      >
+                        <QrCode className="h-8 w-8 sm:h-9 sm:w-9 xl:h-11 xl:w-11 2xl:h-12 2xl:w-12" />
+                      </MovableGroup>
+                    ) : null}
+                  </div>
                 ) : null}
               </div>
             ) : null}

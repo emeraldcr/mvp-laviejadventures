@@ -1,4 +1,5 @@
 import Image from "next/image";
+import BuiltInText from "./layout-editor/BuiltInText";
 import EditableSignCanvas from "./layout-editor/EditableSignCanvas";
 import MovableGroup from "./layout-editor/MovableGroup";
 import QrCode from "./QrCode";
@@ -19,7 +20,7 @@ import type { Panel } from "./types";
  */
 export default function EntranceSignPanel({ panel, eager }: { panel: Panel; eager?: boolean }) {
   const Arrow = ARROWS[panel.arrow ?? "right"];
-  const primarySocials = SOCIALS.slice(0, 1);
+  const primarySocials = SOCIALS.slice(0, 2);
 
   return (
     <div data-sign-artwork className="relative flex flex-1 flex-col items-center pb-8 sm:pb-11 xl:pb-14 print:pb-0">
@@ -65,29 +66,51 @@ export default function EntranceSignPanel({ panel, eager }: { panel: Panel; eage
               </MovableGroup>
 
               <div className="relative my-auto py-8 xl:py-7 print:py-4">
-                <MovableGroup
-                  groupId="copy"
-                  label={{ es: "Nombre y detalles", en: "Name and details" }}
-                  className="relative z-10"
-                >
+                <div className="relative z-10">
                   {panel.kicker ? (
-                    <p className="text-xs font-black uppercase tracking-[0.22em] text-[#7DE7DC] sm:text-sm xl:text-lg print:text-[10px]">
-                      {panel.kicker}
-                    </p>
+                    <BuiltInText
+                      groupId="copy-kicker"
+                      label={{ es: "Encabezado", en: "Eyebrow" }}
+                      text={panel.kicker}
+                      defaultFontFamily="sans"
+                      className="text-xs uppercase tracking-[0.22em] text-[#7DE7DC] sm:text-sm xl:text-lg print:text-[10px]"
+                      movableClassName="w-fit max-w-full"
+                    />
                   ) : null}
-                  <p className="mt-3 pr-2 text-[clamp(2.1rem,3.6vw,4rem)] font-black uppercase leading-[0.9] tracking-[-0.045em] text-white xl:pr-4 print:mt-2 print:pr-0 print:text-[2.2rem]">
-                    {panel.title}
-                  </p>
-                  <p className="mt-4 text-sm font-bold uppercase tracking-[0.12em] text-[#A8F0E8] sm:text-lg xl:text-xl print:mt-3 print:text-xs">
-                    {panel.titleEn}
-                  </p>
+                  <BuiltInText
+                    groupId="copy-title"
+                    label={{ es: "Título", en: "Title" }}
+                    text={panel.title}
+                    defaultFontFamily="sans"
+                    className="pr-2 text-[clamp(2.1rem,3.6vw,4rem)] uppercase leading-[0.9] tracking-[-0.045em] text-white xl:pr-4 print:pr-0 print:text-[2.2rem]"
+                    movableClassName="mt-3 w-fit max-w-full print:mt-2"
+                  />
+                  <BuiltInText
+                    groupId="copy-title-en"
+                    label={{ es: "Título en inglés", en: "English title" }}
+                    text={panel.titleEn}
+                    defaultFontFamily="sans"
+                    className="text-sm uppercase tracking-[0.12em] text-[#A8F0E8] sm:text-lg xl:text-xl print:text-xs"
+                    movableClassName="mt-4 w-fit max-w-full print:mt-3"
+                  />
                   {panel.subtitle ? (
-                    <p className="mt-5 border-l-4 border-[#00C4B0] pl-3 text-base font-black uppercase tracking-[0.1em] text-white/90 sm:text-xl xl:mt-6 xl:pl-5 print:mt-3 print:text-sm">
-                      {panel.subtitle}
-                    </p>
+                    <BuiltInText
+                      groupId="copy-subtitle"
+                      label={{ es: "Subtítulo", en: "Subtitle" }}
+                      text={panel.subtitle}
+                      defaultFontFamily="sans"
+                      className="border-l-4 border-[#00C4B0] pl-3 text-base uppercase tracking-[0.1em] text-white/90 sm:text-xl xl:pl-5 print:text-sm"
+                      movableClassName="mt-5 w-fit max-w-full xl:mt-6 print:mt-3"
+                    />
                   ) : null}
-                  <AmenityRow className="mt-4 xl:mt-5" />
-                </MovableGroup>
+                  <MovableGroup
+                    groupId="copy-amenities"
+                    label={{ es: "Comodidades", en: "Amenities" }}
+                    className="mt-4 w-fit max-w-full xl:mt-5"
+                  >
+                    <AmenityRow />
+                  </MovableGroup>
+                </div>
 
                 {/* Flecha + ENTRADA fundidos en un solo elemento enorme: la única acción del rótulo. */}
                 <MovableGroup
@@ -113,18 +136,26 @@ export default function EntranceSignPanel({ panel, eager }: { panel: Panel; eage
 
               {/* Franja de contacto reducida al mínimo: dominio, WhatsApp y QR, grandes y nada más. */}
               <div className="relative flex items-center justify-between gap-5 border-t border-white/20 pt-5 xl:gap-8 xl:pt-6 print:gap-4 print:pt-4">
-                <MovableGroup
-                  groupId="contact"
-                  label={{ es: "Sitio web y WhatsApp", en: "Website and WhatsApp" }}
-                  className="relative z-10 min-w-0"
-                >
-                  <p className="break-words text-lg font-black uppercase tracking-[-0.03em] text-white sm:whitespace-nowrap sm:text-2xl xl:text-3xl print:whitespace-nowrap print:text-lg">
-                    {BUSINESS.web.replace(/^www\./, "")}
-                  </p>
-                  <p className="mt-1.5 text-lg font-bold text-[#A8F0E8] sm:text-2xl xl:text-2xl print:text-base">
-                    WhatsApp {BUSINESS.whatsapp}
-                  </p>
-                </MovableGroup>
+                <div className="relative z-10 min-w-0">
+                  <MovableGroup
+                    groupId="contact-web"
+                    label={{ es: "Sitio web", en: "Website" }}
+                    className="w-fit max-w-full"
+                  >
+                    <p className="break-words text-lg font-black uppercase tracking-[-0.03em] text-white sm:whitespace-nowrap sm:text-2xl xl:text-3xl print:whitespace-nowrap print:text-lg">
+                      {BUSINESS.web.replace(/^www\./, "")}
+                    </p>
+                  </MovableGroup>
+                  <MovableGroup
+                    groupId="contact-whatsapp"
+                    label={{ es: "WhatsApp", en: "WhatsApp" }}
+                    className="mt-1.5 w-fit max-w-full"
+                  >
+                    <p className="text-lg font-bold text-[#A8F0E8] sm:text-2xl xl:text-2xl print:text-base">
+                      WhatsApp {BUSINESS.whatsapp}
+                    </p>
+                  </MovableGroup>
+                </div>
                 <MovableGroup
                   groupId="qr"
                   label={{ es: "Código QR", en: "QR code" }}

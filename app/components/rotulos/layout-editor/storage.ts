@@ -7,6 +7,8 @@ import type {
   StoredGroupLayout,
   StoredPanelLayout,
   StoredSignLayout,
+  StoredTextFormat,
+  TextFontFamily,
 } from "./types";
 import { INSERTABLE_ICON_KEYS } from "./types";
 
@@ -29,6 +31,7 @@ const ADDED_TEXT_STYLES = new Set<AddedTextStyle>([
   "cta",
 ]);
 const INSERTABLE_ICON_KEY_SET = new Set<InsertableIconKey>(INSERTABLE_ICON_KEYS);
+const TEXT_FONT_FAMILIES = new Set<TextFontFamily>(["display", "sans", "mono"]);
 
 type ReadableStorage = Pick<Storage, "getItem">;
 type WritableStorage = Pick<Storage, "setItem" | "removeItem">;
@@ -87,6 +90,32 @@ function validatedScale(value: unknown): number | null {
     : null;
 }
 
+function validatedTextFormat(value: unknown): StoredTextFormat | null | undefined {
+  if (value === undefined) return undefined;
+  if (!isRecord(value) || !hasOnlyKeys(value, ["content", "bold", "italic", "underline", "fontFamily"])) {
+    return null;
+  }
+
+  const { content, bold, italic, underline, fontFamily } = value;
+  if (content !== undefined && (typeof content !== "string" || content.length > MAX_TEXT_LENGTH)) {
+    return null;
+  }
+  if (bold !== undefined && typeof bold !== "boolean") return null;
+  if (italic !== undefined && typeof italic !== "boolean") return null;
+  if (underline !== undefined && typeof underline !== "boolean") return null;
+  if (fontFamily !== undefined && (typeof fontFamily !== "string" || !TEXT_FONT_FAMILIES.has(fontFamily as TextFontFamily))) {
+    return null;
+  }
+
+  return {
+    ...(content === undefined ? {} : { content }),
+    ...(bold === undefined ? {} : { bold }),
+    ...(italic === undefined ? {} : { italic }),
+    ...(underline === undefined ? {} : { underline }),
+    ...(fontFamily === undefined ? {} : { fontFamily: fontFamily as TextFontFamily }),
+  };
+}
+
 function validatedGroups(
   value: unknown,
   options: { legacy?: boolean } = {},
@@ -100,7 +129,7 @@ function validatedGroups(
   for (const [groupId, candidate] of entries) {
     if (!isStableId(groupId) || !isRecord(candidate)) return null;
 
-    const allowedKeys = options.legacy ? ["anchor"] : ["anchor", "scale", "hidden"];
+    const allowedKeys = options.legacy ? ["anchor"] : ["anchor", "scale", "hidden", "text"];
     if (!hasOnlyKeys(candidate, allowedKeys)) return null;
 
     const anchor = validatedAnchor(candidate.anchor);
@@ -116,10 +145,14 @@ function validatedGroups(
       return null;
     }
 
+    const text = validatedTextFormat(candidate.text);
+    if (text === null) return null;
+
     groups[groupId] = {
       anchor,
       scale,
       ...(candidate.hidden === undefined ? {} : { hidden: candidate.hidden }),
+      ...(text === undefined ? {} : { text }),
     };
   }
 

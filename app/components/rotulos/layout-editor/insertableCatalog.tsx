@@ -3,9 +3,11 @@ import type { LucideIcon } from "lucide-react";
 import { ARROWS, PICTOGRAMS } from "../constants";
 import type {
   AddedCanvasElement,
+  AddedTextElement,
   AddedTextStyle,
   InsertableIconKey,
   Lang,
+  TextFontFamily,
 } from "./types";
 
 export type InsertableOptionLabel = Readonly<{
@@ -40,6 +42,53 @@ export const TEXT_STYLE_OPTIONS = [
   key: AddedTextStyle;
   label: InsertableOptionLabel;
 }>;
+
+/** Las dos fuentes que ya carga el sitio (--font-display, --font-sans) más una monoespaciada del sistema. */
+export const TEXT_FONT_FAMILY_OPTIONS = [
+  { key: "display", label: { es: "Rótulo (Bricolage, grueso)", en: "Display (Bricolage, bold)" } },
+  { key: "sans", label: { es: "Texto simple (Manrope)", en: "Plain text (Manrope)" } },
+  { key: "mono", label: { es: "Técnica (monoespaciada)", en: "Technical (monospace)" } },
+] as const satisfies ReadonlyArray<{
+  key: TextFontFamily;
+  label: InsertableOptionLabel;
+}>;
+
+/** Sin una fuente elegida, título y llamado a la acción usan la tipografía grande de rótulo; el resto, el texto simple. */
+export function resolveTextFontFamily(element: AddedTextElement): TextFontFamily {
+  return element.fontFamily ?? (element.style === "title" || element.style === "cta" ? "display" : "sans");
+}
+
+export const FONT_FAMILY_CLASSES: Record<TextFontFamily, string> = {
+  display: "font-display",
+  sans: "font-sans",
+  mono: "font-mono",
+};
+
+export type TextEffects = {
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+};
+
+/** Clases de Tailwind para negrita, cursiva, subrayado y tipografía; compartida por texto agregado y campos propios del rótulo. */
+export function textEffectClassesFrom(effects: TextEffects, fontFamily: TextFontFamily): string {
+  const bold = effects.bold ?? true;
+  const italic = effects.italic === true;
+  const underline = effects.underline === true;
+  return [
+    FONT_FAMILY_CLASSES[fontFamily],
+    bold ? "font-black" : "font-semibold",
+    italic ? "italic" : "",
+    underline ? "underline underline-offset-4" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
+/** Clases de Tailwind para negrita, cursiva, subrayado y tipografía de un texto agregado. */
+function textEffectClasses(element: AddedTextElement): string {
+  return textEffectClassesFrom(element, resolveTextFontFamily(element));
+}
 
 const INSERTABLE_ICONS: Record<InsertableIconKey, LucideIcon> = {
   canon: PICTOGRAMS.canon,
@@ -106,10 +155,13 @@ export function InsertedElementArtwork({
   }
 
   const text = textOverride ?? element.text;
+  const typeClasses = textEffectClasses(element);
 
   if (element.style === "title") {
     return (
-      <span className="block max-w-[28rem] whitespace-pre-wrap break-words font-display text-5xl font-black uppercase leading-[0.82] tracking-[-0.055em] text-white drop-shadow-[0_3px_7px_rgba(0,0,0,0.78)]">
+      <span
+        className={`block max-w-[28rem] whitespace-pre-wrap break-words text-5xl uppercase leading-[0.82] tracking-[-0.055em] text-white drop-shadow-[0_3px_7px_rgba(0,0,0,0.78)] ${typeClasses}`}
+      >
         {text}
       </span>
     );
@@ -117,7 +169,9 @@ export function InsertedElementArtwork({
 
   if (element.style === "subtitle") {
     return (
-      <span className="block max-w-[28rem] whitespace-pre-wrap break-words text-2xl font-black uppercase leading-tight tracking-[0.08em] text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.78)]">
+      <span
+        className={`block max-w-[28rem] whitespace-pre-wrap break-words text-2xl uppercase leading-tight tracking-[0.08em] text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.78)] ${typeClasses}`}
+      >
         {text}
       </span>
     );
@@ -125,14 +179,18 @@ export function InsertedElementArtwork({
 
   if (element.style === "label") {
     return (
-      <span className="inline-flex max-w-[24rem] whitespace-pre-wrap break-words rounded-md bg-[#00C4B0] px-4 py-2 text-base font-black uppercase leading-tight tracking-[0.14em] text-[#17332F] shadow-[0_8px_18px_-10px_rgba(0,0,0,0.75)]">
+      <span
+        className={`inline-flex max-w-[24rem] whitespace-pre-wrap break-words rounded-md bg-[#00C4B0] px-4 py-2 text-base uppercase leading-tight tracking-[0.14em] text-[#17332F] shadow-[0_8px_18px_-10px_rgba(0,0,0,0.75)] ${typeClasses}`}
+      >
         {text}
       </span>
     );
   }
 
   return (
-    <span className="inline-flex max-w-[28rem] whitespace-pre-wrap break-words bg-[#F5C518] px-5 py-3 font-display text-2xl font-black uppercase leading-none tracking-[-0.02em] text-[#2E2A25] shadow-[inset_0_2px_0_rgba(255,255,255,0.4),0_10px_20px_-12px_rgba(0,0,0,0.8)]">
+    <span
+      className={`inline-flex max-w-[28rem] whitespace-pre-wrap break-words bg-[#F5C518] px-5 py-3 text-2xl uppercase leading-none tracking-[-0.02em] text-[#2E2A25] shadow-[inset_0_2px_0_rgba(255,255,255,0.4),0_10px_20px_-12px_rgba(0,0,0,0.8)] ${typeClasses}`}
+    >
       {text}
     </span>
   );

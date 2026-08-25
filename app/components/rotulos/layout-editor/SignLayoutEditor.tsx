@@ -184,6 +184,7 @@ function normalizedGroupLayout(groupLayout: StoredGroupLayout): StoredGroupLayou
     },
     scale: clamp(groupLayout.scale, 0.2, 4),
     ...(groupLayout.hidden ? { hidden: true } : {}),
+    ...(groupLayout.text ? { text: groupLayout.text } : {}),
   };
 }
 
