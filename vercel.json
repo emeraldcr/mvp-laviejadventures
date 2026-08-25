@@ -9,6 +9,7 @@
   "framework": "nextjs",
   "buildCommand": "next build",
   "installCommand": "npm ci",
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- . ':(exclude).agents' ':(exclude)docs' ':(exclude)scripts' ':(exclude)*.md' ':(exclude).codex-transport-market-test.log' ':(exclude)lint-output.txt' ':(exclude)_tmp_check_flyers.mjs'",
   "crons": [
     {
       "path": "/api/scores/cron/sync",

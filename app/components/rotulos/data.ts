@@ -2,16 +2,21 @@ import { TIER_PRICE } from "./pricing";
 import type { Rotulo } from "./types";
 
 /**
- * Plan vial de La Vieja Adventures.
+ * Plan vial y de orientación interna de La Vieja Adventures.
  *
- * Alcance acordado:
+ * Alcance acordado (12 rótulos, ~₡282.500 de ₡300.000 de referencia):
  * - 1 rótulo principal de 3 × 2 m.
  * - 2 alertas cercanas de 2 × 1 m, una por sentido de giro.
  * - 4 señales de aproximación de 1 × 1 m: 2 km y 1 km por cada sentido.
+ * - 1 señal de parqueo de 2 × 1 m, ya dentro de la propiedad.
+ * - 4 señales de orientación interna de 1 × 1 m: cafetería, senderos,
+ *   mirador y baños.
  *
  * Las señales de carretera priorizan destino, distancia y flecha. Los datos de
  * contacto, servicios y fotografía se concentran en la entrada principal,
- * donde el vehículo circula más despacio.
+ * donde el vehículo circula más despacio. Las señales internas reutilizan los
+ * pictogramas ya definidos en constants.ts (parqueo, comida, sendero, mirador,
+ * baños) que antes no se usaban en ningún rótulo del plan.
  */
 export const ROTULOS: Rotulo[] = [
   {
@@ -243,6 +248,167 @@ export const ROTULOS: Rotulo[] = [
         brands: ["lva"],
         arrow: "right",
         pictogram: "canon",
+        photos: [],
+        price: TIER_PRICE.pequeno,
+      },
+    ],
+  },
+  {
+    id: 8,
+    code: "R-08",
+    name: "Parqueo",
+    kind: "indicador",
+    placement: {
+      es: "En el ingreso al área de parqueo, dentro de la propiedad",
+      en: "At the entrance to the parking area, inside the property",
+    },
+    purpose: {
+      es: "Dirigir a los visitantes hacia el parqueo disponible.",
+      en: "Direct visitors to the available parking area.",
+    },
+    panels: [
+      {
+        layoutId: "r08-parqueo",
+        size: "mediano",
+        kicker: "SERVICIOS",
+        title: "La Vieja Adventures",
+        titleEn: "La Vieja River Canyon",
+        cta: {
+          es: "PARQUEO",
+          en: "PARKING",
+        },
+        brands: ["lva"],
+        brandForward: true,
+        arrow: "right",
+        pictogram: "parqueo",
+        photos: [],
+        price: TIER_PRICE.mediano,
+      },
+    ],
+  },
+  {
+    id: 9,
+    code: "R-09",
+    name: "Cafetería y Restaurante",
+    kind: "indicador",
+    placement: {
+      es: "En el camino hacia la cafetería y el restaurante",
+      en: "On the path toward the café and restaurant",
+    },
+    purpose: {
+      es: "Indicar el camino hacia el área de comidas.",
+      en: "Point the way toward the dining area.",
+    },
+    panels: [
+      {
+        layoutId: "r09-comida",
+        size: "pequeno",
+        kicker: "CAFETERÍA",
+        title: "La Vieja Adventures",
+        titleEn: "La Vieja River Canyon",
+        cta: {
+          es: "CAFETERÍA",
+          en: "CAFÉ",
+        },
+        brands: ["lva"],
+        arrow: "left",
+        pictogram: "comida",
+        photos: [],
+        price: TIER_PRICE.pequeno,
+      },
+    ],
+  },
+  {
+    id: 10,
+    code: "R-10",
+    name: "Senderos y Cascadas",
+    kind: "indicador",
+    placement: {
+      es: "En la entrada a los senderos hacia las cascadas",
+      en: "At the trailhead leading to the waterfalls",
+    },
+    purpose: {
+      es: "Guiar a los visitantes hacia los senderos y cascadas.",
+      en: "Guide visitors toward the trails and waterfalls.",
+    },
+    panels: [
+      {
+        layoutId: "r10-senderos",
+        size: "pequeno",
+        kicker: "SENDEROS",
+        title: "La Vieja Adventures",
+        titleEn: "La Vieja River Canyon",
+        cta: {
+          es: "SENDEROS",
+          en: "TRAILS",
+        },
+        brands: ["lva"],
+        arrow: "right",
+        pictogram: "sendero",
+        photos: [],
+        price: TIER_PRICE.pequeno,
+      },
+    ],
+  },
+  {
+    id: 11,
+    code: "R-11",
+    name: "Mirador",
+    kind: "indicador",
+    placement: {
+      es: "En el desvío hacia el mirador del cañón",
+      en: "At the turnoff to the canyon viewpoint",
+    },
+    purpose: {
+      es: "Señalar el acceso al mirador panorámico.",
+      en: "Mark access to the panoramic viewpoint.",
+    },
+    panels: [
+      {
+        layoutId: "r11-mirador",
+        size: "pequeno",
+        kicker: "MIRADOR",
+        title: "La Vieja Adventures",
+        titleEn: "La Vieja River Canyon",
+        cta: {
+          es: "MIRADOR",
+          en: "VIEWPOINT",
+        },
+        brands: ["lva"],
+        arrow: "down-right",
+        pictogram: "mirador",
+        photos: [],
+        price: TIER_PRICE.pequeno,
+      },
+    ],
+  },
+  {
+    id: 12,
+    code: "R-12",
+    name: "Baños",
+    kind: "indicador",
+    placement: {
+      es: "Cerca de los servicios sanitarios",
+      en: "Near the restrooms",
+    },
+    purpose: {
+      es: "Indicar la ubicación de los baños.",
+      en: "Indicate the location of the restrooms.",
+    },
+    panels: [
+      {
+        layoutId: "r12-banos",
+        size: "pequeno",
+        kicker: "BAÑOS",
+        title: "La Vieja Adventures",
+        titleEn: "La Vieja River Canyon",
+        cta: {
+          es: "BAÑOS",
+          en: "RESTROOMS",
+        },
+        brands: ["lva"],
+        arrow: "left",
+        pictogram: "banos",
         photos: [],
         price: TIER_PRICE.pequeno,
       },

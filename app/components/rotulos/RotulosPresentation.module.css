@@ -43,11 +43,23 @@
   .page :global([data-sign-artwork]) {
     break-inside: avoid;
     page-break-inside: avoid;
+    display: grid !important;
+    place-items: center;
+    width: 100%;
+    /* 194mm printable height − caption line below the artwork, so both
+       always land on the same page no matter the panel's aspect ratio. */
+    height: 172mm;
   }
 
   .page :global([data-sign-artboard]) {
-    width: 100%;
-    max-height: 184mm;
+    /* Both dimensions free so the aspect-ratio "contain" algorithm (like
+       object-fit: contain) picks the largest box that fits width AND
+       height — a 2:1 "mediano" panel used to compute a width wider than
+       the page from a fixed 184mm height, which cut it off at the edges. */
+    width: auto !important;
+    height: auto !important;
+    max-width: 100%;
+    max-height: 100%;
     margin-inline: auto;
   }
 

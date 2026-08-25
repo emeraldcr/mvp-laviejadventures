@@ -45,12 +45,12 @@ export default function RotulosDisclosureList({
             id="catalogo-rotulos-title"
             className="mt-2 text-3xl font-black tracking-[-0.04em] text-white sm:text-4xl xl:text-5xl"
           >
-            {t("Siete rótulos, tres tamaños, una ruta clara", "Seven signs, three sizes, one clear route")}
+            {t("Doce rótulos, tres tamaños, de la carretera al mirador", "Twelve signs, three sizes, from the road to the viewpoint")}
           </h1>
           <p className="mt-3 text-sm font-bold leading-relaxed text-zinc-300 sm:text-base">
             {t(
-              "1 principal · 3 × 2 m · 2 alertas cercanas · 2 × 1 m · 4 señales de aproximación · 1 × 1 m",
-              "1 main sign · 3 × 2 m · 2 near-entry alerts · 2 × 1 m · 4 approach signs · 1 × 1 m",
+              "1 principal · 3 × 2 m · 2 alertas cercanas · 2 × 1 m · 4 señales de aproximación · 1 × 1 m · 1 parqueo · 2 × 1 m · 4 señales internas · 1 × 1 m",
+              "1 main sign · 3 × 2 m · 2 near-entry alerts · 2 × 1 m · 4 approach signs · 1 × 1 m · 1 parking sign · 2 × 1 m · 4 internal wayfinding signs · 1 × 1 m",
             )}
           </p>
         </div>

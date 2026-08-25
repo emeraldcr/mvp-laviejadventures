@@ -23,7 +23,7 @@ export default function EntranceSignPanel({ panel, eager }: { panel: Panel; eage
 
   return (
     <div data-sign-artwork className="relative flex flex-1 flex-col items-center pb-8 sm:pb-11 xl:pb-14 print:pb-0">
-      <div className="w-full drop-shadow-[0_34px_40px_rgba(0,0,0,0.55)] print:drop-shadow-none">
+      <div className="w-full drop-shadow-[0_34px_40px_rgba(0,0,0,0.55)] print:w-auto print:max-w-full print:drop-shadow-none">
         <EditableSignCanvas
           panelId={panel.layoutId}
           revision={1}

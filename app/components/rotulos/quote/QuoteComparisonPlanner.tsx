@@ -218,7 +218,7 @@ export default function QuoteComparisonPlanner() {
             <p className="mt-2 max-w-3xl text-xs font-bold text-[#008d80]">
               {scopeFromSelection
                 ? "Cantidades precargadas desde la selección hecha en /rotulos. Ajústelas aquí si el alcance a cotizar es distinto; no afecta esa página."
-                : "Mostrando el alcance completo del plan (7 fichas, 7 láminas). Ajústelas aquí según lo que realmente vaya a cotizar."}
+                : "Mostrando el alcance completo del plan (12 fichas, 12 láminas). Ajústelas aquí según lo que realmente vaya a cotizar."}
             </p>
           </div>
         </div>

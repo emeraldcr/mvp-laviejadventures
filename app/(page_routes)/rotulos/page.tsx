@@ -5,14 +5,17 @@ import Link from "next/link";
 import { ImageIcon } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
 import QuoteWorkflowCard from "@/app/components/rotulos/QuoteWorkflowCard";
+import RotulosBudgetStatus from "@/app/components/rotulos/RotulosBudgetStatus";
 import RotulosDesignGuideDisclosure from "@/app/components/rotulos/RotulosDesignGuideDisclosure";
 import RotulosDisclosureList from "@/app/components/rotulos/RotulosDisclosureList";
 import RotulosHeader from "@/app/components/rotulos/RotulosHeader";
+import RotulosSummaryTable from "@/app/components/rotulos/RotulosSummaryTable";
 import presentationStyles from "@/app/components/rotulos/RotulosPresentation.module.css";
 import { BUSINESS } from "@/app/components/rotulos/constants";
 import { ROTULOS } from "@/app/components/rotulos/data";
-import { createTranslator, formatPrice } from "@/app/components/rotulos/helpers";
+import { createTranslator, formatPrice, selectionBreakdown } from "@/app/components/rotulos/helpers";
 import { planMeasurementStats } from "@/app/components/rotulos/measurements";
+import { BUDGET_CRC } from "@/app/components/rotulos/pricing";
 import type { Currency } from "@/app/components/rotulos/types";
 
 /**
@@ -48,6 +51,7 @@ export default function RotulosPage() {
 
   const price = useCallback((crc: number) => formatPrice(crc, currency), [currency]);
   const t = useMemo(() => createTranslator(lang), [lang]);
+  const breakdown = useMemo(() => selectionBreakdown(ROTULOS, selected), [selected]);
 
   return (
     <main className={`${presentationStyles.page} min-h-screen bg-zinc-950 text-white print:bg-white print:text-black`}>
@@ -60,6 +64,24 @@ export default function RotulosPage() {
       />
 
       <section className="mx-auto w-full max-w-[1920px] px-3 pb-20 sm:px-6 lg:px-10 xl:px-14 2xl:px-20 print:max-w-none print:p-0">
+        <RotulosSummaryTable
+          rotulos={ROTULOS}
+          selected={selected}
+          lang={lang}
+          price={price}
+          t={t}
+        />
+
+        <div className="mt-4 print:hidden">
+          <RotulosBudgetStatus
+            amount={breakdown.total}
+            baseAmount={breakdown.base}
+            budgetCrc={BUDGET_CRC}
+            price={price}
+            t={t}
+          />
+        </div>
+
         <RotulosDisclosureList
           rotulos={ROTULOS}
           selected={selected}

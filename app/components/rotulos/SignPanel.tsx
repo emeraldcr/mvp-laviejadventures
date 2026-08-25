@@ -65,7 +65,7 @@ export default function SignPanel({ panel, kind, large, eager }: SignPanelProps)
   return (
     <div data-sign-artwork className="relative flex min-w-0 flex-1 flex-col items-center pb-7 sm:pb-9 xl:pb-12 print:pb-0">
       <div
-        className="w-full drop-shadow-[0_26px_30px_rgba(0,0,0,0.5)] sm:max-w-[var(--panel-max-w)] print:max-w-none print:drop-shadow-none"
+        className="w-full drop-shadow-[0_26px_30px_rgba(0,0,0,0.5)] sm:max-w-[var(--panel-max-w)] print:w-auto print:max-w-full print:drop-shadow-none"
         style={{ "--panel-max-w": `${Math.round(widthScale * 100)}%` } as CSSProperties}
       >
         <EditableSignCanvas
