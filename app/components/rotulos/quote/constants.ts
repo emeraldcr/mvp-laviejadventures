@@ -4,7 +4,8 @@ import type {
   ScopeRequirements,
   SignSizeDefinition,
 } from "./types";
-import { PANEL_SIZE_SPECS } from "../measurements";
+import { ROTULOS } from "../data";
+import { PANEL_SIZE_SPECS, planMeasurementStats } from "../measurements";
 
 export const DEFAULT_BUDGET_CRC = 300000;
 export const REQUIRED_QUOTES = 3;
@@ -33,11 +34,17 @@ export const SIGN_SIZES: SignSizeDefinition[] = [
   },
 ];
 
-/** Cinco láminas completas y las dos láminas físicas que hoy agrupa R-06. */
+/**
+ * Alcance por defecto: se calcula desde el catálogo real (`ROTULOS` en
+ * data.ts) en vez de repetir las cantidades a mano, para que este valor no
+ * quede desincronizado si el plan de láminas cambia.
+ */
+const catalogPanelsBySize = planMeasurementStats(ROTULOS).bySize;
+
 export const DEFAULT_SCOPE: ScopeQuantities = {
-  large: 5,
-  medium: 0,
-  small: 2,
+  large: catalogPanelsBySize.grande,
+  medium: catalogPanelsBySize.mediano,
+  small: catalogPanelsBySize.pequeno,
 };
 
 export const DEFAULT_SCOPE_REQUIREMENTS: ScopeRequirements = {

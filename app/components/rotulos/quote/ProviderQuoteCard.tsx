@@ -436,8 +436,13 @@ export default function ProviderQuoteCard({
               const max = maxQuantityForSize(quote, size.key, budgetCrc);
               return (
                 <div key={size.key} className="rounded-xl border border-[#2E2A25]/10 bg-white p-3">
-                  <p className="text-xs font-bold text-[#706b65]">Máximo {size.label.toLowerCase()}</p>
+                  <p className="text-xs font-bold text-[#706b65]">
+                    Todo el presupuesto en {size.label.toLowerCase()}
+                  </p>
                   <p className="mt-1 font-black">{max === null ? "No calculable" : `${max} u.`}</p>
+                  <p className="mt-1 text-[11px] text-[#706b65]">
+                    Hipotético: no resta el alcance ya definido arriba.
+                  </p>
                 </div>
               );
             })}

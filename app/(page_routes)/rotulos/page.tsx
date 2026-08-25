@@ -16,6 +16,7 @@ import {
   formatPrice,
   selectionTotals,
 } from "@/app/components/rotulos/helpers";
+import { planMeasurementStats } from "@/app/components/rotulos/measurements";
 import type { Currency } from "@/app/components/rotulos/types";
 
 /**
@@ -38,6 +39,18 @@ export default function RotulosPage() {
   );
 
   const totals = useMemo(() => selectionTotals(ROTULOS, selected), [selected]);
+
+  /** Lleva la selección actual al comparador, para que su alcance no dependa de un default aparte. */
+  const cotizacionHref = useMemo(() => {
+    const chosen = ROTULOS.filter((rotulo) => selected.includes(rotulo.id));
+    const bySize = planMeasurementStats(chosen).bySize;
+    const params = new URLSearchParams({
+      large: String(bySize.grande),
+      medium: String(bySize.mediano),
+      small: String(bySize.pequeno),
+    });
+    return `/rotulos/cotizacion?${params.toString()}`;
+  }, [selected]);
 
   const price = useCallback((crc: number) => formatPrice(crc, currency), [currency]);
   const t = useMemo(() => createTranslator(lang), [lang]);
@@ -89,7 +102,7 @@ export default function RotulosPage() {
               <span className="mt-1 block">{t("Selección y total", "Selection and total")}</span>
             </a>
             <Link
-              href="/rotulos/cotizacion"
+              href={cotizacionHref}
               className="rounded-2xl border border-[#00C4B0]/35 bg-[#00C4B0]/10 p-4 font-bold text-[#c7faf5] transition hover:bg-[#00C4B0]/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00C4B0]"
             >
               <span className="block text-[10px] font-black uppercase tracking-[0.16em] text-[#65e2d5]">
@@ -152,7 +165,7 @@ export default function RotulosPage() {
         </details>
 
         <div className="mt-8">
-          <QuoteWorkflowCard lang={lang} t={t} />
+          <QuoteWorkflowCard lang={lang} t={t} href={cotizacionHref} />
         </div>
 
         <RotulosDesignGuideDisclosure lang={lang} />

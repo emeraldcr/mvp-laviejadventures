@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { Suspense } from "react";
 import { ArrowLeft } from "lucide-react";
 import QuoteComparisonPlanner from "@/app/components/rotulos/quote/QuoteComparisonPlanner";
 
@@ -41,7 +42,9 @@ export default function RotulosCotizacionPage() {
         </div>
       </header>
 
-      <QuoteComparisonPlanner />
+      <Suspense>
+        <QuoteComparisonPlanner />
+      </Suspense>
     </main>
   );
 }

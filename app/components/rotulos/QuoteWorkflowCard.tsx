@@ -7,10 +7,15 @@ import type { Lang } from "./types";
 type QuoteWorkflowCardProps = {
   lang: Lang;
   t: (es: string, en: string) => string;
+  href?: string;
 };
 
 /** Acceso corto al expediente de compra, separado de la galería de diseños. */
-export default function QuoteWorkflowCard({ lang, t }: QuoteWorkflowCardProps) {
+export default function QuoteWorkflowCard({
+  lang,
+  t,
+  href = "/rotulos/cotizacion",
+}: QuoteWorkflowCardProps) {
   return (
     <section className="mb-8 overflow-hidden rounded-3xl border border-[#00C4B0]/35 bg-[#00C4B0]/10 shadow-xl shadow-black/20">
       <div className="grid gap-6 p-5 sm:p-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
@@ -60,7 +65,7 @@ export default function QuoteWorkflowCard({ lang, t }: QuoteWorkflowCardProps) {
         </div>
 
         <Link
-          href="/rotulos/cotizacion"
+          href={href}
           className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#00C4B0] px-6 py-3 text-sm font-black text-[#2E2A25] transition hover:bg-[#35d7c6] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#00C4B0]"
         >
           {t("Abrir comparador", "Open comparator")}

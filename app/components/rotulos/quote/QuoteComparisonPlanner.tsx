@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   CheckCircle2,
   CircleDollarSign,
@@ -38,9 +39,29 @@ function numericValue(value: string) {
   return Number.isFinite(parsed) ? Math.max(0, Math.round(parsed)) : 0;
 }
 
+/** Alcance recibido por URL desde la selección hecha en /rotulos, si viene completo y válido. */
+function scopeFromSearchParams(params: URLSearchParams): ScopeQuantities | null {
+  const keys: SignSizeKey[] = ["large", "medium", "small"];
+  const raw = keys.map((key) => params.get(key));
+  if (raw.some((value) => value === null)) return null;
+
+  const parsed = raw.map(Number);
+  if (parsed.some((value) => !Number.isFinite(value) || value < 0)) return null;
+
+  return { large: parsed[0], medium: parsed[1], small: parsed[2] };
+}
+
 export default function QuoteComparisonPlanner() {
+  const searchParams = useSearchParams();
+  const scopeFromSelection = useMemo(
+    () => scopeFromSearchParams(searchParams),
+    [searchParams],
+  );
+
   const [budgetCrc, setBudgetCrc] = useState(DEFAULT_BUDGET_CRC);
-  const [scope, setScope] = useState<ScopeQuantities>({ ...DEFAULT_SCOPE });
+  const [scope, setScope] = useState<ScopeQuantities>({
+    ...(scopeFromSelection ?? DEFAULT_SCOPE),
+  });
   const [requirements, setRequirements] = useState<ScopeRequirements>({
     ...DEFAULT_SCOPE_REQUIREMENTS,
   });
@@ -193,6 +214,11 @@ export default function QuoteComparisonPlanner() {
               Todas las empresas deben cotizar exactamente estas cantidades y la misma
               especificación. Así se comparan manzanas con manzanas, no una lona con un rótulo
               instalado, mae.
+            </p>
+            <p className="mt-2 max-w-3xl text-xs font-bold text-[#008d80]">
+              {scopeFromSelection
+                ? "Cantidades precargadas desde la selección hecha en /rotulos. Ajústelas aquí si el alcance a cotizar es distinto; no afecta esa página."
+                : "Mostrando el alcance completo del plan (6 fichas, 7 láminas). Ajústelas aquí según lo que realmente vaya a cotizar."}
             </p>
           </div>
         </div>
