@@ -11,6 +11,7 @@ import {
   X,
 } from "lucide-react";
 import EntranceSignPanel from "./EntranceSignPanel";
+import SignLayoutEditor from "./layout-editor/SignLayoutEditor";
 import SignPanel from "./SignPanel";
 import { KIND_META } from "./constants";
 import { IVA_RATE, signSubtotal, signSubtotalBreakdown } from "./helpers";
@@ -182,27 +183,29 @@ export default function RotuloCard({
         className={`${expanded ? "block" : "hidden"} border-t border-white/10 print:block print:border-0`}
       >
         <div className="grid gap-8 p-3 sm:p-6 lg:p-8 xl:gap-12 xl:p-12 2xl:p-16 print:block print:p-0">
-          <div
-            className={`mx-auto w-full max-w-[1680px] min-w-0 rounded-[2rem] border border-white/[0.06] bg-zinc-950/55 p-2 sm:p-4 xl:rounded-[2.5rem] xl:p-8 2xl:p-12 print:max-w-none print:border-0 print:bg-transparent print:p-0 ${
-              rotulo.kind === "par"
-                ? "grid gap-8 2xl:grid-cols-2 2xl:gap-12 print:grid print:grid-cols-2"
-                : "flex flex-col"
-            }`}
-          >
-            {rotulo.panels.map((panel, index) =>
-              rotulo.kind === "entrada" ? (
-                <EntranceSignPanel key={`${rotulo.id}-${index}`} panel={panel} eager={eager} />
-              ) : (
-                <SignPanel
-                  key={`${rotulo.id}-${index}`}
-                  panel={panel}
-                  kind={rotulo.kind}
-                  large={rotulo.kind !== "par"}
-                  eager={eager}
-                />
-              ),
-            )}
-          </div>
+          <SignLayoutEditor signId={rotulo.code} signLabel={rotulo.name} lang={lang} className="min-w-0">
+            <div
+              className={`mx-auto w-full max-w-[1680px] min-w-0 rounded-[2rem] border border-white/[0.06] bg-zinc-950/55 p-2 sm:p-4 xl:rounded-[2.5rem] xl:p-8 2xl:p-12 print:max-w-none print:border-0 print:bg-transparent print:p-0 ${
+                rotulo.kind === "par"
+                  ? "grid gap-8 2xl:grid-cols-2 2xl:gap-12 print:grid print:grid-cols-2"
+                  : "flex flex-col"
+              }`}
+            >
+              {rotulo.panels.map((panel, index) =>
+                rotulo.kind === "entrada" ? (
+                  <EntranceSignPanel key={`${rotulo.id}-${index}`} panel={panel} eager={eager} />
+                ) : (
+                  <SignPanel
+                    key={`${rotulo.id}-${index}`}
+                    panel={panel}
+                    kind={rotulo.kind}
+                    large={panel.size === "grande"}
+                    eager={eager}
+                  />
+                ),
+              )}
+            </div>
+          </SignLayoutEditor>
 
           <p className="hidden pt-3 text-center text-[9pt] font-bold leading-snug text-[#2E2A25] print:block">
             {rotulo.code} · {rotulo.name} · {t("Propuesta visual; confirme medidas y originales antes de fabricar.", "Visual proposal; confirm dimensions and source files before production.")}

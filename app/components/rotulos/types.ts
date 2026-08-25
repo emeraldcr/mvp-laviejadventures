@@ -27,7 +27,9 @@ export type PictogramKey =
   | "comida"
   | "parqueo"
   | "mirador"
-  | "sendero";
+  | "sendero"
+  | "wifi"
+  | "banos";
 
 export type RotuloKind = "entrada" | "anticipo" | "destino" | "indicador" | "par";
 
@@ -39,6 +41,8 @@ export type Social = {
 };
 
 export type Panel = {
+  /** Identidad estable del lienzo para conservar posiciones aunque cambie el orden. */
+  layoutId: string;
   /** Medida de trabajo usada para solicitar cotizaciones. */
   size: PanelSizeKey;
   /** Línea corta arriba del título. */
@@ -53,6 +57,8 @@ export type Panel = {
   /** Distancia o referencia impresa en el rótulo. */
   distance?: string;
   brands: Brand[];
+  /** Sustituye el pictograma generico por el logo oficial como elemento principal. */
+  brandForward?: boolean;
   arrow?: ArrowKey;
   pictogram: PictogramKey;
   /** Fotografías del destino: una principal y, cuando existe, una secundaria. */

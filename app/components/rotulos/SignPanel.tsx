@@ -1,7 +1,11 @@
+import type { CSSProperties } from "react";
 import Image from "next/image";
 import { ARROWS, PHOTO_FOCUS, PICTOGRAMS } from "./constants";
+import EditableSignCanvas from "./layout-editor/EditableSignCanvas";
+import MovableGroup from "./layout-editor/MovableGroup";
 import { diagonalBand, diagonalEdge } from "./helpers";
-import { GroundShadow, LeafShape, LeafSprig, SignPosts, WaveSeam } from "./SignChrome";
+import { PANEL_SIZE_SPECS } from "./measurements";
+import { AmenityRow, GroundShadow, LeafShape, LeafSprig, SignPosts, WaveSeam } from "./SignChrome";
 import type { Panel, RotuloKind } from "./types";
 
 type SignPanelProps = {
@@ -38,23 +42,45 @@ export default function SignPanel({ panel, kind, large, eager }: SignPanelProps)
   const theme = SIGN_THEME[kind];
   const logo = panel.brands[0] === "lva-turquoise" ? "/logo1.jpg" : "/logo2.jpg";
   const hasPhotos = panel.photos.length > 0;
+  const brandForward = panel.brandForward === true;
+  /** Sin foto, el ícono/título/flecha son todo el diseño: deben llenar la lámina, no flotar en el centro. */
+  const boosted = large || !hasPhotos;
   const aspectClass =
-    panel.size === "grande"
+    brandForward
+      ? hasPhotos
+        ? "aspect-[4/5] min-h-[820px] lg:aspect-[3/2] lg:min-h-0 print:aspect-[3/2] print:min-h-0"
+        : "aspect-[4/5] min-h-[480px] lg:aspect-[3/2] lg:min-h-0 print:aspect-[3/2] print:min-h-0"
+      : panel.size === "grande"
       ? "aspect-[4/5] min-h-[480px] min-[520px]:aspect-[4/3] lg:aspect-[16/10] 2xl:aspect-[2/1] 2xl:min-h-0 print:aspect-[2/1] print:min-h-0"
       : panel.size === "mediano"
         ? "aspect-[4/5] min-h-[480px] sm:aspect-[4/3] 2xl:aspect-[3/2] 2xl:min-h-0 print:aspect-[3/2] print:min-h-0"
         : "aspect-[4/5] min-h-[480px] sm:aspect-[4/3] xl:aspect-square xl:min-h-0 print:aspect-square print:min-h-0";
+  /**
+   * Una lámina "pequeño" no debe ocupar el mismo ancho en pantalla que una
+   * "grande": el ancho también es parte de la medida de trabajo. Los pares
+   * ya se acomodan en su propia columna de grid, así que no se reescala.
+   */
+  const widthScale = PANEL_SIZE_SPECS[panel.size].widthM / PANEL_SIZE_SPECS.grande.widthM;
+  const scaleWidth = kind !== "par";
 
   return (
     <div data-sign-artwork className="relative flex min-w-0 flex-1 flex-col items-center pb-7 sm:pb-9 xl:pb-12 print:pb-0">
-      <div className="w-full drop-shadow-[0_26px_30px_rgba(0,0,0,0.5)] print:drop-shadow-none">
-        <div
+      <div
+        className={`w-full drop-shadow-[0_26px_30px_rgba(0,0,0,0.5)] print:max-w-none print:drop-shadow-none ${
+          scaleWidth ? "sm:max-w-[var(--panel-max-w)]" : ""
+        }`}
+        style={scaleWidth ? ({ "--panel-max-w": `${Math.round(widthScale * 100)}%` } as CSSProperties) : undefined}
+      >
+        <EditableSignCanvas
+          panelId={panel.layoutId}
+          revision={1}
+          label={{ es: panel.title, en: panel.titleEn }}
           data-sign-artboard
           data-panel-size={panel.size}
-          className={`relative flex w-full flex-col overflow-hidden rounded-[26px] border-[7px] border-white bg-[#2E2A25] shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)] xl:rounded-[34px] xl:border-[10px] print:rounded-none ${aspectClass}`}
+          className={`relative isolate flex w-full flex-col overflow-hidden rounded-[26px] border-[7px] border-white bg-[#2E2A25] shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)] [container-type:inline-size] xl:rounded-[34px] xl:border-[10px] print:rounded-none ${aspectClass}`}
         >
           {hasPhotos ? (
-            <div className="relative min-h-0 flex-[1.1] overflow-hidden bg-zinc-800">
+            <div className="relative min-h-0 flex-[1.1] bg-zinc-800">
               {panel.photos.length > 2 ? (
                 <div className="relative h-full w-full bg-white">
                   {panel.photos.map((photo, index) => (
@@ -81,8 +107,12 @@ export default function SignPanel({ panel, kind, large, eager }: SignPanelProps)
                       style={{ clipPath: diagonalEdge(index, panel.photos.length) }}
                     />
                   ))}
-                  <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                    <div className="rounded-2xl border-2 border-white bg-white/95 p-3 shadow-[0_20px_45px_-18px_rgba(0,0,0,0.55)] sm:p-4">
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <MovableGroup
+                      groupId="photo-logo"
+                      label={{ es: "Logo sobre las fotos", en: "Logo over photos" }}
+                      className="relative z-10 rounded-2xl border-2 border-white bg-white/95 p-3 shadow-[0_20px_45px_-18px_rgba(0,0,0,0.55)] sm:p-4"
+                    >
                       <Image
                         src={logo}
                         alt="La Vieja Adventures"
@@ -90,7 +120,7 @@ export default function SignPanel({ panel, kind, large, eager }: SignPanelProps)
                         height={large ? 120 : 96}
                         className="h-auto w-20 object-contain sm:w-24 lg:w-28 xl:w-32"
                       />
-                    </div>
+                    </MovableGroup>
                   </div>
                 </div>
               ) : (
@@ -124,12 +154,14 @@ export default function SignPanel({ panel, kind, large, eager }: SignPanelProps)
               )}
 
               {panel.kicker ? (
-                <div
-                  className="absolute left-3 top-3 max-w-[70%] border-l-4 bg-[#2E2A25]/92 px-3 py-2 text-[10px] font-black uppercase tracking-[0.17em] text-white shadow-xl backdrop-blur-sm sm:text-xs xl:left-6 xl:top-6 xl:px-5 xl:py-3 xl:text-sm"
+                <MovableGroup
+                  groupId="kicker"
+                  label={{ es: "Encabezado", en: "Eyebrow" }}
+                  className="absolute left-3 top-3 z-10 max-w-[70%] border-l-4 bg-[#2E2A25]/92 px-3 py-2 text-[10px] font-black uppercase tracking-[0.17em] text-white shadow-xl backdrop-blur-sm sm:text-xs xl:left-6 xl:top-6 xl:px-5 xl:py-3 xl:text-sm"
                   style={{ borderColor: theme.accent }}
                 >
                   {panel.kicker}
-                </div>
+                </MovableGroup>
               ) : null}
 
               <WaveSeam
@@ -155,109 +187,205 @@ export default function SignPanel({ panel, kind, large, eager }: SignPanelProps)
             </div>
 
             {!hasPhotos && panel.kicker ? (
-              <p className="relative mb-4 text-xs font-black uppercase tracking-[0.22em] text-white/75 xl:mb-5 xl:text-base 2xl:mb-7 2xl:text-lg">
-                {panel.kicker}
-              </p>
+              <MovableGroup
+                groupId="kicker"
+                label={{ es: "Encabezado", en: "Eyebrow" }}
+                className="relative z-10 mb-4 w-fit max-w-full self-start xl:mb-5 2xl:mb-7"
+              >
+                <p className="text-xs font-black uppercase tracking-[0.22em] text-white/75 xl:text-base 2xl:text-lg">
+                  {panel.kicker}
+                </p>
+              </MovableGroup>
             ) : null}
 
-            <div className="relative flex min-h-0 flex-1 items-center gap-3 sm:gap-4 xl:gap-6 2xl:gap-8">
-              <div
-                className={`relative flex shrink-0 items-center justify-center border-2 border-white/75 ${
-                  large
-                    ? "h-16 w-16 sm:h-20 sm:w-20 xl:h-24 xl:w-24 2xl:h-28 2xl:w-28"
-                    : "h-14 w-14 sm:h-16 sm:w-16 xl:h-20 xl:w-20 2xl:h-24 2xl:w-24"
-                }`}
-              >
-                <Picto
-                  className={
-                    large
-                      ? "h-11 w-11 sm:h-14 sm:w-14 xl:h-16 xl:w-16 2xl:h-20 2xl:w-20"
-                      : "h-10 w-10 sm:h-11 sm:w-11 xl:h-14 xl:w-14 2xl:h-16 2xl:w-16"
-                  }
-                  strokeWidth={2.25}
-                  aria-hidden
-                />
-              </div>
+            {brandForward ? (
+              <div className="relative grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_auto] grid-rows-[auto_1fr] items-center gap-x-5 gap-y-5 lg:grid-cols-[0.8fr_1.55fr_0.72fr] lg:grid-rows-1 lg:gap-x-6 xl:grid-cols-[0.78fr_1.6fr_0.72fr] xl:gap-x-10 2xl:gap-x-14 print:grid-cols-[0.8fr_1.55fr_0.72fr] print:grid-rows-1 print:gap-x-6">
+                <MovableGroup
+                  groupId="primary-logo"
+                  label={{ es: "Logo principal", en: "Main logo" }}
+                  className="relative z-10 col-start-1 row-start-1 flex w-28 max-w-full items-center justify-center justify-self-start border-2 border-white/35 bg-[#2E2A25] p-2 shadow-[0_18px_38px_-18px_rgba(0,0,0,0.85)] lg:w-full lg:max-w-[190px] lg:justify-self-center xl:max-w-[240px] xl:border-4 xl:p-3 2xl:max-w-[280px] print:w-full print:max-w-[190px] print:justify-self-center"
+                >
+                  <Image
+                    src={logo}
+                    alt="Logo oficial de La Vieja Adventures"
+                    width={280}
+                    height={280}
+                    className="h-auto w-full object-contain"
+                  />
+                </MovableGroup>
 
-              <div className="min-w-0 flex-1">
-                <p className="text-[9px] font-black uppercase tracking-[0.18em] text-white/70 sm:text-[10px] xl:text-xs 2xl:text-sm">
-                  {theme.eyebrow}
-                </p>
-                <p
-                  className={`mt-1 font-black uppercase leading-[0.9] tracking-[-0.035em] text-white ${
-                    large
-                      ? hasPhotos
-                        ? "text-[clamp(1.8rem,4.1vw,4.75rem)]"
-                        : "text-[clamp(2.3rem,5.4vw,6rem)]"
-                      : "text-[clamp(1.45rem,3vw,3.1rem)]"
-                  }`}
+                <MovableGroup
+                  groupId="copy"
+                  label={{ es: "Nombre y detalles", en: "Name and details" }}
+                  className="relative z-10 col-span-2 row-start-2 min-w-0 self-center [container-type:inline-size] lg:col-span-1 lg:col-start-2 lg:row-start-1 print:col-span-1 print:col-start-2 print:row-start-1"
                 >
-                  {panel.title}
-                </p>
-                <p
-                  className={`mt-1.5 font-bold uppercase leading-tight tracking-[0.06em] text-white/75 ${
-                    large
-                      ? "text-[clamp(0.7rem,1.2vw,1.2rem)]"
-                      : "text-[10px] sm:text-xs xl:text-sm 2xl:text-base"
-                  }`}
-                >
-                  {panel.titleEn}
-                </p>
-                {panel.subtitle ? (
-                  <p className="mt-2 border-t border-white/25 pt-2 text-[10px] font-bold uppercase leading-tight tracking-[0.08em] text-white/90 sm:text-xs xl:mt-3 xl:pt-3 xl:text-base 2xl:mt-4 2xl:pt-4 2xl:text-lg">
-                    {panel.subtitle}
+                  <p className="text-xs font-black uppercase tracking-[0.2em] text-white/75 sm:text-sm xl:text-base 2xl:text-lg">
+                    {theme.eyebrow}
                   </p>
-                ) : null}
-              </div>
+                  <p className="mt-1 break-words text-[clamp(2.2rem,5.2cqw,6.5rem)] font-black uppercase leading-[0.84] tracking-[-0.045em] text-white">
+                    {panel.title}
+                  </p>
+                  <p className="mt-2 text-[clamp(0.72rem,1.35cqw,1.45rem)] font-bold uppercase leading-tight tracking-[0.08em] text-white/75">
+                    {panel.titleEn}
+                  </p>
+                  {panel.subtitle ? (
+                    <p className="mt-3 border-t-2 border-white/30 pt-3 text-[clamp(0.74rem,1.3cqw,1.4rem)] font-black uppercase leading-tight tracking-[0.07em] text-white xl:mt-5 xl:pt-5">
+                      {panel.subtitle}
+                    </p>
+                  ) : null}
+                  <AmenityRow className="mt-3 xl:mt-4" />
+                </MovableGroup>
 
-              <div className="relative flex shrink-0 flex-col items-center justify-center self-stretch border-l border-white/25 pl-3 sm:pl-4 xl:pl-6 2xl:pl-8">
-                <LeafSprig
-                  className={`pointer-events-none absolute text-white/50 ${
-                    large
-                      ? "-top-3 right-1 h-9 w-12 sm:h-11 sm:w-14 xl:h-14 xl:w-16 2xl:h-16 2xl:w-20"
-                      : "-top-2 right-0 h-8 w-10 xl:h-12 xl:w-14 2xl:h-14 2xl:w-16"
-                  }`}
-                />
-                <Arrow
-                  className={
-                    large
-                      ? "h-16 w-16 sm:h-24 sm:w-24 xl:h-28 xl:w-28 2xl:h-32 2xl:w-32"
-                      : "h-14 w-14 sm:h-16 sm:w-16 xl:h-20 xl:w-20 2xl:h-24 2xl:w-24"
-                  }
-                  strokeWidth={3.4}
-                  aria-hidden
-                />
-                {panel.distance ? (
+                <MovableGroup
+                  groupId="direction"
+                  label={{ es: "Flecha y entrada", en: "Arrow and entrance" }}
+                  className="relative z-10 col-start-2 row-start-1 flex shrink-0 flex-col items-center justify-center self-stretch lg:col-start-3 lg:border-l-2 lg:border-white/30 lg:pl-5 xl:pl-8 2xl:pl-10 print:col-start-3 print:border-l-2 print:border-white/30 print:pl-5"
+                >
+                  <LeafSprig className="pointer-events-none absolute -top-2 right-0 h-10 w-14 text-white/45 sm:h-12 sm:w-16 xl:h-16 xl:w-20" />
+                  <Arrow
+                    className="h-24 w-24 sm:h-28 sm:w-28 xl:h-40 xl:w-40 2xl:h-48 2xl:w-48"
+                    strokeWidth={3.8}
+                    aria-hidden
+                  />
                   <span
-                    className={`mt-1 font-black leading-none ${
-                      large
-                        ? "text-2xl sm:text-4xl xl:text-4xl 2xl:text-5xl"
-                        : "text-xl sm:text-2xl xl:text-2xl 2xl:text-3xl"
-                    }`}
+                    className="mt-1 text-lg font-black uppercase leading-none tracking-[0.08em] sm:text-xl xl:mt-2 xl:text-3xl 2xl:text-4xl"
                     style={{ color: theme.accent }}
                   >
-                    {panel.distance}
+                    {panel.cta.es}
                   </span>
-                ) : null}
+                </MovableGroup>
               </div>
-            </div>
+            ) : (
+              <div className="relative flex min-h-0 flex-1 items-center gap-3 sm:gap-4 xl:gap-6 2xl:gap-8">
+                <MovableGroup
+                  groupId="pictogram"
+                  label={{ es: "Pictograma", en: "Pictogram" }}
+                  className={`relative z-10 flex shrink-0 items-center justify-center border-2 border-white/75 ${
+                    boosted
+                      ? "h-16 w-16 sm:h-20 sm:w-20 xl:h-24 xl:w-24 2xl:h-28 2xl:w-28"
+                      : "h-14 w-14 sm:h-16 sm:w-16 xl:h-20 xl:w-20 2xl:h-24 2xl:w-24"
+                  }`}
+                >
+                  <Picto
+                    className={
+                      boosted
+                        ? "h-11 w-11 sm:h-14 sm:w-14 xl:h-16 xl:w-16 2xl:h-20 2xl:w-20"
+                        : "h-10 w-10 sm:h-11 sm:w-11 xl:h-14 xl:w-14 2xl:h-16 2xl:w-16"
+                    }
+                    strokeWidth={2.25}
+                    aria-hidden
+                  />
+                </MovableGroup>
 
-            <div className="relative mt-2 flex items-center justify-between gap-3 border-t border-white/20 pt-2 xl:mt-3 xl:pt-3 2xl:mt-5 2xl:pt-4">
-              <p className="text-[9px] font-black uppercase tracking-[0.14em] text-white/75 sm:text-[10px] xl:text-xs 2xl:text-sm">
-                laviejaadventures.com
-              </p>
-              <div className="shrink-0 bg-white p-1">
-                <Image
-                  src={logo}
-                  alt="La Vieja Adventures"
-                  width={large ? 42 : 34}
-                  height={large ? 42 : 34}
-                  className="h-auto w-8 object-contain sm:w-10 xl:w-12 2xl:w-14"
-                />
+                <MovableGroup
+                  groupId="copy"
+                  label={{ es: "Nombre y detalles", en: "Name and details" }}
+                  className="relative z-10 min-w-0 flex-1"
+                >
+                  <p className="text-[9px] font-black uppercase tracking-[0.18em] text-white/70 sm:text-[10px] xl:text-xs 2xl:text-sm">
+                    {theme.eyebrow}
+                  </p>
+                  <p
+                    className={`mt-1 font-black uppercase leading-[0.9] tracking-[-0.035em] text-white ${
+                      hasPhotos
+                        ? large
+                          ? "text-[clamp(1.8rem,4.1cqw,4.75rem)]"
+                          : "text-[clamp(1.45rem,3cqw,3.1rem)]"
+                        : large
+                          ? "text-[clamp(2.3rem,5.4cqw,6rem)]"
+                          : "text-[clamp(1.9rem,4.4cqw,4.6rem)]"
+                    }`}
+                  >
+                    {panel.title}
+                  </p>
+                  <p
+                    className={`mt-1.5 font-bold uppercase leading-tight tracking-[0.06em] text-white/75 ${
+                      boosted
+                        ? "text-[clamp(0.7rem,1.2cqw,1.2rem)]"
+                        : "text-[10px] sm:text-xs xl:text-sm 2xl:text-base"
+                    }`}
+                  >
+                    {panel.titleEn}
+                  </p>
+                  {panel.subtitle ? (
+                    <p className="mt-2 border-t border-white/25 pt-2 text-[10px] font-bold uppercase leading-tight tracking-[0.08em] text-white/90 sm:text-xs xl:mt-3 xl:pt-3 xl:text-base 2xl:mt-4 2xl:pt-4 2xl:text-lg">
+                      {panel.subtitle}
+                    </p>
+                  ) : null}
+                  <AmenityRow className="mt-2 xl:mt-3" />
+                </MovableGroup>
+
+                <MovableGroup
+                  groupId="direction"
+                  label={{ es: "Flecha y distancia", en: "Arrow and distance" }}
+                  className="relative z-10 flex shrink-0 flex-col items-center justify-center self-stretch border-l border-white/25 pl-3 sm:pl-4 xl:pl-6 2xl:pl-8"
+                >
+                  <LeafSprig
+                    className={`pointer-events-none absolute text-white/50 ${
+                      boosted
+                        ? "-top-3 right-1 h-9 w-12 sm:h-11 sm:w-14 xl:h-14 xl:w-16 2xl:h-16 2xl:w-20"
+                        : "-top-2 right-0 h-8 w-10 xl:h-12 xl:w-14 2xl:h-14 2xl:w-16"
+                    }`}
+                  />
+                  <Arrow
+                    className={
+                      boosted
+                        ? "h-16 w-16 sm:h-24 sm:w-24 xl:h-28 xl:w-28 2xl:h-32 2xl:w-32"
+                        : "h-14 w-14 sm:h-16 sm:w-16 xl:h-20 xl:w-20 2xl:h-24 2xl:w-24"
+                    }
+                    strokeWidth={3.4}
+                    aria-hidden
+                  />
+                  {panel.distance ? (
+                    <span
+                      className={`mt-1 font-black leading-none ${
+                        boosted
+                          ? "text-2xl sm:text-4xl xl:text-4xl 2xl:text-5xl"
+                          : "text-xl sm:text-2xl xl:text-2xl 2xl:text-3xl"
+                      }`}
+                      style={{ color: theme.accent }}
+                    >
+                      {panel.distance}
+                    </span>
+                  ) : null}
+                </MovableGroup>
               </div>
+            )}
+
+            <div
+              className={`relative mt-2 flex items-center gap-3 border-t border-white/20 pt-2 xl:mt-3 xl:pt-3 2xl:mt-5 2xl:pt-4 ${
+                brandForward ? "justify-center" : "justify-between"
+              }`}
+            >
+              <MovableGroup
+                groupId="footer-site"
+                label={{ es: "Sitio web", en: "Website" }}
+                className={`relative z-10 font-black uppercase text-white/75 ${
+                  brandForward
+                    ? "text-xs tracking-[0.18em] sm:text-sm xl:text-lg 2xl:text-xl"
+                    : "text-[9px] tracking-[0.14em] sm:text-[10px] xl:text-xs 2xl:text-sm"
+                }`}
+              >
+                laviejaadventures.com
+              </MovableGroup>
+              {!brandForward ? (
+                <MovableGroup
+                  groupId="footer-logo"
+                  label={{ es: "Logo del pie", en: "Footer logo" }}
+                  className="relative z-10 shrink-0 bg-white p-1"
+                >
+                  <Image
+                    src={logo}
+                    alt="La Vieja Adventures"
+                    width={large ? 42 : 34}
+                    height={large ? 42 : 34}
+                    className="h-auto w-8 object-contain sm:w-10 xl:w-12 2xl:w-14"
+                  />
+                </MovableGroup>
+              ) : null}
             </div>
           </div>
-        </div>
+        </EditableSignCanvas>
 
         <SignPosts color={theme.background} className="print:hidden" />
       </div>

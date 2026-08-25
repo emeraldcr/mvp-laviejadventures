@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { AMENITIES, PICTOGRAMS } from "./constants";
 
 /**
  * Piezas de "carpintería" compartidas entre láminas: lo que hace que un
@@ -87,4 +88,27 @@ export function SignPosts({ color, className }: { color: string; className?: str
 /** Sombra de contacto en el piso: separa la lámina del fondo de la página. */
 export function GroundShadow({ className }: { className?: string }) {
   return <div className={`mx-auto rounded-full bg-black/35 blur-md ${className ?? "h-2.5 w-28 sm:w-36"}`} aria-hidden />;
+}
+
+/**
+ * Comida · wifi · baños · senderos: los mismos cuatro íconos en toda la
+ * señalización, chicos y sin etiqueta, para que el visitante sepa qué hay en
+ * el sitio sin competir con el mensaje principal de la lámina.
+ */
+export function AmenityRow({ className }: { className?: string }) {
+  return (
+    <div className={`flex items-center gap-1.5 ${className ?? ""}`} aria-hidden>
+      {AMENITIES.map((key) => {
+        const Icon = PICTOGRAMS[key];
+        return (
+          <div
+            key={key}
+            className="flex h-6 w-6 shrink-0 items-center justify-center rounded-[4px] border border-white/40 bg-white/5 sm:h-7 sm:w-7"
+          >
+            <Icon className="h-3.5 w-3.5 text-white/85 sm:h-4 sm:w-4" strokeWidth={2.25} />
+          </div>
+        );
+      })}
+    </div>
+  );
 }

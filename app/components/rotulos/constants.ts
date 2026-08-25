@@ -9,9 +9,11 @@ import {
   ParkingCircle,
   Ruler,
   Signpost,
+  Toilet,
   TreePine,
   UtensilsCrossed,
   Waves,
+  Wifi,
   type LucideIcon,
 } from "lucide-react";
 
@@ -204,7 +206,16 @@ export const PICTOGRAMS: Record<PictogramKey, LucideIcon> = {
   parqueo: ParkingCircle,
   mirador: Binoculars,
   sendero: TreePine,
+  wifi: Wifi,
+  banos: Toilet,
 };
+
+/**
+ * Franja de amenidades: los servicios disponibles en la propiedad, repetidos
+ * de forma consistente en todas las láminas para reforzar qué hay en el
+ * sitio sin depender de que alguien lea el subtítulo completo.
+ */
+export const AMENITIES: PictogramKey[] = ["comida", "wifi", "banos", "sendero"];
 
 // ─────────────────────────────────────────────────────────────────────────────
 // FOTOGRAFÍAS Y COMPOSICIÓN

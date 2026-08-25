@@ -1,8 +1,10 @@
 import Image from "next/image";
+import EditableSignCanvas from "./layout-editor/EditableSignCanvas";
+import MovableGroup from "./layout-editor/MovableGroup";
 import QrCode from "./QrCode";
 import SocialMark from "./SocialMark";
 import { ARROWS, BUSINESS, GLASS_BASE, SOCIALS, TEXT_SHADOW } from "./constants";
-import { GroundShadow, LeafShape, SignPosts } from "./SignChrome";
+import { AmenityRow, GroundShadow, LeafShape, SignPosts } from "./SignChrome";
 import type { Panel } from "./types";
 
 /**
@@ -22,13 +24,16 @@ export default function EntranceSignPanel({ panel, eager }: { panel: Panel; eage
   return (
     <div data-sign-artwork className="relative flex flex-1 flex-col items-center pb-8 sm:pb-11 xl:pb-14 print:pb-0">
       <div className="w-full drop-shadow-[0_34px_40px_rgba(0,0,0,0.55)] print:drop-shadow-none">
-        <div
+        <EditableSignCanvas
+          panelId={panel.layoutId}
+          revision={1}
+          label={{ es: panel.title, en: panel.titleEn }}
           data-sign-artboard
           data-panel-size={panel.size}
-          className="relative overflow-hidden rounded-[30px] border-[8px] border-white bg-[#2E2A25] p-2 xl:rounded-[38px] xl:border-[10px] xl:p-2.5 print:aspect-[2/1] print:rounded-none print:border-[6px] print:p-0"
+          className="relative isolate overflow-hidden rounded-[30px] border-[8px] border-white bg-[#2E2A25] p-2 xl:rounded-[38px] xl:border-[10px] xl:p-2.5 print:aspect-[2/1] print:rounded-none print:border-[6px] print:p-0"
         >
           <div className="grid min-h-[760px] overflow-hidden rounded-[20px] bg-[#2E2A25] lg:min-h-[650px] lg:grid-cols-[minmax(360px,0.84fr)_minmax(0,1.16fr)] xl:grid-cols-[minmax(500px,0.9fr)_minmax(0,1.1fr)] print:h-full print:min-h-0 print:rounded-none print:grid-cols-[minmax(340px,0.8fr)_minmax(0,1.2fr)]">
-            <div className="relative order-2 flex min-w-0 flex-col overflow-hidden bg-[#2E2A25] p-6 text-white sm:p-8 lg:order-1 lg:p-9 xl:p-11 print:p-6">
+            <div className="relative order-2 flex min-w-0 flex-col bg-[#2E2A25] p-6 text-white sm:p-8 lg:order-1 lg:p-9 xl:p-11 print:p-6">
               <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-[0.14]">
                 <LeafShape veins className="absolute -right-10 -top-10 h-56 w-48 rotate-[22deg] text-[#00C4B0]" />
                 <LeafShape veins className="absolute -bottom-16 -left-10 h-64 w-52 rotate-[-18deg] text-white" />
@@ -36,7 +41,11 @@ export default function EntranceSignPanel({ panel, eager }: { panel: Panel; eage
               </div>
 
               {/* Un solo logo, sin flecha compitiendo al lado: la marca es lo primero que se lee. */}
-              <div className="relative flex items-center gap-3">
+              <MovableGroup
+                groupId="primary-logo"
+                label={{ es: "Logo principal", en: "Main logo" }}
+                className="relative z-10 flex w-fit max-w-full self-start items-center gap-3"
+              >
                 {panel.brands.map((brand) => (
                   <div key={brand} className="bg-white p-1.5 shadow-xl shadow-black/30">
                     <Image
@@ -53,28 +62,39 @@ export default function EntranceSignPanel({ panel, eager }: { panel: Panel; eage
                     />
                   </div>
                 ))}
-              </div>
+              </MovableGroup>
 
               <div className="relative my-auto py-8 xl:py-7 print:py-4">
-                {panel.kicker ? (
-                  <p className="text-xs font-black uppercase tracking-[0.22em] text-[#7DE7DC] sm:text-sm xl:text-lg print:text-[10px]">
-                    {panel.kicker}
+                <MovableGroup
+                  groupId="copy"
+                  label={{ es: "Nombre y detalles", en: "Name and details" }}
+                  className="relative z-10"
+                >
+                  {panel.kicker ? (
+                    <p className="text-xs font-black uppercase tracking-[0.22em] text-[#7DE7DC] sm:text-sm xl:text-lg print:text-[10px]">
+                      {panel.kicker}
+                    </p>
+                  ) : null}
+                  <p className="mt-3 pr-2 text-[clamp(2.1rem,3.6vw,4rem)] font-black uppercase leading-[0.9] tracking-[-0.045em] text-white xl:pr-4 print:mt-2 print:pr-0 print:text-[2.2rem]">
+                    {panel.title}
                   </p>
-                ) : null}
-                <p className="mt-3 pr-2 text-[clamp(2.1rem,3.6vw,4rem)] font-black uppercase leading-[0.9] tracking-[-0.045em] text-white xl:pr-4 print:mt-2 print:pr-0 print:text-[2.2rem]">
-                  {panel.title}
-                </p>
-                <p className="mt-4 text-sm font-bold uppercase tracking-[0.12em] text-[#A8F0E8] sm:text-lg xl:text-xl print:mt-3 print:text-xs">
-                  {panel.titleEn}
-                </p>
-                {panel.subtitle ? (
-                  <p className="mt-5 border-l-4 border-[#00C4B0] pl-3 text-base font-black uppercase tracking-[0.1em] text-white/90 sm:text-xl xl:mt-6 xl:pl-5 print:mt-3 print:text-sm">
-                    {panel.subtitle}
+                  <p className="mt-4 text-sm font-bold uppercase tracking-[0.12em] text-[#A8F0E8] sm:text-lg xl:text-xl print:mt-3 print:text-xs">
+                    {panel.titleEn}
                   </p>
-                ) : null}
+                  {panel.subtitle ? (
+                    <p className="mt-5 border-l-4 border-[#00C4B0] pl-3 text-base font-black uppercase tracking-[0.1em] text-white/90 sm:text-xl xl:mt-6 xl:pl-5 print:mt-3 print:text-sm">
+                      {panel.subtitle}
+                    </p>
+                  ) : null}
+                  <AmenityRow className="mt-4 xl:mt-5" />
+                </MovableGroup>
 
                 {/* Flecha + ENTRADA fundidos en un solo elemento enorme: la única acción del rótulo. */}
-                <div className="mt-8 flex items-center gap-4 bg-[#F5C518] px-5 py-4 text-[#2E2A25] shadow-[inset_0_2px_0_rgba(255,255,255,0.45)] xl:mt-10 xl:gap-6 xl:px-7 xl:py-5 print:mt-4 print:gap-3 print:px-4 print:py-3">
+                <MovableGroup
+                  groupId="direction"
+                  label={{ es: "Flecha y entrada", en: "Arrow and entrance" }}
+                  className="relative z-10 mt-8 flex items-center gap-4 bg-[#F5C518] px-5 py-4 text-[#2E2A25] shadow-[inset_0_2px_0_rgba(255,255,255,0.45)] xl:mt-10 xl:gap-6 xl:px-7 xl:py-5 print:mt-4 print:gap-3 print:px-4 print:py-3"
+                >
                   <Arrow
                     className="h-14 w-14 shrink-0 sm:h-16 sm:w-16 xl:h-20 xl:w-20 print:h-10 print:w-10"
                     strokeWidth={3.4}
@@ -88,26 +108,34 @@ export default function EntranceSignPanel({ panel, eager }: { panel: Panel; eage
                       {panel.cta.en}
                     </p>
                   </div>
-                </div>
+                </MovableGroup>
               </div>
 
               {/* Franja de contacto reducida al mínimo: dominio, WhatsApp y QR, grandes y nada más. */}
               <div className="relative flex items-center justify-between gap-5 border-t border-white/20 pt-5 xl:gap-8 xl:pt-6 print:gap-4 print:pt-4">
-                <div className="min-w-0">
+                <MovableGroup
+                  groupId="contact"
+                  label={{ es: "Sitio web y WhatsApp", en: "Website and WhatsApp" }}
+                  className="relative z-10 min-w-0"
+                >
                   <p className="break-words text-lg font-black uppercase tracking-[-0.03em] text-white sm:whitespace-nowrap sm:text-2xl xl:text-3xl print:whitespace-nowrap print:text-lg">
                     {BUSINESS.web.replace(/^www\./, "")}
                   </p>
                   <p className="mt-1.5 text-lg font-bold text-[#A8F0E8] sm:text-2xl xl:text-2xl print:text-base">
                     WhatsApp {BUSINESS.whatsapp}
                   </p>
-                </div>
-                <div className="flex shrink-0 items-center justify-center bg-white p-2.5 shadow-xl shadow-black/35 xl:p-3">
+                </MovableGroup>
+                <MovableGroup
+                  groupId="qr"
+                  label={{ es: "Código QR", en: "QR code" }}
+                  className="relative z-10 flex shrink-0 items-center justify-center bg-white p-2.5 shadow-xl shadow-black/35 xl:p-3"
+                >
                   <QrCode className="h-[5.75rem] w-[5.75rem] sm:h-[6.75rem] sm:w-[6.75rem] xl:h-[7.75rem] xl:w-[7.75rem] print:h-[5.1rem] print:w-[5.1rem]" />
-                </div>
+                </MovableGroup>
               </div>
             </div>
 
-            <div className="relative order-1 min-h-[390px] overflow-hidden bg-zinc-800 lg:order-2 lg:min-h-full">
+            <div className="relative order-1 min-h-[390px] bg-zinc-800 lg:order-2 lg:min-h-full">
               <Image
                 src={panel.photos[0]}
                 alt="Visitante explorando el Cañón del Río La Vieja"
@@ -119,8 +147,10 @@ export default function EntranceSignPanel({ panel, eager }: { panel: Panel; eage
               />
 
               {/* Marca secundaria, claramente más chica que el logo principal: solo confirma la marca, no compite. */}
-              <div
-                className={`absolute right-5 top-5 p-1.5 xl:right-7 xl:top-7 print:hidden ${GLASS_BASE} bg-[rgba(24,24,27,0.42)]`}
+              <MovableGroup
+                groupId="photo-logo"
+                label={{ es: "Logo sobre la foto", en: "Logo over photo" }}
+                className={`absolute right-5 top-5 z-10 p-1.5 xl:right-7 xl:top-7 print:hidden ${GLASS_BASE} bg-[rgba(24,24,27,0.42)]`}
               >
                 <Image
                   src="/logo1.jpg"
@@ -129,13 +159,15 @@ export default function EntranceSignPanel({ panel, eager }: { panel: Panel; eage
                   height={56}
                   className="h-8 w-8 rounded-md object-contain sm:h-9 sm:w-9"
                 />
-              </div>
+              </MovableGroup>
 
               <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/70 to-transparent sm:h-32 print:hidden" />
 
               {/* Solo ubicación + un par de redes: el contacto real vive una sola vez, en el panel café. */}
-              <div
-                className={`absolute inset-x-5 bottom-5 flex items-center justify-between gap-3 px-4 py-2.5 sm:inset-x-6 sm:bottom-6 xl:inset-x-8 xl:bottom-8 print:hidden ${GLASS_BASE} bg-[rgba(24,24,27,0.42)]`}
+              <MovableGroup
+                groupId="photo-caption"
+                label={{ es: "Ubicación y red social", en: "Location and social media" }}
+                className={`absolute inset-x-5 bottom-5 z-10 flex items-center justify-between gap-3 px-4 py-2.5 sm:inset-x-6 sm:bottom-6 xl:inset-x-8 xl:bottom-8 print:hidden ${GLASS_BASE} bg-[rgba(24,24,27,0.42)]`}
               >
                 <p
                   className={`border-l-4 border-[#00C4B0] pl-2.5 text-xs font-black uppercase tracking-[0.16em] text-white sm:text-sm ${TEXT_SHADOW}`}
@@ -151,10 +183,10 @@ export default function EntranceSignPanel({ panel, eager }: { panel: Panel; eage
                     />
                   ))}
                 </div>
-              </div>
+              </MovableGroup>
             </div>
           </div>
-        </div>
+        </EditableSignCanvas>
 
         <SignPosts color="#2E2A25" className="scale-125 sm:scale-150 xl:scale-[1.8] print:hidden" />
       </div>

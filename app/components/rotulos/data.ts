@@ -28,6 +28,8 @@ export const ROTULOS: Rotulo[] = [
     },
     panels: [
       {
+        layoutId: "r01-main",
+
         size: "grande",
 
         kicker: "Bienvenidos · Welcome",
@@ -37,7 +39,7 @@ export const ROTULOS: Rotulo[] = [
         titleEn: "Cañón del Río La Vieja",
 
         subtitle:
-          "Cañón · Cascadas · Restaurante · Mirador",
+          "Tours · Cafetería y Restaurante · Senderos · Cascadas · Mirador · Baños",
 
         cta: {
           es: "ENTRADA",
@@ -75,6 +77,8 @@ export const ROTULOS: Rotulo[] = [
 
     panels: [
       {
+        layoutId: "r02-main",
+
         size: "grande",
 
         kicker: "PRÓXIMA ENTRADA",
@@ -94,16 +98,13 @@ export const ROTULOS: Rotulo[] = [
 
         brands: ["lva"],
 
+        brandForward: true,
+
         arrow: "left",
 
         pictogram: "canon",
 
-        photos: [
-          "/image/IMG_4200.jpg",
-          "/image/IMG_5592.jpg",
-          "/image/IMG_4376.jpg",
-          "/image/IMG_4210.jpg",
-        ],
+        photos: ["/image/IMG_4200.jpg", "/image/IMG_5592.jpg"],
 
         price: TIER_PRICE.grande,
       },
@@ -128,7 +129,9 @@ export const ROTULOS: Rotulo[] = [
 
     panels: [
       {
-        size: "grande",
+        layoutId: "r03-main",
+
+        size: "mediano",
 
         kicker: "LA VIEJA ADVENTURES",
 
@@ -145,13 +148,15 @@ export const ROTULOS: Rotulo[] = [
 
         brands: ["lva"],
 
+        brandForward: true,
+
         arrow: "right",
 
         pictogram: "canon",
 
         photos: [],
 
-        price: TIER_PRICE.grande,
+        price: TIER_PRICE.mediano,
       },
     ],
   },
@@ -174,7 +179,9 @@ export const ROTULOS: Rotulo[] = [
 
     panels: [
       {
-        size: "grande",
+        layoutId: "r04-main",
+
+        size: "mediano",
 
         kicker: "LA VIEJA",
 
@@ -191,13 +198,15 @@ export const ROTULOS: Rotulo[] = [
 
         brands: ["lva"],
 
+        brandForward: true,
+
         arrow: "down-right",
 
         pictogram: "comida",
 
-        photos: ["/image/IMG_5686.jpg"],
+        photos: [],
 
-        price: TIER_PRICE.grande,
+        price: TIER_PRICE.mediano,
       },
     ],
   },
@@ -220,7 +229,9 @@ export const ROTULOS: Rotulo[] = [
 
     panels: [
       {
-        size: "grande",
+        layoutId: "r05-main",
+
+        size: "pequeno",
 
         kicker: "LA VIEJA ADVENTURES",
 
@@ -243,7 +254,7 @@ export const ROTULOS: Rotulo[] = [
 
         photos: [],
 
-        price: TIER_PRICE.grande,
+        price: TIER_PRICE.pequeno,
       },
     ],
   },
@@ -266,6 +277,8 @@ export const ROTULOS: Rotulo[] = [
 
     panels: [
       {
+        layoutId: "r06-lajas",
+
         size: "pequeno",
 
         kicker: "SUCRE",
@@ -293,6 +306,8 @@ export const ROTULOS: Rotulo[] = [
       },
 
       {
+        layoutId: "r06-ciudad-quesada",
+
         size: "pequeno",
 
         kicker: "SUCRE · SAN CARLOS",

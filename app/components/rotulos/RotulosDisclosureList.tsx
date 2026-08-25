@@ -37,21 +37,6 @@ export default function RotulosDisclosureList({
   return (
     <section id="catalogo-rotulos" aria-labelledby="catalogo-rotulos-title" className="mt-12 scroll-mt-24 xl:mt-24 print:mt-0">
       <div className="flex flex-col gap-6 rounded-3xl border border-white/10 bg-zinc-900/45 p-5 sm:p-6 lg:flex-row lg:items-end lg:justify-between xl:rounded-[2.5rem] xl:p-10 2xl:p-12 print:hidden">
-        <div>
-          <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#65e2d5]">
-            {t("Paso 1 · Rótulos y medidas", "Step 1 · Signs and dimensions")}
-          </p>
-          <h2 id="catalogo-rotulos-title" className="mt-2 text-3xl font-black tracking-tight text-white sm:text-4xl xl:text-5xl">
-            {t("Todos los rótulos abiertos, grandes y con aire", "Every sign open, large and spacious")}
-          </h2>
-          <p className="mt-4 max-w-4xl text-sm leading-relaxed text-zinc-400 sm:text-base xl:text-lg">
-            {t(
-              "La vista prioriza monitores grandes: cada arte ocupa primero todo el ancho disponible y la información técnica baja a una franja secundaria. Puede cerrar piezas puntuales si necesita comparar menos.",
-              "This view prioritizes large displays: every artwork uses the full available width first, while technical information moves to a secondary strip. Close individual pieces when you want a shorter comparison.",
-            )}
-          </p>
-        </div>
-
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
