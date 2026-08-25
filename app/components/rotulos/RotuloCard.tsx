@@ -13,7 +13,7 @@ import {
 import EntranceSignPanel from "./EntranceSignPanel";
 import SignPanel from "./SignPanel";
 import { KIND_META } from "./constants";
-import { signSubtotal } from "./helpers";
+import { IVA_RATE, signSubtotal, signSubtotalBreakdown } from "./helpers";
 import {
   formatAreaM2,
   panelMeasurementCentimeters,
@@ -52,20 +52,23 @@ export default function RotuloCard({
   const meta = KIND_META[rotulo.kind];
   const Icon = meta.icon;
   const subtotal = signSubtotal(rotulo);
+  const breakdown = signSubtotalBreakdown(rotulo);
+  const ivaPct = Math.round(IVA_RATE * 100);
   const areaM2 = rotuloTotalAreaM2(rotulo);
   const headingId = `rotulo-${rotulo.code.toLowerCase()}-heading`;
   const regionId = `rotulo-${rotulo.code.toLowerCase()}-details`;
 
   return (
     <article
-      className={`overflow-hidden rounded-3xl border shadow-xl shadow-black/30 transition-colors ${
+      data-rotulo-card
+      className={`overflow-hidden rounded-3xl border shadow-xl shadow-black/30 transition-colors xl:rounded-[2.75rem] print:mb-0 print:break-after-page print:overflow-visible print:rounded-none print:border-0 print:bg-white print:shadow-none ${
         active
           ? "border-[#00C4B0]/35 bg-zinc-900/70"
           : "border-white/10 bg-zinc-900/35"
       }`}
     >
-      <div className="p-4 sm:p-5">
-        <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
+      <div className="p-4 sm:p-5 xl:p-8 2xl:p-10 print:hidden">
+        <div className="flex flex-col gap-6 2xl:flex-row 2xl:items-center 2xl:justify-between">
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-xs font-black uppercase tracking-[0.2em] text-[#65e2d5]">
@@ -91,17 +94,17 @@ export default function RotuloCard({
 
             <h3
               id={headingId}
-              className="mt-2 text-2xl font-black tracking-[-0.035em] text-white sm:text-3xl"
+              className="mt-3 text-2xl font-black tracking-[-0.035em] text-white sm:text-3xl xl:text-4xl"
             >
               {rotulo.name}
             </h3>
-            <p className="mt-2 flex items-start gap-2 text-sm text-zinc-300 sm:text-base">
+            <p className="mt-3 flex items-start gap-2 text-sm text-zinc-300 sm:text-base xl:text-lg">
               <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#00C4B0]" aria-hidden />
               {rotulo.placement[lang]}
             </p>
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto_auto_auto] sm:items-center">
-              <div className="rounded-2xl border border-[#00C4B0]/25 bg-[#00C4B0]/10 p-3">
+            <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_auto_auto_auto] xl:items-center 2xl:mt-6 2xl:gap-4">
+              <div className="rounded-2xl border border-[#00C4B0]/25 bg-[#00C4B0]/10 p-3 xl:p-4">
                 <p className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.16em] text-[#65e2d5]">
                   <Ruler className="h-4 w-4" aria-hidden />
                   {t("Medida de trabajo · ancho × alto", "Working size · width × height")}
@@ -110,7 +113,7 @@ export default function RotuloCard({
                   {rotuloMeasurementSummary(rotulo, lang)}
                 </p>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 xl:p-4">
                 <p className="text-[10px] font-black uppercase tracking-[0.14em] text-zinc-500">
                   {t("Cantidad", "Quantity")}
                 </p>
@@ -119,22 +122,25 @@ export default function RotuloCard({
                   {rotulo.panels.length} {rotulo.panels.length === 1 ? t("lámina", "panel") : t("láminas", "panels")}
                 </p>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 xl:p-4">
                 <p className="text-[10px] font-black uppercase tracking-[0.14em] text-zinc-500">
                   {t("Área total", "Total area")}
                 </p>
                 <p className="mt-1 font-black text-white">{formatAreaM2(areaM2, lang)}</p>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 xl:p-4">
                 <p className="text-[10px] font-black uppercase tracking-[0.14em] text-zinc-500">
                   {t("Estimación interna", "Internal estimate")}
                 </p>
                 <p className="mt-1 font-black text-white">{price(subtotal)}</p>
+                <p className="mt-0.5 text-[10px] text-zinc-500">
+                  {price(breakdown.base)} + {ivaPct}% {t("IVA", "tax")}
+                </p>
               </div>
             </div>
           </div>
 
-          <div className="flex shrink-0 flex-col gap-2 sm:flex-row xl:flex-col">
+          <div className="flex shrink-0 flex-col gap-3 sm:flex-row 2xl:flex-col">
             <button
               type="button"
               onClick={() => onToggle(rotulo.id)}
@@ -172,116 +178,113 @@ export default function RotuloCard({
         id={regionId}
         role="region"
         aria-labelledby={headingId}
-        hidden={!expanded}
-        className="border-t border-white/10"
+        aria-hidden={!expanded}
+        className={`${expanded ? "block" : "hidden"} border-t border-white/10 print:block print:border-0`}
       >
-        {expanded ? (
+        <div className="grid gap-8 p-3 sm:p-6 lg:p-8 xl:gap-12 xl:p-12 2xl:p-16 print:block print:p-0">
           <div
-            className={`grid gap-6 ${
-              rotulo.kind === "entrada"
-                ? "p-2 min-[380px]:p-3 sm:p-5"
-                : "p-4 sm:p-6 lg:grid-cols-[minmax(0,2fr)_minmax(300px,0.62fr)]"
+            className={`mx-auto w-full max-w-[1680px] min-w-0 rounded-[2rem] border border-white/[0.06] bg-zinc-950/55 p-2 sm:p-4 xl:rounded-[2.5rem] xl:p-8 2xl:p-12 print:max-w-none print:border-0 print:bg-transparent print:p-0 ${
+              rotulo.kind === "par"
+                ? "grid gap-8 2xl:grid-cols-2 2xl:gap-12 print:grid print:grid-cols-2"
+                : "flex flex-col"
             }`}
           >
-            <div
-              className={`flex min-w-0 flex-col gap-5 rounded-2xl bg-zinc-950/50 ${
-                rotulo.kind === "entrada" ? "p-1 min-[380px]:p-2 sm:p-4" : "p-2 sm:p-4 xl:flex-row"
-              }`}
-            >
-              {rotulo.panels.map((panel, index) =>
-                rotulo.kind === "entrada" ? (
-                  <EntranceSignPanel key={`${rotulo.id}-${index}`} panel={panel} eager={eager} />
-                ) : (
-                  <SignPanel
-                    key={`${rotulo.id}-${index}`}
-                    panel={panel}
-                    kind={rotulo.kind}
-                    large={rotulo.kind !== "par"}
-                    eager={eager}
-                  />
-                ),
-              )}
-            </div>
-
-            <div className="flex min-w-0 flex-col gap-4">
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#65e2d5]">
-                  {t("Función del rótulo", "Purpose of the sign")}
-                </p>
-                <p className="mt-2 text-sm leading-relaxed text-zinc-300">{rotulo.purpose[lang]}</p>
-              </div>
-
-              <div className="rounded-2xl border border-[#00C4B0]/30 bg-[#00C4B0]/10 p-4">
-                <p className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.15em] text-[#9ff5eb]">
-                  <Ruler className="h-4 w-4" aria-hidden />
-                  {t("Ficha de medidas", "Measurement sheet")}
-                </p>
-                <ul className="mt-3 space-y-3">
-                  {rotulo.panels.map((panel, index) => {
-                    const spec = PANEL_SIZE_SPECS[panel.size];
-                    return (
-                      <li key={`${rotulo.id}-measure-${index}`} className="border-t border-white/10 pt-3 first:border-0 first:pt-0">
-                        <p className="text-sm font-black text-white">
-                          {panel.kicker || `${t("Lámina", "Panel")} ${index + 1}`} · {spec.label[lang]}
-                        </p>
-                        <p className="mt-1 text-sm font-bold leading-relaxed text-[#c7faf5]">
-                          {panelMeasurementLabel(panel, lang)}
-                        </p>
-                        <p className="mt-1 text-xs text-zinc-400">{panelMeasurementCentimeters(panel)}</p>
-                      </li>
-                    );
-                  })}
-                </ul>
-                <p className="mt-4 border-t border-white/10 pt-3 text-xs leading-relaxed text-zinc-400">
-                  {t(
-                    "Medida propuesta para cotizar. Confirme material, estructura, sitio y medida final antes de producir.",
-                    "Proposed quoting size. Confirm material, structure, site and final size before production.",
-                  )}
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#65e2d5]">
-                  {t("Frase de calle", "Street hook")}
-                </p>
-                <ul className="mt-2 space-y-2 text-sm text-zinc-200">
-                  {rotulo.panels.map((panel, index) => (
-                    <li key={`${rotulo.id}-cta-${index}`} className="flex gap-2">
-                      <span className="text-[#00C4B0]">→</span>
-                      <span>
-                        {panel.cta.es}
-                        <span className="block text-xs italic text-zinc-400">{panel.cta.en}</span>
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="mt-auto border-t border-white/10 pt-4">
-                <div className="flex flex-wrap items-end justify-between gap-3">
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.14em] text-zinc-500">
-                      {t("Estimación interna por área", "Internal area estimate")}
-                    </p>
-                    <p className="mt-1 text-xs text-zinc-400">
-                      {rotulo.panels.length > 1
-                        ? rotulo.panels.map((panel) => price(panel.price)).join(" + ")
-                        : t("Cálculo de planificación; no es una cotización final", "Planning calculation; not a final quote")}
-                    </p>
-                  </div>
-                  <p className="text-2xl font-black tracking-tight text-white">{price(subtotal)}</p>
-                </div>
-              </div>
-            </div>
-
-            <p className="text-center text-[11px] leading-relaxed text-zinc-500 lg:col-span-2">
-              {t(
-                "Vista ilustrativa: la maqueta en pantalla no está dibujada a escala física.",
-                "Illustrative view: the on-screen mockup is not drawn to physical scale.",
-              )}
-            </p>
+            {rotulo.panels.map((panel, index) =>
+              rotulo.kind === "entrada" ? (
+                <EntranceSignPanel key={`${rotulo.id}-${index}`} panel={panel} eager={eager} />
+              ) : (
+                <SignPanel
+                  key={`${rotulo.id}-${index}`}
+                  panel={panel}
+                  kind={rotulo.kind}
+                  large={rotulo.kind !== "par"}
+                  eager={eager}
+                />
+              ),
+            )}
           </div>
-        ) : null}
+
+          <p className="hidden pt-3 text-center text-[9pt] font-bold leading-snug text-[#2E2A25] print:block">
+            {rotulo.code} · {rotulo.name} · {t("Propuesta visual; confirme medidas y originales antes de fabricar.", "Visual proposal; confirm dimensions and source files before production.")}
+          </p>
+
+          <div className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-4 xl:gap-6 print:hidden">
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-5 xl:rounded-3xl xl:p-6">
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#65e2d5]">
+                {t("Función del rótulo", "Purpose of the sign")}
+              </p>
+              <p className="mt-3 text-sm leading-relaxed text-zinc-300 xl:text-base">{rotulo.purpose[lang]}</p>
+            </div>
+
+            <div className="rounded-2xl border border-[#00C4B0]/30 bg-[#00C4B0]/10 p-5 xl:rounded-3xl xl:p-6">
+              <p className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.15em] text-[#9ff5eb]">
+                <Ruler className="h-4 w-4" aria-hidden />
+                {t("Ficha de medidas", "Measurement sheet")}
+              </p>
+              <ul className="mt-4 space-y-3">
+                {rotulo.panels.map((panel, index) => {
+                  const spec = PANEL_SIZE_SPECS[panel.size];
+                  return (
+                    <li key={`${rotulo.id}-measure-${index}`} className="border-t border-white/10 pt-3 first:border-0 first:pt-0">
+                      <p className="text-sm font-black text-white">
+                        {panel.kicker || `${t("Lámina", "Panel")} ${index + 1}`} · {spec.label[lang]}
+                      </p>
+                      <p className="mt-1 text-sm font-bold leading-relaxed text-[#c7faf5]">
+                        {panelMeasurementLabel(panel, lang)}
+                      </p>
+                      <p className="mt-1 text-xs text-zinc-400">{panelMeasurementCentimeters(panel)}</p>
+                    </li>
+                  );
+                })}
+              </ul>
+              <p className="mt-4 border-t border-white/10 pt-3 text-xs leading-relaxed text-zinc-400">
+                {t(
+                  "Medida propuesta para cotizar. Confirme material, estructura, sitio y medida final antes de producir.",
+                  "Proposed quoting size. Confirm material, structure, site and final size before production.",
+                )}
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-5 xl:rounded-3xl xl:p-6">
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#65e2d5]">
+                {t("Frase de calle", "Street hook")}
+              </p>
+              <ul className="mt-3 space-y-3 text-sm text-zinc-200 xl:text-base">
+                {rotulo.panels.map((panel, index) => (
+                  <li key={`${rotulo.id}-cta-${index}`} className="flex gap-2">
+                    <span className="text-[#00C4B0]">→</span>
+                    <span>
+                      {panel.cta.es}
+                      <span className="block text-xs italic text-zinc-400">{panel.cta.en}</span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="flex flex-col rounded-2xl border border-white/10 bg-white/5 p-5 xl:rounded-3xl xl:p-6">
+              <p className="text-[10px] font-black uppercase tracking-[0.14em] text-zinc-500">
+                {t("Estimación interna por área", "Internal area estimate")}
+              </p>
+              <p className="mt-3 text-xs leading-relaxed text-zinc-400">
+                {rotulo.panels.length > 1
+                  ? rotulo.panels.map((panel) => price(panel.price)).join(" + ")
+                  : t("Cálculo de planificación; no es una cotización final", "Planning calculation; not a final quote")}
+              </p>
+              <p className="mt-2 text-xs font-bold text-[#9ff5eb]">
+                {price(breakdown.base)} + {ivaPct}% {t("IVA", "tax")} ({price(breakdown.iva)})
+              </p>
+              <p className="mt-auto pt-6 text-3xl font-black tracking-tight text-white xl:text-4xl">{price(subtotal)}</p>
+            </div>
+          </div>
+
+          <p className="text-center text-[11px] leading-relaxed text-zinc-500 xl:text-xs print:hidden">
+            {t(
+              "En escritorio extra ancho e impresión, la maqueta adopta la proporción de trabajo. Confirme medidas y archivos originales de alta resolución antes de fabricar.",
+              "On extra-wide displays and in print, the mockup uses the working proportion. Confirm dimensions and high-resolution source files before production.",
+            )}
+          </p>
+        </div>
       </div>
     </article>
   );

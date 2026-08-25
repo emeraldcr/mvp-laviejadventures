@@ -22,7 +22,7 @@ export default function RotulosDisclosureList({
   price,
   t,
 }: RotulosDisclosureListProps) {
-  const [expandedIds, setExpandedIds] = useState<number[]>([]);
+  const [expandedIds, setExpandedIds] = useState<number[]>(() => rotulos.map((rotulo) => rotulo.id));
   const allIds = useMemo(() => rotulos.map((rotulo) => rotulo.id), [rotulos]);
   const allExpanded = expandedIds.length === allIds.length;
 
@@ -35,19 +35,19 @@ export default function RotulosDisclosureList({
   };
 
   return (
-    <section id="catalogo-rotulos" aria-labelledby="catalogo-rotulos-title" className="mt-10 scroll-mt-24">
-      <div className="flex flex-col gap-5 rounded-3xl border border-white/10 bg-zinc-900/45 p-5 sm:p-6 lg:flex-row lg:items-end lg:justify-between">
+    <section id="catalogo-rotulos" aria-labelledby="catalogo-rotulos-title" className="mt-12 scroll-mt-24 xl:mt-24 print:mt-0">
+      <div className="flex flex-col gap-6 rounded-3xl border border-white/10 bg-zinc-900/45 p-5 sm:p-6 lg:flex-row lg:items-end lg:justify-between xl:rounded-[2.5rem] xl:p-10 2xl:p-12 print:hidden">
         <div>
           <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#65e2d5]">
             {t("Paso 1 · Rótulos y medidas", "Step 1 · Signs and dimensions")}
           </p>
-          <h2 id="catalogo-rotulos-title" className="mt-2 text-3xl font-black tracking-tight text-white sm:text-4xl">
-            {t("Abra solamente el rótulo que quiera revisar", "Open only the sign you want to review")}
+          <h2 id="catalogo-rotulos-title" className="mt-2 text-3xl font-black tracking-tight text-white sm:text-4xl xl:text-5xl">
+            {t("Todos los rótulos abiertos, grandes y con aire", "Every sign open, large and spacious")}
           </h2>
-          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-400 sm:text-base">
+          <p className="mt-4 max-w-4xl text-sm leading-relaxed text-zinc-400 sm:text-base xl:text-lg">
             {t(
-              "Las seis fichas empiezan cerradas. La medida, ubicación, cantidad y área siempre quedan visibles; el botón abre la maqueta grande y sus detalles.",
-              "All six records start closed. Size, location, quantity and area remain visible; the button opens the large mockup and its details.",
+              "La vista prioriza monitores grandes: cada arte ocupa primero todo el ancho disponible y la información técnica baja a una franja secundaria. Puede cerrar piezas puntuales si necesita comparar menos.",
+              "This view prioritizes large displays: every artwork uses the full available width first, while technical information moves to a secondary strip. Close individual pieces when you want a shorter comparison.",
             )}
           </p>
         </div>
@@ -74,7 +74,7 @@ export default function RotulosDisclosureList({
         </div>
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 px-1 text-xs font-bold text-zinc-400" aria-live="polite">
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-3 px-1 text-xs font-bold text-zinc-400 xl:mt-8 xl:text-sm print:hidden" aria-live="polite">
         <span className="inline-flex items-center gap-2">
           <Eye className="h-4 w-4 text-[#00C4B0]" aria-hidden />
           {expandedIds.length} {t("abiertos de", "open of")} {rotulos.length}
@@ -84,8 +84,8 @@ export default function RotulosDisclosureList({
         </span>
       </div>
 
-      <div className="mt-4 grid gap-4">
-        {rotulos.map((rotulo, index) => {
+      <div className="mt-10 grid gap-16 xl:mt-16 xl:gap-24 2xl:gap-32 print:mt-0 print:block">
+        {rotulos.map((rotulo) => {
           const expanded = expandedIds.includes(rotulo.id);
           return (
             <RotuloCard
@@ -98,7 +98,7 @@ export default function RotulosDisclosureList({
               onToggleExpanded={toggleExpanded}
               price={price}
               t={t}
-              eager={index === 0 && expanded}
+              eager={expanded}
             />
           );
         })}

@@ -10,7 +10,7 @@ export default function SignProposals({ lang }: { lang: Lang }) {
 
   return (
     <section className="mt-14 border-t border-white/10 pt-10">
-      <p className="text-[11px] font-black uppercase tracking-[0.24em] text-emerald-300">
+      <p className="text-[11px] font-black uppercase tracking-[0.24em] text-[#65e2d5]">
         {lang === "es" ? "Propuestas de diseño" : "Design proposals"}
       </p>
       <h2 className="mt-3 text-3xl font-black tracking-tight text-white md:text-4xl">
@@ -30,7 +30,7 @@ export default function SignProposals({ lang }: { lang: Lang }) {
             key={rule.value}
             className="rounded-2xl border border-white/10 bg-white/5 p-4"
           >
-            <p className="text-xl font-black tracking-tight text-emerald-300">{rule.value}</p>
+            <p className="text-xl font-black tracking-tight text-[#65e2d5]">{rule.value}</p>
             <p className="mt-2 text-xs leading-relaxed text-zinc-400">{t(rule.text)}</p>
           </div>
         ))}
@@ -41,12 +41,12 @@ export default function SignProposals({ lang }: { lang: Lang }) {
           <article
             key={proposal.id}
             className={`flex flex-col overflow-hidden rounded-3xl border bg-zinc-900/60 shadow-xl shadow-black/40 ${
-              proposal.recommended ? "border-emerald-300/40" : "border-white/10"
+              proposal.recommended ? "border-[#00C4B0]/40" : "border-white/10"
             }`}
           >
             <div className="flex items-start justify-between gap-3 border-b border-white/10 px-5 py-4">
               <div className="min-w-0">
-                <p className="text-[11px] font-black uppercase tracking-[0.2em] text-emerald-300">
+                <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#65e2d5]">
                   {proposal.id} &middot; {proposal.slots}
                 </p>
                 <h3 className="mt-1 text-lg font-black tracking-tight text-white">
@@ -56,7 +56,7 @@ export default function SignProposals({ lang }: { lang: Lang }) {
               <span
                 className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-black ${
                   proposal.recommended
-                    ? "border-emerald-300/50 bg-emerald-400/20 text-emerald-100"
+                    ? "border-[#00C4B0]/50 bg-[#00C4B0]/20 text-[#9ff5eb]"
                     : "border-sky-300/40 bg-sky-400/10 text-sky-200"
                 }`}
               >
@@ -80,7 +80,7 @@ export default function SignProposals({ lang }: { lang: Lang }) {
               <ul className="space-y-1.5 border-t border-white/10 pt-3 text-sm text-zinc-400">
                 {proposal.specs.map((spec) => (
                   <li key={spec.es} className="flex gap-2">
-                    <span className="text-emerald-300">&middot;</span>
+                    <span className="text-[#65e2d5]">&middot;</span>
                     <span>{t(spec)}</span>
                   </li>
                 ))}
@@ -96,11 +96,11 @@ export default function SignProposals({ lang }: { lang: Lang }) {
         ))}
       </div>
 
-      <div className="mt-8 rounded-3xl border border-emerald-300/30 bg-emerald-400/10 p-5 md:p-6">
-        <p className="text-[11px] font-black uppercase tracking-[0.2em] text-emerald-200">
+      <div className="mt-8 rounded-3xl border border-[#00C4B0]/30 bg-[#00C4B0]/10 p-5 md:p-6">
+        <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#9ff5eb]">
           {lang === "es" ? "Lo que yo haría" : "What I would do"}
         </p>
-        <ul className="mt-3 space-y-2 text-sm leading-relaxed text-emerald-50">
+        <ul className="mt-3 space-y-2 text-sm leading-relaxed text-[#c7faf5]">
           <li>
             <span className="font-black">R-01 · </span>
             {lang === "es"
@@ -132,7 +132,7 @@ export default function SignProposals({ lang }: { lang: Lang }) {
               : "Minimal trailblazer (P-C). Three words, one arrow, the distance."}
           </li>
         </ul>
-        <p className="mt-4 border-t border-emerald-200/20 pt-3 text-xs leading-relaxed text-emerald-100/80">
+        <p className="mt-4 border-t border-[#9ff5eb]/20 pt-3 text-xs leading-relaxed text-[#c7faf5]/80">
           {lang === "es"
             ? "Antes de mandar a fabricar, valide con MOPT o la municipalidad, según corresponda, si la ubicación, el diseño o la instalación requieren permiso. Además, deje por escrito en cada cotización el material reflectivo solicitado para comparar exactamente el mismo alcance."
             : "Before production, validate with MOPT or the municipality, as applicable, whether the location, design or installation requires a permit. Also state the requested reflective material in writing on every quote so all companies price the same scope."}

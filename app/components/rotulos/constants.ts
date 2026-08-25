@@ -53,14 +53,15 @@ export const BUSINESS = {
   whatsapp: "6233-2535",
   phone: "8643-0807",
   handle: "@laviejaadventures",
+  link: "https://wa.me/50662332535",
 };
 
 /**
  * Destino del código QR.
  *
- * El código QR dirige al sitio web oficial de La Vieja Adventures.
+ * El código QR abre el contacto directo de WhatsApp de La Vieja Adventures.
  */
-export const QR_TARGET = `https://${BUSINESS.web}`;
+export const QR_TARGET = BUSINESS.link;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // REDES SOCIALES

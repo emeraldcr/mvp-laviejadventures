@@ -62,3 +62,9 @@ export const TIER_PRICE: Record<SizeKey, number> = SIZE_TIERS.reduce(
   (acc, t) => ({ ...acc, [t.key]: t.total }),
   {} as Record<SizeKey, number>,
 );
+
+/** Tarifa completa (base + IVA) por tamaño, para mostrar el desglose en pantalla. */
+export const TIER_BY_KEY: Record<SizeKey, SizeTier> = SIZE_TIERS.reduce(
+  (acc, t) => ({ ...acc, [t.key]: t }),
+  {} as Record<SizeKey, SizeTier>,
+);

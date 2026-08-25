@@ -1,5 +1,5 @@
 import { Check, LayoutPanelTop, Ruler, X } from "lucide-react";
-import { signSubtotal } from "./helpers";
+import { IVA_RATE, selectionBreakdown, signSubtotal } from "./helpers";
 import { formatAreaM2, rotuloMeasurementSummary, rotuloTotalAreaM2 } from "./measurements";
 import type { Lang, Rotulo } from "./types";
 
@@ -21,6 +21,9 @@ export default function RotulosSummaryTable({
   price,
   t,
 }: RotulosSummaryTableProps) {
+  const breakdown = selectionBreakdown(rotulos, selected);
+  const ivaPct = Math.round(IVA_RATE * 100);
+
   return (
     <div className="mt-4">
       <div className="space-y-3 sm:hidden">
@@ -62,11 +65,16 @@ export default function RotulosSummaryTable({
           );
         })}
 
-        <div className="flex items-end justify-between gap-3 rounded-2xl border border-[#00C4B0]/35 bg-[#00C4B0]/15 p-4">
-          <p className="text-xs font-black uppercase tracking-[0.14em] text-[#9ff5eb]">
-            {t("Estimación interna seleccionada", "Selected internal estimate")}
+        <div className="rounded-2xl border border-[#00C4B0]/35 bg-[#00C4B0]/15 p-4">
+          <div className="flex items-end justify-between gap-3">
+            <p className="text-xs font-black uppercase tracking-[0.14em] text-[#9ff5eb]">
+              {t("Estimación interna seleccionada", "Selected internal estimate")}
+            </p>
+            <p className="text-xl font-black text-white">{price(total)}</p>
+          </div>
+          <p className="mt-1 text-[11px] font-bold text-[#9ff5eb]/80">
+            {price(breakdown.base)} + {ivaPct}% {t("IVA", "tax")} ({price(breakdown.iva)})
           </p>
-          <p className="text-xl font-black text-white">{price(total)}</p>
         </div>
       </div>
 
@@ -112,6 +120,9 @@ export default function RotulosSummaryTable({
             <tr>
               <td className="px-4 py-4 font-black uppercase tracking-[0.14em]" colSpan={3}>
                 {t("Estimación interna seleccionada", "Selected internal estimate")}
+                <span className="mt-1 block text-[11px] font-bold normal-case tracking-normal text-[#c7faf5]/80">
+                  {price(breakdown.base)} + {ivaPct}% {t("IVA", "tax")} ({price(breakdown.iva)})
+                </span>
               </td>
               <td className="px-4 py-4 text-right text-xl font-black text-white">{price(total)}</td>
             </tr>

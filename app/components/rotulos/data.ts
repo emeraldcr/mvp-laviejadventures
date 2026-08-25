@@ -2,217 +2,320 @@ import { TIER_PRICE } from "./pricing";
 import type { Rotulo } from "./types";
 
 /**
- * Los seis rótulos del plan, en el orden en que se encuentran manejando desde
- * Ciudad Quesada. Cambiar aquí cambia las láminas, la tabla y el total.
+ * Señalización vial y de orientación de La Vieja Adventures.
  *
- * Referencia preliminar en adhesivo impreso: las láminas completas usan el
- * tamaño "grande" y las dos piezas de R-06 el tamaño "pequeño". Medidas y
- * montos deben confirmarse con tres cotizaciones del mismo alcance.
+ * Principios:
+ * - El destino siempre se llama igual: "La Vieja Adventures".
+ * - "Cañón del Río La Vieja" funciona como atractivo principal.
+ * - Máximo 3 niveles visuales de información.
+ * - Distancia + flecha tienen prioridad sobre frases promocionales.
+ * - Inglés únicamente como apoyo para visitantes internacionales.
+ * - Las señales de carretera orientan; las señales en propiedad informan.
  */
 export const ROTULOS: Rotulo[] = [
   {
     id: 1,
     code: "R-01",
-    name: "Entrada Vuelta Principal",
+    name: "Entrada Principal",
     kind: "entrada",
     placement: {
-      es: "Vuelta principal, entrada a la finca",
-      en: "Main turn, entrance to the property",
+      es: "Entrada principal de La Vieja Adventures",
+      en: "Main entrance to La Vieja Adventures",
     },
     purpose: {
-      es: "Rótulo madre: doble marca, es el que confirma que ya llegaron.",
-      en: "Flagship sign: dual brand, the one that confirms guests arrived.",
+      es: "Marcar claramente la llegada al destino.",
+      en: "Clearly mark arrival at the destination.",
     },
     panels: [
       {
         size: "grande",
+
         kicker: "Bienvenidos · Welcome",
+
         title: "La Vieja Adventures",
+
         titleEn: "Cañón del Río La Vieja",
-        subtitle: "La Vieja Organics",
+
+        subtitle:
+          "Cañón · Cascadas · Restaurante · Mirador",
+
         cta: {
-          es: "Entre aquí: cañón, cascadas y café orgánico",
-          en: "Turn in here: canyon, waterfalls & organic coffee",
+          es: "ENTRADA",
+          en: "ENTRANCE",
         },
-        brands: ["lva", "lva-turquoise"],
+
+        brands: ["lva"],
+
         arrow: "right",
+
         pictogram: "canon",
+
         photos: ["/image/IMG_4946.JPG"],
+
         price: TIER_PRICE.grande,
       },
     ],
   },
+
   {
     id: 2,
     code: "R-02",
     name: "Anticipo Puente La Vieja",
     kind: "anticipo",
+
     placement: {
-      es: "300 metros antes del Puente La Vieja",
-      en: "300 meters before the La Vieja bridge",
+      es: "300 m antes del Puente La Vieja",
+      en: "300 m before La Vieja Bridge",
     },
+
     purpose: {
-      es: "Aviso anticipado para que bajen la velocidad antes del puente.",
-      en: "Advance warning so drivers slow down before the bridge.",
+      es: "Preparar al conductor para el próximo giro.",
+      en: "Prepare drivers for the upcoming turn.",
     },
+
     panels: [
       {
         size: "grande",
-        kicker: "Puente La Vieja",
-        title: "Su aventura empieza en 300 m",
-        titleEn: "Your adventure starts in 300 m",
-        subtitle: "Cañón del Río La Vieja",
+
+        kicker: "PRÓXIMA ENTRADA",
+
+        title: "La Vieja Adventures",
+
+        titleEn: "Cañón del Río La Vieja",
+
+        subtitle: "Sucre · San Carlos",
+
         cta: {
-          es: "Baje la velocidad: la entrada es a la izquierda",
-          en: "Slow down: the entrance is on your left",
+          es: "300 m",
+          en: "300 m",
         },
+
         distance: "300 m",
+
         brands: ["lva"],
+
         arrow: "left",
-        pictogram: "rio",
-        photos: ["/image/IMG_4200.jpg", "/image/IMG_5592.jpg"],
+
+        pictogram: "canon",
+
+        photos: [
+          "/image/IMG_4200.jpg",
+          "/image/IMG_5592.jpg",
+          "/image/IMG_4376.jpg",
+          "/image/IMG_4210.jpg",
+        ],
+
         price: TIER_PRICE.grande,
       },
     ],
   },
+
   {
     id: 3,
     code: "R-03",
-    name: "Anticipo Vuelta Chicharronera",
+    name: "Desvío La Vieja Adventures",
     kind: "anticipo",
+
     placement: {
-      es: "Antes de la vuelta de la chicharronera",
-      en: "Before the chicharronera turn",
+      es: "Antes de la vuelta conocida como Chicharronera",
+      en: "Before the local Chicharronera turn",
     },
+
     purpose: {
-      es: "El punto de referencia más usado por los clientes que llaman perdidos.",
-      en: "The landmark most quoted by guests who call in lost.",
+      es: "Confirmar el desvío correcto hacia el destino.",
+      en: "Confirm the correct turn toward the destination.",
     },
+
     panels: [
       {
         size: "grande",
-        kicker: "Vuelta Chicharronera",
-        title: "Cascadas y pozas a la vuelta",
-        titleEn: "Waterfalls & pools around the bend",
-        subtitle: "Operación según clima y nivel del río",
+
+        kicker: "LA VIEJA ADVENTURES",
+
+        title: "Cañón del Río La Vieja",
+
+        titleEn: "River Canyon",
+
+        subtitle: "Sucre",
+
         cta: {
-          es: "No siga de largo: el cañón está aquí cerquita",
-          en: "Do not drive past: the canyon is right here",
+          es: "ENTRADA",
+          en: "ENTRANCE",
         },
+
         brands: ["lva"],
+
         arrow: "right",
-        pictogram: "cascada",
-        photos: ["/image/IMG_4376.jpg", "/image/IMG_4210.jpg"],
+
+        pictogram: "canon",
+
+        photos: [],
+
         price: TIER_PRICE.grande,
       },
     ],
   },
+
   {
     id: 4,
     code: "R-04",
-    name: "Restaurante y Mirador La Vieja",
+    name: "Restaurante y Mirador",
     kind: "destino",
+
     placement: {
       es: "Acceso al restaurante y mirador",
-      en: "Access to restaurant and lookout",
+      en: "Restaurant and lookout access",
     },
+
     purpose: {
-      es: "Captura al que solo va pasando: comida y vista, no solo tour.",
-      en: "Catches drive-by traffic: food and view, not only tours.",
+      es: "Identificar los servicios disponibles para visitantes.",
+      en: "Identify visitor services available at this access.",
     },
+
     panels: [
       {
         size: "grande",
-        kicker: "Restaurante y Mirador",
-        title: "Coma con vista al cañón",
-        titleEn: "Eat with a canyon view",
-        subtitle: "La Vieja",
+
+        kicker: "LA VIEJA",
+
+        title: "Restaurante & Mirador",
+
+        titleEn: "Restaurant & Lookout",
+
+        subtitle: "Café · Comida · Vista al cañón",
+
         cta: {
-          es: "Pare, tómese un café y asómese al mirador",
-          en: "Stop, grab a coffee and step out to the lookout",
+          es: "ENTRADA",
+          en: "ENTRANCE",
         },
+
         brands: ["lva"],
+
         arrow: "down-right",
+
         pictogram: "comida",
-        photos: ["/image/IMG_5686.jpg", "/image/IMG_6812.jpg"],
+
+        photos: ["/image/IMG_5686.jpg"],
+
         price: TIER_PRICE.grande,
       },
     ],
   },
+
   {
     id: 5,
     code: "R-05",
-    name: "Parqueo + Recepción",
+    name: "Recepción y Parqueo",
     kind: "indicador",
+
     placement: {
-      es: "Dentro de la propiedad, bifurcación de acceso",
-      en: "Inside the property, at the access fork",
+      es: "Bifurcación interna de acceso",
+      en: "Internal access fork",
     },
+
     purpose: {
-      es: "Indicador interno: ordena el flujo de carros y evita preguntas.",
-      en: "Internal wayfinding: orders car flow and prevents questions.",
+      es: "Separar claramente el flujo hacia recepción y parqueo.",
+      en: "Clearly direct vehicles toward reception and parking.",
     },
+
     panels: [
       {
         size: "grande",
-        kicker: "Parqueo · Parking",
+
+        kicker: "LA VIEJA ADVENTURES",
+
         title: "Recepción",
-        titleEn: "Check-in & tours",
-        subtitle: "Registro de tours",
+
+        titleEn: "Reception · Check-in",
+
+        subtitle: "Tours",
+
         cta: {
-          es: "Parquee aquí y pregunte por su tour del día",
-          en: "Park here and ask about today's tours",
+          es: "PARQUEO",
+          en: "PARKING",
         },
+
         brands: ["lva"],
+
         arrow: "right",
+
         pictogram: "parqueo",
-        photos: ["/image/IMG_4523.jpg", "/image/IMG_2443.jpg"],
+
+        photos: [],
+
         price: TIER_PRICE.grande,
       },
     ],
   },
+
   {
     id: 6,
     code: "R-06",
-    name: "Anticipos Lajas + CQ",
+    name: "Orientación Lajas + Ciudad Quesada",
     kind: "par",
+
     placement: {
-      es: "Lajas y Ciudad Quesada (dos láminas pequeñas)",
-      en: "Lajas and Ciudad Quesada (two small panels)",
+      es: "Lajas y salida de Ciudad Quesada hacia Sucre",
+      en: "Lajas and Ciudad Quesada approach toward Sucre",
     },
+
     purpose: {
-      es: "Dos anticipos lejanos: siembran la marca desde antes de la ruta.",
-      en: "Two far-out teasers: plant the brand before the route even starts.",
+      es: "Dar presencia al destino y confirmar la ruta desde mayor distancia.",
+      en: "Build destination awareness and confirm the route from farther away.",
     },
+
     panels: [
       {
         size: "pequeno",
-        kicker: "Lajas",
-        title: "El cañón lo espera",
-        titleEn: "The canyon is waiting",
+
+        kicker: "SUCRE",
+
+        title: "La Vieja Adventures",
+
+        titleEn: "Cañón del Río La Vieja",
+
+        subtitle: "Cañón · Cascadas · Tours",
+
         cta: {
-          es: "Siga rumbo a Sucre: vale cada kilómetro",
-          en: "Keep heading to Sucre: worth every kilometer",
+          es: "SIGA →",
+          en: "FOLLOW →",
         },
+
         brands: ["lva"],
+
         arrow: "right",
+
         pictogram: "canon",
+
         photos: ["/image/IMG_4671.jpg"],
+
         price: TIER_PRICE.pequeno,
       },
+
       {
         size: "pequeno",
-        kicker: "Ciudad Quesada",
-        title: "Cañón del Río La Vieja",
-        titleEn: "La Vieja River Canyon",
+
+        kicker: "SUCRE · SAN CARLOS",
+
+        title: "La Vieja Adventures",
+
+        titleEn: "Cañón del Río La Vieja",
+
+        subtitle: "Adventure · Nature · Waterfalls",
+
         cta: {
-          es: "Su próxima aventura queda saliendo a Sucre",
-          en: "Your next adventure is on the road to Sucre",
+          es: "→ SUCRE",
+          en: "→ SUCRE",
         },
+
         brands: ["lva"],
+
         arrow: "right",
-        pictogram: "mirador",
+
+        pictogram: "canon",
+
         photos: ["/image/IMG_39145.jpg"],
+
         price: TIER_PRICE.pequeno,
       },
     ],

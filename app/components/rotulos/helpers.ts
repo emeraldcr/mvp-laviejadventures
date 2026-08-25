@@ -1,5 +1,6 @@
 import { create as createQrMatrix } from "qrcode";
 import { CRC_PER_USD, PHOTO_SKEW } from "./constants";
+import { IVA_RATE, TIER_BY_KEY } from "./pricing";
 import type { Currency, Lang, Rotulo, SelectionTotals } from "./types";
 
 // ── Precios ──────────────────────────────────────────────────────────────────
@@ -27,6 +28,27 @@ export function formatPrice(crc: number, currency: Currency) {
 export function signSubtotal(rotulo: Rotulo) {
   return rotulo.panels.reduce((sum, panel) => sum + panel.price, 0);
 }
+
+/**
+ * Desglose base + IVA de un rótulo: el total ya incluye el 13%, pero en
+ * pantalla solo se veía el monto final. Esto permite mostrar de dónde sale
+ * cada colón, sumando la tarifa base de cada lámina según su tamaño.
+ */
+export function signSubtotalBreakdown(rotulo: Rotulo) {
+  const base = rotulo.panels.reduce((sum, panel) => sum + TIER_BY_KEY[panel.size].base, 0);
+  const total = signSubtotal(rotulo);
+  return { base, iva: total - base, total };
+}
+
+/** Mismo desglose para un conjunto de rótulos seleccionados. */
+export function selectionBreakdown(rotulos: Rotulo[], selected: number[]) {
+  const chosen = rotulos.filter((rotulo) => selected.includes(rotulo.id));
+  const base = chosen.reduce((sum, rotulo) => sum + signSubtotalBreakdown(rotulo).base, 0);
+  const total = chosen.reduce((sum, rotulo) => sum + signSubtotal(rotulo), 0);
+  return { base, iva: total - base, total };
+}
+
+export { IVA_RATE };
 
 /** Cuántos rótulos, cuántas láminas y cuánto suma lo que está incluido. */
 export function selectionTotals(rotulos: Rotulo[], selected: number[]): SelectionTotals {
