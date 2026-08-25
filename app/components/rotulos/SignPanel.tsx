@@ -23,7 +23,7 @@ const SIGN_THEME: Record<
   anticipo: { background: "#5C3B1E", accent: "#F5C518", eyebrow: "Destino turístico" },
   destino: { background: "#0B4EA2", accent: "#F5C518", eyebrow: "Servicios" },
   indicador: { background: "#2E2A25", accent: "#00C4B0", eyebrow: "Orientación interna" },
-  par: { background: "#2E2A25", accent: "#00C4B0", eyebrow: "La Vieja Adventures" },
+  distancia: { background: "#2E2A25", accent: "#00C4B0", eyebrow: "La Vieja Adventures" },
 };
 
 /**
@@ -43,33 +43,30 @@ export default function SignPanel({ panel, kind, large, eager }: SignPanelProps)
   const logo = panel.brands[0] === "lva-turquoise" ? "/logo1.jpg" : "/logo2.jpg";
   const hasPhotos = panel.photos.length > 0;
   const brandForward = panel.brandForward === true;
+  const showAmenities = kind === "destino" || kind === "indicador";
   /** Sin foto, el ícono/título/flecha son todo el diseño: deben llenar la lámina, no flotar en el centro. */
   const boosted = large || !hasPhotos;
   const aspectClass =
     brandForward
       ? hasPhotos
-        ? "aspect-[4/5] min-h-[820px] lg:aspect-[3/2] lg:min-h-0 print:aspect-[3/2] print:min-h-0"
-        : "aspect-[4/5] min-h-[480px] lg:aspect-[3/2] lg:min-h-0 print:aspect-[3/2] print:min-h-0"
+        ? "aspect-[4/5] min-h-[820px] lg:aspect-[2/1] lg:min-h-0 print:aspect-[2/1] print:min-h-0"
+        : "aspect-[4/5] min-h-[480px] lg:aspect-[2/1] lg:min-h-0 print:aspect-[2/1] print:min-h-0"
       : panel.size === "grande"
-      ? "aspect-[4/5] min-h-[480px] min-[520px]:aspect-[4/3] lg:aspect-[16/10] 2xl:aspect-[2/1] 2xl:min-h-0 print:aspect-[2/1] print:min-h-0"
+      ? "aspect-[4/5] min-h-[480px] min-[520px]:aspect-[4/3] lg:aspect-[3/2] lg:min-h-0 print:aspect-[3/2] print:min-h-0"
       : panel.size === "mediano"
-        ? "aspect-[4/5] min-h-[480px] sm:aspect-[4/3] 2xl:aspect-[3/2] 2xl:min-h-0 print:aspect-[3/2] print:min-h-0"
+        ? "aspect-[4/5] min-h-[480px] sm:aspect-[4/3] 2xl:aspect-[2/1] 2xl:min-h-0 print:aspect-[2/1] print:min-h-0"
         : "aspect-[4/5] min-h-[480px] sm:aspect-[4/3] xl:aspect-square xl:min-h-0 print:aspect-square print:min-h-0";
   /**
    * Una lámina "pequeño" no debe ocupar el mismo ancho en pantalla que una
-   * "grande": el ancho también es parte de la medida de trabajo. Los pares
-   * ya se acomodan en su propia columna de grid, así que no se reescala.
+   * "grande": el ancho también es parte de la medida de trabajo.
    */
   const widthScale = PANEL_SIZE_SPECS[panel.size].widthM / PANEL_SIZE_SPECS.grande.widthM;
-  const scaleWidth = kind !== "par";
 
   return (
     <div data-sign-artwork className="relative flex min-w-0 flex-1 flex-col items-center pb-7 sm:pb-9 xl:pb-12 print:pb-0">
       <div
-        className={`w-full drop-shadow-[0_26px_30px_rgba(0,0,0,0.5)] print:max-w-none print:drop-shadow-none ${
-          scaleWidth ? "sm:max-w-[var(--panel-max-w)]" : ""
-        }`}
-        style={scaleWidth ? ({ "--panel-max-w": `${Math.round(widthScale * 100)}%` } as CSSProperties) : undefined}
+        className="w-full drop-shadow-[0_26px_30px_rgba(0,0,0,0.5)] sm:max-w-[var(--panel-max-w)] print:max-w-none print:drop-shadow-none"
+        style={{ "--panel-max-w": `${Math.round(widthScale * 100)}%` } as CSSProperties}
       >
         <EditableSignCanvas
           panelId={panel.layoutId}
@@ -233,7 +230,7 @@ export default function SignPanel({ panel, kind, large, eager }: SignPanelProps)
                       {panel.subtitle}
                     </p>
                   ) : null}
-                  <AmenityRow className="mt-3 xl:mt-4" />
+                  {showAmenities ? <AmenityRow className="mt-3 xl:mt-4" /> : null}
                 </MovableGroup>
 
                 <MovableGroup
@@ -257,25 +254,27 @@ export default function SignPanel({ panel, kind, large, eager }: SignPanelProps)
               </div>
             ) : (
               <div className="relative flex min-h-0 flex-1 items-center gap-3 sm:gap-4 xl:gap-6 2xl:gap-8">
-                <MovableGroup
-                  groupId="pictogram"
-                  label={{ es: "Pictograma", en: "Pictogram" }}
-                  className={`relative z-10 flex shrink-0 items-center justify-center border-2 border-white/75 ${
-                    boosted
-                      ? "h-16 w-16 sm:h-20 sm:w-20 xl:h-24 xl:w-24 2xl:h-28 2xl:w-28"
-                      : "h-14 w-14 sm:h-16 sm:w-16 xl:h-20 xl:w-20 2xl:h-24 2xl:w-24"
-                  }`}
-                >
-                  <Picto
-                    className={
+                {kind !== "distancia" ? (
+                  <MovableGroup
+                    groupId="pictogram"
+                    label={{ es: "Pictograma", en: "Pictogram" }}
+                    className={`relative z-10 flex shrink-0 items-center justify-center border-2 border-white/75 ${
                       boosted
-                        ? "h-11 w-11 sm:h-14 sm:w-14 xl:h-16 xl:w-16 2xl:h-20 2xl:w-20"
-                        : "h-10 w-10 sm:h-11 sm:w-11 xl:h-14 xl:w-14 2xl:h-16 2xl:w-16"
-                    }
-                    strokeWidth={2.25}
-                    aria-hidden
-                  />
-                </MovableGroup>
+                        ? "h-16 w-16 sm:h-20 sm:w-20 xl:h-24 xl:w-24 2xl:h-28 2xl:w-28"
+                        : "h-14 w-14 sm:h-16 sm:w-16 xl:h-20 xl:w-20 2xl:h-24 2xl:w-24"
+                    }`}
+                  >
+                    <Picto
+                      className={
+                        boosted
+                          ? "h-11 w-11 sm:h-14 sm:w-14 xl:h-16 xl:w-16 2xl:h-20 2xl:w-20"
+                          : "h-10 w-10 sm:h-11 sm:w-11 xl:h-14 xl:w-14 2xl:h-16 2xl:w-16"
+                      }
+                      strokeWidth={2.25}
+                      aria-hidden
+                    />
+                  </MovableGroup>
+                ) : null}
 
                 <MovableGroup
                   groupId="copy"
@@ -312,7 +311,7 @@ export default function SignPanel({ panel, kind, large, eager }: SignPanelProps)
                       {panel.subtitle}
                     </p>
                   ) : null}
-                  <AmenityRow className="mt-2 xl:mt-3" />
+                  {showAmenities ? <AmenityRow className="mt-2 xl:mt-3" /> : null}
                 </MovableGroup>
 
                 <MovableGroup
@@ -352,38 +351,40 @@ export default function SignPanel({ panel, kind, large, eager }: SignPanelProps)
               </div>
             )}
 
-            <div
-              className={`relative mt-2 flex items-center gap-3 border-t border-white/20 pt-2 xl:mt-3 xl:pt-3 2xl:mt-5 2xl:pt-4 ${
-                brandForward ? "justify-center" : "justify-between"
-              }`}
-            >
-              <MovableGroup
-                groupId="footer-site"
-                label={{ es: "Sitio web", en: "Website" }}
-                className={`relative z-10 font-black uppercase text-white/75 ${
-                  brandForward
-                    ? "text-xs tracking-[0.18em] sm:text-sm xl:text-lg 2xl:text-xl"
-                    : "text-[9px] tracking-[0.14em] sm:text-[10px] xl:text-xs 2xl:text-sm"
+            {kind !== "distancia" ? (
+              <div
+                className={`relative mt-2 flex items-center gap-3 border-t border-white/20 pt-2 xl:mt-3 xl:pt-3 2xl:mt-5 2xl:pt-4 ${
+                  brandForward ? "justify-center" : "justify-between"
                 }`}
               >
-                laviejaadventures.com
-              </MovableGroup>
-              {!brandForward ? (
                 <MovableGroup
-                  groupId="footer-logo"
-                  label={{ es: "Logo del pie", en: "Footer logo" }}
-                  className="relative z-10 shrink-0 bg-white p-1"
+                  groupId="footer-site"
+                  label={{ es: "Sitio web", en: "Website" }}
+                  className={`relative z-10 font-black uppercase text-white/75 ${
+                    brandForward
+                      ? "text-xs tracking-[0.18em] sm:text-sm xl:text-lg 2xl:text-xl"
+                      : "text-[9px] tracking-[0.14em] sm:text-[10px] xl:text-xs 2xl:text-sm"
+                  }`}
                 >
-                  <Image
-                    src={logo}
-                    alt="La Vieja Adventures"
-                    width={large ? 42 : 34}
-                    height={large ? 42 : 34}
-                    className="h-auto w-8 object-contain sm:w-10 xl:w-12 2xl:w-14"
-                  />
+                  laviejaadventures.com
                 </MovableGroup>
-              ) : null}
-            </div>
+                {!brandForward ? (
+                  <MovableGroup
+                    groupId="footer-logo"
+                    label={{ es: "Logo del pie", en: "Footer logo" }}
+                    className="relative z-10 shrink-0 bg-white p-1"
+                  >
+                    <Image
+                      src={logo}
+                      alt="La Vieja Adventures"
+                      width={large ? 42 : 34}
+                      height={large ? 42 : 34}
+                      className="h-auto w-8 object-contain sm:w-10 xl:w-12 2xl:w-14"
+                    />
+                  </MovableGroup>
+                ) : null}
+              </div>
+            ) : null}
           </div>
         </EditableSignCanvas>
 

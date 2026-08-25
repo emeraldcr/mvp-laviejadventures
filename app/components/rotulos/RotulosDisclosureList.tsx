@@ -37,7 +37,25 @@ export default function RotulosDisclosureList({
   return (
     <section id="catalogo-rotulos" aria-labelledby="catalogo-rotulos-title" className="mt-12 scroll-mt-24 xl:mt-24 print:mt-0">
       <div className="flex flex-col gap-6 rounded-3xl border border-white/10 bg-zinc-900/45 p-5 sm:p-6 lg:flex-row lg:items-end lg:justify-between xl:rounded-[2.5rem] xl:p-10 2xl:p-12 print:hidden">
-        <div className="flex flex-wrap gap-2">
+        <div className="max-w-4xl">
+          <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#65e2d5]">
+            {t("Plan vial actualizado", "Updated road-sign plan")}
+          </p>
+          <h1
+            id="catalogo-rotulos-title"
+            className="mt-2 text-3xl font-black tracking-[-0.04em] text-white sm:text-4xl xl:text-5xl"
+          >
+            {t("Siete rótulos, tres tamaños, una ruta clara", "Seven signs, three sizes, one clear route")}
+          </h1>
+          <p className="mt-3 text-sm font-bold leading-relaxed text-zinc-300 sm:text-base">
+            {t(
+              "1 principal · 3 × 2 m · 2 alertas cercanas · 2 × 1 m · 4 señales de aproximación · 1 × 1 m",
+              "1 main sign · 3 × 2 m · 2 near-entry alerts · 2 × 1 m · 4 approach signs · 1 × 1 m",
+            )}
+          </p>
+        </div>
+
+        <div className="flex shrink-0 flex-wrap gap-2">
           <button
             type="button"
             onClick={() => setExpandedIds(allIds)}

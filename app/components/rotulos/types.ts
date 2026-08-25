@@ -31,7 +31,7 @@ export type PictogramKey =
   | "wifi"
   | "banos";
 
-export type RotuloKind = "entrada" | "anticipo" | "destino" | "indicador" | "par";
+export type RotuloKind = "entrada" | "anticipo" | "destino" | "indicador" | "distancia";
 
 /** Marca de red social: lucide no trae TikTok ni X, se usan paths propios. */
 export type Social = {
@@ -94,7 +94,7 @@ export type Proposal = {
   name: Copy;
   /** De donde sale el formato: sistemas reales que lo usan. */
   reference: Copy;
-  /** Para cual de los seis puntos sirve. */
+  /** Para cuáles puntos del plan sirve. */
   slots: string;
   why: Copy;
   specs: Copy[];

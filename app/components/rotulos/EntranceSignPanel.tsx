@@ -30,9 +30,9 @@ export default function EntranceSignPanel({ panel, eager }: { panel: Panel; eage
           label={{ es: panel.title, en: panel.titleEn }}
           data-sign-artboard
           data-panel-size={panel.size}
-          className="relative isolate overflow-hidden rounded-[30px] border-[8px] border-white bg-[#2E2A25] p-2 xl:rounded-[38px] xl:border-[10px] xl:p-2.5 print:aspect-[2/1] print:rounded-none print:border-[6px] print:p-0"
+          className="relative isolate w-full overflow-hidden rounded-[30px] border-[8px] border-white bg-[#2E2A25] p-2 lg:aspect-[3/2] xl:rounded-[38px] xl:border-[10px] xl:p-2.5 print:aspect-[3/2] print:rounded-none print:border-[6px] print:p-0"
         >
-          <div className="grid min-h-[760px] overflow-hidden rounded-[20px] bg-[#2E2A25] lg:min-h-[650px] lg:grid-cols-[minmax(360px,0.84fr)_minmax(0,1.16fr)] xl:grid-cols-[minmax(500px,0.9fr)_minmax(0,1.1fr)] print:h-full print:min-h-0 print:rounded-none print:grid-cols-[minmax(340px,0.8fr)_minmax(0,1.2fr)]">
+          <div className="grid min-h-[760px] overflow-hidden rounded-[20px] bg-[#2E2A25] lg:h-full lg:min-h-0 lg:grid-cols-[minmax(360px,0.84fr)_minmax(0,1.16fr)] xl:grid-cols-[minmax(500px,0.9fr)_minmax(0,1.1fr)] print:h-full print:min-h-0 print:rounded-none print:grid-cols-[minmax(340px,0.8fr)_minmax(0,1.2fr)]">
             <div className="relative order-2 flex min-w-0 flex-col bg-[#2E2A25] p-6 text-white sm:p-8 lg:order-1 lg:p-9 xl:p-11 print:p-6">
               <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-[0.14]">
                 <LeafShape veins className="absolute -right-10 -top-10 h-56 w-48 rotate-[22deg] text-[#00C4B0]" />

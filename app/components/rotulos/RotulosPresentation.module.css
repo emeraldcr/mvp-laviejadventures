@@ -52,11 +52,11 @@
   }
 
   .page :global([data-panel-size="grande"]) {
-    aspect-ratio: 2 / 1 !important;
+    aspect-ratio: 3 / 2 !important;
   }
 
   .page :global([data-panel-size="mediano"]) {
-    aspect-ratio: 3 / 2 !important;
+    aspect-ratio: 2 / 1 !important;
   }
 
   .page :global([data-panel-size="pequeno"]) {

@@ -2,21 +2,22 @@ import { TIER_PRICE } from "./pricing";
 import type { Rotulo } from "./types";
 
 /**
- * Señalización vial y de orientación de La Vieja Adventures.
+ * Plan vial de La Vieja Adventures.
  *
- * Principios:
- * - El destino siempre se llama igual: "La Vieja Adventures".
- * - "Cañón del Río La Vieja" funciona como atractivo principal.
- * - Máximo 3 niveles visuales de información.
- * - Distancia + flecha tienen prioridad sobre frases promocionales.
- * - Inglés únicamente como apoyo para visitantes internacionales.
- * - Las señales de carretera orientan; las señales en propiedad informan.
+ * Alcance acordado:
+ * - 1 rótulo principal de 3 × 2 m.
+ * - 2 alertas cercanas de 2 × 1 m, una por sentido de giro.
+ * - 4 señales de aproximación de 1 × 1 m: 2 km y 1 km por cada sentido.
+ *
+ * Las señales de carretera priorizan destino, distancia y flecha. Los datos de
+ * contacto, servicios y fotografía se concentran en la entrada principal,
+ * donde el vehículo circula más despacio.
  */
 export const ROTULOS: Rotulo[] = [
   {
     id: 1,
     code: "R-01",
-    name: "Entrada Principal",
+    name: "Rótulo principal",
     kind: "entrada",
     placement: {
       es: "Entrada principal de La Vieja Adventures",
@@ -29,308 +30,220 @@ export const ROTULOS: Rotulo[] = [
     panels: [
       {
         layoutId: "r01-main",
-
         size: "grande",
-
         kicker: "Bienvenidos · Welcome",
-
         title: "La Vieja Adventures",
-
         titleEn: "Cañón del Río La Vieja",
-
         subtitle:
           "Tours · Cafetería y Restaurante · Senderos · Cascadas · Mirador · Baños",
-
         cta: {
           es: "ENTRADA",
           en: "ENTRANCE",
         },
-
         brands: ["lva"],
-
         arrow: "right",
-
         pictogram: "canon",
-
         photos: ["/image/IMG_4946.JPG"],
-
         price: TIER_PRICE.grande,
       },
     ],
   },
-
   {
     id: 2,
     code: "R-02",
-    name: "Anticipo Puente La Vieja",
+    name: "Alerta cercana · giro a la izquierda",
     kind: "anticipo",
-
     placement: {
-      es: "300 m antes del Puente La Vieja",
-      en: "300 m before La Vieja Bridge",
+      es: "Aproximación cercana a la entrada, para el giro a la izquierda",
+      en: "Near the entrance, for the left-turn approach",
     },
-
     purpose: {
-      es: "Preparar al conductor para el próximo giro.",
-      en: "Prepare drivers for the upcoming turn.",
+      es: "Avisar con tiempo que la entrada está próxima y preparar el giro.",
+      en: "Warn that the entrance is near and prepare drivers for the turn.",
     },
-
     panels: [
       {
-        layoutId: "r02-main",
-
-        size: "grande",
-
+        layoutId: "r02-alert-left",
+        size: "mediano",
         kicker: "PRÓXIMA ENTRADA",
-
         title: "La Vieja Adventures",
-
-        titleEn: "Cañón del Río La Vieja",
-
+        titleEn: "La Vieja River Canyon",
         subtitle: "Sucre · San Carlos",
-
         cta: {
-          es: "300 m",
-          en: "300 m",
+          es: "ENTRADA",
+          en: "ENTRANCE",
         },
-
-        distance: "300 m",
-
         brands: ["lva"],
-
         brandForward: true,
-
         arrow: "left",
-
         pictogram: "canon",
-
-        photos: ["/image/IMG_4200.jpg", "/image/IMG_5592.jpg"],
-
-        price: TIER_PRICE.grande,
+        photos: [],
+        price: TIER_PRICE.mediano,
       },
     ],
   },
-
   {
     id: 3,
     code: "R-03",
-    name: "Desvío La Vieja Adventures",
+    name: "Alerta cercana · giro a la derecha",
     kind: "anticipo",
-
     placement: {
-      es: "Antes de la vuelta conocida como Chicharronera",
-      en: "Before the local Chicharronera turn",
+      es: "Aproximación cercana a la entrada, para el giro a la derecha",
+      en: "Near the entrance, for the right-turn approach",
     },
-
     purpose: {
-      es: "Confirmar el desvío correcto hacia el destino.",
-      en: "Confirm the correct turn toward the destination.",
+      es: "Avisar con tiempo que la entrada está próxima y preparar el giro.",
+      en: "Warn that the entrance is near and prepare drivers for the turn.",
     },
-
     panels: [
       {
-        layoutId: "r03-main",
-
+        layoutId: "r03-alert-right",
         size: "mediano",
-
-        kicker: "LA VIEJA ADVENTURES",
-
-        title: "Cañón del Río La Vieja",
-
-        titleEn: "River Canyon",
-
-        subtitle: "Sucre",
-
+        kicker: "PRÓXIMA ENTRADA",
+        title: "La Vieja Adventures",
+        titleEn: "La Vieja River Canyon",
+        subtitle: "Sucre · San Carlos",
         cta: {
           es: "ENTRADA",
           en: "ENTRANCE",
         },
-
         brands: ["lva"],
-
         brandForward: true,
-
         arrow: "right",
-
         pictogram: "canon",
-
         photos: [],
-
         price: TIER_PRICE.mediano,
       },
     ],
   },
-
   {
     id: 4,
     code: "R-04",
-    name: "Restaurante y Mirador",
-    kind: "destino",
-
+    name: "Aproximación izquierda · 2 km",
+    kind: "distancia",
     placement: {
-      es: "Acceso al restaurante y mirador",
-      en: "Restaurant and lookout access",
+      es: "A 2 km de la entrada, en el sentido que requiere giro a la izquierda",
+      en: "2 km from the entrance, on the approach requiring a left turn",
     },
-
     purpose: {
-      es: "Identificar los servicios disponibles para visitantes.",
-      en: "Identify visitor services available at this access.",
+      es: "Indicar la distancia restante y anticipar el sentido del giro final.",
+      en: "Show the remaining distance and preview the direction of the final turn.",
     },
-
     panels: [
       {
-        layoutId: "r04-main",
-
-        size: "mediano",
-
-        kicker: "LA VIEJA",
-
-        title: "Restaurante & Mirador",
-
-        titleEn: "Restaurant & Lookout",
-
-        subtitle: "Café · Comida · Vista al cañón",
-
+        layoutId: "r04-distance-2km-left",
+        size: "pequeno",
+        kicker: "FALTAN",
+        title: "La Vieja Adventures",
+        titleEn: "La Vieja River Canyon",
         cta: {
-          es: "ENTRADA",
-          en: "ENTRANCE",
+          es: "A 2 KM",
+          en: "2 KM AHEAD",
         },
-
+        distance: "2 km",
         brands: ["lva"],
-
-        brandForward: true,
-
-        arrow: "down-right",
-
-        pictogram: "comida",
-
+        arrow: "left",
+        pictogram: "canon",
         photos: [],
-
-        price: TIER_PRICE.mediano,
+        price: TIER_PRICE.pequeno,
       },
     ],
   },
-
   {
     id: 5,
     code: "R-05",
-    name: "Recepción y Parqueo",
-    kind: "indicador",
-
+    name: "Aproximación izquierda · 1 km",
+    kind: "distancia",
     placement: {
-      es: "Bifurcación interna de acceso",
-      en: "Internal access fork",
+      es: "A 1 km de la entrada, en el sentido que requiere giro a la izquierda",
+      en: "1 km from the entrance, on the approach requiring a left turn",
     },
-
     purpose: {
-      es: "Separar claramente el flujo hacia recepción y parqueo.",
-      en: "Clearly direct vehicles toward reception and parking.",
+      es: "Repetir la distancia restante y confirmar el sentido del giro final.",
+      en: "Repeat the remaining distance and confirm the direction of the final turn.",
     },
-
     panels: [
       {
-        layoutId: "r05-main",
-
+        layoutId: "r05-distance-1km-left",
         size: "pequeno",
-
-        kicker: "LA VIEJA ADVENTURES",
-
-        title: "Recepción",
-
-        titleEn: "Reception · Check-in",
-
-        subtitle: "Tours",
-
+        kicker: "FALTAN",
+        title: "La Vieja Adventures",
+        titleEn: "La Vieja River Canyon",
         cta: {
-          es: "PARQUEO",
-          en: "PARKING",
+          es: "A 1 KM",
+          en: "1 KM AHEAD",
         },
-
+        distance: "1 km",
         brands: ["lva"],
-
-        arrow: "right",
-
-        pictogram: "parqueo",
-
+        arrow: "left",
+        pictogram: "canon",
         photos: [],
-
         price: TIER_PRICE.pequeno,
       },
     ],
   },
-
   {
     id: 6,
     code: "R-06",
-    name: "Orientación Lajas + Ciudad Quesada",
-    kind: "par",
-
+    name: "Aproximación derecha · 2 km",
+    kind: "distancia",
     placement: {
-      es: "Lajas y salida de Ciudad Quesada hacia Sucre",
-      en: "Lajas and Ciudad Quesada approach toward Sucre",
+      es: "A 2 km de la entrada, en el sentido que requiere giro a la derecha",
+      en: "2 km from the entrance, on the approach requiring a right turn",
     },
-
     purpose: {
-      es: "Dar presencia al destino y confirmar la ruta desde mayor distancia.",
-      en: "Build destination awareness and confirm the route from farther away.",
+      es: "Indicar la distancia restante y anticipar el sentido del giro final.",
+      en: "Show the remaining distance and preview the direction of the final turn.",
     },
-
     panels: [
       {
-        layoutId: "r06-lajas",
-
+        layoutId: "r06-distance-2km-right",
         size: "pequeno",
-
-        kicker: "SUCRE",
-
+        kicker: "FALTAN",
         title: "La Vieja Adventures",
-
-        titleEn: "Cañón del Río La Vieja",
-
-        subtitle: "Cañón · Cascadas · Tours",
-
+        titleEn: "La Vieja River Canyon",
         cta: {
-          es: "SIGA →",
-          en: "FOLLOW →",
+          es: "A 2 KM",
+          en: "2 KM AHEAD",
         },
-
+        distance: "2 km",
         brands: ["lva"],
-
         arrow: "right",
-
         pictogram: "canon",
-
-        photos: ["/image/IMG_4671.jpg"],
-
+        photos: [],
         price: TIER_PRICE.pequeno,
       },
-
+    ],
+  },
+  {
+    id: 7,
+    code: "R-07",
+    name: "Aproximación derecha · 1 km",
+    kind: "distancia",
+    placement: {
+      es: "A 1 km de la entrada, en el sentido que requiere giro a la derecha",
+      en: "1 km from the entrance, on the approach requiring a right turn",
+    },
+    purpose: {
+      es: "Repetir la distancia restante y confirmar el sentido del giro final.",
+      en: "Repeat the remaining distance and confirm the direction of the final turn.",
+    },
+    panels: [
       {
-        layoutId: "r06-ciudad-quesada",
-
+        layoutId: "r07-distance-1km-right",
         size: "pequeno",
-
-        kicker: "SUCRE · SAN CARLOS",
-
+        kicker: "FALTAN",
         title: "La Vieja Adventures",
-
-        titleEn: "Cañón del Río La Vieja",
-
-        subtitle: "Adventure · Nature · Waterfalls",
-
+        titleEn: "La Vieja River Canyon",
         cta: {
-          es: "→ SUCRE",
-          en: "→ SUCRE",
+          es: "A 1 KM",
+          en: "1 KM AHEAD",
         },
-
+        distance: "1 km",
         brands: ["lva"],
-
         arrow: "right",
-
         pictogram: "canon",
-
-        photos: ["/image/IMG_39145.jpg"],
-
+        photos: [],
         price: TIER_PRICE.pequeno,
       },
     ],

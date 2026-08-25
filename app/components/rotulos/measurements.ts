@@ -12,13 +12,13 @@ export const PANEL_SIZE_SPECS: Record<PanelSizeKey, PanelSizeSpec> = {
   grande: {
     key: "grande",
     label: { es: "Grande", en: "Large" },
-    widthM: 2,
-    heightM: 1,
+    widthM: 3,
+    heightM: 2,
   },
   mediano: {
     key: "mediano",
     label: { es: "Mediano", en: "Medium" },
-    widthM: 1.5,
+    widthM: 2,
     heightM: 1,
   },
   pequeno: {

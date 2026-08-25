@@ -26,7 +26,7 @@ export default function RotulosPlanOverview({ rotulos, lang, t }: RotulosPlanOve
           </span>
           <div>
             <p className="text-3xl font-black text-white">{stats.records}</p>
-            <p className="text-sm font-bold text-zinc-400">{t("fichas R-01 a R-06", "records R-01 to R-06")}</p>
+            <p className="text-sm font-bold text-zinc-400">{t("fichas R-01 a R-07", "records R-01 to R-07")}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">

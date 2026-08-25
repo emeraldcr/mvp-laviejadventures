@@ -164,11 +164,11 @@ export const KIND_META: Record<
       "border-violet-300/40 bg-violet-400/10 text-violet-200",
   },
 
-  par: {
+  distancia: {
     icon: MapPin,
     label: {
-      es: "Conjunto de señales",
-      en: "Sign Set",
+      es: "Señal de aproximación",
+      en: "Approach Sign",
     },
     tone:
       "border-rose-300/40 bg-rose-400/10 text-rose-200",

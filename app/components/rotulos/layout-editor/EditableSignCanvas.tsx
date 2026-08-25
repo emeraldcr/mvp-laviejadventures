@@ -8,6 +8,7 @@ import {
   useState,
   type ComponentPropsWithoutRef,
   type PointerEvent as ReactPointerEvent,
+  type Ref,
 } from "react";
 import { Plus, RotateCcw, Shapes, Type } from "lucide-react";
 import AddedElementsLayer from "./AddedElementsLayer";
@@ -36,6 +37,8 @@ export type EditableSignCanvasProps = ComponentPropsWithoutRef<"div"> & {
   panelId: string;
   revision: PanelLayoutRevision;
   label: LocalizedText;
+  /** Acceso directo al nodo del lienzo, por ejemplo para exportarlo a imagen. */
+  ref?: Ref<HTMLDivElement>;
 };
 
 export default function EditableSignCanvas({
@@ -46,10 +49,19 @@ export default function EditableSignCanvas({
   role = "group",
   "aria-label": ariaLabel,
   onPointerDownCapture,
+  ref,
   ...divProps
 }: EditableSignCanvasProps) {
   const editor = useSignLayoutEditor();
   const canvasRef = useRef<HTMLDivElement>(null);
+  const setCanvasNode = useCallback(
+    (node: HTMLDivElement | null) => {
+      canvasRef.current = node;
+      if (typeof ref === "function") ref(node);
+      else if (ref) ref.current = node;
+    },
+    [ref],
+  );
   const groupsRef = useRef(new Map<string, MovableGroupController>());
   const resizeFrameRef = useRef<number | null>(null);
   const [selectedIcon, setSelectedIcon] = useState<InsertableIconKey>("arrow-right");
@@ -266,7 +278,7 @@ export default function EditableSignCanvas({
       <>
         <div
           {...divProps}
-          ref={canvasRef}
+          ref={setCanvasNode}
           role={role}
           aria-label={ariaLabel ?? resolvedLabel}
           data-layout-canvas

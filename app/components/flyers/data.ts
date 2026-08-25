@@ -12,11 +12,16 @@ import {
 } from "lucide-react";
 import type { Flyer, FlyerAccent } from "./types";
 
-const TURQUOISE: FlyerAccent = { bg: "#00C4B0", text: "#08312C" };
-const YELLOW: FlyerAccent = { bg: "#F5C518", text: "#2E2A25" };
-const BLUE: FlyerAccent = { bg: "#0B4EA2", text: "#FFFFFF" };
-const GREEN: FlyerAccent = { bg: "#0F7A3D", text: "#FFFFFF" };
-const BROWN: FlyerAccent = { bg: "#5C3B1E", text: "#FFFFFF" };
+/**
+ * Paleta oficial de la logoguía (turquesa + negro cálido) y sus tintes
+ * derivados. Sin colores de señalización vial: ver
+ * `.agents/skills/la-vieja-brand-design/references/brand-system.md`.
+ */
+const TURQUOISE: FlyerAccent = { bg: "#00C4B0", text: "#062824", wash: "rgba(0,196,176,0.4)" };
+const DEEP_TEAL: FlyerAccent = { bg: "#0A6F63", text: "#FFFFFF", wash: "rgba(10,111,99,0.45)" };
+const WARM_BLACK: FlyerAccent = { bg: "#2E2A25", text: "#FFFFFF", wash: "rgba(46,42,37,0.55)" };
+const MIST: FlyerAccent = { bg: "#F3FBF9", text: "#12302B" };
+const AMBER: FlyerAccent = { bg: "#F3A712", text: "#2E2A25", wash: "rgba(243,167,18,0.32)" };
 
 /**
  * Diez publicaciones listas para Instagram, todas en formato cuadrado
@@ -42,13 +47,14 @@ export const FLYERS: Flyer[] = [
     code: "IG-02",
     layoutId: "flyer-canyoning",
     icon: Waves,
-    accent: BLUE,
+    accent: WARM_BLACK,
     kicker: "Tour de aventura",
     title: "Canyoning Extremo",
     titleEn: "Extreme Canyoning Tour",
     subtitle: "Rappel, pozas naturales y guías certificados",
     cta: { es: "Reservá tu cupo", en: "Book your spot" },
     photo: "/image/IMG_3705.jpg",
+    weatherDependent: true,
   },
   {
     id: 3,
@@ -62,13 +68,14 @@ export const FLYERS: Flyer[] = [
     subtitle: "Senderos guiados hacia caídas de agua únicas",
     cta: { es: "Explorá ya", en: "Explore now" },
     photo: "/image/IMG_5038.JPG",
+    weatherDependent: true,
   },
   {
     id: 4,
     code: "IG-04",
     layoutId: "flyer-grupo",
     icon: Users,
-    accent: GREEN,
+    accent: MIST,
     kicker: "Aventura en grupo",
     title: "Traé a tu Gente",
     titleEn: "Bring Your Crew",
@@ -81,20 +88,21 @@ export const FLYERS: Flyer[] = [
     code: "IG-05",
     layoutId: "flyer-senderos",
     icon: TreePine,
-    accent: BROWN,
+    accent: DEEP_TEAL,
     kicker: "Senderos y rappel",
     title: "Subí, Bajá, Explorá",
     titleEn: "Climb, Descend, Explore",
     subtitle: "Rutas guiadas para todos los niveles de experiencia",
     cta: { es: "Elegí tu ruta", en: "Choose your route" },
     photo: "/image/IMG_3920.jpg",
+    weatherDependent: true,
   },
   {
     id: 6,
     code: "IG-06",
     layoutId: "flyer-luz",
     icon: Sun,
-    accent: YELLOW,
+    accent: MIST,
     kicker: "Momento mágico",
     title: "Donde Entra la Luz",
     titleEn: "Where the Light Breaks In",
@@ -107,7 +115,7 @@ export const FLYERS: Flyer[] = [
     code: "IG-07",
     layoutId: "flyer-promo",
     icon: Percent,
-    accent: YELLOW,
+    accent: AMBER,
     kicker: "Promo de temporada",
     title: "2x1 Entre Semana",
     titleEn: "2-for-1, Weekdays",
@@ -120,7 +128,7 @@ export const FLYERS: Flyer[] = [
     code: "IG-08",
     layoutId: "flyer-horario",
     icon: Clock,
-    accent: BLUE,
+    accent: WARM_BLACK,
     kicker: "Horario y ubicación",
     title: "Abrimos Todos los Días",
     titleEn: "Open Every Day",
@@ -146,7 +154,7 @@ export const FLYERS: Flyer[] = [
     code: "IG-10",
     layoutId: "flyer-reserva",
     icon: MessageCircle,
-    accent: YELLOW,
+    accent: TURQUOISE,
     kicker: "Reservá tu cupo",
     title: "Tu Aventura te Espera",
     titleEn: "Your Adventure Awaits",

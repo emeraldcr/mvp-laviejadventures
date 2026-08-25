@@ -13,7 +13,7 @@ export const PROPOSALS: Proposal[] = [
       es: "MUTCD (EE.UU.), TSRGD (Reino Unido), Unterrichtungstafel (Alemania), SECTUR (México)",
       en: "MUTCD (US), TSRGD (UK), Unterrichtungstafel (Germany), SECTUR (Mexico)",
     },
-    slots: "R-02 · R-03 · R-06",
+    slots: "R-02 a R-07",
     why: {
       es: "El café es el color que el mundo entero reserva para atractivo turístico y recreativo. El conductor lo decodifica antes de leer una sola letra: sabe que ahí hay algo que visitar, no un negocio cualquiera. Pictograma + destino + distancia: tres unidades, ni una más.",
       en: "Brown is the color the whole world reserves for tourist and recreational attractions. Drivers decode it before reading a single letter. Pictogram, destination, distance: three units, no more.",
@@ -77,10 +77,10 @@ export const PROPOSALS: Proposal[] = [
       es: "Trailblazer del MUTCD, fingerboard de Nueva Zelanda y Australia",
       en: "MUTCD trailblazer, New Zealand and Australia fingerboards",
     },
-    slots: "R-06 (Lajas y CQ)",
+    slots: "R-04 a R-07 (aproximaciones de 2 km y 1 km)",
     why: {
-      es: "Para los anticipos lejanos donde solo hay que sembrar el rumbo. Tres palabras y una flecha. En Lajas y Ciudad Quesada el conductor no va a decidir nada todavía: solo tiene que registrar que existe y hacia dónde queda.",
-      en: "For the far-out teasers where you only need to plant a direction. Three words and an arrow. In Lajas and Ciudad Quesada the driver is not deciding anything yet, they just need to register that it exists and which way it is.",
+      es: "Para los anticipos lejanos donde solo hay que sembrar el rumbo. Nombre, distancia y flecha: el conductor registra que el destino existe, cuánto falta y cuál es el sentido final.",
+      en: "For distant approach signs that only need to establish the route. Name, distance and arrow: drivers register that the destination exists, how far remains and the final direction.",
     },
     specs: [
       {
@@ -109,7 +109,7 @@ export const PROPOSALS: Proposal[] = [
       es: "Specific Service (LOGO) signs del MUTCD, paneles azules de servicios en Europa",
       en: "MUTCD Specific Service (LOGO) signs, blue service panels across Europe",
     },
-    slots: "R-04 (restaurante y mirador)",
+    slots: "Fase interna opcional · fuera de R-01 a R-07",
     why: {
       es: "El azul es el código universal de servicios al conductor: comida, combustible, hospedaje. Para el restaurante y mirador dice más que cualquier frase, porque el que tiene hambre lo busca sin leer. Cada servicio va en su placa blanca con pictograma.",
       en: "Blue is the universal code for driver services: food, fuel, lodging. For the restaurant and lookout it says more than any sentence, because a hungry driver scans for it without reading. Each service gets its own white tile with a pictogram.",
@@ -173,7 +173,7 @@ export const PROPOSALS: Proposal[] = [
       es: "Fingerpost británico y señalética de senderos (parques nacionales, Camino de Santiago)",
       en: "British fingerpost and trail signage (national parks, Camino de Santiago)",
     },
-    slots: "R-05 (parqueo y recepción)",
+    slots: "Fase interna opcional · fuera de R-01 a R-07",
     why: {
       es: "Adentro de la finca el problema ya no es velocidad, es orientación. Una paleta por destino, apiladas en un poste: parqueo, recepción, restaurante, sendero. Madera y crema pegan con el entorno y se leen a pie, que es como se recorre.",
       en: "Inside the property the problem is no longer speed, it is orientation. One blade per destination stacked on a post: parking, reception, restaurant, trail. Wood and cream fit the setting and read on foot, which is how people move there.",

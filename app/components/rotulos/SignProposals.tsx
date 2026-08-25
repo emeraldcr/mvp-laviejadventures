@@ -110,26 +110,14 @@ export default function SignProposals({ lang }: { lang: Lang }) {
           <li>
             <span className="font-black">R-02 y R-03 · </span>
             {lang === "es"
-              ? "Café turístico (P-A), o el formato vial modular de la foto (P-B) después de validar ubicación y permisos aplicables. Sin foto, sin QR, sin redes: destino, flecha y distancia."
-              : "Brown tourist sign (P-A), or the modular road-style format from the photo (P-B) after validating location and applicable permits. No photo, no QR, no socials: destination, arrow, distance."}
+              ? "Café turístico (P-A), o el formato vial modular de la foto (P-B) después de validar ubicación y permisos aplicables. Sin foto, QR ni redes: destino, próxima entrada y flecha."
+              : "Brown tourist sign (P-A), or the modular road-style format from the photo (P-B) after validating location and applicable permits. No photo, QR or socials: destination, next entrance and arrow."}
           </li>
           <li>
-            <span className="font-black">R-04 · </span>
+            <span className="font-black">R-04 a R-07 · </span>
             {lang === "es"
-              ? "Azul de servicios (P-D). El que anda con hambre lo encuentra sin leer."
-              : "Blue service sign (P-D). A hungry driver finds it without reading."}
-          </li>
-          <li>
-            <span className="font-black">R-05 · </span>
-            {lang === "es"
-              ? "Paletas de madera (P-F). Adentro se camina, no se maneja."
-              : "Wooden blades (P-F). Inside people walk, they do not drive."}
-          </li>
-          <li>
-            <span className="font-black">R-06 · </span>
-            {lang === "es"
-              ? "Flecha mínima (P-C). Tres palabras, una flecha, los kilómetros."
-              : "Minimal trailblazer (P-C). Three words, one arrow, the distance."}
+              ? "Flecha mínima (P-C). Nombre, flecha y distancia; dos piezas marcan 2 km y dos piezas marcan 1 km."
+              : "Minimal trailblazer (P-C). Name, arrow and distance; two signs mark 2 km and two signs mark 1 km."}
           </li>
         </ul>
         <p className="mt-4 border-t border-[#9ff5eb]/20 pt-3 text-xs leading-relaxed text-[#c7faf5]/80">

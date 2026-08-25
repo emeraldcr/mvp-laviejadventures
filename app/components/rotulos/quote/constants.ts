@@ -14,14 +14,14 @@ export const SIGN_SIZES: SignSizeDefinition[] = [
   {
     key: "large",
     label: "Grande",
-    dimensions: "2 × 1 m",
+    dimensions: "3 × 2 m",
     widthM: PANEL_SIZE_SPECS.grande.widthM,
     heightM: PANEL_SIZE_SPECS.grande.heightM,
   },
   {
     key: "medium",
     label: "Mediano",
-    dimensions: "1,5 × 1 m",
+    dimensions: "2 × 1 m",
     widthM: PANEL_SIZE_SPECS.mediano.widthM,
     heightM: PANEL_SIZE_SPECS.mediano.heightM,
   },

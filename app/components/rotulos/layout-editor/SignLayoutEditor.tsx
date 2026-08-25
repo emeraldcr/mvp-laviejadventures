@@ -544,7 +544,7 @@ export default function SignLayoutEditor({
       >
         <div
           data-layout-toolbar
-          className={`mb-4 flex flex-col gap-3 rounded-2xl border p-4 text-white shadow-lg shadow-black/20 sm:flex-row sm:items-center sm:justify-between print:hidden ${
+          className={`mb-4 flex flex-col gap-3 rounded-2xl border p-4 text-white shadow-lg shadow-black/20 print:hidden ${
             isEditing ? "border-[#F5C518]/70 bg-[#302b16]" : "border-[#00C4B0]/30 bg-[#102c2a]"
           }`}
           role="group"

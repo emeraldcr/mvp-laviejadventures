@@ -44,6 +44,28 @@ export function LeafShape({ className, style, veins }: LeafShapeProps) {
   );
 }
 
+const RIVER_LINES = [
+  "M14 0C28 26 2 52 16 78C30 104 4 130 18 156C30 178 12 196 20 220",
+  "M40 0C52 24 30 50 44 76C58 102 34 128 46 154C58 176 38 196 48 220",
+  "M66 0C76 22 58 48 70 74C82 100 62 126 72 152C82 174 64 194 74 220",
+];
+
+/**
+ * Líneas de cañón/río, el mismo trazo ondulado que forma el interior del
+ * isotipo. Textura de marca reconocible sin tocar el archivo del logo.
+ */
+export function CanyonLines({ className, style }: { className?: string; style?: CSSProperties }) {
+  return (
+    <svg viewBox="0 0 88 220" className={className} style={style} fill="none" aria-hidden>
+      <g stroke="currentColor" strokeWidth={3.5} strokeLinecap="round">
+        {RIVER_LINES.map((d) => (
+          <path key={d} d={d} />
+        ))}
+      </g>
+    </svg>
+  );
+}
+
 /** Dos hojas superpuestas: el acento que se posa junto a un pictograma o flecha. */
 export function LeafSprig({ className }: { className?: string }) {
   return (

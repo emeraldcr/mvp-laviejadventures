@@ -44,7 +44,7 @@ export default function ProposalMock({ variant }: { variant: Variant }) {
             style={{ backgroundColor: SIGN_COLORS.blue }}
           >
             <ArrowUp className="h-8 w-8 text-white" strokeWidth={3} aria-hidden />
-            <span className="mt-1 text-sm font-black text-white">3 km</span>
+            <span className="mt-1 text-sm font-black text-white">2 km</span>
           </div>
           <div
             className="flex flex-1 items-center justify-center gap-2 rounded-[3px] border-[3px] px-3 py-2"
@@ -94,7 +94,7 @@ export default function ProposalMock({ variant }: { variant: Variant }) {
           </div>
           <div className="flex flex-col items-center border-l-2 border-white/60 pl-3">
             <ArrowUpRight className="h-9 w-9 text-white" strokeWidth={3} aria-hidden />
-            <span className="mt-1 text-lg font-black text-white">3 km</span>
+            <span className="mt-1 text-lg font-black text-white">2 km</span>
           </div>
         </div>
       </SignFrame>
@@ -131,7 +131,7 @@ export default function ProposalMock({ variant }: { variant: Variant }) {
           })}
         </div>
         <p className="pt-2 text-center text-xs font-black uppercase tracking-[0.16em] text-white">
-          La Vieja Adventures &middot; 300 m
+          La Vieja Adventures
         </p>
       </SignFrame>
     );
@@ -148,7 +148,7 @@ export default function ProposalMock({ variant }: { variant: Variant }) {
             <p className="text-2xl font-black uppercase leading-none tracking-tight text-white">
               Adventures
             </p>
-            <p className="mt-2 text-lg font-black text-white">12 km</p>
+            <p className="mt-2 text-lg font-black text-white">1 km</p>
           </div>
           <ArrowUpRight className="h-20 w-20 shrink-0 text-white" strokeWidth={3} aria-hidden />
         </div>

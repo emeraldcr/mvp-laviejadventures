@@ -12,6 +12,8 @@ export type FlyerAccent = {
   bg: string;
   /** Color de texto con contraste garantizado sobre `bg`. */
   text: string;
+  /** Tinte translúcido usado para graduar la fotografía con el color de marca. */
+  wash?: string;
 };
 
 export type Flyer = {
@@ -29,4 +31,6 @@ export type Flyer = {
   photo: string;
   /** Solo la publicación de reserva incluye el código QR de contacto. */
   showQr?: boolean;
+  /** Cañón, rappel o río: exige la nota de clima/guía del contenido turístico. */
+  weatherDependent?: boolean;
 };
