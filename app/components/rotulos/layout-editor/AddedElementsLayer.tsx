@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import { ImageUp } from "lucide-react";
 import MovableGroup from "./MovableGroup";
 import TextEffectsToolbar from "./TextEffectsToolbar";
+import { ImageUploadError, processImageFile } from "./imageUpload";
 import {
   INSERTABLE_ICON_OPTIONS,
   InsertedElementArtwork,
@@ -15,6 +17,7 @@ import { useEditableSignCanvas } from "./canvasContext";
 import {
   addedElementGroupId,
   type AddedCanvasElement,
+  type AddedImageElement,
   type AddedTextElement,
   type AddedTextStyle,
   type InsertableIconKey,
@@ -136,6 +139,81 @@ function AddedIconInspector({ element }: { element: Extract<AddedCanvasElement, 
   );
 }
 
+function AddedImageInspector({ element }: { element: AddedImageElement }) {
+  const { lang, updateAddedElement, announce } = useEditableSignCanvas();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const errorMessage = (reason: ImageUploadError["reason"]) => {
+    if (lang === "es") {
+      switch (reason) {
+        case "unsupported-type":
+          return "Formato no admitido. Use PNG, JPG, WEBP o GIF.";
+        case "too-large":
+          return "La imagen es demasiado pesada (máximo 20 MB).";
+        default:
+          return "No se pudo procesar la imagen.";
+      }
+    }
+    switch (reason) {
+      case "unsupported-type":
+        return "Unsupported format. Use PNG, JPG, WEBP, or GIF.";
+      case "too-large":
+        return "The image is too large (20 MB maximum).";
+      default:
+        return "The image could not be processed.";
+    }
+  };
+
+  const handleChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] ?? null;
+    event.target.value = "";
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const { src, aspectRatio } = await processImageFile(file);
+      updateAddedElement({ ...element, src, aspectRatio });
+      announce(lang === "es" ? "Imagen actualizada." : "Image updated.");
+    } catch (error) {
+      const reason = error instanceof ImageUploadError ? error.reason : "decode-failed";
+      announce(errorMessage(reason));
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  return (
+    <div className="grid min-w-52 gap-1 text-left text-[10px] font-black uppercase tracking-[0.12em] text-zinc-300">
+      {lang === "es" ? "Imagen" : "Image"}
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/gif"
+        onChange={handleChange}
+        className="sr-only"
+        tabIndex={-1}
+        aria-hidden="true"
+      />
+      <button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        disabled={isUploading}
+        className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-white/25 bg-zinc-950 px-3 text-sm font-bold normal-case tracking-normal text-white outline-none hover:border-[#00C4B0] focus:border-[#00C4B0] disabled:cursor-wait disabled:opacity-60"
+      >
+        <ImageUp className="h-4 w-4" aria-hidden />
+        {isUploading
+          ? lang === "es"
+            ? "Cargando…"
+            : "Uploading…"
+          : lang === "es"
+            ? "Cambiar imagen"
+            : "Change image"}
+      </button>
+    </div>
+  );
+}
+
 function AddedElementObject({ element }: { element: AddedCanvasElement }) {
   const {
     lang,
@@ -145,6 +223,8 @@ function AddedElementObject({ element }: { element: AddedCanvasElement }) {
     updateAddedElement,
     removeAddedElement,
     duplicateAddedElement,
+    bringAddedElementToFront,
+    sendAddedElementToBack,
     announce,
   } = useEditableSignCanvas();
   const groupId = addedElementGroupId(element.id);
@@ -198,15 +278,27 @@ function AddedElementObject({ element }: { element: AddedCanvasElement }) {
     announce(lang === "es" ? "Objeto duplicado." : "Object duplicated.");
   };
 
+  const bringToFront = () => {
+    if (!bringAddedElementToFront(element.id)) return;
+    announce(lang === "es" ? "Objeto enviado al frente." : "Object brought to front.");
+  };
+
+  const sendToBack = () => {
+    if (!sendAddedElementToBack(element.id)) return;
+    announce(lang === "es" ? "Objeto enviado al fondo." : "Object sent to back.");
+  };
+
   return (
     <MovableGroup
       groupId={groupId}
       label={label}
-      readOnlyRole={element.kind === "icon" ? "img" : undefined}
-      readOnlyLabel={element.kind === "icon" ? label : undefined}
+      readOnlyRole={element.kind === "text" ? undefined : "img"}
+      readOnlyLabel={element.kind === "text" ? undefined : label}
       className="pointer-events-auto absolute left-0 top-0 z-30 w-fit max-w-[82%]"
       onDelete={remove}
       onDuplicate={duplicate}
+      onBringToFront={bringToFront}
+      onSendToBack={sendToBack}
       onReset={() => {
         commitLayout(groupId, { anchor: { x: 0.5, y: 0.5 }, scale: 1 });
         announce(lang === "es" ? "Objeto centrado y restablecido." : "Object centered and reset.");
@@ -218,8 +310,10 @@ function AddedElementObject({ element }: { element: AddedCanvasElement }) {
             draft={draftText}
             onDraftChange={updateDraftText}
           />
-        ) : (
+        ) : element.kind === "icon" ? (
           <AddedIconInspector element={element} />
+        ) : (
+          <AddedImageInspector element={element} />
         )
       }
     >

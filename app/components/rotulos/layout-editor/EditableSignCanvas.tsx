@@ -6,17 +6,19 @@ import {
   useMemo,
   useRef,
   useState,
+  type ChangeEvent,
   type ComponentPropsWithoutRef,
   type PointerEvent as ReactPointerEvent,
   type Ref,
 } from "react";
-import { Plus, RotateCcw, Shapes, Type } from "lucide-react";
+import { ImageUp, Plus, RotateCcw, Shapes, Type } from "lucide-react";
 import AddedElementsLayer from "./AddedElementsLayer";
 import {
   EditableSignCanvasContext,
   type EditableSignCanvasContextValue,
   type MovableGroupController,
 } from "./canvasContext";
+import { ImageUploadError, processImageFile } from "./imageUpload";
 import {
   INSERTABLE_ICON_OPTIONS,
   localizeInsertableLabel,
@@ -64,7 +66,9 @@ export default function EditableSignCanvas({
   );
   const groupsRef = useRef(new Map<string, MovableGroupController>());
   const resizeFrameRef = useRef<number | null>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const [selectedIcon, setSelectedIcon] = useState<InsertableIconKey>("arrow-right");
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const resolvedLabel = localize(label, editor.lang);
   const addedElements = editor.getAddedElements(panelId, revision);
   const hiddenGroupCount = editor.getHiddenGroupCount(panelId, revision);
@@ -189,6 +193,74 @@ export default function EditableSignCanvas({
     [editor.addIconElement, editor.announce, editor.lang, panelId, revision, selectGroup],
   );
 
+  const addImageElement = useCallback(
+    (src: string, aspectRatio: number) => {
+      const id = editor.addImageElement(panelId, revision, src, aspectRatio);
+      if (!id) {
+        editor.announce(
+          editor.lang === "es"
+            ? "Esta lámina alcanzó el máximo de objetos agregados."
+            : "This panel reached the maximum number of added objects.",
+        );
+        return null;
+      }
+      const groupId = addedElementGroupId(id);
+      selectGroup(groupId);
+      editor.announce(editor.lang === "es" ? "Imagen agregada." : "Image added.");
+      return id;
+    },
+    [editor.addImageElement, editor.announce, editor.lang, panelId, revision, selectGroup],
+  );
+
+  const imageUploadErrorMessage = useCallback(
+    (reason: ImageUploadError["reason"]) => {
+      if (editor.lang === "es") {
+        switch (reason) {
+          case "unsupported-type":
+            return "Formato no admitido. Use PNG, JPG, WEBP o GIF.";
+          case "too-large":
+            return "La imagen es demasiado pesada (máximo 20 MB).";
+          default:
+            return "No se pudo procesar la imagen.";
+        }
+      }
+      switch (reason) {
+        case "unsupported-type":
+          return "Unsupported format. Use PNG, JPG, WEBP, or GIF.";
+        case "too-large":
+          return "The image is too large (20 MB maximum).";
+        default:
+          return "The image could not be processed.";
+      }
+    },
+    [editor.lang],
+  );
+
+  const handleImageFile = useCallback(
+    async (file: File) => {
+      setIsUploadingImage(true);
+      try {
+        const { src, aspectRatio } = await processImageFile(file);
+        addImageElement(src, aspectRatio);
+      } catch (error) {
+        const reason = error instanceof ImageUploadError ? error.reason : "decode-failed";
+        editor.announce(imageUploadErrorMessage(reason));
+      } finally {
+        setIsUploadingImage(false);
+      }
+    },
+    [addImageElement, editor, imageUploadErrorMessage],
+  );
+
+  const handleImageInputChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0] ?? null;
+      event.target.value = "";
+      if (file) void handleImageFile(file);
+    },
+    [handleImageFile],
+  );
+
   const updateAddedElement = useCallback(
     (element: AddedCanvasElement) => editor.updateAddedElement(panelId, revision, element),
     [editor.updateAddedElement, panelId, revision],
@@ -202,6 +274,16 @@ export default function EditableSignCanvas({
   const duplicateAddedElement = useCallback(
     (elementId: string) => editor.duplicateAddedElement(panelId, revision, elementId),
     [editor.duplicateAddedElement, panelId, revision],
+  );
+
+  const bringAddedElementToFront = useCallback(
+    (elementId: string) => editor.bringAddedElementToFront(panelId, revision, elementId),
+    [editor.bringAddedElementToFront, panelId, revision],
+  );
+
+  const sendAddedElementToBack = useCallback(
+    (elementId: string) => editor.sendAddedElementToBack(panelId, revision, elementId),
+    [editor.sendAddedElementToBack, panelId, revision],
   );
 
   const restoreHiddenGroups = useCallback(() => {
@@ -232,17 +314,22 @@ export default function EditableSignCanvas({
       addedElements,
       addTextElement,
       addIconElement,
+      addImageElement,
       updateAddedElement,
       removeAddedElement,
       duplicateAddedElement,
+      bringAddedElementToFront,
+      sendAddedElementToBack,
       hiddenGroupCount,
       restoreHiddenGroups,
       announce: editor.announce,
     }),
     [
       addIconElement,
+      addImageElement,
       addTextElement,
       addedElements,
+      bringAddedElementToFront,
       commitLayout,
       duplicateAddedElement,
       editor.announce,
@@ -258,6 +345,7 @@ export default function EditableSignCanvas({
       revision,
       selectGroup,
       selectedGroupId,
+      sendAddedElementToBack,
       updateAddedElement,
     ],
   );
@@ -334,6 +422,30 @@ export default function EditableSignCanvas({
               <Plus className="h-4 w-4" aria-hidden />
               <Shapes className="h-4 w-4" aria-hidden />
               {editor.lang === "es" ? "Ícono" : "Icon"}
+            </button>
+            <input
+              ref={imageInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/gif"
+              onChange={handleImageInputChange}
+              className="sr-only"
+              tabIndex={-1}
+              aria-hidden="true"
+            />
+            <button
+              type="button"
+              onClick={() => imageInputRef.current?.click()}
+              disabled={isUploadingImage}
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-[#00C4B0]/55 bg-[#00C4B0]/15 px-3 text-xs font-black text-[#A8F0E8] hover:bg-[#00C4B0]/25 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-wait disabled:opacity-60"
+            >
+              <ImageUp className="h-4 w-4" aria-hidden />
+              {isUploadingImage
+                ? editor.lang === "es"
+                  ? "Cargando…"
+                  : "Uploading…"
+                : editor.lang === "es"
+                  ? "Imagen"
+                  : "Image"}
             </button>
             {hiddenGroupCount > 0 ? (
               <button

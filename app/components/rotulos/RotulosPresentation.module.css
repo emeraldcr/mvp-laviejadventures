@@ -4,13 +4,6 @@
   -webkit-print-color-adjust: exact;
 }
 
-@media screen {
-  .page :global([data-rotulo-card]) {
-    content-visibility: auto;
-    contain-intrinsic-size: auto 1500px;
-  }
-}
-
 @page {
   size: A4 landscape;
   margin: 8mm;

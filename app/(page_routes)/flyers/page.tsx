@@ -3,16 +3,18 @@
 import { useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ArrowUpRight } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
 import FlyerCard from "@/app/components/flyers/FlyerCard";
-import { FLYERS } from "@/app/components/flyers/data";
+import { FLYER_CATEGORIES, FLYERS } from "@/app/components/flyers/data";
 import { BUSINESS } from "@/app/components/rotulos/constants";
 import { createTranslator } from "@/app/components/rotulos/helpers";
 
 /**
- * Diez publicaciones cuadradas para Instagram, con el mismo editor movible
- * tipo Canva que los rótulos: cada tarjeta trae su propio "Editar objetos".
+ * Todo el catálogo de tours convertido en flyers verticales (2:3) para
+ * Instagram, agrupados por tour/categoría. Cada tarjeta trae el mismo editor
+ * movible tipo Canva que los rótulos: "Editar objetos" para mover,
+ * redimensionar, agregar texto o íconos y borrar.
  */
 export default function FlyersPage() {
   const { lang, toggle } = useLanguage();
@@ -55,7 +57,7 @@ export default function FlyersPage() {
         </div>
       </header>
 
-      <section className="mx-auto w-full max-w-[1920px] px-4 pb-24 pt-10 sm:px-6 xl:px-14 2xl:px-20">
+      <section className="mx-auto w-full max-w-[1920px] px-4 pb-10 pt-10 sm:px-6 xl:px-14 2xl:px-20">
         <div className="max-w-3xl">
           <p className="text-xs font-black uppercase tracking-[0.2em] text-[#65e2d5]">
             {t("Contenido para redes sociales", "Social media content")}
@@ -65,22 +67,79 @@ export default function FlyersPage() {
           </h1>
           <p className="mt-4 text-sm leading-relaxed text-zinc-300 sm:text-base">
             {t(
-              'Diez publicaciones listas en formato vertical 2:3. Descargue cada una en alta calidad con el botón "Descargar HQ", o active "Editar objetos" para mover, redimensionar, agregar texto o íconos y borrar — igual que en el editor de rótulos.',
-              'Ten ready-to-post vertical 2:3 flyers. Download each one in high quality with the "Download HQ" button, or turn on "Edit objects" to move, resize, add text or icons, and delete — the same editor used for the road signs.',
+              `${FLYERS.length} publicaciones verticales listas, una tanda completa por cada tour del catálogo. Descargue cada una en alta calidad con el botón "Descargar HQ", o active "Editar objetos" para mover, redimensionar, agregar texto o íconos y borrar — igual que en el editor de rótulos.`,
+              `${FLYERS.length} ready-to-post vertical flyers, a full set for every tour in the catalog. Download each one in high quality with the "Download HQ" button, or turn on "Edit objects" to move, resize, add text or icons, and delete — the same editor used for the road signs.`,
             )}
           </p>
         </div>
 
-        <div className="mt-10 grid gap-8 sm:grid-cols-2 xl:mt-14 xl:grid-cols-3 xl:gap-10">
-          {FLYERS.map((flyer, index) => (
-            <FlyerCard key={flyer.id} flyer={flyer} lang={lang} eager={index === 0} />
-          ))}
-        </div>
-
-        <p className="mt-14 text-center text-xs text-zinc-500">
-          {BUSINESS.name} &middot; {BUSINESS.place} &middot; {BUSINESS.web}
-        </p>
+        <nav
+          aria-label={t("Ir a categoría", "Jump to category")}
+          className="mt-8 flex flex-wrap gap-2"
+        >
+          {FLYER_CATEGORIES.map((category) => {
+            const Icon = category.icon;
+            return (
+              <a
+                key={category.slug}
+                href={`#${category.slug}`}
+                className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.06em] text-zinc-300 transition hover:border-[#00C4B0]/60 hover:bg-[#00C4B0]/15 hover:text-white sm:text-xs"
+              >
+                <Icon className="h-3.5 w-3.5 shrink-0 text-[#65e2d5]" aria-hidden />
+                {t(category.label.es, category.label.en)}
+                <span className="text-zinc-500">{category.flyers.length}</span>
+              </a>
+            );
+          })}
+        </nav>
       </section>
+
+      {FLYER_CATEGORIES.map((category, categoryIndex) => {
+        const Icon = category.icon;
+        return (
+          <section
+            key={category.slug}
+            id={category.slug}
+            className="mx-auto w-full max-w-[1920px] scroll-mt-24 px-4 pb-16 sm:px-6 xl:px-14 2xl:px-20"
+          >
+            <div className="flex flex-wrap items-end justify-between gap-4 border-t border-white/10 pt-10">
+              <div className="max-w-2xl">
+                <div className="flex items-center gap-2 text-[#65e2d5]">
+                  <Icon className="h-4 w-4 shrink-0" aria-hidden />
+                  <p className="text-xs font-black uppercase tracking-[0.2em]">
+                    {t(category.label.es, category.label.en)}
+                  </p>
+                </div>
+                <p className="mt-2 text-sm leading-relaxed text-zinc-300 sm:text-base">
+                  {t(category.blurb.es, category.blurb.en)}
+                </p>
+              </div>
+              <Link
+                href={`/tour/${encodeURIComponent(category.tourSlug)}`}
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-bold text-zinc-300 transition hover:border-[#00C4B0]/60 hover:bg-[#00C4B0]/15 hover:text-white"
+              >
+                {t("Ver el tour", "View the tour")}
+                <ArrowUpRight className="h-3.5 w-3.5" aria-hidden />
+              </Link>
+            </div>
+
+            <div className="mt-8 grid gap-8 sm:grid-cols-2 xl:grid-cols-3 xl:gap-10">
+              {category.flyers.map((flyer, index) => (
+                <FlyerCard
+                  key={flyer.id}
+                  flyer={flyer}
+                  lang={lang}
+                  eager={categoryIndex === 0 && index === 0}
+                />
+              ))}
+            </div>
+          </section>
+        );
+      })}
+
+      <p className="mx-auto w-full max-w-[1920px] px-4 pb-24 text-center text-xs text-zinc-500 sm:px-6 xl:px-14 2xl:px-20">
+        {BUSINESS.name} &middot; {BUSINESS.place} &middot; {BUSINESS.web}
+      </p>
     </main>
   );
 }

@@ -2,9 +2,9 @@ import type { LucideIcon } from "lucide-react";
 import type { Copy } from "../rotulos/types";
 
 /**
- * Publicación cuadrada (1080 × 1080) para Instagram. Reutiliza el mismo
- * lienzo editable de los rótulos: cada campo de texto vive en un
- * MovableGroup que se puede mover, redimensionar o eliminar.
+ * Publicación vertical (2:3) para Instagram. Reutiliza el mismo lienzo
+ * editable de los rótulos: cada campo de texto vive en un MovableGroup que
+ * se puede mover, redimensionar o eliminar.
  */
 
 export type FlyerAccent = {
@@ -21,6 +21,8 @@ export type Flyer = {
   code: string;
   /** Identidad estable del lienzo; conserva posiciones aunque cambie el orden. */
   layoutId: string;
+  /** Slug de la categoría (y del tour) a la que pertenece esta publicación. */
+  category: string;
   icon: LucideIcon;
   accent: FlyerAccent;
   kicker: string;
@@ -29,8 +31,19 @@ export type Flyer = {
   subtitle: string;
   cta: Copy;
   photo: string;
-  /** Solo la publicación de reserva incluye el código QR de contacto. */
+  /** Solo algunas publicaciones de reserva incluyen el código QR de contacto. */
   showQr?: boolean;
   /** Cañón, rappel o río: exige la nota de clima/guía del contenido turístico. */
   weatherDependent?: boolean;
+};
+
+/** Un grupo de flyers, todos promocionando el mismo tour del catálogo. */
+export type FlyerCategory = {
+  slug: string;
+  /** Slug real del tour en el catálogo (`/tour/[slug]`), para enlazar de vuelta. */
+  tourSlug: string;
+  icon: LucideIcon;
+  label: Copy;
+  blurb: Copy;
+  flyers: Flyer[];
 };

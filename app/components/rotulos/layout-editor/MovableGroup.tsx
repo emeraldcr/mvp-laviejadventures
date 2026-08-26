@@ -12,7 +12,7 @@ import {
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
-import { Copy, Minus, Plus, RotateCcw, Trash2 } from "lucide-react";
+import { BringToFront, Copy, Minus, Plus, RotateCcw, SendToBack, Trash2 } from "lucide-react";
 import { useEditableSignCanvas } from "./canvasContext";
 import {
   constrainTranslationToCanvas,
@@ -67,6 +67,8 @@ export type MovableGroupProps = Omit<ComponentPropsWithoutRef<"div">, ReservedDi
   onDelete?: () => void;
   onDuplicate?: () => void;
   onReset?: () => void;
+  onBringToFront?: () => void;
+  onSendToBack?: () => void;
 };
 
 type PointerSession = {
@@ -163,6 +165,8 @@ export default function MovableGroup({
   onDelete,
   onDuplicate,
   onReset,
+  onBringToFront,
+  onSendToBack,
   ...divProps
 }: MovableGroupProps) {
   const {
@@ -956,6 +960,28 @@ export default function MovableGroup({
                   title={lang === "es" ? "Duplicar" : "Duplicate"}
                 >
                   <Copy className="h-5 w-5" aria-hidden />
+                </button>
+              ) : null}
+              {onBringToFront ? (
+                <button
+                  type="button"
+                  onClick={onBringToFront}
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-white/20 bg-white/10 hover:bg-white/20 focus-visible:outline-2 focus-visible:outline-[#00C4B0]"
+                  aria-label={lang === "es" ? "Enviar al frente" : "Bring to front"}
+                  title={lang === "es" ? "Al frente" : "To front"}
+                >
+                  <BringToFront className="h-5 w-5" aria-hidden />
+                </button>
+              ) : null}
+              {onSendToBack ? (
+                <button
+                  type="button"
+                  onClick={onSendToBack}
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-white/20 bg-white/10 hover:bg-white/20 focus-visible:outline-2 focus-visible:outline-[#00C4B0]"
+                  aria-label={lang === "es" ? "Enviar al fondo" : "Send to back"}
+                  title={lang === "es" ? "Al fondo" : "To back"}
+                >
+                  <SendToBack className="h-5 w-5" aria-hidden />
                 </button>
               ) : null}
               <button

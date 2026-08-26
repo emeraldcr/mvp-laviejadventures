@@ -23,6 +23,10 @@ const MAX_GROUPS_PER_PANEL = 96;
 const MAX_ELEMENTS_PER_PANEL = 48;
 const MIN_SCALE = 0.2;
 const MAX_SCALE = 4;
+/** ~2.9MB de datos binarios en base64; imageUpload.ts ya comprime antes de llegar aquí. */
+const MAX_IMAGE_SRC_LENGTH = 4_000_000;
+const IMAGE_DATA_URL_PATTERN =
+  /^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/]+=*$/;
 
 const ADDED_TEXT_STYLES = new Set<AddedTextStyle>([
   "title",
@@ -201,6 +205,38 @@ function validatedIconElement(value: Record<string, unknown>): AddedCanvasElemen
   };
 }
 
+function isValidImageDataUrl(value: unknown): value is string {
+  return (
+    typeof value === "string" &&
+    value.length > 0 &&
+    value.length <= MAX_IMAGE_SRC_LENGTH &&
+    IMAGE_DATA_URL_PATTERN.test(value)
+  );
+}
+
+function validatedImageElement(value: Record<string, unknown>): AddedCanvasElement | null {
+  if (!hasOnlyKeys(value, ["id", "kind", "src", "aspectRatio"]) || !isStableId(value.id)) {
+    return null;
+  }
+
+  if (
+    value.kind !== "image" ||
+    !isValidImageDataUrl(value.src) ||
+    typeof value.aspectRatio !== "number" ||
+    !Number.isFinite(value.aspectRatio) ||
+    value.aspectRatio <= 0
+  ) {
+    return null;
+  }
+
+  return {
+    id: value.id,
+    kind: "image",
+    src: value.src,
+    aspectRatio: value.aspectRatio,
+  };
+}
+
 function validatedElements(value: unknown): AddedCanvasElement[] | null {
   if (!Array.isArray(value) || value.length > MAX_ELEMENTS_PER_PANEL) return null;
 
@@ -214,7 +250,9 @@ function validatedElements(value: unknown): AddedCanvasElement[] | null {
         ? validatedTextElement(candidate)
         : candidate.kind === "icon"
           ? validatedIconElement(candidate)
-          : null;
+          : candidate.kind === "image"
+            ? validatedImageElement(candidate)
+            : null;
     if (!element || ids.has(element.id)) return null;
 
     ids.add(element.id);

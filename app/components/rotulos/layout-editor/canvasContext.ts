@@ -29,9 +29,12 @@ export type EditableSignCanvasContextValue = {
   addedElements: readonly AddedCanvasElement[];
   addTextElement: (style?: AddedTextStyle) => string | null;
   addIconElement: (icon: InsertableIconKey) => string | null;
+  addImageElement: (src: string, aspectRatio: number) => string | null;
   updateAddedElement: (element: AddedCanvasElement) => boolean;
   removeAddedElement: (elementId: string) => boolean;
   duplicateAddedElement: (elementId: string) => string | null;
+  bringAddedElementToFront: (elementId: string) => boolean;
+  sendAddedElementToBack: (elementId: string) => boolean;
   hiddenGroupCount: number;
   restoreHiddenGroups: () => number;
   announce: (message: string) => void;

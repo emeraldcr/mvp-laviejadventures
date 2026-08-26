@@ -24,6 +24,7 @@ import {
   localize,
   type AddedCanvasElement,
   type AddedIconElement,
+  type AddedImageElement,
   type AddedTextElement,
   type AddedTextStyle,
   type InsertableIconKey,
@@ -41,7 +42,8 @@ let fallbackElementSequence = 0;
 
 type AddedElementDraft =
   | Omit<AddedTextElement, "id">
-  | Omit<AddedIconElement, "id">;
+  | Omit<AddedIconElement, "id">
+  | Omit<AddedImageElement, "id">;
 
 export type SelectedLayoutObject = {
   panelId: string;
@@ -81,6 +83,12 @@ export type SignLayoutEditorContextValue = {
     revision: PanelLayoutRevision,
     icon: InsertableIconKey,
   ) => string | null;
+  addImageElement: (
+    panelId: string,
+    revision: PanelLayoutRevision,
+    src: string,
+    aspectRatio: number,
+  ) => string | null;
   updateAddedElement: (
     panelId: string,
     revision: PanelLayoutRevision,
@@ -96,6 +104,16 @@ export type SignLayoutEditorContextValue = {
     revision: PanelLayoutRevision,
     elementId: string,
   ) => string | null;
+  bringAddedElementToFront: (
+    panelId: string,
+    revision: PanelLayoutRevision,
+    elementId: string,
+  ) => boolean;
+  sendAddedElementToBack: (
+    panelId: string,
+    revision: PanelLayoutRevision,
+    elementId: string,
+  ) => boolean;
   getHiddenGroupCount: (panelId: string, revision: PanelLayoutRevision) => number;
   restoreHiddenGroups: (panelId: string, revision: PanelLayoutRevision) => number;
   announce: (message: string) => void;
@@ -361,6 +379,12 @@ export default function SignLayoutEditor({
     [addElement],
   );
 
+  const addImageElement = useCallback(
+    (panelId: string, revision: PanelLayoutRevision, src: string, aspectRatio: number) =>
+      addElement(panelId, revision, { kind: "image", src, aspectRatio }),
+    [addElement],
+  );
+
   const updateAddedElement = useCallback(
     (panelId: string, revision: PanelLayoutRevision, element: AddedCanvasElement) => {
       const current = layoutRef.current;
@@ -431,6 +455,38 @@ export default function SignLayoutEditor({
         }),
       );
       return id;
+    },
+    [publishLayout],
+  );
+
+  const bringAddedElementToFront = useCallback(
+    (panelId: string, revision: PanelLayoutRevision, elementId: string) => {
+      const current = layoutRef.current;
+      const panel = current.panels[panelId];
+      if (!panel || panel.revision !== revision) return false;
+      const index = panel.elements.findIndex((element) => element.id === elementId);
+      if (index < 0 || index === panel.elements.length - 1) return false;
+
+      const elements = [...panel.elements];
+      const [element] = elements.splice(index, 1);
+      elements.push(element);
+      return publishLayout(withPanel(current, panelId, { ...panel, elements }));
+    },
+    [publishLayout],
+  );
+
+  const sendAddedElementToBack = useCallback(
+    (panelId: string, revision: PanelLayoutRevision, elementId: string) => {
+      const current = layoutRef.current;
+      const panel = current.panels[panelId];
+      if (!panel || panel.revision !== revision) return false;
+      const index = panel.elements.findIndex((element) => element.id === elementId);
+      if (index <= 0) return false;
+
+      const elements = [...panel.elements];
+      const [element] = elements.splice(index, 1);
+      elements.unshift(element);
+      return publishLayout(withPanel(current, panelId, { ...panel, elements }));
     },
     [publishLayout],
   );
@@ -506,17 +562,22 @@ export default function SignLayoutEditor({
       getAddedElements,
       addTextElement,
       addIconElement,
+      addImageElement,
       updateAddedElement,
       removeAddedElement,
       duplicateAddedElement,
+      bringAddedElementToFront,
+      sendAddedElementToBack,
       getHiddenGroupCount,
       restoreHiddenGroups,
       announce,
     }),
     [
       addIconElement,
+      addImageElement,
       addTextElement,
       announce,
+      bringAddedElementToFront,
       commitGroupLayout,
       duplicateAddedElement,
       getAddedElements,
@@ -530,6 +591,7 @@ export default function SignLayoutEditor({
       restoreHiddenGroups,
       selectObject,
       selectedObject,
+      sendAddedElementToBack,
       signId,
       updateAddedElement,
     ],

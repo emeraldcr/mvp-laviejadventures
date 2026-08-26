@@ -120,6 +120,10 @@ export function getInsertedElementLabel(element: AddedCanvasElement): Insertable
     );
   }
 
+  if (element.kind === "image") {
+    return { es: "Imagen agregada", en: "Added image" };
+  }
+
   const styleLabel =
     TEXT_STYLE_OPTIONS.find((option) => option.key === element.style)?.label ??
     ({ es: "Texto", en: "Text" } as const);
@@ -151,6 +155,19 @@ export function InsertedElementArtwork({
       <span className="flex h-24 w-24 items-center justify-center rounded-2xl border-2 border-[#00C4B0] bg-[#2E2A25] p-4 text-[#00C4B0] shadow-[0_12px_24px_-12px_rgba(0,0,0,0.8)]">
         <Icon className="h-full w-full" strokeWidth={2.6} aria-hidden />
       </span>
+    );
+  }
+
+  if (element.kind === "image") {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={element.src}
+        alt=""
+        draggable={false}
+        style={{ aspectRatio: element.aspectRatio }}
+        className="block max-h-[70vh] w-56 max-w-[60vw] rounded-lg object-contain shadow-[0_12px_24px_-12px_rgba(0,0,0,0.8)]"
+      />
     );
   }
 

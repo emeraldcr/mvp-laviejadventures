@@ -84,11 +84,20 @@ export type AddedIconElement = {
   icon: InsertableIconKey;
 };
 
+export type AddedImageElement = {
+  id: string;
+  kind: "image";
+  /** Imagen ya procesada del lado del cliente: siempre un data URL (ver imageUpload.ts). */
+  src: string;
+  /** Ancho/alto de la imagen procesada; evita que el recuadro salte mientras carga. */
+  aspectRatio: number;
+};
+
 /**
  * Contenido creado por el usuario. Su geometria vive en `groups` bajo la
  * llave `custom:${id}`, igual que la de los grupos incluidos en el rotulo.
  */
-export type AddedCanvasElement = AddedTextElement | AddedIconElement;
+export type AddedCanvasElement = AddedTextElement | AddedIconElement | AddedImageElement;
 
 export function addedElementGroupId(elementId: string): string {
   return `custom:${elementId}`;

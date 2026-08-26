@@ -207,9 +207,24 @@ export default function RotuloCard({
             </div>
           </SignLayoutEditor>
 
-          <p className="hidden pt-3 text-center text-[9pt] font-bold leading-snug text-[#2E2A25] print:block">
-            {rotulo.code} · {rotulo.name} · {t("Propuesta visual; confirme medidas y originales antes de fabricar.", "Visual proposal; confirm dimensions and source files before production.")}
-          </p>
+          <div className="hidden pt-3 text-center print:block">
+            <p className="text-[9pt] font-black leading-snug text-[#2E2A25]">
+              {rotulo.code} · {rotulo.name} ·{" "}
+              {rotulo.panels
+                .map((panel, index) => {
+                  const spec = PANEL_SIZE_SPECS[panel.size];
+                  const prefix =
+                    rotulo.panels.length > 1
+                      ? `${panel.kicker || `${t("Lámina", "Panel")} ${index + 1}`} `
+                      : "";
+                  return `${prefix}${spec.widthM} × ${spec.heightM} m (${panelMeasurementCentimeters(panel)})`;
+                })
+                .join(" · ")}
+            </p>
+            <p className="mt-0.5 text-[8pt] font-bold leading-snug text-[#2E2A25]/70">
+              {t("Propuesta visual; confirme medidas y originales antes de fabricar.", "Visual proposal; confirm dimensions and source files before production.")}
+            </p>
+          </div>
 
           <div className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-4 xl:gap-6 print:hidden">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-5 xl:rounded-3xl xl:p-6">
