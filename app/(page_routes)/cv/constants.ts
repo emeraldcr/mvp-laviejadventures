@@ -1,4 +1,4 @@
-import { Github, Mail, MapPin, Phone } from "lucide-react";
+import { Github, Linkedin, Mail, MapPin, Phone } from "lucide-react";
 
 export const personalInfo = {
   name: "Allan José Rojas Durán",
@@ -19,6 +19,12 @@ export const contactInfo = [
     icon: Mail,
     text: "allan4devs@gmail.com",
     href: "mailto:allan4devs@gmail.com",
+  },
+  {
+    icon: Linkedin,
+    text: "linkedin.com/in/aallanrd",
+    href: "https://www.linkedin.com/in/aallanrd/",
+    external: true,
   },
   {
     icon: Github,

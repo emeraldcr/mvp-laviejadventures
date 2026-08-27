@@ -1,4 +1,4 @@
-import { Github, Mail, MapPin, Phone } from "lucide-react";
+import { Github, Linkedin, Mail, MapPin, Phone } from "lucide-react";
 
 export const personalInfo = {
   name: "Allan José Rojas Durán",
@@ -21,6 +21,12 @@ export const contactInfo = [
     href: "mailto:allan4devs@gmail.com",
   },
   {
+    icon: Linkedin,
+    text: "linkedin.com/in/aallanrd",
+    href: "https://www.linkedin.com/in/aallanrd/",
+    external: true,
+  },
+  {
     icon: Github,
     text: "github.com/emeraldcr",
     href: "https://github.com/emeraldcr",
@@ -34,6 +40,10 @@ export const primarySkills = [
     items: ["Java", "Spring Boot", "Microservices", "REST", "GraphQL"],
   },
   {
+    label: "Messaging & Event-Driven",
+    items: ["Kafka", "RabbitMQ", "AWS SNS", "AWS SQS", "Event-Driven Architecture"],
+  },
+  {
     label: "Cloud & DevOps",
     items: [
       "AWS",
@@ -45,13 +55,24 @@ export const primarySkills = [
       "Docker",
       "Kubernetes",
       "Terraform",
+      "Datadog",
       "Prometheus",
       "Grafana",
     ],
   },
   {
-    label: "Databases",
-    items: ["PostgreSQL", "MySQL", "Redis", "SQL"],
+    label: "Databases & Modeling",
+    items: ["PostgreSQL", "MySQL", "Redis", "SQL", "Data Modeling"],
+  },
+  {
+    label: "Architecture & Practice",
+    items: [
+      "System Design",
+      "Domain-Driven Design (DDD)",
+      "Scalability",
+      "Distributed Systems",
+      "Mentoring",
+    ],
   },
 ] as const;
 
@@ -103,14 +124,23 @@ export const summary: SummarySegment[][] = [
       text: "Deep expertise in ",
     },
     { text: "Java and Spring Boot", bold: true },
-    {
-      text: " microservices on AWS, with additional full-stack delivery in ",
-    },
+    { text: " microservices on AWS — " },
+    { text: "event-driven architecture", bold: true },
+    { text: " with Kafka, RabbitMQ, and SNS/SQS, " },
+    { text: "domain-driven design", bold: true },
+    { text: ", and " },
+    { text: "system design for scalability", bold: true },
+    { text: " — plus full-stack delivery in " },
     { text: "TypeScript/React", bold: true },
     { text: " and " },
     { text: "PHP/Laravel", bold: true },
+    { text: "." },
+  ],
+  [
+    { text: "Hands-on with " },
+    { text: "data modeling", bold: true },
     {
-      text: ", covering RESTful APIs, cloud infrastructure, and CI/CD pipelines.",
+      text: ", RESTful API design, cloud infrastructure, CI/CD, and production observability via Datadog, Prometheus, and Grafana. Mentor engineers through code review, pairing, and design reviews.",
     },
   ],
 ];
@@ -130,9 +160,9 @@ export const experience: {
     location: "Remote · Costa Rica",
     current: true,
     bullets: [
-      "Architect and deliver Spring Boot services powering a cloud-native tourism platform — booking, reservations, authentication, and payments.",
-      "Build and deploy Java/Spring Boot backends on AWS, integrated with React/Next.js front ends and GraphQL APIs.",
-      "Develop AI-assisted backend tools for reservations, customer communication, and internal reporting.",
+      "Architect and deliver Spring Boot services for a cloud-native tourism platform — booking, reservations, authentication, and payments — applying domain-driven design and system-design trade-offs for scalability.",
+      "Build event-driven Java/Spring Boot backends on AWS, using SNS/SQS for asynchronous booking and notification workflows, integrated with React/Next.js front ends and GraphQL APIs.",
+      "Own data modeling for the MySQL schema and develop AI-assisted backend tools for reservations, customer communication, and internal reporting.",
     ],
   },
 
@@ -142,7 +172,7 @@ export const experience: {
     period: "Oct 2025 – Apr 2026",
     location: "Costa Rica",
     bullets: [
-      "Delivered and maintained a cloud-based payment control and management platform supporting client MCM operations.",
+      "Delivered and maintained a cloud-based payment control and management platform for client MCM, refining data models and service boundaries for reliability at scale.",
       "Worked as part of an embedded consulting engineering team, contributing to production software delivery and cloud-based systems.",
     ],
   },
@@ -153,9 +183,9 @@ export const experience: {
     period: "Sept 2024 – Oct 2025",
     location: "Remote · Costa Rica",
     bullets: [
-      "Designed and maintained Spring Boot microservices and event-driven backend services across AWS and Kubernetes environments.",
-      "Strengthened release consistency with GitHub Actions and Jenkins pipelines and production observability with Prometheus and Grafana.",
-      "Built React and Redux Toolkit dashboards consuming those services for real-time operational monitoring.",
+      "Designed and maintained Spring Boot microservices and event-driven services on AWS and Kubernetes, using Kafka and RabbitMQ for event streaming and inter-service messaging.",
+      "Led system-design discussions and mentored engineers through code review, raising consistency across the backend team.",
+      "Strengthened release pipelines (GitHub Actions, Jenkins) and production observability with Datadog, Prometheus, and Grafana; built React/Redux Toolkit dashboards on top of those services.",
     ],
   },
 
@@ -166,7 +196,7 @@ export const experience: {
     location: "Costa Rica",
     bullets: [
       "Built and maintained backend applications with React front ends, including Kaptyn, a luxury ride-hailing platform.",
-      "Designed RESTful APIs and integrations for GPS tracking, payments, and real-time mobility.",
+      "Designed RESTful APIs, relational data models, and integrations for GPS tracking, payments, and real-time mobility, tuning queries and caching for scale.",
     ],
   },
 

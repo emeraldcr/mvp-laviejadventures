@@ -2,17 +2,22 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Check, ClipboardCopy, FileText, Home, Printer, Search, Waypoints, X } from "lucide-react";
+import { Check, ClipboardCopy, FileText, Home, Mail, Printer, Search, Waypoints, X } from "lucide-react";
 import { CvDocument } from "./CvDocument";
 import { auditJd, buildCorpus, DICT_CATEGORY_ORDER, type DictHit } from "./audit";
-import { cvVariants } from "./variants";
+import { buildCoverLetter, parseCompanyInfo } from "./coverLetter";
+import { cvVariantBySlug, cvVariants, type CvVariant } from "./variants";
 import type { CvData } from "./types";
 
 const JD_STORAGE_KEY = "cv:jd-audit";
 const MIN_JD_LEN = 30;
 
+const CL_COMPANY_KEY = "cv:cl-company";
+const CL_NOTES_KEY = "cv:cl-notes";
+
 export function CvWorkspace({ activeSlug, cv }: { activeSlug: string; cv: CvData }) {
   const corpus = useMemo(() => buildCorpus(cv), [cv]);
+  const variant = useMemo(() => cvVariantBySlug(activeSlug) ?? cvVariants[0], [activeSlug]);
 
   return (
     <main className="min-h-screen bg-zinc-100 print:bg-white">
@@ -28,6 +33,7 @@ export function CvWorkspace({ activeSlug, cv }: { activeSlug: string; cv: CvData
           <div className="space-y-4 lg:sticky lg:top-6">
             <VariantNav activeSlug={activeSlug} />
             <JdAudit corpus={corpus} />
+            <CoverLetter variant={variant} cv={cv} />
           </div>
         </aside>
 
@@ -321,4 +327,145 @@ function scoreBar(score: number): string {
   if (score >= 80) return "bg-teal-500";
   if (score >= 50) return "bg-amber-500";
   return "bg-rose-500";
+}
+
+// ── cover letter panel ──────────────────────────────────────
+
+function CoverLetter({ variant, cv }: { variant: CvVariant; cv: CvData }) {
+  const [raw, setRaw] = useState("");
+  const [notes, setNotes] = useState("");
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    try {
+      setRaw(sessionStorage.getItem(CL_COMPANY_KEY) ?? "");
+      setNotes(sessionStorage.getItem(CL_NOTES_KEY) ?? "");
+    } catch {
+      /* sessionStorage unavailable — ignore */
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(CL_COMPANY_KEY, raw);
+    } catch {
+      /* ignore */
+    }
+  }, [raw]);
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(CL_NOTES_KEY, notes);
+    } catch {
+      /* ignore */
+    }
+  }, [notes]);
+
+  const info = useMemo(() => parseCompanyInfo(raw), [raw]);
+  const ready = info.company.trim().length > 0;
+  const letter = useMemo(
+    () => (ready ? buildCoverLetter({ info, variant, cv, notes }) : ""),
+    [ready, info, variant, cv, notes],
+  );
+
+  async function copyLetter() {
+    try {
+      await navigator.clipboard.writeText(letter);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      /* clipboard blocked — ignore */
+    }
+  }
+
+  return (
+    <section className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
+      <div className="flex items-center gap-1.5">
+        <Mail size={13} className="text-teal-600" />
+        <h2 className="text-[11px] font-bold uppercase tracking-wider text-zinc-900">Cover letter</h2>
+      </div>
+      <p className="mt-1 text-[11px] leading-snug text-zinc-400">
+        Paste the company blurb or job posting — get a draft built from the{" "}
+        <span className="font-semibold text-zinc-500">{variant.name}</span> variant.
+      </p>
+
+      <div className="relative mt-2.5">
+        <textarea
+          value={raw}
+          onChange={(e) => setRaw(e.target.value)}
+          rows={5}
+          spellCheck={false}
+          placeholder={'Paste company info / job posting…\nLines like "Company: Acme" or "Hiring Manager: Dana" are picked up.'}
+          className="w-full resize-y rounded-lg border border-zinc-200 bg-zinc-50 p-2.5 font-mono text-[11.5px] leading-relaxed text-zinc-700 outline-none transition-colors focus:border-teal-500 focus:bg-white focus:ring-1 focus:ring-teal-500"
+        />
+        {raw && (
+          <button
+            type="button"
+            onClick={() => setRaw("")}
+            title="Clear"
+            className="absolute right-1.5 top-1.5 rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700"
+          >
+            <X size={13} />
+          </button>
+        )}
+      </div>
+
+      {ready && (
+        <div className="mt-2 flex flex-wrap gap-1">
+          <DerivedChip label="Company" value={info.company} />
+          <DerivedChip label="Role" value={info.role || variant.role} muted={!info.role} />
+          {info.hiringManager && <DerivedChip label="Manager" value={info.hiringManager} />}
+        </div>
+      )}
+
+      <textarea
+        value={notes}
+        onChange={(e) => setNotes(e.target.value)}
+        rows={2}
+        spellCheck={false}
+        placeholder="Optional — why this company / a detail to emphasize (used verbatim as one paragraph)…"
+        className="mt-2 w-full resize-y rounded-lg border border-zinc-200 bg-zinc-50 p-2.5 text-[11.5px] leading-relaxed text-zinc-700 outline-none transition-colors focus:border-teal-500 focus:bg-white focus:ring-1 focus:ring-teal-500"
+      />
+
+      {!ready && (
+        <p className="mt-2 flex items-center gap-1.5 text-[11px] text-zinc-400">
+          <FileText size={12} />
+          {raw.trim().length === 0
+            ? "Waiting for company info…"
+            : 'Add a company name (or a "Company:" line) to generate.'}
+        </p>
+      )}
+
+      {ready && (
+        <div className="mt-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-[10.5px] font-bold uppercase tracking-wide text-teal-700">Draft letter</h3>
+            <button
+              type="button"
+              onClick={copyLetter}
+              className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-semibold text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-800"
+            >
+              {copied ? <Check size={11} /> : <ClipboardCopy size={11} />}
+              {copied ? "Copied" : "Copy"}
+            </button>
+          </div>
+          <pre className="mt-1.5 max-h-80 overflow-auto whitespace-pre-wrap rounded-lg border border-zinc-200 bg-zinc-50 p-2.5 font-mono text-[11px] leading-relaxed text-zinc-700">
+            {letter}
+          </pre>
+          <p className="mt-1 text-[10px] leading-snug text-zinc-400">
+            Draft only — drop in the real hiring-manager name and a company-specific detail before sending.
+          </p>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function DerivedChip({ label, value, muted }: { label: string; value: string; muted?: boolean }) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded border border-zinc-200 bg-zinc-50 px-1.5 py-0.5 text-[10px] text-zinc-500">
+      <span className="font-semibold uppercase tracking-wide text-zinc-400">{label}</span>
+      <span className={muted ? "italic text-zinc-400" : "text-zinc-700"}>{value}</span>
+    </span>
+  );
 }
