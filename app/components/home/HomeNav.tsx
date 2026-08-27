@@ -35,8 +35,6 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
   const links = [
     { href: "/tours", label: "Tours" },
     { href: "/galeria", label: isEs ? "Galería" : "Gallery" },
-    { href: "/store", label: isEs ? "Tienda" : "Store" },
-    { href: "/organics", label: "Organics" },
     { href: "/info", label: "Info" },
     { href: "/tiempo", label: isEs ? "Clima" : "Weather" },
   ];

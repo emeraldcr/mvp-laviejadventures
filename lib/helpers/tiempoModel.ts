@@ -976,10 +976,12 @@ export function buildTiempoModel(input: BuildModelInput): TiempoModel | null {
     grid, ante, clim, tomorrow, input.stationHealthScore, confNow,
   );
 
-  const riverHeadline = scoreConfidence(
-    Math.round(0.4 * river.confidence.plus6h.score + 0.6 * river.confidence.plus24h.score),
-    [],
+  // Confianza titular del bloque RÍO: mezcla ponderada de horizontes. El desglose
+  // por horizonte (ahora / +6 h / +24 h) se muestra aparte en el módulo.
+  const riverBlend = Math.round(
+    0.4 * river.confidence.plus6h.score + 0.6 * river.confidence.plus24h.score,
   );
+  const riverHeadline = scoreConfidence(riverBlend, []);
 
   const assumptions = [
     "La estación mide un punto de la cuenca alta; se asume que la lluvia allí representa la que alimenta el tramo del tour.",

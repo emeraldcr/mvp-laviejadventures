@@ -102,7 +102,7 @@ export function RiverProjectionChart({ river }: { river: RiverModel }) {
           stroke="#5eead4" strokeWidth={2} strokeDasharray="5 3" dot={false}
           isAnimationActive={false} connectNulls
         />
-        {peakK >= 0 && river.peak && (
+        {peakK >= 0 && river.peak?.exceedsNow && (
           <ReferenceDot x={peakK} y={river.peak.index} r={4} fill="#f97316" stroke="#0d0f0f" />
         )}
       </ComposedChart>
