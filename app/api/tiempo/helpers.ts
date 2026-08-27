@@ -6,10 +6,29 @@ import type {
   CurrentTotals,
   DailyEntry,
   HourlyEntry,
+  RainBaseline,
   RainStatus,
   RiskDescriptor,
+  StationHealth,
+  StationHealthQuality,
   TiempoSections,
 } from "@/lib/types/tiempo-api";
+import {
+  RELIABILITY_DEDUCTION_FRESHNESS_HIGH,
+  RELIABILITY_DEDUCTION_FRESHNESS_LOW,
+  RELIABILITY_DEDUCTION_FRESHNESS_MED,
+  RELIABILITY_DEDUCTION_NO_SNAPSHOT,
+  RELIABILITY_DEDUCTION_RECORDS_LOW,
+  RELIABILITY_DEDUCTION_RECORDS_MED,
+  RELIABILITY_FRESHNESS_HIGH_MIN,
+  RELIABILITY_FRESHNESS_LOW_MIN,
+  RELIABILITY_FRESHNESS_MED_MIN,
+  RELIABILITY_LEVEL_HIGH_SCORE,
+  RELIABILITY_LEVEL_MED_SCORE,
+  RELIABILITY_RECORDS_THRESHOLD_FULL,
+  RELIABILITY_RECORDS_THRESHOLD_LOW,
+  RELIABILITY_SCORE_MAX,
+} from "@/lib/constants/tiempo";
 
 export function safeParseFloat(s?: string): number {
   if (!s) return 0;
@@ -59,72 +78,6 @@ export function getRiskStatus(last3h: number, last6h: number, last24h: number): 
   return { level: "green", label: "Condiciones aceptables", emoji: "🟢" };
 }
 
-export function calculateEMA(values: number[], alpha = 0.6): number {
-  if (values.length === 0) return 0;
-  let ema = values[values.length - 1];
-  for (let i = values.length - 2; i >= 0; i--) {
-    ema = alpha * values[i] + (1 - alpha) * ema;
-  }
-  return ema;
-}
-
-export function linearRegressionForecast(values: number[]): number {
-  const n = values.length;
-  if (n < 2) return Math.max(0, values[0] ?? 0);
-
-  const ordered = [...values].reverse();
-  const xMean = (n - 1) / 2;
-  const yMean = ordered.reduce((a, b) => a + b, 0) / n;
-  let num = 0;
-  let den = 0;
-
-  for (let i = 0; i < n; i++) {
-    num += (i - xMean) * (ordered[i] - yMean);
-    den += (i - xMean) ** 2;
-  }
-
-  const slope = den === 0 ? 0 : num / den;
-  const intercept = yMean - slope * xMean;
-  return Math.max(0, intercept + slope * n);
-}
-
-export function movingAverageForecast(values: number[], window: number): number {
-  const slice = values.slice(0, window);
-  return Math.max(0, slice.reduce((a, b) => a + b, 0) / Math.max(1, slice.length));
-}
-
-export function doubleEMAForecast(values: number[], alpha = 0.5, beta = 0.3): number {
-  if (values.length === 0) return 0;
-
-  const ordered = [...values].reverse();
-  let level = ordered[0];
-  let trend = ordered.length > 1 ? ordered[1] - ordered[0] : 0;
-
-  for (let i = 1; i < ordered.length; i++) {
-    const prevLevel = level;
-    level = alpha * ordered[i] + (1 - alpha) * (level + trend);
-    trend = beta * (level - prevLevel) + (1 - beta) * trend;
-  }
-
-  return Math.max(0, level + trend);
-}
-
-export function weightedMovingAverage(values: number[], window: number): number {
-  const slice = values.slice(0, window);
-  const n = slice.length;
-  if (n === 0) return 0;
-
-  const totalWeight = (n * (n + 1)) / 2;
-  const weighted = slice.reduce((sum, v, i) => sum + v * (n - i), 0);
-  return Math.max(0, weighted / totalWeight);
-}
-
-export function getConfidence(length: number, std: number): "baja" | "media" | "alta" {
-  if (length >= 8 && std < 2.5) return "alta";
-  if (length >= 5) return "media";
-  return "baja";
-}
-
 export function round1(v: number): number {
   return Math.round(v * 10) / 10;
 }
@@ -149,7 +102,9 @@ function parseTableRows($: CheerioAPI, table: Cheerio<AnyNode>): string[][] {
 export function extractSections(html: string): TiempoSections {
   const $ = load(html);
   const sections: TiempoSections = {};
-  const titleSelector = "p, h2, h3, h4, h5, h6, td, th, div, span, b, strong";
+  // El IMN rotula cada tabla con <h1><a name=...>Tabla de datos: X</a></h1>, así
+  // que h1 y a deben estar en el selector o no se encuentra ningún título.
+  const titleSelector = "h1, h2, h3, h4, h5, h6, a, p, td, th, div, span, b, strong";
 
   $(titleSelector).each((_, el) => {
     const ownText = $(el).clone().children().remove().end().text().trim();
@@ -268,4 +223,119 @@ export function parseDailyRows(rows?: string[][]): DailyEntry[] {
     timestamp: parseIMNDate(fechaRaw),
     lluvia_mm: safeParseFloat(lluviaRaw),
   }));
+}
+
+// ── Salud de la estación ─────────────────────────────────────────────────────
+// La estación del IMN publica un registro por hora. Si faltan registros o el
+// último es viejo, los acumulados y la tendencia pierden confiabilidad. Esto lo
+// vuelve explícito para el usuario en vez de fingir precisión.
+
+export function buildStationHealth(
+  hourlyRows: HourlyEntry[],
+  current: CurrentTotals,
+  now: Date = new Date(),
+): StationHealth {
+  const lastReading = hourlyRows.find((r) => r.timestamp)?.timestamp ?? null;
+  const minutesSinceReading = lastReading
+    ? Math.max(0, Math.round((now.getTime() - lastReading.getTime()) / 60000))
+    : null;
+
+  // La estación publica un registro por hora, así que la lectura más nueva vive
+  // hasta ~60 min antes de que llegue la siguiente. Solo cuenta como "vieja" lo
+  // que exceda esa cadencia horaria.
+  const NOMINAL_INTERVAL_MIN = 60;
+  const lateness =
+    minutesSinceReading == null
+      ? null
+      : Math.max(0, minutesSinceReading - NOMINAL_INTERVAL_MIN);
+
+  // Registros con marca de tiempo dentro de las últimas ~24 h. Se agrega media
+  // hora de gracia para que el borde de la ventana móvil no reste un registro.
+  const cutoff = now.getTime() - (24 * 60 + 30) * 60 * 1000;
+  const hourlyRows24h = Math.min(
+    RELIABILITY_RECORDS_THRESHOLD_FULL,
+    hourlyRows.filter((r) => r.timestamp && r.timestamp.getTime() >= cutoff).length,
+  );
+
+  let score = RELIABILITY_SCORE_MAX;
+  const reasons: string[] = [];
+
+  if (lateness == null) {
+    score -= RELIABILITY_DEDUCTION_FRESHNESS_HIGH;
+    reasons.push("sin lecturas con hora válida");
+  } else if (lateness > RELIABILITY_FRESHNESS_HIGH_MIN) {
+    score -= RELIABILITY_DEDUCTION_FRESHNESS_HIGH;
+    reasons.push(`última lectura hace ${minutesSinceReading} min`);
+  } else if (lateness > RELIABILITY_FRESHNESS_MED_MIN) {
+    score -= RELIABILITY_DEDUCTION_FRESHNESS_MED;
+    reasons.push(`última lectura hace ${minutesSinceReading} min`);
+  } else if (lateness > RELIABILITY_FRESHNESS_LOW_MIN) {
+    score -= RELIABILITY_DEDUCTION_FRESHNESS_LOW;
+    reasons.push(`última lectura hace ${minutesSinceReading} min`);
+  }
+
+  if (hourlyRows24h < RELIABILITY_RECORDS_THRESHOLD_LOW) {
+    score -= RELIABILITY_DEDUCTION_RECORDS_LOW;
+    reasons.push(`solo ${hourlyRows24h}/24 registros horarios`);
+  } else if (hourlyRows24h < RELIABILITY_RECORDS_THRESHOLD_FULL - 1) {
+    score -= RELIABILITY_DEDUCTION_RECORDS_MED;
+    reasons.push(`${hourlyRows24h}/24 registros horarios`);
+  }
+
+  if (!current) {
+    score -= RELIABILITY_DEDUCTION_NO_SNAPSHOT;
+    reasons.push("sin acumulado actual (7 a.m.)");
+  }
+
+  score = Math.max(0, Math.min(RELIABILITY_SCORE_MAX, Math.round(score)));
+
+  const quality: StationHealthQuality =
+    score >= RELIABILITY_LEVEL_HIGH_SCORE
+      ? "alta"
+      : score >= RELIABILITY_LEVEL_MED_SCORE
+        ? "media"
+        : "baja";
+
+  return {
+    lastReadingISO: lastReading?.toISOString() ?? null,
+    minutesSinceReading,
+    hourlyRows24h,
+    expectedRows24h: RELIABILITY_RECORDS_THRESHOLD_FULL,
+    score,
+    quality,
+    qualityReason: reasons.length
+      ? reasons.join(" · ")
+      : "datos completos y al día",
+  };
+}
+
+// ── Línea base de lluvia diaria ─────────────────────────────────────────────
+// Promedio de mm/día en la tabla "Diarios", excluyendo la fila más reciente
+// (que corresponde al día en curso y está incompleta). Sirve para decir
+// "hoy va X% de lo normal para la fecha".
+
+export function buildDailyBaseline(
+  dailyRows: DailyEntry[],
+  todaySumMm: number | null,
+  maxDays = 14,
+): RainBaseline {
+  const sorted = [...dailyRows].sort((a, b) => {
+    const ta = a.timestamp?.getTime() ?? 0;
+    const tb = b.timestamp?.getTime() ?? 0;
+    return tb - ta;
+  });
+
+  // La primera fila es el día en curso: se descarta del promedio.
+  const sample = sorted.slice(1, 1 + maxDays).filter((r) => r.timestamp);
+  const sampleDays = sample.length;
+  const dailyAvgMm = sampleDays
+    ? round1(sample.reduce((a, r) => a + r.lluvia_mm, 0) / sampleDays)
+    : 0;
+
+  const todayVsAvgPct =
+    todaySumMm != null && dailyAvgMm > 0
+      ? Math.round((todaySumMm / dailyAvgMm) * 100)
+      : null;
+
+  return { dailyAvgMm, sampleDays, todayVsAvgPct };
 }

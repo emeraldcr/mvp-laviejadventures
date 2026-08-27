@@ -20,39 +20,39 @@ export default function FeaturedStory({ tours }: Props) {
 
   const inclusions = isEs
     ? [
-        "Sendero, río y cañón en la misma salida",
-        "Cascada El Zafiro y pozas de color turquesa",
-        "Guía de la zona y charla de seguridad sin rodeos",
-        "Si el río o el clima cambian, la ruta también",
+        "Sendero, río y cañón en una sola salida",
+        "Cascada El Zafiro y pozas de agua turquesa",
+        "Guía local bilingüe y charla de seguridad clara",
+        "Ruta que se ajusta al clima y al nivel del río",
       ]
     : [
-        "Trail, river, and canyon in one outing",
+        "Trail, river, and canyon in a single outing",
         "El Zafiro Waterfall and turquoise pools",
-        "Local guide and a straight safety talk",
-        "If river or weather changes, so does the route",
+        "Local bilingual guide and a clear safety briefing",
+        "Route adjusts to the weather and river level",
       ];
 
   const steps = [
     {
       num: "01",
-      title: isEs ? "Elegí día y cuántos van" : "Pick the day and who's coming",
+      title: isEs ? "Elija la fecha y el tamaño del grupo" : "Choose the date and group size",
       body: isEs
-        ? "Ciudad Esmeralda ya está armada: solo decinos cuándo y de cuántos es el grupo."
-        : "Ciudad Esmeralda is ready to go — just tell us when and how many.",
+        ? "Ciudad Esmeralda es una salida fija: indíquenos el día y cuántas personas asistirán."
+        : "Ciudad Esmeralda is a set departure — just tell us the day and how many will join.",
     },
     {
       num: "02",
-      title: isEs ? "Confirmá y listo" : "Confirm and you're set",
+      title: isEs ? "Confirme y pague en línea" : "Confirm and pay online",
       body: isEs
-        ? "Pago seguro y el correo de confirmación te llega al toque."
-        : "Secure payment, and the confirmation email lands right away.",
+        ? "Pago seguro y confirmación en su correo de inmediato."
+        : "Secure payment, and your confirmation email arrives right away.",
     },
     {
       num: "03",
-      title: isEs ? "Al cañón" : "Into the canyon",
+      title: isEs ? "Viva el cañón" : "Into the canyon",
       body: isEs
-        ? "Llegás, saludás al guía y entran al bosque. El ritmo y la ruta van con tu grupo y con lo que diga el río ese día."
-        : "You arrive, meet the guide, and head into the forest. Pace and route follow your group and what the river allows that day.",
+        ? "Llega, conoce a su guía y entra al bosque. El ritmo y la ruta se adaptan a su grupo y a las condiciones del río ese día."
+        : "You arrive, meet your guide, and head into the forest. Pace and route adapt to your group and the river conditions that day.",
     },
   ];
 
@@ -100,8 +100,8 @@ export default function FeaturedStory({ tours }: Props) {
             </h2>
             <p className="mt-5 max-w-lg text-base leading-relaxed text-stone-600 dark:text-stone-300 md:text-lg">
               {isEs
-                ? "Esta es la salida que más nos piden: pie en el barro, agua en las botas y el cañón abriéndose hasta la cascada. No es un paseo de foto fácil — pedís pierna — y si el clima se pone feo, no insistimos. El río manda."
-                : "This is the day people ask for most: mud on the boots, water in the shoes, and the canyon opening up to the falls. Not a casual photo stroll — it needs legs — and if weather turns nasty, we don't push. The river decides."}
+                ? "Es la salida que más nos piden: barro en las botas, agua hasta las rodillas y el cañón abriéndose hasta la cascada. No es un paseo de fotos: exige buena condición física. Y si el clima no acompaña, ajustamos la ruta o le reprogramamos la reserva."
+                : "It's the day people ask for most: mud on your boots, water to your knees, and the canyon opening up to the falls. Not a photo stroll — it takes real fitness. And if the weather doesn't cooperate, we adjust the route or rebook you."}
             </p>
 
             <ul className="mt-7 grid gap-3 sm:grid-cols-2">
@@ -118,13 +118,13 @@ export default function FeaturedStory({ tours }: Props) {
             <div className="mt-8 flex flex-wrap items-center gap-5">
               <div>
                 <span className="block text-xs font-medium uppercase tracking-widest text-stone-400 dark:text-stone-500">
-                  {isEs ? "La que más se vive" : "The one people live"}
+                  {isEs ? "Recorrido" : "Route"}
                 </span>
                 <span className="font-display text-3xl font-bold text-stone-900 dark:text-stone-50">
-                  1
+                  {isEs ? "3,5 km" : "3.5 km"}
                 </span>
                 <span className="ml-1.5 text-sm text-stone-500 dark:text-stone-400">
-                  {isEs ? "cañón, una ruta" : "canyon, one route"}
+                  {isEs ? "de sendero, río y cañón" : "of trail, river and canyon"}
                 </span>
               </div>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-stone-100 px-3.5 py-2 text-xs font-semibold text-stone-600 dark:bg-stone-800 dark:text-stone-300">
@@ -155,7 +155,7 @@ export default function FeaturedStory({ tours }: Props) {
         <div className="mt-24 md:mt-32">
           <div className="mb-10 text-center">
             <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em] text-emerald-700 dark:text-emerald-300">
-              {isEs ? "Sin enredo" : "No fuss"}
+              {isEs ? "Reserva sencilla" : "Simple booking"}
             </p>
             <h2 className="font-display text-3xl font-bold tracking-tight text-stone-900 dark:text-stone-50 md:text-4xl">
               {isEs ? "De la reserva al cañón en tres pasos" : "From booking to canyon in three steps"}

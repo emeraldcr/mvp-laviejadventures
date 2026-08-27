@@ -3,26 +3,27 @@
 import Link from "next/link";
 import { MobileBottomNav, SiteHeader } from "@/app/components/navigation/SiteNavigation";
 import {
-  BarChart, Bar, AreaChart, Area,
-  XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, ReferenceLine,
-  CartesianGrid,
+  BarChart, Bar,
+  XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
 } from "recharts";
 import {
-  RefreshCw, Droplets, Thermometer, Wind,
-  TrendingUp, TrendingDown, Minus, CloudRain, Gauge, Activity,
-  ArrowLeft, Waves, AlertOctagon, Umbrella,
-  ShieldCheck, MapPin, MessageCircle, CloudSun,
+  RefreshCw, CloudRain, Gauge,
+  ArrowLeft, Waves, MapPin, MessageCircle, CloudSun,
+  CalendarClock, Clock,
 } from "lucide-react";
 
 import { useTiempoData } from "@/lib/hooks/useTiempoData";
 import WeatherMessage from "./components/WeatherMessage";
 import { PulsingDot } from "./components/PulsingDot";
-import { StatPill } from "./components/StatPill";
 import { CollapsibleSection } from "./components/CollapsibleSection";
 import { CustomBarTooltip } from "./components/CustomBarTooltip";
-import { SaturationGauge } from "./components/SaturationGauge";
 import { RainHistorySection } from "./components/RainHistorySection";
-import { TomorrowMorningSection } from "./components/TomorrowMorningSection";
+import { RiverTourImpactSection } from "./components/RiverTourImpactSection";
+import { StationInfoSection } from "./components/StationInfoSection";
+import { StationHealthBadge } from "./components/StationHealthBadge";
+import { NowModule } from "./components/v2/NowModule";
+import { TomorrowModule } from "./components/v2/TomorrowModule";
+import { RiverModule } from "./components/v2/RiverModule";
 
 export default function TourWeatherDashboard() {
   const {
@@ -32,52 +33,40 @@ export default function TourWeatherDashboard() {
     lastRefresh,
     cooldown,
     fetchAll,
-    assessment,
     canyonSchedule,
-    saturation,
     rainNarrative,
-    morningSlots,
-    morningSummary,
     weatherSnap,
-    hourlyChart,
     riskChart,
     dailyChart,
+    accumulationSeries,
+    tourImpacts,
+    stationHealth,
+    baseline,
+    model,
     fetchWarning,
   } = useTiempoData();
 
-  const AssessmentIcon = assessment.icon;
+  const rainWindows = [
+    { label: "1 h", mm: rain?.stats?.last1h_mm ?? 0 },
+    { label: "3 h", mm: rain?.stats?.last3h_mm ?? 0 },
+    { label: "6 h", mm: rain?.stats?.last6h_mm ?? 0 },
+    { label: "24 h", mm: rain?.stats?.last24h_mm ?? 0 },
+    { label: "48 h", mm: rain?.stats?.last48h_mm ?? 0 },
+  ];
+
   const ScheduleIcon = canyonSchedule.icon;
-
-  const sCarlos = regional?.locations?.find(l => l.id === "san_carlos");
+  const sCarlos = regional?.locations?.find((l) => l.id === "san_carlos");
   const zoneNow = sCarlos?.current ?? null;
-
-  const trendIcon = rain?.status?.trend === "subiendo"
-    ? <TrendingUp size={14} className="text-red-400" />
-    : rain?.status?.trend === "bajando"
-      ? <TrendingDown size={14} className="text-emerald-400" />
-      : <Minus size={14} className="text-zinc-400" />;
-
-  const crecida = rain?.crecidaRisk;
-  const crecidaTone =
-    crecida?.level === "critico" ? "text-red-300 border-red-500/35 bg-red-500/10"
-    : crecida?.level === "alto" ? "text-amber-300 border-amber-500/35 bg-amber-500/10"
-    : crecida?.level === "moderado" ? "text-yellow-200 border-yellow-500/30 bg-yellow-500/10"
-    : "text-emerald-300 border-emerald-500/30 bg-emerald-500/10";
-  const CrecidaIcon = crecida?.level === "critico" ? AlertOctagon : Waves;
 
   return (
     <div className="min-h-screen bg-[#0d0f0f] text-white font-sans selection:bg-[#00C4B0]/30">
-
       <SiteHeader isScrolled />
 
       <div className="pt-14 md:pt-20">
         <div className="sticky top-14 z-20 border-b border-white/6 bg-[#0d0f0f]/90 backdrop-blur-xl md:top-20">
           <div className="max-w-5xl mx-auto px-4 md:px-6 h-14 flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Link
-                href="/"
-                className="flex items-center gap-1.5 text-zinc-400 hover:text-white transition-colors group"
-              >
+              <Link href="/" className="flex items-center gap-1.5 text-zinc-400 hover:text-white transition-colors group">
                 <ArrowLeft size={15} className="group-hover:-translate-x-0.5 transition-transform" />
                 <span className="text-xs font-semibold">Inicio</span>
               </Link>
@@ -87,6 +76,7 @@ export default function TourWeatherDashboard() {
                   Clima · Río La Vieja
                 </span>
               </div>
+              <StationHealthBadge health={stationHealth} compact />
             </div>
             <div className="flex items-center gap-3">
               {lastRefresh && (
@@ -113,289 +103,227 @@ export default function TourWeatherDashboard() {
           <header className="mb-7 max-w-3xl">
             <div className="mb-3 flex items-center gap-2 text-[#66ddcf]">
               <CloudSun size={17} />
-              <p className="text-xs font-bold uppercase tracking-[0.2em]">Guía local del tiempo</p>
+              <p className="text-xs font-bold uppercase tracking-[0.2em]">Guía local del tiempo · v2.0</p>
             </div>
             <h1 className="text-3xl font-black tracking-tight text-white md:text-5xl">
-              Clima y condiciones para su aventura
+              Clima, río y pronóstico para su aventura
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-400 md:text-base">
-              Una lectura sencilla de lluvia, río y pronóstico en San Carlos. Úsela para prepararse; la decisión final de una actividad en río o cañón siempre la toma el guía en sitio.
+              Tres lecturas, cada una con su nivel de confianza: cómo está{" "}
+              <strong className="text-zinc-200">ahora</strong>, cómo se ve{" "}
+              <strong className="text-zinc-200">mañana hora por hora</strong> y el{" "}
+              <strong className="text-zinc-200">nivel del río</strong> en el tramo del tour. La fuente
+              primaria es el pluviómetro del IMN en la cuenca alta; todo lo demás entra como apoyo
+              secundario. La decisión final de una salida la toma el guía en sitio.
             </p>
           </header>
 
-          <div className="mb-5 grid gap-3 sm:grid-cols-3">
+          {/* Índice de navegación */}
+          <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <a href="#ahora" className="group rounded-2xl border border-white/10 bg-white/[0.035] p-4 transition hover:border-[#00C4B0]/35 hover:bg-[#00C4B0]/[0.05]">
               <CloudSun size={18} className="mb-3 text-[#00C4B0]" />
-              <p className="text-sm font-bold">Condiciones ahora</p>
-              <p className="mt-1 text-xs leading-5 text-zinc-500">Lo esencial para decidir cómo prepararse.</p>
+              <p className="text-sm font-bold">1 · Ahora</p>
+              <p className="mt-1 text-xs leading-5 text-zinc-500">Lluvia medida y estado de la cuenca.</p>
             </a>
             <a href="#manana" className="group rounded-2xl border border-white/10 bg-white/[0.035] p-4 transition hover:border-[#00C4B0]/35 hover:bg-[#00C4B0]/[0.05]">
-              <Umbrella size={18} className="mb-3 text-[#00C4B0]" />
-              <p className="text-sm font-bold">Mañana y 5 días</p>
-              <p className="mt-1 text-xs leading-5 text-zinc-500">Ventanas de salida y tendencia semanal.</p>
+              <CalendarClock size={18} className="mb-3 text-[#00C4B0]" />
+              <p className="text-sm font-bold">2 · Mañana</p>
+              <p className="mt-1 text-xs leading-5 text-zinc-500">Pronóstico hora por hora, con banda.</p>
             </a>
-            <a href="#seguridad" className="group rounded-2xl border border-white/10 bg-white/[0.035] p-4 transition hover:border-[#00C4B0]/35 hover:bg-[#00C4B0]/[0.05]">
-              <ShieldCheck size={18} className="mb-3 text-[#00C4B0]" />
-              <p className="text-sm font-bold">Río y seguridad</p>
-              <p className="mt-1 text-xs leading-5 text-zinc-500">Qué significa el dato para sus planes.</p>
+            <a href="#rio" className="group rounded-2xl border border-white/10 bg-white/[0.035] p-4 transition hover:border-[#00C4B0]/35 hover:bg-[#00C4B0]/[0.05]">
+              <Waves size={18} className="mb-3 text-[#00C4B0]" />
+              <p className="text-sm font-bold">3 · Nivel del río</p>
+              <p className="mt-1 text-xs leading-5 text-zinc-500">Índice de caudal y proyección 30 h.</p>
+            </a>
+            <a href="#estacion" className="group rounded-2xl border border-white/10 bg-white/[0.035] p-4 transition hover:border-[#00C4B0]/35 hover:bg-[#00C4B0]/[0.05]">
+              <Gauge size={18} className="mb-3 text-[#00C4B0]" />
+              <p className="text-sm font-bold">La estación IMN</p>
+              <p className="mt-1 text-xs leading-5 text-zinc-500">Qué mide, qué no, y qué tan fresca está.</p>
             </a>
           </div>
 
           <div className="space-y-4">
-          {fetchWarning && (
-            <div className="rounded-2xl border border-amber-500/35 bg-amber-500/10 px-4 py-3">
-              <p className="text-xs font-semibold text-amber-300 uppercase tracking-wide">Aviso</p>
-              <p className="text-sm text-amber-100 mt-1">{fetchWarning}</p>
-            </div>
-          )}
+            {fetchWarning && (
+              <div className="rounded-2xl border border-amber-500/35 bg-amber-500/10 px-4 py-3">
+                <p className="text-xs font-semibold text-amber-300 uppercase tracking-wide">Aviso</p>
+                <p className="text-sm text-amber-100 mt-1">{fetchWarning}</p>
+              </div>
+            )}
 
-          {/* ═══ RESUMEN PRINCIPAL ═══════════════════════════════════════════════ */}
-          <div id="ahora" className={`relative scroll-mt-40 rounded-3xl border overflow-hidden ${assessment.bg} ${assessment.border} p-5 md:p-7`}>
-            <div className={`absolute inset-0 opacity-20 ${
-              assessment.level === "go" ? "bg-gradient-to-br from-emerald-500/30 to-transparent"
-              : assessment.level === "no" ? "bg-gradient-to-br from-red-500/30 to-transparent"
-              : "bg-gradient-to-br from-amber-500/30 to-transparent"
-            } pointer-events-none`} />
+            {(rain?.stats?.wetStreak ?? 0) >= 4 && (
+              <div className="rounded-2xl border border-red-500/35 bg-red-500/10 px-4 py-3">
+                <p className="text-xs font-semibold text-red-300 uppercase tracking-wide">Alerta</p>
+                <p className="text-sm text-red-100 mt-1">
+                  <strong>{rain?.stats?.wetStreak} horas seguidas de lluvia.</strong> El río puede seguir
+                  subiendo aunque ahora parezca calmado.
+                </p>
+              </div>
+            )}
 
-            <div className="relative z-10 space-y-4">
-              <div className="flex items-start justify-between gap-3">
+            {/* ═══ LOS 3 MÓDULOS ═══════════════════════════════════════════════ */}
+            {model && rain ? (
+              <>
+                <NowModule
+                  model={model}
+                  rain={rain}
+                  zoneNow={zoneNow}
+                  lastUpdateISO={rain.meta?.lastUpdateISO}
+                />
+                <TomorrowModule model={model} />
+                <RiverModule model={model} />
+              </>
+            ) : (
+              <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 text-center">
+                <p className="text-sm text-zinc-400">
+                  {loading
+                    ? "Cargando datos de la estación IMN…"
+                    : "La estación IMN no tiene suficientes lecturas para el modelo en este momento. Reintente en unos minutos."}
+                </p>
+              </div>
+            )}
+
+            {/* Horario del cañón */}
+            <div className={`rounded-2xl border px-4 py-3 ${canyonSchedule.bg} ${canyonSchedule.border}`}>
+              <div className="flex items-start gap-3">
+                <ScheduleIcon size={16} className={`${canyonSchedule.color} mt-0.5 shrink-0`} />
                 <div>
-                  <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500 font-bold mb-1.5">
-                    Lectura rápida · San Carlos
-                  </p>
-                  <div className="flex items-center gap-2 mb-1">
-                    <AssessmentIcon size={22} className={assessment.color} strokeWidth={2} />
-                    <h2 className={`text-2xl font-black ${assessment.color}`}>{assessment.title}</h2>
-                  </div>
-                  <p className="text-sm text-zinc-400 leading-relaxed">{assessment.subtitle}</p>
-                </div>
-                <div className="text-right shrink-0">
-                  <div className={`text-4xl font-black tabular-nums ${assessment.color}`}>
-                    {rain?.stats?.last3h_mm?.toFixed(1) ?? "—"}
-                  </div>
-                  <div className="text-[10px] uppercase tracking-widest text-zinc-500">mm · 3h</div>
+                  <p className={`text-sm font-bold ${canyonSchedule.color}`}>{canyonSchedule.message}</p>
+                  <p className="text-xs text-zinc-400 mt-0.5 leading-relaxed">{canyonSchedule.detail}</p>
                 </div>
               </div>
+            </div>
 
-              <SaturationGauge saturation={saturation} />
+            {/* ═══ IMPACTO EN LOS TOURS DE RÍO ═══════════════════════════════ */}
+            <div id="tours" className="scroll-mt-40">
+              <RiverTourImpactSection impacts={tourImpacts} />
+            </div>
 
-              {zoneNow && (
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  <div className="rounded-xl bg-black/25 border border-white/8 px-3 py-3">
-                    <Thermometer size={12} className="text-orange-300 mx-auto mb-1" />
-                    <p className="text-center text-base font-bold">{Math.round(zoneNow.temp_c)}°C</p>
-                    <p className="mt-0.5 text-center text-[10px] text-zinc-500">Temperatura</p>
+            {/* ═══ CÓMO HA LLOVIDO (histórico) ══════════════════════════════ */}
+            <div id="lluvia" className="scroll-mt-40">
+              <RainHistorySection
+                narrative={rainNarrative}
+                accumulationSeries={accumulationSeries}
+                riskChart={riskChart}
+                baseline={baseline}
+                windows={rainWindows}
+                todayMm={rain?.currentSnapshot?.sum_lluv_mm ?? 0}
+                yesterdayMm={rain?.currentSnapshot?.lluv_ayer_mm ?? 0}
+              />
+            </div>
+
+            {/* Mensaje vacilón */}
+            <WeatherMessage snap={weatherSnap} />
+
+            {/* ═══ PRONÓSTICO 5 DÍAS (contexto secundario) ══════════════════ */}
+            {sCarlos?.daily_5d && sCarlos.daily_5d.length > 0 && (() => {
+              const days = sCarlos.daily_5d.slice(0, 5);
+              const maxMm = Math.max(1, ...days.map((d) => d.precip_sum_mm ?? 0));
+              return (
+                <div className="rounded-2xl border border-white/8 bg-white/[0.02] p-4">
+                  <p className="text-xs font-bold text-zinc-300 uppercase tracking-wide mb-1 flex items-center gap-1.5">
+                    <Clock size={12} /> Próximos días · San Carlos
+                  </p>
+                  <p className="text-[10px] text-zinc-600 mb-3">
+                    Base secundaria (Open-Meteo). Contexto, no sustituye la estación.
+                  </p>
+                  <div className="flex gap-1.5">
+                    {days.map((d, i) => (
+                      <div key={i} className="flex-1 flex flex-col items-center gap-1 rounded-xl bg-black/25 border border-white/6 py-2.5 px-1">
+                        <span className="text-[9px] text-zinc-500">
+                          {i === 0 ? "Hoy" : i === 1 ? "Mañana" : new Date(d.date).toLocaleDateString("es-CR", { weekday: "short" }).replace(".", "")}
+                        </span>
+                        <span className="text-lg leading-none">{d.weather_icon}</span>
+                        <span className="text-[10px] text-zinc-300 font-bold">{Math.round(d.temp_max_c)}°</span>
+                        <span className="text-[9px] text-teal-300 font-semibold">
+                          {d.precip_prob_max != null ? `${d.precip_prob_max}%` : "—"}
+                        </span>
+                        <div className="mt-0.5 h-8 w-1.5 rounded-full bg-white/6 flex flex-col justify-end overflow-hidden">
+                          <div
+                            className="w-full rounded-full bg-sky-400/70"
+                            style={{ height: `${Math.round(((d.precip_sum_mm ?? 0) / maxMm) * 100)}%` }}
+                          />
+                        </div>
+                        <span className="text-[8px] text-zinc-500 tabular-nums">{(d.precip_sum_mm ?? 0).toFixed(0)} mm</span>
+                      </div>
+                    ))}
                   </div>
-                  <div className="rounded-xl bg-black/25 border border-white/8 px-3 py-3">
-                    <Droplets size={12} className="text-blue-300 mx-auto mb-1" />
-                    <p className="text-center text-base font-bold">{Math.round(zoneNow.hr_pct)}%</p>
-                    <p className="mt-0.5 text-center text-[10px] text-zinc-500">Humedad</p>
-                  </div>
-                  <div className="rounded-xl bg-black/25 border border-white/8 px-3 py-3">
-                    <Wind size={12} className="text-teal-300 mx-auto mb-1" />
-                    <p className="text-center text-base font-bold">{Math.round(zoneNow.wind_kmh)} km/h</p>
-                    <p className="mt-0.5 text-center text-[10px] text-zinc-500">Viento</p>
-                  </div>
-                  <div className="rounded-xl bg-black/25 border border-white/8 px-3 py-3">
-                    <Umbrella size={12} className="text-sky-300 mx-auto mb-1" />
-                    <p className="text-center text-base font-bold">
-                      {zoneNow.precip_prob_next3h != null ? `${zoneNow.precip_prob_next3h}%` : "—"}
+                </div>
+              );
+            })()}
+
+            {/* ═══ LA ESTACIÓN ══════════════════════════════════════════════ */}
+            <StationInfoSection health={stationHealth} stationName={rain?.meta?.station} />
+
+            {/* ═══ SUPUESTOS DEL MODELO ═════════════════════════════════════ */}
+            {model && (
+              <CollapsibleSection title="Supuestos y límites del modelo" icon={Gauge}>
+                <ul className="space-y-2 text-xs leading-5 text-zinc-400">
+                  {model.assumptions.map((a, i) => (
+                    <li key={i} className="flex gap-2">
+                      <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-zinc-600" />
+                      <span>{a}</span>
+                    </li>
+                  ))}
+                  <li className="flex gap-2 text-zinc-600">
+                    <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-zinc-700" />
+                    <span>Motor generado {new Date(model.generatedAtISO).toLocaleString("es-CR")}.</span>
+                  </li>
+                </ul>
+              </CollapsibleSection>
+            )}
+
+            {/* ═══ DETALLES TÉCNICOS ═══════════════════════════════════════ */}
+            <CollapsibleSection title="Más detalles técnicos" icon={Gauge}>
+              <div className="space-y-4">
+                {dailyChart.length > 0 && (
+                  <div>
+                    <p className="text-[10px] text-zinc-500 mb-2 uppercase tracking-wide flex items-center gap-1">
+                      <CloudRain size={12} /> Lluvia diaria · 7 días
                     </p>
-                    <p className="mt-0.5 text-center text-[10px] text-zinc-500">Lluvia · próx. 3h</p>
+                    <ResponsiveContainer width="100%" height={100} minWidth={1} minHeight={1}>
+                      <BarChart data={dailyChart} barSize={24} margin={{ top: 4, right: 0, bottom: 0, left: -20 }}>
+                        <XAxis dataKey="fecha" tick={{ fontSize: 9, fill: "#71717a" }} tickLine={false} axisLine={false} />
+                        <YAxis tick={{ fontSize: 9, fill: "#71717a" }} tickLine={false} axisLine={false} />
+                        <Tooltip content={<CustomBarTooltip />} />
+                        <Bar dataKey="lluvia" name="Lluvia" radius={[4, 4, 0, 0]}>
+                          {dailyChart.map((entry, i) => (
+                            <Cell key={i} fill={entry.fill} fillOpacity={0.85} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
                   </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Horario del cañón — informativo, no bloquea datos */}
-          <div className={`rounded-2xl border px-4 py-3 ${canyonSchedule.bg} ${canyonSchedule.border}`}>
-            <div className="flex items-start gap-3">
-              <ScheduleIcon size={16} className={`${canyonSchedule.color} mt-0.5 shrink-0`} />
-              <div>
-                <p className={`text-sm font-bold ${canyonSchedule.color}`}>{canyonSchedule.message}</p>
-                <p className="text-xs text-zinc-400 mt-0.5 leading-relaxed">{canyonSchedule.detail}</p>
+                )}
+                <p className="text-[10px] text-zinc-600 leading-4">
+                  La curva de acumulación 48 h y las ventanas móviles de 3 h / 6 h están en la
+                  sección <a href="#lluvia" className="text-zinc-400 hover:underline">Cómo ha llovido</a>.
+                </p>
               </div>
-            </div>
-          </div>
+            </CollapsibleSection>
 
-          {(rain?.stats?.wetStreak ?? 0) >= 4 && (
-            <div className="rounded-2xl border border-red-500/35 bg-red-500/10 px-4 py-3">
-              <p className="text-xs font-semibold text-red-300 uppercase tracking-wide">Alerta</p>
-              <p className="text-sm text-red-100 mt-1">
-                <strong>{rain?.stats?.wetStreak} horas seguidas de lluvia.</strong> El río puede seguir subiendo aunque ahora parezca calmado.
-              </p>
-            </div>
-          )}
-
-          {/* Riesgo de crecida simplificado */}
-          <div id="seguridad" className={`scroll-mt-40 rounded-2xl border px-4 py-4 ${crecidaTone}`}>
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-xs font-semibold uppercase tracking-wide">Río La Vieja · crecida estimada</p>
-              <CrecidaIcon size={15} />
-            </div>
-            <p className="text-lg font-black mt-1">{crecida?.label ?? "Sin estimación"}</p>
-            <p className="text-xs mt-1 leading-5 opacity-90">{crecida?.guidance ?? ""}</p>
-            <p className="mt-3 border-t border-current/15 pt-3 text-[11px] leading-5 opacity-75">
-              Esta estimación orienta, pero no confirma una salida. El nivel real del río, el terreno y la valoración del guía mandan.
-            </p>
-          </div>
-
-          {/* ═══ CÓMO HA LLOVIDO ═══════════════════════════════════════════════ */}
-          <RainHistorySection narrative={rainNarrative} chartData={hourlyChart} />
-
-          {/* ═══ MAÑANA 7 / 8 / 9 AM ═══════════════════════════════════════════ */}
-          <div id="manana" className="scroll-mt-40">
-            <TomorrowMorningSection slots={morningSlots} summary={morningSummary} />
-          </div>
-
-          {/* Mensaje vacilón */}
-          <WeatherMessage snap={weatherSnap} />
-
-          {/* ═══ PRONÓSTICO 5 DÍAS (simple) ════════════════════════════════════ */}
-          {sCarlos?.daily_5d && sCarlos.daily_5d.length > 0 && (
-            <div className="rounded-2xl border border-white/8 bg-white/[0.02] p-4">
-              <p className="text-xs font-bold text-zinc-300 uppercase tracking-wide mb-3">
-                Próximos días · San Carlos
-              </p>
-              <div className="flex gap-1.5">
-                {sCarlos.daily_5d.slice(0, 5).map((d, i) => (
-                  <div key={i} className="flex-1 flex flex-col items-center gap-1 rounded-xl bg-black/25 border border-white/6 py-2.5 px-1">
-                    <span className="text-[9px] text-zinc-500">
-                      {i === 0 ? "Hoy" : i === 1 ? "Mañana" : new Date(d.date).toLocaleDateString("es-CR", { weekday: "short" }).replace(".", "")}
-                    </span>
-                    <span className="text-lg leading-none">{d.weather_icon}</span>
-                    <span className="text-[10px] text-zinc-300 font-bold">{Math.round(d.temp_max_c)}°</span>
-                    <span className="text-[9px] text-teal-300 font-semibold">
-                      {d.precip_prob_max != null ? `${d.precip_prob_max}%` : `${d.precip_sum_mm}mm`}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* ═══ DETALLES TÉCNICOS (colapsable) ══════════════════════════════════ */}
-          <CollapsibleSection title="Más detalles técnicos" icon={Gauge}>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-xl bg-black/30 border border-white/8 p-3 space-y-2">
-                  <p className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Lluvia reciente</p>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-zinc-400">Última hora</span>
-                    <span className="font-bold">{rain?.stats?.last1h_mm ?? "—"} mm</span>
-                  </div>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-zinc-400">6 horas</span>
-                    <span className="font-bold">{rain?.stats?.last6h_mm ?? "—"} mm</span>
-                  </div>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-zinc-400">24 horas</span>
-                    <span className="font-bold">{rain?.stats?.last24h_mm ?? "—"} mm</span>
-                  </div>
-                  <div className="flex justify-between text-xs items-center">
-                    <span className="text-zinc-400">Tendencia</span>
-                    <span className="flex items-center gap-1 font-bold">{trendIcon} {rain?.status?.trend ?? "—"}</span>
-                  </div>
-                </div>
-                <div className="rounded-xl bg-black/30 border border-white/8 p-3 space-y-2">
-                  <p className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Rachas</p>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-zinc-400">Horas lluvia/24h</span>
-                    <span className="font-bold">{rain?.stats?.wetHoursLast24 ?? "—"} h</span>
-                  </div>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-zinc-400">Racha lluvia</span>
-                    <span className="font-bold">{rain?.stats?.wetStreak ?? "—"} h</span>
-                  </div>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-zinc-400">Racha seca</span>
-                    <span className="font-bold">{rain?.stats?.dryStreak ?? "—"} h</span>
-                  </div>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-zinc-400">Pico 24h</span>
-                    <span className="font-bold">{rain?.stats?.peakHour24h?.mm ?? "—"} mm</span>
-                  </div>
-                </div>
-              </div>
-
-              {dailyChart.length > 0 && (
+            <section className="rounded-3xl border border-white/10 bg-[#2E2A25]/45 p-5 md:flex md:items-center md:justify-between md:gap-6">
+              <div className="flex items-start gap-3">
+                <MapPin size={18} className="mt-0.5 shrink-0 text-[#00C4B0]" />
                 <div>
-                  <p className="text-[10px] text-zinc-500 mb-2 uppercase tracking-wide flex items-center gap-1">
-                    <CloudRain size={12} /> Lluvia diaria · 7 días
+                  <h2 className="text-sm font-bold">¿Su tour depende del río?</h2>
+                  <p className="mt-1 max-w-xl text-xs leading-5 text-zinc-400">
+                    Escríbanos antes de salir. Allan o Verónica le confirman la condición operativa real,
+                    sin adivinar disponibilidad ni poner la aventura por encima de la seguridad.
                   </p>
-                  <ResponsiveContainer width="100%" height={100} minWidth={1} minHeight={1}>
-                    <BarChart data={dailyChart} barSize={24} margin={{ top: 4, right: 0, bottom: 0, left: -20 }}>
-                      <XAxis dataKey="fecha" tick={{ fontSize: 9, fill: "#71717a" }} tickLine={false} axisLine={false} />
-                      <YAxis tick={{ fontSize: 9, fill: "#71717a" }} tickLine={false} axisLine={false} />
-                      <Tooltip content={<CustomBarTooltip />} />
-                      <Bar dataKey="lluvia" name="Lluvia" radius={[4, 4, 0, 0]}>
-                        {dailyChart.map((entry, i) => (
-                          <Cell key={i} fill={entry.fill} fillOpacity={0.85} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
                 </div>
-              )}
-
-              {riskChart.length > 0 && (
-                <div>
-                  <p className="text-[10px] text-zinc-500 mb-2 uppercase tracking-wide flex items-center gap-1">
-                    <Activity size={12} /> Riesgo acumulado 24h
-                  </p>
-                  <ResponsiveContainer width="100%" height={110} minWidth={1} minHeight={1}>
-                    <AreaChart data={riskChart} margin={{ top: 4, right: 0, bottom: 0, left: -20 }}>
-                      <defs>
-                        <linearGradient id="g3h" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#f97316" stopOpacity={0.3} />
-                          <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
-                        </linearGradient>
-                        <linearGradient id="g6h" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#ef4444" stopOpacity={0.2} />
-                          <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                      <XAxis dataKey="hora" tick={{ fontSize: 9, fill: "#71717a" }} tickLine={false} axisLine={false} interval={2} />
-                      <YAxis tick={{ fontSize: 9, fill: "#71717a" }} tickLine={false} axisLine={false} />
-                      <Tooltip content={<CustomBarTooltip />} />
-                      <ReferenceLine y={10} stroke="#f97316" strokeDasharray="3 2" strokeOpacity={0.6} />
-                      <ReferenceLine y={20} stroke="#ef4444" strokeDasharray="3 2" strokeOpacity={0.6} />
-                      <Area type="monotone" dataKey="3h" name="Acum. 3h" stroke="#f97316" fill="url(#g3h)" strokeWidth={2} dot={false} />
-                      <Area type="monotone" dataKey="6h" name="Acum. 6h" stroke="#ef4444" fill="url(#g6h)" strokeWidth={1.5} dot={false} />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-              )}
-
-              <div className="grid grid-cols-3 gap-2">
-                <StatPill label="Últ. 48h" value={rain?.stats?.last48h_mm ?? "—"} unit="mm" />
-                <StatPill label="Hoy (acum.)" value={rain?.currentSnapshot?.sum_lluv_mm ?? "—"} unit="mm" />
-                <StatPill label="Ayer total" value={rain?.currentSnapshot?.lluv_ayer_mm ?? "—"} unit="mm" />
               </div>
-            </div>
-          </CollapsibleSection>
+              <Link href="/reservar" className="mt-4 inline-flex shrink-0 items-center gap-2 rounded-full bg-[#00C4B0] px-4 py-2.5 text-xs font-black text-[#16211f] transition hover:bg-[#66ddcf] md:mt-0">
+                <MessageCircle size={15} /> Consultar al equipo
+              </Link>
+            </section>
 
-          <section className="rounded-3xl border border-white/10 bg-[#2E2A25]/45 p-5 md:flex md:items-center md:justify-between md:gap-6">
-            <div className="flex items-start gap-3">
-              <MapPin size={18} className="mt-0.5 shrink-0 text-[#00C4B0]" />
-              <div>
-                <h2 className="text-sm font-bold">¿Su tour depende del río?</h2>
-                <p className="mt-1 max-w-xl text-xs leading-5 text-zinc-400">Escríbanos antes de salir. Allan o Verónica le confirman la condición operativa real, sin adivinar disponibilidad ni poner la aventura por encima de la seguridad.</p>
-              </div>
-            </div>
-            <Link href="/reservar" className="mt-4 inline-flex shrink-0 items-center gap-2 rounded-full bg-[#00C4B0] px-4 py-2.5 text-xs font-black text-[#16211f] transition hover:bg-[#66ddcf] md:mt-0">
-              <MessageCircle size={15} /> Consultar al equipo
-            </Link>
-          </section>
-
-          {rain?.meta && (
-            <p className="text-[10px] text-zinc-700 text-center pb-4 leading-relaxed px-4">
-              {rain.meta.note}<br />
-              Fuente lluvia: {rain.meta.station} · Pronóstico: Open-Meteo · {new Date(rain.meta.fetchedAt).toLocaleString("es-CR")}
-            </p>
-          )}
+            {rain?.meta && (
+              <p className="text-[10px] text-zinc-700 text-center pb-4 leading-relaxed px-4">
+                {rain.meta.note}<br />
+                Fuente primaria: {rain.meta.station} · Base secundaria: Open-Meteo (San Carlos) ·{" "}
+                {new Date(rain.meta.fetchedAt).toLocaleString("es-CR")}
+              </p>
+            )}
           </div>
         </main>
       </div>

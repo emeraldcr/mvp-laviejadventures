@@ -20,16 +20,16 @@ export default function HomeHero() {
 
   const facts = isEs
     ? [
-        { icon: MapPin, value: "San Carlos", label: "Ribera del Río La Vieja" },
-        { icon: Users, value: "Grupos guiados", label: "Aventura acompañada" },
-        { icon: Clock3, value: "Naturaleza real", label: "Cañón, bosque y río" },
-        { icon: ShieldCheck, value: "Seguridad primero", label: "Ruta según condiciones" },
+        { icon: MapPin, value: "San Carlos", label: "Sucre de Ciudad Quesada" },
+        { icon: Users, value: "Grupos pequeños", label: "Guía local bilingüe" },
+        { icon: Clock3, value: "3–4 horas", label: "Sendero, cañón y Cascada El Zafiro" },
+        { icon: ShieldCheck, value: "Reserva flexible", label: "Cancelación gratis hasta 48 h antes" },
       ]
     : [
-        { icon: MapPin, value: "San Carlos", label: "La Vieja River region" },
-        { icon: Users, value: "Guided groups", label: "Accompanied adventure" },
-        { icon: Clock3, value: "Real nature", label: "Canyon, forest and river" },
-        { icon: ShieldCheck, value: "Safety first", label: "Route follows conditions" },
+        { icon: MapPin, value: "San Carlos", label: "Sucre de Ciudad Quesada" },
+        { icon: Users, value: "Small groups", label: "Local bilingual guide" },
+        { icon: Clock3, value: "3–4 hours", label: "Trail, canyon & El Zafiro Waterfall" },
+        { icon: ShieldCheck, value: "Flexible booking", label: "Free cancellation up to 48h before" },
       ];
 
   return (
@@ -59,7 +59,7 @@ export default function HomeHero() {
           </span>
           <span className="hidden items-center gap-2 rounded-full border border-[#00C4B0]/40 bg-black/25 px-4 py-2 text-[10px] font-extrabold uppercase tracking-[0.2em] text-white/90 backdrop-blur-md sm:inline-flex">
             <span className="h-2 w-2 animate-pulse rounded-full bg-[#00C4B0]" />
-            {isEs ? "Aventura guiada" : "Guided adventure"}
+            {isEs ? "Reserva en línea" : "Book online"}
           </span>
         </div>
 
@@ -79,8 +79,8 @@ export default function HomeHero() {
 
           <p className="mt-7 max-w-2xl text-balance text-sm font-semibold leading-relaxed text-white/85 sm:text-base md:text-lg">
             {isEs
-              ? "Ciudad Esmeralda se vive con los pies en el río y la mirada arriba. Guías locales, equipo y una ruta que siempre se ajusta al clima."
-              : "Experience Ciudad Esmeralda with your feet in the river and your eyes up. Local guides, proper gear, and a route that always follows the weather."}
+              ? "El cañón insignia de La Vieja Adventures: sendero, río y las pozas turquesa de la Cascada El Zafiro, con guía local bilingüe y grupos pequeños. Si el clima cambia, ajustamos la ruta o le reprogramamos sin costo."
+              : "La Vieja Adventures' signature canyon: trail, river, and the turquoise pools of El Zafiro Waterfall, with a local bilingual guide and small groups. If the weather turns, we adjust the route or rebook you at no cost."}
           </p>
 
           <div className="mt-7 flex flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
@@ -105,7 +105,7 @@ export default function HomeHero() {
               className="inline-flex min-h-14 items-center justify-center gap-3 rounded-full border border-[#00C4B0]/60 bg-[#00C4B0]/12 px-7 text-xs font-black uppercase tracking-[0.12em] text-[#79f4e7] backdrop-blur-md transition hover:-translate-y-0.5 hover:border-[#00C4B0] hover:bg-[#00C4B0]/22"
             >
               <Bot size={17} aria-hidden />
-              {isEs ? "Hablar con la IA" : "Talk to AI"}
+              {isEs ? "Planear con Vero (IA)" : "Plan with Vero (AI)"}
             </Link>
           </div>
         </div>
@@ -116,11 +116,13 @@ export default function HomeHero() {
               <div>
                 <p className="text-sm font-bold leading-relaxed text-white/82">
                   {isEs
-                    ? "Aventura brava. Decisiones responsables."
-                    : "Bold adventure. Responsible decisions."}
+                    ? "Reserve en línea y reciba la confirmación al instante."
+                    : "Book online and get your confirmation instantly."}
                 </p>
                 <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.15em] text-[#00C4B0]">
-                  {isEs ? "El río manda, nosotros lo respetamos" : "The river leads, we respect it"}
+                  {isEs
+                    ? "Pago seguro · Cancelación gratis hasta 48 h antes"
+                    : "Secure payment · Free cancellation up to 48h before"}
                 </p>
               </div>
               <ArrowDown size={18} className="hidden shrink-0 text-[#00C4B0] md:block" />

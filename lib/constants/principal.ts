@@ -35,43 +35,43 @@ export const principalContent = {
         "Del cañón con agua hasta la caminata tranquila en el bosque: acá hay para el que quiere adrenalina y para el que quiere aire fresco sin apuros.",
     },
     conversion: {
-      title: "Preguntas que nos hacen seguido",
-      subtitle: "Lo que la gente quiere saber antes de meterse al río o al bosque.",
+      title: "Preguntas frecuentes",
+      subtitle: "Lo que conviene saber antes de reservar su tour.",
       faqs: [
         {
           question: "¿Puedo cambiar la fecha después de reservar?",
           answer:
-            "Sí. Avisanos con al menos 48 horas y te ayudamos a reprogramar según lo que haya disponible. Sin drama.",
+            "Sí. Avísenos con al menos 48 horas de antelación y le ayudamos a reprogramar según la disponibilidad, sin cargos adicionales.",
         },
         {
-          question: "¿Cuál tour conviene si soy principiante?",
+          question: "¿Qué tour conviene si soy principiante?",
           answer:
-            "Si venís más suave, **Cascadas Secretas**, **Lluvia en la Naturaleza** o el **Tour Gastronómico** son buena entrada. Baja o media intensidad, sin pedirte experiencia previa. Ciudad Esmeralda ya pide más pierna y ganas.",
+            "Si prefiere algo más tranquilo, **Cascadas Secretas**, **Lluvia en la Naturaleza** o el **Tour Gastronómico** son un buen comienzo: intensidad baja o media, sin experiencia previa. Ciudad Esmeralda exige mejor condición física.",
         },
         {
           question: "¿Qué pasa si llueve el día del tour?",
           answer:
-            "Con lluvia liviana casi siempre salimos igual — en la zona eso es parte del paisaje. Si se pone feo de verdad (tormenta fuerte o río crecido), te escribimos con tiempo para cambiar fecha o pasar a otra actividad segura. Seguridad primero, siempre.",
+            "Con lluvia ligera casi siempre salimos: en la zona es parte del paisaje. Si el tiempo empeora de verdad (tormenta eléctrica o río crecido), le escribimos con antelación para cambiar la fecha o pasar a otra actividad segura. La seguridad es lo primero.",
         },
         {
-          question: "¿Qué llevo al tour?",
+          question: "¿Qué debo llevar al tour?",
           answer:
-            "En general: ropa cómoda, zapatos que se puedan mojar, traje de baño, toalla, repelente, bloqueador y una muda seca. Según el tour te mandamos la lista exacta al confirmar.",
+            "En general: ropa cómoda, calzado que se pueda mojar, traje de baño, toalla, repelente, bloqueador y una muda seca. Al confirmar le enviamos la lista exacta según el tour.",
         },
         {
           question: "¿Hay edad mínima?",
           answer:
-            "La mayoría de tours reciben desde 10–12 años con un adulto. Los más exigentes (rapel, cuatrimotos) piden 14 y 16 años respectivamente. Si tenés dudas con peques o adultos mayores, escribí y te decimos con honestidad.",
+            "La mayoría de los tours admiten desde los 10–12 años acompañados de un adulto. Los más exigentes (rápel y cuadraciclos) piden 14 y 16 años respectivamente. Si tiene dudas con niños o adultos mayores, escríbanos y le orientamos con claridad.",
         },
         {
-          question: "¿El transporte viene incluido?",
+          question: "¿El transporte está incluido?",
           answer:
-            "No está incluido en el tour. Si necesitás traslado desde el hotel, lo coordinamos aparte por un costo adicional.",
+            "No está incluido en el precio del tour. Si necesita traslado desde el hotel, lo coordinamos aparte con un costo adicional.",
         },
         {
-          question: "¿Cómo es la cancelación?",
+          question: "¿Cómo funciona la cancelación?",
           answer:
-            "Cancelás gratis hasta 48 horas antes. Con menos de 48 horas no hay reembolso. Si el clima o el río no dan, nosotros te reprogramamos o te ofrecemos alternativa segura.",
+            "La cancelación es gratuita hasta 48 horas antes. Con menos de 48 horas no hay reembolso. Si el clima o el río impiden la salida, le reprogramamos u ofrecemos una alternativa segura.",
         },
       ],
     },
@@ -87,7 +87,7 @@ export const principalContent = {
       },
     },
     errors: {
-      criticalFallback: "Uy, algo falló al cargar las reservas. Recargá la página o escribinos por WhatsApp.",
+      criticalFallback: "Ocurrió un problema al cargar la página. Actualícela o escríbanos por WhatsApp.",
     },
   },
   en: {
@@ -124,43 +124,43 @@ export const principalContent = {
         "From a full canyon day to a calm forest walk — something for the adrenaline crowd and for those who just want fresh air without the rush.",
     },
     conversion: {
-      title: "Questions we get all the time",
-      subtitle: "What people ask before they hit the river or the trail.",
+      title: "Frequently asked questions",
+      subtitle: "What's worth knowing before you book your tour.",
       faqs: [
         {
           question: "Can I change my date after booking?",
           answer:
-            "Yes. Give us at least 48 hours' notice and we'll help you rebook based on what's open. No stress.",
+            "Yes. Give us at least 48 hours' notice and we'll help you rebook based on availability, at no extra charge.",
         },
         {
           question: "Which tour is best for beginners?",
           answer:
-            "If you want something gentler, **Secret Waterfalls**, **Rain in Nature**, or the **Food Tour** are solid starts. Lower or medium intensity, no prior experience needed. Ciudad Esmeralda asks for more legs and energy.",
+            "If you want something gentler, **Secret Waterfalls**, **Rain in Nature**, or the **Food Tour** are solid starts: lower or medium intensity, no prior experience needed. Ciudad Esmeralda calls for better fitness.",
         },
         {
-          question: "What if it rains?",
+          question: "What if it rains on the day of the tour?",
           answer:
-            "Light rain is normal here and we usually still go out. If a real storm hits or the river rises, we'll message you early with a new date or a safer option. Safety first, always.",
+            "Light rain is normal here and we usually still head out. If a real storm hits or the river rises, we'll message you ahead of time with a new date or a safer option. Safety comes first, always.",
         },
         {
-          question: "What should I bring?",
+          question: "What should I bring to the tour?",
           answer:
-            "In general: comfy clothes, shoes that can get wet, swimsuit, towel, repellent, sunscreen, and a dry change. We'll send the exact list when you confirm.",
+            "In general: comfortable clothes, footwear that can get wet, swimsuit, towel, repellent, sunscreen, and a dry change. We'll send the exact list for your tour when you confirm.",
         },
         {
           question: "Is there a minimum age?",
           answer:
-            "Most tours welcome ages 10–12+ with an adult. More demanding ones (canyon rappel, ATVs) need 14 and 16. Not sure about kids or older guests? Message us and we'll be straight with you.",
+            "Most tours welcome ages 10–12 and up with an adult. The more demanding ones (canyon rappel, ATVs) require 14 and 16. Not sure about children or older guests? Message us and we'll advise you clearly.",
         },
         {
           question: "Is transport included?",
           answer:
-            "Not in the tour price. Need a hotel transfer? We can arrange it separately for an extra fee.",
+            "It's not included in the tour price. If you need a hotel transfer, we can arrange it separately for an additional fee.",
         },
         {
-          question: "What's the cancellation policy?",
+          question: "How does cancellation work?",
           answer:
-            "Free cancel up to 48 hours before. Inside 48 hours, no refund. If weather or the river make it unsafe, we rebook you or offer a safer alternative.",
+            "Free cancellation up to 48 hours before. Inside 48 hours, there's no refund. If weather or the river make the outing unsafe, we rebook you or offer a safer alternative.",
         },
       ],
     },
@@ -176,7 +176,7 @@ export const principalContent = {
       },
     },
     errors: {
-      criticalFallback: "Something went wrong loading bookings. Refresh or WhatsApp us.",
+      criticalFallback: "Something went wrong loading the page. Refresh it or message us on WhatsApp.",
     },
   },
 } as const satisfies Record<Lang, object>;

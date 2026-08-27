@@ -1,6 +1,7 @@
 import { CheckCircle2, AlertTriangle, XCircle, Clock, Sun } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { RainData, RegionalHourlyEntry } from "@/lib/types/index";
+import { RIVER_TOUR_PROFILES } from "@/lib/constants/riverTours";
 
 // ── Decision type ─────────────────────────────────────────────────────────────
 
@@ -86,6 +87,10 @@ export function getCostaRicaHour(referenceISO?: string | null): number {
   }).format(base);
   const hour = Number(hourText);
   return Number.isFinite(hour) ? hour : 12;
+}
+
+export function round1(v: number): number {
+  return Math.round((Number(v) || 0) * 10) / 10;
 }
 
 export function mmToColor(mm: number): string {
@@ -364,12 +369,165 @@ export function getWeatherAssessment(rain: RainData | null): Decision {
   };
 }
 
-/** @deprecated Usar getWeatherAssessment + getCanyonSchedule por separado */
-export function getDecision(rain: RainData | null): Decision {
-  return getWeatherAssessment(rain);
+// ── Impacto del clima en los tours de río ────────────────────────────────────
+
+export type RiverTourVerdict = "favorable" | "vigilar" | "poco" | "rio-manda";
+
+export type RiverTourImpact = {
+  slug: string;
+  name: string;
+  difficulty: string;
+  blurb: string;
+  wetNote: string;
+  verdict: RiverTourVerdict;
+  verdictLabel: string;
+  reason: string;
+  factors: {
+    lluvia24h: number;
+    lluvia3h: number;
+    crecida: string;
+    probAM: number | null;
+    tendencia: string;
+  };
+};
+
+function cap(s: string): string {
+  return s.length ? s[0].toUpperCase() + s.slice(1) : s;
+}
+
+/**
+ * Traduce el mismo dato de lluvia/río a un veredicto por tour. Cada perfil
+ * (lib/constants/riverTours.ts) define los mm que mueven su veredicto porque un
+ * cañón técnico se cierra mucho antes que una caminata por la orilla.
+ */
+export function getRiverTourImpacts(
+  rain: RainData | null,
+  morningSlots?: MorningSlot[],
+): RiverTourImpact[] {
+  const last3h = round1(rain?.stats?.last3h_mm ?? 0);
+  const last24h = round1(rain?.stats?.last24h_mm ?? 0);
+  const wetStreak = rain?.stats?.wetStreak ?? 0;
+  const crecidaLevel = rain?.crecidaRisk?.level ?? "bajo";
+  const crecidaLabel = rain?.crecidaRisk?.label ?? "Sin estimación";
+  const trend = rain?.status?.trend ?? "estable";
+  const stationQuality = rain?.stationHealth?.quality ?? "alta";
+
+  const availableAM = (morningSlots ?? []).filter((s) => s.available);
+  const probAM = availableAM.length
+    ? Math.max(...availableAM.map((s) => s.precip_prob ?? 0))
+    : null;
+  const mmAM = availableAM.reduce((a, s) => a + (s.precip_mm ?? 0), 0);
+  const amWet = (probAM ?? 0) >= 60 || mmAM >= 4;
+
+  return RIVER_TOUR_PROFILES.map((p) => {
+    const factors = {
+      lluvia24h: last24h,
+      lluvia3h: last3h,
+      crecida: crecidaLabel,
+      probAM,
+      tendencia: trend,
+    };
+    const head = { slug: p.slug, name: p.name, difficulty: p.difficulty, blurb: p.blurb, wetNote: p.wetNote };
+
+    if (!rain?.stats || stationQuality === "baja") {
+      return {
+        ...head,
+        verdict: "rio-manda" as const,
+        verdictLabel: "Sin dato fresco",
+        reason:
+          "La estación no tiene lecturas recientes. Consulte al equipo antes de contar con este tour.",
+        factors,
+      };
+    }
+
+    if (crecidaLevel === "critico" || last3h >= p.avoid3hMm || wetStreak >= 4) {
+      const why =
+        crecidaLevel === "critico"
+          ? `riesgo alto de crecida (${crecidaLabel.toLowerCase()})`
+          : wetStreak >= 4
+            ? `${wetStreak} h seguidas de lluvia`
+            : `${last3h} mm en las últimas 3 h`;
+      return {
+        ...head,
+        verdict: "poco" as const,
+        verdictLabel: "Poco favorable",
+        reason: `${cap(why)}. ${p.wetNote}`,
+        factors,
+      };
+    }
+
+    if (
+      crecidaLevel === "alto" ||
+      last3h >= p.watch3hMm ||
+      last24h >= p.loaded24hMm ||
+      amWet
+    ) {
+      const bits: string[] = [];
+      if (crecidaLevel === "alto") bits.push("el caudal puede subir");
+      if (last24h >= p.loaded24hMm) bits.push(`${last24h} mm acumulados en 24 h`);
+      else if (last3h >= p.watch3hMm) bits.push(`${last3h} mm en 3 h`);
+      if (amWet && probAM != null) bits.push(`${probAM}% de lluvia mañana temprano`);
+      if (!bits.length) bits.push("lluvia reciente en la cuenca");
+      return {
+        ...head,
+        verdict: "vigilar" as const,
+        verdictLabel: "Vigilar de cerca",
+        reason: `${cap(bits.join(" · "))}. Confirme el estado del río con el equipo la mañana del tour.`,
+        factors,
+      };
+    }
+
+    return {
+      ...head,
+      verdict: "favorable" as const,
+      verdictLabel: "Condiciones favorables",
+      reason: `Poca lluvia reciente (${last24h} mm en 24 h) y tendencia ${trend}. Base buena para salir; el guía confirma en sitio.`,
+      factors,
+    };
+  });
 }
 
 // ── Chart data transformers ───────────────────────────────────────────────────
+
+export type AccumulationPoint = {
+  tsISO: string | null;
+  hora: string;
+  dia: string;
+  mm: number;
+  cumulative: number;
+};
+
+/** Serie de 48 h (más antigua → más reciente) con lluvia horaria y acumulado corrido. */
+export function buildAccumulationSeries(rain: RainData | null): AccumulationPoint[] {
+  const ordered = [...(rain?.data?.hourly ?? [])].reverse().slice(-48);
+  let cum = 0;
+  return ordered.map((h) => {
+    cum += h.lluvia_mm;
+    const d = h.timestampISO ? new Date(h.timestampISO) : null;
+    return {
+      tsISO: h.timestampISO ?? null,
+      hora: d
+        ? d.toLocaleTimeString("es-CR", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false,
+            timeZone: "America/Costa_Rica",
+          })
+        : formatHora(h.timestampISO, h.fecha),
+      dia: d
+        ? d
+            .toLocaleDateString("es-CR", {
+              weekday: "short",
+              day: "numeric",
+              timeZone: "America/Costa_Rica",
+            })
+            .replace(".", "")
+        : "",
+      mm: round1(h.lluvia_mm),
+      cumulative: round1(cum),
+    };
+  });
+}
 
 export function buildHourlyChart(rain: RainData | null) {
   return (rain?.data?.hourly ?? [])

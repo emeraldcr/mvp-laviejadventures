@@ -9,6 +9,8 @@ import {
   buildHourlyChart,
   buildRiskChart,
   buildDailyChart,
+  buildAccumulationSeries,
+  getRiverTourImpacts,
 } from "@/lib/helpers/tiempoHelpers";
 import type { RainData, RegionalData } from "@/lib/types/index";
 import type { WeatherSnapshot } from "@/lib/helpers/weatherMessageHelpers";
@@ -29,7 +31,7 @@ export function useTiempoData() {
     try {
       setFetchWarning(null);
       const [r1, r2] = await Promise.allSettled([
-        fetch("/api/tiempo?hours=24").then(r => r.json()),
+        fetch("/api/tiempo?hours=48").then(r => r.json()),
         fetch("/api/tiempo/regional").then(r => r.json()),
       ]);
 
@@ -101,6 +103,11 @@ export function useTiempoData() {
   const hourlyChart  = useMemo(() => buildHourlyChart(rain),   [rain]);
   const riskChart    = useMemo(() => buildRiskChart(rain),     [rain]);
   const dailyChart   = useMemo(() => buildDailyChart(rain),    [rain]);
+  const accumulationSeries = useMemo(() => buildAccumulationSeries(rain), [rain]);
+  const tourImpacts = useMemo(
+    () => getRiverTourImpacts(rain, morningSlots),
+    [rain, morningSlots],
+  );
 
   return {
     rain,
@@ -119,6 +126,11 @@ export function useTiempoData() {
     hourlyChart,
     riskChart,
     dailyChart,
+    accumulationSeries,
+    tourImpacts,
+    stationHealth: rain?.stationHealth ?? null,
+    baseline: rain?.baseline ?? null,
+    model: rain?.model ?? null,
     showRawForecast,
     setShowRawForecast,
     fetchWarning,

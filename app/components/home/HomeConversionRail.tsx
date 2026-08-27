@@ -16,15 +16,15 @@ export default function HomeConversionRail() {
           <div className="p-7 sm:p-9 lg:p-12">
             <span className="inline-flex items-center gap-2 rounded-full bg-[#00C4B0]/12 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.16em] text-[#70eee1]">
               <ShieldCheck size={14} />
-              {isEs ? "Reserva segura · ruta responsable" : "Secure booking · responsible route"}
+              {isEs ? "Reserva en línea · confirmación inmediata" : "Online booking · instant confirmation"}
             </span>
             <h2 className="mt-5 max-w-2xl font-display text-balance text-3xl font-black leading-[1.02] tracking-tight sm:text-4xl lg:text-5xl">
-              {isEs ? "Su aventura puede empezar en menos de dos minutos." : "Your adventure can start in under two minutes."}
+              {isEs ? "Reserve Ciudad Esmeralda en menos de dos minutos." : "Book Ciudad Esmeralda in under two minutes."}
             </h2>
             <p className="mt-4 max-w-xl text-sm leading-relaxed text-white/68 sm:text-base">
               {isEs
-                ? "Elija fecha, cantidad de personas y paquete. Antes de pagar verá el resumen completo; si algo no le calza, Vero o el equipo le ayudan."
-                : "Pick a date, group size, and package. You will see the full summary before payment; if anything does not fit, Vero or our team can help."}
+                ? "Elija la fecha, el número de personas y el paquete. Verá el precio final antes de pagar, con pago seguro y cancelación gratuita hasta 48 h antes. ¿Dudas? Vero (IA) o nuestro equipo le responden."
+                : "Choose your date, group size, and package. You will see the final price before paying, with secure payment and free cancellation up to 48h before. Questions? Vero (AI) or our team will help."}
             </p>
           </div>
 
@@ -37,7 +37,7 @@ export default function HomeConversionRail() {
                 <CalendarDays size={20} />
                 <strong className="mt-3 block text-base font-black">{primaryBookingLabel(isEs)}</strong>
                 <span className="mt-1 block text-xs font-semibold opacity-70">
-                  {isEs ? "Ver fechas y paquetes" : "See dates and packages"}
+                  {isEs ? "Fechas, paquetes y precio final" : "Dates, packages and final price"}
                 </span>
               </span>
               <ArrowRight size={20} className="transition-transform group-hover:translate-x-1" />
@@ -48,9 +48,9 @@ export default function HomeConversionRail() {
             >
               <span>
                 <Bot size={20} className="text-[#00C4B0]" />
-                <strong className="mt-3 block text-base font-black">{isEs ? "Armar con Vero" : "Plan with Vero"}</strong>
+                <strong className="mt-3 block text-base font-black">{isEs ? "Planear con Vero" : "Plan with Vero"}</strong>
                 <span className="mt-1 block text-xs font-semibold text-white/55">
-                  {isEs ? "IA para elegir mejor" : "AI to help you choose"}
+                  {isEs ? "IA que le ayuda a elegir tour" : "AI that helps you pick a tour"}
                 </span>
               </span>
               <ArrowRight size={20} className="text-[#00C4B0] transition-transform group-hover:translate-x-1" />
@@ -63,9 +63,9 @@ export default function HomeConversionRail() {
             >
               <span>
                 <MessageCircle size={20} className="text-[#00C4B0]" />
-                <strong className="mt-3 block text-base font-black">{isEs ? "Hablar con el equipo" : "Talk to the team"}</strong>
+                <strong className="mt-3 block text-base font-black">{isEs ? "Escribir por WhatsApp" : "Message us on WhatsApp"}</strong>
                 <span className="mt-1 block text-xs font-semibold text-white/55">
-                  {isEs ? "Grupos y planes especiales" : "Groups and custom plans"}
+                  {isEs ? "Grupos, empresas y planes a medida" : "Groups, companies and custom plans"}
                 </span>
               </span>
               <ArrowRight size={20} className="text-[#00C4B0] transition-transform group-hover:translate-x-1" />
@@ -77,9 +77,9 @@ export default function HomeConversionRail() {
       <aside className="fixed bottom-7 right-7 z-40 hidden w-64 overflow-hidden rounded-[1.4rem] border border-white/10 bg-[#2E2A25]/95 text-white shadow-[0_24px_70px_rgba(0,0,0,.3)] backdrop-blur-xl md:block">
         <div className="border-b border-white/10 px-5 py-4">
           <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#70eee1]">
-            {isEs ? "¿Listo para mojarse?" : "Ready to get wet?"}
+            {isEs ? "¿Listo para reservar?" : "Ready to book?"}
           </p>
-          <p className="mt-1 text-sm font-bold">{isEs ? "Reserve cuando quiera." : "Book whenever you are ready."}</p>
+          <p className="mt-1 text-sm font-bold">{isEs ? "Disponibilidad durante todo el año." : "Availability year-round."}</p>
         </div>
         <div className="grid grid-cols-[1fr_auto]">
           <Link

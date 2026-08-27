@@ -22,10 +22,10 @@ export default function ToursShowcase({ tours }: Props) {
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div>
             <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em] text-emerald-700 dark:text-emerald-300">
-              {isEs ? "Experiencias" : "Experiences"}
+              {isEs ? "Más experiencias" : "More experiences"}
             </p>
             <h2 className="font-display max-w-2xl text-balance text-4xl font-black leading-[0.98] tracking-tight text-stone-950 dark:text-stone-50 md:text-6xl">
-              {isEs ? "¿Busca otro plan? Compare estas aventuras" : "Looking for another plan? Compare these adventures"}
+              {isEs ? "¿Busca otro plan? Compare y reserve" : "Looking for another plan? Compare and book"}
             </h2>
           </div>
           <Link

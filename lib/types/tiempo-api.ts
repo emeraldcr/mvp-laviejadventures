@@ -48,3 +48,32 @@ export type RainStatus = "sin lluvia" | "ligera" | "moderada" | "intensa";
 export type RiskDescriptor = { level: RiskStatus; label: string; emoji: string };
 
 export type TiempoSections = Record<string, string[][]>;
+
+// ── Salud de la estación (frescura + completitud de los datos del IMN) ────────
+export type StationHealthQuality = "alta" | "media" | "baja";
+
+export type StationHealth = {
+  /** ISO de la última lectura horaria disponible */
+  lastReadingISO: string | null;
+  /** Minutos transcurridos desde esa última lectura */
+  minutesSinceReading: number | null;
+  /** Cuántos registros horarios hay en las últimas 24 h */
+  hourlyRows24h: number;
+  /** Cuántos se esperarían (uno por hora) */
+  expectedRows24h: number;
+  /** Puntuación 0–100 antes de mapear a nivel */
+  score: number;
+  quality: StationHealthQuality;
+  /** Frase corta que explica por qué bajó la calidad */
+  qualityReason: string;
+};
+
+// ── Línea base de lluvia diaria (para comparar "hoy vs lo normal") ───────────
+export type RainBaseline = {
+  /** Promedio de mm por día en la muestra (excluye el día parcial de hoy) */
+  dailyAvgMm: number;
+  /** Días usados en el promedio */
+  sampleDays: number;
+  /** Acumulado de hoy como % del promedio (100 = igual al promedio) */
+  todayVsAvgPct: number | null;
+};

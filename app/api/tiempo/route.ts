@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import {
+  buildDailyBaseline,
+  buildStationHealth,
   extractSections,
   getRainIntensity,
   getRiskStatus,
@@ -9,6 +11,43 @@ import {
   round1,
 } from "./helpers";
 import { ABBREVIATIONS, CACHE_TTL_SECONDS, FETCH_HEADERS, IMN_URL } from "@/lib/types/tiempo-api";
+import { buildTiempoModel, type ModelSecondaryHour } from "@/lib/helpers/tiempoModel";
+
+// ── Fuente SECUNDARIA (base, no verdad): modelo Open-Meteo para San Carlos /
+//    Ciudad Quesada. Solo entra como un miembro de bajo peso en el ensemble y
+//    para contraste. Si falla, la predicción sigue siendo 100 % estación IMN.
+const SECONDARY_LAT = 10.33;
+const SECONDARY_LON = -84.43;
+
+async function fetchSecondaryHourly(): Promise<ModelSecondaryHour[]> {
+  try {
+    const url = new URL("https://api.open-meteo.com/v1/forecast");
+    url.searchParams.set("latitude", String(SECONDARY_LAT));
+    url.searchParams.set("longitude", String(SECONDARY_LON));
+    url.searchParams.set("hourly", "precipitation,precipitation_probability");
+    url.searchParams.set("timezone", "America/Costa_Rica");
+    url.searchParams.set("forecast_days", "3");
+    const res = await fetch(url.toString(), {
+      cache: "no-store",
+      next: { revalidate: CACHE_TTL_SECONDS },
+    });
+    if (!res.ok) return [];
+    const json = await res.json();
+    const h = json?.hourly ?? {};
+    const times: string[] = h.time ?? [];
+    return times.map((t, i) => ({
+      // Open-Meteo devuelve hora local de Costa Rica sin zona: se ancla a UTC−6.
+      tsISO: new Date(`${t}:00-06:00`).toISOString(),
+      precipMm: Number(h.precipitation?.[i] ?? 0) || 0,
+      precipProb:
+        h.precipitation_probability?.[i] == null
+          ? null
+          : Number(h.precipitation_probability[i]),
+    }));
+  } catch {
+    return [];
+  }
+}
 
 // La estación de la Reserva Montaña Sagrada solo mide LLUVIA (mm).
 // No hay sensor de temperatura, humedad ni un limnímetro de río. Por eso todo
@@ -133,6 +172,25 @@ export async function GET(request: Request) {
 
     const lastUpdate = hourlyRows[0]?.timestamp ?? current?.timestamp ?? new Date();
     const crecidaRisk = buildCrecidaRisk(last3h, last6h, last24h);
+    const stationHealth = buildStationHealth(hourlyRows, current);
+    const baseline = buildDailyBaseline(dailyRows, current?.sum_lluv_mm ?? null);
+
+    // ── Motor de predicción v2.0 (AHORA / MAÑANA / RÍO, cada uno con confianza) ──
+    const secondaryHourly = await fetchSecondaryHourly();
+    const model = buildTiempoModel({
+      hourly: hourlyRows.map((r) => ({
+        timestamp: r.timestamp,
+        lluvia_mm: r.lluvia_mm,
+        temp_c: r.temp_c,
+        hr_pct: r.hr_pct,
+      })),
+      daily: dailyRows.map((d) => ({ timestamp: d.timestamp, lluvia_mm: d.lluvia_mm })),
+      todaySumMm: current?.sum_lluv_mm ?? null,
+      stationHealthScore: stationHealth.score,
+      minutesSinceReading: stationHealth.minutesSinceReading,
+      hourlyRows24h: stationHealth.hourlyRows24h,
+      secondaryHourly,
+    });
 
     return NextResponse.json(
       {
@@ -180,6 +238,9 @@ export async function GET(request: Request) {
         },
         currentSnapshot: current,
         crecidaRisk,
+        stationHealth,
+        baseline,
+        model,
         counts: { hourlyAvailable: hourlyRows.length, dailyAvailable: dailyRows.length },
       },
       {

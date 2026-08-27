@@ -39,7 +39,7 @@ function FaqSection() {
               className="mt-7 inline-flex items-center gap-2 rounded-full border border-stone-300 px-6 py-3 text-sm font-bold text-stone-800 transition-colors hover:border-emerald-600 hover:text-emerald-700 dark:border-stone-600 dark:text-stone-200 dark:hover:border-emerald-400 dark:hover:text-emerald-300"
             >
               <MessageCircle size={16} />
-              {isEs ? "¿Otra duda? Escribinos al WhatsApp" : "Still wondering? WhatsApp us"}
+              {isEs ? "¿Otra consulta? Escríbanos por WhatsApp" : "Another question? Message us on WhatsApp"}
             </a>
           </div>
 
@@ -99,12 +99,12 @@ function FinalCta() {
 
         <div className="relative px-8 py-16 md:px-16 md:py-24">
           <h2 className="font-display max-w-2xl text-balance text-4xl font-bold leading-[1.0] tracking-tight text-white md:text-6xl">
-            {isEs ? "El cañón no se va a vaciar solo. ¿Vamos?" : "The canyon won't empty itself. Coming?"}
+            {isEs ? "Reserve su lugar en Ciudad Esmeralda" : "Reserve your spot on Ciudad Esmeralda"}
           </h2>
           <p className="mt-4 max-w-xl text-base leading-relaxed text-white/75 md:text-lg">
             {isEs
-              ? "Cupos chicos a propósito: cuidamos el bosque y el cañón se siente mejor sin muchedumbre. Si el clima o el río no dan, te avisamos y reprogramamos. Sin heroísmos tontos."
-              : "Small groups on purpose: we look after the forest and the canyon feels better without a crowd. If weather or the river say no, we tell you and rebook. No silly heroics."}
+              ? "Trabajamos con grupos pequeños a propósito: protege el bosque y el cañón se disfruta mejor sin multitudes. Si el clima o el río no acompañan, le avisamos y reprogramamos sin costo. Pago seguro y cancelación gratuita hasta 48 h antes."
+              : "We keep groups small on purpose: it protects the forest and the canyon feels better without a crowd. If the weather or river don't cooperate, we let you know and rebook at no cost. Secure payment and free cancellation up to 48h before."}
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
@@ -162,8 +162,8 @@ function HomeFooter() {
             </div>
             <p className="mt-4 max-w-sm text-sm leading-relaxed">
               {isEs
-                ? "Familia de San Carlos. Ciudad Esmeralda es la salida que más nos piden: sendero, río, cañón y pozas, con gente de acá guiándote."
-                : "A San Carlos family. Ciudad Esmeralda is the day people ask for most: trail, river, canyon, and pools, with locals guiding you."}
+                ? "Operador local de turismo de aventura en San Carlos, Costa Rica. Ciudad Esmeralda es nuestra salida insignia: sendero, río, cañón y pozas turquesa, con guías de la zona."
+                : "A local adventure-tourism operator in San Carlos, Costa Rica. Ciudad Esmeralda is our signature outing: trail, river, canyon, and turquoise pools, with local guides."}
             </p>
           </div>
 

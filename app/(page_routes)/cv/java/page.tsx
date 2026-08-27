@@ -14,7 +14,7 @@ import {
   type SummarySegment,
 } from "./constants";
 
-export default function CvPage() {
+export default function CvJavaPage() {
   return (
     <main className="min-h-screen bg-white px-4 py-10 print:bg-white print:p-0">
       <style>{`
@@ -34,8 +34,8 @@ export default function CvPage() {
             Back to home
           </Link>
           <span className="text-zinc-300">·</span>
-          <Link href="/cv/java" className="text-sm text-zinc-500 transition-colors hover:text-teal-600">
-            View Java-centered version →
+          <Link href="/cv" className="text-sm text-zinc-500 transition-colors hover:text-teal-600">
+            View full-stack version →
           </Link>
           <span className="text-zinc-300">·</span>
           <Link href="/cv/elasticsearch" className="text-sm text-zinc-500 transition-colors hover:text-teal-600">
