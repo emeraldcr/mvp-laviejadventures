@@ -194,7 +194,7 @@ export function EditorForm({
             <div className="space-y-2.5">
               <Field label={ui.skillGroup} value={it.label} onChange={(v) => updateItem("skills", it.id, { label: v })} placeholder="Herramientas / Fortalezas / Técnicas" />
               <Area
-                label={ui.skillItems.replace("coma", "línea")}
+                label={ui.skillItems}
                 value={it.items.join("\n")}
                 onChange={(v) => updateItem("skills", it.id, { items: v.split("\n") })}
                 rows={3}

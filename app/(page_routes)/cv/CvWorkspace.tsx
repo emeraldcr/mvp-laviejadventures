@@ -111,6 +111,11 @@ export function CvWorkspace({ activeSlug, cv }: { activeSlug: string; cv: CvData
     setPreviewDoc(doc);
     setPrintSignal((n) => n + 1);
   }, []);
+  const handleLetter = useCallback((letter: string | null, company?: string) => {
+    setCoverLetter(letter);
+    setLetterCompany(company ?? "");
+  }, []);
+  const printLetterNow = useCallback(() => requestPrint("letter"), [requestPrint]);
   useEffect(() => {
     if (printSignal === 0) return;
     let raf2 = 0;
@@ -139,15 +144,7 @@ export function CvWorkspace({ activeSlug, cv }: { activeSlug: string; cv: CvData
               onOpenAudit={() => setAuditOpen(true)}
               onPrint={requestPrint}
             />
-            <CoverLetter
-              variant={variant}
-              cv={cv}
-              onLetter={(letter, company) => {
-                setCoverLetter(letter);
-                setLetterCompany(company ?? "");
-              }}
-              onPrint={() => requestPrint("letter")}
-            />
+            <CoverLetter variant={variant} cv={cv} onLetter={handleLetter} onPrint={printLetterNow} />
           </div>
         </aside>
 

@@ -86,11 +86,11 @@ export const text = {
   // résumé · main column
   sectionHeading:
     "font-[family-name:var(--font-display)] text-[10.5px] font-bold uppercase tracking-[0.2em] text-zinc-900",
-  lead: "text-[10px] leading-[1.6] tracking-[0.008em] text-zinc-700",
-  role: "text-[11.5px] font-bold leading-[1.2] tracking-[0.002em] text-zinc-900",
+  lead: "text-[10.5px] leading-[1.6] tracking-[0.008em] text-zinc-700",
+  role: "text-[12px] font-bold leading-[1.2] tracking-[0.002em] text-zinc-900",
   company: "text-[8.5px] font-semibold uppercase tracking-[0.1em] text-zinc-500",
   current: "font-bold uppercase tracking-[0.1em] text-teal-700",
-  bullet: "text-[9.5px] leading-[1.5] tracking-[0.006em] text-zinc-700",
+  bullet: "text-[10px] leading-[1.5] tracking-[0.006em] text-zinc-700",
   period: "text-[8px] font-semibold uppercase tracking-[0.08em] tabular-nums text-zinc-500",
   location: "text-[7.5px] uppercase tracking-[0.08em] text-zinc-400",
   footer: "text-[7px] font-semibold uppercase tracking-[0.24em] text-zinc-400",

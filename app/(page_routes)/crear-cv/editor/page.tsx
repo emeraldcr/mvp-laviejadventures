@@ -20,7 +20,7 @@ import {
 import { useLanguage } from "@/lib/LanguageContext";
 import { cn } from "@/lib/helpers/utils";
 import type { BuilderState, CoverLetterData, ResumeData, ResumeSettings, TemplateId } from "../types";
-import { ACCENTS, emptyResume, sampleState, uid } from "../sample";
+import { ACCENTS, emptyResume, sampleState } from "../sample";
 import { TEMPLATE_META, UI } from "../i18n";
 import { TEMPLATE_ORDER, isFreeTemplate } from "../templates";
 import { ResumePreview, ResumeSheet } from "../ResumePreview";
