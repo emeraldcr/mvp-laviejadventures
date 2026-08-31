@@ -194,6 +194,38 @@ export const PROPOSALS: Proposal[] = [
     ],
     recommended: true,
   },
+  {
+    id: "P-G",
+    variant: "elegante",
+    name: {
+      es: "Placa elegante minimalista",
+      en: "Minimalist elegant plaque",
+    },
+    reference: {
+      es: "Placas de fachada de restaurantes y hoteles boutique (p. ej. Silvestre, San José); señalética de fincas y lodges de autor",
+      en: "Facade plaques of boutique restaurants and hotels (e.g. Silvestre, San José); estate and boutique-lodge signage",
+    },
+    slots: "R-01 (entrada) · versión sobria para fachada, recepción o muro",
+    why: {
+      es: "Una segunda lectura del portal de entrada para cuando el entorno pide discreción: fondo de madera oscura casi plano, marca centrada, tipografía serif con mucho espaciado y una sola textura de hoja o cañón al 6 % que se intuye y no se mira. Sirve donde un rótulo a todo color se sentiría fuera de lugar.",
+      en: "A second take on the gateway sign for settings that call for restraint: near-flat dark-wood background, centered mark, wide-tracked serif type and a single leaf-or-canyon texture at 6% that is felt, not seen. For places where a full-color sign would feel out of place.",
+    },
+    specs: [
+      {
+        es: "Dos tonos: madera oscura y champán bronce. Sin amarillo ni turquesa.",
+        en: "Two tones: dark wood and champagne bronze. No yellow, no turquoise.",
+      },
+      {
+        es: "Textura de hoja o cañón al 5–7 % de opacidad, siempre por debajo del texto.",
+        en: "Leaf or canyon texture at 5–7% opacity, always beneath the text.",
+      },
+      {
+        es: "Placa vertical de 40–50 cm en latón, acrílico oscuro o MDF laminado mate.",
+        en: "Vertical plaque 40–50 cm in brass, dark acrylic or matte-laminated MDF.",
+      },
+    ],
+    recommended: false,
+  },
 ];
 
 /** Las cifras duras de señalización que sostienen las propuestas. */

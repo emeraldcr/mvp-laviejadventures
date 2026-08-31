@@ -830,6 +830,7 @@ export async function runConversation(
             faqs: faqContext,
             tours: tourKnowledge,
             siteKnowledge,
+            sessionId: session.sessionId,
           });
           if (!interpreted) {
             replyOverride = "No logré ubicar esa consulta todavía. Puede elegir una opción o pedir hablar con el equipo.";
@@ -886,6 +887,7 @@ export async function runConversation(
           faqs: faqContext,
           tours: tourKnowledge,
           siteKnowledge,
+          sessionId: session.sessionId,
         });
         replyOverride = interpreted?.reply || "Esa consulta necesita confirmación del equipo para no inventarle información.";
         answerSource = interpreted ? "openai" : "state-machine";

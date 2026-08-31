@@ -14,15 +14,31 @@ export function CvDocument({ cv }: { cv: CvData }) {
 
       <aside className="relative border-b border-zinc-200 bg-zinc-50 px-6 py-8 md:border-b-0 md:border-r">
         <div className="relative">
-          <h1 className="font-[family-name:var(--font-display)] text-xl font-bold leading-[1.15] tracking-tight text-zinc-900">
-            {personalInfo.name}
-          </h1>
-          <p className="mt-2.5 text-sm font-semibold text-teal-700">{personalInfo.title}</p>
+          <header className="flex flex-col items-center text-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full border border-teal-600/30 bg-white font-[family-name:var(--font-display)] text-base font-bold tracking-wide text-teal-700 shadow-sm">
+              {monogram(personalInfo.name)}
+            </div>
+            <h1 className="mt-3 font-[family-name:var(--font-display)] text-[19px] font-bold leading-[1.15] tracking-tight text-zinc-900">
+              {personalInfo.name}
+            </h1>
+            <p className="mt-2 text-[11.5px] font-semibold uppercase tracking-[0.12em] text-teal-700">
+              {personalInfo.title}
+            </p>
+            <span className="mt-3 block h-px w-10 bg-teal-600/50" />
+          </header>
 
-          <div className="mt-6 space-y-1">
-            {contactInfo.map((item) => (
-              <ContactItem key={item.text} icon={item.icon} text={item.text} href={item.href} external={item.external} />
-            ))}
+          <div className="mt-5 rounded-lg border border-zinc-200 bg-white p-2.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)] print:shadow-none">
+            <div className="space-y-0.5">
+              {contactInfo.map((item) => (
+                <ContactItem
+                  key={item.text}
+                  icon={item.icon}
+                  text={item.text}
+                  href={item.href}
+                  external={item.external}
+                />
+              ))}
+            </div>
           </div>
 
           <SidebarHeading title="Core Skills" />
@@ -139,6 +155,14 @@ function Segments({ segments }: { segments: readonly SummarySegment[] }) {
   );
 }
 
+/** First given name + first surname initials (falls back gracefully). */
+function monogram(name: string): string {
+  const parts = name.split(/\s+/).filter(Boolean);
+  if (parts.length >= 4) return (parts[0][0] + parts[2][0]).toUpperCase();
+  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  return (parts[0]?.slice(0, 2) ?? "").toUpperCase();
+}
+
 function ContactItem({
   icon: Icon,
   text,
@@ -151,11 +175,11 @@ function ContactItem({
   external?: boolean;
 }) {
   const className =
-    "flex items-center gap-2 py-0.5 text-[11.5px] font-medium text-zinc-700 transition-colors hover:text-teal-700";
+    "group flex items-center gap-2.5 rounded-md px-1.5 py-1 text-[11px] font-medium leading-snug text-zinc-600 transition-colors hover:bg-teal-50/70 hover:text-teal-700";
   const content = (
     <>
-      <span className="flex h-4 w-4 shrink-0 items-center justify-center text-zinc-400">
-        <Icon size={11} />
+      <span className="flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-md border border-zinc-200 bg-zinc-50 text-zinc-400 transition-colors group-hover:border-teal-200 group-hover:bg-white group-hover:text-teal-600 print:border-zinc-300 print:text-zinc-500">
+        <Icon size={12} />
       </span>
       <span>{text}</span>
     </>

@@ -27,8 +27,8 @@ export default function RotulosDesignGuideDisclosure({ lang }: { lang: Lang }) {
             </h2>
             <p className="mt-2 max-w-3xl text-sm leading-relaxed text-zinc-400">
               {t(
-                "Estos seis formatos son referencias visuales, no seis rótulos adicionales. Se mantienen cerrados para que el plan principal sea fácil de leer.",
-                "These six formats are visual references, not six additional signs. They stay closed so the main plan remains easy to read.",
+                "Estos siete formatos son referencias visuales, no siete rótulos adicionales. Se mantienen cerrados para que el plan principal sea fácil de leer.",
+                "These seven formats are visual references, not seven additional signs. They stay closed so the main plan remains easy to read.",
               )}
             </p>
           </div>

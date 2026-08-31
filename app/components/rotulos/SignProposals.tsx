@@ -15,8 +15,8 @@ export default function SignProposals({ lang }: { lang: Lang }) {
       </p>
       <h2 className="mt-3 text-3xl font-black tracking-tight text-white md:text-4xl">
         {lang === "es"
-          ? "Seis formatos visuales de referencia"
-          : "Six visual reference formats"}
+          ? "Siete formatos visuales de referencia"
+          : "Seven visual reference formats"}
       </h2>
       <p className="mt-4 max-w-3xl text-sm leading-relaxed text-zinc-300 md:text-base">
         {lang === "es"

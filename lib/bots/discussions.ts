@@ -97,16 +97,31 @@ export async function runInvestigation(input: {
       : "(no messages yet — you go first)";
     const isFinal = i === input.rounds - 1;
 
+    // Stable prefix: agent persona + collaboration rules + repo context are the
+    // same on every one of this agent's turns in the investigation, so they stay
+    // at the top for prompt-cache hits. The round transcript and the final-round
+    // flag are volatile and go in the user turn.
     const systemPrompt = `${agent.systemPrompt}
 
-You are one of several agents jointly investigating this codebase (La Vieja Adventures, a Next.js tour-booking app) alongside: ${others}. Ground every claim in the repo context below — cite real file paths from it. Be concise, under 120 words, and build on or challenge prior points rather than repeating them. You are analyzing and advising only — you cannot edit files directly.${
-      isFinal ? " This is the final round: end with one concrete, actionable recommendation." : ""
-    }`;
-    const userMessage = `REPO CONTEXT:\n${repoContext}\n\nINVESTIGATION TOPIC: ${input.topic}\n\nDISCUSSION SO FAR:\n${transcript}\n\nYour turn, ${agent.name}:`;
+You are one of several agents jointly investigating this codebase (La Vieja Adventures, a Next.js tour-booking app) alongside: ${others}. Ground every claim in the repo context below — cite real file paths from it. Be concise, under 120 words, and build on or challenge prior points rather than repeating them. You are analyzing and advising only — you cannot edit files directly.
+
+REPO CONTEXT:
+${repoContext}`;
+    const userMessage = `INVESTIGATION TOPIC: ${input.topic}
+
+DISCUSSION SO FAR:
+${transcript}
+${isFinal ? "\nThis is the final round: end with one concrete, actionable recommendation.\n" : ""}
+Your turn, ${agent.name}:`;
 
     let content: string;
     try {
-      const result = await callModel(agent.preferredModel, systemPrompt, userMessage);
+      const result = await callModel(
+        agent.preferredModel,
+        systemPrompt,
+        userMessage,
+        `discussion:${doc._id}:${agentId}`,
+      );
       content = result.content?.trim() || "(no response)";
       const quotaType = agent.preferredModel === "claude" ? "claudeTokens" : "chatgptTokens";
       await decreaseQuota(agentId, quotaType, result.tokensUsed).catch(() => {});

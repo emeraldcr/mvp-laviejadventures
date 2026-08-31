@@ -119,9 +119,8 @@ export const experience: {
     location: "Remote · Costa Rica",
     current: true,
     bullets: [
-      "Architect and deliver a cloud-native tourism platform (booking, reservations, authentication, payments) with Node.js, TypeScript, REST/GraphQL APIs, MongoDB, and MySQL, deployed on AWS with Docker.",
-      "Implement Elasticsearch indexing, Query DSL, and aggregations for platform search and reporting, instrumented with Datadog and Elasticsearch APM for observability and telemetry.",
-      "Develop AI-assisted tools with GitHub Copilot and GenAI workflows for reservations, customer communication, internal reporting, and business operations.",
+      "Build a cloud-native booking platform with Node.js, TypeScript, and REST / GraphQL APIs over MongoDB and MySQL, deployed on AWS with Docker.",
+      "Add Elasticsearch indexing, Query DSL, and aggregations for platform search and reporting, instrumented with Datadog and Elasticsearch APM.",
     ],
   },
 
@@ -131,9 +130,9 @@ export const experience: {
     period: "Oct 2025 – Apr 2026",
     location: "Costa Rica",
     bullets: [
-      "Delivered and maintained a cloud-based payment control and management platform for client MCM, exposing REST APIs backed by Elasticsearch-powered search and reporting.",
-      "Instrumented services with Datadog and Elasticsearch APM for telemetry, distributed tracing, and performance troubleshooting across the platform.",
-      "Worked as part of an embedded consulting engineering team contributing to production software delivery and cloud-based systems.",
+      "Delivered and maintained a cloud-based payment control and management platform for client MCM, exposing Node.js REST APIs backed by Elasticsearch-powered search and reporting.",
+      "Designed and tuned Elasticsearch indices, Query DSL queries, and aggregations, and managed index lifecycle (ILM) for retention and cost.",
+      "Instrumented services with Datadog and Elasticsearch APM for telemetry, distributed tracing, and performance troubleshooting across the platform, as part of an embedded consulting engineering team.",
     ],
   },
 
@@ -145,6 +144,7 @@ export const experience: {
     bullets: [
       "Designed and maintained Spring Boot microservices and event-driven backend services across AWS, Docker, and Kubernetes environments, exposing REST APIs for downstream integrations.",
       "Built and tuned Elasticsearch indices, Query DSL queries, and aggregations to power operational search and real-time dashboards.",
+      "Owned search relevance and query performance for operational dashboards, reducing query latency through mapping and aggregation tuning.",
       "Strengthened production observability with Datadog, Elasticsearch APM, Prometheus, and Grafana, improving telemetry and incident troubleshooting across distributed systems.",
     ],
   },

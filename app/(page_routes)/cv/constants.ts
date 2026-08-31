@@ -155,9 +155,8 @@ export const experience: {
     location: "Remote · Costa Rica",
     current: true,
     bullets: [
-      "Architect and deliver a cloud-native tourism platform spanning booking, reservations, authentication, payments, and operational workflows.",
-      "Build end-to-end services with Spring Boot, React, Next.js, TypeScript, GraphQL, and MySQL, deployed and monitored on AWS.",
-      "Develop AI-assisted tools for reservations, customer communication, internal reporting, and business operations.",
+      "Build and ship a cloud-native booking platform for a tourism operator — Spring Boot and React / Next.js on AWS — as the sole engineer, moving fast from scope to production.",
+      "Add AI-assisted tools for reservations, customer communication, and internal reporting.",
     ],
   },
 
@@ -167,8 +166,9 @@ export const experience: {
     period: "Oct 2025 – Apr 2026",
     location: "Costa Rica",
     bullets: [
-      "Delivered and maintained a cloud-based payment control and management platform supporting client MCM operations.",
-      "Worked as part of an embedded consulting engineering team, contributing to production software delivery and cloud-based systems.",
+      "Delivered and operated a cloud-based payment control and management platform for client MCM, owning services end to end from data model through REST and GraphQL APIs.",
+      "Built the backend in Spring Boot with a React / TypeScript front end, deployed and monitored on AWS with Docker.",
+      "Worked as an embedded consulting engineer inside the client's team, shipping production software on a fast release cadence and influencing technical decisions.",
     ],
   },
 
@@ -178,9 +178,10 @@ export const experience: {
     period: "Sept 2024 – Oct 2025",
     location: "Remote · Costa Rica",
     bullets: [
-      "Designed and maintained Spring Boot microservices and event-driven backend services across AWS and Kubernetes environments.",
+      "Designed and maintained Spring Boot microservices and event-driven backend services across AWS and Kubernetes, exposing REST and GraphQL APIs for downstream teams.",
       "Built React and Redux Toolkit dashboards with real-time visualization for operational monitoring and decision support.",
-      "Improved deployment consistency through GitHub Actions and Jenkins while strengthening production observability with Prometheus and Grafana.",
+      "Improved deployment consistency through GitHub Actions and Jenkins and strengthened production observability with Prometheus and Grafana.",
+      "Led design reviews and mentored engineers, raising consistency across the backend team.",
     ],
   },
 

@@ -31,7 +31,7 @@ export async function POST(
 
     let result;
     try {
-      result = await callModel(agent.preferredModel, agent.systemPrompt, message.slice(0, 4000));
+      result = await callModel(agent.preferredModel, agent.systemPrompt, message.slice(0, 4000), `agent:${id}`);
     } catch (err) {
       await setStatus(id, "error");
       await logActivity({

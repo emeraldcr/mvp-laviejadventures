@@ -86,7 +86,14 @@ export type SelectionTotals = {
 
 // ── Propuestas de diseño ─────────────────────────────────────────────────────
 
-export type Variant = "mopt" | "turistico" | "servicios" | "flecha" | "portal" | "blades";
+export type Variant =
+  | "mopt"
+  | "turistico"
+  | "servicios"
+  | "flecha"
+  | "portal"
+  | "blades"
+  | "elegante";
 
 export type Proposal = {
   id: string;

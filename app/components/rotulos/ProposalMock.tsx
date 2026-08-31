@@ -11,7 +11,9 @@ import {
   UtensilsCrossed,
   Waves,
 } from "lucide-react";
-import { SIGN_COLORS } from "./constants";
+import { BUSINESS, SIGN_COLORS } from "./constants";
+import QrCode from "./QrCode";
+import { CanyonLines, LeafShape } from "./SignChrome";
 import type { Variant } from "./types";
 
 function SignFrame({
@@ -198,6 +200,79 @@ export default function ProposalMock({ variant }: { variant: Variant }) {
             <span className="flex h-9 w-9 items-center justify-center rounded-[2px] bg-white text-[7px] font-black leading-none text-zinc-900">
               QR
             </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (variant === "elegante") {
+    return (
+      <div className="w-full max-w-[300px]">
+        <div
+          className="relative overflow-hidden rounded-[4px] p-1.5 shadow-[0_18px_40px_-16px_rgba(0,0,0,0.9)]"
+          style={{ backgroundColor: SIGN_COLORS.wood }}
+        >
+          {/* Un solo guiño de naturaleza, al 6 %: se intuye, no se mira. */}
+          <div className="pointer-events-none absolute inset-0 opacity-[0.06]" aria-hidden>
+            <CanyonLines className="absolute -top-6 right-4 h-[170%] w-20 text-[#e6d6b4]" />
+            <LeafShape
+              veins
+              className="absolute -bottom-7 -left-7 h-32 w-28 -rotate-[18deg] text-[#e6d6b4]"
+            />
+          </div>
+
+          <div className="relative border border-[#9c7b45]/40 px-6 py-7">
+            {[
+              "left-0 top-0 border-l border-t",
+              "right-0 top-0 border-r border-t",
+              "bottom-0 left-0 border-b border-l",
+              "bottom-0 right-0 border-b border-r",
+            ].map((corner) => (
+              <span
+                key={corner}
+                className={`pointer-events-none absolute h-2.5 w-2.5 border-[#9c7b45] ${corner}`}
+                aria-hidden
+              />
+            ))}
+
+            <div className="relative flex flex-col items-center text-center">
+              <div className="rounded-full border border-[#9c7b45]/50 bg-black/30 p-1.5">
+                <Image
+                  src="/logo1.jpg"
+                  alt=""
+                  width={40}
+                  height={40}
+                  className="h-10 w-10 rounded-full object-contain"
+                />
+              </div>
+
+              <p className="mt-4 font-serif text-lg font-semibold uppercase leading-none tracking-[0.35em] text-[#e6d6b4]">
+                La Vieja
+              </p>
+              <p className="mt-1.5 font-serif text-[10px] uppercase tracking-[0.5em] text-[#e6d6b4]/75">
+                Adventures
+              </p>
+
+              <div className="mt-3 flex w-full items-center gap-2">
+                <span className="h-px flex-1 bg-[#9c7b45]/40" aria-hidden />
+                <span className="text-[7px] uppercase tracking-[0.3em] text-[#cbb890]">
+                  Cañón del Río La Vieja
+                </span>
+                <span className="h-px flex-1 bg-[#9c7b45]/40" aria-hidden />
+              </div>
+
+              <div className="mt-4 bg-white p-1">
+                <QrCode className="h-12 w-12" />
+              </div>
+
+              <p className="mt-3 text-[7px] uppercase tracking-[0.22em] text-[#cbb890]/80">
+                {BUSINESS.web.replace(/^www\./, "")}
+              </p>
+              <p className="mt-0.5 text-[7px] uppercase tracking-[0.22em] text-[#cbb890]/55">
+                WhatsApp {BUSINESS.whatsapp}
+              </p>
+            </div>
           </div>
         </div>
       </div>

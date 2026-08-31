@@ -104,35 +104,13 @@ const INTERPRETATION_SCHEMA = {
   },
 } as const;
 
-export async function interpretWithOpenAI(input: {
-  message: string;
-  currentStep: string;
-  reservation: ConversationReservation;
-  faqs: ConversationFaq[];
-  tours: AssistantTourKnowledge[];
-  siteKnowledge: AssistantSiteKnowledge[];
-}): Promise<AIInterpretation | null> {
-  const apiKey = process.env.OPENAI_API_KEY?.trim();
-  if (!apiKey) return null;
+// Frozen, versioned system prefix. Must stay byte-identical across every request
+// so OpenAI prompt caching serves it at the cache-hit rate (~10x cheaper). Bump
+// the version string only on a deliberate wording change. Nothing that varies per
+// request or per day goes in here — that lives in the volatile block below.
+const SYSTEM_PROMPT_VERSION = "v1";
 
-  const model = process.env.OPENAI_ASSISTANT_MODEL?.trim()
-    || process.env.OPENAI_MODEL?.trim()
-    || "gpt-5.6-luna";
-  const client = new OpenAI({ apiKey });
-  const faqContext = input.faqs
-    .map((faq) => `- ${faq.question}: ${faq.answer}`)
-    .join("\n");
-  const tourContext = JSON.stringify(input.tours);
-  const siteContext = JSON.stringify(input.siteKnowledge);
-
-  try {
-    const response = await client.responses.create({
-      model,
-      reasoning: { effort: "none" },
-      input: [
-        {
-          role: "system",
-          content: `Role: interprete de reservas de La Vieja Adventures.
+const STATIC_SYSTEM_RULES = `Role: interprete de reservas de La Vieja Adventures.
 
 Goal: detecte la intención, extraiga únicamente datos explícitos y responda cálidamente en español.
 
@@ -147,21 +125,67 @@ Constraints:
 - Use ustedeo natural de Costa Rica; nunca tutee al visitante.
 - Devuelva las fechas como AAAA-MM-DD, incluso cuando el visitante use palabras.
 - Para seleccionar un tour, devuelva únicamente el slug exacto del catálogo.
-- Si un dato no aparece con claridad, devuelva null o [].
+- Si un dato no aparece con claridad, devuelva null o [].`;
 
-Fecha actual en Costa Rica: ${new Intl.DateTimeFormat("en-CA", { timeZone: "America/Costa_Rica" }).format(new Date())}
-Paso actual: ${input.currentStep}
-Datos ya guardados: ${JSON.stringify(input.reservation)}
+export async function interpretWithOpenAI(input: {
+  message: string;
+  currentStep: string;
+  reservation: ConversationReservation;
+  faqs: ConversationFaq[];
+  tours: AssistantTourKnowledge[];
+  siteKnowledge: AssistantSiteKnowledge[];
+  sessionId?: string;
+}): Promise<AIInterpretation | null> {
+  const apiKey = process.env.OPENAI_API_KEY?.trim();
+  if (!apiKey) return null;
+
+  const model = process.env.OPENAI_ASSISTANT_MODEL?.trim()
+    || process.env.OPENAI_MODEL?.trim()
+    || "gpt-5.6-luna";
+  const client = new OpenAI({ apiKey });
+
+  // Deterministic ordering so an identical FAQ/catalog set renders byte-identically
+  // between requests — a reshuffled list is a fresh cache miss on the whole prefix.
+  const faqContext = [...input.faqs]
+    .sort((a, b) => a.id.localeCompare(b.id))
+    .map((faq) => `- ${faq.question}: ${faq.answer}`)
+    .join("\n");
+  const tourContext = JSON.stringify(
+    [...input.tours].sort((a, b) => a.slug.localeCompare(b.slug)),
+  );
+  const siteContext = JSON.stringify(
+    [...input.siteKnowledge].sort((a, b) => a.id.localeCompare(b.id)),
+  );
+
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Costa_Rica" }).format(new Date());
+
+  // Stable prefix (cacheable): rules + verified FAQ + full catalog. Same bytes every call.
+  const staticContext = `Prompt version: ${SYSTEM_PROMPT_VERSION}
+
+${STATIC_SYSTEM_RULES}
 
 FAQ verificadas:
 ${faqContext || "No hay FAQ disponibles."}
 
 Catálogo completo verificado:
-${tourContext || "No hay tours disponibles."}
+${tourContext || "No hay tours disponibles."}`;
+
+  // Volatile block (never cached): day bucket, conversation state, per-query RAG hits.
+  const volatileContext = `Fecha actual en Costa Rica: ${today}
+Paso actual: ${input.currentStep}
+Datos ya guardados: ${JSON.stringify(input.reservation)}
 
 Contenido relevante del sitio recuperado desde MongoDB:
-${siteContext || "No se recuperó contenido adicional."}`,
-        },
+${siteContext === "[]" ? "No se recuperó contenido adicional." : siteContext}`;
+
+  try {
+    const response = await client.responses.create({
+      model,
+      reasoning: { effort: "none" },
+      prompt_cache_key: input.sessionId || undefined,
+      input: [
+        { role: "system", content: staticContext },
+        { role: "system", content: volatileContext },
         { role: "user", content: input.message },
       ],
       text: {
@@ -174,6 +198,15 @@ ${siteContext || "No se recuperó contenido adicional."}`,
         },
       },
     }, { signal: AbortSignal.timeout(10_000) });
+
+    const usage = response.usage;
+    if (usage) {
+      const cached = usage.input_tokens_details?.cached_tokens ?? 0;
+      const rate = usage.input_tokens ? Math.round((cached / usage.input_tokens) * 100) : 0;
+      console.info(
+        `[conversation/openai] cache ${rate}% (${cached}/${usage.input_tokens} in, ${usage.output_tokens} out)`,
+      );
+    }
 
     if (!response.output_text) return null;
     return { ...EMPTY_INTERPRETATION, ...JSON.parse(response.output_text) } as AIInterpretation;

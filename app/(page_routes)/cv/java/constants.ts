@@ -2,7 +2,7 @@ import { Github, Linkedin, Mail, MapPin, Phone } from "lucide-react";
 
 export const personalInfo = {
   name: "Allan José Rojas Durán",
-  title: "Senior Java Software Engineer",
+  title: "Senior Java Backend Engineer",
 };
 
 export const contactInfo = [
@@ -36,42 +36,52 @@ export const contactInfo = [
 
 export const primarySkills = [
   {
-    label: "Java & Backend",
-    items: ["Java", "Spring Boot", "Microservices", "REST", "GraphQL"],
-  },
-  {
-    label: "Messaging & Event-Driven",
-    items: ["Kafka", "RabbitMQ", "AWS SNS", "AWS SQS", "Event-Driven Architecture"],
-  },
-  {
-    label: "Cloud & DevOps",
+    label: "Core Java",
     items: [
-      "AWS",
-      "Lambda",
-      "ECS/EKS",
-      "EC2",
-      "S3",
-      "RDS",
-      "Docker",
-      "Kubernetes",
-      "Terraform",
+      "Core Java (17 / 21)",
+      "Concurrency & multi-threading",
+      "JVM internals & memory management",
+      "Garbage-collection tuning",
+      "Object-oriented design",
+      "SOLID & design patterns",
+    ],
+  },
+  {
+    label: "Frameworks & APIs",
+    items: ["Spring Boot", "REST", "gRPC", "GraphQL", "Microservices", "JPA / Hibernate"],
+  },
+  {
+    label: "Build, CI/CD & Observability",
+    items: [
+      "Maven",
+      "Gradle",
+      "JUnit",
+      "GitHub Actions",
+      "Jenkins",
+      "Monorepos",
+      "Feature flags / experimentation",
       "Datadog",
       "Prometheus",
       "Grafana",
     ],
   },
   {
-    label: "Databases & Modeling",
-    items: ["PostgreSQL", "MySQL", "Redis", "SQL", "Data Modeling"],
+    label: "Cloud & Containers",
+    items: ["AWS", "GCP", "Azure", "Docker", "Kubernetes", "Terraform", "Lambda", "ECS / EKS"],
   },
   {
-    label: "Architecture & Practice",
+    label: "Reliability & Scale",
     items: [
-      "System Design",
-      "Domain-Driven Design (DDD)",
-      "Scalability",
-      "Distributed Systems",
-      "Mentoring",
+      "Performance tuning",
+      "JVM profiling",
+      "Benchmarking",
+      "SLAs / SLOs",
+      "Distributed systems",
+      "System design",
+      "Kafka",
+      "RabbitMQ",
+      "PostgreSQL",
+      "Redis",
     ],
   },
 ] as const;
@@ -82,8 +92,14 @@ export const secondarySkills = [
     items: ["TypeScript", "JavaScript", "Python", "PHP", "Node.js", "Laravel", "React", "Next.js"],
   },
   {
-    label: "Testing & CI/CD",
-    items: ["Jest", "Pest", "Dusk", "Playwright", "Cypress", "GitHub Actions", "Jenkins"],
+    label: "Practice",
+    items: [
+      "Technical roadmap & decision-making",
+      "Code review",
+      "Mentoring",
+      "Cross-functional collaboration",
+      "Agile",
+    ],
   },
 ];
 
@@ -116,32 +132,41 @@ export const summary: SummarySegment[][] = [
   [
     { text: "11+ years", bold: true, accent: true },
     {
-      text: " building production Java systems across enterprise, healthcare, consumer, and consulting environments.",
+      text: " building and operating large-scale, production Java systems across enterprise, healthcare, consumer, and consulting environments — with deep, hands-on focus on ",
     },
-  ],
-  [
-    {
-      text: "Deep expertise in ",
-    },
-    { text: "Java and Spring Boot", bold: true },
-    { text: " microservices on AWS — " },
-    { text: "event-driven architecture", bold: true },
-    { text: " with Kafka, RabbitMQ, and SNS/SQS, " },
-    { text: "domain-driven design", bold: true },
-    { text: ", and " },
-    { text: "system design for scalability", bold: true },
-    { text: " — plus full-stack delivery in " },
-    { text: "TypeScript/React", bold: true },
-    { text: " and " },
-    { text: "PHP/Laravel", bold: true },
+    { text: "Core Java", bold: true },
     { text: "." },
   ],
   [
-    { text: "Hands-on with " },
-    { text: "data modeling", bold: true },
+    { text: "Expert-level in " },
+    { text: "concurrency and multi-threading", bold: true },
+    { text: ", " },
+    { text: "JVM internals, memory management, and garbage-collection tuning", bold: true },
+    { text: ", " },
+    { text: "object-oriented design", bold: true },
+    { text: ", and " },
+    { text: "Maven / Gradle", bold: true },
+    { text: " build tooling — applied to " },
+    { text: "Spring Boot microservices", bold: true },
+    { text: " and " },
+    { text: "REST / gRPC APIs", bold: true },
+    { text: " on AWS, GCP, and Azure with Docker and Kubernetes." },
+  ],
+  [
+    { text: "Build " },
+    { text: "internal developer-platform features", bold: true },
     {
-      text: ", RESTful API design, cloud infrastructure, CI/CD, and production observability via Datadog, Prometheus, and Grafana. Mentor engineers through code review, pairing, and design reviews.",
+      text: " — CI/CD, monorepos, feature flags / experimentation, and observability — that guide engineers along the ",
     },
+    { text: "golden path", bold: true },
+    { text: ", and drive " },
+    { text: "operational excellence", bold: true },
+    { text: " through SLAs / SLOs, JVM profiling, benchmarking, and performance tuning." },
+  ],
+  [
+    { text: "Influence technical roadmap and decision-making, design " },
+    { text: "AI-driven automation", bold: true },
+    { text: " in Java, and mentor engineers through code review and design reviews." },
   ],
 ];
 
@@ -154,15 +179,14 @@ export const experience: {
   bullets: string[];
 }[] = [
   {
-    role: "Senior Full-Stack Engineer",
+    role: "Senior Backend Engineer · Java Platform",
     company: "La Vieja Adventures",
     period: "Apr 2026 – Present",
     location: "Remote · Costa Rica",
     current: true,
     bullets: [
-      "Architect and deliver Spring Boot services for a cloud-native tourism platform — booking, reservations, authentication, and payments — applying domain-driven design and system-design trade-offs for scalability.",
-      "Build event-driven Java/Spring Boot backends on AWS, using SNS/SQS for asynchronous booking and notification workflows, integrated with React/Next.js front ends and GraphQL APIs.",
-      "Own data modeling for the MySQL schema and develop AI-assisted backend tools for reservations, customer communication, and internal reporting.",
+      "Design and operate Spring Boot services for a cloud-native booking and payments platform, applying Core Java, object-oriented design, and domain-driven boundaries as the sole engineer.",
+      "Expose REST and gRPC APIs over AWS SNS/SQS and add AI-driven automation for reservations, customer communication, and reporting.",
     ],
   },
 
@@ -172,8 +196,9 @@ export const experience: {
     period: "Oct 2025 – Apr 2026",
     location: "Costa Rica",
     bullets: [
-      "Delivered and maintained a cloud-based payment control and management platform for client MCM, refining data models and service boundaries for reliability at scale.",
-      "Worked as part of an embedded consulting engineering team, contributing to production software delivery and cloud-based systems.",
+      "Delivered and maintained a cloud-based payment control platform for client MCM, owning service boundaries, data models, and JVM performance for reliability at scale.",
+      "Built Spring Boot microservices and REST / gRPC APIs on AWS, tuned garbage collection and thread pools under load, and held coverage with JUnit.",
+      "Owned the build and release path — Maven / Gradle, GitHub Actions CI/CD, Docker on Kubernetes — inside an embedded consulting team, influencing technical decisions across the engineering group.",
     ],
   },
 
@@ -183,9 +208,10 @@ export const experience: {
     period: "Sept 2024 – Oct 2025",
     location: "Remote · Costa Rica",
     bullets: [
-      "Designed and maintained Spring Boot microservices and event-driven services on AWS and Kubernetes, using Kafka and RabbitMQ for event streaming and inter-service messaging.",
-      "Led system-design discussions and mentored engineers through code review, raising consistency across the backend team.",
-      "Strengthened release pipelines (GitHub Actions, Jenkins) and production observability with Datadog, Prometheus, and Grafana; built React/Redux Toolkit dashboards on top of those services.",
+      "Designed and operated Spring Boot microservices and event-driven services on AWS and Kubernetes, using Kafka and RabbitMQ for streaming and inter-service messaging with concurrent, high-throughput consumers.",
+      "Built internal developer-platform capabilities — CI/CD (GitHub Actions, Jenkins), monorepo workflows, feature flags, and observability with Datadog, Prometheus, and Grafana — plus internal tools and APIs that improved developer productivity, and set SLAs/SLOs, coding standards, and performance benchmarks for the backend.",
+      "Drove JVM profiling, benchmarking, and garbage-collection tuning to hold latency targets as traffic grew.",
+      "Led system-design reviews, championed Java best practices, and mentored engineers through code review, raising consistency across the team.",
     ],
   },
 
@@ -195,8 +221,8 @@ export const experience: {
     period: "Sept 2022 – Jun 2024",
     location: "Costa Rica",
     bullets: [
-      "Built and maintained backend applications with React front ends, including Kaptyn, a luxury ride-hailing platform.",
-      "Designed RESTful APIs, relational data models, and integrations for GPS tracking, payments, and real-time mobility, tuning queries and caching for scale.",
+      "Built and maintained backend services with React front ends, including Kaptyn, a luxury ride-hailing platform.",
+      "Designed RESTful APIs, relational data models, and integrations for GPS tracking, payments, and real-time mobility, tuning queries, caching, and connection pools for scale.",
     ],
   },
 
@@ -206,8 +232,7 @@ export const experience: {
     period: "Feb 2021 – May 2022",
     location: "Costa Rica",
     bullets: [
-      "Delivered backend integrations for a chemical management system using Node.js.",
-      "Worked in a client-facing engineering capacity through Infosys, contracted via Amtek.",
+      "Delivered backend integrations for a chemical management system using Node.js, in a client-facing engineering capacity through Infosys (contracted via Amtek).",
     ],
   },
 
@@ -217,8 +242,8 @@ export const experience: {
     period: "2016 – Feb 2020",
     location: "Costa Rica",
     bullets: [
-      "Built Java systems supporting FDA-regulated medical-device manufacturing operations, backed by SQL databases.",
-      "Automated production reporting and equipment-monitoring dashboards with Python and JavaScript under FDA and ISO 13485 quality controls.",
+      "Built Core Java systems supporting FDA-regulated medical-device manufacturing, backed by SQL databases, under FDA and ISO 13485 quality controls.",
+      "Automated production reporting and equipment-monitoring dashboards with Java, Python, and JavaScript.",
     ],
   },
 
