@@ -5,6 +5,7 @@ import {
   contactInfo,
   education,
   experience,
+  highlights,
   languages,
   personalInfo,
   primarySkills,
@@ -16,7 +17,17 @@ export default function CvPage() {
   return (
     <CvWorkspace
       activeSlug=""
-      cv={{ personalInfo, contactInfo, primarySkills, secondarySkills, education, languages, summary, experience }}
+      cv={{
+        personalInfo,
+        contactInfo,
+        primarySkills,
+        secondarySkills,
+        education,
+        languages,
+        summary,
+        highlights,
+        experience,
+      }}
     />
   );
 }

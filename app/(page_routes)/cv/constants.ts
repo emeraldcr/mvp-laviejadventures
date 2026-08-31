@@ -1,14 +1,21 @@
 import { Github, Linkedin, Mail, MapPin, Phone } from "lucide-react";
 
+// ─────────────────────────────────────────────────────────────
+// The combined "everything" résumé — every stack and tool from the tailored
+// variants surfaced in one sheet, laid out feature-first (a "What I Bring"
+// strengths band above the summary). Default /cv; send this when the role is
+// broad or the JD spans multiple stacks.
+// ─────────────────────────────────────────────────────────────
+
 export const personalInfo = {
   name: "Allan José Rojas Durán",
-  title: "Senior Software Engineer",
+  title: "Senior Full-Stack Software Engineer",
 };
 
 export const contactInfo = [
   {
     icon: MapPin,
-    text: "Alajuela, Costa Rica · Remote",
+    text: "Alajuela, Costa Rica · Remote (LATAM / Americas)",
   },
   {
     icon: Phone,
@@ -37,59 +44,99 @@ export const contactInfo = [
 export const primarySkills = [
   {
     label: "Languages",
-    items: [
-      "TypeScript",
-      "Java",
-      "JavaScript",
-      "Python",
-      "PHP",
-      "SQL",
-    ],
+    items: ["TypeScript", "JavaScript", "Python", "Java", "C#", "PHP", "SQL", "Bash"],
   },
   {
     label: "Backend & APIs",
     items: [
       "Spring Boot",
       "Node.js",
+      "NestJS",
+      "Express",
+      "FastAPI",
+      "Django REST",
+      "Flask",
       "Laravel",
+      ".NET 8 / ASP.NET Core",
       "REST",
       "GraphQL",
-      "Eloquent ORM",
+      "gRPC",
+      "WebSockets",
+      "Microservices",
+      "Event-driven (Kafka, RabbitMQ)",
+    ],
+  },
+  {
+    label: "Frontend",
+    items: ["React", "Next.js", "Remix", "Redux Toolkit", "TypeScript", "Tailwind CSS", "HTML / CSS", "Blade"],
+  },
+  {
+    label: "AI & LLM Engineering",
+    items: [
+      "OpenAI & Anthropic Claude APIs",
+      "RAG",
+      "Embeddings & vector search",
+      "pgvector",
+      "LangGraph",
+      "LangChain",
+      "Agents & tool / function calling",
+      "Prompt engineering",
+      "Evals & guardrails",
+      "MCP",
     ],
   },
   {
     label: "Cloud & DevOps",
     items: [
-      "AWS",
-      "Lambda",
-      "ECS/EKS",
-      "EC2",
-      "S3",
-      "RDS",
+      "AWS (Lambda, AppSync, Cognito, API Gateway, ECS/EKS, S3, RDS, DynamoDB, SQS/SNS, CloudFormation/SAM, CDK)",
+      "Azure (Functions, App Service, AKS, DevOps)",
+      "GCP",
       "Docker",
       "Kubernetes",
       "Terraform",
-      "Prometheus",
-      "Grafana",
-    ],
-  },
-  {
-    label: "Frontend",
-    items: [
-      "React",
-      "Next.js",
-      "Redux Toolkit",
-      "Blade",
-      "Tailwind CSS",
+      "GitHub Actions",
+      "Jenkins",
+      "CI/CD",
     ],
   },
 ] as const;
 
 export const secondarySkills = [
-  { label: "Data", items: ["PostgreSQL", "MySQL", "Redis"] },
+  {
+    label: "Data & Search",
+    items: [
+      "PostgreSQL",
+      "MySQL",
+      "MongoDB",
+      "Redis",
+      "Elasticsearch (Query DSL, aggregations, ILM)",
+      "SQLAlchemy",
+      "Entity Framework Core",
+      "Hibernate / JPA",
+      "Eloquent ORM",
+    ],
+  },
+  {
+    label: "Observability",
+    items: ["Datadog", "Prometheus", "Grafana", "OpenTelemetry", "APM", "Distributed tracing"],
+  },
   {
     label: "Testing & CI/CD",
-    items: ["Jest", "Pest", "Dusk", "Playwright", "Cypress", "GitHub Actions", "Jenkins"],
+    items: ["Jest", "Vitest", "pytest", "Pest", "JUnit", "Playwright", "Cypress", "Supertest", "GitHub Actions", "Jenkins"],
+  },
+  {
+    label: "Practice",
+    items: [
+      "System design",
+      "Distributed systems",
+      "DDD",
+      "SOLID",
+      "Clean, layered architecture",
+      "Tech lead",
+      "Code review",
+      "Mentoring",
+      "Agile / Scrum",
+    ],
   },
 ];
 
@@ -118,25 +165,59 @@ export type SummarySegment = {
   accent?: boolean;
 };
 
+export const highlights: { title: string; detail: string }[] = [
+  {
+    title: "Full-stack, scope → production",
+    detail:
+      "Own the data model, the APIs, the front end, and the cloud it runs on — currently the sole engineer on a cloud-native platform, shipping from architecture to deploy.",
+  },
+  {
+    title: "AI / LLM features in production",
+    detail:
+      "OpenAI and Claude with RAG, tool / function calling, and LangGraph agents — paired with deterministic logic where correctness matters.",
+  },
+  {
+    title: "Cloud-native across three clouds",
+    detail:
+      "AWS serverless (Lambda, AppSync, Cognito, API Gateway), plus Azure and GCP; Docker, Kubernetes, and IaC with Terraform / CloudFormation.",
+  },
+  {
+    title: "Tech lead & mentor",
+    detail:
+      "Own architecture and technical decisions, run design reviews, and raise the bar through code review — 11+ years, enterprise to startup.",
+  },
+];
+
 export const summary: SummarySegment[][] = [
   [
     { text: "11+ years", bold: true, accent: true },
     {
-      text: " designing and delivering production software across enterprise, healthcare, consumer, and consulting environments.",
+      text: " shipping production software across enterprise, healthcare, fintech, consumer, and consulting environments — full-stack, end to end.",
     },
   ],
   [
-    {
-      text: "Full-stack expertise spanning ",
-    },
-    { text: "Java/Spring Boot", bold: true },
+    { text: "Full-stack across " },
+    { text: "Java / Spring Boot", bold: true },
     { text: ", " },
-    { text: "PHP/Laravel", bold: true },
+    { text: "TypeScript / React / Next.js", bold: true },
     { text: ", " },
-    { text: "TypeScript/React", bold: true },
+    { text: "Python / FastAPI / Django", bold: true },
+    { text: ", " },
+    { text: "C# / .NET 8", bold: true },
+    { text: ", and " },
+    { text: "PHP / Laravel", bold: true },
+    { text: " — on " },
+    { text: "AWS, Azure, and GCP", bold: true },
+    { text: " with Docker, Kubernetes, Elasticsearch, PostgreSQL, and CI/CD." },
+  ],
+  [
+    { text: "Build " },
+    { text: "LLM-powered, agentic product features", bold: true },
     {
-      text: ", AWS, microservices, APIs, cloud infrastructure, and CI/CD.",
+      text: " — OpenAI and Claude with RAG, tool calling, and LangGraph — pairing model calls with deterministic logic where reliability matters. English at ",
     },
+    { text: "C1", bold: true },
+    { text: "." },
   ],
 ];
 
@@ -155,8 +236,8 @@ export const experience: {
     location: "Remote · Costa Rica",
     current: true,
     bullets: [
-      "Build and ship a cloud-native booking platform for a tourism operator — Spring Boot and React / Next.js on AWS — as the sole engineer, moving fast from scope to production.",
-      "Add AI-assisted tools for reservations, customer communication, and internal reporting.",
+      "Own a cloud-native booking and operations platform end to end as the sole engineer — customer booking plus internal tools for reservations, scheduling, and fulfillment — from architecture through deployment.",
+      "Build on Spring Boot, FastAPI / Django REST, and Node.js behind React / Next.js on AWS (PostgreSQL / MySQL, Docker, GraphQL / REST), and add LLM-assisted tools — OpenAI and Claude with RAG and tool calling — for reservations, customer communication, and reporting.",
     ],
   },
 
@@ -166,9 +247,9 @@ export const experience: {
     period: "Oct 2025 – Apr 2026",
     location: "Costa Rica",
     bullets: [
-      "Delivered and operated a cloud-based payment control and management platform for client MCM, owning services end to end from data model through REST and GraphQL APIs.",
-      "Built the backend in Spring Boot with a React / TypeScript front end, deployed and monitored on AWS with Docker.",
-      "Worked as an embedded consulting engineer inside the client's team, shipping production software on a fast release cadence and influencing technical decisions.",
+      "Delivered and operated a cloud-based payment control and management platform for client MCM, owning services end to end from data model through REST and GraphQL APIs on a fast release cadence.",
+      "Built the backend in Spring Boot with a React / TypeScript front end, deployed and monitored on AWS with Docker; added Elasticsearch-powered search and reporting and LLM-assisted automation over platform data.",
+      "Worked as an embedded consulting engineer inside the client's team, influencing technical decisions and setting standards through code and design reviews.",
     ],
   },
 
@@ -178,10 +259,9 @@ export const experience: {
     period: "Sept 2024 – Oct 2025",
     location: "Remote · Costa Rica",
     bullets: [
-      "Designed and maintained Spring Boot microservices and event-driven backend services across AWS and Kubernetes, exposing REST and GraphQL APIs for downstream teams.",
-      "Built React and Redux Toolkit dashboards with real-time visualization for operational monitoring and decision support.",
-      "Improved deployment consistency through GitHub Actions and Jenkins and strengthened production observability with Prometheus and Grafana.",
-      "Led design reviews and mentored engineers, raising consistency across the backend team.",
+      "Designed and operated Spring Boot microservices and event-driven services across AWS and Kubernetes, using Kafka and RabbitMQ for streaming, exposing REST and GraphQL APIs for downstream teams.",
+      "Built React and Redux Toolkit dashboards with real-time visualization for operational monitoring, and tuned Elasticsearch indices and queries for operational search.",
+      "Strengthened CI/CD (GitHub Actions, Jenkins) and observability (Datadog, Prometheus, Grafana); led design reviews and mentored engineers, raising consistency across the backend team.",
     ],
   },
 
@@ -191,9 +271,8 @@ export const experience: {
     period: "Sept 2022 – Jun 2024",
     location: "Costa Rica",
     bullets: [
-      "Built and maintained Laravel applications with React frontends, including Kaptyn, a luxury ride-hailing platform.",
-      "Designed RESTful APIs and integrations for GPS tracking, payments, and real-time mobility.",
-      "Optimized API and database performance through SQL tuning and caching, validated with automated testing.",
+      "Built and maintained Laravel and Node.js applications with React frontends, including Kaptyn, a luxury ride-hailing platform.",
+      "Designed RESTful APIs and PostgreSQL / MySQL data models for GPS tracking, payments, and real-time mobility, tuning queries and caching for scale and validating with automated testing.",
     ],
   },
 
@@ -203,8 +282,7 @@ export const experience: {
     period: "Feb 2021 – May 2022",
     location: "Costa Rica",
     bullets: [
-      "Delivered backend integrations for a chemical management system using Node.js.",
-      "Worked in a client-facing engineering capacity through Infosys, contracted via Amtek.",
+      "Built backend integrations and REST APIs for a chemical management system in Node.js and Python, in a client-facing engineering capacity through Infosys (contracted via Amtek).",
     ],
   },
 
@@ -214,8 +292,8 @@ export const experience: {
     period: "2016 – Feb 2020",
     location: "Costa Rica",
     bullets: [
-      "Built Java and Python systems supporting FDA-regulated medical-device manufacturing operations and SQL-backed production workflows.",
-      "Automated production reporting and equipment-monitoring dashboards using JavaScript and Chart.js within FDA and ISO 13485 quality environments.",
+      "Built Java, C#, and Python systems supporting FDA-regulated medical-device manufacturing operations and SQL-backed production workflows under FDA and ISO 13485 quality controls.",
+      "Automated production reporting and equipment-monitoring dashboards using JavaScript and Chart.js.",
     ],
   },
 

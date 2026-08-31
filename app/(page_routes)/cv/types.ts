@@ -30,6 +30,15 @@ export type ExperienceEntry = {
   bullets: string[];
 };
 
+/** Feature-first strengths band rendered above the summary. Optional — only the
+ *  combined "everything" résumé sets it; tailored variants leave it unset. */
+export type Highlight = {
+  /** Short, punchy capability label — e.g. "Full-stack, scope → production". */
+  title: string;
+  /** One line of proof / detail under the title. */
+  detail: string;
+};
+
 export type CvData = {
   personalInfo: { name: string; title: string };
   contactInfo: readonly ContactEntry[];
@@ -44,5 +53,6 @@ export type CvData = {
   };
   languages: readonly { language: string; level: string }[];
   summary: readonly SummarySegment[][];
+  highlights?: readonly Highlight[];
   experience: readonly ExperienceEntry[];
 };

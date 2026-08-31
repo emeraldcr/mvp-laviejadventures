@@ -6,7 +6,8 @@ import type { CvData, SummarySegment } from "./types";
 // clean on its own.
 
 export function CvDocument({ cv }: { cv: CvData }) {
-  const { personalInfo, contactInfo, primarySkills, secondarySkills, education, languages, summary, experience } = cv;
+  const { personalInfo, contactInfo, primarySkills, secondarySkills, education, languages, summary, highlights, experience } =
+    cv;
 
   return (
     <article className="relative grid w-full max-w-4xl grid-cols-1 overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm md:grid-cols-[220px_1fr] print:mt-0 print:w-full print:max-w-none print:grid-cols-[2in_1fr] print:rounded-none print:border-0 print:shadow-none">
@@ -79,6 +80,23 @@ export function CvDocument({ cv }: { cv: CvData }) {
       </aside>
 
       <div className="px-7 py-8 print:px-6 print:py-5">
+        {highlights && highlights.length > 0 && (
+          <section className="mb-6 print:mb-4">
+            <SectionHeading title="What I Bring" />
+            <div className="mt-3 grid gap-2.5 sm:grid-cols-2 print:mt-2 print:grid-cols-2 print:gap-1.5">
+              {highlights.map((h) => (
+                <div
+                  key={h.title}
+                  className="break-inside-avoid rounded-lg border border-zinc-200 bg-zinc-50/70 p-2.5 print:border-zinc-300 print:p-2"
+                >
+                  <p className="text-[11.5px] font-bold leading-snug text-zinc-900 print:text-[10.5px]">{h.title}</p>
+                  <p className="mt-0.5 text-[11px] leading-snug text-zinc-600 print:text-[9.5px]">{h.detail}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
         <SectionHeading title="Professional Summary" />
         {summary.map((paragraph, index) => (
           <p

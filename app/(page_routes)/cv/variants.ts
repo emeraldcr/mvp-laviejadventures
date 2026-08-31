@@ -48,10 +48,10 @@ export const cvVariants: CvVariant[] = [
   {
     slug: "",
     path: "/cv",
-    name: "Full-Stack",
-    role: "Senior Software Engineer",
-    when: "General senior / full-stack roles — broadest surface area.",
-    focus: ["Java / Spring Boot", "TypeScript / React", "PHP / Laravel", "AWS"],
+    name: "Full-Stack · God CV",
+    role: "Senior Full-Stack Software Engineer",
+    when: "The everything CV — feature-first, every stack and tool from the tailored variants surfaced in one sheet. Default when the role is broad or the JD spans multiple stacks.",
+    focus: ["Java · TS/React · Python · C# · PHP", "AI / LLM · agents · RAG", "AWS · Azure · GCP", "Feature-first"],
   },
   {
     slug: "agentic-ai",

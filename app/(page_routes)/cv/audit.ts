@@ -283,6 +283,7 @@ function anyPresent(text: string, variants: string[]): boolean {
 export function buildCorpus(cv: CvData): string {
   const parts: string[] = [cv.personalInfo.title];
   for (const para of cv.summary) for (const seg of para) parts.push(seg.text);
+  for (const h of cv.highlights ?? []) parts.push(h.title, h.detail);
   for (const group of [...cv.primarySkills, ...cv.secondarySkills]) {
     parts.push(group.label, ...group.items);
   }

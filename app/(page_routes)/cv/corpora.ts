@@ -29,6 +29,7 @@ type CvConstantsModule = {
   education: CvData["education"];
   languages: CvData["languages"];
   summary: CvData["summary"];
+  highlights?: CvData["highlights"];
   experience: CvData["experience"];
 };
 
@@ -40,6 +41,7 @@ const asCv = (m: CvConstantsModule): CvData => ({
   education: m.education,
   languages: m.languages,
   summary: m.summary,
+  highlights: m.highlights,
   experience: m.experience,
 });
 
