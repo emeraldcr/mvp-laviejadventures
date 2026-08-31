@@ -8,7 +8,7 @@
 // ─────────────────────────────────────────────────────────────
 
 import type { BuilderState, ResumeData, ResumeSettings } from "./types";
-import { ACCENTS, emptyResume, sampleState, uid } from "./sample";
+import { ACCENTS, emptyResume, uid } from "./sample";
 
 export const STORAGE_KEY = "lva:crear-cv:v1";
 export const LICENSE_KEY = "lva:crear-cv:license";
@@ -52,7 +52,6 @@ const bool = (v: unknown): boolean => v === true;
 /** Accept partial / older / hand-edited payloads without throwing. */
 export function normalizeState(input: unknown): BuilderState {
   const raw = (input ?? {}) as Partial<BuilderState>;
-  const base = sampleState("es");
   const d = (raw.data ?? {}) as Partial<ResumeData>;
   const s = (raw.settings ?? {}) as Partial<ResumeSettings>;
   const c = raw.cover ?? {};
@@ -123,7 +122,7 @@ export function normalizeState(input: unknown): BuilderState {
   };
 
   return {
-    data: hasAnyContent(data) ? data : base.data,
+    data,
     settings,
     cover: {
       company: str((c as Record<string, unknown>).company),
@@ -137,16 +136,6 @@ export function normalizeState(input: unknown): BuilderState {
           : null,
     },
   };
-}
-
-function hasAnyContent(d: ResumeData): boolean {
-  return Boolean(
-    d.fullName ||
-      d.headline ||
-      d.summary ||
-      d.experience.some((e) => e.role || e.company || e.bullets.some(Boolean)) ||
-      d.education.some((e) => e.degree || e.school),
-  );
 }
 
 function clampNum(v: unknown, lo: number, hi: number, fallback: number): number {

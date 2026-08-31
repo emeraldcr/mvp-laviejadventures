@@ -109,11 +109,13 @@ export default function EditorPage() {
     }
   }, [pendingTemplate, patchSettings]);
 
-  const printWith = useCallback((cls: "cvx-printing-resume" | "cvx-printing-letter") => {
+  // The résumé is the default print target; `cvx-printing-letter` swaps to the
+  // cover letter for one paint. A manual Ctrl+P (no class) still prints the CV.
+  const printLetterFlag = useCallback(() => {
     if (typeof window === "undefined") return;
-    document.body.classList.add(cls);
+    document.body.classList.add("cvx-printing-letter");
     const done = () => {
-      document.body.classList.remove(cls);
+      document.body.classList.remove("cvx-printing-letter");
       window.removeEventListener("afterprint", done);
     };
     window.addEventListener("afterprint", done);
@@ -122,12 +124,12 @@ export default function EditorPage() {
 
   const printResume = useCallback(() => {
     setDlOpen(false);
-    printWith("cvx-printing-resume");
-  }, [printWith]);
+    setTimeout(() => window.print(), 60);
+  }, []);
   const printLetter = useCallback(() => {
     setDlOpen(false);
-    requireProOr(() => printWith("cvx-printing-letter"));
-  }, [printWith, requireProOr]);
+    requireProOr(printLetterFlag);
+  }, [printLetterFlag, requireProOr]);
 
   const letterText = useMemo(
     () =>
@@ -189,9 +191,11 @@ export default function EditorPage() {
           html, body { background: #fff !important; }
           body * { visibility: hidden !important; }
           .cvx-print, .cvx-print * { visibility: visible !important; }
-          .cvx-print { display: none; position: absolute; left: 0; top: 0; width: 100%; }
-          body.cvx-printing-resume .cvx-print--resume { display: block !important; }
-          body.cvx-printing-letter .cvx-print--letter { display: block !important; }
+          .cvx-print { position: absolute; left: 0; top: 0; width: 100%; }
+          .cvx-print--resume { display: block; }
+          .cvx-print--letter { display: none; }
+          body.cvx-printing-letter .cvx-print--resume { display: none; }
+          body.cvx-printing-letter .cvx-print--letter { display: block; }
           .cvx-sheet { box-shadow: none !important; }
           * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
         }
