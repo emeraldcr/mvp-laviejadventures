@@ -1,38 +1,13 @@
-import { Github, Linkedin, Mail, MapPin, Phone } from "lucide-react";
+import { buildContactInfo, buildLanguages, NAME } from "../definitions/identity";
+
+export { education } from "../definitions/education";
 
 export const personalInfo = {
-  name: "Allan José Rojas Durán",
+  name: NAME,
   title: "Agentic AI Engineer",
 };
 
-export const contactInfo = [
-  {
-    icon: MapPin,
-    text: "Alajuela, Costa Rica · Remote (Americas)",
-  },
-  {
-    icon: Phone,
-    text: "+506 7225 2296",
-    href: "tel:+50672252296",
-  },
-  {
-    icon: Mail,
-    text: "allan4devs@gmail.com",
-    href: "mailto:allan4devs@gmail.com",
-  },
-  {
-    icon: Linkedin,
-    text: "linkedin.com/in/aallanrd",
-    href: "https://www.linkedin.com/in/aallanrd/",
-    external: true,
-  },
-  {
-    icon: Github,
-    text: "github.com/emeraldcr",
-    href: "https://github.com/emeraldcr",
-    external: true,
-  },
-];
+export const contactInfo = buildContactInfo("americas");
 
 export const primarySkills = [
   {
@@ -75,24 +50,7 @@ export const secondarySkills = [
   },
 ];
 
-export const education = {
-  degree: "Computer Engineering",
-  school: "Instituto Tecnológico de Costa Rica (TEC)",
-  period: "2009–2015",
-  internshipLabel: "Graduation Project:",
-  internship: "iTalent (Google Partner)",
-};
-
-export const languages = [
-  {
-    language: "Spanish",
-    level: "Native",
-  },
-  {
-    language: "English",
-    level: "Professional Working · C1",
-  },
-];
+export const languages = buildLanguages("short");
 
 export type SummarySegment = {
   text: string;
