@@ -79,6 +79,10 @@ export const text = {
   sidebarBody: "text-[9px] leading-[1.6] tracking-[0.01em] text-zinc-600",
   sidebarStrong: "font-semibold text-zinc-900",
 
+  // résumé · "What I Bring" strengths band (base CV only)
+  hlTitle: "text-[9px] font-bold leading-[1.25] tracking-[0.004em] text-zinc-900",
+  hlDetail: "text-[8px] leading-[1.4] tracking-[0.006em] text-zinc-600",
+
   // résumé · main column
   sectionHeading:
     "font-[family-name:var(--font-display)] text-[10.5px] font-bold uppercase tracking-[0.2em] text-zinc-900",
@@ -113,6 +117,7 @@ export const gap = {
   betweenJobs: 3.4,
   jobHeadToBullets: 1.4,
   betweenBullets: 0.6,
+  afterHighlights: 5,
 } as const;
 
 // ── sheet chrome ────────────────────────────────────────────
@@ -159,5 +164,31 @@ export const PRINT_CSS = `
     break-after: page;
   }
   .cv-sheet:last-of-type { page-break-after: auto; break-after: auto; }
+
+  /* the "Both" preview stack: drop flex + gap so each sheet owns its page */
+  .cv-sheet-stack { display: block !important; gap: 0 !important; }
 }
 `;
+
+// ── on-screen preview chrome ────────────────────────────────
+// The WYSIWYG print preview lives in PrintPreview.tsx; its surface styling is
+// defined here so every visual decision for /cv stays in this file.
+
+export const preview = {
+  surface: "cv-preview-scroll w-full",
+  toolbar:
+    "cv-print-hide sticky top-0 z-20 mb-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-zinc-200 bg-white/95 px-3 py-2 shadow-sm backdrop-blur",
+  segment: "flex overflow-hidden rounded-lg border border-zinc-200",
+  segBtn: "px-2.5 py-1 text-[11px] font-semibold transition-colors",
+  segOn: "bg-teal-600 text-white",
+  segOff: "bg-white text-zinc-500 hover:bg-zinc-50",
+  hint: "text-[10px] font-medium uppercase tracking-[0.14em] text-zinc-400",
+  /** per-sheet caption row above each page (screen only) */
+  capRow: "cv-print-hide mb-2 flex w-full items-center justify-between gap-2",
+  capLabel: "text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-400",
+  pill: "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em]",
+  pillOk: "border-teal-200 bg-teal-50 text-teal-700",
+  pillOver: "border-amber-300 bg-amber-50 text-amber-800",
+  overNote: "cv-print-hide mt-2 text-[10.5px] font-medium leading-snug text-amber-700",
+  stack: "cv-sheet-stack flex flex-col items-center gap-10",
+} as const;

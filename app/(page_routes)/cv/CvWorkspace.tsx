@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import {
@@ -18,7 +18,8 @@ import {
   Waypoints,
   X,
 } from "lucide-react";
-import { CvDocument } from "./CvDocument";
+import { PrintPreview, type PreviewDoc } from "./PrintPreview";
+import { PRINT_CSS } from "./design";
 import { auditJd, buildCorpus, DICT_CATEGORY_ORDER, type AuditResult, type DictHit } from "./audit";
 import { buildCoverLetter, parseCompanyInfo, type CompanyInfo } from "./coverLetter";
 import { cvVariantBySlug, cvVariants, type CvVariant } from "./variants";
@@ -44,6 +45,7 @@ import {
 } from "./applications";
 
 const JD_STORAGE_KEY = "cv:jd-audit";
+const PREVIEW_DOC_KEY = "cv:preview-doc";
 const MIN_JD_LEN = 30;
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -62,7 +64,9 @@ export function CvWorkspace({ activeSlug, cv }: { activeSlug: string; cv: CvData
   const [jd, setJd] = useState("");
   const [auditOpen, setAuditOpen] = useState(false);
   const [coverLetter, setCoverLetter] = useState<string | null>(null);
-  const [printLetter, setPrintLetter] = useState<string | null>(null);
+  const [letterCompany, setLetterCompany] = useState("");
+  const [previewDoc, setPreviewDoc] = useState<PreviewDoc>("resume");
+  const [printSignal, setPrintSignal] = useState(0);
 
   useEffect(() => {
     try {
@@ -80,50 +84,48 @@ export function CvWorkspace({ activeSlug, cv }: { activeSlug: string; cv: CvData
     }
   }, [jd]);
 
+  useEffect(() => {
+    try {
+      const v = localStorage.getItem(PREVIEW_DOC_KEY);
+      if (v === "resume" || v === "letter" || v === "both") setPreviewDoc(v);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+  useEffect(() => {
+    try {
+      localStorage.setItem(PREVIEW_DOC_KEY, previewDoc);
+    } catch {
+      /* ignore */
+    }
+  }, [previewDoc]);
+
   const audit = useMemo(
     () => (jd.trim().length >= MIN_JD_LEN ? auditJd(jd, corpus) : null),
     [jd, corpus],
   );
 
-  // Print the cover letter on its own: swap the printable surface for one paint,
-  // fire the dialog, then restore the résumé once the dialog closes.
+  // Point the preview at the chosen document, give React two frames to paint it,
+  // then open the print dialog — what you see in the preview is what prints.
+  const requestPrint = useCallback((doc: PreviewDoc) => {
+    setPreviewDoc(doc);
+    setPrintSignal((n) => n + 1);
+  }, []);
   useEffect(() => {
-    if (printLetter == null) return;
+    if (printSignal === 0) return;
     let raf2 = 0;
-    let fallback = 0;
-    let done = false;
-    const restore = () => {
-      if (done) return;
-      done = true;
-      setPrintLetter(null);
-    };
     const raf1 = requestAnimationFrame(() => {
-      raf2 = requestAnimationFrame(() => {
-        window.addEventListener("afterprint", restore, { once: true });
-        window.print();
-        // Fallback for browsers where print() is non-blocking and afterprint
-        // never fires (or the user's setup swallows it).
-        fallback = window.setTimeout(restore, 1000);
-      });
+      raf2 = requestAnimationFrame(() => window.print());
     });
     return () => {
-      done = true;
       cancelAnimationFrame(raf1);
       cancelAnimationFrame(raf2);
-      clearTimeout(fallback);
-      window.removeEventListener("afterprint", restore);
     };
-  }, [printLetter]);
+  }, [printSignal]);
 
   return (
-    <main className={`min-h-screen bg-zinc-100 print:bg-white ${printLetter != null ? "cvw-print-letter" : ""}`}>
-      <style>{`
-        @media print {
-          @page { size: letter; margin: 0.4in; }
-          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
-          .cvw-print-letter .cvw-cv { display: none !important; }
-        }
-      `}</style>
+    <main className="min-h-screen bg-zinc-100 print:bg-white">
+      <style>{PRINT_CSS}</style>
 
       <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 lg:flex-row lg:items-start print:block print:max-w-none print:p-0">
         <aside className="w-full shrink-0 lg:w-[330px] print:hidden">
@@ -135,24 +137,30 @@ export function CvWorkspace({ activeSlug, cv }: { activeSlug: string; cv: CvData
               audit={audit}
               coverLetter={coverLetter}
               onOpenAudit={() => setAuditOpen(true)}
-              onPrintLetter={() => {
-                if (coverLetter) setPrintLetter(coverLetter);
-              }}
+              onPrint={requestPrint}
             />
-            <CoverLetter variant={variant} cv={cv} onLetter={setCoverLetter} onPrint={setPrintLetter} />
+            <CoverLetter
+              variant={variant}
+              cv={cv}
+              onLetter={(letter, company) => {
+                setCoverLetter(letter);
+                setLetterCompany(company ?? "");
+              }}
+              onPrint={() => requestPrint("letter")}
+            />
           </div>
         </aside>
 
-        <div className="cvw-cv flex min-w-0 flex-1 justify-center print:block">
-          <CvDocument cv={cv} />
+        <div className="min-w-0 flex-1 print:block">
+          <PrintPreview
+            cv={cv}
+            letter={coverLetter}
+            company={letterCompany}
+            docMode={previewDoc}
+            onDocMode={setPreviewDoc}
+          />
         </div>
       </div>
-
-      {printLetter != null && (
-        <div className="hidden print:block">
-          <PrintableCoverLetter text={printLetter} />
-        </div>
-      )}
 
       {auditOpen && (
         <Modal title="JD keyword audit" onClose={() => setAuditOpen(false)}>
@@ -172,7 +180,7 @@ function VariantNav({
   audit,
   coverLetter,
   onOpenAudit,
-  onPrintLetter,
+  onPrint,
 }: {
   activeSlug: string;
   apps: UseApplications;
@@ -180,7 +188,7 @@ function VariantNav({
   audit: AuditResult | null;
   coverLetter: string | null;
   onOpenAudit: () => void;
-  onPrintLetter: () => void;
+  onPrint: (doc: PreviewDoc) => void;
 }) {
   const [view, setView] = useState<ViewState>(defaultView);
   const [openSlug, setOpenSlug] = useState<string | null>(activeSlug || "");
@@ -489,7 +497,7 @@ function VariantNav({
           <span className="shrink-0 text-[9px] font-bold uppercase tracking-wide text-zinc-400">Print</span>
           <button
             type="button"
-            onClick={() => window.print()}
+            onClick={() => onPrint("resume")}
             className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-zinc-300 bg-white px-2.5 py-1.5 text-[11.5px] font-semibold text-zinc-700 shadow-sm transition-colors hover:border-transparent hover:bg-teal-600 hover:text-white"
           >
             <FileText size={12} />
@@ -497,7 +505,7 @@ function VariantNav({
           </button>
           <button
             type="button"
-            onClick={onPrintLetter}
+            onClick={() => onPrint("letter")}
             disabled={!coverLetter}
             title={coverLetter ? "Print the drafted cover letter" : "Draft a cover letter below to enable"}
             className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-zinc-300 bg-white px-2.5 py-1.5 text-[11.5px] font-semibold text-zinc-700 shadow-sm transition-colors hover:border-transparent hover:bg-teal-600 hover:text-white disabled:cursor-not-allowed disabled:border-zinc-200 disabled:bg-zinc-50 disabled:text-zinc-300 disabled:shadow-none disabled:hover:bg-zinc-50 disabled:hover:text-zinc-300"
@@ -899,8 +907,8 @@ function CoverLetter({
 }: {
   variant: CvVariant;
   cv: CvData;
-  onLetter: (letter: string | null) => void;
-  onPrint: (letter: string) => void;
+  onLetter: (letter: string | null, company?: string) => void;
+  onPrint: () => void;
 }) {
   const slug = variant.slug || "base";
   const companyKey = `cv:cl-company:${slug}`;
@@ -964,8 +972,8 @@ function CoverLetter({
   );
 
   useEffect(() => {
-    onLetter(ready ? letter : null);
-  }, [ready, letter, onLetter]);
+    onLetter(ready ? letter : null, info.company);
+  }, [ready, letter, info.company, onLetter]);
 
   async function copyLetter() {
     try {
@@ -1069,7 +1077,7 @@ function CoverLetter({
             <div className="flex items-center gap-0.5">
               <button
                 type="button"
-                onClick={() => onPrint(letter)}
+                onClick={onPrint}
                 className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-semibold text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-800"
               >
                 <Printer size={11} />
@@ -1106,7 +1114,7 @@ function DerivedChip({ label, value, muted }: { label: string; value: string; mu
   );
 }
 
-// ── audit modal + printable cover letter ────────────────────
+// ── audit modal ─────────────────────────────────────────────
 
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
   useEffect(() => {
@@ -1154,34 +1162,5 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
       </div>
     </div>,
     document.body,
-  );
-}
-
-/** Renders a plain-text cover letter (from buildCoverLetter) as a clean sheet
- *  that stands in for the résumé while the letter is being printed. */
-function PrintableCoverLetter({ text }: { text: string }) {
-  const blocks = text.trim().split(/\n{2,}/);
-  const [head, ...body] = blocks;
-  const headLines = head.split("\n");
-
-  return (
-    <article className="mx-auto w-full max-w-[7.4in] bg-white px-12 py-12 text-zinc-800 print:px-0 print:py-2">
-      <div className="mb-6 h-[2px] w-full bg-teal-600" />
-      <header className="mb-8 border-b border-zinc-200 pb-4">
-        <p className="font-[family-name:var(--font-display)] text-lg font-bold tracking-tight text-zinc-900">
-          {headLines[0]}
-        </p>
-        {headLines.slice(1).map((line, i) => (
-          <p key={i} className="mt-0.5 text-[11px] text-zinc-500">
-            {line}
-          </p>
-        ))}
-      </header>
-      {body.map((block, i) => (
-        <p key={i} className={`whitespace-pre-line text-[12.5px] leading-relaxed ${i === 0 ? "" : "mt-4"}`}>
-          {block}
-        </p>
-      ))}
-    </article>
   );
 }
