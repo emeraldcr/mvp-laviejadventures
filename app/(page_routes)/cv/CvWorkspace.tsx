@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import {
+  Archive,
   Check,
   ChevronDown,
   ChevronRight,
@@ -11,19 +12,20 @@ import {
   FileText,
   Home,
   Mail,
-  Printer,
+  Pencil,
   RotateCcw,
   Search,
   Star,
   Waypoints,
   X,
 } from "lucide-react";
-import { PrintPreview, type PreviewDoc } from "./PrintPreview";
+import { CvEditor } from "./CvEditor";
+import { useEditableCv } from "./useEditableCv";
+import { PrintPreview } from "./PrintPreview";
 import { PRINT_CSS } from "./design";
 import { auditJd, buildCorpus, DICT_CATEGORY_ORDER, type AuditResult, type DictHit } from "./audit";
-import { buildCoverLetter, parseCompanyInfo, type CompanyInfo } from "./coverLetter";
 import { cvVariantBySlug, cvVariants, type CvVariant } from "./variants";
-import { VARIANT_CORPUS, VARIANT_CV } from "./corpora";
+import { VARIANT_CORPUS } from "./corpora";
 import { useApplications, type UseApplications } from "./useApplications";
 import type { CvData } from "./types";
 import {
@@ -45,7 +47,6 @@ import {
 } from "./applications";
 
 const JD_STORAGE_KEY = "cv:jd-audit";
-const PREVIEW_DOC_KEY = "cv:preview-doc";
 const MIN_JD_LEN = 30;
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -56,16 +57,16 @@ function clampInt(raw: string, lo: number, hi: number): number {
   return Math.min(hi, Math.max(lo, n));
 }
 
-export function CvWorkspace({ activeSlug, cv }: { activeSlug: string; cv: CvData }) {
+export function CvWorkspace({ activeSlug, cv: baseCv }: { activeSlug: string; cv: CvData }) {
+  const editApi = useEditableCv(activeSlug, baseCv);
+  const cv = editApi.cv;
   const corpus = useMemo(() => buildCorpus(cv), [cv]);
   const variant = useMemo(() => cvVariantBySlug(activeSlug) ?? cvVariants[0], [activeSlug]);
   const apps = useApplications();
 
+  const [editing, setEditing] = useState(false);
   const [jd, setJd] = useState("");
   const [auditOpen, setAuditOpen] = useState(false);
-  const [coverLetter, setCoverLetter] = useState<string | null>(null);
-  const [letterCompany, setLetterCompany] = useState("");
-  const [previewDoc, setPreviewDoc] = useState<PreviewDoc>("resume");
   const [printSignal, setPrintSignal] = useState(0);
 
   useEffect(() => {
@@ -84,38 +85,14 @@ export function CvWorkspace({ activeSlug, cv }: { activeSlug: string; cv: CvData
     }
   }, [jd]);
 
-  useEffect(() => {
-    try {
-      const v = localStorage.getItem(PREVIEW_DOC_KEY);
-      if (v === "resume" || v === "letter" || v === "both") setPreviewDoc(v);
-    } catch {
-      /* ignore */
-    }
-  }, []);
-  useEffect(() => {
-    try {
-      localStorage.setItem(PREVIEW_DOC_KEY, previewDoc);
-    } catch {
-      /* ignore */
-    }
-  }, [previewDoc]);
-
   const audit = useMemo(
     () => (jd.trim().length >= MIN_JD_LEN ? auditJd(jd, corpus) : null),
     [jd, corpus],
   );
 
-  // Point the preview at the chosen document, give React two frames to paint it,
-  // then open the print dialog — what you see in the preview is what prints.
-  const requestPrint = useCallback((doc: PreviewDoc) => {
-    setPreviewDoc(doc);
-    setPrintSignal((n) => n + 1);
-  }, []);
-  const handleLetter = useCallback((letter: string | null, company?: string) => {
-    setCoverLetter(letter);
-    setLetterCompany(company ?? "");
-  }, []);
-  const printLetterNow = useCallback(() => requestPrint("letter"), [requestPrint]);
+  // Bump a signal, give React two frames to settle the preview, then open the
+  // browser print dialog — what's on screen is exactly what prints.
+  const requestPrint = useCallback(() => setPrintSignal((n) => n + 1), []);
   useEffect(() => {
     if (printSignal === 0) return;
     let raf2 = 0;
@@ -133,28 +110,35 @@ export function CvWorkspace({ activeSlug, cv }: { activeSlug: string; cv: CvData
       <style>{PRINT_CSS}</style>
 
       <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 lg:flex-row lg:items-start print:block print:max-w-none print:p-0">
-        <aside className="w-full shrink-0 lg:w-[330px] print:hidden">
+        <aside className={`w-full shrink-0 print:hidden ${editing ? "lg:w-[400px]" : "lg:w-[330px]"}`}>
           <div className="space-y-4 lg:sticky lg:top-6 lg:max-h-[calc(100dvh-3rem)] lg:overflow-y-auto lg:pr-1">
-            <VariantNav
-              activeSlug={activeSlug}
-              apps={apps}
-              jd={jd}
-              audit={audit}
-              coverLetter={coverLetter}
-              onOpenAudit={() => setAuditOpen(true)}
-              onPrint={requestPrint}
-            />
-            <CoverLetter variant={variant} cv={cv} onLetter={handleLetter} onPrint={printLetterNow} />
+            {editing ? (
+              <CvEditor
+                api={editApi}
+                slug={activeSlug}
+                variantName={variant.name}
+                onClose={() => setEditing(false)}
+              />
+            ) : (
+              <VariantNav activeSlug={activeSlug} apps={apps} jd={jd} />
+            )}
           </div>
         </aside>
 
         <div className="min-w-0 flex-1 print:block">
           <PrintPreview
             cv={cv}
-            letter={coverLetter}
-            company={letterCompany}
-            docMode={previewDoc}
-            onDocMode={setPreviewDoc}
+            lockDoc="resume"
+            actions={
+              <WorkspaceNav
+                audit={audit}
+                edited={editApi.isEdited}
+                editing={editing}
+                onToggleEdit={() => setEditing((v) => !v)}
+                onOpenAudit={() => setAuditOpen(true)}
+                onPrint={requestPrint}
+              />
+            }
           />
         </div>
       </div>
@@ -168,24 +152,82 @@ export function CvWorkspace({ activeSlug, cv }: { activeSlug: string; cv: CvData
   );
 }
 
+// ── workspace nav — rendered inside the preview toolbar (the "main nav") ──────
+
+function WorkspaceNav({
+  audit,
+  edited,
+  editing,
+  onToggleEdit,
+  onOpenAudit,
+  onPrint,
+}: {
+  audit: AuditResult | null;
+  edited: boolean;
+  editing: boolean;
+  onToggleEdit: () => void;
+  onOpenAudit: () => void;
+  onPrint: () => void;
+}) {
+  const btn =
+    "inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[10.5px] font-semibold transition-colors";
+  const plain = "border-zinc-200 bg-white text-zinc-500 hover:bg-zinc-50";
+  return (
+    <>
+      <button
+        type="button"
+        onClick={onToggleEdit}
+        title={editing ? "Close the content editor" : "Edit résumé content"}
+        className={`${btn} ${editing ? "border-teal-500 bg-teal-50 text-teal-700 hover:bg-teal-100" : plain}`}
+      >
+        <Pencil size={11} />
+        {editing ? "Editing" : "Edit"}
+        {edited && (
+          <span className="rounded bg-teal-100 px-1 text-[9px] font-bold uppercase tracking-wide text-teal-700">
+            edited
+          </span>
+        )}
+      </button>
+      <button
+        type="button"
+        onClick={onOpenAudit}
+        title="JD keyword audit"
+        className={`${btn} ${
+          audit ? "border-teal-500 bg-teal-50 text-teal-700 hover:bg-teal-100" : plain
+        }`}
+      >
+        <Search size={11} />
+        JD audit
+        {audit && (
+          <span className="rounded bg-teal-600 px-1 text-[9px] font-bold tabular-nums text-white">{audit.score}%</span>
+        )}
+      </button>
+      <button type="button" onClick={onPrint} title="Print résumé" className={`${btn} ${plain}`}>
+        <FileText size={11} />
+        Print
+      </button>
+      <Link href="/allan" title="Portfolio" className={`${btn} ${plain}`}>
+        <Waypoints size={11} />
+        Portfolio
+      </Link>
+      <Link href="/" title="Home" className={`${btn} ${plain}`}>
+        <Home size={11} />
+        Home
+      </Link>
+    </>
+  );
+}
+
 // ── variant switcher + application tracker ───────────────────
 
 function VariantNav({
   activeSlug,
   apps,
   jd,
-  audit,
-  coverLetter,
-  onOpenAudit,
-  onPrint,
 }: {
   activeSlug: string;
   apps: UseApplications;
   jd: string;
-  audit: AuditResult | null;
-  coverLetter: string | null;
-  onOpenAudit: () => void;
-  onPrint: (doc: PreviewDoc) => void;
 }) {
   const [view, setView] = useState<ViewState>(defaultView);
   const [openSlug, setOpenSlug] = useState<string | null>(activeSlug || "");
@@ -236,6 +278,9 @@ function VariantNav({
 
     const filtered = base.filter(({ v, st }) => {
       if (v.slug === activeSlug) return true; // never hide what you're viewing
+      // Archived variants drop out of the list — unless you flip "Show archived"
+      // or filter the status dropdown straight to Archived.
+      if (st.status === "archived" && !view.showArchived && view.status !== "archived") return false;
       if (view.status !== "all" && st.status !== view.status) return false;
       if (view.emailOnly && !st.checkEmail) return false;
       if (q) {
@@ -260,6 +305,10 @@ function VariantNav({
   const total = cvVariants.length;
   const filtersOn = view.status !== "all" || view.emailOnly || view.query.trim() !== "";
   const progressPills = STATUS_ORDER.filter((s) => s !== "draft" && (tally[s] ?? 0) > 0);
+  const archivedCount = useMemo(
+    () => cvVariants.filter((v) => v.slug !== activeSlug && apps.get(v.slug).status === "archived").length,
+    [apps, activeSlug],
+  );
 
   return (
     <nav className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
@@ -360,14 +409,28 @@ function VariantNav({
           </button>
         </div>
 
-        {filtersOn && (
-          <button
-            type="button"
-            onClick={() => patchView({ status: "all", emailOnly: false, query: "" })}
-            className="text-[10px] font-semibold text-zinc-500 hover:text-zinc-800"
-          >
-            Clear filters
-          </button>
+        {(filtersOn || archivedCount > 0) && (
+          <div className="flex items-center gap-3">
+            {filtersOn && (
+              <button
+                type="button"
+                onClick={() => patchView({ status: "all", emailOnly: false, query: "" })}
+                className="text-[10px] font-semibold text-zinc-500 hover:text-zinc-800"
+              >
+                Clear filters
+              </button>
+            )}
+            {archivedCount > 0 && view.status !== "archived" && (
+              <button
+                type="button"
+                onClick={() => patchView({ showArchived: !view.showArchived })}
+                className="inline-flex items-center gap-1 text-[10px] font-semibold text-zinc-500 hover:text-zinc-800"
+              >
+                <Archive size={11} />
+                {view.showArchived ? "Hide" : "Show"} archived ({archivedCount})
+              </button>
+            )}
+          </div>
         )}
       </div>
 
@@ -475,63 +538,6 @@ function VariantNav({
           Word budgets →
         </Link>
       </p>
-
-      <div className="mt-3 space-y-2">
-        <button
-          type="button"
-          onClick={onOpenAudit}
-          className={`inline-flex w-full items-center justify-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-semibold shadow-sm transition-colors ${
-            audit
-              ? "border-teal-500 bg-teal-50 text-teal-700 hover:bg-teal-100"
-              : "border-zinc-300 bg-white text-zinc-700 hover:border-transparent hover:bg-teal-600 hover:text-white"
-          }`}
-        >
-          <Search size={13} />
-          JD keyword audit
-          {audit && (
-            <span className="rounded bg-teal-600 px-1 text-[9px] font-bold tabular-nums text-white">{audit.score}%</span>
-          )}
-        </button>
-
-        <div className="flex items-center gap-1.5">
-          <span className="shrink-0 text-[9px] font-bold uppercase tracking-wide text-zinc-400">Print</span>
-          <button
-            type="button"
-            onClick={() => onPrint("resume")}
-            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-zinc-300 bg-white px-2.5 py-1.5 text-[11.5px] font-semibold text-zinc-700 shadow-sm transition-colors hover:border-transparent hover:bg-teal-600 hover:text-white"
-          >
-            <FileText size={12} />
-            Résumé
-          </button>
-          <button
-            type="button"
-            onClick={() => onPrint("letter")}
-            disabled={!coverLetter}
-            title={coverLetter ? "Print the drafted cover letter" : "Draft a cover letter below to enable"}
-            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-zinc-300 bg-white px-2.5 py-1.5 text-[11.5px] font-semibold text-zinc-700 shadow-sm transition-colors hover:border-transparent hover:bg-teal-600 hover:text-white disabled:cursor-not-allowed disabled:border-zinc-200 disabled:bg-zinc-50 disabled:text-zinc-300 disabled:shadow-none disabled:hover:bg-zinc-50 disabled:hover:text-zinc-300"
-          >
-            <Mail size={12} />
-            Letter
-          </button>
-        </div>
-
-        <div className="flex items-center gap-1.5">
-          <Link
-            href="/allan"
-            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-zinc-300 bg-white px-2.5 py-1.5 text-[11.5px] font-medium text-zinc-600 transition-colors hover:border-zinc-400 hover:text-zinc-900"
-          >
-            <Waypoints size={12} />
-            Portfolio
-          </Link>
-          <Link
-            href="/"
-            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-zinc-300 bg-white px-2.5 py-1.5 text-[11.5px] font-medium text-zinc-600 transition-colors hover:border-zinc-400 hover:text-zinc-900"
-          >
-            <Home size={12} />
-            Home
-          </Link>
-        </div>
-      </div>
     </nav>
   );
 }
@@ -548,35 +554,12 @@ function PipelineEditor({
   apps: UseApplications;
 }) {
   const slug = variant.slug;
-  const [copied, setCopied] = useState(false);
   const set = (patch: Partial<ApplicationState>) => apps.update(slug, patch);
 
   function onStatus(next: ApplicationStatus) {
     const patch: Partial<ApplicationState> = { status: next };
     if (next !== "draft" && next !== "archived" && next !== "rejected" && !st.appliedOn) patch.appliedOn = today();
     set(patch);
-  }
-
-  async function copyLetter() {
-    const info: CompanyInfo = {
-      company: variant.company ?? "",
-      role: variant.postingTitle || variant.role,
-      location: variant.location ?? "",
-      hiringManager: variant.hiringManager ?? "",
-    };
-    const letter = buildCoverLetter({
-      info,
-      variant,
-      cv: VARIANT_CV[slug] ?? VARIANT_CV[""],
-      notes: variant.coverLetterNotes,
-    });
-    try {
-      await navigator.clipboard.writeText(letter);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch {
-      /* clipboard blocked — ignore */
-    }
   }
 
   const fieldCls =
@@ -689,19 +672,15 @@ function PipelineEditor({
         />
       </label>
 
-      <div className="flex items-center justify-between pt-0.5">
-        {variant.company ? (
-          <button
-            type="button"
-            onClick={copyLetter}
-            className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-semibold text-teal-700 transition-colors hover:bg-teal-50"
-          >
-            {copied ? <Check size={11} /> : <Mail size={11} />}
-            {copied ? "Copied" : "Copy cover letter"}
-          </button>
-        ) : (
-          <span className="text-[10px] text-zinc-300">No company set in variants.ts</span>
-        )}
+      <div className="flex items-center justify-end gap-1 pt-0.5">
+        <button
+          type="button"
+          onClick={() => onStatus(st.status === "archived" ? "draft" : "archived")}
+          className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-semibold text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700"
+        >
+          <Archive size={11} />
+          {st.status === "archived" ? "Unarchive" : "Archive"}
+        </button>
         <button
           type="button"
           onClick={() => apps.reset(slug)}
@@ -895,223 +874,6 @@ function scoreBar(score: number): string {
   if (score >= 80) return "bg-teal-500";
   if (score >= 50) return "bg-amber-500";
   return "bg-rose-500";
-}
-
-// ── cover letter panel ──────────────────────────────────────
-
-function CoverLetter({
-  variant,
-  cv,
-  onLetter,
-  onPrint,
-}: {
-  variant: CvVariant;
-  cv: CvData;
-  onLetter: (letter: string | null, company?: string) => void;
-  onPrint: () => void;
-}) {
-  const slug = variant.slug || "base";
-  const companyKey = `cv:cl-company:${slug}`;
-  const notesKey = `cv:cl-notes:${slug}`;
-
-  const [raw, setRaw] = useState("");
-  const [notes, setNotes] = useState("");
-  const [copied, setCopied] = useState(false);
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    setLoaded(false);
-    try {
-      setRaw(sessionStorage.getItem(companyKey) ?? "");
-      setNotes(sessionStorage.getItem(notesKey) ?? "");
-    } catch {
-      /* ignore */
-    }
-    setLoaded(true);
-  }, [companyKey, notesKey]);
-
-  useEffect(() => {
-    if (!loaded) return;
-    try {
-      sessionStorage.setItem(companyKey, raw);
-    } catch {
-      /* ignore */
-    }
-  }, [raw, companyKey, loaded]);
-  useEffect(() => {
-    if (!loaded) return;
-    try {
-      sessionStorage.setItem(notesKey, notes);
-    } catch {
-      /* ignore */
-    }
-  }, [notes, notesKey, loaded]);
-
-  const pasted = useMemo(() => parseCompanyInfo(raw), [raw]);
-  const usingPaste = raw.trim().length > 0 && pasted.company.trim().length > 0;
-  const hasRegistry = Boolean(variant.company);
-
-  const info: CompanyInfo = useMemo(
-    () =>
-      usingPaste
-        ? pasted
-        : {
-            company: variant.company ?? "",
-            role: variant.postingTitle || variant.role,
-            location: variant.location ?? "",
-            hiringManager: variant.hiringManager ?? "",
-          },
-    [usingPaste, pasted, variant],
-  );
-  const effectiveNotes = usingPaste ? notes : notes || variant.coverLetterNotes || "";
-  const ready = info.company.trim().length > 0;
-
-  const letter = useMemo(
-    () => (ready ? buildCoverLetter({ info, variant, cv, notes: effectiveNotes }) : ""),
-    [ready, info, variant, cv, effectiveNotes],
-  );
-
-  useEffect(() => {
-    onLetter(ready ? letter : null, info.company);
-  }, [ready, letter, info.company, onLetter]);
-
-  async function copyLetter() {
-    try {
-      await navigator.clipboard.writeText(letter);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch {
-      /* clipboard blocked — ignore */
-    }
-  }
-
-  return (
-    <section className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
-      <div className="flex items-center justify-between gap-1.5">
-        <div className="flex items-center gap-1.5">
-          <Mail size={13} className="text-teal-600" />
-          <h2 className="text-[11px] font-bold uppercase tracking-wider text-zinc-900">Cover letter</h2>
-        </div>
-        {ready && (
-          <span
-            className={`rounded-full border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide ${
-              usingPaste ? "border-zinc-200 bg-zinc-50 text-zinc-500" : "border-teal-200 bg-teal-50 text-teal-700"
-            }`}
-          >
-            {usingPaste ? "From pasted text" : "Auto · variants.ts"}
-          </span>
-        )}
-      </div>
-      <p className="mt-1 text-[11px] leading-snug text-zinc-400">
-        {hasRegistry ? (
-          <>
-            Auto-drafted for <span className="font-semibold text-zinc-500">{variant.company}</span> from the{" "}
-            <span className="font-semibold text-zinc-500">{variant.name}</span> variant. Paste below to override.
-          </>
-        ) : (
-          <>
-            Paste the company blurb or job posting — get a draft built from the{" "}
-            <span className="font-semibold text-zinc-500">{variant.name}</span> variant. Set{" "}
-            <code className="text-zinc-500">company</code> in <code className="text-zinc-500">variants.ts</code> to
-            auto-fill it.
-          </>
-        )}
-      </p>
-
-      <div className="relative mt-2.5">
-        <textarea
-          value={raw}
-          onChange={(e) => setRaw(e.target.value)}
-          rows={4}
-          spellCheck={false}
-          placeholder={
-            hasRegistry
-              ? "Override — paste company info / job posting to replace the auto draft…"
-              : 'Paste company info / job posting…\nLines like "Company: Acme" or "Hiring Manager: Dana" are picked up.'
-          }
-          className="w-full resize-y rounded-lg border border-zinc-200 bg-zinc-50 p-2.5 font-mono text-[11.5px] leading-relaxed text-zinc-700 outline-none transition-colors focus:border-teal-500 focus:bg-white focus:ring-1 focus:ring-teal-500"
-        />
-        {raw && (
-          <button
-            type="button"
-            onClick={() => setRaw("")}
-            title="Clear override"
-            className="absolute right-1.5 top-1.5 rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700"
-          >
-            <X size={13} />
-          </button>
-        )}
-      </div>
-
-      {ready && (
-        <div className="mt-2 flex flex-wrap gap-1">
-          <DerivedChip label="Company" value={info.company} />
-          <DerivedChip label="Role" value={info.role || variant.role} muted={!info.role} />
-          {info.hiringManager && <DerivedChip label="Manager" value={info.hiringManager} />}
-          {variant.contactEmail && !usingPaste && <DerivedChip label="Send to" value={variant.contactEmail} />}
-        </div>
-      )}
-
-      <textarea
-        value={notes}
-        onChange={(e) => setNotes(e.target.value)}
-        rows={2}
-        spellCheck={false}
-        placeholder="Optional — why this company / a detail to emphasize (used verbatim as one paragraph)…"
-        className="mt-2 w-full resize-y rounded-lg border border-zinc-200 bg-zinc-50 p-2.5 text-[11.5px] leading-relaxed text-zinc-700 outline-none transition-colors focus:border-teal-500 focus:bg-white focus:ring-1 focus:ring-teal-500"
-      />
-
-      {!ready && (
-        <p className="mt-2 flex items-center gap-1.5 text-[11px] text-zinc-400">
-          <FileText size={12} />
-          {raw.trim().length === 0
-            ? "Waiting for company info…"
-            : 'Add a company name (or a "Company:" line) to generate.'}
-        </p>
-      )}
-
-      {ready && (
-        <div className="mt-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-[10.5px] font-bold uppercase tracking-wide text-teal-700">Draft letter</h3>
-            <div className="flex items-center gap-0.5">
-              <button
-                type="button"
-                onClick={onPrint}
-                className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-semibold text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-800"
-              >
-                <Printer size={11} />
-                Print
-              </button>
-              <button
-                type="button"
-                onClick={copyLetter}
-                className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-semibold text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-800"
-              >
-                {copied ? <Check size={11} /> : <ClipboardCopy size={11} />}
-                {copied ? "Copied" : "Copy"}
-              </button>
-            </div>
-          </div>
-          <pre className="mt-1.5 max-h-80 overflow-auto whitespace-pre-wrap rounded-lg border border-zinc-200 bg-zinc-50 p-2.5 font-mono text-[11px] leading-relaxed text-zinc-700">
-            {letter}
-          </pre>
-          <p className="mt-1 text-[10px] leading-snug text-zinc-400">
-            Draft only — drop in the real hiring-manager name and a company-specific detail before sending.
-          </p>
-        </div>
-      )}
-    </section>
-  );
-}
-
-function DerivedChip({ label, value, muted }: { label: string; value: string; muted?: boolean }) {
-  return (
-    <span className="inline-flex items-center gap-1 rounded border border-zinc-200 bg-zinc-50 px-1.5 py-0.5 text-[10px] text-zinc-500">
-      <span className="font-semibold uppercase tracking-wide text-zinc-400">{label}</span>
-      <span className={muted ? "italic text-zinc-400" : "text-zinc-700"}>{value}</span>
-    </span>
-  );
 }
 
 // ── audit modal ─────────────────────────────────────────────

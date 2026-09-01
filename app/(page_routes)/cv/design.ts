@@ -7,9 +7,11 @@
 //   types.ts             → the data shape every variant must satisfy.
 //   <slug>/constants.ts  → content only (words, dates, skill lists). No classes.
 //   CvDocument.tsx        → résumé structure/markup — consumes tokens, no magic numbers.
-//   CoverLetterDocument.tsx → letter structure/markup — same tokens, same sheet.
+//   cover-letter/         → self-contained cover-letter feature (generator, the
+//                          50-point lint, the printable letter, its own editor
+//                          route) — reuses these tokens + the same A4 sheet.
 //   PrintPreview.tsx      → the on-screen A4 preview + print orchestration.
-//   CvWorkspace.tsx       → app chrome (variant nav, JD audit, letter editor).
+//   CvWorkspace.tsx       → app chrome (variant nav, JD audit, letter panel).
 //
 // Rule of thumb: if you are tweaking how the résumé *looks*, you edit this file
 // and nothing else. If a component needs a raw px/mm value for layout, it comes

@@ -40,8 +40,14 @@ export type CvVariant = {
   jobUrl?: string;
   /** yyyy-mm-dd this variant was tailored — tiebreaker for the "Recent" sort. */
   tailoredOn?: string;
-  /** Verbatim "why this company" paragraph for the auto cover letter. */
+  /** Verbatim "why this company" paragraph for the auto cover letter (rule 15 / 17). */
   coverLetterNotes?: string;
+  /** One specific, true, non-portable thing about the company — leads the letter
+   *  when set (rule 2). Left blank, the 50-point review flags it. */
+  coverLetterHook?: string;
+  /** One human, slightly-unusual detail — a tool, a decision you'd redo, a
+   *  moment (rule 39). Left blank, the review flags it. */
+  coverLetterDetail?: string;
 };
 
 export const cvVariants: CvVariant[] = [

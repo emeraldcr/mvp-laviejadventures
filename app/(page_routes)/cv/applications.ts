@@ -141,11 +141,13 @@ export type ViewState = {
   sort: SortMode;
   status: ApplicationStatus | "all";
   emailOnly: boolean;
+  /** Archived variants are hidden from the list unless this is on. */
+  showArchived: boolean;
   query: string;
 };
 
 export function defaultView(): ViewState {
-  return { sort: "recent", status: "all", emailOnly: false, query: "" };
+  return { sort: "recent", status: "all", emailOnly: false, showArchived: false, query: "" };
 }
 
 export function resolveView(raw: unknown): ViewState {
@@ -157,6 +159,7 @@ export function resolveView(raw: unknown): ViewState {
         ? (v.status as ViewState["status"])
         : "all",
     emailOnly: Boolean(v.emailOnly),
+    showArchived: Boolean(v.showArchived),
     query: typeof v.query === "string" ? v.query : "",
   };
 }

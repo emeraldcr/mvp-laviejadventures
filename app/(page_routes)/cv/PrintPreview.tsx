@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import { AlertTriangle, Check, FileText, Mail, Maximize2, Minimize2 } from "lucide-react";
+import { AlertTriangle, Check, FileText, Mail, Maximize2, Minimize2, Pencil } from "lucide-react";
 import { CvDocument } from "./CvDocument";
-import { CoverLetterDocument } from "./CoverLetterDocument";
+import { CoverLetterDocument } from "./cover-letter/Document";
 import { A4, preview } from "./design";
 import type { CvData } from "./types";
 
@@ -19,16 +19,27 @@ type Fit = "fit" | "actual";
 
 export function PrintPreview({
   cv,
-  letter,
+  letter = null,
   company,
-  docMode,
+  docMode = "resume",
   onDocMode,
+  lockDoc,
+  editing = false,
+  onToggleEdit,
+  actions,
 }: {
   cv: CvData;
-  letter: string | null;
+  letter?: string | null;
   company?: string;
-  docMode: PreviewDoc;
-  onDocMode: (d: PreviewDoc) => void;
+  docMode?: PreviewDoc;
+  onDocMode?: (d: PreviewDoc) => void;
+  /** Pin the preview to one document and hide the résumé/letter/both switch. */
+  lockDoc?: PreviewDoc;
+  /** Content-editor toggle — omitted (with onToggleEdit) hides the Edit button. */
+  editing?: boolean;
+  onToggleEdit?: () => void;
+  /** Extra controls rendered at the end of the toolbar — the workspace's nav. */
+  actions?: ReactNode;
 }) {
   const [fit, setFit] = useState<Fit>("fit");
 
@@ -48,20 +59,43 @@ export function PrintPreview({
     }
   }, [fit]);
 
-  const showResume = docMode === "resume" || docMode === "both";
-  const showLetter = docMode === "letter" || docMode === "both";
+  const effective = lockDoc ?? docMode;
+  const showResume = effective === "resume" || effective === "both";
+  const showLetter = effective === "letter" || effective === "both";
 
   return (
     <div className={preview.surface}>
       <div className={preview.toolbar}>
-        <div className={preview.segment}>
-          <SegBtn icon={<FileText size={12} />} label="Résumé" on={docMode === "resume"} onClick={() => onDocMode("resume")} />
-          <SegBtn icon={<Mail size={12} />} label="Cover letter" on={docMode === "letter"} onClick={() => onDocMode("letter")} />
-          <SegBtn label="Both" on={docMode === "both"} onClick={() => onDocMode("both")} />
-        </div>
+        {lockDoc ? (
+          <span className={`${preview.hint} inline-flex items-center gap-1`}>
+            {lockDoc === "letter" ? <Mail size={12} /> : <FileText size={12} />}
+            {lockDoc === "letter" ? "Cover letter" : lockDoc === "resume" ? "Résumé" : "Résumé + letter"}
+          </span>
+        ) : (
+          <div className={preview.segment}>
+            <SegBtn icon={<FileText size={12} />} label="Résumé" on={docMode === "resume"} onClick={() => onDocMode?.("resume")} />
+            <SegBtn icon={<Mail size={12} />} label="Cover letter" on={docMode === "letter"} onClick={() => onDocMode?.("letter")} />
+            <SegBtn label="Both" on={docMode === "both"} onClick={() => onDocMode?.("both")} />
+          </div>
+        )}
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-1.5">
           <span className={preview.hint}>A4 · print preview</span>
+          {onToggleEdit && !lockDoc && (
+            <button
+              type="button"
+              onClick={onToggleEdit}
+              title={editing ? "Close the content editor" : "Edit résumé content"}
+              className={`inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[10.5px] font-semibold transition-colors ${
+                editing
+                  ? "border-teal-500 bg-teal-50 text-teal-700"
+                  : "border-zinc-200 bg-white text-zinc-500 hover:bg-zinc-50"
+              }`}
+            >
+              <Pencil size={11} />
+              {editing ? "Editing" : "Edit"}
+            </button>
+          )}
           <button
             type="button"
             onClick={() => setFit((f) => (f === "fit" ? "actual" : "fit"))}
@@ -71,6 +105,12 @@ export function PrintPreview({
             {fit === "fit" ? <Maximize2 size={11} /> : <Minimize2 size={11} />}
             {fit === "fit" ? "Actual size" : "Fit width"}
           </button>
+          {actions && (
+            <>
+              <span className="mx-0.5 h-4 w-px bg-zinc-200" aria-hidden />
+              {actions}
+            </>
+          )}
         </div>
       </div>
 
@@ -90,11 +130,35 @@ export function PrintPreview({
   );
 }
 
+// Signature over everything that affects vertical fill, so the one-page overflow
+// check re-runs on any content edit (name, summary, skills, bullets, …).
 function resumeKey(cv: CvData): string {
-  return `R:${cv.personalInfo.title}:${cv.experience.length}:${cv.highlights?.length ?? 0}:${cv.experience.reduce(
-    (n, j) => n + j.bullets.length,
-    0,
-  )}`;
+  let bulletCount = 0;
+  let bulletChars = 0;
+  for (const j of cv.experience) {
+    bulletCount += j.bullets.length;
+    for (const b of j.bullets) bulletChars += b.length;
+  }
+  let skillChars = 0;
+  for (const g of [...cv.primarySkills, ...cv.secondarySkills]) {
+    skillChars += g.label.length;
+    for (const it of g.items) skillChars += it.length + 1;
+  }
+  let summaryChars = 0;
+  for (const para of cv.summary) for (const seg of para) summaryChars += seg.text.length;
+  return [
+    "R",
+    cv.personalInfo.name.length,
+    cv.personalInfo.title,
+    cv.contactInfo.length,
+    cv.experience.length,
+    bulletCount,
+    bulletChars,
+    cv.highlights?.length ?? 0,
+    skillChars,
+    summaryChars,
+    cv.languages.length,
+  ].join(":");
 }
 
 function SegBtn({ icon, label, on, onClick }: { icon?: ReactNode; label: string; on: boolean; onClick: () => void }) {
