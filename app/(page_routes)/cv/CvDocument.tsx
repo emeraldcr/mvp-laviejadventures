@@ -10,9 +10,20 @@ import { color, gap, margin, sheet, text } from "./design";
 
 const mm = (n: number) => `${n}mm`;
 
+const DEFAULT_LABELS = {
+  coreSkills: "Core Skills",
+  education: "Education",
+  languages: "Languages",
+  whatIBring: "What I Bring",
+  summary: "Professional Summary",
+  experience: "Professional Experience",
+  documentType: "Résumé",
+} as const;
+
 export function CvDocument({ cv, sheetRef }: { cv: CvData; sheetRef?: Ref<HTMLElement> }) {
   const { personalInfo, contactInfo, primarySkills, secondarySkills, education, languages, summary, highlights, experience } =
     cv;
+  const L = { ...DEFAULT_LABELS, ...cv.labels };
 
   const sidebarPad: CSSProperties = {
     padding: `${mm(margin.cvTop)} ${mm(margin.cvSideNarrow)} ${mm(margin.cvBottom)}`,
@@ -45,7 +56,7 @@ export function CvDocument({ cv, sheetRef }: { cv: CvData; sheetRef?: Ref<HTMLEl
             </div>
           </div>
 
-          <SidebarHeading title="Core Skills" />
+          <SidebarHeading title={L.coreSkills} />
           <div className="mt-2.5 space-y-2">
             {primarySkills.map((group) => (
               <div key={group.label}>
@@ -61,7 +72,7 @@ export function CvDocument({ cv, sheetRef }: { cv: CvData; sheetRef?: Ref<HTMLEl
             ))}
           </div>
 
-          <SidebarHeading title="Education" />
+          <SidebarHeading title={L.education} />
           <div className={`mt-1.5 ${text.sidebarBody}`}>
             <p className={text.sidebarStrong}>{education.degree}</p>
             <p>{education.school}</p>
@@ -71,7 +82,7 @@ export function CvDocument({ cv, sheetRef }: { cv: CvData; sheetRef?: Ref<HTMLEl
             </p>
           </div>
 
-          <SidebarHeading title="Languages" />
+          <SidebarHeading title={L.languages} />
           <div className={`mt-1.5 ${text.sidebarBody}`}>
             {languages.map((entry) => (
               <p key={entry.language}>
@@ -90,7 +101,7 @@ export function CvDocument({ cv, sheetRef }: { cv: CvData; sheetRef?: Ref<HTMLEl
         <div className="flex h-full flex-col" style={mainPad}>
           {highlights && highlights.length > 0 && (
             <section style={{ marginBottom: mm(gap.afterHighlights) }}>
-              <SectionHeading title="What I Bring" />
+              <SectionHeading title={L.whatIBring} />
               <div className="mt-1.5 grid grid-cols-2 gap-x-3 gap-y-1.5">
                 {highlights.map((h) => (
                   <div key={h.title} className="break-inside-avoid">
@@ -102,7 +113,7 @@ export function CvDocument({ cv, sheetRef }: { cv: CvData; sheetRef?: Ref<HTMLEl
             </section>
           )}
 
-          <SectionHeading title="Professional Summary" />
+          <SectionHeading title={L.summary} />
           <div style={{ marginTop: mm(gap.afterHeading) }}>
             {summary.map((paragraph, index) => (
               <p key={index} className={text.lead} style={index === 0 ? undefined : { marginTop: mm(1.6) }}>
@@ -111,7 +122,7 @@ export function CvDocument({ cv, sheetRef }: { cv: CvData; sheetRef?: Ref<HTMLEl
             ))}
           </div>
 
-          <SectionHeading title="Professional Experience" style={{ marginTop: mm(gap.beforeSection) }} />
+          <SectionHeading title={L.experience} style={{ marginTop: mm(gap.beforeSection) }} />
           <div className="relative flex-1" style={{ marginTop: mm(gap.afterHeading) }}>
             <div className="absolute bottom-1 left-[3px] top-1 w-px bg-zinc-200" />
             <div className="flex flex-col" style={{ rowGap: mm(gap.betweenJobs) }}>
@@ -161,7 +172,7 @@ export function CvDocument({ cv, sheetRef }: { cv: CvData; sheetRef?: Ref<HTMLEl
             <div className="mt-2 flex items-center justify-between gap-2">
               <p className={`truncate ${text.footer}`}>{personalInfo.name}</p>
               <p className={`truncate ${text.footer}`}>{personalInfo.title}</p>
-              <p className={`shrink-0 ${text.footer}`}>Résumé</p>
+              <p className={`shrink-0 ${text.footer}`}>{L.documentType}</p>
             </div>
           </div>
         </div>

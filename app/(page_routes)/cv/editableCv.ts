@@ -22,7 +22,7 @@ import {
   Twitter,
   type LucideIcon,
 } from "lucide-react";
-import type { CvData, SummarySegment } from "./types";
+import type { CvData, CvLabels, SummarySegment } from "./types";
 
 // ── contact icons ──────────────────────────────────────────
 
@@ -114,6 +114,8 @@ export type EditableCv = {
   summary: string[];
   highlights: EditableHighlight[];
   experience: EditableJob[];
+  /** localized section headings — English defaults when unset */
+  labels?: Partial<CvLabels>;
 };
 
 // ── blank rows for the "add" buttons ───────────────────────
@@ -210,6 +212,7 @@ export function toEditable(cv: CvData): EditableCv {
       current: Boolean(j.current),
       bullets: [...j.bullets],
     })),
+    ...(cv.labels ? { labels: { ...cv.labels } } : {}),
   };
 }
 
@@ -265,6 +268,7 @@ export function materialize(ec: EditableCv): CvData {
         ...(j.current ? { current: true } : {}),
         bullets: j.bullets.map(trim).filter(nonEmpty),
       })),
+    ...(ec.labels ? { labels: ec.labels } : {}),
   };
 }
 
@@ -276,6 +280,23 @@ const asStrArr = (v: unknown): string[] =>
   Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
 const asObj = (v: unknown): Record<string, unknown> =>
   v && typeof v === "object" ? (v as Record<string, unknown>) : {};
+
+const LABEL_KEYS: (keyof CvLabels)[] = [
+  "coreSkills",
+  "education",
+  "languages",
+  "whatIBring",
+  "summary",
+  "experience",
+  "documentType",
+];
+
+function parseLabels(v: unknown): Partial<CvLabels> | undefined {
+  const o = asObj(v);
+  const out: Partial<CvLabels> = {};
+  for (const k of LABEL_KEYS) if (typeof o[k] === "string") out[k] = o[k] as string;
+  return Object.keys(out).length > 0 ? out : undefined;
+}
 
 /** Coerce anything (stored JSON, a pasted export) into a valid EditableCv, or
  *  null if it clearly isn't one. Missing / wrong-typed fields become blanks. */
@@ -334,5 +355,6 @@ export function coerceEditable(input: unknown): EditableCv | null {
         bullets: asStrArr(jo.bullets),
       };
     }),
+    ...(parseLabels(o.labels) ? { labels: parseLabels(o.labels) } : {}),
   };
 }

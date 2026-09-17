@@ -1,114 +1,27 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, Minus, Package, Plus, ShoppingCart, Trash2, X } from "lucide-react";
+import { BRANCHES, FREE_SHIPPING_THRESHOLD, money, type Product } from "./data";
 import {
-  ArrowLeft,
-  Banknote,
-  Building2,
-  CheckCircle2,
-  CreditCard,
-  Minus,
-  Package,
-  Plus,
-  ShoppingCart,
-  Smartphone,
-  Store,
-  Trash2,
-  Truck,
-  X,
-} from "lucide-react";
-import {
-  BRANCHES,
-  FREE_SHIPPING_THRESHOLD,
-  money,
-  WHATSAPP,
-  type Product,
-} from "./data";
+  DELIVERY,
+  IBAN,
+  newOrderId,
+  PAYMENT,
+  saveOrder,
+  SINPE_NUMBER,
+  type DeliveryOption,
+  type PaymentOption,
+  type PlacedOrder,
+} from "./order";
 import { PartArt } from "./PartArt";
 
 export type CartLine = { product: Product; qty: number };
 
-type Step = "cart" | "entrega" | "pago" | "listo";
+type Step = "cart" | "entrega" | "pago";
 
-type DeliveryOption = {
-  id: "retiro" | "gam" | "nacional" | "encomienda";
-  label: string;
-  desc: string;
-  price: number;
-  eta: string;
-  icon: typeof Truck;
-};
-
-const DELIVERY: DeliveryOption[] = [
-  {
-    id: "retiro",
-    label: "Retiro en sucursal",
-    desc: "Listo en 2 horas dentro del horario de tienda",
-    price: 0,
-    eta: "Hoy",
-    icon: Store,
-  },
-  {
-    id: "gam",
-    label: "Envío GAM exprés",
-    desc: "Gran Área Metropolitana, 24–48 h",
-    price: 2500,
-    eta: "24–48 h",
-    icon: Truck,
-  },
-  {
-    id: "nacional",
-    label: "Envío nacional · Correos de Costa Rica",
-    desc: "Todo el país, 2–5 días hábiles",
-    price: 3900,
-    eta: "2–5 días",
-    icon: Truck,
-  },
-  {
-    id: "encomienda",
-    label: "Encomienda de bus",
-    desc: "Mismo día a cabeceras de cantón",
-    price: 2000,
-    eta: "Mismo día",
-    icon: Truck,
-  },
-];
-
-type PaymentOption = {
-  id: "sinpe" | "tarjeta" | "transferencia" | "contra";
-  label: string;
-  desc: string;
-  icon: typeof CreditCard;
-};
-
-const PAYMENT: PaymentOption[] = [
-  {
-    id: "sinpe",
-    label: "SINPE Móvil",
-    desc: "Transferí al 8888-8888 (TRAA Repuestos S.A.) y adjuntá el comprobante",
-    icon: Smartphone,
-  },
-  {
-    id: "tarjeta",
-    label: "Tarjeta de crédito o débito",
-    desc: "Visa, Mastercard y AMEX · pago con 3-D Secure",
-    icon: CreditCard,
-  },
-  {
-    id: "transferencia",
-    label: "Transferencia o SINPE a cuenta IBAN",
-    desc: "BAC / Banco Nacional · CR00 0000 0000 0000 0000 00",
-    icon: Building2,
-  },
-  {
-    id: "contra",
-    label: "Pago contra entrega",
-    desc: "Efectivo o datáfono al recibir · solo retiro y GAM",
-    icon: Banknote,
-  },
-];
-
-const STEP_LABELS: Record<Exclude<Step, "listo">, string> = {
+const STEP_LABELS: Record<Step, string> = {
   cart: "Carrito",
   entrega: "Entrega",
   pago: "Pago",
@@ -141,13 +54,8 @@ export function CheckoutDrawer({
     direccion: "",
   });
   const [card, setCard] = useState({ num: "", exp: "", cvc: "" });
-  const [done, setDone] = useState<null | {
-    orderId: string;
-    total: number;
-    delivery: DeliveryOption;
-    payment: PaymentOption;
-  }>(null);
 
+  const router = useRouter();
   const drawerRef = useRef<HTMLDivElement>(null);
 
   const subtotal = useMemo(
@@ -165,10 +73,7 @@ export function CheckoutDrawer({
 
   // reinicia el flujo cada vez que se abre
   useEffect(() => {
-    if (open) {
-      setStep("cart");
-      setDone(null);
-    }
+    if (open) setStep("cart");
   }, [open]);
 
   // "contra entrega" deja de ser válido si cambian a un envío que no lo admite
@@ -210,28 +115,32 @@ export function CheckoutDrawer({
   function confirm() {
     if (!delivery || !paymentId) return;
     const payment = PAYMENT.find((p) => p.id === paymentId)!;
-    const orderId = `TRAA-${Date.now().toString(36).toUpperCase().slice(-6)}`;
-    const text = encodeURIComponent(
-      [
-        `Pedido ${orderId} — TRAA Repuestos (demo)`,
-        "",
-        ...lines.map((l) => `• ${l.qty}× ${l.product.name} [${l.product.id}] — ${money(l.product.price * l.qty)}`),
-        "",
-        `Subtotal: ${money(subtotal)}`,
-        `Entrega: ${delivery.label}${shippingFree ? " (gratis)" : ` — ${money(shipping)}`}`,
-        delivery.id === "retiro"
-          ? `Sucursal: ${branch}`
-          : `Envío a: ${addr.nombre}, ${addr.direccion}, ${addr.canton}, ${addr.provincia} — tel ${addr.telefono}`,
-        `Pago: ${payment.label}`,
-        `TOTAL: ${money(total)}`,
-      ].join("\n"),
-    );
-    setDone({ orderId, total, delivery, payment });
-    setStep("listo");
+    const order: PlacedOrder = {
+      id: newOrderId(),
+      createdAt: new Date().toISOString(),
+      lines: lines.map((l) => ({
+        id: l.product.id,
+        name: l.product.name,
+        brand: l.product.brand,
+        category: l.product.category,
+        qty: l.qty,
+        unit: l.product.price,
+      })),
+      subtotal,
+      shipping,
+      shippingFree,
+      total,
+      delivery: { id: delivery.id, label: delivery.label, eta: delivery.eta },
+      payment: { id: payment.id, label: payment.label },
+      ...(delivery.id === "retiro" ? { branch } : { address: { ...addr } }),
+      ...(paymentId === "tarjeta"
+        ? { card4: card.num.replace(/D/g, "").slice(-4) }
+        : {}),
+    };
+    saveOrder(order);
     onClear();
-    if (typeof window !== "undefined") {
-      window.open(`https://wa.me/${WHATSAPP}?text=${text}`, "_blank", "noopener,noreferrer");
-    }
+    onClose();
+    router.push(`/traa/pedido?id=${order.id}`);
   }
 
   return (
@@ -245,7 +154,7 @@ export function CheckoutDrawer({
         aria-label="Carrito y pago"
       >
         <div className="tr-drawer-head">
-          {step !== "cart" && step !== "listo" && (
+          {step !== "cart" && (
             <button
               className="tr-x"
               onClick={() => setStep(step === "pago" ? "entrega" : "cart")}
@@ -254,14 +163,13 @@ export function CheckoutDrawer({
               <ArrowLeft size={16} />
             </button>
           )}
-          <h2>{step === "listo" ? "Pedido confirmado" : "Tu pedido"}</h2>
+          <h2>Tu pedido</h2>
           <button className="tr-x" onClick={onClose} aria-label="Cerrar">
             <X size={16} />
           </button>
         </div>
 
-        {step !== "listo" && (
-          <div className="tr-steps" aria-hidden="true">
+        <div className="tr-steps" aria-hidden="true">
             {(["cart", "entrega", "pago"] as const).map((s, i) => {
               const order = ["cart", "entrega", "pago"];
               const cur = order.indexOf(step);
@@ -274,9 +182,8 @@ export function CheckoutDrawer({
                   {i < 2 ? "  ·" : ""}
                 </span>
               );
-            })}
-          </div>
-        )}
+          })}
+        </div>
 
         <div className="tr-drawer-body">
           {/* ---------- PASO CARRITO ---------- */}
@@ -487,44 +394,20 @@ export function CheckoutDrawer({
 
               {paymentId === "sinpe" && (
                 <p className="tr-hint">
-                  Al confirmar te pasamos el detalle por WhatsApp. Hacé el SINPE Móvil al
-                  <b> 8888-8888</b> por {money(total)} y respondé con la foto del comprobante;
-                  despachamos apenas se acredita.
+                  Al confirmar abrimos el comprobante del pedido con el número SINPE y el monto
+                  exacto. Hacé el SINPE Móvil al <b>{SINPE_NUMBER}</b> por {money(total)} y adjuntá
+                  la foto desde esa misma pantalla; despachamos apenas se acredita.
                 </p>
               )}
               {paymentId === "transferencia" && (
                 <p className="tr-hint">
-                  Cuenta IBAN <b>CR00 0000 0000 0000 0000 00</b> — BAC / Banco Nacional, a
-                  nombre de TRAA Repuestos S.A. Enviá el comprobante por WhatsApp al confirmar.
+                  Cuenta IBAN <b>{IBAN}</b> — BAC / Banco Nacional, a nombre de TRAA Repuestos
+                  S.A. Al confirmar te mostramos el detalle para adjuntar el comprobante.
                 </p>
               )}
             </>
           )}
 
-          {/* ---------- PASO LISTO ---------- */}
-          {step === "listo" && done && (
-            <div className="tr-success">
-              <div className="tr-check">
-                <CheckCircle2 size={30} />
-              </div>
-              <h3>¡Gracias por tu compra!</h3>
-              <div className="tr-order-id">{done.orderId}</div>
-              <dl>
-                <dt>Total</dt>
-                <dd>{money(done.total)}</dd>
-                <dt>Entrega</dt>
-                <dd>
-                  {done.delivery.label} · {done.delivery.eta}
-                </dd>
-                <dt>Pago</dt>
-                <dd>{done.payment.label}</dd>
-              </dl>
-              <p className="tr-hint" style={{ marginTop: 16 }}>
-                Te abrimos WhatsApp con el resumen para enviar el comprobante. Esto es una
-                demostración: no se procesó ningún cobro real.
-              </p>
-            </div>
-          )}
         </div>
 
         {/* ---------- PIE ---------- */}
@@ -604,12 +487,6 @@ export function CheckoutDrawer({
                 Demo — no se realiza ningún cobro real.
               </p>
             </>
-          )}
-
-          {step === "listo" && (
-            <button className="tr-btn tr-btn--ghost tr-btn--block" onClick={onClose}>
-              Seguir comprando
-            </button>
           )}
         </div>
       </div>

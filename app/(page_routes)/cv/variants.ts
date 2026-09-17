@@ -134,6 +134,14 @@ export const cvVariants: CvVariant[] = [
     when: "Full-stack web roles on a React/Next + Node/NestJS stack — testing, clean architecture, and AI features.",
     focus: ["React / Next.js", "Node.js / NestJS", "Testing + CI/CD", "LLM / agentic features"],
   },
+  {
+    slug: "oscar-cocinero",
+    path: "/cv/oscar-cocinero",
+    name: "Oscar Vindas · Cocinero",
+    role: "Cocinero · Gastronomía",
+    when: "CV en español para Oscar Steve Vindas Campos — puesto de cocinero / asistente de cocina en hotelería y restaurantes.",
+    focus: ["Cocina", "Manipulación de Alimentos", "Higiene alimentaria", "Inglés básico"],
+  },
 ];
 
 export const cvVariantBySlug = (slug: string): CvVariant | undefined =>

@@ -39,6 +39,20 @@ export type Highlight = {
   detail: string;
 };
 
+/** Section headings on the printed sheet. Optional — variants leave it unset and
+ *  get the English defaults; a localized variant (e.g. a Spanish CV) overrides
+ *  any subset of them. Defaults live in CvDocument. */
+export type CvLabels = {
+  coreSkills: string;
+  education: string;
+  languages: string;
+  whatIBring: string;
+  summary: string;
+  experience: string;
+  /** Footer document type — "Résumé". */
+  documentType: string;
+};
+
 export type CvData = {
   personalInfo: { name: string; title: string };
   contactInfo: readonly ContactEntry[];
@@ -55,4 +69,6 @@ export type CvData = {
   summary: readonly SummarySegment[][];
   highlights?: readonly Highlight[];
   experience: readonly ExperienceEntry[];
+  /** Localized section headings — English defaults when unset. */
+  labels?: Partial<CvLabels>;
 };

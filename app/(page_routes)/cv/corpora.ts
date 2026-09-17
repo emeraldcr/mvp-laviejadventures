@@ -20,6 +20,7 @@ import * as java from "./java/constants";
 import * as elasticsearch from "./elasticsearch/constants";
 import * as electricAir from "./electric-air/constants";
 import * as designli from "./designli/constants";
+import * as oscarCocinero from "./oscar-cocinero/constants";
 
 type CvConstantsModule = {
   personalInfo: CvData["personalInfo"];
@@ -55,6 +56,7 @@ export const VARIANT_CV: Record<string, CvData> = {
   elasticsearch: asCv(elasticsearch),
   "electric-air": asCv(electricAir),
   designli: asCv(designli),
+  "oscar-cocinero": asCv(oscarCocinero),
 };
 
 export const VARIANT_CORPUS: Record<string, string> = {};

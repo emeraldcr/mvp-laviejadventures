@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   BadgePercent,
+  BarChart3,
   Boxes,
   Check,
   CreditCard,
@@ -125,6 +126,7 @@ export default function TraaPitchPage() {
             tarjeta y envíos a todo el país.
           </span>
           <a href="#propuesta">¿Por qué?</a>
+          <Link href="/traa/panel">Panel interno</Link>
         </div>
       </div>
 
@@ -256,7 +258,7 @@ export default function TraaPitchPage() {
               {
                 icon: CreditCard,
                 t: "Pago en línea",
-                d: "SINPE Móvil, tarjeta con 3-D Secure, transferencia a IBAN y contra entrega. Comprobante por WhatsApp.",
+                d: "SINPE Móvil, tarjeta con 3-D Secure, transferencia a IBAN y contra entrega. El comprobante queda en pantalla y en el correo, sin salir del sitio.",
               },
               {
                 icon: Truck,
@@ -272,6 +274,11 @@ export default function TraaPitchPage() {
                 icon: Timer,
                 t: "Checkout en 60 segundos",
                 d: "Sin crear cuenta. Tres pasos: carrito, entrega, pago. El asesor entra solo cuando hace falta.",
+              },
+              {
+                icon: BarChart3,
+                t: "Panel de ventas y despacho",
+                d: "Cada pedido cae en un tablero: qué se vende y con qué margen, qué hay que sacar hoy y qué se está atrasando.",
               },
             ].map((f) => (
               <div className="tr-feat" key={f.t}>
@@ -317,6 +324,9 @@ export default function TraaPitchPage() {
             <button className="tr-btn tr-btn--ghost" onClick={openCheckoutDemo}>
               <ShoppingCart size={15} /> Probar el checkout
             </button>
+            <Link className="tr-btn tr-btn--ghost" href="/traa/panel">
+              <BarChart3 size={15} /> Ver el panel interno
+            </Link>
           </div>
           <p className="tr-note">
             * Estimación ilustrativa para el pitch. Cifras y branding con fines de demostración; no
@@ -338,6 +348,7 @@ export default function TraaPitchPage() {
           <div className="tr-foot-links">
             <a href="#top">Catálogo</a>
             <a href="#propuesta">La propuesta</a>
+            <Link href="/traa/panel">Panel interno</Link>
             <a href={`https://wa.me/${WHATSAPP}`} target="_blank" rel="noopener noreferrer">
               WhatsApp
             </a>
