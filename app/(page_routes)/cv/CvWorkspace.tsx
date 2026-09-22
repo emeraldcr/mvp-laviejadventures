@@ -10,7 +10,9 @@ import {
   ChevronRight,
   ClipboardCopy,
   FileText,
+  ExternalLink,
   Home,
+  ListChecks,
   Mail,
   Pencil,
   RotateCcw,
@@ -50,6 +52,12 @@ const JD_STORAGE_KEY = "cv:jd-audit";
 const MIN_JD_LEN = 30;
 
 const today = () => new Date().toISOString().slice(0, 10);
+
+function applicationStateForVariant(variant: CvVariant, apps: UseApplications): ApplicationState {
+  const state = apps.get(variant.slug);
+  const hasLocalState = Object.prototype.hasOwnProperty.call(apps.raw, variant.slug);
+  return variant.archivedByDefault && !hasLocalState ? { ...state, status: "archived" } : state;
+}
 
 function clampInt(raw: string, lo: number, hi: number): number {
   const n = Math.round(Number(raw));
@@ -134,6 +142,7 @@ export function CvWorkspace({ activeSlug, cv: baseCv }: { activeSlug: string; cv
                 audit={audit}
                 edited={editApi.isEdited}
                 editing={editing}
+                variant={variant}
                 onToggleEdit={() => setEditing((v) => !v)}
                 onOpenAudit={() => setAuditOpen(true)}
                 onPrint={requestPrint}
@@ -158,6 +167,7 @@ function WorkspaceNav({
   audit,
   edited,
   editing,
+  variant,
   onToggleEdit,
   onOpenAudit,
   onPrint,
@@ -165,6 +175,7 @@ function WorkspaceNav({
   audit: AuditResult | null;
   edited: boolean;
   editing: boolean;
+  variant: CvVariant;
   onToggleEdit: () => void;
   onOpenAudit: () => void;
   onPrint: () => void;
@@ -206,9 +217,25 @@ function WorkspaceNav({
         <FileText size={11} />
         Print
       </button>
+      {variant.jobUrl && (
+        <a
+          href={variant.jobUrl}
+          target="_blank"
+          rel="noreferrer"
+          title={`Open the ${variant.company ?? "company"} application`}
+          className={`${btn} border-teal-600 bg-teal-600 text-white hover:bg-teal-700`}
+        >
+          <ExternalLink size={11} />
+          Open job
+        </a>
+      )}
       <Link href="/allan" title="Portfolio" className={`${btn} ${plain}`}>
         <Waypoints size={11} />
         Portfolio
+      </Link>
+      <Link href="/cv/java-react-jobs" title="100 Java and React applications" className={`${btn} ${plain}`}>
+        <ListChecks size={11} />
+        100 jobs
       </Link>
       <Link href="/" title="Home" className={`${btn} ${plain}`}>
         <Home size={11} />
@@ -261,7 +288,7 @@ function VariantNav({
   const tally = useMemo(() => {
     const t = {} as Record<ApplicationStatus, number>;
     for (const v of cvVariants) {
-      const s = apps.get(v.slug).status;
+      const s = applicationStateForVariant(v, apps).status;
       t[s] = (t[s] ?? 0) + 1;
     }
     return t;
@@ -272,7 +299,7 @@ function VariantNav({
     const base = cvVariants.map((v, i) => ({
       v,
       i,
-      st: apps.get(v.slug),
+      st: applicationStateForVariant(v, apps),
       match: jdReady ? matchScores[v.slug] ?? 0 : null,
     }));
 
@@ -306,7 +333,10 @@ function VariantNav({
   const filtersOn = view.status !== "all" || view.emailOnly || view.query.trim() !== "";
   const progressPills = STATUS_ORDER.filter((s) => s !== "draft" && (tally[s] ?? 0) > 0);
   const archivedCount = useMemo(
-    () => cvVariants.filter((v) => v.slug !== activeSlug && apps.get(v.slug).status === "archived").length,
+    () =>
+      cvVariants.filter(
+        (v) => v.slug !== activeSlug && applicationStateForVariant(v, apps).status === "archived",
+      ).length,
     [apps, activeSlug],
   );
 

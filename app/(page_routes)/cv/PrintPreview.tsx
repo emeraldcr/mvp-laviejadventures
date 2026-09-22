@@ -148,6 +148,7 @@ function resumeKey(cv: CvData): string {
   for (const para of cv.summary) for (const seg of para) summaryChars += seg.text.length;
   return [
     "R",
+    cv.density ?? "standard",
     cv.personalInfo.name.length,
     cv.personalInfo.title,
     cv.contactInfo.length,

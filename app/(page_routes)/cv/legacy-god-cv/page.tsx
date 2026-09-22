@@ -1,9 +1,8 @@
 "use client";
 
-import { CvWorkspace } from "./CvWorkspace";
+import { CvWorkspace } from "../CvWorkspace";
 import {
   contactInfo,
-  density,
   education,
   experience,
   highlights,
@@ -12,14 +11,13 @@ import {
   primarySkills,
   secondarySkills,
   summary,
-} from "./java-react-2026/constants";
+} from "../constants";
 
-export default function CvPage() {
+export default function LegacyGodCvPage() {
   return (
     <CvWorkspace
-      activeSlug=""
+      activeSlug="legacy-god-cv"
       cv={{
-        density,
         personalInfo,
         contactInfo,
         primarySkills,
@@ -33,3 +31,4 @@ export default function CvPage() {
     />
   );
 }
+

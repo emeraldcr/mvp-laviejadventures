@@ -13,6 +13,9 @@ import {
   resolveState,
   saveApps,
 } from "./applications";
+import { cvVariants } from "./variants";
+
+const JAVA_REACT_CAMPAIGN_MIGRATION_KEY = "cv:campaign:java-react-2026:v1";
 
 export type UseApplications = {
   /** false until the first client-side read has run. */
@@ -28,7 +31,41 @@ export function useApplications(): UseApplications {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    setMap(loadApps());
+    const loaded = loadApps();
+    try {
+      if (!window.localStorage.getItem(JAVA_REACT_CAMPAIGN_MIGRATION_KEY)) {
+        const migrated: AppsMap = { ...loaded };
+        const migratedOn = new Date().toISOString();
+
+        // The old base résumé lived at the empty slug. Preserve any tracker
+        // notes under its archived replacement, then leave the new master clean.
+        if (migrated[""]) {
+          migrated["legacy-god-cv"] = {
+            ...resolveState(migrated[""]),
+            status: "archived",
+            updatedOn: migratedOn,
+          };
+          delete migrated[""];
+        }
+
+        for (const variant of cvVariants) {
+          if (!variant.archivedByDefault) continue;
+          migrated[variant.slug] = {
+            ...resolveState(migrated[variant.slug]),
+            status: "archived",
+            updatedOn: migratedOn,
+          };
+        }
+
+        saveApps(migrated);
+        window.localStorage.setItem(JAVA_REACT_CAMPAIGN_MIGRATION_KEY, migratedOn);
+        setMap(migrated);
+      } else {
+        setMap(loaded);
+      }
+    } catch {
+      setMap(loaded);
+    }
     setReady(true);
   }, []);
 

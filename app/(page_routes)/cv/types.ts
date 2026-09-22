@@ -54,6 +54,8 @@ export type CvLabels = {
 };
 
 export type CvData = {
+  /** Optional denser A4 treatment for content-heavy, single-page variants. */
+  density?: "standard" | "compact";
   personalInfo: { name: string; title: string };
   contactInfo: readonly ContactEntry[];
   primarySkills: readonly SkillGroup[];

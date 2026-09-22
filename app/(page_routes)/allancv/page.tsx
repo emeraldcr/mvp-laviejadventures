@@ -6,6 +6,7 @@ import { CvDocument } from "../cv/CvDocument";
 import { A4, PRINT_CSS } from "../cv/design";
 import {
   contactInfo,
+  density,
   education,
   experience,
   highlights,
@@ -14,16 +15,17 @@ import {
   primarySkills,
   secondarySkills,
   summary,
-} from "../cv/constants";
+} from "../cv/java-react-2026/constants";
 import type { CvData } from "../cv/types";
 
-// Read-only presentation of the "God CV" — the exact A4 résumé sheet from /cv,
+// Read-only presentation of the Java + React 2026 master résumé from /cv,
 // stripped of all workspace chrome (no editor, variant switcher, JD audit or
 // application tracker). The whole sheet is scaled to fit the viewport on screen
 // so it reads as one page; it prints / saves to PDF as one clean A4 via the
 // shared print stylesheet.
 
 const cv: CvData = {
+  density,
   personalInfo,
   contactInfo,
   primarySkills,

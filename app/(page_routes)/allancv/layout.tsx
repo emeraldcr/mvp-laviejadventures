@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Allan Rojas — CV",
+  title: "Allan Rojas — Senior Java + React Engineer",
   description:
-    "Senior Full-Stack Software Engineer — 11+ years shipping production software across Java/Spring Boot, TypeScript/React, Python, C#/.NET and AWS.",
+    "Senior Full-Stack Engineer — 11+ years shipping Java/Spring Boot and React/TypeScript systems on AWS.",
 };
 
 export default function AllanCvLayout({ children }: { children: React.ReactNode }) {

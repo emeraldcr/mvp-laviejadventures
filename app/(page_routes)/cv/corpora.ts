@@ -11,7 +11,12 @@
 import { buildCorpus } from "./audit";
 import type { CvData } from "./types";
 
-import * as base from "./constants";
+import * as legacyGodCv from "./constants";
+import * as base from "./java-react-2026/constants";
+import {
+  buildJavaReactCampaignCv,
+  JAVA_REACT_CAMPAIGN_JOB_KEYS,
+} from "./java-react-2026/jobs";
 import * as agenticAi from "./agentic-ai/constants";
 import * as pythonReactLead from "./python-react-lead/constants";
 import * as pythonReactAws from "./python-react-aws/constants";
@@ -23,6 +28,7 @@ import * as designli from "./designli/constants";
 import * as oscarCocinero from "./oscar-cocinero/constants";
 
 type CvConstantsModule = {
+  density?: CvData["density"];
   personalInfo: CvData["personalInfo"];
   contactInfo: CvData["contactInfo"];
   primarySkills: CvData["primarySkills"];
@@ -35,6 +41,7 @@ type CvConstantsModule = {
 };
 
 const asCv = (m: CvConstantsModule): CvData => ({
+  density: m.density,
   personalInfo: m.personalInfo,
   contactInfo: m.contactInfo,
   primarySkills: m.primarySkills,
@@ -48,6 +55,7 @@ const asCv = (m: CvConstantsModule): CvData => ({
 
 export const VARIANT_CV: Record<string, CvData> = {
   "": asCv(base),
+  "legacy-god-cv": asCv(legacyGodCv),
   "agentic-ai": asCv(agenticAi),
   "python-react-lead": asCv(pythonReactLead),
   "python-react-aws": asCv(pythonReactAws),
@@ -58,6 +66,10 @@ export const VARIANT_CV: Record<string, CvData> = {
   designli: asCv(designli),
   "oscar-cocinero": asCv(oscarCocinero),
 };
+
+for (const key of JAVA_REACT_CAMPAIGN_JOB_KEYS) {
+  VARIANT_CV[`java-react-2026/${key}`] = buildJavaReactCampaignCv(key);
+}
 
 export const VARIANT_CORPUS: Record<string, string> = {};
 for (const [slug, cv] of Object.entries(VARIANT_CV)) {

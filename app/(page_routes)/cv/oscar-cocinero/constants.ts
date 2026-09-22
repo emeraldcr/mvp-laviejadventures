@@ -8,7 +8,7 @@
 // correo quedan como marcador — se completan en el editor de /cv.
 // ─────────────────────────────────────────────────────────────
 
-import { GraduationCap, Mail, MapPin, Phone } from "lucide-react";
+import { Mail, MapPin, Phone } from "lucide-react";
 import type { ContactEntry, CvData, CvLabels, SummarySegment } from "../types";
 
 export const labels: Partial<CvLabels> = {
@@ -27,51 +27,25 @@ export const personalInfo = {
 
 export const contactInfo: ContactEntry[] = [
   { icon: MapPin, text: "San Carlos, Alajuela · Costa Rica" },
-  { icon: Phone, text: "Teléfono — por completar" },
-  { icon: Mail, text: "Correo — por completar" },
-  { icon: GraduationCap, text: "Manipulación de Alimentos (certificado)" },
+  { icon: Phone, text: "Teléfono por completar" },
+  { icon: Mail, text: "Correo por completar" },
 ];
 
 export const primarySkills = [
   {
-    label: "Cocina",
-    items: [
-      "Preparación y cocción de alimentos",
-      "Asistencia de cocina",
-      "Mise en place / alistado de ingredientes",
-      "Emplatado y montaje de platos",
-      "Apoyo en línea durante el servicio",
-    ],
+    label: "Cocina y servicio",
+    items: ["Preparación y cocción", "Mise en place", "Emplatado", "Apoyo en línea"],
   },
   {
-    label: "Higiene y seguridad alimentaria",
-    items: [
-      "Manipulación de Alimentos (certificado)",
-      "Buenas prácticas de higiene",
-      "Limpieza y sanitización del área",
-      "Rotación y control de producto",
-    ],
-  },
-  {
-    label: "Otras",
-    items: [
-      "Atención al cliente",
-      "Acomodo de mercadería / góndolas",
-      "Herramientas de cómputo básicas (INA · TIC)",
-    ],
+    label: "Operación e higiene",
+    items: ["Manipulación de alimentos", "Limpieza y orden", "Rotación de producto", "Atención al cliente"],
   },
 ] as const;
 
 export const secondarySkills = [
   {
-    label: "Aptitudes",
-    items: [
-      "Trabajo en equipo",
-      "Responsabilidad y puntualidad",
-      "Disposición para aprender",
-      "Trabajo bajo presión",
-      "Orden y limpieza",
-    ],
+    label: "Fortalezas",
+    items: ["Trabajo en equipo", "Responsabilidad", "Puntualidad", "Adaptación al ritmo del servicio"],
   },
 ];
 
@@ -90,21 +64,9 @@ export const languages = [
 
 export const summary: SummarySegment[][] = [
   [
-    { text: "Cocinero", bold: true, accent: true },
-    { text: " con experiencia en la " },
-    { text: "preparación y cocción de alimentos", bold: true },
-    { text: " en el sector hotelero, con certificado en " },
-    { text: "Manipulación de Alimentos", bold: true },
-    { text: " y formación técnica en el INA." },
-  ],
-  [
-    { text: "Apoyo en " },
-    { text: "mise en place", bold: true },
-    { text: ", montaje de estaciones y servicio en línea, aplicando " },
-    { text: "buenas prácticas de higiene", bold: true },
-    { text: " y orden. Persona " },
-    { text: "responsable, puntual y con disposición para aprender", bold: true },
-    { text: ", cómoda trabajando en equipo y bajo presión." },
+    { text: "Cocinero con experiencia reciente en hotelería, " },
+    { text: "preparación de alimentos y apoyo durante el servicio", bold: true, accent: true },
+    { text: ". Cuenta con certificado de Manipulación de Alimentos y formación técnica del INA. Se distingue por su responsabilidad, orden y disposición para colaborar con el equipo de cocina." },
   ],
 ];
 
@@ -121,11 +83,10 @@ export const experience: {
     company: "Hotel Río Guanacaste",
     period: "Ene – Set 2026",
     location: "Guanacaste, Costa Rica",
-    current: true,
     bullets: [
-      "Preparación y cocción de platos en la línea de cocina del hotel, apoyando el servicio diario de alimentos.",
-      "Alistado de ingredientes (mise en place), porcionado y montaje de las estaciones antes del servicio.",
-      "Aplicación de buenas prácticas de manipulación de alimentos, higiene y limpieza del área de trabajo.",
+      "Preparación y cocción de alimentos para el servicio diario del hotel.",
+      "Alistado de ingredientes, porcionado y preparación de estaciones antes del servicio.",
+      "Limpieza del área y manipulación higiénica de los alimentos.",
     ],
   },
   {
@@ -134,9 +95,8 @@ export const experience: {
     period: "Mar – Set 2024",
     location: "San Carlos, Costa Rica",
     bullets: [
-      "Surtido y acomodo de mercadería en góndolas, manteniendo la exhibición ordenada y abastecida.",
-      "Control de fechas de vencimiento y rotación de producto.",
-      "Atención y orientación a los clientes en sala.",
+      "Acomodo y reposición de mercadería, con control de fechas y rotación de producto.",
+      "Mantenimiento del orden en góndolas y atención a clientes en sala.",
     ],
   },
 ];

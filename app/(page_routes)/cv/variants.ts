@@ -1,4 +1,6 @@
 // ─────────────────────────────────────────────────────────────
+
+import { JAVA_REACT_CAMPAIGN_JOB_KEYS, JAVA_REACT_CAMPAIGN_JOBS } from "./java-react-2026/jobs";
 // Résumé variant registry — single source of truth for the sidebar.
 //
 // To add a new variant:
@@ -26,6 +28,9 @@ export type CvVariant = {
   when: string;
   /** Keywords this variant deliberately leans into (shown as tags). */
   focus: string[];
+  /** Hide this legacy variant until "Show archived" is enabled. A locally
+   *  saved pipeline state always wins, so it can be unarchived normally. */
+  archivedByDefault?: boolean;
 
   // ── application metadata (optional) — feeds the auto cover letter + tracker ──
   /** Role title exactly as written in the posting (defaults to `role`). */
@@ -54,10 +59,36 @@ export const cvVariants: CvVariant[] = [
   {
     slug: "",
     path: "/cv",
-    name: "Full-Stack · God CV",
+    name: "Java + React · 2026 master",
+    role: "Senior Full-Stack Engineer · Java / React",
+    when: "One clean master résumé for the 10-role Java + React campaign. Use it when an application does not need a company-specific version.",
+    focus: ["Java · Spring Boot", "React · Next.js · TypeScript", "AWS · Kafka · PostgreSQL", "11+ years · C1 English"],
+    tailoredOn: "2026-09-20",
+  },
+  ...JAVA_REACT_CAMPAIGN_JOB_KEYS.map((key): CvVariant => {
+    const job = JAVA_REACT_CAMPAIGN_JOBS[key];
+    return {
+      slug: `java-react-2026/${job.key}`,
+      path: `/cv/java-react-2026/${job.key}`,
+      name: job.name,
+      role: job.resumeTitle,
+      company: job.company,
+      when: job.when,
+      focus: [...job.focus],
+      postingTitle: job.postingTitle,
+      location: job.location,
+      jobUrl: job.jobUrl,
+      tailoredOn: "2026-09-20",
+    };
+  }),
+  {
+    slug: "legacy-god-cv",
+    path: "/cv/legacy-god-cv",
+    name: "Archived · Full-Stack God CV",
     role: "Senior Full-Stack Software Engineer",
-    when: "The everything CV — feature-first, every stack and tool from the tailored variants surfaced in one sheet. Default when the role is broad or the JD spans multiple stacks.",
-    focus: ["Java · TS/React · Python · C# · PHP", "AI / LLM · agents · RAG", "AWS · Azure · GCP", "Feature-first"],
+    when: "Archived snapshot of the previous broad, every-stack résumé.",
+    focus: ["Java · TS/React · Python · C# · PHP", "AI / LLM", "AWS · Azure · GCP", "Legacy"],
+    archivedByDefault: true,
   },
   {
     slug: "agentic-ai",
@@ -66,6 +97,7 @@ export const cvVariants: CvVariant[] = [
     role: "Agentic AI Engineer",
     when: "AI / agentic engineering roles — LLM apps, RAG, and tool-calling systems in production.",
     focus: ["LLMs (OpenAI / Claude)", "RAG", "Agents / tool-calling", "Python · AWS · TS"],
+    archivedByDefault: true,
   },
   {
     slug: "python-react-lead",
@@ -79,6 +111,7 @@ export const cvVariants: CvVariant[] = [
     location: "LATAM · 100% Remote",
     contactEmail: "cristina.caetano@zazmic.ai",
     tailoredOn: "2026-08-30",
+    archivedByDefault: true,
   },
   {
     slug: "python-react-aws",
@@ -91,6 +124,7 @@ export const cvVariants: CvVariant[] = [
     postingTitle: "Full Stack Developer — Python / React (AWS Cloud)",
     location: "Remote",
     tailoredOn: "2026-08-30",
+    archivedByDefault: true,
   },
   {
     slug: "python-dotnet",
@@ -99,6 +133,7 @@ export const cvVariants: CvVariant[] = [
     role: "Senior Full-Stack Software Engineer",
     when: "Full-stack roles on a Python/FastAPI + C#/.NET 8 stack with React 19 and Azure.",
     focus: ["Python / FastAPI", "C# / .NET 8", "React 19 · PostgreSQL", "Azure"],
+    archivedByDefault: true,
   },
   {
     slug: "java",
@@ -107,6 +142,7 @@ export const cvVariants: CvVariant[] = [
     role: "Java Backend Engineer",
     when: "Backend-heavy Core Java roles — internal developer platforms, JVM performance tuning, and large-scale distributed systems.",
     focus: ["Core Java / JVM", "Concurrency", "Spring Boot · gRPC", "AWS · Kubernetes"],
+    archivedByDefault: true,
   },
   {
     slug: "elasticsearch",
@@ -115,6 +151,7 @@ export const cvVariants: CvVariant[] = [
     role: "Elasticsearch & Node.js Engineer",
     when: "Search, observability and Node backend roles.",
     focus: ["Elasticsearch", "Query DSL", "Node.js", "Datadog / APM"],
+    archivedByDefault: true,
   },
   {
     slug: "electric-air",
@@ -124,6 +161,7 @@ export const cvVariants: CvVariant[] = [
     company: "Electric Air",
     when: "Product full-stack roles on a Python/Django + React (Remix) stack — startup, end-to-end ownership.",
     focus: ["Python / Django", "React / Remix", "PostgreSQL", "AI integration"],
+    archivedByDefault: true,
   },
   {
     slug: "designli",
@@ -133,6 +171,7 @@ export const cvVariants: CvVariant[] = [
     company: "Designli",
     when: "Full-stack web roles on a React/Next + Node/NestJS stack — testing, clean architecture, and AI features.",
     focus: ["React / Next.js", "Node.js / NestJS", "Testing + CI/CD", "LLM / agentic features"],
+    archivedByDefault: true,
   },
   {
     slug: "oscar-cocinero",
@@ -141,6 +180,7 @@ export const cvVariants: CvVariant[] = [
     role: "Cocinero · Gastronomía",
     when: "CV en español para Oscar Steve Vindas Campos — puesto de cocinero / asistente de cocina en hotelería y restaurantes.",
     focus: ["Cocina", "Manipulación de Alimentos", "Higiene alimentaria", "Inglés básico"],
+    archivedByDefault: true,
   },
 ];
 
