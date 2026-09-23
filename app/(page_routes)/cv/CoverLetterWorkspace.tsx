@@ -3,16 +3,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, ClipboardCheck, ClipboardCopy, FileText, Printer, RotateCcw, Sparkles } from "lucide-react";
-import { PRINT_CSS } from "../design";
-import { PrintPreview } from "../PrintPreview";
-import { cvVariantBySlug, cvVariants } from "../variants";
-import { VARIANT_CV } from "../corpora";
-import { buildCoverLetter } from "./build";
-import { parseCompanyInfo } from "./parse";
-import { lintLetter } from "./lint";
-import { LetterLint } from "./LetterLint";
-import { emptyDraft, loadDraft, saveDraft, type ClDraft } from "./store";
-import { TONE_LABEL, TONE_ORDER, type CompanyInfo, type LintContext, type Tone } from "./types";
+import { PRINT_CSS } from "./design";
+import { PrintPreview } from "./PrintPreview";
+import { cvVariantBySlug, cvVariants } from "./variants";
+import { VARIANT_CV } from "./cv-data";
+import { buildCoverLetter } from "./cover-letter-build";
+import { parseCompanyInfo } from "./cover-letter-parse";
+import { lintLetter } from "./cover-letter-lint";
+import { LetterLint } from "./CoverLetterLint";
+import { emptyDraft, loadDraft, saveDraft, type ClDraft } from "./cover-letter-store";
+import { TONE_LABEL, TONE_ORDER, type CompanyInfo, type LintContext, type Tone } from "./cover-letter-types";
 
 const knownSlug = (s: string | null): string =>
   s && cvVariants.some((v) => v.slug === s) ? s : "";

@@ -2,7 +2,7 @@
 // standalone /cv/cover-letter editor share one localStorage blob per variant so
 // edits in one show up in the other.
 
-import type { Tone } from "./types";
+import type { Tone } from "./cover-letter-types";
 
 export type ClDraft = {
   /** Pasted company blurb / job posting (overrides the variant metadata). */

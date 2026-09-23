@@ -1,4 +1,4 @@
-import type { ApplicationState, ApplicationStatus } from "../applications";
+import type { ApplicationState, ApplicationStatus } from "./applications";
 
 export type JobLead = {
   id: string;

@@ -1,5 +1,5 @@
 import type { CSSProperties, Ref } from "react";
-import { color, margin, sheet, text } from "../design";
+import { color, margin, sheet, text } from "./design";
 
 // The printable cover letter — one physical A4 page, styled from ../design so it
 // shares the résumé's visual language. Consumes the plain-text draft produced by

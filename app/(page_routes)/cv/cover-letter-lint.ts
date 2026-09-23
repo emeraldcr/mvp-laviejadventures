@@ -15,7 +15,7 @@ import type {
   LintReport,
   ManualRule,
   Severity,
-} from "./types";
+} from "./cover-letter-types";
 
 // ── phrase lists (shared with build.ts) ─────────────────────
 

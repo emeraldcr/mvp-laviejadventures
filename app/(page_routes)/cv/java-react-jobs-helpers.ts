@@ -1,5 +1,5 @@
-import type { ApplicationState } from "../applications";
-import type { JobLead, JobRowModel, JobStats, StatusFilter } from "./types";
+import type { ApplicationState } from "./applications";
+import type { JobLead, JobRowModel, JobStats, StatusFilter } from "./java-react-jobs-types";
 
 type GetApplication = (slug: string) => ApplicationState;
 

@@ -2,7 +2,7 @@
 // job posting or notes blob. Anything missed just falls back to the active
 // variant's own metadata when the letter is built.
 
-import type { CompanyInfo } from "./types";
+import type { CompanyInfo } from "./cover-letter-types";
 
 const collapse = (s: string) => s.replace(/\s+/g, " ").trim();
 const stripEdges = (s: string) => s.replace(/^[\s"'([]+|[\s"')\].,;:]+$/g, "");

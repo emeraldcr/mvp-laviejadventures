@@ -1,6 +1,6 @@
-import { buildContactInfo, buildLanguages, NAME } from "../definitions/identity";
+import { buildContactInfo, buildLanguages, NAME } from "./cv-definition-identity";
 
-export { education } from "../definitions/education";
+export { education } from "./cv-definition-education";
 
 export const personalInfo = {
   name: NAME,

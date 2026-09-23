@@ -8,12 +8,12 @@
 // variant so /cv/stats can show those bands ("how many words can I adapt?").
 //
 // It also reconciles each variant's live experience bullets against the
-// deduped bullet pool in definitions/jobs.ts and flags any drift.
+// deduped bullet pool in cv-definition-jobs.ts and flags any drift.
 // ─────────────────────────────────────────────────────────────
 
 import { cvVariants } from "./variants";
-import { VARIANT_CV } from "./corpora";
-import { JOBS, resolveJobKey } from "./definitions/jobs";
+import { VARIANT_CV } from "./cv-data";
+import { JOBS, resolveJobKey } from "./cv-definition-jobs";
 import type { CvData } from "./types";
 
 // ── primitives ──────────────────────────────────────────────
@@ -228,7 +228,7 @@ export type JobBudget = {
   bulletWords: Band;
   bulletChars: Band;
   poolSize: number;
-  /** Bullets a live variant uses that are NOT in definitions/jobs.ts — drift to fold back in. */
+  /** Bullets a live variant uses that are NOT in cv-definition-jobs.ts — drift to fold back in. */
   offMenu: { key: string; text: string }[];
   /** Pool bullets no current variant uses — spare phrasings on the shelf. */
   unusedPool: string[];

@@ -4,7 +4,7 @@
 // React binding for the /cv content editor.
 //
 // Per-variant overrides live in localStorage (key: cv:edits:v1:<slug>). The
-// route's constants.ts is the SEED / default; once you edit, the stored blob
+// route's data module is the SEED / default; once you edit, the stored blob
 // shadows it until you "Reset". SSR-safe (starts from the seed, hydrates in an
 // effect), debounced autosave, and cross-tab sync via the `storage` event.
 // ─────────────────────────────────────────────────────────────

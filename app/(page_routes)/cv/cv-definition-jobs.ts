@@ -9,7 +9,7 @@
 // that crept in across variants (e.g. "… Midland Credit Management" with and
 // without "(MCM)", "Amtek" vs "Amstek").
 //
-// `sources` on each bullet = the variant slugs whose live constants.ts uses
+// `sources` on each bullet = the variant slugs whose live data module uses
 // that exact phrasing today ("base" = the default God CV at /cv). The /cv/stats
 // page reconciles this pool against the live variants and flags any drift.
 // ─────────────────────────────────────────────────────────────
@@ -32,7 +32,7 @@ export type Angle =
 
 export type BulletDef = {
   text: string;
-  /** Variant slugs whose live constants.ts currently uses this exact phrasing.
+  /** Variant slugs whose live data module currently uses this exact phrasing.
    *  "base" = the default God CV at /cv. */
   sources: readonly string[];
   /** Framings this bullet leans into — filter the pool by these when tailoring. */

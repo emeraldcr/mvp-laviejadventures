@@ -1,4 +1,4 @@
-import type { CvData, Highlight, SkillGroup, SummarySegment } from "../types";
+import type { CvData, Highlight, SkillGroup, SummarySegment } from "./types";
 import {
   aiSkills,
   backendSkills,
@@ -12,7 +12,7 @@ import {
   frontendSkills,
   languages,
   personalInfo,
-} from "./constants";
+} from "./cv-data-java-react";
 
 export type CampaignJob = {
   key: string;

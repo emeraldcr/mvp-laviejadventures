@@ -1,5 +1,5 @@
-import { DEFAULT_REMOTE_LOCATION, JOBS_STORAGE_KEY } from "./constants";
-import type { JobLead } from "./types";
+import { DEFAULT_REMOTE_LOCATION, JOBS_STORAGE_KEY } from "./java-react-jobs-constants";
+import type { JobLead } from "./java-react-jobs-types";
 
 const editableKeys = ["company", "title", "location", "url"] as const;
 

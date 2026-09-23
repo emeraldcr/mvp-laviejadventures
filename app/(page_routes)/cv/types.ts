@@ -1,6 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 
-// Shared shape every CV variant's `constants.ts` must satisfy.
+// Shared shape every CV data module must satisfy.
 // The document layout is identical across variants — only this data changes.
 
 export type SummarySegment = {

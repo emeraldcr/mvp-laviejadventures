@@ -1,7 +1,7 @@
 "use client";
 
-import { JobBoardScreen } from "./components/JobBoardScreen";
-import { JobBoardProvider } from "./context";
+import { JobBoardScreen } from "./JobBoardScreen";
+import { JobBoardProvider } from "./JavaReactJobsContext";
 
 export function JavaReactJobsClient() {
   return (

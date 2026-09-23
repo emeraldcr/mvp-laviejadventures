@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, Check, ChevronDown, ChevronRight, Info, X } from "lucide-react";
-import { MANUAL_RULES } from "./lint";
-import { LINT_GROUP_ORDER, type LintReport, type Severity } from "./types";
+import { MANUAL_RULES } from "./cover-letter-lint";
+import { LINT_GROUP_ORDER, type LintReport, type Severity } from "./cover-letter-types";
 
 const SEV_DOT: Record<Severity, string> = {
   fail: "bg-rose-500",

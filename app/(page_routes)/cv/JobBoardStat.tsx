@@ -1,4 +1,4 @@
-import { STAT_TONE_CLASS, type StatTone } from "../values";
+import { STAT_TONE_CLASS, type StatTone } from "./java-react-jobs-values";
 
 export function Stat({ label, value, tone }: { label: string; value: string | number; tone: StatTone }) {
   return (

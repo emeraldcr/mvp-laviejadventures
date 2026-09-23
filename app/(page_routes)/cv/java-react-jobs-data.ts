@@ -1,7 +1,7 @@
-import { JAVA_REACT_CAMPAIGN_JOB_KEYS, JAVA_REACT_CAMPAIGN_JOBS } from "../java-react-2026/jobs";
-import { DEFAULT_REMOTE_LOCATION, TOTAL_JOBS } from "./constants";
-import { RESEARCHED_JOBS } from "./researched-jobs";
-import type { JobLead } from "./types";
+import { JAVA_REACT_CAMPAIGN_JOB_KEYS, JAVA_REACT_CAMPAIGN_JOBS } from "./cv-campaign-java-react";
+import { DEFAULT_REMOTE_LOCATION, TOTAL_JOBS } from "./java-react-jobs-constants";
+import { RESEARCHED_JOBS } from "./java-react-jobs-researched";
+import type { JobLead } from "./java-react-jobs-types";
 
 function blankSlot(position: number): JobLead {
   const slot = String(position).padStart(3, "0");

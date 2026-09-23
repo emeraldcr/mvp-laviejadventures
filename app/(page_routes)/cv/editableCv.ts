@@ -3,7 +3,7 @@
 // content editor. The only non-JSON field in CvData is the contact-entry icon
 // (a React component); here it becomes a string key. Two converters bridge the
 // two shapes:
-//   toEditable(cv)     → seed the editor form from a variant's constants.ts
+//   toEditable(cv)     → seed the editor form from a variant data module
 //   materialize(ec)     → back to CvData for the live preview / audit / letter
 // materialize() also trims + drops empty rows so the preview stays clean while
 // the editor keeps your in-progress text (blank bullet lines, half-typed groups).

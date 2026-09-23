@@ -27,7 +27,7 @@ import { PrintPreview } from "./PrintPreview";
 import { PRINT_CSS } from "./design";
 import { auditJd, buildCorpus, DICT_CATEGORY_ORDER, type AuditResult, type DictHit } from "./audit";
 import { cvVariantBySlug, cvVariants, type CvVariant } from "./variants";
-import { VARIANT_CORPUS } from "./corpora";
+import { VARIANT_CORPUS } from "./cv-data";
 import { useApplications, type UseApplications } from "./useApplications";
 import type { CvData } from "./types";
 import {
@@ -562,8 +562,9 @@ function VariantNav({
       </ul>
 
       <p className="mt-3 border-t border-zinc-100 pt-2.5 text-[10.5px] leading-snug text-zinc-400">
-        New variant: add <code className="text-zinc-500">cv/&lt;slug&gt;/</code> + a line in{" "}
-        <code className="text-zinc-500">variants.ts</code>. Pipeline state is stored locally in this browser.{" "}
+        New variant: add <code className="text-zinc-500">cv-data-&lt;slug&gt;.ts</code>, register it in{" "}
+        <code className="text-zinc-500">cv-data.ts</code> and <code className="text-zinc-500">variants.ts</code>.
+        Pipeline state is stored locally in this browser.{" "}
         <Link href="/cv/stats" className="font-semibold text-teal-600 hover:text-teal-700">
           Word budgets →
         </Link>

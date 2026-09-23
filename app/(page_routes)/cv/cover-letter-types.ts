@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────────────────────
 // Cover-letter feature — shared types.
 //
-// The feature is self-contained under cv/cover-letter/:
+// The feature is split across flat cover-letter-*.ts(x) modules:
 //   parse.ts     → pull company / role / manager out of a pasted posting
 //   build.ts     → deterministic generator, written to pass the 50-point checklist
 //   lint.ts      → the 50-point checklist as automated checks + a manual list

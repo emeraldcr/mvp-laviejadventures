@@ -1,16 +1,15 @@
-import { buildContactInfo, buildLanguages, NAME } from "./definitions/identity";
+import { buildContactInfo, buildLanguages, NAME } from "./cv-definition-identity";
 
 // ─────────────────────────────────────────────────────────────
-// The combined "everything" résumé — every stack and tool from the tailored
-// variants surfaced in one sheet, laid out feature-first (a "What I Bring"
-// strengths band above the summary). Default /cv; send this when the role is
-// broad or the JD spans multiple stacks.
+// Archived combined "everything" résumé — every stack and tool from the
+// tailored variants surfaced in one sheet, laid out feature-first. It remains
+// available at /cv/legacy-god-cv, but is hidden by default in the workspace.
 //
 // Shared facts (name, contact block, education, languages) come from
-// ./definitions — only summary + experience are tailored per variant.
+// flat cv-definition-* modules — only summary + experience are tailored here.
 // ─────────────────────────────────────────────────────────────
 
-export { education } from "./definitions/education";
+export { education } from "./cv-definition-education";
 
 export const personalInfo = {
   name: NAME,

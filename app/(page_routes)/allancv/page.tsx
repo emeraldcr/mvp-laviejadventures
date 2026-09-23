@@ -15,7 +15,7 @@ import {
   primarySkills,
   secondarySkills,
   summary,
-} from "../cv/java-react-2026/constants";
+} from "../cv/cv-data-java-react";
 import type { CvData } from "../cv/types";
 
 // Read-only presentation of the Java + React 2026 master résumé from /cv,

@@ -3,13 +3,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowUpRight, Check, ClipboardCopy, FileText, Mail, Printer, X } from "lucide-react";
-import type { CvData } from "../types";
-import type { CvVariant } from "../variants";
-import { buildCoverLetter } from "./build";
-import { parseCompanyInfo } from "./parse";
-import { lintLetter } from "./lint";
-import { loadDraft, saveDraft, type ClDraft } from "./store";
-import type { CompanyInfo, LintContext } from "./types";
+import type { CvData } from "./types";
+import type { CvVariant } from "./variants";
+import { buildCoverLetter } from "./cover-letter-build";
+import { parseCompanyInfo } from "./cover-letter-parse";
+import { lintLetter } from "./cover-letter-lint";
+import { loadDraft, saveDraft, type ClDraft } from "./cover-letter-store";
+import type { CompanyInfo, LintContext } from "./cover-letter-types";
 
 /** Compact cover-letter panel for the /cv sidebar. Shares its draft with the
  *  standalone /cv/cover-letter editor via store.ts; the full set of inputs

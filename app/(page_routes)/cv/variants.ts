@@ -1,13 +1,13 @@
 // ─────────────────────────────────────────────────────────────
 
-import { JAVA_REACT_CAMPAIGN_JOB_KEYS, JAVA_REACT_CAMPAIGN_JOBS } from "./java-react-2026/jobs";
+import { JAVA_REACT_CAMPAIGN_JOB_KEYS, JAVA_REACT_CAMPAIGN_JOBS } from "./cv-campaign-java-react";
 // Résumé variant registry — single source of truth for the sidebar.
 //
 // To add a new variant:
-//   1. Create app/(page_routes)/cv/<slug>/constants.ts (copy an existing one,
+//   1. Create one flat cv-data-<slug>.ts file (copy an existing data module and
 //      adapt the summary + experience bullets + skills to the target role).
-//   2. Create app/(page_routes)/cv/<slug>/page.tsx (3-line wrapper — copy one).
-//   3. Add an entry to the array below.
+//   2. Register its data in cv-data.ts and its navigation metadata below.
+// No route folder or page wrapper is needed; [...slug]/page.tsx resolves it.
 // The sidebar, the variant switcher and the "active" highlight update from here.
 // ─────────────────────────────────────────────────────────────
 

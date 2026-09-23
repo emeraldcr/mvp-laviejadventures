@@ -10,12 +10,12 @@ import {
   type ReactNode,
   type SetStateAction,
 } from "react";
-import type { ApplicationState } from "../applications";
-import { useApplications } from "../useApplications";
-import { createDefaultJobs } from "./data";
-import { calculateJobStats, selectJobRows } from "./helpers";
-import { readStoredJobs, writeStoredJobs } from "./memory";
-import type { JobLead, JobLeadPatch, JobRowModel, JobStats, StatusFilter } from "./types";
+import type { ApplicationState } from "./applications";
+import { useApplications } from "./useApplications";
+import { createDefaultJobs } from "./java-react-jobs-data";
+import { calculateJobStats, selectJobRows } from "./java-react-jobs-helpers";
+import { readStoredJobs, writeStoredJobs } from "./java-react-jobs-memory";
+import type { JobLead, JobLeadPatch, JobRowModel, JobStats, StatusFilter } from "./java-react-jobs-types";
 
 type JobBoardContextValue = {
   rows: JobRowModel[];

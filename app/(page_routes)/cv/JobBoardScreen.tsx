@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { ArrowLeft, BriefcaseBusiness, Search, X } from "lucide-react";
-import { STATUS_LABEL, STATUS_ORDER } from "../../applications";
-import { TOTAL_JOBS } from "../constants";
-import { useJobBoard } from "../context";
-import type { StatusFilter } from "../types";
-import { JobRow } from "./JobRow";
-import { Stat } from "./Stat";
+import { STATUS_LABEL, STATUS_ORDER } from "./applications";
+import { TOTAL_JOBS } from "./java-react-jobs-constants";
+import { useJobBoard } from "./JavaReactJobsContext";
+import type { StatusFilter } from "./java-react-jobs-types";
+import { JobRow } from "./JobBoardRow";
+import { Stat } from "./JobBoardStat";
 
 export function JobBoardScreen() {
   const board = useJobBoard();

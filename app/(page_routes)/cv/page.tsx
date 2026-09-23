@@ -1,35 +1,5 @@
-"use client";
-
-import { CvWorkspace } from "./CvWorkspace";
-import {
-  contactInfo,
-  density,
-  education,
-  experience,
-  highlights,
-  languages,
-  personalInfo,
-  primarySkills,
-  secondarySkills,
-  summary,
-} from "./java-react-2026/constants";
+import { CvRoute } from "./CvRoute";
 
 export default function CvPage() {
-  return (
-    <CvWorkspace
-      activeSlug=""
-      cv={{
-        density,
-        personalInfo,
-        contactInfo,
-        primarySkills,
-        secondarySkills,
-        education,
-        languages,
-        summary,
-        highlights,
-        experience,
-      }}
-    />
-  );
+  return <CvRoute slug="" />;
 }

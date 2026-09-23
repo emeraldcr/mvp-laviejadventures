@@ -13,7 +13,7 @@
 // ─────────────────────────────────────────────────────────────
 
 import { Github, Linkedin, Mail, MapPin, Phone } from "lucide-react";
-import type { ContactEntry } from "../types";
+import type { ContactEntry } from "./types";
 
 export const NAME = "Allan José Rojas Durán";
 export const PHONE = "+506 7225 2296";

@@ -7,16 +7,16 @@
 //   certifications.ts   → formal certs (none yet) + compliance exposure
 //   jobs.ts             → one record per employer + the full bullet pool ("menu")
 //
-// Migration path for a variant's constants.ts:
-//   import { buildContactInfo, buildLanguages, NAME } from "../definitions/identity";
-//   export { education } from "../definitions/education";
+// Pattern for a flat variant data module:
+//   import { buildContactInfo, buildLanguages, NAME } from "./cv-definition-identity";
+//   export { education } from "./cv-definition-education";
 //   export const personalInfo = { name: NAME, title: "…" };
 //   export const contactInfo  = buildContactInfo("latam");
 //   export const languages    = buildLanguages("short");
-//   // summary + experience stay local — they are what each variant tailors.
+//   // summary + experience stay in cv-data-<slug>.ts — they are tailored.
 // ─────────────────────────────────────────────────────────────
 
-export * from "./identity";
-export * from "./education";
-export * from "./certifications";
-export * from "./jobs";
+export * from "./cv-definition-identity";
+export * from "./cv-definition-education";
+export * from "./cv-definition-certifications";
+export * from "./cv-definition-jobs";

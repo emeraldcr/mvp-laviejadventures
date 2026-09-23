@@ -4,13 +4,13 @@
 // Purpose: know the word/character ceiling for each slot (summary paragraph,
 // highlight, sidebar skill line, experience bullet) so tailoring a new variant
 // stays inside what fits on one A4 page. All numbers come from ./stats; all
-// shared facts from ./definitions.
+// shared facts from the flat cv-definition-* modules.
 // ─────────────────────────────────────────────────────────────
 
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { cvVariants } from "../variants";
-import { VARIANT_CV } from "../corpora";
+import { cvVariants } from "./variants";
+import { VARIANT_CV } from "./cv-data";
 import {
   ENGLISH_LEVEL,
   LOCATION_LINE,
@@ -19,7 +19,7 @@ import {
   education,
   graduationProject,
   JOBS,
-} from "../definitions";
+} from "./cv-definitions";
 import {
   JOB_BUDGETS,
   KIND_BUDGETS,
@@ -29,12 +29,10 @@ import {
   rowSectionLabel,
   type Band,
   type MatrixRow,
-} from "../stats";
-
-export const metadata = { title: "CV word budgets" };
+} from "./stats";
 
 const SHORT: Record<string, string> = {
-  base: "God",
+  base: "Master",
   "agentic-ai": "AI",
   "python-react-lead": "Lead",
   "python-react-aws": "Py/AWS",
@@ -214,7 +212,7 @@ export default function CvStatsPage() {
           </div>
           {JOB_BUDGETS.some((j) => j.offMenu.length > 0) && (
             <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-[11.5px] text-amber-900">
-              <p className="font-bold">Drift — live bullets not in the pool (fold back into definitions/jobs.ts):</p>
+              <p className="font-bold">Drift — live bullets not in the pool (fold back into cv-definition-jobs.ts):</p>
               <ul className="mt-1.5 space-y-1">
                 {JOB_BUDGETS.flatMap((j) =>
                   j.offMenu.map((o, i) => (

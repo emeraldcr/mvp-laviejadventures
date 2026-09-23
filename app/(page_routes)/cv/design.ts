@@ -5,11 +5,11 @@
 //   design.ts            → all styling: page geometry, type scale, colour,
 //                          spacing rhythm, and the print stylesheet.
 //   types.ts             → the data shape every variant must satisfy.
-//   <slug>/constants.ts  → content only (words, dates, skill lists). No classes.
+//   cv-data-*.ts         → content only (words, dates, skill lists). No classes.
 //   CvDocument.tsx        → résumé structure/markup — consumes tokens, no magic numbers.
-//   cover-letter/         → self-contained cover-letter feature (generator, the
-//                          50-point lint, the printable letter, its own editor
-//                          route) — reuses these tokens + the same A4 sheet.
+//   cover-letter-*.ts(x) → self-contained cover-letter feature (generator,
+//                          lint, printable letter, and editor route) reusing
+//                          these tokens and the same A4 sheet.
 //   PrintPreview.tsx      → the on-screen A4 preview + print orchestration.
 //   CvWorkspace.tsx       → app chrome (variant nav, JD audit, letter panel).
 //

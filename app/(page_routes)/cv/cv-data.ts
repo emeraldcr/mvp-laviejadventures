@@ -1,33 +1,35 @@
 // ─────────────────────────────────────────────────────────────
 // Every variant's résumé data + prebuilt text corpus, in one place.
+// Flat cv-data-*.ts modules hold content; routes read this registry instead of
+// owning a folder and wrapper for every CV.
 //
-// A route only loads its own constants.ts, but the sidebar needs all of them:
+// The workspace needs all variants for:
 //   - VARIANT_CV      → build a cover letter for any variant ("Copy letter")
 //   - VARIANT_CORPUS  → score every variant against a pasted JD ("Match" sort)
 //
-// Add a variant = one import + one line in each map (keys match variants.ts slugs).
+// Add a variant = one flat data module + one entry here + metadata in variants.ts.
 // ─────────────────────────────────────────────────────────────
 
 import { buildCorpus } from "./audit";
 import type { CvData } from "./types";
 
-import * as legacyGodCv from "./constants";
-import * as base from "./java-react-2026/constants";
+import * as legacyGodCv from "./cv-data-legacy";
+import * as base from "./cv-data-java-react";
 import {
   buildJavaReactCampaignCv,
   JAVA_REACT_CAMPAIGN_JOB_KEYS,
-} from "./java-react-2026/jobs";
-import * as agenticAi from "./agentic-ai/constants";
-import * as pythonReactLead from "./python-react-lead/constants";
-import * as pythonReactAws from "./python-react-aws/constants";
-import * as pythonDotnet from "./python-dotnet/constants";
-import * as java from "./java/constants";
-import * as elasticsearch from "./elasticsearch/constants";
-import * as electricAir from "./electric-air/constants";
-import * as designli from "./designli/constants";
-import * as oscarCocinero from "./oscar-cocinero/constants";
+} from "./cv-campaign-java-react";
+import * as agenticAi from "./cv-data-agentic-ai";
+import * as pythonReactLead from "./cv-data-python-react-lead";
+import * as pythonReactAws from "./cv-data-python-react-aws";
+import * as pythonDotnet from "./cv-data-python-dotnet";
+import * as java from "./cv-data-java";
+import * as elasticsearch from "./cv-data-elasticsearch";
+import * as electricAir from "./cv-data-electric-air";
+import * as designli from "./cv-data-designli";
+import * as oscarCocinero from "./cv-data-oscar-cocinero";
 
-type CvConstantsModule = {
+type CvDataModule = {
   density?: CvData["density"];
   personalInfo: CvData["personalInfo"];
   contactInfo: CvData["contactInfo"];
@@ -38,9 +40,10 @@ type CvConstantsModule = {
   summary: CvData["summary"];
   highlights?: CvData["highlights"];
   experience: CvData["experience"];
+  labels?: CvData["labels"];
 };
 
-const asCv = (m: CvConstantsModule): CvData => ({
+const asCv = (m: CvDataModule): CvData => ({
   density: m.density,
   personalInfo: m.personalInfo,
   contactInfo: m.contactInfo,
@@ -51,6 +54,7 @@ const asCv = (m: CvConstantsModule): CvData => ({
   summary: m.summary,
   highlights: m.highlights,
   experience: m.experience,
+  labels: m.labels,
 });
 
 export const VARIANT_CV: Record<string, CvData> = {
@@ -74,4 +78,12 @@ for (const key of JAVA_REACT_CAMPAIGN_JOB_KEYS) {
 export const VARIANT_CORPUS: Record<string, string> = {};
 for (const [slug, cv] of Object.entries(VARIANT_CV)) {
   VARIANT_CORPUS[slug] = buildCorpus(cv);
+}
+
+export function getCvBySlug(slug: string): CvData | undefined {
+  return VARIANT_CV[slug];
+}
+
+export function isCvSlug(slug: string): boolean {
+  return Object.hasOwn(VARIANT_CV, slug);
 }

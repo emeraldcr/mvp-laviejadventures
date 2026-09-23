@@ -8,11 +8,11 @@ import {
   STATUS_ORDER,
   type ApplicationState,
   type ApplicationStatus,
-} from "../../applications";
-import { isFilledJob } from "../helpers";
-import type { JobLead, JobLeadPatch } from "../types";
-import { FIELD_CLASS, MATCH_CLASS, MATCH_LABEL } from "../values";
-import { Field } from "./Field";
+} from "./applications";
+import { isFilledJob } from "./java-react-jobs-helpers";
+import type { JobLead, JobLeadPatch } from "./java-react-jobs-types";
+import { FIELD_CLASS, MATCH_CLASS, MATCH_LABEL } from "./java-react-jobs-values";
+import { Field } from "./JobBoardField";
 
 export function JobRow({
   job,

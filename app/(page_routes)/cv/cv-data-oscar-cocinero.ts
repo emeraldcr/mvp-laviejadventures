@@ -9,7 +9,7 @@
 // ─────────────────────────────────────────────────────────────
 
 import { Mail, MapPin, Phone } from "lucide-react";
-import type { ContactEntry, CvData, CvLabels, SummarySegment } from "../types";
+import type { ContactEntry, CvData, CvLabels, SummarySegment } from "./types";
 
 export const labels: Partial<CvLabels> = {
   coreSkills: "Habilidades",
