@@ -20,6 +20,9 @@ export type TailoredDraft = {
   experience: { jobId: string; bullets: GroundedText[] }[];
   keywordMatches: { term: string; evidenceIds: string[]; skillIds: string[] }[];
 };
-export type CvResult = { cv: SavedCv; draft: TailoredDraft; jd: JobDescription; gaps: string[]; evidence: Evidence[]; sourceVersion: string; archiveSlugs: string[] };
+export type GenerationDiagnostic = { stage: string; code: string; message: string; retryable: boolean; status?: number; requestId?: string; model?: string };
+export type GenerationMethod = "ai" | "archive";
+export type GenerationProgress = "extract" | "tailor" | "review" | "repair" | "fallback" | "complete";
+export type CvResult = { cv: SavedCv; draft: TailoredDraft; jd: JobDescription; gaps: string[]; evidence: Evidence[]; sourceVersion: string; archiveSlugs: string[]; method?: GenerationMethod; notices?: string[] };
 export type GenerationSummary = { id: string; title: string; company: string | null; status: "pending" | "complete" | "error"; createdAt: string };
-export type GenerationView = GenerationSummary & { result: CvResult | null; error: string | null; jobDescription: string };
+export type GenerationView = GenerationSummary & { result: CvResult | null; error: string | null; jobDescription: string; progress?: GenerationProgress; diagnostics?: GenerationDiagnostic[] };
