@@ -184,5 +184,11 @@ export const cvVariants: CvVariant[] = [
   },
 ];
 
+// The registry remains intact as source material; the generator owns /cv now.
+for (const variant of cvVariants) {
+  variant.path = `/cv/archive/${variant.slug || "master"}`;
+  variant.archivedByDefault = true;
+}
+
 export const cvVariantBySlug = (slug: string): CvVariant | undefined =>
   cvVariants.find((v) => v.slug === slug);

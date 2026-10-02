@@ -14,16 +14,16 @@ OUTPUT.parent.mkdir(parents=True, exist_ok=True)
 
 PAGE_W, PAGE_H = landscape(A4)
 
-BG = HexColor("#080A0D")
-PANEL = HexColor("#11161C")
-PANEL_2 = HexColor("#171D24")
-TEXT = HexColor("#F4F7F9")
-MUTED = HexColor("#AAB4BD")
-LINE = HexColor("#34404B")
-CYAN = HexColor("#57DCF5")
-LIME = HexColor("#D8FF3E")
-ORANGE = HexColor("#FFB451")
-RED = HexColor("#FF7474")
+BG = HexColor("#FFFFFF")
+PANEL = HexColor("#F7F9FA")
+PANEL_2 = HexColor("#EDF2F5")
+TEXT = HexColor("#172129")
+MUTED = HexColor("#53636F")
+LINE = HexColor("#BCC8CF")
+CYAN = HexColor("#007F9D")
+LIME = HexColor("#668000")
+ORANGE = HexColor("#B65A00")
+RED = HexColor("#A72D39")
 
 FONT_REG = "SegoeUI"
 FONT_BOLD = "SegoeUI-Bold"
