@@ -32,7 +32,7 @@ const db = { collection(name) {
     },
     async insertOne(record) { records.set(record._id, structuredClone(record)); return { insertedId: record._id }; },
     async deleteOne(query) { const record = [...records.values()].find((item) => matches(item, query)); if (record) records.delete(record._id); },
-    async updateOne(query, update) { const record = [...records.values()].find((item) => matches(item, query)); if (!record) return;
+    async updateOne(query, update, options = {}) { let record = [...records.values()].find((item) => matches(item, query)); if (!record && options.upsert) { record = { _id: query._id }; records.set(query._id, record); } if (!record) return;
       Object.assign(record, structuredClone(update.$set ?? {}));
       for (const [key, value] of Object.entries(update.$push ?? {})) record[key].push(structuredClone(value));
     },
@@ -72,6 +72,9 @@ async function main() {
   const { assembleCv, validateJobDescription } = require("../lib/cv/validate.ts");
   const store = require("../lib/cv/store.ts");
   const { generateCv } = require("../lib/cv/generate.ts");
+  const { extractLocalJobDescription, buildLocalCv, containsTerm } = require("../lib/cv/engine.ts");
+  const { defaultCvProfile, validateCvProfile, saveCvProfile, loadCvSources } = require("../lib/cv/profile.ts");
+  const profileApi = require("../app/api/cv/profile/route.ts");
   const { POST } = require("../app/api/cv/generate/route.ts");
   const { GET } = require("../app/api/cv/generations/route.ts");
   const { NextRequest } = require("next/server");
@@ -172,14 +175,13 @@ async function main() {
     assert.equal((await store.listGenerations("expired-owner"))[0].status, "error");
     const next = await store.createGeneration("expired-owner", pasted, "mock", sources); assert.ok(next); await store.releaseGeneration("expired-owner", next);
   });
-  await check("complete three-stage pipeline persists every call before the result", async () => {
+  await check("local pipeline saves a complete CV without calling a provider", async () => {
     const id = await store.createGeneration(admin.id, pasted, "mock", sources);
-    responses = [jd, draft, { supported: true, issues: [] }];
-    await generateCv(id, pasted, sources, "mock");
+    await generateCv(id, pasted, sources);
     const record = databases.get("cv_generations").get(id);
-    assert.equal(record.status, "complete"); assert.deepEqual(record.calls.map((call) => call.stage), ["extract", "tailor", "audit"]);
-    assert.equal(record.calls[0].usage.total_tokens, 200); assert.equal(record.calls[0].estimatedCostUsd, null); assert.equal(record.sourceSnapshot.version, sources.version);
-    assert.deepEqual(record.result.gaps, ["Rust"]); await store.releaseGeneration(admin.id, id);
+    assert.equal(record.status, "complete"); assert.equal(record.progress, "complete"); assert.deepEqual(record.calls, []);
+    assert.equal(record.sourceSnapshot.version, sources.version); assert.equal(record.result.method, "local");
+    assert.ok(record.result.gaps.includes("Rust")); assert.equal(modelCalls, 0); await store.releaseGeneration(admin.id, id);
   });
   await check("generation route rejects unauthenticated, cross-origin and malformed input", async () => {
     const before = modelCalls; const savedAdmin = admin; admin = null;
@@ -190,28 +192,99 @@ async function main() {
     assert.equal((await POST(request("{bad json"))).status, 400);
     assert.equal(modelCalls, before);
   });
-  await check("route saves unsupported attempts and releases the lock", async () => {
-    responses = [jd, draft, { supported: false, issues: ["A claim is overstated."] }];
-    const response = await POST(request({ jobDescription: pasted })); assert.equal(response.status, 422);
+  await check("non-job content is rejected, saved, and releases the lock", async () => {
+    const response = await POST(request({ jobDescription: "This is an unrelated personal story about walking through a forest, enjoying the birds and taking some photographs on a pleasant weekend afternoon with friends." })); assert.equal(response.status, 400);
     const data = await response.json(); const record = databases.get("cv_generations").get(data.id);
-    assert.equal(record.status, "error"); assert.equal(record.result, null); assert.equal(record.calls.length, 3);
+    assert.equal(record.status, "error"); assert.equal(record.result, null); assert.equal(record.calls.length, 0);
     assert.ok(!databases.get("cv_generation_locks").has(admin.id));
   });
-  await check("incomplete/refused output is persisted before failure", async () => {
-    responses = [{ __response: { status: "incomplete", output_text: "" } }];
-    const response = await POST(request({ jobDescription: pasted })); assert.equal(response.status, 502);
+  await check("generation succeeds without any OpenAI API key", async () => {
+    delete process.env.OPENAI_API_KEY;
+    const response = await POST(request({ jobDescription: pasted })); assert.equal(response.status, 201);
     const data = await response.json(); const record = databases.get("cv_generations").get(data.id);
-    assert.equal(record.calls.length, 1); assert.equal(record.status, "error"); assert.equal(record.result, null);
+    assert.equal(record.calls.length, 0); assert.equal(record.status, "complete"); assert.equal(record.result.method, "local"); assert.equal(modelCalls, 0);
   });
   await check("successful POST returns a durable URL and history returns saved metadata", async () => {
-    responses = [jd, draft, { supported: true, issues: [] }];
     const response = await POST(request({ jobDescription: pasted })); assert.equal(response.status, 201);
     const data = await response.json(); assert.equal(data.url, `/cv/generated/${data.id}`);
     assert.equal((await store.getGeneration(admin.id, data.id)).result.cv.personalInfo.name, sources.base.personalInfo.name);
     const history = await GET(new NextRequest("https://cv.example/api/cv/generations")); assert.equal(history.status, 200);
     const body = await history.json(); assert.ok(body.generations.some((item) => item.id === data.id)); assert.ok(!("sourceSnapshot" in body.generations[0]));
   });
-  console.log(`\n${count} CV generator regression checks passed. Mocked provider and persistence only.`);
+  await check("local keyword extraction retains quotes and rejects invented version matches", () => {
+    const description = "Acme\nSenior Software Engineer\nRequirements\nBuild Python 99 applications using React and Rust. Experience shipping reliable production systems and collaborating on code review is required.";
+    const local = extractLocalJobDescription(description);
+    assert.equal(local.company, "Acme"); assert.ok(local.keywords.some((keyword) => keyword.term === "Python 99"));
+    const result = buildLocalCv(sources, local); assert.ok(result.gaps.includes("Python 99")); assert.ok(result.gaps.includes("Rust"));
+  });
+  await check("aliases preserve genuine support without inferring related products", () => {
+    assert.ok(containsTerm("Cloud deployments using GCP", "Google Cloud"));
+    assert.ok(containsTerm("Large language models and retrieval augmented generation", "LLM"));
+    assert.ok(containsTerm("PostgreSQL data services", "Postgres"));
+    assert.ok(!containsTerm("Vector database integrations", "Pinecone"));
+    assert.ok(!containsTerm("Python application development", "Python 99"));
+  });
+  await check("supported archive facts remain distinct from omitted output keywords", () => {
+    const local = extractLocalJobDescription("Acme\nStaff Software Engineer, AI Engineering\nRequirements\nBuild Java and Python services with React, LangGraph, LLM and RAG. Experience with Google Cloud, AWS and code reviews is required. Familiarity with Rust is preferred.");
+    const result = buildLocalCv(sources, local);
+    for (const term of ["LangGraph", "Google Cloud", "code reviews"]) {
+      assert.ok(result.draft.keywordMatches.some((match) => match.term === term), `${term} lost real source support`);
+      assert.ok(!result.gaps.includes(term));
+    }
+    assert.ok(result.gaps.includes("Rust"));
+    const printedSkills = [...result.cv.primarySkills, ...result.cv.secondarySkills].flatMap((group) => group.items).join("\n");
+    assert.ok(containsTerm(printedSkills, "LangGraph"));
+    assert.ok(result.omittedKeywords.every((term) => result.draft.keywordMatches.some((match) => match.term === term)));
+  });
+  await check("different roles choose different real skills and employer evidence", () => {
+    const frontend = buildLocalCv(sources, extractLocalJobDescription("Acme\nSenior Frontend React Developer\nRequirements\nBuild accessible React and TypeScript interfaces with Next.js. Experience delivering responsive applications, UI performance, CSS and frontend testing is required."));
+    const ai = buildLocalCv(sources, extractLocalJobDescription("Acme\nSenior AI Engineer\nRequirements\nBuild agent workflows using LangGraph, RAG, LLM and tool calling. Experience deploying AI applications, evaluations and reliable backend services is required."));
+    assert.notDeepEqual(frontend.draft.skillGroups, ai.draft.skillGroups);
+    assert.notDeepEqual(frontend.draft.experience[0].bullets, ai.draft.experience[0].bullets);
+    assert.deepEqual(frontend.cv.experience.map((job) => job.company), ai.cv.experience.map((job) => job.company));
+    assert.equal(modelCalls, 0);
+  });
+  await check("profile seeds can be saved, and new facts drive future CVs", async () => {
+    const profile = validateCvProfile(defaultCvProfile(sources), sources);
+    profile.skillGroups.push({ label: "New confirmed skills", items: ["Rust"] });
+    profile.experience[0].bullets.push("Built Rust services supporting production application workflows.");
+    await saveCvProfile(admin.id, profile);
+    const learned = await loadCvSources(admin.id);
+    assert.notEqual(learned.version, sources.version);
+    const result = buildLocalCv(learned, extractLocalJobDescription(pasted));
+    assert.ok(!result.gaps.includes("Rust")); assert.ok(result.draft.keywordMatches.some((match) => match.term === "Rust"));
+    assert.ok(result.evidence.some((proof) => proof.archives.includes("profile")));
+    assert.ok(!learned.evidence.some((proof) => proof.archives.some((slug) => slug !== "profile")));
+  });
+  await check("profile corrections replace deleted facts without mixing admin accounts", async () => {
+    const learned = await loadCvSources(admin.id);
+    const other = await loadCvSources("separate-admin");
+    assert.notEqual(learned.version, other.version); assert.equal(other.version, sources.version);
+    const minimal = defaultCvProfile(sources);
+    minimal.skillGroups = [{ label: "Frontend", items: ["React", "TypeScript"] }];
+    minimal.experience[0].bullets = ["Built React interfaces for client-facing application workflows."];
+    const corrected = buildCvSources(validateCvProfile(minimal, sources));
+    assert.equal(corrected.skills.length, 2); assert.ok(!corrected.evidence.filter((proof) => proof.jobId === sources.jobs[0].id).some((proof) => proof.text.includes("131")));
+    assert.ok(buildLocalCv(corrected, extractLocalJobDescription(pasted)).gaps.includes("Rust"));
+  });
+  await check("profile validation blocks missing jobs and long claims", () => {
+    const profile = defaultCvProfile(sources);
+    assert.throws(() => validateCvProfile({ ...profile, experience: [] }));
+    profile.experience[0].bullets = ["claim ".repeat(41)]; assert.throws(() => validateCvProfile(profile));
+    const duplicates = defaultCvProfile(sources);
+    duplicates.skillGroups = [{ label: "One", items: ["React"] }, { label: "Two", items: ["react"] }];
+    assert.throws(() => validateCvProfile(duplicates));
+  });
+  await check("profile API requires authentication and validates request origin", async () => {
+    const savedAdmin = admin; admin = null;
+    assert.equal((await profileApi.GET(new NextRequest("https://cv.example/api/cv/profile"))).status, 401);
+    assert.equal((await profileApi.PUT(request({}))).status, 401);
+    admin = savedAdmin;
+    assert.equal((await profileApi.PUT(request({}, "https://evil.example"))).status, 403);
+    assert.equal((await profileApi.PUT(request({}))).status, 400);
+    const result = await profileApi.GET(new NextRequest("https://cv.example/api/cv/profile")); assert.equal(result.status, 200); assert.ok((await result.json()).profile);
+  });
+  console.log(`\n${count} local CV generator regression checks passed. In-memory persistence; zero provider calls.`);
 }
 main().catch((error) => { console.error(error); process.exitCode = 1; }).finally(() => {
   Module._load = originalLoad;

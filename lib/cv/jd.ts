@@ -3,7 +3,7 @@ import { load } from "cheerio";
 export const MAX_JD_LENGTH = 40_000;
 export class CvInputError extends Error {}
 
-/** Mechanical cleanup happens before the model sees the pasted content. */
+/** Remove copied page noise before local keyword extraction. */
 export function cleanJobDescription(value: unknown): string {
   if (typeof value !== "string") throw new CvInputError("Paste a job description to continue.");
   if (value.length > MAX_JD_LENGTH) throw new CvInputError("Keep the job description below 40,000 characters.");

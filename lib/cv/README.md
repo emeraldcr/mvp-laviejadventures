@@ -1,36 +1,37 @@
-# JD-to-CV generation
+# Local CV generator
 
-`/cv` is the paste-and-generate entry point. Sign in there with the existing site admin account. Previous CVs are accessible at `/cv/archive`; their old URLs redirect to archived snapshots. Cover letters, the application tracker, word budgets, and `/allancv` remain available.
+`/cv` accepts a pasted job description and creates a separate, saved CV for that role. It also retains the quick browser keyword comparison. `/cv/profile` edits the source profile, skills, and employer-specific accomplishments. `/cv/archive` preserves all original data-driven CV variants. Existing generated snapshots and failed attempts stay accessible at `/cv/generated/<id>`; retry links restore their saved JD.
 
-## Server configuration
+## Local matching engine
 
-- `OPENAI_API_KEY`: existing server-side OpenAI key.
-- `OPENAI_CV_MODEL`: optional model override supporting Responses structured outputs. Falls back to `OPENAI_MODEL`, then `gpt-4.1-mini`.
-- `MONGODB_URI` and `MONGODB_DB`: existing database configuration.
-- The existing admin login/JWT configuration is used; generation and saved results require authentication. A saved CV is accessible only to the admin who created it.
+The Node.js generator runs entirely in this application. No external AI, model download, API key, or paid inference service is needed. It is deterministic retrieval and assembly of supported facts, not a general-purpose language model.
 
-No API key or database credential is sent to React. The POST route uses Node.js and has a 240-second execution budget. The OpenAI pipeline has a shared 170-second timeout; hosts must permit that execution duration.
+1. `jd.ts` removes HTML, duplicate lines, navigation, logo labels, and copied application fields. `engine.ts` locates the job title/company and extracts literal, quoted requirements with the existing technical dictionary. Benefits and company boilerplate are excluded from ranking when recognizable headings are present.
+2. `ranking.ts` learns term rarity from the current evidence corpus and scores overlap with the JD. Controlled aliases, requirement priority, and role focus supplement this relevance score.
+3. `engine.ts` selects a grounded profile, chooses skills to cover distinct requested technologies, and ranks accomplishments within their actual employer. It retains all employers, reserves space for each, and prioritizes recent work. A short profile focus sentence uses exact, supported skill labels.
+4. `validate.ts` checks evidence IDs, employer attribution, metrics, chronology, keyword quotes, and content budgets before a result becomes printable. Identity, contacts, education, languages, employer names, historical titles, periods, and locations remain from the master CV.
+5. Gaps describe terms absent from the source facts. Supported keywords omitted for space appear separately. Basic keyword coverage does not establish required years, exact versions, certifications, or hiring fit; review those requirements before applying.
 
-## Sources and editable zones
+This engine selects and combines existing wording. It does not invent achievements or infer expertise in one product from a related product. Dictionary matching has limits for unusual titles, unknown tools, negation, and nuanced qualifications. The quick browser comparison is a broader dictionary reference, not the generation validator or an ATS score.
 
-The flat `cv-data-*.ts` modules and `cv-data.ts` registry remain intact as the archive. `buildCvSources` combines only variants whose candidate name matches the master CV. Oscar's CV is excluded. Employer and period must match canonical employment entries; the known La Vieja Adventures entry is mapped to the current independent consulting entry. Skills and evidence are deduplicated and assigned stable IDs, retaining their archive slugs.
+## Facts and archives
 
-The generator changes the headline, summary, skill selection/order/groups, and experience bullet wording. It preserves the master CV's name, contacts, education, languages, employers, historical job titles, periods, locations, and chronology. Browser-local edits from the previous workspace are not used as server evidence; source data modules supply the factual baseline.
+`sources.ts` reads the flat `cv-data-*.ts` modules through `cv-data.ts`. Only variants matching the master's candidate identity are consolidated; Oscar's CV remains a separate archive. Evidence has stable IDs and archive attribution. Employment evidence must match canonical company and period, including the known mapping from current La Vieja Adventures work to independent consulting.
 
-1. Mechanical HTML/text cleanup removes scripts, navigation, controls, duplicate lines and common copied job-site noise.
-2. A structured model call cleans the actual job description, identifies role/company, extracts keywords and exact supporting JD quotes, and rejects unrelated input.
-3. A structured model call writes a concise CV with evidence IDs for every summary paragraph and experience bullet. Skill IDs resolve to exact existing skill labels.
-4. Code validates IDs, job attribution, copied quotes, metrics, employment completeness, and content budgets. A separate model call checks semantic fidelity and keyword matches. Rejected drafts never become printable generated CVs.
-5. Requirements without supported matches appear as gaps beside the CV, not as candidate claims. Matching evidence is an aid to review, not an ATS score or a promise of hiring fit. The automated semantic check can still make mistakes; review before applying.
+The profile editor starts with consolidated skills and short employer-specific evidence. Saved edits become the complete factual source for that admin's future generations; deleted or corrected archive claims are not silently reintroduced. Editing the profile does not modify the archives or previously saved CVs. Generated output never trains subsequent output. The relevance statistics are rebuilt from source facts each time.
 
-## Persistence
+## Storage and authentication
 
-`cv_generations` stores an ID before model calls, owner, source snapshot/hash, cleaned input, extraction, output, failures, timestamps, model responses and token usage. Model output is saved before parsing or validation, including refused/incomplete responses. Estimated cost is null rather than assuming an unverified model price.
+The existing MongoDB and admin/JWT configuration are required. CV generation does not read `OPENAI_API_KEY`, `OPENAI_MODEL`, or `OPENAI_CV_MODEL`. Existing AI features elsewhere in the application keep their own configuration.
 
-`cv_generation_locks` prevents concurrent generations for the same admin through an atomic expiring lock. Interrupted pending records display a retry state after four minutes. History shows the latest 30 attempts; older records are retained and remain addressable at `/cv/generated/<id>`.
+- `cv_profiles`: editable source facts, isolated by admin ID.
+- `cv_generations`: durable ID, owner, source snapshot/hash, cleaned JD, extraction, result/failure, and timestamps. New records use `local-cv-engine-v2`, with an empty provider-call history. Historical provider records are preserved.
+- `cv_generation_locks`: atomic, expiring per-admin lock against overlapping generation. Interrupted pending records display retry state after four minutes.
 
-Each generated result survives refresh and has PDF printing, plain-text download/copy, JSON export, keyword evidence and the cleaned JD. The existing A4 preview measures overflow in the user's browser; content budgets do not themselves guarantee a one-page fit.
+Generation/profile APIs require admin authentication and reject cross-origin mutations. The latest 30 attempts appear in history; older records remain addressable. A database outage can still prevent saving and is reported explicitly.
 
-## Validation
+Saved results offer an A4 print/PDF view, text download/copy, JSON export, keyword evidence, and the cleaned JD. The browser measures page overflow; content budgets alone do not guarantee a one-page print fit.
 
-Run `node scripts/check-cv-generator.cjs`, targeted ESLint, `npm run type-check`, and `npm run build`. The regression script uses an in-memory TypeScript loader and mocked model/persistence boundaries; it does not require a browser, contact OpenAI or write to the live database. Browser, live-provider and print acceptance remain manual.
+## Verification
+
+Run `node scripts/check-cv-generator.cjs`, targeted ESLint, TypeScript checks, and the application build. The regression script isolates persistence and authentication in memory and asserts zero provider calls. It covers source integrity, ownership, retries, input cleanup, local extraction, and learning from profile edits. Live API/database verification is separate. Visual and printing confirmation remain manual; do not open Playwright.

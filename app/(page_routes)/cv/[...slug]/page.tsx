@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { isCvSlug } from "../cv-data";
 import { cvVariantBySlug, cvVariants } from "../variants";
 
-const FEATURE_ROUTES = ["cover-letter", "java-react-jobs", "stats", "archive"] as const;
+const FEATURE_ROUTES = ["cover-letter", "java-react-jobs", "stats", "archive", "profile"] as const;
 
 export const dynamicParams = true;
 
@@ -26,6 +26,7 @@ export async function generateMetadata({
 
   if (route.startsWith("generated/")) return { title: "Generated CV", robots: { index: false, follow: false } };
   if (route === "archive") return { title: "CV Archive", robots: { index: false, follow: false } };
+  if (route === "profile") return { title: "My CV Experience", robots: { index: false, follow: false } };
 
   if (route === "cover-letter") return { title: "Cover letter editor" };
   if (route === "java-react-jobs") {
@@ -47,6 +48,13 @@ export default async function CvSlugPage({
   params: Promise<{ slug: string[] }>;
 }) {
   const route = (await params).slug.join("/");
+
+  if (route === "profile") {
+    const { getAdminFromCookies } = await import("@/lib/admin-auth");
+    if (!await getAdminFromCookies()) redirect("/cv");
+    const { CvProfileEditor } = await import("../CvProfileEditor");
+    return <CvProfileEditor />;
+  }
 
   if (route === "archive") {
     const { CvArchive } = await import("../CvArchive");
