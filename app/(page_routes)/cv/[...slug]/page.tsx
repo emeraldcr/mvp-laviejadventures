@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { isCvSlug } from "../cv-data";
 import { cvVariantBySlug, cvVariants } from "../variants";
 
-const FEATURE_ROUTES = ["cover-letter", "java-react-jobs", "stats", "archive", "profile"] as const;
+const FEATURE_ROUTES = ["cover-letter", "java-react-jobs", "stats", "archive", "profile", "scraper"] as const;
 
 export const dynamicParams = true;
 
@@ -27,6 +27,7 @@ export async function generateMetadata({
   if (route.startsWith("generated/")) return { title: "Generated CV", robots: { index: false, follow: false } };
   if (route === "archive") return { title: "CV Archive", robots: { index: false, follow: false } };
   if (route === "profile") return { title: "My CV Experience", robots: { index: false, follow: false } };
+  if (["scraper", "scrapper", "srapper"].includes(route)) return { title: "CV Job & Form Scanner", robots: { index: false, follow: false } };
 
   if (route === "cover-letter") return { title: "Cover letter editor" };
   if (route === "java-react-jobs") {
@@ -48,6 +49,12 @@ export default async function CvSlugPage({
   params: Promise<{ slug: string[] }>;
 }) {
   const route = (await params).slug.join("/");
+
+  if (route === "srapper" || route === "scrapper") redirect("/cv/scraper");
+  if (route === "scraper") {
+    const { CvScraper } = await import("../CvScraper");
+    return <CvScraper />;
+  }
 
   if (route === "profile") {
     const { getAdminFromCookies } = await import("@/lib/admin-auth");

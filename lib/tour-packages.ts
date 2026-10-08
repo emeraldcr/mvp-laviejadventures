@@ -451,7 +451,7 @@ export function getPackageSchedule(pkg: Pick<TourPackageOption, "id" | "name" | 
     .join(" ");
 
   if (/\b(private|privado)\b/.test(normalized) || pkg.groupTour === false) {
-    return "weekday";
+    return "weekend";
   }
 
   if (

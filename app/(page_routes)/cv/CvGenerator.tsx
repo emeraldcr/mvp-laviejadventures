@@ -7,10 +7,10 @@ import { auditJd, buildCorpus, DICT_CATEGORY_ORDER, type AuditResult, type DictH
 import * as baseCv from "./cv-data-java-react";
 import { CvGenerateAction } from "./CvGenerateAction";
 import type { CvProfile } from "@/lib/cv/types";
+import { CV_JD_DRAFT_KEY, CV_JD_MAX_LENGTH } from "@/lib/cv/draft";
 
-const DRAFT_KEY = "cv:jd-generator-draft:v1";
 const MIN_JD_LENGTH = 30;
-const MAX_JD_LENGTH = 40_000;
+const MAX_JD_LENGTH = CV_JD_MAX_LENGTH;
 const BASE_CORPUS = buildCorpus(baseCv);
 const field =
   "w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 outline-none focus:border-zinc-900 focus:ring-2 focus:ring-zinc-900/10";
@@ -37,8 +37,8 @@ export function CvGenerator({ initialJd = "" }: { initialJd?: string }) {
 
   useEffect(() => {
     try {
-      setJd(initialJd || sessionStorage.getItem(DRAFT_KEY) || "");
-      if (initialJd) sessionStorage.setItem(DRAFT_KEY, initialJd);
+      setJd(initialJd || sessionStorage.getItem(CV_JD_DRAFT_KEY) || "");
+      if (initialJd) sessionStorage.setItem(CV_JD_DRAFT_KEY, initialJd);
     } catch {
       // The comparison still works when browser storage is unavailable.
     }
@@ -66,7 +66,7 @@ export function CvGenerator({ initialJd = "" }: { initialJd?: string }) {
     setJd(value);
     setHasCompared(false);
     try {
-      sessionStorage.setItem(DRAFT_KEY, value);
+      sessionStorage.setItem(CV_JD_DRAFT_KEY, value);
     } catch {
       // The comparison still works when browser storage is unavailable.
     }
@@ -84,9 +84,10 @@ export function CvGenerator({ initialJd = "" }: { initialJd?: string }) {
           <Link href="/cv" className="flex items-center gap-2 font-semibold">
             <FileText size={18} /> CV Studio
           </Link>
-          <Link href="/cv/archive" className="text-zinc-600 hover:text-zinc-900">
-            CV archive
-          </Link>
+          <div className="flex flex-wrap justify-end gap-5">
+            <Link href="/cv/scraper" className="text-zinc-600 hover:text-zinc-900">Import a job URL</Link>
+            <Link href="/cv/archive" className="text-zinc-600 hover:text-zinc-900">CV archive</Link>
+          </div>
         </nav>
         <header className="mb-8 max-w-2xl">
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">

@@ -155,7 +155,7 @@ export async function quoteReservation(db: Db, input: ReservationQuoteInput): Pr
     const schedule = getPackageSchedule(selectedPackage);
     const message = schedule === "weekday"
       ? "Selected package is only available on weekdays. Please choose a weekday date."
-      : "Selected package is only available on weekends. Please choose a weekend date or select the private tour for weekdays.";
+      : "Selected package is only available on weekends. Please choose a weekend date.";
 
     throw new ReservationQuoteError("package_schedule", message, 400, {
       selectedDate: normalizedDate,

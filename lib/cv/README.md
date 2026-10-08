@@ -32,6 +32,18 @@ Generation/profile APIs require admin authentication and reject cross-origin mut
 
 Saved results offer an A4 print/PDF view, text download/copy, JSON export, keyword evidence, and the cleaned JD. The browser measures page overflow; content budgets alone do not guarantee a one-page print fit.
 
+## Job URL and form scanner
+
+`/cv/scraper` reads a public job or application page. The original `/cv/srapper` URL and `/cv/scrapper` redirect there. CV Studio links to the scanner through **Import a job URL**.
+
+The scanner extracts readable page text, JSON-LD job postings, links, forms, and input/textarea/select fields, including controls associated with a form elsewhere in the document. It preserves labels, required flags, options, upload constraints, and other field attributes. Password, hidden, and token-like values are omitted. Limits and incomplete extraction appear in scan notes.
+
+Review and edit either a job posting or the full page text, then choose **Use in CV generator**. This explicitly replaces the generator draft in the same browser tab using the shared session-storage key. Import requires 100–40,000 characters; it opens the generator for review. Copy/text download and JSON scan export are also available. Storage or clipboard failures leave the text on screen with a recovery message.
+
+`POST /api/scrape` accepts `{ "url": "https://…" }`; the original `GET /api/scrape?url=…` contract remains supported. Both require the existing admin session, reject foreign origins, and return uncached results or `{ error, code }`. Public HTTP/HTTPS URLs only: DNS answers are checked and pinned to the connection, every redirect is revalidated, and the download is limited to 20 seconds and 2 MB both before and after decompression. Scans can be cancelled from the screen.
+
+The scanner reads downloaded HTML. It does not execute page JavaScript, open embedded application frames, or submit applications. Sites requiring those flows or blocking automated access need a direct public job URL or manually pasted text. Extracted posting dates and salary are source data; they do not confirm that a vacancy is still open.
+
 ## Verification
 
-Run `node scripts/check-cv-generator.cjs`, targeted ESLint, TypeScript checks, and the application build. The regression script isolates persistence and authentication in memory and asserts zero provider calls. It covers source integrity, ownership, retries, input cleanup, local extraction, and learning from profile edits. Live API/database verification is separate. Visual and printing confirmation remain manual; do not open Playwright.
+Run `node scripts/check-cv-generator.cjs`, `node scripts/check-cv-scraper-extract.cjs`, `node scripts/check-cv-scraper-fetch.cjs`, targeted ESLint, TypeScript checks, and the application build. The generator regression script isolates persistence and authentication in memory and asserts zero provider calls. It covers source integrity, ownership, retries, input cleanup, local extraction, and learning from profile edits. Scanner checks use HTML fixtures and mocked network responses to verify extraction, public-address rules, redirects, size/time limits, and authenticated API behavior. Live API/database verification is separate. Visual and printing confirmation remain manual; do not open Playwright.

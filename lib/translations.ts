@@ -126,7 +126,7 @@ const es = {
       private: {
         name: "Tour Privado",
         description:
-          "Experiencia privada para tu grupo, con atención personalizada. Disponible de lunes a viernes.",
+          "Experiencia privada para tu grupo, con atención personalizada. Disponible solo los fines de semana.",
       },
     },
     perPerson: "persona",
@@ -466,7 +466,7 @@ const en = {
       private: {
         name: "Private Tour",
         description:
-          "Private experience for your group with personalized attention. Available Monday through Friday.",
+          "Private experience for your group with personalized attention. Available weekends only.",
       },
     },
     perPerson: "person",
@@ -590,7 +590,7 @@ const en = {
     mainToursTitle: "What you can do with us",
     ratesTitle: "Rates & conditions",
     ratesText1:
-      "Options run from ₡19,990 (weekend groups) to ₡34,990 (weekday individual). Exact price depends on the tour and package.",
+      "Options run from ₡19,990 (weekend groups) to ₡34,990 (weekend private groups). Exact price depends on the tour and package.",
     ratesText2:
       "Heavy rain, a rising river, or unsafe ground? We don't push it. We rebook or switch to something gentler. Pura vida, with a clear head.",
     ratesText3:
