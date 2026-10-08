@@ -126,7 +126,7 @@ const es = {
       private: {
         name: "Tour Privado",
         description:
-          "Experiencia privada para tu grupo, con atención personalizada. Disponible solo los fines de semana.",
+          "Experiencia privada para tu grupo, con atención personalizada. Disponible todos los días, sujeto a confirmación.",
       },
     },
     perPerson: "persona",
@@ -466,7 +466,7 @@ const en = {
       private: {
         name: "Private Tour",
         description:
-          "Private experience for your group with personalized attention. Available weekends only.",
+          "Private experience for your group with personalized attention. Available every day, subject to confirmation.",
       },
     },
     perPerson: "person",

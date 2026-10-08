@@ -442,28 +442,9 @@ export function normalizeTourPackages(value: unknown): TourPackageOption[] {
     .filter((pkg) => pkg.name && Number.isFinite(pkg.price));
 }
 
-export function getPackageSchedule(pkg: Pick<TourPackageOption, "id" | "name" | "nameEs" | "groupTour"> | null | undefined): PackageSchedule {
-  if (!pkg) return "any";
-
-  const normalized = [pkg.id, pkg.name, pkg.nameEs]
-    .filter(Boolean)
-    .map(normalizePackageScheduleText)
-    .join(" ");
-
-  if (/\b(private|privado)\b/.test(normalized) || pkg.groupTour === false) {
-    return "weekend";
-  }
-
-  if (
-    /\b(essential|esencial|lunch|almuerzo|basic|basico|standard|estandar|daily)\b/.test(normalized) ||
-    normalized.includes("full day") ||
-    normalized.includes("full-day") ||
-    normalized.includes("dia completo") ||
-    pkg.groupTour === true
-  ) {
-    return "weekend";
-  }
-
+export function getPackageSchedule(_pkg: Pick<TourPackageOption, "id" | "name" | "nameEs" | "groupTour"> | null | undefined): PackageSchedule {
+  // Package availability is confirmed separately by the operator/calendar.
+  // Do not block a date based on the package label or group/private status.
   return "any";
 }
 
@@ -501,13 +482,4 @@ export function isPackageAvailableOnDate(
   if (schedule === "weekend") return isWeekend;
 
   return !isWeekend;
-}
-
-function normalizePackageScheduleText(value: unknown): string {
-  return String(value ?? "")
-    .trim()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[_\s]+/g, " ");
 }
