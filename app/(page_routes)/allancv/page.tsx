@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Printer } from "lucide-react";
-import { CvDocument } from "../cv/CvDocument";
+import { CvDocument } from "../cv/cv/CvDocument";
 import { A4, PRINT_CSS } from "../cv/design";
 import {
   contactInfo,
@@ -15,7 +15,7 @@ import {
   primarySkills,
   secondarySkills,
   summary,
-} from "../cv/cv-data-java-react";
+} from "../cv/data/cv-data-java-react";
 import type { CvData } from "../cv/types";
 
 // Read-only presentation of the Java + React 2026 master résumé from /cv,

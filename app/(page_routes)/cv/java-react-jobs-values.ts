@@ -11,13 +11,13 @@ export const STAT_TONE_CLASS = {
 export type StatTone = keyof typeof STAT_TONE_CLASS;
 
 export const MATCH_LABEL = {
-  campaign: "Aligned CV",
-  exact: "Exact Java + React",
-  search: "Stack to verify",
+  tailored: "Tailored CV",
+  strong: "Strong CV match",
+  general: "General CV",
 } as const;
 
 export const MATCH_CLASS = {
-  campaign: "bg-teal-500/10 text-teal-300",
-  exact: "bg-emerald-500/10 text-emerald-300",
-  search: "bg-amber-500/10 text-amber-300",
+  tailored: "bg-teal-500/10 text-teal-300",
+  strong: "bg-emerald-500/10 text-emerald-300",
+  general: "bg-amber-500/10 text-amber-300",
 } as const;

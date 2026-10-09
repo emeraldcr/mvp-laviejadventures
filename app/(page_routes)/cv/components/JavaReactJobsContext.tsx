@@ -2,6 +2,7 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -10,12 +11,12 @@ import {
   type ReactNode,
   type SetStateAction,
 } from "react";
-import type { ApplicationState } from "./applications";
-import { useApplications } from "./useApplications";
-import { createDefaultJobs } from "./java-react-jobs-data";
-import { calculateJobStats, selectJobRows } from "./java-react-jobs-helpers";
-import { readStoredJobs, writeStoredJobs } from "./java-react-jobs-memory";
-import type { JobLead, JobLeadPatch, JobRowModel, JobStats, StatusFilter } from "./java-react-jobs-types";
+import type { ApplicationState } from "../applications";
+import { useApplications } from "../useApplications";
+import { createDefaultJobs } from "../java-react-jobs-data";
+import { calculateJobStats, selectJobRows } from "../java-react-jobs-helpers";
+import { readStoredJobs, writeStoredJobs } from "../java-react-jobs-memory";
+import type { JobLead, JobLeadPatch, JobRowModel, JobStats, StatusFilter, TrackFilter } from "../java-react-jobs-types";
 
 type JobBoardContextValue = {
   rows: JobRowModel[];
@@ -24,8 +25,8 @@ type JobBoardContextValue = {
   setQuery: Dispatch<SetStateAction<string>>;
   statusFilter: StatusFilter;
   setStatusFilter: Dispatch<SetStateAction<StatusFilter>>;
-  filledOnly: boolean;
-  setFilledOnly: Dispatch<SetStateAction<boolean>>;
+  trackFilter: TrackFilter;
+  setTrackFilter: Dispatch<SetStateAction<TrackFilter>>;
   openId: string | null;
   toggleOpen: (id: string) => void;
   updateJob: (id: string, patch: JobLeadPatch) => void;
@@ -35,12 +36,12 @@ type JobBoardContextValue = {
 const JobBoardContext = createContext<JobBoardContextValue | null>(null);
 
 export function JobBoardProvider({ children }: { children: ReactNode }) {
-  const { get: getApplication, update: updateApplication } = useApplications();
+  const { get: getStoredApplication, raw: storedApplications, update: updateApplication } = useApplications();
   const [jobs, setJobs] = useState<JobLead[]>(createDefaultJobs);
   const [storageReady, setStorageReady] = useState(false);
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [filledOnly, setFilledOnly] = useState(false);
+  const [trackFilter, setTrackFilter] = useState<TrackFilter>("all");
   const [openId, setOpenId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -52,9 +53,18 @@ export function JobBoardProvider({ children }: { children: ReactNode }) {
     if (storageReady) writeStoredJobs(jobs);
   }, [jobs, storageReady]);
 
+  const getApplication = useCallback(
+    (job: JobLead): ApplicationState => {
+      const state = getStoredApplication(job.applicationSlug);
+      if (Object.prototype.hasOwnProperty.call(storedApplications, job.applicationSlug)) return state;
+      return { ...state, status: job.initialStatus, stage: job.nextStep, priority: job.initialPriority, notes: job.sourceNotes };
+    },
+    [getStoredApplication, storedApplications],
+  );
+
   const rows = useMemo(
-    () => selectJobRows({ jobs, getApplication, query, statusFilter, filledOnly }),
-    [filledOnly, getApplication, jobs, query, statusFilter],
+    () => selectJobRows({ jobs, getApplication, query, statusFilter, trackFilter }),
+    [getApplication, jobs, query, statusFilter, trackFilter],
   );
   const stats = useMemo(() => calculateJobStats(jobs, getApplication), [getApplication, jobs]);
 
@@ -66,15 +76,15 @@ export function JobBoardProvider({ children }: { children: ReactNode }) {
       setQuery,
       statusFilter,
       setStatusFilter,
-      filledOnly,
-      setFilledOnly,
+      trackFilter,
+      setTrackFilter,
       openId,
       toggleOpen: (id) => setOpenId((current) => (current === id ? null : id)),
       updateJob: (id, patch) =>
         setJobs((current) => current.map((job) => (job.id === id ? { ...job, ...patch } : job))),
       updateApplication,
     }),
-    [filledOnly, openId, query, rows, stats, statusFilter, updateApplication],
+    [openId, query, rows, stats, statusFilter, trackFilter, updateApplication],
   );
 
   return <JobBoardContext.Provider value={value}>{children}</JobBoardContext.Provider>;

@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { ArrowRight, FileText, Search } from "lucide-react";
-import { auditJd, buildCorpus, DICT_CATEGORY_ORDER, type AuditResult, type DictHit } from "./audit";
-import * as baseCv from "./cv-data-java-react";
+import { auditJd, buildCorpus, DICT_CATEGORY_ORDER, type AuditResult, type DictHit } from "../audit";
+import * as baseCv from "../data/cv-data-java-react";
 import { CvGenerateAction } from "./CvGenerateAction";
 import type { CvProfile } from "@/lib/cv/types";
 import { CV_JD_DRAFT_KEY, CV_JD_MAX_LENGTH } from "@/lib/cv/draft";

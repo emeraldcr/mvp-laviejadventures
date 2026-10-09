@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { cvVariants } from "./variants";
+import { cvVariants } from "../variants";
 
 export function CvArchive() {
   return <main className="min-h-screen bg-[#f5f4f0] px-5 py-12 text-zinc-900"><div className="mx-auto max-w-4xl">
@@ -10,6 +10,6 @@ export function CvArchive() {
       <p className="text-sm font-semibold">{variant.name}</p><p className="mt-2 text-xs leading-relaxed text-zinc-500">{variant.role}</p>
       {variant.company && <p className="mt-2 text-xs text-teal-700">{variant.company}</p>}
     </Link>)}</div>
-    <nav className="mt-8 flex flex-wrap gap-5 text-sm text-zinc-500"><Link href="/cv/java-react-jobs">Application tracker</Link><Link href="/cv/cover-letter">Cover letter editor</Link><Link href="/cv/stats">CV word budgets</Link></nav>
+    <nav className="mt-8 flex flex-wrap gap-5 text-sm text-zinc-500"><Link href="/cv/jobs">Application tracker</Link><Link href="/cv/cover-letter">Cover letter editor</Link><Link href="/cv/stats">CV word budgets</Link></nav>
   </div></main>;
 }

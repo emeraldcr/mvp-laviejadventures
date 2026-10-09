@@ -78,7 +78,7 @@ async function main() {
   const { POST } = require("../app/api/cv/generate/route.ts");
   const { GET } = require("../app/api/cv/generations/route.ts");
   const { NextRequest } = require("next/server");
-  const { VARIANT_CV } = require("../app/(page_routes)/cv/cv-data.ts");
+  const { VARIANT_CV } = require("../app/(page_routes)/cv/data/cv-data.ts");
   const { cvVariants } = require("../app/(page_routes)/cv/variants.ts");
   const routes = require("../app/(page_routes)/cv/[...slug]/page.tsx");
   let count = 0;

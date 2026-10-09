@@ -13,8 +13,8 @@
 // for a human to write.
 // ─────────────────────────────────────────────────────────────
 
-import type { CvData } from "./types";
-import type { CvVariant } from "./variants";
+import type { CvData } from "../types";
+import type { CvVariant } from "../variants";
 import type { CompanyInfo, Tone } from "./cover-letter-types";
 import { countWeakness } from "./cover-letter-lint";
 

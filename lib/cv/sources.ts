@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { VARIANT_CV } from "@/app/(page_routes)/cv/cv-data";
+import { VARIANT_CV } from "@/app/(page_routes)/cv/data/cv-data";
 import { toEditable } from "@/app/(page_routes)/cv/editableCv";
 import { normalizedText } from "./jd";
 import type { CvProfile, CvSources, Evidence, SourceSkill } from "./types";

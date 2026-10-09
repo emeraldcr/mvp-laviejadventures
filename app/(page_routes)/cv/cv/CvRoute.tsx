@@ -1,8 +1,8 @@
 "use client";
 
 import { CvSavedPreview } from "./CvSavedPreview";
-import { toEditable } from "./editableCv";
-import { getCvBySlug } from "./cv-data";
+import { toEditable } from "../editableCv";
+import { getCvBySlug } from "../data/cv-data";
 
 /** Shared client boundary for every data-driven CV route. */
 export function CvRoute({ slug }: { slug: string }) {

@@ -22,14 +22,14 @@ import {
   X,
 } from "lucide-react";
 import { CvEditor } from "./CvEditor";
-import { useEditableCv } from "./useEditableCv";
-import { PrintPreview } from "./PrintPreview";
-import { PRINT_CSS } from "./design";
-import { auditJd, buildCorpus, DICT_CATEGORY_ORDER, type AuditResult, type DictHit } from "./audit";
-import { cvVariantBySlug, cvVariants, type CvVariant } from "./variants";
-import { VARIANT_CORPUS } from "./cv-data";
-import { useApplications, type UseApplications } from "./useApplications";
-import type { CvData } from "./types";
+import { useEditableCv } from "../useEditableCv";
+import { PrintPreview } from "../PrintPreview";
+import { PRINT_CSS } from "../design";
+import { auditJd, buildCorpus, DICT_CATEGORY_ORDER, type AuditResult, type DictHit } from "../audit";
+import { cvVariantBySlug, cvVariants, type CvVariant } from "../variants";
+import { VARIANT_CORPUS } from "../data/cv-data";
+import { useApplications, type UseApplications } from "../useApplications";
+import type { CvData } from "../types";
 import {
   APPS_VIEW_KEY,
   resolveView,
@@ -46,7 +46,7 @@ import {
   type SessionType,
   type SortMode,
   type ViewState,
-} from "./applications";
+} from "../applications";
 
 const JD_STORAGE_KEY = "cv:jd-audit";
 const MIN_JD_LEN = 30;
@@ -233,9 +233,9 @@ function WorkspaceNav({
         <Waypoints size={11} />
         Portfolio
       </Link>
-      <Link href="/cv/java-react-jobs" title="100 Java and React applications" className={`${btn} ${plain}`}>
+      <Link href="/cv/jobs" title="All software job applications" className={`${btn} ${plain}`}>
         <ListChecks size={11} />
-        100 jobs
+        All jobs
       </Link>
       <Link href="/" title="Home" className={`${btn} ${plain}`}>
         <Home size={11} />

@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { AlertTriangle, Check, FileText, Mail, Maximize2, Minimize2, Pencil } from "lucide-react";
-import { CvDocument } from "./CvDocument";
-import { CoverLetterDocument } from "./CoverLetterDocument";
+import { CvDocument } from "./cv/CvDocument";
+import { CoverLetterDocument } from "./cover/CoverLetterDocument";
 import { A4, preview } from "./design";
 import type { CvData } from "./types";
 

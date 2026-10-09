@@ -10,8 +10,8 @@
 // Add a variant = one flat data module + one entry here + metadata in variants.ts.
 // ─────────────────────────────────────────────────────────────
 
-import { buildCorpus } from "./audit";
-import type { CvData } from "./types";
+import { buildCorpus } from "../audit";
+import type { CvData } from "../types";
 
 import * as legacyGodCv from "./cv-data-legacy";
 import * as base from "./cv-data-java-react";

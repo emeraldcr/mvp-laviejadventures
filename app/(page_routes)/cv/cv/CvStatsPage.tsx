@@ -9,8 +9,8 @@
 
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { cvVariants } from "./variants";
-import { VARIANT_CV } from "./cv-data";
+import { cvVariants } from "../variants";
+import { VARIANT_CV } from "../data/cv-data";
 import {
   ENGLISH_LEVEL,
   LOCATION_LINE,
@@ -19,7 +19,7 @@ import {
   education,
   graduationProject,
   JOBS,
-} from "./cv-definitions";
+} from "../data/cv-definitions";
 import {
   JOB_BUDGETS,
   KIND_BUDGETS,
@@ -29,7 +29,7 @@ import {
   rowSectionLabel,
   type Band,
   type MatrixRow,
-} from "./stats";
+} from "../stats";
 
 const SHORT: Record<string, string> = {
   base: "Master",

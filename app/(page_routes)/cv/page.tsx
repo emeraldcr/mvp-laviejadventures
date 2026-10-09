@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { CvGenerator } from "./CvGenerator";
+import { CvGenerator } from "./cv/CvGenerator";
 import { getAdminFromCookies } from "@/lib/admin-auth";
 import { getGeneration } from "@/lib/cv/store";
 

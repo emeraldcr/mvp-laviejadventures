@@ -1,8 +1,8 @@
 import type { CSSProperties, Ref } from "react";
 import { GraduationCap } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import type { CvData, SummarySegment } from "./types";
-import { color, gap, margin, sheet, text } from "./design";
+import type { CvData, SummarySegment } from "../types";
+import { color, gap, margin, sheet, text } from "../design";
 
 // The printable résumé — one physical A4 page, identical layout for every
 // variant (only `cv` data differs). Every visual decision comes from ./design;

@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Printer, Download } from "lucide-react";
-import { materialize } from "./editableCv";
-import { PrintPreview } from "./PrintPreview";
-import { PRINT_CSS } from "./design";
+import { materialize } from "../editableCv";
+import { PrintPreview } from "../PrintPreview";
+import { PRINT_CSS } from "../design";
 import type { SavedCv, CvResult } from "@/lib/cv/types";
 
 function download(content: string, type: string, filename: string) {

@@ -12,8 +12,8 @@
 // ─────────────────────────────────────────────────────────────
 
 import { cvVariants } from "./variants";
-import { VARIANT_CV } from "./cv-data";
-import { JOBS, resolveJobKey } from "./cv-definition-jobs";
+import { VARIANT_CV } from "./data/cv-data";
+import { JOBS, resolveJobKey } from "./data/cv-definition-jobs";
 import type { CvData } from "./types";
 
 // ── primitives ──────────────────────────────────────────────

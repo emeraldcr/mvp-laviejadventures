@@ -39,7 +39,14 @@ export function readStoredJobs(defaults: JobLead[]): JobLead[] {
 
 export function writeStoredJobs(jobs: JobLead[]): void {
   try {
-    window.localStorage.setItem(JOBS_STORAGE_KEY, JSON.stringify(jobs));
+    const editable = jobs.map((job) => ({
+      id: job.id,
+      company: job.company,
+      title: job.title,
+      location: job.location,
+      url: job.url,
+    }));
+    window.localStorage.setItem(JOBS_STORAGE_KEY, JSON.stringify(editable));
   } catch {
     /* localStorage unavailable or full */
   }

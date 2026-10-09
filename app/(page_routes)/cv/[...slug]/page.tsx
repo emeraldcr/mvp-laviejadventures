@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import { isCvSlug } from "../cv-data";
+import { isCvSlug } from "../data/cv-data";
 import { cvVariantBySlug, cvVariants } from "../variants";
 
-const FEATURE_ROUTES = ["cover-letter", "java-react-jobs", "stats", "archive", "profile", "scraper"] as const;
+const FEATURE_ROUTES = ["cover-letter", "jobs", "java-react-jobs", "stats", "archive", "profile", "scraper"] as const;
 
 export const dynamicParams = true;
 
@@ -30,10 +30,10 @@ export async function generateMetadata({
   if (["scraper", "scrapper", "srapper"].includes(route)) return { title: "CV Job & Form Scanner", robots: { index: false, follow: false } };
 
   if (route === "cover-letter") return { title: "Cover letter editor" };
-  if (route === "java-react-jobs") {
+  if (route === "jobs" || route === "java-react-jobs") {
     return {
-      title: "100 Java + React Jobs | Application Tracker",
-      description: "A focused application tracker for 100 remote Java and React opportunities.",
+      title: "All Software Jobs | Application Tracker",
+      description: "A local application tracker for every consolidated software opportunity.",
     };
   }
   if (route === "stats") return { title: "CV word budgets" };
@@ -52,45 +52,45 @@ export default async function CvSlugPage({
 
   if (route === "srapper" || route === "scrapper") redirect("/cv/scraper");
   if (route === "scraper") {
-    const { CvScraper } = await import("../CvScraper");
+    const { CvScraper } = await import("../cv/CvScraper");
     return <CvScraper />;
   }
 
   if (route === "profile") {
     const { getAdminFromCookies } = await import("@/lib/admin-auth");
     if (!await getAdminFromCookies()) redirect("/cv");
-    const { CvProfileEditor } = await import("../CvProfileEditor");
+    const { CvProfileEditor } = await import("../cv/CvProfileEditor");
     return <CvProfileEditor />;
   }
 
   if (route === "archive") {
-    const { CvArchive } = await import("../CvArchive");
+    const { CvArchive } = await import("../cv/CvArchive");
     return <CvArchive />;
   }
   if (route.startsWith("generated/")) {
     const id = route.slice(10);
     if (id.includes("/")) notFound();
-    const { CvGeneratedPage } = await import("../CvGeneratedPage");
+    const { CvGeneratedPage } = await import("../cv/CvGeneratedPage");
     return <CvGeneratedPage id={id} />;
   }
   if (route.startsWith("archive/")) {
     const archived = route.slice(8);
     const slug = archived === "master" ? "" : archived;
     if (!isCvSlug(slug)) notFound();
-    const { CvRoute } = await import("../CvRoute");
+    const { CvRoute } = await import("../cv/CvRoute");
     return <CvRoute slug={slug} />;
   }
 
   if (route === "cover-letter") {
-    const { CoverLetterWorkspace } = await import("../CoverLetterWorkspace");
+    const { CoverLetterWorkspace } = await import("../cover/CoverLetterWorkspace");
     return <CoverLetterWorkspace />;
   }
-  if (route === "java-react-jobs") {
-    const { JavaReactJobsClient } = await import("../JavaReactJobsClient");
+  if (route === "jobs" || route === "java-react-jobs") {
+    const { JavaReactJobsClient } = await import("../components/JavaReactJobsClient");
     return <JavaReactJobsClient />;
   }
   if (route === "stats") {
-    const { default: CvStatsPage } = await import("../CvStatsPage");
+    const { default: CvStatsPage } = await import("../cv/CvStatsPage");
     return <CvStatsPage />;
   }
   if (!isCvSlug(route)) notFound();

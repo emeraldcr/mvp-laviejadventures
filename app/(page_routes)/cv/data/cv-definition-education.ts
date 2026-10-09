@@ -4,7 +4,7 @@
 //     export { education } from "./cv-definition-education";
 // ─────────────────────────────────────────────────────────────
 
-import type { CvData } from "./types";
+import type { CvData } from "../types";
 
 export const education = {
   degree: "Computer Engineering",

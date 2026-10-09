@@ -1,6 +1,6 @@
 import { buildContactInfo, buildLanguages, NAME } from "./cv-definition-identity";
 import { education } from "./cv-definition-education";
-import type { CvData, Highlight, SkillGroup, SummarySegment } from "./types";
+import type { CvData, Highlight, SkillGroup, SummarySegment } from "../types";
 
 export { education };
 

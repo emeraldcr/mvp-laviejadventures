@@ -1,4 +1,4 @@
-import type { CvData, Highlight, SkillGroup, SummarySegment } from "./types";
+import type { CvData, Highlight, SkillGroup, SummarySegment } from "../types";
 import {
   aiSkills,
   backendSkills,

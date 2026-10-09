@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowUpRight, Check, ClipboardCopy, FileText, Mail, Printer, X } from "lucide-react";
-import type { CvData } from "./types";
-import type { CvVariant } from "./variants";
+import type { CvData } from "../types";
+import type { CvVariant } from "../variants";
 import { buildCoverLetter } from "./cover-letter-build";
 import { parseCompanyInfo } from "./cover-letter-parse";
 import { lintLetter } from "./cover-letter-lint";

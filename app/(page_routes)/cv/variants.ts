@@ -1,6 +1,6 @@
 // ─────────────────────────────────────────────────────────────
 
-import { JAVA_REACT_CAMPAIGN_JOB_KEYS, JAVA_REACT_CAMPAIGN_JOBS } from "./cv-campaign-java-react";
+import { JAVA_REACT_CAMPAIGN_JOB_KEYS, JAVA_REACT_CAMPAIGN_JOBS } from "./data/cv-campaign-java-react";
 // Résumé variant registry — single source of truth for the sidebar.
 //
 // To add a new variant:

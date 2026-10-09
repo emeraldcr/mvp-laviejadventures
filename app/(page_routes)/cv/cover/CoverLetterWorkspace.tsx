@@ -3,10 +3,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, ClipboardCheck, ClipboardCopy, FileText, Printer, RotateCcw, Sparkles } from "lucide-react";
-import { PRINT_CSS } from "./design";
-import { PrintPreview } from "./PrintPreview";
-import { cvVariantBySlug, cvVariants } from "./variants";
-import { VARIANT_CV } from "./cv-data";
+import { PRINT_CSS } from "../design";
+import { PrintPreview } from "../PrintPreview";
+import { cvVariantBySlug, cvVariants } from "../variants";
+import { VARIANT_CV } from "../data/cv-data";
 import { buildCoverLetter } from "./cover-letter-build";
 import { parseCompanyInfo } from "./cover-letter-parse";
 import { lintLetter } from "./cover-letter-lint";

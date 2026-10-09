@@ -21,7 +21,7 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import type { EditableCvApi } from "./useEditableCv";
+import type { EditableCvApi } from "../useEditableCv";
 import {
   blankContact,
   blankGroup,
@@ -32,7 +32,7 @@ import {
   CONTACT_ICON_ORDER,
   type ContactIconKey,
   type EditableCv,
-} from "./editableCv";
+} from "../editableCv";
 
 type Mutate = EditableCvApi["mutate"];
 
