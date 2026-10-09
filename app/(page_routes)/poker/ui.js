@@ -4,6 +4,46 @@
 
 const SUIT_SYMBOLS = { c: '♣', d: '♦', h: '♥', s: '♠' };
 const RED_SUITS = new Set(['d', 'h']);
+const TURN_SECONDS = 20;
+let turnClock = { key: null, startedAt: 0 };
+let lastWarningSecond = null;
+
+function syncTurnClock(state) {
+  const active = state.actionSeat >= 0 && state.street !== 'showdown' && state.players[state.actionSeat] && !state.players[state.actionSeat].folded;
+  const key = active ? `${state.handNumber}:${state.street}:${state.actionSeat}` : null;
+  if (key !== turnClock.key) {
+    turnClock = { key, startedAt: active ? performance.now() : 0 };
+    lastWarningSecond = null;
+  }
+}
+
+function renderTurnTimer() {
+  if (!turnClock.key) return;
+  const elapsed = Math.max(0, (performance.now() - turnClock.startedAt) / 1000);
+  const remaining = Math.max(0, TURN_SECONDS - elapsed);
+  const seconds = Math.ceil(remaining);
+  const progress = Math.max(0, Math.min(1, remaining / TURN_SECONDS));
+  const activeSeat = turnClock.key.split(':').pop();
+  const ring = document.querySelector(`.seat[data-seat="${activeSeat}"] .timer-ring`);
+  if (!ring) return;
+
+  ring.style.setProperty('--timer-progress', progress.toFixed(4));
+  ring.querySelector('.timer-seconds').textContent = String(seconds);
+  ring.classList.toggle('warning', remaining <= 8 && remaining > 0);
+  ring.classList.toggle('expired', remaining <= 0);
+
+  if (remaining <= 8 && seconds !== lastWarningSecond) {
+    lastWarningSecond = seconds;
+    window.PokerSound?.play(seconds > 0 ? 'timer' : 'timer-end');
+  }
+}
+
+function startTimerLoop() {
+  renderTurnTimer();
+  window.requestAnimationFrame(startTimerLoop);
+}
+
+startTimerLoop();
 
 function createCardEl(cardStr, small = false) {
   const el = document.createElement('div');
@@ -21,6 +61,7 @@ function createCardEl(cardStr, small = false) {
 
 function renderSeats(state) {
   const container = document.getElementById('seats');
+  syncTurnClock(state);
   container.innerHTML = '';
 
   state.players.forEach((p, i) => {
@@ -50,8 +91,10 @@ function renderSeats(state) {
     else if (p.allIn) status = 'All-In';
     else if (state.actionSeat === i) status = 'Acting...';
 
+    const isActive = state.actionSeat === i && state.street !== 'showdown';
     seat.innerHTML = `
       <div class="seat-inner">
+        ${isActive ? '<div class="timer-ring" aria-label="Turn timer"><span class="timer-seconds">20</span><small>s</small></div>' : ''}
         <div class="seat-name">${p.name}</div>
         <div class="seat-stack">${p.stack}</div>
         <div class="seat-status">${status}</div>

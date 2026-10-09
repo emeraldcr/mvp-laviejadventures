@@ -244,11 +244,12 @@ class PokerTable {
     }
 
     // Post blinds
-    const sbIdx = this.nextOccupied(this.dealerIndex);
+    const headsUp = active.length === 2;
+    const sbIdx = headsUp ? this.dealerIndex : this.nextOccupied(this.dealerIndex);
     const bbIdx = this.nextOccupied(sbIdx);
     this.postBlind(sbIdx, this.smallBlind);
     this.postBlind(bbIdx, this.bigBlind);
-    this.currentBet = this.bigBlind;
+    this.currentBet = Math.max(this.players[sbIdx].bet, this.players[bbIdx].bet);
     this.minRaise = this.bigBlind;
 
     // First to act (UTG)
@@ -301,13 +302,18 @@ class PokerTable {
 
     if (toCall === 0) {
       actions.push({ type: 'check' });
-      actions.push({ type: 'bet', min: this.minRaise, max: p.stack });
+      if (p.stack >= this.minRaise) {
+        actions.push({ type: 'bet', min: this.minRaise, max: p.stack });
+      }
     } else {
       actions.push({ type: 'fold' });
       if (toCall < p.stack) {
         actions.push({ type: 'call', amount: toCall });
       }
-      actions.push({ type: 'raise', min: this.currentBet + this.minRaise, max: p.stack + p.bet });
+      const maxRaiseTo = p.stack + p.bet;
+      if (!p.acted && maxRaiseTo >= this.currentBet + this.minRaise) {
+        actions.push({ type: 'raise', min: this.currentBet + this.minRaise, max: maxRaiseTo });
+      }
     }
     // All-in always possible if stack > 0
     if (p.stack > 0) {
@@ -337,6 +343,7 @@ class PokerTable {
         break;
 
       case 'call': {
+        if (toCall <= 0) return { ok: false, error: 'Nothing to call' };
         const amount = Math.min(toCall, p.stack);
         p.stack -= amount;
         p.bet += amount;
@@ -350,16 +357,15 @@ class PokerTable {
 
       case 'bet':
       case 'raise': {
-        let total = action.amount; // total bet this street
-        if (action.type === 'bet') total = action.amount;
+        const total = action.amount; // total bet this street
         const raiseTo = Math.min(total, p.stack + p.bet);
         const putIn = raiseTo - p.bet;
         if (putIn <= 0) return { ok: false, error: 'Invalid raise' };
 
         const raiseSize = raiseTo - this.currentBet;
-        if (raiseSize > 0 && raiseSize < this.minRaise && raiseTo < p.stack + p.bet) {
-          // allow short all-in
-        }
+        if (action.type === 'bet' && this.currentBet !== 0) return { ok: false, error: 'Cannot bet into an existing bet' };
+        if (action.type === 'raise' && (this.currentBet === 0 || p.acted)) return { ok: false, error: 'Betting is not reopened' };
+        if (!Number.isFinite(total) || raiseSize < this.minRaise) return { ok: false, error: 'Raise is below the minimum' };
 
         p.stack -= putIn;
         p.bet = raiseTo;
@@ -390,11 +396,15 @@ class PokerTable {
         p.allIn = true;
         p.acted = true;
         if (p.bet > this.currentBet) {
-          this.minRaise = Math.max(this.minRaise, p.bet - this.currentBet);
+          const raiseSize = p.bet - this.currentBet;
+          const fullRaise = raiseSize >= this.minRaise;
+          if (fullRaise) this.minRaise = raiseSize;
           this.currentBet = p.bet;
           this.lastAggressor = this.actionIndex;
-          for (const pl of this.players) {
-            if (pl && pl !== p && !pl.folded && !pl.allIn) pl.acted = false;
+          if (fullRaise) {
+            for (const pl of this.players) {
+              if (pl && pl !== p && !pl.folded && !pl.allIn) pl.acted = false;
+            }
           }
         }
         msg = `${p.name} goes all-in (${p.bet})`;
@@ -465,8 +475,8 @@ class PokerTable {
     this.lastAggressor = -1;
 
     // If everyone all-in, auto runout
-    const canAct = this.players.some(p => p && !p.folded && !p.allIn && p.stack > 0);
-    if (!canAct) {
+    const playersWhoCanAct = this.players.filter(p => p && !p.folded && !p.allIn && p.stack > 0);
+    if (playersWhoCanAct.length < 2) {
       return this.runout();
     }
 
@@ -514,7 +524,11 @@ class PokerTable {
       }
       const potBestScore = Math.max(...eligible.map(result => result.score));
       const potWinners = eligible.filter(result => result.score === potBestScore)
-        .sort((a, b) => a.player.seat - b.player.seat);
+        .sort((a, b) => {
+          const distanceA = (a.player.seat - this.dealerIndex - 1 + this.numSeats) % this.numSeats;
+          const distanceB = (b.player.seat - this.dealerIndex - 1 + this.numSeats) % this.numSeats;
+          return distanceA - distanceB;
+        });
       const share = Math.floor(potAmount / potWinners.length);
       let remainder = potAmount % potWinners.length;
       for (const winner of potWinners) {

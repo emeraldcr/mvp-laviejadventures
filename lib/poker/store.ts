@@ -11,7 +11,7 @@ export const SMALL_BLIND = 5_000;
 export const BIG_BLIND = 10_000;
 export const MIN_BUY_IN = 100_000;
 
-type PokerPlayer = { id: string; name: string; stack: number; seat: number; isBot: false; hole: string[]; bet: number; totalBet: number; folded: boolean; allIn: boolean; acted: boolean };
+type PokerPlayer = { id: string; name: string; stack: number; seat: number; isBot: false; hole: string[]; bet: number; totalBet: number; folded: boolean; allIn: boolean; acted: boolean; departed?: boolean };
 type Winner = { seat: number; name: string; handName: string; amount: number };
 type EngineSnapshot = { numSeats: number; startingStack: number; smallBlind: number; bigBlind: number; players: Array<PokerPlayer | null>; deck: string[]; community: string[]; pot: number; sidePots: unknown[]; street: string; dealerIndex: number; actionIndex: number; currentBet: number; minRaise: number; lastAggressor: number; handNumber: number; history: unknown[]; winners: Winner[]; heroSeat: number };
 export type PokerTableDoc = { _id: string; state: EngineSnapshot; version: number; recentActionIds: string[]; lastWinners: Winner[]; lastCompletedHand: number; createdAt: Date; updatedAt: Date };
@@ -70,7 +70,9 @@ export async function getOrCreatePokerUser(userId: string, name: string) {
 }
 
 function maybeStartNextHand(engine: InstanceType<typeof PokerTable>) {
-  if ((engine.street === "waiting" || engine.street === "showdown") && engine.getActivePlayers().length >= 2 && !engine.startHand().ok) throw new Error("Unable to start poker hand");
+  if (engine.street !== "waiting" && engine.street !== "showdown") return;
+  engine.players = engine.players.map((player) => player?.departed ? null : player);
+  if (engine.getActivePlayers().length >= 2 && !engine.startHand().ok) throw new Error("Unable to start poker hand");
 }
 
 function publicState(doc: PokerTableDoc, userId: string) {
@@ -123,10 +125,20 @@ export async function standFromPokerTable(userId: string, actionId: string) {
   if (seat < 0) return { ok: false as const, status: 409, error: "not_seated" };
   const player = engine.players[seat]!;
   const cashOut = player.stack;
-  const mustAdvance = engine.actionIndex === seat || engine.getInHandPlayers().length <= 2;
-  player.folded = true;
-  engine.players[seat] = null;
-  if (engine.street !== "waiting" && engine.street !== "showdown" && mustAdvance) engine.advance();
+  const handIsActive = engine.street !== "waiting" && engine.street !== "showdown";
+  if (handIsActive) {
+    if (engine.actionIndex === seat) engine.applyAction({ type: "fold" });
+    else {
+      player.folded = true;
+      player.acted = true;
+      if (engine.getInHandPlayers().length <= 1) engine.advance();
+    }
+    player.stack = 0;
+    player.allIn = true;
+    player.departed = true;
+  } else {
+    engine.players[seat] = null;
+  }
   let lastWinners = current.lastWinners;
   let lastCompletedHand = current.lastCompletedHand;
   if (engine.street === "showdown") { lastWinners = structuredClone(engine.winners); lastCompletedHand = engine.handNumber; }

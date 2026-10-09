@@ -1,0 +1,13 @@
+{
+  "name": "Poker Table",
+  "short_name": "Poker",
+  "description": "A live Texas Hold'em poker table.",
+  "id": "/poker",
+  "start_url": "/poker",
+  "scope": "/poker",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "icons": [{ "src": "/poker/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}

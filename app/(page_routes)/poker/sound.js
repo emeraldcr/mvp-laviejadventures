@@ -127,6 +127,10 @@ class PokerSoundManager {
     } else if (name === 'connected') {
       this._tone(660, 0.1, { volume: 0.07 });
       this._tone(880, 0.12, { volume: 0.06, delay: 0.08 });
+    } else if (name === 'timer') {
+      this._tone(880, 0.055, { type: 'square', volume: 0.055 });
+    } else if (name === 'timer-end') {
+      this._tone(220, 0.18, { type: 'sawtooth', volume: 0.08, to: 140 });
     }
   }
 

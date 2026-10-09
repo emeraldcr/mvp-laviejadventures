@@ -17,6 +17,7 @@ export default function PokerPage() {
         await import("./api.js");
         await import("./ui.js");
         await import("./sound.js");
+        await import("./pwa.js");
         await import("./app.js");
       } catch (error) {
         console.error("Unable to start the poker table", error);
@@ -42,8 +43,11 @@ export default function PokerPage() {
         </div>
         <div className="controls">
           <span className="connection-status" id="connection-status" data-status="connecting">Connecting…</span>
+          <button id="btn-install" className="btn btn-icon pwa-control hidden" type="button" aria-label="Install Poker Table" title="Install app">↓</button>
+          <button id="btn-notifications" className="btn btn-icon" type="button" aria-label="Enable turn notifications" aria-pressed="false" title="Enable notifications">🔕</button>
           <button id="btn-sound" className="btn btn-icon" type="button" aria-label="Mute poker sounds" aria-pressed="false">🔊</button>
           <button id="btn-new-game" className="btn btn-secondary" type="button">Sit Down</button>
+          <button id="btn-poker-logout" className="btn btn-ghost" type="button" hidden>Log out</button>
           <button id="btn-settings" className="btn btn-ghost" type="button" disabled>Stand Up</button>
         </div>
       </header>
@@ -82,6 +86,18 @@ export default function PokerPage() {
         </div>
         <div className="bet-amount" id="bet-amount">0</div>
       </footer>
+
+      <div className="poker-auth hidden" id="poker-auth" role="dialog" aria-modal="true" aria-labelledby="poker-auth-title">
+        <form className="poker-auth-card" id="poker-auth-form">
+          <div className="poker-auth-mark" aria-hidden="true">♠</div>
+          <h2 id="poker-auth-title">Enter the table</h2>
+          <p className="poker-auth-copy">Choose a username and password. We’ll remember you on this browser. Email can be added later.</p>
+          <label>Username<input id="poker-username" name="username" autoComplete="username" minLength={3} maxLength={24} required /></label>
+          <label>Password<input id="poker-password" name="password" type="password" autoComplete="new-password" minLength={8} required /></label>
+          <p className="poker-auth-error" id="poker-auth-error" role="alert" />
+          <button className="btn btn-primary" type="submit">Enter and play</button>
+        </form>
+      </div>
 
       <div className="overlay hidden" id="overlay" role="dialog" aria-modal="true" aria-labelledby="overlay-title">
         <div className="overlay-content">

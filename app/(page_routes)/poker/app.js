@@ -2,8 +2,46 @@
  * Main application — wires UI + API + local engine loop
  */
 
-const { PokerAPI, PokerSound, UI } = window;
+const { PokerAPI, PokerSound, PokerPWA, UI } = window;
 const api = new PokerAPI();
+const authOverlay = document.getElementById('poker-auth');
+const authForm = document.getElementById('poker-auth-form');
+const authError = document.getElementById('poker-auth-error');
+const logoutButton = document.getElementById('btn-poker-logout');
+
+function showAuth(message = '') {
+  if (authError) authError.textContent = message;
+  authOverlay?.classList.remove('hidden');
+  document.getElementById('poker-username')?.focus();
+}
+
+function hideAuth() {
+  authOverlay?.classList.add('hidden');
+}
+
+authForm?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const button = authForm.querySelector('button[type="submit"]');
+  button.disabled = true;
+  if (authError) authError.textContent = '';
+  try {
+    const response = await fetch('/api/poker/auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: authForm.username.value, password: authForm.password.value }) });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(payload.error || 'Could not enter the table.');
+    hideAuth();
+    await init();
+  } catch (error) {
+    showAuth(error.message === 'invalid_credentials' ? 'That password does not match this username.' : 'Choose a username and password (8+ characters).');
+  } finally {
+    button.disabled = false;
+  }
+});
+
+logoutButton?.addEventListener('click', async () => {
+  api.disconnect();
+  await fetch('/api/poker/auth', { method: 'DELETE' });
+  window.location.reload();
+});
 
 let currentLegal = [];
 let previousState = null;
@@ -17,12 +55,15 @@ function renderProfile() {
 }
 
 async function init() {
+  if (api.state) return;
   PokerSound.initButton('btn-sound');
-  await api.createTable();
+    await api.createTable();
+    if (logoutButton) logoutButton.hidden = false;
   renderProfile();
 
   api.onUpdate(async (state) => {
     PokerSound.handleState(previousState, state);
+    PokerPWA.handleState(previousState, state);
     previousState = state;
     UI.renderState(state);
     currentLegal = await api.getLegalActions();
@@ -112,7 +153,8 @@ init().catch((error) => {
     };
     UI.showOverlay('Welcome to the table', 'Sign in or create your account to receive 1,000,000 free chips today.');
   } else {
-    UI.showOverlay('Connection error', 'The table could not connect to the game server. Check MongoDB and try again.');
+    if (error.status === 401) showAuth('Enter a username and password to play.');
+    else UI.showOverlay('Connection error', 'The table could not connect to the game server. Check MongoDB and try again.');
   }
 });
 
