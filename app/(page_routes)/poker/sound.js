@@ -135,10 +135,10 @@ class PokerSoundManager {
     if (next.handNumber > previous.handNumber) this.play('deal');
     else if ((next.community?.length || 0) > (previous.community?.length || 0)) this.play('card');
 
-    if (next.street === 'showdown' && previous.street !== 'showdown') {
-      const heroWon = next.winners?.some((winner) => winner.seat === 0);
+    if ((next.lastCompletedHand || 0) > (previous.lastCompletedHand || 0)) {
+      const heroWon = next.lastWinners?.some((winner) => winner.seat === next.heroSeat);
       this.play(heroWon ? 'win' : 'lose');
-    } else if (next.actionSeat === 0 && previous.actionSeat !== 0) {
+    } else if (next.heroSeat >= 0 && next.actionSeat === next.heroSeat && previous.actionSeat !== next.heroSeat) {
       this.play('turn');
     }
   }

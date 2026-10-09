@@ -36,14 +36,15 @@ export default function PokerPage() {
         </div>
         <div className="stats" aria-label="Table status">
           <div className="stat"><span className="label">Hand</span><span id="hand-count">1</span></div>
-          <div className="stat"><span className="label">Blinds</span><span id="blinds-display">10 / 20</span></div>
+          <div className="stat"><span className="label">Blinds</span><span id="blinds-display">5K / 10K</span></div>
           <div className="stat"><span className="label">Pot</span><span id="pot-display">0</span></div>
+          <div className="stat bankroll-stat"><span className="label">Bank</span><span id="bankroll-display">—</span></div>
         </div>
         <div className="controls">
           <span className="connection-status" id="connection-status" data-status="connecting">Connecting…</span>
           <button id="btn-sound" className="btn btn-icon" type="button" aria-label="Mute poker sounds" aria-pressed="false">🔊</button>
-          <button id="btn-new-game" className="btn btn-secondary" type="button">New Game</button>
-          <button id="btn-settings" className="btn btn-ghost" type="button">Settings</button>
+          <button id="btn-new-game" className="btn btn-secondary" type="button">Sit Down</button>
+          <button id="btn-settings" className="btn btn-ghost" type="button" disabled>Stand Up</button>
         </div>
       </header>
 
@@ -64,8 +65,8 @@ export default function PokerPage() {
 
       <footer className="action-bar" id="action-bar">
         <div className="player-info">
-          <div className="stack" id="hero-stack">1000</div>
-          <div className="to-call" id="to-call">Loading table…</div>
+          <div className="stack" id="hero-stack">Watching</div>
+          <div className="to-call" id="to-call">Sign in and choose your chips</div>
         </div>
         <div className="actions">
           <button className="btn btn-fold" id="btn-fold" type="button" disabled>Fold</button>
@@ -92,13 +93,11 @@ export default function PokerPage() {
 
       <div className="modal hidden" id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
         <div className="modal-content">
-          <h3 id="settings-title">Settings</h3>
-          <label>Starting Stack <input type="number" id="set-stack" defaultValue="1000" min="100" step="100" /></label>
-          <label>Small Blind <input type="number" id="set-sb" defaultValue="10" min="1" step="1" /></label>
-          <label>Big Blind <input type="number" id="set-bb" defaultValue="20" min="2" step="1" /></label>
-          <label>Number of Bots <input type="number" id="set-bots" defaultValue="5" min="1" max="5" /></label>
+          <h3 id="settings-title">Sit at the table</h3>
+          <p className="cashier-copy">Choose how many chips to bring. Blinds are always 5,000 / 10,000.</p>
+          <label>Buy-in <input type="number" id="set-stack" defaultValue="100000" min="100000" step="10000" /></label>
           <div className="modal-actions">
-            <button className="btn btn-primary" id="btn-apply-settings" type="button">Apply &amp; Restart</button>
+            <button className="btn btn-primary" id="btn-apply-settings" type="button">Take a Seat</button>
             <button className="btn btn-ghost" id="btn-close-settings" type="button">Close</button>
           </div>
         </div>

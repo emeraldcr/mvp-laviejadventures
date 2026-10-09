@@ -607,6 +607,13 @@
   color: var(--gold);
 }
 
+.cashier-copy {
+  margin: -8px 0 18px;
+  color: var(--text-dim);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 .modal-content label {
   display: flex;
   justify-content: space-between;

@@ -494,24 +494,46 @@ class PokerTable {
     });
 
     results.sort((a, b) => b.score - a.score);
-    const bestScore = results[0].score;
-    const winners = results.filter(r => r.score === bestScore);
 
-    // Simple pot award (no side pots for simplicity in this version)
-    const share = Math.floor(this.pot / winners.length);
-    let remainder = this.pot % winners.length;
+    // Build main/side pots from total contributions so different buy-ins and
+    // short all-ins are paid correctly.
+    const contributionLevels = [...new Set(this.players
+      .filter(Boolean)
+      .map(player => player.totalBet)
+      .filter(amount => amount > 0))].sort((a, b) => a - b);
+    const awards = new Map();
+    let previousLevel = 0;
 
-    for (const w of winners) {
-      w.player.stack += share + (remainder > 0 ? 1 : 0);
-      if (remainder > 0) remainder--;
+    for (const level of contributionLevels) {
+      const contributors = this.players.filter(player => player && player.totalBet >= level);
+      const potAmount = (level - previousLevel) * contributors.length;
+      const eligible = results.filter(result => !result.player.folded && result.player.totalBet >= level);
+      if (!eligible.length || potAmount <= 0) {
+        previousLevel = level;
+        continue;
+      }
+      const potBestScore = Math.max(...eligible.map(result => result.score));
+      const potWinners = eligible.filter(result => result.score === potBestScore)
+        .sort((a, b) => a.player.seat - b.player.seat);
+      const share = Math.floor(potAmount / potWinners.length);
+      let remainder = potAmount % potWinners.length;
+      for (const winner of potWinners) {
+        const amount = share + (remainder > 0 ? 1 : 0);
+        if (remainder > 0) remainder--;
+        winner.player.stack += amount;
+        awards.set(winner.player.seat, (awards.get(winner.player.seat) || 0) + amount);
+      }
+      previousLevel = level;
     }
 
-    this.winners = winners.map(w => ({
-      seat: w.player.seat,
-      name: w.player.name,
-      handName: w.name,
-      amount: share
-    }));
+    this.winners = results
+      .filter(result => awards.has(result.player.seat))
+      .map(result => ({
+        seat: result.player.seat,
+        name: result.player.name,
+        handName: result.name,
+        amount: awards.get(result.player.seat)
+      }));
 
     this.pot = 0;
     this.actionIndex = -1;
@@ -554,7 +576,8 @@ class PokerTable {
       winners: this.winners,
       players: this.players.map((p, i) => {
         if (!p) return { seat: i, empty: true };
-        const showCards = !p.isBot || this.street === 'showdown' || forSeat === i;
+        const viewerSeat = forSeat ?? this.heroSeat;
+        const showCards = this.street === 'showdown' || viewerSeat === i;
         return {
           seat: i,
           id: p.id,
@@ -566,7 +589,7 @@ class PokerTable {
           allIn: p.allIn,
           isBot: p.isBot,
           hole: showCards ? [...p.hole] : (p.hole.length ? ['??', '??'] : []),
-          isHero: i === (forSeat ?? this.heroSeat)
+          isHero: i === viewerSeat
         };
       })
     };

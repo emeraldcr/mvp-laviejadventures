@@ -76,7 +76,8 @@ function maybeStartNextHand(engine: InstanceType<typeof PokerTable>) {
 function publicState(doc: PokerTableDoc, userId: string) {
   const engine = restore(doc);
   const seat = engine.players.findIndex((player) => player?.id === userId);
-  return { ...engine.getState(seat >= 0 ? seat : null), version: doc.version, heroSeat: seat, legalActions: seat >= 0 && engine.actionIndex === seat ? engine.getLegalActions() : [], lastWinners: doc.lastWinners, lastCompletedHand: doc.lastCompletedHand };
+  engine.heroSeat = seat;
+  return { ...engine.getState(), version: doc.version, heroSeat: seat, legalActions: seat >= 0 && engine.actionIndex === seat ? engine.getLegalActions() : [], lastWinners: doc.lastWinners, lastCompletedHand: doc.lastCompletedHand };
 }
 
 export async function getPokerLobby(userId: string, name: string) {

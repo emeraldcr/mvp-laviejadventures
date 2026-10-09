@@ -1,7 +1,8 @@
 /** Persistent poker API client backed by MongoDB and WebSockets. */
 class PokerAPI {
   constructor() {
-    this.tableId = null;
+    this.tableId = 'MAIN';
+    this.profile = null;
     this.state = null;
     this.legalActions = [];
     this.listeners = new Set();
@@ -53,25 +54,22 @@ class PokerAPI {
     return payload;
   }
 
-  async createTable(options = {}) {
+  async createTable() {
     this.disconnect();
     this.closedByClient = false;
-    const payload = await this._request('/api/poker/tables', {
-      method: 'POST',
-      body: JSON.stringify(options)
-    });
-    this.tableId = payload.tableId;
+    const payload = await this._request('/api/poker/lobby');
+    this.profile = payload.profile;
     this.state = null;
     this._applyState(payload.state);
     this.connect();
-    return { ok: true, tableId: this.tableId };
+    return { ok: true, tableId: this.tableId, profile: this.profile };
   }
 
   connect() {
     if (!this.tableId || this.socket?.readyState === WebSocket.OPEN) return;
     clearTimeout(this.reconnectTimer);
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const url = `${protocol}//${window.location.host}/api/poker/ws?tableId=${encodeURIComponent(this.tableId)}`;
+    const url = `${protocol}//${window.location.host}/api/poker/ws`;
     this._emitConnection('connecting');
     const socket = new WebSocket(url);
     this.socket = socket;
@@ -106,23 +104,13 @@ class PokerAPI {
   }
 
   async startHand() {
-    if (!this.tableId) return { ok: false, error: 'No table' };
-    try {
-      const payload = await this._request(`/api/poker/tables/${this.tableId}/hand`, {
-        method: 'POST',
-        body: JSON.stringify({ actionId: crypto.randomUUID() })
-      });
-      this._applyState(payload.state);
-      return payload;
-    } catch (error) {
-      return { ok: false, error: error.message };
-    }
+    return { ok: true };
   }
 
   async getState() {
     if (this.state) return this.state;
-    if (!this.tableId) return null;
-    const payload = await this._request(`/api/poker/tables/${this.tableId}`);
+    const payload = await this._request('/api/poker/lobby');
+    this.profile = payload.profile;
     this._applyState(payload.state);
     return this.state;
   }
@@ -134,7 +122,7 @@ class PokerAPI {
   async takeAction(action) {
     if (!this.tableId) return { ok: false, error: 'No table' };
     try {
-      const payload = await this._request(`/api/poker/tables/${this.tableId}/action`, {
+      const payload = await this._request('/api/poker/action', {
         method: 'POST',
         body: JSON.stringify({ actionId: crypto.randomUUID(), action })
       });
@@ -150,7 +138,28 @@ class PokerAPI {
   }
 
   async processUntilHeroOrEnd() {
-    // Bots run atomically on the server before MongoDB is updated.
+    // The shared table advances only when the current human player acts.
+  }
+
+  async sit(buyIn) {
+    const payload = await this._request('/api/poker/seat', { method: 'POST', body: JSON.stringify({ actionId: crypto.randomUUID(), buyIn }) });
+    this._applyState(payload.state);
+    await this.refreshProfile();
+    return payload;
+  }
+
+  async stand() {
+    const payload = await this._request('/api/poker/stand', { method: 'POST', body: JSON.stringify({ actionId: crypto.randomUUID() }) });
+    this._applyState(payload.state);
+    await this.refreshProfile();
+    return payload;
+  }
+
+  async refreshProfile() {
+    const payload = await this._request('/api/poker/lobby');
+    this.profile = payload.profile;
+    this._applyState(payload.state);
+    return this.profile;
   }
 }
 

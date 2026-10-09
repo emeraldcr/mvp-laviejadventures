@@ -91,8 +91,8 @@ function renderCommunity(cards) {
 }
 
 function renderActionBar(state, legal) {
-  const hero = state.players[0];
-  document.getElementById('hero-stack').textContent = hero ? hero.stack : 0;
+  const hero = state.heroSeat >= 0 ? state.players[state.heroSeat] : null;
+  document.getElementById('hero-stack').textContent = hero ? hero.stack : 'Watching';
 
   const toCall = state.currentBet - (hero?.bet || 0);
   document.getElementById('to-call').textContent = toCall > 0 ? `To call: ${toCall}` : 'Your turn';
@@ -105,7 +105,7 @@ function renderActionBar(state, legal) {
   const slider = document.getElementById('bet-slider');
   const betAmount = document.getElementById('bet-amount');
 
-  const isHeroTurn = state.actionSeat === 0 && state.street !== 'showdown';
+  const isHeroTurn = state.heroSeat >= 0 && state.actionSeat === state.heroSeat && state.street !== 'showdown';
 
   btnFold.disabled = !isHeroTurn || !legal.some(a => a.type === 'fold');
   btnCheck.disabled = !isHeroTurn || !legal.some(a => a.type === 'check');

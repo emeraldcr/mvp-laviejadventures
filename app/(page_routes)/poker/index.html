@@ -16,14 +16,15 @@
       </div>
       <div class="stats">
         <div class="stat"><span class="label">Hand</span><span id="hand-count">1</span></div>
-        <div class="stat"><span class="label">Blinds</span><span id="blinds-display">10 / 20</span></div>
+        <div class="stat"><span class="label">Blinds</span><span id="blinds-display">5K / 10K</span></div>
         <div class="stat"><span class="label">Pot</span><span id="pot-display">0</span></div>
+        <div class="stat bankroll-stat"><span class="label">Bank</span><span id="bankroll-display">â€”</span></div>
       </div>
       <div class="controls">
         <span class="connection-status" id="connection-status" data-status="connecting">Connecting&hellip;</span>
         <button id="btn-sound" class="btn btn-icon" type="button" aria-label="Mute poker sounds" aria-pressed="false">&#128266;</button>
-        <button id="btn-new-game" class="btn btn-secondary">New Game</button>
-        <button id="btn-settings" class="btn btn-ghost">Settings</button>
+        <button id="btn-new-game" class="btn btn-secondary">Sit Down</button>
+        <button id="btn-settings" class="btn btn-ghost" disabled>Stand Up</button>
       </div>
     </header>
 
@@ -55,8 +56,8 @@
     <!-- Action Bar (bottom) -->
     <footer class="action-bar" id="action-bar">
       <div class="player-info">
-        <div class="stack" id="hero-stack">1000</div>
-        <div class="to-call" id="to-call">To call: 0</div>
+        <div class="stack" id="hero-stack">Watching</div>
+        <div class="to-call" id="to-call">Sign in and choose your chips</div>
       </div>
       <div class="actions">
         <button class="btn btn-fold" id="btn-fold" disabled>Fold</button>
@@ -85,13 +86,11 @@
     <!-- Settings Modal -->
     <div class="modal hidden" id="settings-modal">
       <div class="modal-content">
-        <h3>Settings</h3>
-        <label>Starting Stack <input type="number" id="set-stack" value="1000" min="100" step="100" /></label>
-        <label>Small Blind <input type="number" id="set-sb" value="10" min="1" step="5" /></label>
-        <label>Big Blind <input type="number" id="set-bb" value="20" min="2" step="10" /></label>
-        <label>Number of Bots <input type="number" id="set-bots" value="5" min="1" max="5" /></label>
+        <h3>Sit at the table</h3>
+        <p class="cashier-copy">Choose how many chips to bring. Blinds are always 5,000 / 10,000.</p>
+        <label>Buy-in <input type="number" id="set-stack" value="100000" min="100000" step="10000" /></label>
         <div class="modal-actions">
-          <button class="btn btn-primary" id="btn-apply-settings">Apply & Restart</button>
+          <button class="btn btn-primary" id="btn-apply-settings">Take a Seat</button>
           <button class="btn btn-ghost" id="btn-close-settings">Close</button>
         </div>
       </div>
