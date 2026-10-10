@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { isCvSlug } from "../data/cv-data";
 import { cvVariantBySlug, cvVariants } from "../variants";
 
-const FEATURE_ROUTES = ["cover-letter", "jobs", "java-react-jobs", "stats", "archive", "profile", "scraper"] as const;
+const FEATURE_ROUTES = ["cover-letter", "jobs", "java-react-jobs", "stats", "archive", "cv-archive", "profile", "scraper"] as const;
 
 export const dynamicParams = true;
 
@@ -12,7 +12,7 @@ export function generateStaticParams() {
     ...cvVariants.filter((variant) => variant.slug).map((variant) => ({
       slug: variant.slug.split("/"),
     })),
-    ...cvVariants.map((variant) => ({ slug: ["archive", ...(variant.slug || "master").split("/")] })),
+    ...cvVariants.map((variant) => ({ slug: ["cv-archive", ...(variant.slug || "master").split("/")] })),
     ...FEATURE_ROUTES.map((route) => ({ slug: [route] })),
   ];
 }
@@ -26,6 +26,7 @@ export async function generateMetadata({
 
   if (route.startsWith("generated/")) return { title: "Generated CV", robots: { index: false, follow: false } };
   if (route === "archive") return { title: "CV Archive", robots: { index: false, follow: false } };
+  if (route === "cv-archive") return { title: "Saved CV Archive", robots: { index: false, follow: false } };
   if (route === "profile") return { title: "My CV Experience", robots: { index: false, follow: false } };
   if (["scraper", "scrapper", "srapper"].includes(route)) return { title: "CV Job & Form Scanner", robots: { index: false, follow: false } };
 
@@ -38,7 +39,7 @@ export async function generateMetadata({
   }
   if (route === "stats") return { title: "CV word budgets" };
 
-  const archiveSlug = route.startsWith("archive/") ? route.slice(8) : route;
+  const archiveSlug = route.startsWith("cv-archive/") ? route.slice(11) : route.startsWith("archive/") ? route.slice(8) : route;
   const variant = cvVariantBySlug(archiveSlug === "master" ? "" : archiveSlug);
   return variant ? { title: `${variant.name} | CV` } : {};
 }
@@ -64,6 +65,10 @@ export default async function CvSlugPage({
   }
 
   if (route === "archive") {
+    const { JavaReactJobsClient } = await import("../components/JavaReactJobsClient");
+    return <JavaReactJobsClient />;
+  }
+  if (route === "cv-archive") {
     const { CvArchive } = await import("../cv/CvArchive");
     return <CvArchive />;
   }
@@ -73,8 +78,8 @@ export default async function CvSlugPage({
     const { CvGeneratedPage } = await import("../cv/CvGeneratedPage");
     return <CvGeneratedPage id={id} />;
   }
-  if (route.startsWith("archive/")) {
-    const archived = route.slice(8);
+  if (route.startsWith("cv-archive/") || route.startsWith("archive/")) {
+    const archived = route.startsWith("cv-archive/") ? route.slice(11) : route.slice(8);
     const slug = archived === "master" ? "" : archived;
     if (!isCvSlug(slug)) notFound();
     const { CvRoute } = await import("../cv/CvRoute");
@@ -95,5 +100,5 @@ export default async function CvSlugPage({
   }
   if (!isCvSlug(route)) notFound();
 
-  redirect(`/cv/archive/${route}`);
+  redirect(`/cv/cv-archive/${route}`);
 }

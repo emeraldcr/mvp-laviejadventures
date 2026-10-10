@@ -29,7 +29,7 @@ export function CvSavedPreview({ savedCv, result, archive = false }: { savedCv: 
     <style dangerouslySetInnerHTML={{ __html: PRINT_CSS }} />
     <div className="mx-auto max-w-6xl print:max-w-none">
       <header className="cv-print-hide mb-8">
-        <Link href={archive ? "/cv/archive" : "/cv"} className="text-sm text-zinc-500">← {archive ? "CV archive" : "New CV"}</Link>
+        <Link href={archive ? "/cv/cv-archive" : "/cv"} className="text-sm text-zinc-500">← {archive ? "CV archive" : "New CV"}</Link>
         <h1 className="mt-5 text-2xl font-semibold">{archive ? "Archived CV" : result?.jd.title ?? "Your CV"}</h1>
         {result?.jd.company && <p className="mt-1 text-sm text-zinc-500">{result.jd.company}</p>}
         {result?.method === "local" && <p className="mt-3 rounded-lg border border-teal-200 bg-teal-50 px-4 py-3 text-sm text-teal-800">Generated from your saved experience. <Link href="/cv/profile" className="underline">Add or improve your facts</Link> for future CVs.</p>}
@@ -49,7 +49,7 @@ export function CvSavedPreview({ savedCv, result, archive = false }: { savedCv: 
           <details><summary className="cursor-pointer font-semibold">Cleaned job description</summary><p className="mt-3 whitespace-pre-wrap text-xs leading-relaxed text-zinc-600">{result.jd.cleanedText}</p></details>
           {Boolean(result.omittedKeywords?.length) && <details><summary className="cursor-pointer font-semibold">Supported, but not included here</summary><p className="mt-2 text-xs leading-relaxed text-zinc-500">Your source CVs support these terms. They were omitted from this CV to keep it concise: {result.omittedKeywords?.join(", ")}.</p></details>}
           <details><summary className="cursor-pointer font-semibold">Keywords and source quotes</summary><ul className="mt-3 space-y-3">{result.jd.keywords.map((keyword) => <li key={keyword.term}><p className="text-xs font-semibold">{keyword.term} · {keyword.priority}</p><p className="mt-1 text-xs leading-relaxed text-zinc-500">“{keyword.quote}”</p></li>)}</ul></details>
-          <details><summary className="cursor-pointer font-semibold">Original CV evidence</summary><ul className="mt-3 space-y-4">{result.evidence.map((proof) => <li key={proof.id}><p className="text-xs leading-relaxed text-zinc-600">{proof.text}</p><Link href={proof.archives[0] === "profile" ? "/cv/profile" : `/cv/archive/${proof.archives[0] || "master"}`} className="mt-1 inline-block text-xs text-teal-700 underline">{proof.archives[0] === "profile" ? "Open saved experience" : "Open archived source"}</Link></li>)}</ul></details>
+          <details><summary className="cursor-pointer font-semibold">Original CV evidence</summary><ul className="mt-3 space-y-4">{result.evidence.map((proof) => <li key={proof.id}><p className="text-xs leading-relaxed text-zinc-600">{proof.text}</p><Link href={proof.archives[0] === "profile" ? "/cv/profile" : `/cv/cv-archive/${proof.archives[0] || "master"}`} className="mt-1 inline-block text-xs text-teal-700 underline">{proof.archives[0] === "profile" ? "Open saved experience" : "Open archived source"}</Link></li>)}</ul></details>
           <p className="text-xs leading-relaxed text-zinc-500">{result.method === "local" ? "Requirements are matched by their wording in your saved evidence. Years, exact versions, and certifications still need your review. " : ""}Review the wording and page fit before sending.</p>
         </aside>}
       </div>

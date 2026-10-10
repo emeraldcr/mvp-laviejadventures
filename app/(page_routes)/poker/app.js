@@ -11,6 +11,9 @@ const logoutButton = document.getElementById('btn-poker-logout');
 
 function showAuth(message = '') {
   if (authError) authError.textContent = message;
+  const savedUsername = localStorage.getItem('poker:username');
+  const usernameInput = document.getElementById('poker-username');
+  if (usernameInput && savedUsername && !usernameInput.value) usernameInput.value = savedUsername;
   authOverlay?.classList.remove('hidden');
   document.getElementById('poker-username')?.focus();
 }
@@ -25,9 +28,11 @@ authForm?.addEventListener('submit', async (event) => {
   button.disabled = true;
   if (authError) authError.textContent = '';
   try {
+    const username = authForm.username.value.trim();
     const response = await fetch('/api/poker/auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: authForm.username.value, password: authForm.password.value }) });
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(payload.error || 'Could not enter the table.');
+    localStorage.setItem('poker:username', username);
     hideAuth();
     await init();
   } catch (error) {
@@ -143,15 +148,8 @@ async function act(action) {
 // Boot
 init().catch((error) => {
   console.error(error);
-  const button = document.getElementById('btn-next-hand');
   if (error.status === 401) {
-    button.textContent = 'Create account / Sign in';
-    button.onclick = () => {
-      const link = document.createElement('a');
-      link.href = '/platform';
-      link.click();
-    };
-    UI.showOverlay('Welcome to the table', 'Sign in or create your account to receive 1,000,000 free chips today.');
+    showAuth('Choose a username and password to start playing.');
   } else {
     if (error.status === 401) showAuth('Enter a username and password to play.');
     else UI.showOverlay('Connection error', 'The table could not connect to the game server. Check MongoDB and try again.');

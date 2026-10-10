@@ -86,7 +86,7 @@ export function CvGenerator({ initialJd = "" }: { initialJd?: string }) {
           </Link>
           <div className="flex flex-wrap justify-end gap-5">
             <Link href="/cv/scraper" className="text-zinc-600 hover:text-zinc-900">Import a job URL</Link>
-            <Link href="/cv/archive" className="text-zinc-600 hover:text-zinc-900">CV archive</Link>
+            <Link href="/cv/cv-archive" className="text-zinc-600 hover:text-zinc-900">CV archive</Link>
           </div>
         </nav>
         <header className="mb-8 max-w-2xl">
@@ -222,7 +222,7 @@ export function CvGenerator({ initialJd = "" }: { initialJd?: string }) {
 
         <p className="mt-6 text-sm text-zinc-600">
           Want to review the source résumé?{" "}
-          <Link href="/cv/archive/master" className="inline-flex items-center gap-1 font-semibold text-teal-700 hover:text-teal-800">
+          <Link href="/cv/cv-archive/master" className="inline-flex items-center gap-1 font-semibold text-teal-700 hover:text-teal-800">
             <Search size={14} />
             Open the base CV
           </Link>

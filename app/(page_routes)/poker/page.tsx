@@ -70,7 +70,7 @@ export default function PokerPage() {
       <footer className="action-bar" id="action-bar">
         <div className="player-info">
           <div className="stack" id="hero-stack">Watching</div>
-          <div className="to-call" id="to-call">Sign in and choose your chips</div>
+          <div className="to-call" id="to-call">Choose your chips to play</div>
         </div>
         <div className="actions">
           <button className="btn btn-fold" id="btn-fold" type="button" disabled>Fold</button>
@@ -90,12 +90,12 @@ export default function PokerPage() {
       <div className="poker-auth hidden" id="poker-auth" role="dialog" aria-modal="true" aria-labelledby="poker-auth-title">
         <form className="poker-auth-card" id="poker-auth-form">
           <div className="poker-auth-mark" aria-hidden="true">♠</div>
-          <h2 id="poker-auth-title">Enter the table</h2>
-          <p className="poker-auth-copy">Choose a username and password. We’ll remember you on this browser. Email can be added later.</p>
+          <h2 id="poker-auth-title">Choose your player</h2>
+          <p className="poker-auth-copy">Only a username and password. We’ll remember you on this browser and take you straight to the table.</p>
           <label>Username<input id="poker-username" name="username" autoComplete="username" minLength={3} maxLength={24} required /></label>
           <label>Password<input id="poker-password" name="password" type="password" autoComplete="new-password" minLength={8} required /></label>
           <p className="poker-auth-error" id="poker-auth-error" role="alert" />
-          <button className="btn btn-primary" type="submit">Enter and play</button>
+          <button className="btn btn-primary" type="submit">Start playing</button>
         </form>
       </div>
 
