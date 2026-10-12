@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { trackAnalyticsEvent } from "@/lib/analytics/client";
 import type { OrderDetails } from "@/lib/types/index";
 import { RESERVATION_TRAVELER_DRAFT_KEY } from "@/lib/reservation/constants";
-import { getPayPalLocaleForCountry } from "@/app/components/reservation/paypalLocales";
 import {
   buildBookingAnalyticsMetadata,
   buildCheckoutKey,
@@ -81,7 +80,6 @@ export function usePayPalCheckout({
 
     let isMounted = true;
     let scriptForCleanup: HTMLScriptElement | null = null;
-    let loadFallbackAttempted = false;
     let buttonsRendered = false;
 
     trackAnalyticsEvent("booking_checkout_started", {
@@ -269,31 +267,14 @@ export function usePayPalCheckout({
     };
 
     const buyerCountryCode = getBuyerCountryFromPhone(orderDetails.phone);
-    const requestedLocale = getPayPalLocaleForCountry(buyerCountryCode, lang);
-    const sdkSrc = buildSdkSrc(requestedLocale);
-    const fallbackSdkSrc = buildSdkSrc();
+    // PayPal returns HTTP 400 for the Spanish locale aliases used by the
+    // previous booking page (including es_XC) with this live client ID.
+    // Omitting locale lets PayPal choose a supported locale from the buyer's
+    // browser and geolocation, and is the SDK's recommended default.
+    const sdkSrc = buildSdkSrc();
 
-    const handleScriptError = (failedSrc: string) => {
+    const handleScriptError = () => {
       document.querySelector<HTMLScriptElement>("#paypal-sdk")?.remove();
-
-      // PayPal's SDK v5 accepts BCP-47 country locales (for example es-CR).
-      // Some older locale aliases are rejected with HTTP 400; in that case,
-      // retry once with PayPal's automatic locale detection.
-      if (failedSrc !== fallbackSdkSrc && !loadFallbackAttempted) {
-        loadFallbackAttempted = true;
-        trackAnalyticsEvent("payment_error", {
-          metadata: {
-            ...bookingAnalyticsMetadata,
-            stage: "paypal_sdk_locale_fallback",
-            reason: "paypal_sdk_locale_load_error",
-            requestedLocale,
-            buyerCountryCode,
-          },
-        });
-        loadSdkScript(fallbackSdkSrc);
-        return;
-      }
-
       failPayPalLoad("paypal_sdk_load", "paypal_sdk_load_error");
     };
 
@@ -316,15 +297,24 @@ export function usePayPalCheckout({
           renderWhenMounted();
         }
       };
-      script.onerror = () => handleScriptError(src);
+      script.onerror = handleScriptError;
 
       document.body.appendChild(script);
     };
 
     const existing = document.querySelector<HTMLScriptElement>("#paypal-sdk");
-    if (existing && existing.src !== sdkSrc) {
-      existing.remove();
+    // A PayPal SDK instance is global and cannot be reconfigured by injecting
+    // a second URL. Reuse an already loaded instance instead of replacing its
+    // script while window.paypal is live.
+    if (existing && window.paypal) {
+      initializeButtons();
+      return () => {
+        isMounted = false;
+        if (paypalRef.current) paypalRef.current.innerHTML = "";
+      };
     }
+
+    if (existing && existing.src !== sdkSrc) existing.remove();
 
     const activeScript = document.querySelector<HTMLScriptElement>("#paypal-sdk");
 
@@ -334,7 +324,7 @@ export function usePayPalCheckout({
       initializeButtons();
     } else {
       activeScript.addEventListener("load", initializeButtons, { once: true });
-      activeScript.addEventListener("error", () => handleScriptError(activeScript.src), { once: true });
+      activeScript.addEventListener("error", handleScriptError, { once: true });
     }
 
     return () => {
