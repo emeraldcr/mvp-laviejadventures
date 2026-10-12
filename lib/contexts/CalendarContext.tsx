@@ -271,10 +271,8 @@ export function CalendarProvider({
   const goToToday = useCallback(() => {
     setCurrentMonth(minBookableDate.month - 1);
     setCurrentYear(minBookableDate.year);
-    const day = minBookableDate.day;
-    const slots = availability[day] ?? 0;
-    setSelectedDay(slots > 0 ? day : null);
-  }, [availability, minBookableDate.day, minBookableDate.month, minBookableDate.year]);
+    setSelectedDay(null);
+  }, [minBookableDate.month, minBookableDate.year]);
 
   const goToNextAvailableDay = useCallback(() => {
     const nextDay = findFirstAvailableDay();

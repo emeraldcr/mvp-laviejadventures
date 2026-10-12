@@ -16,7 +16,7 @@ function CalendarBase() {
     nextMonth,
     prevMonth,
     goToYear,
-    currentYear,
+    goToToday,
     selectedDay,
   } = useCalendarContext();
   const { lang } = useLanguage();
@@ -80,8 +80,17 @@ function CalendarBase() {
             <span aria-hidden>›</span>
           </button>
         </div>
-        {currentYear !== 2027 && (
-          <div className="flex justify-center sm:justify-end">
+        <div className="flex flex-wrap justify-center gap-2 sm:justify-end">
+          {currentYear !== new Date().getFullYear() && (
+            <button
+              type="button"
+              onClick={goToToday}
+              className="inline-flex min-h-8 items-center justify-center rounded-full border border-sky-500/40 bg-sky-500/10 px-3 py-1 text-[10px] font-bold tracking-wide text-sky-800 transition hover:-translate-y-0.5 hover:border-sky-500 hover:bg-sky-500/20 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:text-sky-200 sm:text-xs"
+            >
+              {lang === "es" ? "Volver a hoy" : "Back to today"}
+            </button>
+          )}
+          {currentYear !== 2027 && (
             <button
               type="button"
               onClick={() => goToYear(2027)}
@@ -89,8 +98,8 @@ function CalendarBase() {
             >
               {lang === "es" ? "Ver fechas 2027" : "See 2027 dates"}
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Weekday labels + grid */}
