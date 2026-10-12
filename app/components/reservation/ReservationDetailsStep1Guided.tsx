@@ -5,11 +5,11 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Clock3, Minus, Plus, Sparkles, Users } from "lucide-react";
 import PackagePicker from "./PackagePicker";
 import { formatDepartureLabel } from "@/lib/reservation/constants";
-import type { ReservationAddonDetails, TourTime } from "@/lib/reservation/types";
+import type { ReservationAddonDetails, ReservationChoiceStep, TourTime } from "@/lib/reservation/types";
 import type { TourPackageOption } from "@/lib/types/index";
 
 type ReservationTranslations = typeof import("@/lib/translations").translations["es"]["reservation"];
-export type ChoiceStep = 1 | 2 | 3;
+export type ChoiceStep = ReservationChoiceStep;
 
 interface Props {
   choiceStep: ChoiceStep;

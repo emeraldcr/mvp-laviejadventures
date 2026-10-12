@@ -5,52 +5,43 @@ import { format } from "date-fns";
 import { es, enUS } from "date-fns/locale";
 import { useLanguage } from "@/lib/LanguageContext";
 import { translations } from "@/lib/translations";
-import { MapPin } from "lucide-react";
 import { trackAnalyticsEvent } from "@/lib/analytics/client";
-import { TOUR_INFO } from "@/lib/tour-info";
 import {
-  ADDON_OPTIONS,
-  DEFAULT_DEPARTURE_TIMES,
-  RESERVATION_TRAVELER_DRAFT_KEY,
   formatDepartureLabel,
-  getTransportLocationLabel,
 } from "@/lib/reservation/constants";
-import {
-  buildAddonsBreakdown,
-  getAddonsPricePerPerson,
-} from "@/lib/reservation/addons";
-import { isTransportConfigComplete } from "@/lib/reservation/transport";
-import {
-  getExcludedAddonIds,
-  getPackageDepartureTimes,
-  getPackageDisplayName,
-  getPackageId,
-  getTourPackageOptions,
-  resolveInitialPackage,
-  resolveRecommendedPackage,
-} from "@/lib/reservation/pricing";
-import { isPackageAvailableOnDate } from "@/lib/tour-packages";
-import ReservationDetailsStepProgress from "./ReservationDetailsStepProgress";
+import { getPackageId, resolveInitialPackage } from "@/lib/reservation/pricing";
 import ReservationDetailsStep3 from "./ReservationDetailsStep3";
 import BookingStickyBar from "./BookingStickyBar";
 import type {
   TourTime,
   BookingStepId,
+  ReservationChoiceStep,
   ReservationDetailsProps,
-  ReservationAddonDetails,
 } from "@/lib/reservation/types";
-import useReservationForm from "../../hooks/useReservationForm";
-import { PHONE_COUNTRIES as ALL_PHONE_COUNTRIES } from "@/app/components/reservation/phoneCountries";
-import { resolveSelectedTourSlug, getDefaultMainTourInfo } from "./reservationDetails.helpers";
-import ReservationDetailsStep1Guided, { type ChoiceStep } from "./ReservationDetailsStep1Guided";
+import ReservationDetailsStep1Guided from "./ReservationDetailsStep1Guided";
 import ReservationDetailsStep2 from "./ReservationDetailsStep2";
 import InlinePayPalCheckout from "./InlinePayPalCheckout";
-import type { MainTourInfo, OrderDetails, TourPackageOption } from "@/lib/types/index";
-import { useTransportQuote } from "./hooks/useTransportQuote";
+import type { OrderDetails } from "@/lib/types/index";
+import { ReservationWizardProvider, useReservationWizard } from "./context/ReservationWizardContext";
+import { useReservationStepAnalytics } from "./hooks/useReservationStepAnalytics";
+import { RESERVATION_STEP_LABELS } from "./constants/reservationWizard";
+import { useReservationTourSelection } from "./hooks/useReservationTourSelection";
+import { useReservationTraveler } from "./hooks/useReservationTraveler";
+import { useReservationPricing } from "./hooks/useReservationPricing";
+import ReservationDetailsSidebar from "./ReservationDetailsSidebar";
+import { useReservationNavigation } from "./hooks/useReservationNavigation";
 
 // ---------------------- MAIN COMPONENT ----------------------
 
-export default function ReservationDetails({
+export default function ReservationDetails(props: ReservationDetailsProps) {
+  return (
+    <ReservationWizardProvider>
+      <ReservationDetailsFlow {...props} />
+    </ReservationWizardProvider>
+  );
+}
+
+function ReservationDetailsFlow({
   selectedDate,
   currentMonth,
   tickets,
@@ -65,9 +56,9 @@ export default function ReservationDetails({
   ivaRatePercent = 13,
 }: ReservationDetailsProps) {
   const { lang } = useLanguage();
+  const { currentStep, setCurrentStep, choiceStep, setChoiceStep } = useReservationWizard();
   const tr = translations[lang].reservation;
   const dateLocale = lang === "es" ? es : enUS;
-  const [selectedTourInfo, setSelectedTourInfo] = useState<{ slug: string; tour: MainTourInfo } | null>(null);
   const slots = availability[selectedDate] ?? 0;
   const isTicketsValid = Number.isInteger(tickets) && tickets >= 1 && tickets <= slots;
 
@@ -80,142 +71,35 @@ export default function ReservationDetails({
   );
 
   const [tourTime, setTourTime] = useState<TourTime | null>(null);
-  const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
-  const [addonDetails, setAddonDetails] = useState<ReservationAddonDetails>({});
-  const transportQuoteEnabled = isTransportConfigComplete(addonDetails);
-  const { transportQuote, transportLoading, transportError } = useTransportQuote({
-    enabled: transportQuoteEnabled,
-    addonDetails,
-    tickets,
-  });
-  const [currentStep, setCurrentStep] = useState<BookingStepId>(1);
-  const [choiceStep, setChoiceStep] = useState<ChoiceStep>(1);
   const paymentAttemptIdRef = useRef<string | null>(null);
-  const currentStepRef = useRef<BookingStepId>(1);
-  const stepEnteredAtRef = useRef(0);
-  const completedStepsRef = useRef<Set<BookingStepId>>(new Set());
-  const nextStepFocusRef = useRef<BookingStepId | null>(null);
-  const step1FieldFocusRef = useRef<"schedule" | "tickets" | null>(null);
-  const scheduleSectionRef = useRef<HTMLElement | null>(null);
-  const ticketsInputRef = useRef<HTMLInputElement | null>(null);
-  const travelerSectionRef = useRef<HTMLDivElement | null>(null);
-  const nameInputRef = useRef<HTMLInputElement | null>(null);
-  const emailInputRef = useRef<HTMLInputElement | null>(null);
-  const phoneInputRef = useRef<HTMLInputElement | null>(null);
-  const reviewSectionRef = useRef<HTMLDivElement | null>(null);
-  const termsCheckboxRef = useRef<HTMLInputElement | null>(null);
 
-  const selectedTourSlug = resolveSelectedTourSlug(tours, null, initialSelectedTourSlug);
-  const selectedTour = tours.find((tour) => tour.slug === selectedTourSlug) ?? tours[0] ?? null;
-  const packageOptions = useMemo(() => getTourPackageOptions(selectedTour), [selectedTour]);
-  const [selectedPackageId, setSelectedPackageId] = useState("");
-  const [hasConfirmedPackage, setHasConfirmedPackage] = useState(false);
+  const {
+    selectedTour,
+    packageOptions,
+    selectedPackageId,
+    setSelectedPackageId,
+    hasConfirmedPackage,
+    setHasConfirmedPackage,
+    selectedPackage,
+    excludedAddonIds,
+    packageLabel,
+    packagePriceUSD,
+    selectedTourName,
+    availableTimeSlots,
+    isPackageDisabled,
+    localizedCancellationPolicy,
+  } = useReservationTourSelection({
+    tours,
+    initialSelectedTourSlug,
+    initialSelectedPackageId,
+    reservationDateIso,
+    tickets,
+    lang,
+    tourInfo,
+    defaultCancellationPolicy: tr.defaultCancellationPolicy,
+  });
   const [hasConfirmedTime, setHasConfirmedTime] = useState(false);
   const [hasConfirmedTickets, setHasConfirmedTickets] = useState(false);
-  const selectedPackage = useMemo(
-    () => packageOptions.find((pkg) => pkg.id === selectedPackageId) ?? packageOptions[0] ?? null,
-    [packageOptions, selectedPackageId],
-  );
-  const excludedAddonIds = useMemo(
-    () => getExcludedAddonIds(selectedPackage),
-    [selectedPackage],
-  );
-  const packageLabel = selectedPackage
-    ? getPackageDisplayName(selectedPackage, lang === "es")
-    : lang === "es" ? "Entrada General" : "General Entry";
-  const packagePriceUSD = selectedPackage?.price ?? 30;
-  const selectedTourName = selectedTour ? (lang === "es" ? selectedTour.titleEs : selectedTour.titleEn) : (lang === "es" ? "Tour" : "Tour");
-  const selectedTourDescription = selectedTour
-    ? (lang === "es" ? selectedTour.descriptionEs : selectedTour.descriptionEn) ?? selectedTour.descriptionEs ?? selectedTour.descriptionEn ?? ""
-    : "";
-  const selectedTourFallbackInfo = useMemo<MainTourInfo | null>(() => {
-    if (!selectedTour) return null;
-
-    const priceLabel = typeof selectedTour.priceCRC === "number"
-      ? new Intl.NumberFormat("es-CR", {
-          style: "currency",
-          currency: "CRC",
-          maximumFractionDigits: 0,
-        }).format(selectedTour.priceCRC)
-      : "";
-
-    return {
-      name: selectedTourName,
-      operator: TOUR_INFO.operator,
-      duration: selectedTour.duration ?? "",
-      price: priceLabel,
-      location: selectedTour.location ?? "",
-      inclusions: selectedTour.inclusions ?? [],
-      exclusions: selectedTour.exclusions ?? [],
-      cancellationPolicy: selectedTour.cancellationPolicy ?? "",
-      details: selectedTourDescription,
-      restrictions: selectedTour.restrictions ?? "",
-      contact: TOUR_INFO.contact,
-    };
-  }, [selectedTour, selectedTourDescription, selectedTourName]);
-  const defaultMainTourInfo: MainTourInfo = getDefaultMainTourInfo();
-  const apiSelectedTourInfo = selectedTourInfo?.slug === selectedTourSlug ? selectedTourInfo.tour : null;
-  const resolvedTourInfo: MainTourInfo = apiSelectedTourInfo
-    ? {
-        ...(selectedTourFallbackInfo ?? tourInfo ?? defaultMainTourInfo),
-        ...apiSelectedTourInfo,
-        duration: apiSelectedTourInfo.duration || selectedTourFallbackInfo?.duration || tourInfo?.duration || defaultMainTourInfo.duration,
-        price: apiSelectedTourInfo.price || selectedTourFallbackInfo?.price || tourInfo?.price || defaultMainTourInfo.price,
-        location: apiSelectedTourInfo.location || selectedTourFallbackInfo?.location || tourInfo?.location || defaultMainTourInfo.location,
-        inclusions: apiSelectedTourInfo.inclusions.length > 0 ? apiSelectedTourInfo.inclusions : selectedTourFallbackInfo?.inclusions ?? tourInfo?.inclusions ?? defaultMainTourInfo.inclusions,
-        exclusions: apiSelectedTourInfo.exclusions.length > 0 ? apiSelectedTourInfo.exclusions : selectedTourFallbackInfo?.exclusions ?? tourInfo?.exclusions ?? defaultMainTourInfo.exclusions,
-        cancellationPolicy: apiSelectedTourInfo.cancellationPolicy || selectedTourFallbackInfo?.cancellationPolicy || tourInfo?.cancellationPolicy || defaultMainTourInfo.cancellationPolicy,
-        details: apiSelectedTourInfo.details || selectedTourFallbackInfo?.details || tourInfo?.details || defaultMainTourInfo.details,
-        restrictions: apiSelectedTourInfo.restrictions || selectedTourFallbackInfo?.restrictions || tourInfo?.restrictions || defaultMainTourInfo.restrictions,
-        contact: apiSelectedTourInfo.contact ?? selectedTourFallbackInfo?.contact ?? tourInfo?.contact ?? defaultMainTourInfo.contact,
-      }
-    : selectedTourFallbackInfo ?? (tourInfo ? { ...defaultMainTourInfo, ...tourInfo, cancellationPolicy: tourInfo.cancellationPolicy ?? defaultMainTourInfo.cancellationPolicy } : defaultMainTourInfo);
-
-  const availableTimeSlots = useMemo(() => {
-    const fromPackage = getPackageDepartureTimes(selectedPackage);
-    if (fromPackage.length > 0) return fromPackage;
-    return DEFAULT_DEPARTURE_TIMES;
-  }, [selectedPackage]);
-
-  const isPackageDisabled = useCallback(
-    (pkg: TourPackageOption) => !isPackageAvailableOnDate(pkg, reservationDateIso),
-    [reservationDateIso],
-  );
-
-  useEffect(() => {
-    // Prefer URL package, else recommended “popular” package for zero-decision booking.
-    const packageFromUrl = typeof window !== "undefined"
-      ? new URLSearchParams(window.location.search).get("package")
-      : null;
-    const requestedPackageId = packageFromUrl || initialSelectedPackageId;
-    if (requestedPackageId) {
-      const preferred = resolveInitialPackage(packageOptions, requestedPackageId);
-      setSelectedPackageId(getPackageId(preferred));
-      return;
-    }
-    const recommended = resolveRecommendedPackage(packageOptions, isPackageDisabled);
-    const fallback = resolveInitialPackage(packageOptions, null);
-    setSelectedPackageId(getPackageId(recommended ?? fallback));
-  }, [selectedTourSlug, packageOptions, initialSelectedPackageId, isPackageDisabled]);
-
-  // If the current package is closed for the chosen day, jump to recommended open one.
-  useEffect(() => {
-    if (packageOptions.length === 0 || !selectedPackageId) return;
-    const current = packageOptions.find((pkg) => getPackageId(pkg) === selectedPackageId) ?? null;
-    if (current && !isPackageDisabled(current)) return;
-
-    const recommended = resolveRecommendedPackage(packageOptions, isPackageDisabled);
-    if (recommended) {
-      setSelectedPackageId(getPackageId(recommended));
-      return;
-    }
-    const firstOpen = packageOptions.find((pkg) => !isPackageDisabled(pkg));
-    if (firstOpen) setSelectedPackageId(getPackageId(firstOpen));
-  }, [isPackageDisabled, packageOptions, selectedPackageId]);
-
-  useEffect(() => {
-    setSelectedAddons((current) => current.filter((id) => !excludedAddonIds.includes(id)));
-  }, [excludedAddonIds]);
 
   useEffect(() => {
     if (tourTime && !availableTimeSlots.includes(tourTime)) {
@@ -223,254 +107,43 @@ export default function ReservationDetails({
     }
   }, [availableTimeSlots, tourTime]);
 
-  // Keep shareable booking URL in sync with live selections (date / pax / package).
-  useEffect(() => {
-    if (typeof window === "undefined" || !selectedTourSlug || !selectedPackageId) return;
+  const {
+    selectedAddons,
+    setSelectedAddons,
+    addonDetails,
+    setAddonDetails,
+    transportQuoteEnabled,
+    transportQuote,
+    transportLoading,
+    transportError,
+    addonsPricePerPerson,
+    addonDetailsSummary,
+    pricePerPerson,
+    subtotal,
+    taxes,
+    totalWithTaxes,
+  } = useReservationPricing({
+    tickets,
+    lang,
+    packagePriceUSD,
+    ivaRatePercent,
+    excludedAddonIds,
+  });
 
-    const url = new URL(window.location.href);
-    url.searchParams.set("tour", selectedTourSlug);
-    url.searchParams.set("date", reservationDateIso);
-    if (tickets > 1) url.searchParams.set("pax", String(tickets));
-    else url.searchParams.delete("pax");
-    url.searchParams.set("package", selectedPackageId);
-
-    const next = `${url.pathname}${url.search}`;
-    if (`${window.location.pathname}${window.location.search}` !== next) {
-      window.history.replaceState({}, "", next);
-    }
-  }, [reservationDateIso, selectedPackageId, selectedTourSlug, tickets]);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    fetch(`/api/tours/main?slug=${encodeURIComponent(selectedTourSlug)}`)
-      .then((response) => response.json())
-      .then((data) => {
-        if (isMounted && data?.tour) {
-          setSelectedTourInfo({ slug: selectedTourSlug, tour: data.tour as MainTourInfo });
-        }
-      })
-      .catch(() => {
-        if (isMounted && tourInfo && !selectedTourFallbackInfo) {
-          setSelectedTourInfo({ slug: selectedTourSlug, tour: tourInfo });
-        }
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [selectedTourSlug, selectedTourFallbackInfo, tourInfo]);
-
-  const seemsSpanish = useCallback((value?: string) => {
-    if (!value) return false;
-    return /[áéíóúñ]|\b(entrada|guía|recorrido|cañón|horas|cancelación|solo|adultos|incluye)\b/i.test(value);
-  }, []);
-
-  const localizedCancellationPolicy = useMemo(() => {
-    if (lang === "es") {
-      return resolvedTourInfo.cancellationPolicy || tr.defaultCancellationPolicy;
-    }
-
-    if (!seemsSpanish(resolvedTourInfo.cancellationPolicy)) {
-      return resolvedTourInfo.cancellationPolicy || tr.defaultCancellationPolicy;
-    }
-
-    return tr.defaultCancellationPolicy;
-  }, [lang, resolvedTourInfo.cancellationPolicy, seemsSpanish, tr.defaultCancellationPolicy]);
-
-  const addonsPricePerPerson = useMemo(() => {
-    return getAddonsPricePerPerson(selectedAddons, addonDetails, {
-      transportPricePerPerson: transportQuote?.perPerson ?? null,
-    });
-  }, [selectedAddons, addonDetails, transportQuote]);
-
-  const addonsBreakdown = useMemo(
-    () => buildAddonsBreakdown(selectedAddons, addonDetails, {
-      transportPricePerPerson: transportQuote?.perPerson ?? null,
-    }),
-    [selectedAddons, addonDetails, transportQuote],
-  );
-
-  const addonDetailsSummary = useMemo(() => {
-    const lines: string[] = [];
-
-    if (selectedAddons.includes("alojamiento")) {
-      lines.push([
-        lang === "es" ? "Hospedaje" : "Lodging",
-        addonDetails.lodgingType,
-        addonDetails.lodgingNights ? `${addonDetails.lodgingNights} night(s)` : null,
-        addonDetails.lodgingRoom,
-      ].filter(Boolean).join(": "));
-    }
-
-    if (selectedAddons.includes("almuerzo")) {
-      lines.push([
-        lang === "es" ? "Restaurante" : "Restaurant",
-        addonDetails.restaurantMeal,
-        addonDetails.restaurantProtein,
-        addonDetails.restaurantNotes,
-      ].filter(Boolean).join(": "));
-    }
-
-    if (selectedAddons.includes("transporte")) {
-      lines.push([
-        lang === "es" ? "Transporte" : "Transport",
-        addonDetails.transportType === "private"
-          ? (lang === "es" ? "Privado 4x4" : "Private 4x4")
-          : addonDetails.transportType === "shared"
-            ? (lang === "es" ? "Compartido" : "Shared shuttle")
-            : null,
-        addonDetails.pickupLocation
-          ? `${lang === "es" ? "Pickup" : "Pickup"}: ${getTransportLocationLabel(addonDetails.pickupLocation, lang)}`
-          : null,
-        addonDetails.dropoffLocation
-          ? `${lang === "es" ? "Drop-off" : "Drop-off"}: ${getTransportLocationLabel(addonDetails.dropoffLocation, lang)}`
-          : null,
-        addonDetails.transportNotes,
-      ].filter(Boolean).join(" | "));
-    }
-
-    return lines.filter((line) => line.includes(":")).join(" | ");
-  }, [addonDetails, lang, selectedAddons]);
-
-  const pricePerPerson = packagePriceUSD + addonsPricePerPerson;
-
-  const { subtotalRaw, taxesRaw, totalWithTaxesRaw } = useMemo(() => {
-    const safeTickets = Number.isFinite(tickets) ? Math.max(0, tickets) : 0;
-    const sub = safeTickets * pricePerPerson;
-    const normalizedTaxRate = Number.isFinite(ivaRatePercent)
-      ? Math.max(0, ivaRatePercent) / 100
-      : 0;
-    const tax = sub * normalizedTaxRate;
-    return { subtotalRaw: sub, taxesRaw: tax, totalWithTaxesRaw: sub + tax };
-  }, [tickets, pricePerPerson, ivaRatePercent]);
-
-  const subtotal = Number.isFinite(subtotalRaw) ? subtotalRaw : 0;
-  const taxes = Number.isFinite(taxesRaw) ? taxesRaw : 0;
-  const totalWithTaxes = Number.isFinite(totalWithTaxesRaw) ? totalWithTaxesRaw : 0;
-
-  const { formState, isHydrated: isTravelerDraftHydrated, setFormState, handleChange, validation } = useReservationForm(
-    {
-      name: "",
-      email: "",
-      phoneCode: ALL_PHONE_COUNTRIES[0]?.code ?? "+506",
-      phoneNumber: "",
-      specialRequests: "",
-      agreeTerms: false,
-    },
-    { storageKey: RESERVATION_TRAVELER_DRAFT_KEY },
-  );
+  const {
+    formState,
+    isHydrated: isTravelerDraftHydrated,
+    handleChange,
+    validation,
+    hasAppliedPrefillRef,
+  } = useReservationTraveler({
+    availableTimeSlots,
+    setTourTime,
+    setSelectedAddons,
+    setAddonDetails,
+  });
   const previousReservationDateRef = useRef(reservationDateIso);
-  const hasPrefilledProfileRef = useRef(false);
-  const hasAppliedPrefillRef = useRef(false);
   const hasResumedProgressRef = useRef(false);
-
-  useEffect(() => {
-    if (hasAppliedPrefillRef.current || !isTravelerDraftHydrated || availableTimeSlots.length === 0) return;
-
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const requestedTime = (params.get("time") ?? params.get("tourTime") ?? "").trim();
-      if (requestedTime && availableTimeSlots.includes(requestedTime)) {
-        setTourTime(requestedTime);
-      }
-
-      const requestedPhone = (params.get("phone") ?? "").trim();
-      const requestedPhoneNumber = (params.get("phoneNumber") ?? "").trim();
-      const phoneMatch = requestedPhone.match(/^(\+\d{1,4})[\s-]*(.*)$/);
-      const requestedAddonIds = (params.get("addons") ?? params.get("addonIds") ?? "")
-        .split(",")
-        .map((value) => value.trim())
-        .filter((value) => ADDON_OPTIONS.some((addon) => addon.id === value));
-      if (requestedAddonIds.length > 0) setSelectedAddons(requestedAddonIds);
-
-      const addonDetailsParam = params.get("addonDetails");
-      if (addonDetailsParam) {
-        try {
-          const parsedDetails = JSON.parse(addonDetailsParam) as ReservationAddonDetails;
-          if (parsedDetails && typeof parsedDetails === "object") setAddonDetails(parsedDetails);
-        } catch {
-          // Ignore malformed optional add-on data and keep the configurator usable.
-        }
-      }
-
-      setFormState((current) => ({
-        ...current,
-        name: params.get("name")?.trim() || current.name || "",
-        email: params.get("email")?.trim() || current.email || "",
-        phoneCode: params.get("phoneCode")?.trim() || phoneMatch?.[1] || current.phoneCode,
-        phoneNumber: requestedPhoneNumber || phoneMatch?.[2] || requestedPhone || current.phoneNumber,
-        specialRequests: params.get("specialRequests")?.trim() || current.specialRequests || "",
-        // Terms always require an explicit action in this page. Never trust a URL.
-        agreeTerms: false,
-      }));
-      hasAppliedPrefillRef.current = true;
-    } catch {
-      hasAppliedPrefillRef.current = true;
-    }
-  }, [availableTimeSlots, isTravelerDraftHydrated, setFormState]);
-
-  useEffect(() => {
-    if (previousReservationDateRef.current === reservationDateIso) return;
-    previousReservationDateRef.current = reservationDateIso;
-    completedStepsRef.current.clear();
-    nextStepFocusRef.current = null;
-    setCurrentStep(1);
-    setChoiceStep(1);
-    setTourTime(null);
-    setHasConfirmedPackage(false);
-    setHasConfirmedTime(false);
-    setHasConfirmedTickets(false);
-    handleChange("agreeTerms", false);
-  }, [handleChange, reservationDateIso]);
-
-  // Prefill traveler fields from profile when logged in — never overwrite typed draft values.
-  useEffect(() => {
-    if (hasPrefilledProfileRef.current) return;
-    hasPrefilledProfileRef.current = true;
-
-    let cancelled = false;
-
-    fetch("/api/user/profile")
-      .then((response) => (response.ok ? response.json() : null))
-      .then((data) => {
-        if (cancelled) return;
-        const profile = data?.profile as { name?: string; email?: string; phone?: string } | undefined;
-        if (!profile) return;
-
-        setFormState((prev) => {
-          const next = {
-            ...prev,
-            name: prev.name.trim() ? prev.name : (profile.name ?? prev.name),
-            email: prev.email.trim() ? prev.email : (profile.email ?? prev.email),
-          };
-
-          if (prev.phoneNumber.trim() || !profile.phone?.trim()) return next;
-
-          const normalizedPhone = profile.phone.trim();
-          const matchedCode = ALL_PHONE_COUNTRIES.find((country) =>
-            normalizedPhone.startsWith(country.code),
-          );
-
-          if (matchedCode) {
-            return {
-              ...next,
-              phoneCode: matchedCode.code,
-              phoneNumber: normalizedPhone.slice(matchedCode.code.length).trim(),
-            };
-          }
-
-          return { ...next, phoneNumber: normalizedPhone };
-        });
-      })
-      .catch(() => {
-        // Guest or offline: draft/session storage still handles continuity.
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [setFormState]);
 
   const isStep1Valid =
     isTicketsValid &&
@@ -555,17 +228,7 @@ export default function ReservationDetails({
     tourTime,
   ]);
 
-  const stepLabels = useMemo<Record<BookingStepId, string>>(() => ({
-    1: "schedule",
-    2: "traveler_details",
-    3: "review",
-  }), []);
-
-  useEffect(() => {
-    if (stepEnteredAtRef.current === 0) {
-      stepEnteredAtRef.current = Date.now();
-    }
-  }, []);
+  const stepLabels = RESERVATION_STEP_LABELS;
 
   const missingStep1Keys = useMemo(() => {
     const missing: string[] = [];
@@ -587,12 +250,6 @@ export default function ReservationDetails({
     return missing;
   }, [validation.isNameValid, validation.isEmailValid, validation.isPhoneNumberValid]);
 
-  const getMissingKeysForStep = useCallback((step: BookingStepId) => {
-    if (step === 1) return missingStep1Keys;
-    if (step === 2) return missingStep2Keys;
-    return validation.isAgreeTermsValid ? [] : ["terms"];
-  }, [missingStep1Keys, missingStep2Keys, validation.isAgreeTermsValid]);
-
   const getAnalyticsBookingSnapshot = useCallback(() => ({
     hasPreselectedTour,
     selectedTourSlug: selectedTour?.slug ?? null,
@@ -609,8 +266,8 @@ export default function ReservationDetails({
     addonDetailsSummary,
     addonsPricePerPerson,
     pricePerPerson,
-    subtotal: subtotalRaw,
-    taxes: taxesRaw,
+    subtotal,
+    taxes,
     totalWithTaxes,
   }), [
     hasPreselectedTour,
@@ -627,231 +284,81 @@ export default function ReservationDetails({
     addonDetailsSummary,
     addonsPricePerPerson,
     pricePerPerson,
-    subtotalRaw,
-    taxesRaw,
+    subtotal,
+    taxes,
     totalWithTaxes,
   ]);
 
-  useEffect(() => {
-    trackAnalyticsEvent("booking_step", {
-      metadata: {
-        step: currentStep,
-        stepLabel: stepLabels[currentStep],
-        completion: {
-          step1Valid: isStep1Valid,
-          step2Valid: isStep2Valid,
-          termsAccepted: validation.isAgreeTermsValid,
-          formReadyToSubmit: isFormValid,
-          missingStep1Items,
-          missingStep2Items,
-          missingStep1Keys,
-          missingStep2Keys,
-        },
-        booking: getAnalyticsBookingSnapshot(),
-        selectedDate,
-        currentMonth,
-        currentYear,
-        tickets,
-      },
-    });
-  }, [
+  const {
+    trackBlockedStep,
+    trackStepCompleted,
+    markStepCompleted,
+    resetCompletedSteps,
+  } = useReservationStepAnalytics({
     currentStep,
     isStep1Valid,
     isStep2Valid,
-    validation.isAgreeTermsValid,
+    termsAccepted: validation.isAgreeTermsValid,
     isFormValid,
     missingStep1Items,
     missingStep2Items,
     missingStep1Keys,
     missingStep2Keys,
-    getAnalyticsBookingSnapshot,
+    getBookingSnapshot: getAnalyticsBookingSnapshot,
     selectedDate,
     currentMonth,
     currentYear,
     tickets,
-    stepLabels,
-  ]);
+  });
 
-  useEffect(() => {
-    const previousStep = currentStepRef.current;
-    if (previousStep !== currentStep) {
-      const durationMs = Date.now() - stepEnteredAtRef.current;
-
-      trackAnalyticsEvent("booking_step_abandoned", {
-        metadata: {
-          step: previousStep,
-          stepLabel: stepLabels[previousStep],
-          durationMs,
-          durationSeconds: Math.round(durationMs / 1000),
-          missingKeys: getMissingKeysForStep(previousStep),
-          completed: completedStepsRef.current.has(previousStep),
-          nextStep: currentStep,
-          nextStepLabel: stepLabels[currentStep],
-          booking: getAnalyticsBookingSnapshot(),
-        },
-      });
-
-      currentStepRef.current = currentStep;
-      stepEnteredAtRef.current = Date.now();
-    }
-  }, [currentStep, getAnalyticsBookingSnapshot, getMissingKeysForStep, stepLabels]);
-
-  useEffect(() => {
-    const handlePageHide = () => {
-      const activeStep = currentStepRef.current;
-      const durationMs = Date.now() - stepEnteredAtRef.current;
-
-      trackAnalyticsEvent("booking_step_abandoned", {
-        metadata: {
-          step: activeStep,
-          stepLabel: stepLabels[activeStep],
-          durationMs,
-          durationSeconds: Math.round(durationMs / 1000),
-          missingKeys: getMissingKeysForStep(activeStep),
-          completed: completedStepsRef.current.has(activeStep),
-          nextStep: null,
-          nextStepLabel: null,
-          source: "pagehide",
-          booking: getAnalyticsBookingSnapshot(),
-        },
-      });
-    };
-
-    window.addEventListener("pagehide", handlePageHide);
-    return () => window.removeEventListener("pagehide", handlePageHide);
-  }, [getAnalyticsBookingSnapshot, getMissingKeysForStep, stepLabels]);
-
-  const trackBlockedStep = useCallback((targetStep: BookingStepId | "checkout", source: string) => {
-    const missingKeys = getMissingKeysForStep(currentStep);
-
-    trackAnalyticsEvent("booking_step_blocked", {
-      metadata: {
-        step: currentStep,
-        stepLabel: stepLabels[currentStep],
-        targetStep,
-        targetStepLabel: targetStep === "checkout" ? "checkout" : stepLabels[targetStep],
-        source,
-        missingKeys,
-        missingStep1Keys,
-        missingStep2Keys,
-        termsAccepted: validation.isAgreeTermsValid,
-        booking: getAnalyticsBookingSnapshot(),
-      },
-    });
-  }, [
+  const {
+    goToStep,
+    goToNextStep,
+    handleStep1Enter,
+    handleNameEnter,
+    handleEmailEnter,
+    handlePhoneEnter,
+    step1FieldFocusRef,
+    resetPendingFocus,
+    scheduleSectionRef,
+    ticketsInputRef,
+    travelerSectionRef,
+    nameInputRef,
+    emailInputRef,
+    phoneInputRef,
+    reviewSectionRef,
+    termsCheckboxRef,
+  } = useReservationNavigation({
     currentStep,
-    getAnalyticsBookingSnapshot,
-    getMissingKeysForStep,
-    missingStep1Keys,
-    missingStep2Keys,
-    stepLabels,
-    validation.isAgreeTermsValid,
-  ]);
-
-  const trackStepCompleted = useCallback((step: BookingStepId, targetStep: BookingStepId | "checkout", source: string) => {
-    completedStepsRef.current.add(step);
-
-    trackAnalyticsEvent("booking_step_completed", {
-      metadata: {
-        step,
-        stepLabel: stepLabels[step],
-        targetStep,
-        targetStepLabel: targetStep === "checkout" ? "checkout" : stepLabels[targetStep],
-        source,
-        durationMs: Date.now() - stepEnteredAtRef.current,
-        durationSeconds: Math.round((Date.now() - stepEnteredAtRef.current) / 1000),
-        booking: getAnalyticsBookingSnapshot(),
-      },
-    });
-  }, [getAnalyticsBookingSnapshot, stepLabels]);
-
-  const guideToElement = useCallback((element: HTMLElement | null, focus = false) => {
-    if (!element) return;
-
-    window.setTimeout(() => {
-      element.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
-
-      if (focus && "focus" in element) {
-        window.setTimeout(() => {
-          element.focus({ preventScroll: true });
-        }, 180);
-      }
-    }, 80);
-  }, []);
-
-  const getStep1GuideTarget = useCallback(() => {
-    if (!tourTime) return { element: scheduleSectionRef.current, focus: false };
-    if (!isTicketsValid) return { element: ticketsInputRef.current, focus: true };
-    return { element: ticketsInputRef.current, focus: true };
-  }, [isTicketsValid, tourTime]);
-
-  const getStep2GuideTarget = useCallback(() => {
-    if (!validation.isNameValid) return { element: nameInputRef.current, focus: true };
-    if (!validation.isEmailValid) return { element: emailInputRef.current, focus: true };
-    if (!validation.isPhoneNumberValid) return { element: phoneInputRef.current, focus: true };
-    return { element: travelerSectionRef.current, focus: false };
-  }, [validation.isEmailValid, validation.isNameValid, validation.isPhoneNumberValid]);
-
-  const getStep3GuideTarget = useCallback(() => {
-    if (!validation.isAgreeTermsValid) return { element: termsCheckboxRef.current, focus: true };
-    return { element: reviewSectionRef.current, focus: false };
-  }, [validation.isAgreeTermsValid]);
-
-  const guideToStep = useCallback((step: BookingStepId) => {
-    const target =
-      step === 1 ? getStep1GuideTarget() :
-      step === 2 ? getStep2GuideTarget() :
-      getStep3GuideTarget();
-
-    guideToElement(target.element, target.focus);
-  }, [getStep1GuideTarget, getStep2GuideTarget, getStep3GuideTarget, guideToElement]);
-
-  const goToStep = useCallback((targetStep: BookingStepId, source: string) => {
-    if (targetStep > currentStep) {
-      if (currentStep === 1 && !isStep1Valid) {
-        trackBlockedStep(targetStep, source);
-        guideToStep(1);
-        return;
-      }
-
-      if ((currentStep === 2 || targetStep === 3) && !isStep2Valid) {
-        trackBlockedStep(targetStep, source);
-        // From step 1 with incomplete traveler data, land on traveler form.
-        if (currentStep === 1 && isStep1Valid) {
-          trackStepCompleted(1, 2, source);
-          nextStepFocusRef.current = 2;
-          setCurrentStep(2);
-          return;
-        }
-        guideToStep(2);
-        return;
-      }
-
-      trackStepCompleted(currentStep, targetStep, source);
-      if (currentStep === 1 && targetStep === 3) {
-        completedStepsRef.current.add(2);
-      }
-    }
-
-    nextStepFocusRef.current = targetStep;
-    setCurrentStep(targetStep);
-  }, [currentStep, guideToStep, isStep1Valid, isStep2Valid, trackBlockedStep, trackStepCompleted]);
+    setCurrentStep,
+    choiceStep,
+    setChoiceStep,
+    isStep1Valid,
+    isStep2Valid,
+    isTicketsValid,
+    hasConfirmedPackage,
+    hasConfirmedTime,
+    hasConfirmedTickets,
+    tourTime,
+    validation,
+    trackBlockedStep,
+    trackStepCompleted,
+    markStepCompleted,
+  });
 
   useEffect(() => {
-    if (nextStepFocusRef.current !== currentStep) return;
-
-    nextStepFocusRef.current = null;
-    guideToStep(currentStep);
-  }, [currentStep, guideToStep]);
-
-  useEffect(() => {
-    if (currentStep !== 1 || !step1FieldFocusRef.current) return;
-
-    if (step1FieldFocusRef.current === "tickets" && tourTime) {
-      step1FieldFocusRef.current = null;
-      guideToElement(ticketsInputRef.current, true);
-    }
-  }, [currentStep, guideToElement, tourTime]);
+    if (previousReservationDateRef.current === reservationDateIso) return;
+    previousReservationDateRef.current = reservationDateIso;
+    resetCompletedSteps();
+    resetPendingFocus();
+    setCurrentStep(1);
+    setChoiceStep(1);
+    setTourTime(null);
+    setHasConfirmedPackage(false);
+    setHasConfirmedTime(false);
+    setHasConfirmedTickets(false);
+    handleChange("agreeTerms", false);
+  }, [handleChange, reservationDateIso, resetCompletedSteps, resetPendingFocus, setChoiceStep, setCurrentStep]);
 
   useEffect(() => {
     if (
@@ -892,84 +399,6 @@ export default function ReservationDetails({
     validation.isAgreeTermsValid,
   ]);
 
-  const goToNextStep = useCallback(() => {
-    if (currentStep === 1) {
-      if (choiceStep === 1) {
-        if (!hasConfirmedPackage) return;
-        setChoiceStep(2);
-        return;
-      }
-      if (choiceStep === 2) {
-        if (!tourTime || !hasConfirmedTime) return;
-        setChoiceStep(3);
-        return;
-      }
-      if (choiceStep === 3 && (!isTicketsValid || !hasConfirmedTickets)) return;
-      goToStep(2, "next_button");
-      return;
-    }
-
-    if (currentStep === 2) {
-      goToStep(3, "next_button");
-    }
-  }, [
-    choiceStep,
-    currentStep,
-    goToStep,
-    hasConfirmedPackage,
-    hasConfirmedTickets,
-    hasConfirmedTime,
-    isTicketsValid,
-    tourTime,
-  ]);
-
-  const handleStep1Enter = useCallback((event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key !== "Enter") return;
-
-    event.preventDefault();
-    if (isStep1Valid) {
-      goToNextStep();
-      return;
-    }
-
-    guideToStep(1);
-  }, [goToNextStep, guideToStep, isStep1Valid]);
-
-  const handleNameEnter = useCallback((event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key !== "Enter") return;
-
-    event.preventDefault();
-    if (validation.isNameValid) {
-      guideToElement(emailInputRef.current, true);
-      return;
-    }
-
-    guideToElement(nameInputRef.current, true);
-  }, [guideToElement, validation.isNameValid]);
-
-  const handleEmailEnter = useCallback((event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key !== "Enter") return;
-
-    event.preventDefault();
-    if (validation.isEmailValid) {
-      guideToElement(phoneInputRef.current, true);
-      return;
-    }
-
-    guideToElement(emailInputRef.current, true);
-  }, [guideToElement, validation.isEmailValid]);
-
-  const handlePhoneEnter = useCallback((event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key !== "Enter") return;
-
-    event.preventDefault();
-    if (isStep2Valid) {
-      goToNextStep();
-      return;
-    }
-
-    guideToStep(2);
-  }, [goToNextStep, guideToStep, isStep2Valid]);
 
   const handleTermsEnter = useCallback((event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key !== "Enter") return;
@@ -1127,81 +556,43 @@ export default function ReservationDetails({
   }, [getAnalyticsBookingSnapshot, stepLabels]);
 
   return (
-    <div className="grid gap-4 pb-32 md:pb-4 lg:grid-cols-[minmax(220px,270px)_minmax(0,1fr)] lg:items-start lg:gap-6">
-      <aside className={`min-w-0 lg:sticky lg:top-4 ${currentStep === 3 && formState.agreeTerms ? "hidden" : ""}`}>
-      <div className={`mb-3 flex items-center gap-2.5 rounded-xl border p-2 ${
-        isStep1Valid
-          ? "border-emerald-200 bg-gradient-to-r from-emerald-50 to-white dark:border-emerald-800/40 dark:from-emerald-950/30 dark:to-zinc-900/60"
-          : `border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900/60 ${!selectedTour ? "ring-2 ring-amber-300/70" : ""}`
-      }`}>
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-300">
-          <MapPin className="h-4 w-4" aria-hidden />
-        </span>
-        <div className="min-w-0 flex-1">
-          <h3 className="truncate text-sm font-black leading-tight text-zinc-900 dark:text-zinc-50">{selectedTourName}</h3>
-          <p className="truncate text-xs font-semibold capitalize text-zinc-500 dark:text-zinc-400">
-            {formattedDate}
-            {tourTime ? ` · ${formatDepartureLabel(tourTime)}` : ""}
-            {hasConfirmedTickets ? ` · ${tickets} pax` : ` · ${lang === "es" ? "personas por elegir" : "guests to choose"}`}
-          </p>
-        </div>
-        <div className="shrink-0 text-right">
-          <p className="text-[10px] font-bold uppercase tracking-wide text-zinc-500">
-            {isStep1Valid ? (lang === "es" ? "Listo" : "Ready") : (lang === "es" ? "Est." : "Est.")}
-          </p>
-          <p className="text-sm font-black text-emerald-700 dark:text-emerald-300">
-            ${totalWithTaxes.toFixed(0)}
-          </p>
-        </div>
-      </div>
-
-      {!(currentStep === 3 && formState.agreeTerms) && (
-        <ReservationDetailsStepProgress
-          steps={wizardSteps}
-          currentStep={currentStep}
-          sidebar
-          maxReachableStep={
-            currentStep === 1
-              ? isStep1Valid
-                ? isStep2Valid
-                  ? 3
-                  : 2
-                : 1
-              : currentStep === 2
-                ? isStep2Valid
-                  ? 3
-                  : 2
-                : 3
+    <div className={`grid gap-4 pb-32 md:pb-4 lg:items-start lg:gap-6 ${currentStep === 3 && formState.agreeTerms ? "lg:grid-cols-1" : "lg:grid-cols-[minmax(220px,270px)_minmax(0,1fr)]"}`}>
+      <ReservationDetailsSidebar
+        lang={lang}
+        selectedTourName={selectedTourName}
+        formattedDate={formattedDate}
+        tourTime={tourTime}
+        hasConfirmedTickets={hasConfirmedTickets}
+        tickets={tickets}
+        isStep1Valid={isStep1Valid}
+        termsAccepted={formState.agreeTerms}
+        total={totalWithTaxes}
+        currentStep={currentStep}
+        choiceStep={choiceStep}
+        packageLabel={packageLabel}
+        hasConfirmedPackage={hasConfirmedPackage}
+        steps={wizardSteps}
+        maxReachableStep={
+          currentStep === 1
+            ? isStep1Valid
+              ? isStep2Valid ? 3 : 2
+              : 1
+            : currentStep === 2
+              ? isStep2Valid ? 3 : 2
+              : 3
+        }
+        onStepSelect={(step) => {
+          if (step < currentStep) {
+            setCurrentStep(step);
+            return;
           }
-          onStepSelect={(step) => {
-            if (step < currentStep) {
-              setCurrentStep(step);
-              return;
-            }
-            if (currentStep === 1 && step === 3 && isStep1Valid && isStep2Valid) {
-              goToStep(3, "progress_skip");
-              return;
-            }
-            goToStep(step, "progress");
-          }}
-        />
-      )}
-
-      {currentStep === 1 && (
-        <div className="hidden rounded-xl border border-emerald-200 bg-emerald-50/70 p-3 dark:border-emerald-800/40 dark:bg-emerald-950/20 lg:block">
-          <p className="text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
-            {lang === "es" ? `Paso ${choiceStep} de 3` : `Step ${choiceStep} of 3`}
-          </p>
-          <p className="mt-1 truncate text-sm font-bold text-zinc-800 dark:text-zinc-100">
-            {hasConfirmedPackage ? packageLabel : (lang === "es" ? "Paquete por elegir" : "Choose a package")}
-          </p>
-          <p className="mt-2 text-xl font-black text-emerald-700 dark:text-emerald-300">${totalWithTaxes.toFixed(0)}</p>
-          <div className="mt-3 flex gap-1.5" aria-hidden="true">
-            {[1, 2, 3].map((step) => <span key={step} className={`h-1 flex-1 rounded-full ${step <= choiceStep ? "bg-emerald-500" : "bg-zinc-300 dark:bg-zinc-700"}`} />)}
-          </div>
-        </div>
-      )}
-      </aside>
+          if (currentStep === 1 && step === 3 && isStep1Valid && isStep2Valid) {
+            goToStep(3, "progress_skip");
+            return;
+          }
+          goToStep(step, "progress");
+        }}
+      />
 
       <main className="min-w-0">
       {currentStep === 1 && (
@@ -1346,7 +737,7 @@ export default function ReservationDetails({
         }
         onBack={
           currentStep === 1 && choiceStep > 1
-            ? () => setChoiceStep((choiceStep - 1) as ChoiceStep)
+            ? () => setChoiceStep((choiceStep - 1) as ReservationChoiceStep)
             : currentStep > 1
               ? () => setCurrentStep((currentStep - 1) as BookingStepId)
               : undefined

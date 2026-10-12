@@ -11,6 +11,7 @@ export type { TourSummary, MainTourInfo, AvailabilityMap, TourPackageOption };
 
 export type TourTime = string;
 export type BookingStepId = 1 | 2 | 3;
+export type ReservationChoiceStep = 1 | 2 | 3;
 export type TourPackage = string;
 
 export interface AddOnOption {
