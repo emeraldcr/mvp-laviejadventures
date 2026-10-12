@@ -5,7 +5,6 @@ import { format } from "date-fns";
 import { es, enUS } from "date-fns/locale";
 import { useLanguage } from "@/lib/LanguageContext";
 import { translations } from "@/lib/translations";
-import { trackAnalyticsEvent } from "@/lib/analytics/client";
 import {
   formatDepartureLabel,
 } from "@/lib/reservation/constants";
@@ -24,12 +23,12 @@ import InlinePayPalCheckout from "./InlinePayPalCheckout";
 import type { OrderDetails } from "@/lib/types/index";
 import { ReservationWizardProvider, useReservationWizard } from "./context/ReservationWizardContext";
 import { useReservationStepAnalytics } from "./hooks/useReservationStepAnalytics";
-import { RESERVATION_STEP_LABELS } from "./constants/reservationWizard";
 import { useReservationTourSelection } from "./hooks/useReservationTourSelection";
 import { useReservationTraveler } from "./hooks/useReservationTraveler";
 import { useReservationPricing } from "./hooks/useReservationPricing";
 import ReservationDetailsSidebar from "./ReservationDetailsSidebar";
 import { useReservationNavigation } from "./hooks/useReservationNavigation";
+import { useReservationInteractions } from "./hooks/useReservationInteractions";
 
 // ---------------------- MAIN COMPONENT ----------------------
 
@@ -228,8 +227,6 @@ function ReservationDetailsFlow({
     tourTime,
   ]);
 
-  const stepLabels = RESERVATION_STEP_LABELS;
-
   const missingStep1Keys = useMemo(() => {
     const missing: string[] = [];
 
@@ -346,6 +343,32 @@ function ReservationDetailsFlow({
     markStepCompleted,
   });
 
+  const {
+    onTourTimeSelect,
+    onTicketsChange,
+    onFieldBlur,
+    onPackageSelect,
+  } = useReservationInteractions({
+    getBookingSnapshot: getAnalyticsBookingSnapshot,
+    setTourTime,
+    setHasConfirmedTime,
+    step1FieldFocusRef,
+    setTickets,
+    slots,
+    setHasConfirmedTickets,
+    formState,
+    validation,
+    missingStep2Keys,
+    setSelectedPackageId,
+    setHasConfirmedPackage,
+  });
+
+  const handleTermsEnter = useCallback((event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+    handleChange("agreeTerms", true);
+  }, [handleChange]);
+
   useEffect(() => {
     if (previousReservationDateRef.current === reservationDateIso) return;
     previousReservationDateRef.current = reservationDateIso;
@@ -400,115 +423,6 @@ function ReservationDetailsFlow({
   ]);
 
 
-  const handleTermsEnter = useCallback((event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key !== "Enter") return;
-
-    event.preventDefault();
-    handleChange("agreeTerms", true);
-  }, [handleChange]);
-
-  const handleTourTimeSelect = useCallback((slot: TourTime) => {
-    setTourTime(slot);
-    setHasConfirmedTime(true);
-    step1FieldFocusRef.current = "tickets";
-    trackAnalyticsEvent("booking_selection_changed", {
-      metadata: {
-        step: 1,
-        stepLabel: stepLabels[1],
-        field: "tour_time",
-        value: slot,
-        booking: {
-          ...getAnalyticsBookingSnapshot(),
-          selectedTime: slot,
-          hasSelectedTime: true,
-        },
-      },
-    });
-  }, [getAnalyticsBookingSnapshot, stepLabels]);
-
-  const handleAddonToggle = useCallback((addonId: string) => {
-    setSelectedAddons((prev) => {
-      const next = prev.includes(addonId) ? prev.filter((id) => id !== addonId) : [...prev, addonId];
-      return next;
-    });
-    trackAnalyticsEvent("booking_selection_changed", {
-      metadata: {
-        step: 1,
-        stepLabel: stepLabels[1],
-        field: "addon",
-        addonId,
-        booking: getAnalyticsBookingSnapshot(),
-      },
-    });
-  }, [getAnalyticsBookingSnapshot, stepLabels]);
-
-  const handleTicketsChange = useCallback((rawValue: string) => {
-    const parsedValue = Number(rawValue);
-    const integerValue = Number.isFinite(parsedValue) ? Math.trunc(parsedValue) : 1;
-    const nextTickets = Math.min(Math.max(integerValue, 1), Math.max(slots, 1));
-
-    setTickets(nextTickets);
-    setHasConfirmedTickets(true);
-    trackAnalyticsEvent("booking_selection_changed", {
-      metadata: {
-        step: 1,
-        stepLabel: stepLabels[1],
-        field: "tickets",
-        rawValue: Number.isFinite(parsedValue) ? parsedValue : null,
-        value: nextTickets,
-        wasClamped: nextTickets !== parsedValue,
-        slots,
-        booking: {
-          ...getAnalyticsBookingSnapshot(),
-          tickets: nextTickets,
-        },
-      },
-    });
-  }, [getAnalyticsBookingSnapshot, setTickets, slots, stepLabels]);
-
-  const trackFieldBlur = useCallback((field: "name" | "email" | "phone" | "specialRequests" | "terms") => {
-    const fieldState = {
-      name: {
-        isValid: validation.isNameValid,
-        isEmpty: formState.name.trim() === "",
-        valueLength: formState.name.trim().length,
-      },
-      email: {
-        isValid: validation.isEmailValid,
-        isEmpty: formState.email.trim() === "",
-        valueLength: formState.email.trim().length,
-      },
-      phone: {
-        isValid: validation.isPhoneNumberValid,
-        isEmpty: formState.phoneNumber.trim() === "",
-        valueLength: formState.phoneNumber.trim().length,
-        phoneCode: formState.phoneCode,
-      },
-      specialRequests: {
-        isValid: true,
-        isEmpty: formState.specialRequests.trim() === "",
-        valueLength: formState.specialRequests.trim().length,
-      },
-      terms: {
-        isValid: validation.isAgreeTermsValid,
-        isEmpty: !validation.isAgreeTermsValid,
-        valueLength: validation.isAgreeTermsValid ? 1 : 0,
-      },
-    }[field];
-
-    trackAnalyticsEvent("booking_field_blur", {
-      metadata: {
-        step: field === "terms" ? 3 : 2,
-        stepLabel: field === "terms" ? stepLabels[3] : stepLabels[2],
-        field,
-        ...fieldState,
-        missingStep2Keys,
-        termsAccepted: validation.isAgreeTermsValid,
-        booking: getAnalyticsBookingSnapshot(),
-      },
-    });
-  }, [formState, getAnalyticsBookingSnapshot, missingStep2Keys, stepLabels, validation]);
-
   const missingItems = useMemo(() => [
     ...missingStep1Items,
     ...missingStep2Items,
@@ -540,20 +454,6 @@ function ReservationDetailsFlow({
       ? lang === "es" ? "Continuar" : "Continue"
       : step1ContinueLabel
     : lang === "es" ? "Revisar" : "Review";
-
-  const handlePackageSelect = useCallback((packageId: string) => {
-    setSelectedPackageId(packageId);
-    setHasConfirmedPackage(true);
-    trackAnalyticsEvent("booking_selection_changed", {
-      metadata: {
-        step: 1,
-        stepLabel: stepLabels[1],
-        field: "package",
-        value: packageId,
-        booking: getAnalyticsBookingSnapshot(),
-      },
-    });
-  }, [getAnalyticsBookingSnapshot, stepLabels]);
 
   return (
     <div className={`grid gap-4 pb-32 md:pb-4 lg:items-start lg:gap-6 ${currentStep === 3 && formState.agreeTerms ? "lg:grid-cols-1" : "lg:grid-cols-[minmax(220px,270px)_minmax(0,1fr)]"}`}>
@@ -611,27 +511,16 @@ function ReservationDetailsFlow({
           slots={slots}
           packages={packageOptions}
           selectedPackageId={selectedPackageId}
-          excludedAddonIds={excludedAddonIds}
-          selectedAddons={selectedAddons}
-          addonDetails={addonDetails}
-          addonsPricePerPerson={addonsPricePerPerson}
           packageLabel={hasConfirmedPackage ? packageLabel : (lang === "es" ? "Paquete por elegir" : "Package to choose")}
           reservationDateIso={reservationDateIso}
           estimatedTotal={totalWithTaxes}
           continueLabel={step1ContinueLabel}
-          onPackageSelect={handlePackageSelect}
+          onPackageSelect={onPackageSelect}
           isPackageDisabled={isPackageDisabled}
-          onTourTimeSelect={handleTourTimeSelect}
-          onTicketsChange={handleTicketsChange}
+          onTourTimeSelect={onTourTimeSelect}
+          onTicketsChange={onTicketsChange}
           onStep1Enter={handleStep1Enter}
-          onAddonToggle={handleAddonToggle}
-          onAddonDetailsChange={setAddonDetails}
           onContinue={goToNextStep}
-          canContinue={isStep1Valid}
-          transportQuote={transportQuote}
-          transportLoading={transportLoading}
-          transportError={transportError}
-          transportPreview={transportQuoteEnabled}
           tr={tr}
           lang={lang}
         />
@@ -654,7 +543,7 @@ function ReservationDetailsFlow({
           onNameEnter={handleNameEnter}
           onEmailEnter={handleEmailEnter}
           onPhoneEnter={handlePhoneEnter}
-          onFieldBlur={trackFieldBlur}
+          onFieldBlur={onFieldBlur}
           onBack={() => setCurrentStep(1)}
           onContinue={() => goToStep(3, "continue_button")}
           canContinue={isStep2Valid}

@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { formatDepartureLabel } from "@/lib/reservation/constants";
 import PackagePicker from "@/app/components/reservation/PackagePicker";
-import type { ReservationAddonDetails, TourTime } from "@/lib/reservation/types";
+import type { TourTime } from "@/lib/reservation/types";
 import type { TourPackageOption } from "@/lib/types/index";
 
 type ReservationTranslations = typeof import("@/lib/translations").translations["es"]["reservation"];
@@ -25,10 +25,6 @@ interface ReservationDetailsStep1Props {
   slots: number;
   packages: TourPackageOption[];
   selectedPackageId: string;
-  excludedAddonIds: string[];
-  selectedAddons: string[];
-  addonDetails: ReservationAddonDetails;
-  addonsPricePerPerson: number;
   packagePriceUSD: number;
   packageLabel: string;
   reservationDateIso: string;
@@ -41,14 +37,8 @@ interface ReservationDetailsStep1Props {
   onTourTimeSelect: (slot: TourTime) => void;
   onTicketsChange: (rawValue: string) => void;
   onStep1Enter: (event: KeyboardEvent<HTMLInputElement>) => void;
-  onAddonToggle: (addonId: string) => void;
-  onAddonDetailsChange: (details: ReservationAddonDetails) => void;
   onContinue: () => void;
   canContinue: boolean;
-  transportQuote?: import("@/lib/reservation/transport").TransportQuoteResult | null;
-  transportLoading?: boolean;
-  transportError?: string | null;
-  transportPreview?: boolean;
   tr: ReservationTranslations;
   lang: "es" | "en";
 }
@@ -65,10 +55,6 @@ export default function ReservationDetailsStep1({
   slots,
   packages,
   selectedPackageId,
-  excludedAddonIds,
-  selectedAddons,
-  addonDetails,
-  addonsPricePerPerson,
   packagePriceUSD,
   packageLabel,
   reservationDateIso,
@@ -81,14 +67,8 @@ export default function ReservationDetailsStep1({
   onTourTimeSelect,
   onTicketsChange,
   onStep1Enter,
-  onAddonToggle,
-  onAddonDetailsChange,
   onContinue,
   canContinue,
-  transportQuote = null,
-  transportLoading = false,
-  transportError = null,
-  transportPreview = false,
   tr,
   lang,
 }: ReservationDetailsStep1Props) {

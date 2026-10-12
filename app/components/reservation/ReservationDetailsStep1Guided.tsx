@@ -5,7 +5,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Clock3, Minus, Plus, Sparkles, Users } from "lucide-react";
 import PackagePicker from "./PackagePicker";
 import { formatDepartureLabel } from "@/lib/reservation/constants";
-import type { ReservationAddonDetails, ReservationChoiceStep, TourTime } from "@/lib/reservation/types";
+import type { ReservationChoiceStep, TourTime } from "@/lib/reservation/types";
 import type { TourPackageOption } from "@/lib/types/index";
 
 type ReservationTranslations = typeof import("@/lib/translations").translations["es"]["reservation"];
@@ -26,10 +26,6 @@ interface Props {
   slots: number;
   packages: TourPackageOption[];
   selectedPackageId: string;
-  excludedAddonIds: string[];
-  selectedAddons: string[];
-  addonDetails: ReservationAddonDetails;
-  addonsPricePerPerson: number;
   packageLabel: string;
   reservationDateIso: string;
   estimatedTotal: number;
@@ -39,14 +35,7 @@ interface Props {
   onTourTimeSelect: (slot: TourTime) => void;
   onTicketsChange: (value: string) => void;
   onStep1Enter: (event: KeyboardEvent<HTMLInputElement>) => void;
-  onAddonToggle: (addonId: string) => void;
-  onAddonDetailsChange: (details: ReservationAddonDetails) => void;
   onContinue: () => void;
-  canContinue: boolean;
-  transportQuote?: import("@/lib/reservation/transport").TransportQuoteResult | null;
-  transportLoading?: boolean;
-  transportError?: string | null;
-  transportPreview?: boolean;
   tr: ReservationTranslations;
   lang: "es" | "en";
 }
@@ -58,11 +47,9 @@ export default function ReservationDetailsStep1Guided(props: Props) {
     choiceStep, onChoiceStepChange, scheduleSectionRef, ticketsInputRef, tourTime,
     availableTimeSlots, isTicketsValid, hasConfirmedPackage, hasConfirmedTime,
     hasConfirmedTickets, tickets, slots, packages, selectedPackageId,
-    excludedAddonIds, selectedAddons, addonDetails, addonsPricePerPerson, packageLabel,
+    packageLabel,
     reservationDateIso, estimatedTotal, continueLabel, onPackageSelect, isPackageDisabled,
-    onTourTimeSelect, onTicketsChange, onStep1Enter, onAddonToggle, onAddonDetailsChange,
-    onContinue, canContinue, transportQuote = null, transportLoading = false,
-    transportError = null, transportPreview = false, tr, lang,
+    onTourTimeSelect, onTicketsChange, onStep1Enter, onContinue, tr, lang,
   } = props;
   const isEs = lang === "es";
   const reduceMotion = useReducedMotion();
