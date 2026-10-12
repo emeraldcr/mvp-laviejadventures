@@ -16,7 +16,7 @@ export default function ReservationDetailsStepProgress({
   sidebar = false,
 }: ReservationDetailsStepProgressProps) {
   return (
-    <div className="mb-6 rounded-2xl border border-zinc-200 bg-zinc-50/80 p-4 dark:border-zinc-800 dark:bg-zinc-950/35" aria-label="Booking progress">
+    <div className="mb-2 rounded-xl border border-zinc-200 bg-zinc-50/80 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950/35 sm:mb-4 sm:rounded-2xl sm:p-4" aria-label="Booking progress">
       <div className="sm:hidden">
         <div className="mb-2 flex items-center justify-between gap-3">
           <p className="text-sm font-black text-zinc-900 dark:text-zinc-50">{currentStep} / {steps.length}</p>

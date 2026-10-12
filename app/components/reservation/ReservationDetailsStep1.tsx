@@ -250,9 +250,6 @@ export default function ReservationDetailsStep1({
                 {tr.numPeople}
               </label>
             </div>
-            <span className="rounded-full border border-teal-500/30 bg-teal-500/10 px-2.5 py-0.5 text-[11px] font-bold text-teal-700 dark:text-teal-300">
-              {tr.availablePrefix} {slots}
-            </span>
           </div>
 
           <div className="flex flex-wrap items-center gap-1.5">

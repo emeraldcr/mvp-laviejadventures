@@ -79,10 +79,10 @@ export function usePayPalCheckout({
   useEffect(() => {
     if (!enabled) return;
 
-    const paypalContainer = paypalRef.current;
     let isMounted = true;
     let scriptForCleanup: HTMLScriptElement | null = null;
     let loadFallbackAttempted = false;
+    let buttonsRendered = false;
 
     trackAnalyticsEvent("booking_checkout_started", {
       metadata: bookingAnalyticsMetadata,
@@ -111,16 +111,19 @@ export function usePayPalCheckout({
     };
 
     const initializeButtons = () => {
-      if (!paypalContainer) {
-        failPayPalLoad("paypal_container", "PayPal button container was not found.");
-        return;
-      }
+      // React may remount the checkout subtree while the SDK is loading. Read
+      // the current ref at render time instead of keeping the effect's first
+      // (possibly detached) DOM node.
+      const paypalContainer = paypalRef.current;
+      if (!paypalContainer) return false;
+      if (buttonsRendered) return true;
 
       if (!window.paypal) {
         failPayPalLoad("paypal_sdk_load", "PayPal SDK loaded, but window.paypal is unavailable.");
-        return;
+        return false;
       }
 
+      buttonsRendered = true;
       paypalContainer.innerHTML = "";
 
       const buttons = window.paypal.Buttons({
@@ -233,8 +236,10 @@ export function usePayPalCheckout({
       Promise.resolve(buttons.render(paypalContainer))
         .then(finishLoading)
         .catch((err: unknown) => {
+          buttonsRendered = false;
           failPayPalLoad("paypal_render", err instanceof Error ? err.message : "paypal_render_error", err);
         });
+      return true;
     };
 
     const mode = process.env.NEXT_PUBLIC_PAYPAL_MODE;
@@ -271,6 +276,9 @@ export function usePayPalCheckout({
     const handleScriptError = (failedSrc: string) => {
       document.querySelector<HTMLScriptElement>("#paypal-sdk")?.remove();
 
+      // PayPal's SDK v5 accepts BCP-47 country locales (for example es-CR).
+      // Some older locale aliases are rejected with HTTP 400; in that case,
+      // retry once with PayPal's automatic locale detection.
       if (failedSrc !== fallbackSdkSrc && !loadFallbackAttempted) {
         loadFallbackAttempted = true;
         trackAnalyticsEvent("payment_error", {
@@ -297,7 +305,16 @@ export function usePayPalCheckout({
       scriptForCleanup = script;
 
       script.onload = () => {
-        if (isMounted) initializeButtons();
+        if (isMounted) {
+          // The ref can be temporarily null during a React remount. Retry
+          // briefly while the already loaded SDK remains available.
+          let attempts = 0;
+          const renderWhenMounted = () => {
+            if (!isMounted || initializeButtons()) return;
+            if (++attempts < 20) window.setTimeout(renderWhenMounted, 50);
+          };
+          renderWhenMounted();
+        }
       };
       script.onerror = () => handleScriptError(src);
 
@@ -327,8 +344,8 @@ export function usePayPalCheckout({
         scriptForCleanup.onload = null;
         scriptForCleanup.onerror = null;
       }
-      if (paypalContainer) {
-        paypalContainer.innerHTML = "";
+      if (paypalRef.current) {
+        paypalRef.current.innerHTML = "";
       }
     };
   }, [bookingAnalyticsMetadata, checkoutKey, enabled, errorMessage, lang, onSuccess, orderDetails, router]);

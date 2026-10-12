@@ -10,17 +10,15 @@ type Props = {
   day: number | null;
 };
 
-type Status = "loading" | "past" | "soldout" | "available";
+type Status = "past" | "soldout" | "available";
 
 const STATUS_CARD_CLASS: Record<Status, string> = {
-  loading: "bg-zinc-50 dark:bg-zinc-900 border-zinc-300 dark:border-zinc-600",
   past: "bg-zinc-100 dark:bg-zinc-800 border-zinc-300 dark:border-zinc-600",
   soldout: "bg-red-50 dark:bg-red-900/20 border-red-400 dark:border-red-600",
   available: "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-400 dark:border-emerald-600",
 };
 
 const STATUS_TEXT_CLASS: Record<Status, string> = {
-  loading: "text-zinc-400 dark:text-zinc-500",
   past: "text-zinc-500 dark:text-zinc-400",
   soldout: "text-red-600 dark:text-red-300",
   available: "text-emerald-700 dark:text-emerald-200",
@@ -35,7 +33,6 @@ function CalendarDayBase({ day }: Props) {
     isPastDay,
     isToday,
     getSlotsForDay,
-    availabilityLoading,
   } = useCalendarContext();
 
   if (day === null) {
@@ -46,28 +43,19 @@ function CalendarDayBase({ day }: Props) {
   const today = isToday(day);
   const slots = getSlotsForDay(day);
 
-  const hasSlots = slots > 0 && !past && !availabilityLoading;
+  const hasSlots = slots > 0 && !past;
   const selected = selectedDay === day;
-
-  let status: Status = "soldout";
-  if (availabilityLoading) status = "loading";
-  else if (past) status = "past";
-  else if (slots === 0) status = "soldout";
-  else status = "available";
+  const status: Status = past ? "past" : slots === 0 ? "soldout" : "available";
 
   const labelText =
-    status === "loading"
-      ? " "
-      : status === "past"
+    status === "past"
       ? tr.statusPast
       : status === "soldout"
         ? tr.statusSoldOut
         : tr.legendAvailable;
 
   const compactLabel =
-    status === "loading"
-      ? " "
-      : status === "past"
+    status === "past"
       ? tr.statusPast
       : status === "soldout"
         ? tr.statusSoldOut
@@ -78,7 +66,7 @@ function CalendarDayBase({ day }: Props) {
     selectDay(day);
   };
 
-  const isDisabled = availabilityLoading || !hasSlots;
+  const isDisabled = !hasSlots;
 
   return (
     <button
@@ -131,7 +119,7 @@ function CalendarDayBase({ day }: Props) {
               ✓
             </span>
           )}
-          {!hasSlots && !past && !availabilityLoading && (
+          {!hasSlots && !past && (
             <span className="rounded-full bg-red-500/10 px-1.5 py-[1px] text-[9px] font-medium text-red-600 dark:text-red-300 sm:px-2 sm:py-[2px] sm:text-[10px]">
               x
             </span>
@@ -157,7 +145,7 @@ function CalendarDayBase({ day }: Props) {
             STATUS_TEXT_CLASS[status]
           )}
         >
-          {availabilityLoading ? "" : compactLabel}
+          {compactLabel}
         </span>
       </div>
 

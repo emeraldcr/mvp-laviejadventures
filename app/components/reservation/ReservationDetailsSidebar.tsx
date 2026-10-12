@@ -46,7 +46,7 @@ export default function ReservationDetailsSidebar({
 
   return (
     <aside className={`min-w-0 lg:sticky lg:top-4 ${isCheckoutAccepted ? "hidden" : ""}`}>
-      <div className={`mb-3 flex items-center gap-2.5 rounded-xl border p-2 ${
+      <div className={`mb-1.5 flex items-center gap-2 rounded-xl border p-1.5 sm:mb-2 sm:gap-2.5 sm:p-2 ${
         isStep1Valid
           ? "border-emerald-200 bg-gradient-to-r from-emerald-50 to-white dark:border-emerald-800/40 dark:from-emerald-950/30 dark:to-zinc-900/60"
           : "border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900/60"

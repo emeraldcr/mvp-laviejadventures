@@ -49,7 +49,7 @@ export default function BookingSection({ selectedTourSlug, initialPackageId }: P
 
               {selectedDay && (
                 <div className="min-w-0">
-                  <div className="mb-3 flex justify-end">
+                  <div className="mb-1 flex justify-end sm:mb-2">
                     <button
                       type="button"
                       onClick={() => selectDay(null)}
@@ -59,7 +59,7 @@ export default function BookingSection({ selectedTourSlug, initialPackageId }: P
                       {lang === "es" ? "Cambiar fecha" : "Change date"}
                     </button>
                   </div>
-                  <div className="rounded-[2rem] border border-stone-200 bg-white p-3 shadow-xl shadow-stone-900/5 dark:border-white/10 dark:bg-stone-900 sm:p-6">
+                  <div className="rounded-2xl border border-stone-200 bg-white p-2 shadow-xl shadow-stone-900/5 dark:border-white/10 dark:bg-stone-900 sm:rounded-[2rem] sm:p-4">
                     <Suspense fallback={<ReservationFallback />}>
                       <ReservationSection
                         preselectedTourSlug={selectedTourSlug}
