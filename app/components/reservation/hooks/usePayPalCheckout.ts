@@ -287,7 +287,6 @@ export function usePayPalCheckout({
       }
 
       failPayPalLoad("paypal_sdk_load", "paypal_sdk_load_error");
-      alert(errorMessage);
     };
 
     const loadSdkScript = (src: string) => {

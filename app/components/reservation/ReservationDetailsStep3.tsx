@@ -260,7 +260,7 @@ export default function ReservationDetailsStep3({
             </Link>
             .
             <span className="mt-2 block text-xs font-semibold text-zinc-500">
-              {isEs ? "Después de marcar esta casilla, podrá continuar al pago." : "After checking this box, you can continue to payment."}
+              {isEs ? "Al confirmar, cargaremos aquí mismo el pago seguro de PayPal." : "After confirming, PayPal will load here automatically."}
             </span>
           </span>
         </label>

@@ -1106,7 +1106,13 @@ export default function ReservationDetails({
 
   const step1ContinueLabel = lang === "es" ? "Siguiente · mis datos" : "Next · my details";
 
-  const stickyLabel = currentStep === 1\r\n    ? choiceStep < 3\r\n      ? lang === "es" ? "Continuar" : "Continue"\r\n      : step1ContinueLabel\r\n    : lang === "es" ? "Revisar" : "Review";\r\n\r\n  const handlePackageSelect = useCallback((packageId: string) => {
+  const stickyLabel = currentStep === 1
+    ? choiceStep < 3
+      ? lang === "es" ? "Continuar" : "Continue"
+      : step1ContinueLabel
+    : lang === "es" ? "Revisar" : "Review";
+
+  const handlePackageSelect = useCallback((packageId: string) => {
     setSelectedPackageId(packageId);
     setHasConfirmedPackage(true);
     trackAnalyticsEvent("booking_selection_changed", {
@@ -1122,7 +1128,7 @@ export default function ReservationDetails({
 
   return (
     <div className="grid gap-4 pb-32 md:pb-4 lg:grid-cols-[minmax(220px,270px)_minmax(0,1fr)] lg:items-start lg:gap-6">
-      <aside className="min-w-0 lg:sticky lg:top-4">
+      <aside className={`min-w-0 lg:sticky lg:top-4 ${currentStep === 3 && formState.agreeTerms ? "hidden" : ""}`}>
       <div className={`mb-3 flex items-center gap-2.5 rounded-xl border p-2 ${
         isStep1Valid
           ? "border-emerald-200 bg-gradient-to-r from-emerald-50 to-white dark:border-emerald-800/40 dark:from-emerald-950/30 dark:to-zinc-900/60"
@@ -1149,35 +1155,37 @@ export default function ReservationDetails({
         </div>
       </div>
 
-      <ReservationDetailsStepProgress
-        steps={wizardSteps}
-        currentStep={currentStep}
-        sidebar
-        maxReachableStep={
-          currentStep === 1
-            ? isStep1Valid
-              ? isStep2Valid
-                ? 3
-                : 2
-              : 1
-            : currentStep === 2
-              ? isStep2Valid
-                ? 3
-                : 2
-              : 3
-        }
-        onStepSelect={(step) => {
-          if (step < currentStep) {
-            setCurrentStep(step);
-            return;
+      {!(currentStep === 3 && formState.agreeTerms) && (
+        <ReservationDetailsStepProgress
+          steps={wizardSteps}
+          currentStep={currentStep}
+          sidebar
+          maxReachableStep={
+            currentStep === 1
+              ? isStep1Valid
+                ? isStep2Valid
+                  ? 3
+                  : 2
+                : 1
+              : currentStep === 2
+                ? isStep2Valid
+                  ? 3
+                  : 2
+                : 3
           }
-          if (currentStep === 1 && step === 3 && isStep1Valid && isStep2Valid) {
-            goToStep(3, "progress_skip");
-            return;
-          }
-          goToStep(step, "progress");
-        }}
-      />
+          onStepSelect={(step) => {
+            if (step < currentStep) {
+              setCurrentStep(step);
+              return;
+            }
+            if (currentStep === 1 && step === 3 && isStep1Valid && isStep2Valid) {
+              goToStep(3, "progress_skip");
+              return;
+            }
+            goToStep(step, "progress");
+          }}
+        />
+      )}
 
       {currentStep === 1 && (
         <div className="hidden rounded-xl border border-emerald-200 bg-emerald-50/70 p-3 dark:border-emerald-800/40 dark:bg-emerald-950/20 lg:block">
@@ -1266,7 +1274,13 @@ export default function ReservationDetails({
 
       {currentStep === 3 && (
         <>
-          <ReservationDetailsStep3
+          {formState.agreeTerms ? (
+            <InlinePayPalCheckout
+              orderDetails={paypalOrderDetails!}
+              lang={lang}
+              onBack={() => handleChange("agreeTerms", false)}
+            />
+          ) : <ReservationDetailsStep3
             reviewSectionRef={reviewSectionRef}
             termsCheckboxRef={termsCheckboxRef}
             formState={formState}
@@ -1291,9 +1305,9 @@ export default function ReservationDetails({
             onEditStep={(step) => setCurrentStep(step)}
             tr={tr}
             lang={lang}
-          />
+          />}
 
-          <div className="mb-3 hidden gap-2 md:flex">
+          {!formState.agreeTerms && <div className="mb-3 hidden gap-2 md:flex">
             <button
               type="button"
               onClick={() => setCurrentStep(2)}
@@ -1301,11 +1315,9 @@ export default function ReservationDetails({
             >
               {lang === "es" ? "Volver" : "Back"}
             </button>
-          </div>
+          </div>}
 
-          {paypalOrderDetails && <InlinePayPalCheckout orderDetails={paypalOrderDetails} lang={lang} />}
-
-          {!isFormValid && missingItems.length > 0 && (
+          {!formState.agreeTerms && !isFormValid && missingItems.length > 0 && (
             <p className="mb-3 text-center text-xs font-semibold text-amber-600 dark:text-amber-400">
               {missingItems.join(" ")}
             </p>
