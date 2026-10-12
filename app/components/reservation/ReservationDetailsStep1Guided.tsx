@@ -9,7 +9,7 @@ import type { ReservationAddonDetails, TourTime } from "@/lib/reservation/types"
 import type { TourPackageOption } from "@/lib/types/index";
 
 type ReservationTranslations = typeof import("@/lib/translations").translations["es"]["reservation"];
-export type ChoiceStep = 1 | 2 | 3 | 4;
+export type ChoiceStep = 1 | 2 | 3;
 
 interface Props {
   choiceStep: ChoiceStep;
@@ -68,24 +68,22 @@ export default function ReservationDetailsStep1Guided(props: Props) {
   const reduceMotion = useReducedMotion();
   const guestPresets = GUEST_PRESETS.filter((count) => count <= Math.max(1, slots));
   const titles = isEs
-    ? ["Elegí su paquete", "Elegí el horario", "¿Cuántas personas van?", "Personalizá su aventura"]
-    : ["Choose your package", "Choose a departure", "How many guests?", "Make it your adventure"];
+    ? ["Elegí su paquete", "Elegí el horario", "¿Cuántas personas van?"]
+    : ["Choose your package", "Choose a departure", "How many guests?"];
   const descriptions = isEs
     ? [
         "Compare con calma. El precio es por persona y puede cambiarlo después.",
         "Seleccione una hora disponible para la fecha elegida.",
         "Indique el tamaño de su grupo para calcular disponibilidad y total.",
-        "Los extras son opcionales. Puede continuar sin agregar ninguno.",
       ]
     : [
         "Take your time comparing. Pricing is per guest and can be changed later.",
         "Select an available departure for your chosen date.",
         "Tell us your group size so we can calculate availability and total.",
-        "Extras are optional. You can continue without adding any.",
       ];
 
   const goNext = () => {
-    if (choiceStep < 4) onChoiceStepChange((choiceStep + 1) as ChoiceStep);
+    if (choiceStep < 3) onChoiceStepChange((choiceStep + 1) as ChoiceStep);
     else onContinue();
   };
 
@@ -94,7 +92,7 @@ export default function ReservationDetailsStep1Guided(props: Props) {
       <div className="mb-7 flex items-center justify-between gap-4 rounded-2xl border border-zinc-200 bg-white/90 px-4 py-3 shadow-sm backdrop-blur dark:border-zinc-700 dark:bg-zinc-900/85">
         <div className="min-w-0">
           <p className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300">
-            {isEs ? `Configuración ${choiceStep} de 4` : `Setup ${choiceStep} of 4`}
+            {isEs ? `Configuración ${choiceStep} de 3` : `Setup ${choiceStep} of 3`}
           </p>
           <p className="truncate text-sm font-black text-zinc-900 dark:text-white">{packageLabel}</p>
         </div>
@@ -105,7 +103,7 @@ export default function ReservationDetailsStep1Guided(props: Props) {
       </div>
 
       <div className="mb-8 flex gap-2" aria-label={isEs ? "Progreso de selección" : "Selection progress"}>
-        {[1, 2, 3, 4].map((step) => (
+        {[1, 2, 3].map((step) => (
           <div key={step} className={`h-1.5 flex-1 rounded-full transition-colors duration-500 ${step <= choiceStep ? "bg-emerald-500" : "bg-zinc-200 dark:bg-zinc-700"}`} />
         ))}
       </div>
@@ -119,7 +117,7 @@ export default function ReservationDetailsStep1Guided(props: Props) {
           className="min-h-[430px]">
           <div className="mb-7 max-w-2xl">
             <span className="mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-[#00C4B0]/15 text-[#087d72] dark:text-[#66ddcf]">
-              {choiceStep === 1 ? <Sparkles className="h-6 w-6" /> : choiceStep === 2 ? <Clock3 className="h-6 w-6" /> : choiceStep === 3 ? <Users className="h-6 w-6" /> : <Plus className="h-6 w-6" />}
+              {choiceStep === 1 ? <Sparkles className="h-6 w-6" /> : choiceStep === 2 ? <Clock3 className="h-6 w-6" /> : <Users className="h-6 w-6" />}
             </span>
             <h3 className="text-3xl font-black tracking-tight text-zinc-950 dark:text-white sm:text-4xl">{titles[choiceStep - 1]}</h3>
             <p className="mt-3 text-base leading-7 text-zinc-600 dark:text-zinc-300">{descriptions[choiceStep - 1]}</p>
@@ -188,11 +186,10 @@ export default function ReservationDetailsStep1Guided(props: Props) {
         <button type="button" onClick={goNext} disabled={
           (choiceStep === 1 && !hasConfirmedPackage) ||
           (choiceStep === 2 && (!tourTime || !hasConfirmedTime)) ||
-          (choiceStep === 3 && (!isTicketsValid || !hasConfirmedTickets)) ||
-          (choiceStep === 4 && !canContinue)
+          (choiceStep === 3 && (!isTicketsValid || !hasConfirmedTickets))
         }
           className="ml-auto inline-flex min-h-12 items-center gap-2 rounded-full bg-emerald-600 px-8 font-black text-white shadow-lg shadow-emerald-900/15 transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-40">
-          {choiceStep === 4 ? continueLabel : isEs ? "Continuar" : "Continue"} <ArrowRight className="h-4 w-4" />
+          {choiceStep === 3 ? continueLabel : isEs ? "Continuar" : "Continue"} <ArrowRight className="h-4 w-4" />
         </button>
       </div>
     </div>

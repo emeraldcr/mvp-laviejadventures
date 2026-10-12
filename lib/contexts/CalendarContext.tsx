@@ -34,6 +34,7 @@ type CalendarContextValue = {
   selectDay: (day: number | null) => void;
   nextMonth: () => void;
   prevMonth: () => void;
+  goToYear: (year: number) => void;
   goToToday: () => void;
   goToNextAvailableDay: () => void;
 };
@@ -253,6 +254,12 @@ export function CalendarProvider({
 
   const nextMonth = useCallback(() => changeMonth(1), [changeMonth]);
   const prevMonth = useCallback(() => changeMonth(-1), [changeMonth]);
+  const goToYear = useCallback((year: number) => {
+    if (!Number.isInteger(year)) return;
+    setCurrentYear(year);
+    setCurrentMonth(0);
+    setSelectedDay(null);
+  }, []);
 
   const findFirstAvailableDay = useCallback(() => {
     return Object.keys(availability)
@@ -310,6 +317,7 @@ export function CalendarProvider({
     selectDay,
     nextMonth,
     prevMonth,
+    goToYear,
     goToToday,
     goToNextAvailableDay,
   };

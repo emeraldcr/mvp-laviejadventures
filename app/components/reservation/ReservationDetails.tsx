@@ -963,11 +963,7 @@ export default function ReservationDetails({
         setChoiceStep(3);
         return;
       }
-      if (choiceStep === 3) {
-        if (!isTicketsValid || !hasConfirmedTickets) return;
-        setChoiceStep(4);
-        return;
-      }
+      if (choiceStep === 3 && (!isTicketsValid || !hasConfirmedTickets)) return;
       goToStep(2, "next_button");
       return;
     }
@@ -1171,7 +1167,7 @@ export default function ReservationDetails({
 
   const stickyLabel =
     currentStep === 1
-      ? choiceStep < 4
+      ? choiceStep < 3
         ? lang === "es" ? "Continuar" : "Continue"
         : step1ContinueLabel
       : currentStep === 2
