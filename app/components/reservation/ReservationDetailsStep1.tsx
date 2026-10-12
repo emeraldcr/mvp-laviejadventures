@@ -9,7 +9,6 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { formatDepartureLabel } from "@/lib/reservation/constants";
-import AddOnsExperience from "@/app/components/reservation/AddOnsExperience";
 import PackagePicker from "@/app/components/reservation/PackagePicker";
 import type { ReservationAddonDetails, TourTime } from "@/lib/reservation/types";
 import type { TourPackageOption } from "@/lib/types/index";
@@ -330,29 +329,6 @@ export default function ReservationDetailsStep1({
           </div>
         </div>
       </section>
-
-      <AddOnsExperience
-        lang={lang}
-        selectedAddons={selectedAddons}
-        addonDetails={addonDetails}
-        onAddonToggle={onAddonToggle}
-        onAddonDetailsChange={onAddonDetailsChange}
-        excludedAddonIds={excludedAddonIds}
-        defaultCollapsed
-        transportQuote={transportQuote}
-        transportLoading={transportLoading}
-        transportError={transportError}
-        transportPreview={transportPreview}
-      />
-
-      {selectedAddons.length > 0 && (
-        <div className="flex items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm dark:border-emerald-800/50 dark:bg-emerald-950/20">
-          <span className="font-semibold text-emerald-800 dark:text-emerald-300">
-            {isEs ? "Extras por persona" : "Add-ons per person"}
-          </span>
-          <span className="font-black text-emerald-800 dark:text-emerald-300">+${addonsPricePerPerson}</span>
-        </div>
-      )}
 
       <button
         type="button"

@@ -3,7 +3,6 @@
 import type { KeyboardEvent, RefObject } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Clock3, Minus, Plus, Sparkles, Users } from "lucide-react";
-import AddOnsExperience from "./AddOnsExperience";
 import PackagePicker from "./PackagePicker";
 import { formatDepartureLabel } from "@/lib/reservation/constants";
 import type { ReservationAddonDetails, TourTime } from "@/lib/reservation/types";
@@ -177,20 +176,6 @@ export default function ReservationDetailsStep1Guided(props: Props) {
             </section>
           )}
 
-          {choiceStep === 4 && (
-            <div>
-              <AddOnsExperience lang={lang} selectedAddons={selectedAddons} addonDetails={addonDetails}
-                onAddonToggle={onAddonToggle} onAddonDetailsChange={onAddonDetailsChange}
-                excludedAddonIds={excludedAddonIds} transportQuote={transportQuote}
-                transportLoading={transportLoading} transportError={transportError}
-                transportPreview={transportPreview} />
-              {selectedAddons.length > 0 && (
-                <p className="mt-4 text-right text-sm font-black text-emerald-700 dark:text-emerald-300">
-                  {isEs ? "Extras por persona" : "Add-ons per guest"}: +${addonsPricePerPerson}
-                </p>
-              )}
-            </div>
-          )}
         </motion.div>
       </AnimatePresence>
 

@@ -2,11 +2,6 @@ import type { Db } from "mongodb";
 import { COLLECTIONS } from "@/lib/constants/db";
 import { getReservationSettings } from "@/lib/models/reservation-settings";
 import { getPackageSchedule, isPackageAvailableOnDate } from "@/lib/tour-packages";
-import {
-  AddonPricingError,
-  validateSelectedAddons,
-} from "./addons";
-import { resolveAddonsPricing } from "./addons-server";
 import { getRemainingCapacityForTourDate } from "./capacity";
 import { normalizeReservationDate } from "./dates";
 import {
@@ -15,7 +10,6 @@ import {
 } from "./packages";
 import { DEFAULT_DEPARTURE_TIMES } from "./constants";
 import { getPackageDepartureTimes } from "./pricing";
-import type { ReservationAddonDetails } from "./types";
 
 export type ReservationQuoteInput = {
   bookingAttemptId?: string;
@@ -30,9 +24,6 @@ export type ReservationQuoteInput = {
   tourPackage?: string;
   tourSlug?: string;
   tourName?: string;
-  addons?: string[];
-  addonIds?: string[];
-  addonDetails?: ReservationAddonDetails;
   specialRequests?: string;
   language?: string;
 };
@@ -65,8 +56,6 @@ export type ReservationQuoteErrorCode =
   | "package_unavailable"
   | "package_schedule"
   | "capacity"
-  | "addon_config"
-  | "addon_pricing"
   | "total_mismatch";
 
 export class ReservationQuoteError extends Error {
@@ -194,39 +183,12 @@ export async function quoteReservation(db: Db, input: ReservationQuoteInput): Pr
   const ivaRatePercent = Number(settings?.ivaRate ?? 13);
   const ivaRate = Number.isFinite(ivaRatePercent) ? ivaRatePercent / 100 : 0.13;
   const packagePrice = Number(selectedPackage.price);
-  const addonIds = Array.isArray(input.addonIds) ? input.addonIds : [];
-  const addonDetails = input.addonDetails ?? {};
   const language = input.language === "en" ? "en" : "es";
+  const addonsPricePerPerson = 0;
+  const addonsBreakdown: Array<{ id: string; pricePerPerson: number }> = [];
+  const transportQuote: ReservationQuote["transportQuote"] = null;
 
-  const addonValidation = validateSelectedAddons(addonIds, addonDetails, language);
-  if (!addonValidation.ok) {
-    throw new ReservationQuoteError("addon_config", addonValidation.message, 400, {
-      addonId: addonValidation.addonId,
-    });
-  }
-
-  let addonsPricePerPerson = 0;
-  let addonsBreakdown: Array<{ id: string; pricePerPerson: number }> = [];
-  let transportQuote: ReservationQuote["transportQuote"] = null;
-
-  if (addonIds.length > 0) {
-    try {
-      const resolvedAddons = await resolveAddonsPricing(addonIds, addonDetails, safeTickets);
-      addonsPricePerPerson = resolvedAddons.pricePerPerson;
-      addonsBreakdown = resolvedAddons.breakdown;
-      transportQuote = resolvedAddons.transportQuote;
-    } catch (error) {
-      if (error instanceof AddonPricingError) {
-        throw new ReservationQuoteError("addon_pricing", error.message, 400, {
-          addonId: error.addonId,
-          code: error.code,
-        });
-      }
-      throw error;
-    }
-  }
-
-  const subtotal = safeTickets * (packagePrice + addonsPricePerPerson);
+  const subtotal = safeTickets * packagePrice;
   const totalWithTax = subtotal * (1 + ivaRate);
 
   return {
