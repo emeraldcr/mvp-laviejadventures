@@ -47,11 +47,6 @@ import ReservationDetailsStep1Guided, { type ChoiceStep } from "./ReservationDet
 import ReservationDetailsStep2 from "./ReservationDetailsStep2";
 import type { MainTourInfo, TourPackageOption } from "@/lib/types/index";
 import { useTransportQuote } from "./hooks/useTransportQuote";
-import {
-  AI_BOOKING_HANDOFF_KEY,
-  AI_BOOKING_HANDOFF_VERSION,
-  type AIBookingHandoff,
-} from "@/lib/ai-assistant/shared";
 
 // ---------------------- MAIN COMPONENT ----------------------
 
@@ -377,21 +372,12 @@ export default function ReservationDetails({
 
     try {
       const params = new URLSearchParams(window.location.search);
-      const raw = sessionStorage.getItem(AI_BOOKING_HANDOFF_KEY);
-      const parsedHandoff = raw ? JSON.parse(raw) as AIBookingHandoff : null;
-      const handoff = parsedHandoff?.version === AI_BOOKING_HANDOFF_VERSION && parsedHandoff.state
-        ? parsedHandoff
-        : null;
-      if (raw && !handoff) {
-        sessionStorage.removeItem(AI_BOOKING_HANDOFF_KEY);
-      }
-
-      const requestedTime = (params.get("time") ?? params.get("tourTime") ?? handoff?.state.tourTime ?? "").trim();
+      const requestedTime = (params.get("time") ?? params.get("tourTime") ?? "").trim();
       if (requestedTime && availableTimeSlots.includes(requestedTime)) {
         setTourTime(requestedTime);
       }
 
-      const requestedPhone = (params.get("phone") ?? handoff?.state.phone ?? "").trim();
+      const requestedPhone = (params.get("phone") ?? "").trim();
       const requestedPhoneNumber = (params.get("phoneNumber") ?? "").trim();
       const phoneMatch = requestedPhone.match(/^(\+\d{1,4})[\s-]*(.*)$/);
       const requestedAddonIds = (params.get("addons") ?? params.get("addonIds") ?? "")
@@ -412,18 +398,16 @@ export default function ReservationDetails({
 
       setFormState((current) => ({
         ...current,
-        name: params.get("name")?.trim() || current.name || handoff?.state.name || "",
-        email: params.get("email")?.trim() || current.email || handoff?.state.email || "",
+        name: params.get("name")?.trim() || current.name || "",
+        email: params.get("email")?.trim() || current.email || "",
         phoneCode: params.get("phoneCode")?.trim() || phoneMatch?.[1] || current.phoneCode,
         phoneNumber: requestedPhoneNumber || phoneMatch?.[2] || requestedPhone || current.phoneNumber,
-        specialRequests: params.get("specialRequests")?.trim() || current.specialRequests || handoff?.state.specialRequests || "",
+        specialRequests: params.get("specialRequests")?.trim() || current.specialRequests || "",
         // Terms always require an explicit action in this page. Never trust a URL.
         agreeTerms: false,
       }));
-      if (raw) sessionStorage.removeItem(AI_BOOKING_HANDOFF_KEY);
       hasAppliedPrefillRef.current = true;
     } catch {
-      sessionStorage.removeItem(AI_BOOKING_HANDOFF_KEY);
       hasAppliedPrefillRef.current = true;
     }
   }, [availableTimeSlots, isTravelerDraftHydrated, setFormState]);

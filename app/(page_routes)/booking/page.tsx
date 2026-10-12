@@ -10,7 +10,7 @@ export default async function BookingPage() {
   const session = await auth();
 
   if (!session?.user) {
-    redirect("/platform");
+    redirect("/api/auth/signin");
   }
 
   const userId = (session.user as { id?: string }).id ?? null;

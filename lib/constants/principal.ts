@@ -5,9 +5,6 @@ export const principalContent = {
     header: {
       exploreGroup: "Explorar",
       forecast: "Pronóstico",
-      dashboard: "Dashboard",
-      logout: "Cerrar sesión",
-      userMenuAria: "Menú de usuario",
       toggleMenuAria: "Abrir o cerrar menú",
     },
     hero: {
@@ -94,9 +91,6 @@ export const principalContent = {
     header: {
       exploreGroup: "Explore",
       forecast: "Forecast",
-      dashboard: "Dashboard",
-      logout: "Log Out",
-      userMenuAria: "User menu",
       toggleMenuAria: "Toggle menu",
     },
     hero: {

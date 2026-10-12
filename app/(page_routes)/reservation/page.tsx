@@ -47,7 +47,7 @@ const getReservationReturnPathSnapshot = (): string => {
   }
 
   const returnPath = sessionStorage.getItem(RESERVATION_RETURN_KEY);
-  if (!returnPath || !returnPath.startsWith("/")) {
+  if (!returnPath || !returnPath.startsWith("/reservar")) {
     return "/reservar";
   }
 
@@ -56,14 +56,6 @@ const getReservationReturnPathSnapshot = (): string => {
 
 const getServerReservationReturnPathSnapshot = () => "/reservar";
 
-
-const getReturnHref = (returnPath: string): string => {
-  if (returnPath === "/ai") {
-    return "/ai?from=reservation";
-  }
-
-  return returnPath;
-};
 
 export default function ReservationPage() {
   const { lang, toggle } = useLanguage();
@@ -87,7 +79,7 @@ export default function ReservationPage() {
     getServerReservationReturnPathSnapshot,
   );
   const orderDetails = useMemo(() => parseStoredOrderDetails(storedOrderDetails), [storedOrderDetails]);
-  const returnHref = useMemo(() => getReturnHref(returnPath), [returnPath]);
+  const returnHref = returnPath;
 
   return (
     <main className="min-h-screen bg-zinc-950 pb-16">
@@ -110,7 +102,6 @@ export default function ReservationPage() {
           <nav className="flex items-center gap-2 text-xs font-semibold text-zinc-200 md:gap-4 md:text-sm">
             <Link href="/tours" className="transition-colors hover:text-white">{navTr.tours}</Link>
             <Link href="/galeria" className="transition-colors hover:text-white">{navTr.gallery}</Link>
-            <Link href="/ai" className="transition-colors hover:text-white">AI</Link>
             <Link
               href="/reservar"
               className="rounded-full border border-teal-300/40 bg-teal-400/10 px-3 py-1 text-teal-200 transition hover:bg-teal-400/20"

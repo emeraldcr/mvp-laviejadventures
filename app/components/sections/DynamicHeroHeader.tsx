@@ -12,7 +12,6 @@ import {
 import Image from "next/image";
 import {
   ArrowRight,
-  Bot,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -442,13 +441,6 @@ const MainMosaicHero: React.FC = () => {
               >
                 {isEs ? "Ver tours" : "View tours"}
                 <ChevronDown className="h-4 w-4" />
-              </Link>
-              <Link
-                href="/ai?from=hero"
-                className="inline-flex min-h-14 items-center gap-3 rounded-full border border-[#00C4B0]/60 bg-[#00C4B0]/10 px-7 py-4 text-sm font-black uppercase tracking-[0.18em] text-[#74f3e6] backdrop-blur-xl transition hover:-translate-y-0.5 hover:border-[#00C4B0] hover:bg-[#00C4B0]/20"
-              >
-                <Bot className="h-4 w-4" aria-hidden />
-                {isEs ? "Hablar con la IA" : "Talk to AI"}
               </Link>
             </div>
           </div>

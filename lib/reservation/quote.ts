@@ -1,6 +1,6 @@
 import type { Db } from "mongodb";
 import { COLLECTIONS } from "@/lib/constants/db";
-import { getB2BSettings } from "@/lib/models/b2b-settings";
+import { getReservationSettings } from "@/lib/models/reservation-settings";
 import { getPackageSchedule, isPackageAvailableOnDate } from "@/lib/tour-packages";
 import {
   AddonPricingError,
@@ -190,7 +190,7 @@ export async function quoteReservation(db: Db, input: ReservationQuoteInput): Pr
     });
   }
 
-  const settings = await getB2BSettings();
+  const settings = await getReservationSettings();
   const ivaRatePercent = Number(settings?.ivaRate ?? 13);
   const ivaRate = Number.isFinite(ivaRatePercent) ? ivaRatePercent / 100 : 0.13;
   const packagePrice = Number(selectedPackage.price);

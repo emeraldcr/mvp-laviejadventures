@@ -4,7 +4,6 @@ import Link from "next/link";
 import {
   ArrowDown,
   ArrowRight,
-  Bot,
   Clock3,
   MapPin,
   MessageCircle,
@@ -100,13 +99,6 @@ export default function HomeHero() {
               <MessageCircle size={17} />
               {isEs ? "Hablar con un guía" : "Talk to a guide"}
             </a>
-            <Link
-              href="/ai?from=hero"
-              className="inline-flex min-h-14 items-center justify-center gap-3 rounded-full border border-[#00C4B0]/60 bg-[#00C4B0]/12 px-7 text-xs font-black uppercase tracking-[0.12em] text-[#79f4e7] backdrop-blur-md transition hover:-translate-y-0.5 hover:border-[#00C4B0] hover:bg-[#00C4B0]/22"
-            >
-              <Bot size={17} aria-hidden />
-              {isEs ? "Planear con Vero (IA)" : "Plan with Vero (AI)"}
-            </Link>
           </div>
         </div>
 

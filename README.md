@@ -14,7 +14,7 @@ La Vieja Adventures is the main website for information and reservations for La 
 
 **Features implemented**
 - Reservation flow and payment integration (PayPal)
-- Auth0-based authentication and admin/B2B features
+- Auth0 and email/password authentication for customer bookings
 - Email sending hooks (Resend / SMTP support)
 - Analytics snippets and optional Google Ads
 - MongoDB persistence for bookings and site data
@@ -76,10 +76,6 @@ AUTH_URL=https://your-auth-domain
 NEXTAUTH_URL=http://localhost:3000
 AUTH_SECRET=some-long-random-string
 
-# Admin / B2B JWT secrets
-ADMIN_JWT_SECRET=change-me-in-production
-B2B_JWT_SECRET=change-me-in-production
-
 # PayPal (server and public fallbacks)
 PAYPAL_MODE=sandbox # or live
 PAYPAL_CLIENT_ID= # server-side client id
@@ -97,13 +93,6 @@ SMTP_FROM="La Vieja Adventures <noreply@laviejaadventures.com>"
 # Analytics / Ads (client-side IDs)
 NEXT_PUBLIC_GOOGLE_ADS_ID=G-XXXXXXXXXX
 
-# Social / posting
-TWITTER_API_KEY=
-TWITTER_API_SECRET=
-TWITTER_ACCESS_TOKEN=
-TWITTER_ACCESS_SECRET=
-TWITTER_BEARER_TOKEN=
-
 # Misc
 NEXT_PUBLIC_ENABLE_DEBUG=false
 
@@ -111,7 +100,7 @@ NEXT_PUBLIC_ENABLE_DEBUG=false
 
 Guidelines:
 - Keep secrets (any value without `NEXT_PUBLIC_`) out of client bundles and never commit `.env.local` to git.
-- Use strong random values for `AUTH_SECRET`, `ADMIN_JWT_SECRET`, and `B2B_JWT_SECRET` (at least 32 characters).
+- Use a strong random value for `AUTH_SECRET` (at least 32 characters).
 - For production, set `NODE_ENV=production` and configure secure hosting for secrets (Vercel Secrets, environment in your hosting provider, or HashiCorp Vault).
 
 ## Run locally

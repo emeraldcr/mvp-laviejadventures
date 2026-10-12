@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Bot, CalendarDays, MessageCircle, ShieldCheck } from "lucide-react";
+import { ArrowRight, CalendarDays, MessageCircle, ShieldCheck } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
 import { BOOKING_HREF, WHATSAPP_HREF, primaryBookingLabel } from "./home-utils";
 
@@ -23,12 +23,12 @@ export default function HomeConversionRail() {
             </h2>
             <p className="mt-4 max-w-xl text-sm leading-relaxed text-white/68 sm:text-base">
               {isEs
-                ? "Elija la fecha, el número de personas y el paquete. Verá el precio final antes de pagar, con pago seguro y cancelación gratuita hasta 48 h antes. ¿Dudas? Vero (IA) o nuestro equipo le responden."
-                : "Choose your date, group size, and package. You will see the final price before paying, with secure payment and free cancellation up to 48h before. Questions? Vero (AI) or our team will help."}
+                ? "Elija la fecha, el número de personas y el paquete. Verá el precio final antes de pagar, con pago seguro y cancelación gratuita hasta 48 h antes. ¿Dudas? Nuestro equipo le ayuda por WhatsApp."
+                : "Choose your date, group size, and package. You will see the final price before paying, with secure payment and free cancellation up to 48h before. Questions? Our team can help on WhatsApp."}
             </p>
           </div>
 
-          <div className="grid gap-px bg-white/10 sm:grid-cols-3 lg:grid-cols-1">
+          <div className="grid gap-px bg-white/10 sm:grid-cols-2 lg:grid-cols-1">
             <Link
               href={BOOKING_HREF}
               className="group flex min-h-28 items-center justify-between gap-5 bg-[#00C4B0] p-6 text-[#17211f] transition hover:bg-[#70eee1] lg:px-8"
@@ -41,19 +41,6 @@ export default function HomeConversionRail() {
                 </span>
               </span>
               <ArrowRight size={20} className="transition-transform group-hover:translate-x-1" />
-            </Link>
-            <Link
-              href="/ai?from=landing-rail"
-              className="group flex min-h-28 items-center justify-between gap-5 bg-[#27241f] p-6 transition hover:bg-[#34302a] lg:px-8"
-            >
-              <span>
-                <Bot size={20} className="text-[#00C4B0]" />
-                <strong className="mt-3 block text-base font-black">{isEs ? "Planear con Vero" : "Plan with Vero"}</strong>
-                <span className="mt-1 block text-xs font-semibold text-white/55">
-                  {isEs ? "IA que le ayuda a elegir tour" : "AI that helps you pick a tour"}
-                </span>
-              </span>
-              <ArrowRight size={20} className="text-[#00C4B0] transition-transform group-hover:translate-x-1" />
             </Link>
             <a
               href={WHATSAPP_HREF}
@@ -81,20 +68,13 @@ export default function HomeConversionRail() {
           </p>
           <p className="mt-1 text-sm font-bold">{isEs ? "Disponibilidad durante todo el año." : "Availability year-round."}</p>
         </div>
-        <div className="grid grid-cols-[1fr_auto]">
+        <div className="grid grid-cols-1">
           <Link
             href={BOOKING_HREF}
             className="flex items-center gap-2 bg-[#00C4B0] px-5 py-4 text-sm font-black text-[#17211f] transition hover:bg-[#70eee1]"
           >
             <CalendarDays size={16} />
             {isEs ? "Ver fechas" : "See dates"}
-          </Link>
-          <Link
-            href="/ai?from=landing-dock"
-            aria-label={isEs ? "Planear con Vero" : "Plan with Vero"}
-            className="flex items-center justify-center border-l border-black/10 bg-[#00C4B0] px-4 text-[#17211f] transition hover:bg-[#70eee1]"
-          >
-            <Bot size={18} />
           </Link>
         </div>
       </aside>

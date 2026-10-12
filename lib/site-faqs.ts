@@ -2,53 +2,53 @@ export const SITE_FAQS = {
   es: [
     {
       question: "¿Cómo reservo un tour?",
-      answer: "Entrá a Reservar, elegí fecha y paquete, y pagás en línea. Si preferís ir más despacio, mirá primero la Guía (Docs) o escribinos por WhatsApp y te armamos el plan.",
+      answer: "Elija el tour y la fecha en Reservar. Puede pagar en línea o escribirnos por WhatsApp si necesita ayuda.",
     },
     {
-      question: "¿Dónde veo mis reservas confirmadas?",
-      answer: "En el dashboard, después de iniciar sesión. Ahí está el estado del pago y los datos que necesitás el día del tour.",
+      question: "¿Dónde consulto mi reserva?",
+      answer: "Después de iniciar sesión, puede revisar sus reservas y sus detalles en la sección Mis reservas.",
     },
     {
-      question: "¿Qué es el portal B2B?",
-      answer: "Es para operadores y agencias aliadas: reservan para sus clientes, ven tours y dan seguimiento a su cuenta. Si sos operador y no tenés acceso, escribinos.",
+      question: "¿Cómo puedo pagar?",
+      answer: "El pago en línea se procesa de forma segura con PayPal. Puede usar las tarjetas que PayPal acepte.",
     },
     {
-      question: "¿Cómo se paga?",
-      answer: "Online con PayPal (incluye tarjetas que PayPal acepte). El pago va seguro; no pedimos datos de tarjeta por WhatsApp.",
+      question: "¿Qué debo llevar al tour?",
+      answer: "Lleve ropa cómoda, calzado con buen agarre, agua, bloqueador, repelente y una muda seca. Le enviaremos recomendaciones según el tour.",
     },
     {
-      question: "¿Qué llevo el día del tour?",
-      answer: "Ropa cómoda, zapatos con agarre, agua, bloqueador, repelente y una muda seca. Según el tour te mandamos la lista exacta al confirmar.",
+      question: "¿Qué pasa si llueve o el río crece?",
+      answer: "Si el clima o el nivel del río no permiten salir con seguridad, le contactaremos para reprogramar o proponer una alternativa segura.",
     },
     {
-      question: "¿Necesito ayuda ya?",
-      answer: "WhatsApp es lo más rápido: cupos, clima, transporte o si no sabés si el cañón te calza. Preferimos decirte la verdad antes de que reserves.",
+      question: "¿Necesita ayuda?",
+      answer: "Escríbanos por WhatsApp para consultar sobre el tour, el clima, el transporte o su reserva.",
     },
   ],
   en: [
     {
       question: "How do I book a tour?",
-      answer: "Go to Book, pick date and package, and pay online. Prefer a slower path? Check the Docs guide first, or WhatsApp us and we'll sort a plan.",
+      answer: "Choose a tour and date on the booking page. You can pay online or message us on WhatsApp if you need help.",
     },
     {
-      question: "Where do I see confirmed bookings?",
-      answer: "In the dashboard after you sign in — payment status and the details you need on tour day.",
+      question: "Where can I check my booking?",
+      answer: "After signing in, you can review your bookings and their details in My Bookings.",
     },
     {
-      question: "What's the B2B portal?",
-      answer: "For partner operators and agencies: book for clients, browse tours, and track the account. Operator without access? Message us.",
-    },
-    {
-      question: "How do I pay?",
-      answer: "Online with PayPal (including cards PayPal accepts). Secure checkout — we never ask for card numbers over WhatsApp.",
+      question: "How can I pay?",
+      answer: "Online payments are processed securely through PayPal. You can use cards accepted by PayPal.",
     },
     {
       question: "What should I bring on tour day?",
-      answer: "Comfy clothes, good-grip shoes, water, sunscreen, repellent, and a dry change. We'll send the exact list when you confirm.",
+      answer: "Bring comfortable clothes, grippy shoes, water, sunscreen, repellent, and a dry change. We will send tour-specific recommendations.",
     },
     {
-      question: "Need help now?",
-      answer: "WhatsApp is fastest: availability, weather, transport, or whether the canyon fits you. We'd rather be honest before you book.",
+      question: "What if it rains or the river rises?",
+      answer: "If weather or river levels make the tour unsafe, we will contact you to reschedule or suggest a safe alternative.",
+    },
+    {
+      question: "Need help?",
+      answer: "Message us on WhatsApp about the tour, weather, transportation, or your booking.",
     },
   ],
 } as const;

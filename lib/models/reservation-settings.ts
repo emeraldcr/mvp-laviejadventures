@@ -12,7 +12,7 @@ export type TourPricingOverride = {
   packages: PackageConfig[];
 };
 
-export interface B2BSettings {
+export interface ReservationSettings {
   _id?: string;
   ivaRate: number;
   tourPricing: TourPricingOverride[];
@@ -23,15 +23,15 @@ const SETTINGS_KEY = "default";
 
 async function getSettingsCollection() {
   const db = await getDb();
-  return db.collection<B2BSettings & { _id: string }>(COLLECTIONS.B2B_SETTINGS);
+  return db.collection<ReservationSettings & { _id: string }>(COLLECTIONS.RESERVATION_SETTINGS);
 }
 
-export async function getB2BSettings() {
+export async function getReservationSettings() {
   const col = await getSettingsCollection();
   return col.findOne({ _id: SETTINGS_KEY });
 }
 
-export async function upsertB2BSettings(input: { ivaRate: number; tourPricing: TourPricingOverride[] }) {
+export async function upsertReservationSettings(input: { ivaRate: number; tourPricing: TourPricingOverride[] }) {
   const col = await getSettingsCollection();
   await col.updateOne(
     { _id: SETTINGS_KEY },

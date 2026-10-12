@@ -63,9 +63,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         ]
       : []),
   ],
-  pages: {
-    signIn: "/platform",
-  },
   events: {
     async signIn({ user }) {
       if (!user?.email) return;

@@ -3,7 +3,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import {
-  Bot,
   CloudSun,
   ExternalLink,
   Facebook,
@@ -16,7 +15,6 @@ import {
   Music2,
   Phone,
   ShieldCheck,
-  ShoppingBag,
   Sparkles,
   Twitter,
   Youtube,
@@ -80,12 +78,8 @@ const routeGroups = {
       info: "Informacion general",
       tours: "Tours",
       gallery: "Galeria",
-      store: "Store",
       organics: "Organics",
-      wildo: "Wildo",
       weather: "Tiempo",
-      docs: "Docs",
-      ai: "Asistente IA",
       privacy: "Politica de privacidad",
       terms: "Terminos y condiciones",
       booking: "Reservar",
@@ -108,13 +102,8 @@ const routeGroups = {
       info: "General info",
       tours: "Tours",
       gallery: "Gallery",
-      store: "Store",
       organics: "Organics",
-      wildo: "Wildo",
       weather: "Weather",
-      docs: "Docs",
-      ai: "AI assistant",
-      privacy: "Privacy policy",
       terms: "Terms and conditions",
       booking: "Book now",
     },
@@ -131,15 +120,11 @@ export default function SiteFooter() {
     { href: "/info", label: copy.links.info, icon: Sparkles },
     { href: "/tours", label: copy.links.tours, icon: MapPin },
     { href: "/galeria", label: copy.links.gallery, icon: Instagram },
-    { href: "/store", label: copy.links.store, icon: ShoppingBag },
     { href: "/organics", label: copy.links.organics, icon: Leaf },
-    { href: "/wildo", label: copy.links.wildo, icon: Sparkles },
   ];
 
   const utilityLinks = [
     { href: "/tiempo", label: copy.links.weather, icon: CloudSun },
-    { href: "/docs", label: copy.links.docs, icon: FileText },
-    { href: "/ai", label: copy.links.ai, icon: Bot },
     { href: "/reservar", label: copy.links.booking, icon: MessageCircle },
   ];
 

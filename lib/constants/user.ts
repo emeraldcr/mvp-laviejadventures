@@ -7,9 +7,4 @@ export const DEFAULT_USER_PREFERENCES: UserPreferences = {
     promotions: false,
     weeklySummary: false,
   },
-  dashboard: {
-    compactView: false,
-    showSupportCard: true,
-    defaultBookingTab: "upcoming",
-  },
 };

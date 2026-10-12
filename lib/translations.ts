@@ -3,11 +3,8 @@ import type { Lang } from "@/lib/LanguageContext";
 const es = {
   nav: {
     info: "Información",
-    docs: "Guía",
     tours: "Tours",
-    store: "Tienda",
     gallery: "Galería",
-    wildo: "Wildo",
     reserve: "Reserva",
     time: "Tiempo",
   },
@@ -330,25 +327,13 @@ const es = {
       "Intermedio a avanzado": "Avanzado",
     } as Record<string, string>,
   },
-  dashboard: {
-    title: "Dashboard",
-    description: "Tus reservas y tu perfil",
-    bookingsTitle: "Mis reservas",
-    bookingsDescription: "Acá ves el estado y los datos de tus tours",
-    profileTitle: "Mi perfil",
-    profileDescription: "Datos de tu cuenta",
-    logoutBtn: "Cerrar sesión",
-  }
 };
 
 const en = {
   nav: {
     info: "Information",
-    docs: "Docs",
     tours: "Tours",
-    store: "Store",
     gallery: "Gallery",
-    wildo: "Wildo",
     reserve: "Reserve",
     time: "Weather",
   },
@@ -669,15 +654,6 @@ const en = {
       "Intermedio a avanzado": "Advanced",
     } as Record<string, string>,
   },
-  dashboard: {
-    title: "Dashboard",
-    description: "Your bookings and profile",
-    bookingsTitle: "My bookings",
-    bookingsDescription: "Status and details for your tours",
-    profileTitle: "My profile",
-    profileDescription: "Your account details",
-    logoutBtn: "Log out",
-  }
 };
 
 export const translations: Record<Lang, typeof es> = { es, en };

@@ -28,10 +28,6 @@ function mergeUserPreferences(preferences?: Partial<UserPreferences> | null): Us
       ...DEFAULT_USER_PREFERENCES.notifications,
       ...(preferences?.notifications ?? {}),
     },
-    dashboard: {
-      ...DEFAULT_USER_PREFERENCES.dashboard,
-      ...(preferences?.dashboard ?? {}),
-    },
   };
 }
 

@@ -8,24 +8,9 @@
     }
   },
   "framework": "nextjs",
-  "functions": {
-    "app/api/poker/ws/route.ts": {
-      "maxDuration": 300
-    }
-  },
   "buildCommand": "next build",
   "installCommand": "npm ci",
-  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- . ':(exclude).agents' ':(exclude)docs' ':(exclude)scripts' ':(exclude)*.md' ':(exclude).codex-transport-market-test.log' ':(exclude)lint-output.txt' ':(exclude)_tmp_check_flyers.mjs'",
-  "crons": [
-    {
-      "path": "/api/scores/cron/sync",
-      "schedule": "*/15 * * * *"
-    },
-    {
-      "path": "/api/scores/cron/reminders",
-      "schedule": "*/15 * * * *"
-    }
-  ],
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- . ':(exclude).agents' ':(exclude)*.md'",
   "redirects": [
     {
       "source": "/:path*",
@@ -39,28 +24,7 @@
       "permanent": true
     }
   ],
-  "rewrites": [
-    {
-      "source": "/:path*",
-      "has": [
-        {
-          "type": "host",
-          "value": "platform.laviejaadventures.com"
-        }
-      ],
-      "destination": "/platform/:path*"
-    }
-  ],
   "headers": [
-    {
-      "source": "/b2b/:path*",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=0, s-maxage=0, must-revalidate"
-        }
-      ]
-    },
     {
       "source": "/_next/static/(.*)",
       "headers": [

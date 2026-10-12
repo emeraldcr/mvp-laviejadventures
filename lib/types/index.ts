@@ -7,11 +7,6 @@ export type UserPreferences = {
     promotions: boolean;
     weeklySummary: boolean;
   };
-  dashboard: {
-    compactView: boolean;
-    showSupportCard: boolean;
-    defaultBookingTab: "upcoming" | "past";
-  };
 };
 
 

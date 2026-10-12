@@ -12,7 +12,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Bot,
   CalendarCheck,
   CloudSun,
   Compass,
@@ -23,7 +22,6 @@ import {
   Info as InfoIcon,
   LayoutGrid,
   MessageCircle,
-  ShoppingBag,
   X,
 } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
@@ -32,7 +30,7 @@ import { principalContent } from "@/lib/constants/principal";
 
 const WHATSAPP_RESERVAS_HREF = "https://wa.me/50662332535";
 
-const MORE_PATH_PREFIXES = ["/info", "/tiempo", "/preguntas-frecuentes", "/ai", "/docs", "/store"];
+const MORE_PATH_PREFIXES = ["/info", "/tiempo", "/preguntas-frecuentes"];
 
 const MOBILE_NAV_HEIGHT = "4.25rem";
 
@@ -76,7 +74,6 @@ export const SiteHeader = memo<{ isScrolled?: boolean }>(({ isScrolled = false }
   const navLinks: NavLinkItem[] = [
     { href: "/info", label: tr.info },
     { href: "/tours", label: tr.tours },
-    { href: "/store", label: tr.store },
     { href: "/galeria", label: tr.gallery },
     { href: "/tiempo", label: copy.forecast },
   ];
@@ -199,12 +196,6 @@ const MobileMoreMenu = memo<{
 
   const links: MoreLink[] = [
     {
-      href: "/store",
-      label: tr.store,
-      description: isEs ? "Equipo de montaña y marcas" : "Mountain gear and brands",
-      Icon: ShoppingBag,
-    },
-    {
       href: "/info",
       label: tr.info,
       description: isEs ? "Tours, contacto y detalles" : "Tours, contact and details",
@@ -221,12 +212,6 @@ const MobileMoreMenu = memo<{
       label: isEs ? "Preguntas" : "FAQ",
       description: isEs ? "Respuestas rápidas" : "Quick answers",
       Icon: HelpCircle,
-    },
-    {
-      href: "/ai",
-      label: isEs ? "Asistente IA" : "AI assistant",
-      description: isEs ? "Ayuda al instante" : "Instant help",
-      Icon: Bot,
     },
   ];
 

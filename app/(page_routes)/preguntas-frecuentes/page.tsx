@@ -2,8 +2,7 @@
 
 import DynamicHeroHeader from "@/app/components/sections/DynamicHeroHeader";
 import { useLanguage } from "@/lib/LanguageContext";
-import { CircleHelp, LifeBuoy } from "lucide-react";
-import Link from "next/link";
+import { CircleHelp } from "lucide-react";
 import { SITE_FAQS } from "@/lib/site-faqs";
 
 export default function PreguntasFrecuentesPage() {
@@ -24,46 +23,13 @@ export default function PreguntasFrecuentesPage() {
         </h1>
         <p className="mt-3 max-w-3xl text-zinc-700 dark:text-zinc-300">
           {lang === "es"
-            ? "Reservas, pagos, dashboard, B2B y qué meter en la mochila. Si no está acá, WhatsApp y te respondemos en tico, sin script."
-            : "Bookings, payments, dashboard, B2B, and what to pack. Missing something? WhatsApp us — plain talk, no script."}
+            ? "Reservas, pagos y consejos para su aventura. Si necesita ayuda, escribanos por WhatsApp."
+            : "Bookings, payments, and what to bring. If you need help, message us on WhatsApp."}
         </p>
       </section>
 
-      <section className="mx-auto mt-6 w-full max-w-5xl space-y-3">
-        {items.map((item) => (
-          <details
-            key={item.question}
-            className="group rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm open:border-teal-300 dark:border-zinc-800 dark:bg-zinc-950"
-          >
-            <summary className="cursor-pointer list-none text-lg font-semibold text-zinc-900 marker:content-none dark:text-white">
-              {item.question}
-            </summary>
-            <p className="mt-3 text-zinc-700 dark:text-zinc-300">{item.answer}</p>
-          </details>
-        ))}
-      </section>
 
-      <section className="mx-auto mt-6 flex w-full max-w-5xl flex-wrap gap-3 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-        <Link
-          href="/docs"
-          className="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-700"
-        >
-          <LifeBuoy size={16} />
-          {lang === "es" ? "Ver guía completa" : "View full guide"}
-        </Link>
-        <Link
-          href="/dashboard"
-          className="inline-flex items-center gap-2 rounded-lg border border-zinc-300 px-4 py-2 text-sm font-semibold text-zinc-800 transition hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
-        >
-          {lang === "es" ? "Abrir dashboard" : "Open dashboard"}
-        </Link>
-        <Link
-          href="/b2b/login"
-          className="inline-flex items-center gap-2 rounded-lg border border-zinc-300 px-4 py-2 text-sm font-semibold text-zinc-800 transition hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
-        >
-          {lang === "es" ? "Portal B2B" : "B2B Portal"}
-        </Link>
-      </section>
+
     </main>
   );
 }

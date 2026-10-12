@@ -16,10 +16,7 @@ function isValidPreferences(input: unknown): input is UserPreferences {
     typeof preferences.notifications?.emailEnabled === "boolean" &&
     typeof preferences.notifications?.bookingReminders === "boolean" &&
     typeof preferences.notifications?.promotions === "boolean" &&
-    typeof preferences.notifications?.weeklySummary === "boolean" &&
-    typeof preferences.dashboard?.compactView === "boolean" &&
-    typeof preferences.dashboard?.showSupportCard === "boolean" &&
-    ["upcoming", "past"].includes(preferences.dashboard?.defaultBookingTab)
+    typeof preferences.notifications?.weeklySummary === "boolean"
   );
 }
 

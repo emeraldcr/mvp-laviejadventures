@@ -10,7 +10,6 @@ import {
   ChevronRight,
   Expand,
   Mountain,
-  ShoppingBag,
   Waves,
   X,
 } from "lucide-react";
@@ -198,13 +197,6 @@ export function GaleriaContent({ images }: Props) {
             >
               <CalendarCheck className="h-4 w-4" aria-hidden />
               {isEs ? "Reservar mi aventura" : "Book my adventure"}
-            </Link>
-            <Link
-              href="/store"
-              className="inline-flex min-h-11 items-center gap-2 rounded-full border border-emerald-300/35 bg-emerald-400/10 px-7 py-2.5 font-black text-emerald-100 transition hover:-translate-y-0.5 hover:bg-emerald-400/20 hover:text-white"
-            >
-              <ShoppingBag className="h-4 w-4" aria-hidden />
-              {isEs ? "Equipate en la tienda" : "Gear up at the store"}
             </Link>
           </div>
         </div>
