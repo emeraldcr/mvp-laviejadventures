@@ -5,6 +5,7 @@ interface ReservationDetailsStepProgressProps {
   currentStep: BookingStepId;
   onStepSelect?: (step: BookingStepId) => void;
   maxReachableStep?: BookingStepId;
+  sidebar?: boolean;
 }
 
 export default function ReservationDetailsStepProgress({
@@ -12,6 +13,7 @@ export default function ReservationDetailsStepProgress({
   currentStep,
   onStepSelect,
   maxReachableStep = currentStep,
+  sidebar = false,
 }: ReservationDetailsStepProgressProps) {
   return (
     <div className="mb-6 rounded-2xl border border-zinc-200 bg-zinc-50/80 p-4 dark:border-zinc-800 dark:bg-zinc-950/35" aria-label="Booking progress">
@@ -42,19 +44,19 @@ export default function ReservationDetailsStepProgress({
         </div>
       </div>
 
-      <div className="hidden items-center gap-2 sm:flex">
+      <div className={`${sidebar ? "hidden gap-2 lg:flex lg:flex-col lg:items-stretch" : "hidden items-center gap-2 sm:flex"}`}>
         {steps.map((step) => {
           const isCurrent = currentStep === step.id;
           const isDone = currentStep > step.id;
           const canJump = step.id <= maxReachableStep && !isCurrent;
 
           return (
-            <div key={step.id} className="flex flex-1 items-center gap-2" aria-current={isCurrent ? "step" : undefined}>
+            <div key={step.id} className={`flex gap-2 ${sidebar ? "items-start" : "flex-1 items-center"}`} aria-current={isCurrent ? "step" : undefined}>
               <button
                 type="button"
                 disabled={!canJump}
                 onClick={() => onStepSelect?.(step.id)}
-                className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-bold transition-colors ${
+                className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-xs font-bold transition-colors ${
                   isCurrent
                     ? "border-[#00C4B0] bg-[#00C4B0] text-[#18312f]"
                     : isDone
@@ -68,7 +70,7 @@ export default function ReservationDetailsStepProgress({
                 type="button"
                 disabled={!canJump}
                 onClick={() => onStepSelect?.(step.id)}
-                className={`min-w-0 truncate text-left text-xs font-semibold ${
+                className={`min-w-0 ${sidebar ? "whitespace-normal pt-1" : "truncate"} text-left text-xs font-semibold ${
                   isCurrent
                     ? "text-[#087d72] dark:text-[#66ddcf]"
                     : isDone
@@ -78,7 +80,7 @@ export default function ReservationDetailsStepProgress({
               >
                 {step.label}
               </button>
-              {step.id < steps.length && (
+              {step.id < steps.length && !sidebar && (
                 <span className={`h-px flex-1 ${isDone ? "bg-teal-500/60" : "bg-zinc-300 dark:bg-zinc-800"}`} aria-hidden />
               )}
             </div>

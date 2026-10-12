@@ -107,7 +107,7 @@ function CalendarBase() {
         {tr.weekdays.map((lbl) => (
           <div
             key={lbl}
-            className="text-center text-[9px] font-medium uppercase tracking-wide text-zinc-500 sm:text-[10px]"
+            className="rounded-md border border-zinc-200 bg-zinc-100/80 py-1 text-center text-[10px] font-extrabold uppercase tracking-wide text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800/80 dark:text-zinc-200 sm:rounded-lg sm:py-1.5 sm:text-xs"
           >
             {lbl}
           </div>

@@ -50,37 +50,12 @@ export interface ReservationFormState {
   agreeTerms: boolean;
 }
 
-export interface ReservationOrderPayload {
-  name: string;
-  email: string;
-  phone: string;
-  tickets: number;
-  total: number;
-  date: string;
-  dateIso: string;
-  tourTime: TourTime;
-  packageId: string;
-  tourPackage: TourPackage;
-  tourSlug: string;
-  tourName: string;
-  packagePrice: number;
-  specialRequests: string;
-  addons: string[];
-  addonIds: string[];
-  addonsPrice: number;
-  addonsPricePerPerson?: number;
-  addonsBreakdown?: Array<{ id: string; pricePerPerson: number }>;
-  addonDetails?: ReservationAddonDetails;
-  transportQuote?: import("./transport").TransportQuoteResult | null;
-}
-
 export interface ReservationDetailsProps {
   selectedDate: number;
   currentMonth: number;
   monthName: string;
   tickets: number;
   setTickets: (n: number) => void;
-  onReserve: (data: ReservationOrderPayload) => void;
   availability: AvailabilityMap;
   currentYear: number;
   tourInfo?: MainTourInfo | null;

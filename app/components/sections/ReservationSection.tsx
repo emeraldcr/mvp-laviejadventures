@@ -3,32 +3,8 @@
 import { useCalendarContext } from "@/lib/CalendarContext";
 import ReservationDetails from "@/app/components/reservation/ReservationDetails";
 import { useLanguage } from "@/lib/LanguageContext";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useReservationData, DEFAULT_BOOKABLE_TOUR } from "@/lib/hooks/useReservationData";
-
-type OrderPayload = {
-  name: string;
-  email: string;
-  phone: string;
-  tickets: number;
-  total: number;
-  date: string;
-  dateIso: string;
-  tourTime: string;
-  packageId?: string;
-  tourPackage: string;
-  tourSlug: string;
-  tourName: string;
-  packagePrice: number;
-  specialRequests?: string;
-  addons?: string[];
-  addonIds?: string[];
-  addonsPrice?: number;
-  addonsPricePerPerson?: number;
-  addonsBreakdown?: Array<{ id: string; pricePerPerson: number }>;
-  addonDetails?: import("@/lib/reservation/types").ReservationAddonDetails;
-  transportQuote?: import("@/lib/reservation/transport").TransportQuoteResult | null;
-};
 
 type Props = {
   className?: string;
@@ -36,7 +12,6 @@ type Props = {
   preselectedPackageId?: string;
 };
 
-const RESERVATION_RETURN_KEY = "reservationReturnPath";
 
 export default function ReservationSection({ className, preselectedTourSlug, preselectedPackageId }: Props) {
   const {
@@ -50,7 +25,6 @@ export default function ReservationSection({ className, preselectedTourSlug, pre
 
   const { lang } = useLanguage();
   const { tours, ivaRatePercent } = useReservationData();
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   const requestedTourSlug = (preselectedTourSlug ?? searchParams.get("tour") ?? "").trim();
@@ -58,15 +32,6 @@ export default function ReservationSection({ className, preselectedTourSlug, pre
   const initialSelectedTourSlug = requestedTourSlug || DEFAULT_BOOKABLE_TOUR.slug;
   const hasPreselectedTour = requestedTourSlug.length > 0;
 
-  const handleReserve = (data: OrderPayload) => {
-    const orderDetails = {
-      ...data,
-      bookingAttemptId: crypto.randomUUID(),
-    };
-    sessionStorage.setItem("reservationOrderDetails", JSON.stringify(orderDetails));
-    sessionStorage.setItem(RESERVATION_RETURN_KEY, `/reservar?tour=${encodeURIComponent(data.tourSlug)}`);
-    router.push("/reservation");
-  };
 
   const monthName = new Intl.DateTimeFormat(lang === "es" ? "es-ES" : "en-US", {
     month: "long",
@@ -108,7 +73,6 @@ export default function ReservationSection({ className, preselectedTourSlug, pre
         monthName={monthName}
         tickets={tickets}
         setTickets={setTickets}
-        onReserve={handleReserve}
         availability={availability}
         currentYear={currentYear}
         tours={tours}

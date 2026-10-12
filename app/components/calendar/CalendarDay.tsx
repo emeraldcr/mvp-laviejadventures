@@ -13,10 +13,10 @@ type Props = {
 type Status = "loading" | "past" | "soldout" | "available";
 
 const STATUS_CARD_CLASS: Record<Status, string> = {
-  loading: "bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700",
-  past: "bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700",
-  soldout: "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-700",
-  available: "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-700",
+  loading: "bg-zinc-50 dark:bg-zinc-900 border-zinc-300 dark:border-zinc-600",
+  past: "bg-zinc-100 dark:bg-zinc-800 border-zinc-300 dark:border-zinc-600",
+  soldout: "bg-red-50 dark:bg-red-900/20 border-red-400 dark:border-red-600",
+  available: "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-400 dark:border-emerald-600",
 };
 
 const STATUS_TEXT_CLASS: Record<Status, string> = {
@@ -39,7 +39,7 @@ function CalendarDayBase({ day }: Props) {
   } = useCalendarContext();
 
   if (day === null) {
-    return <div className="h-12 rounded-lg sm:h-14 sm:rounded-xl md:h-16" aria-hidden="true" />;
+    return <div className="h-[clamp(3.5rem,8svh,4.5rem)] rounded-lg sm:h-[clamp(4.25rem,9svh,5rem)] sm:rounded-xl" aria-hidden="true" />;
   }
 
   const past = isPastDay(day);
@@ -95,13 +95,13 @@ function CalendarDayBase({ day }: Props) {
       }
       aria-pressed={selected}
       className={cn(
-        "group relative flex h-12 min-w-0 w-full flex-col overflow-hidden rounded-lg border p-1 text-left shadow-sm outline-none transition-[transform,box-shadow,border-color,background-color] duration-200 ease-out select-none motion-reduce:transition-none sm:h-14 sm:rounded-xl sm:p-2 md:h-16 md:p-2.5",
+        "group relative flex h-[clamp(3.5rem,8svh,4.5rem)] min-w-0 w-full flex-col overflow-hidden rounded-lg border-2 p-1 text-left shadow-sm outline-none transition-[transform,box-shadow,border-color,background-color] duration-200 ease-out select-none motion-reduce:transition-none sm:h-[clamp(4.25rem,9svh,5rem)] sm:rounded-xl sm:p-2 md:p-2.5",
         hasSlots
           ? "cursor-pointer hover:z-10 hover:-translate-y-1 hover:scale-[1.025] hover:border-emerald-400 hover:bg-emerald-100 hover:shadow-[0_12px_28px_-12px_rgba(16,185,129,0.55)] active:translate-y-0 active:scale-[0.99] focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 dark:hover:border-emerald-500 dark:hover:bg-emerald-900/40 dark:hover:shadow-[0_12px_28px_-12px_rgba(16,185,129,0.28)] dark:focus-visible:ring-offset-zinc-950"
           : "cursor-not-allowed opacity-60",
         STATUS_CARD_CLASS[status],
-        today && !selected && "border-sky-400 bg-sky-50 shadow-[0_0_0_2px_rgba(56,189,248,0.16),0_8px_22px_-14px_rgba(14,165,233,0.7)] dark:border-sky-500 dark:bg-sky-950/40",
-        selected && "z-[1] border-emerald-500 bg-emerald-100 ring-2 ring-emerald-500 shadow-[0_8px_24px_-10px_rgba(16,185,129,0.55)] dark:bg-emerald-900/40 dark:shadow-[0_8px_24px_-10px_rgba(16,185,129,0.32)]"
+        today && !selected && "border-sky-500 bg-sky-50 shadow-[0_0_0_2px_rgba(56,189,248,0.18),0_8px_22px_-14px_rgba(14,165,233,0.7)] dark:border-sky-400 dark:bg-sky-950/40",
+        selected && "z-[1] border-emerald-600 bg-emerald-100 ring-2 ring-emerald-500 shadow-[0_8px_24px_-10px_rgba(16,185,129,0.55)] dark:border-emerald-400 dark:bg-emerald-900/40 dark:shadow-[0_8px_24px_-10px_rgba(16,185,129,0.32)]"
       )}
     >
       <div className="flex items-start justify-between gap-0.5">

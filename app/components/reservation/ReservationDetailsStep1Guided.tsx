@@ -89,7 +89,7 @@ export default function ReservationDetailsStep1Guided(props: Props) {
 
   return (
     <div className="mb-4">
-      <div className="mb-7 flex items-center justify-between gap-4 rounded-2xl border border-zinc-200 bg-white/90 px-4 py-3 shadow-sm backdrop-blur dark:border-zinc-700 dark:bg-zinc-900/85">
+      <div className="mb-7 hidden items-center justify-between gap-4 rounded-2xl border border-zinc-200 bg-white/90 px-4 py-3 shadow-sm backdrop-blur dark:border-zinc-700 dark:bg-zinc-900/85">
         <div className="min-w-0">
           <p className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300">
             {isEs ? `Configuración ${choiceStep} de 3` : `Setup ${choiceStep} of 3`}
@@ -102,7 +102,7 @@ export default function ReservationDetailsStep1Guided(props: Props) {
         </div>
       </div>
 
-      <div className="mb-8 flex gap-2" aria-label={isEs ? "Progreso de selección" : "Selection progress"}>
+      <div className="mb-8 hidden gap-2" aria-label={isEs ? "Progreso de selección" : "Selection progress"}>
         {[1, 2, 3].map((step) => (
           <div key={step} className={`h-1.5 flex-1 rounded-full transition-colors duration-500 ${step <= choiceStep ? "bg-emerald-500" : "bg-zinc-200 dark:bg-zinc-700"}`} />
         ))}
@@ -114,13 +114,13 @@ export default function ReservationDetailsStep1Guided(props: Props) {
           animate={{ opacity: 1, x: 0 }}
           exit={reduceMotion ? undefined : { opacity: 0, x: -24 }}
           transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
-          className="min-h-[430px]">
-          <div className="mb-7 max-w-2xl">
-            <span className="mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-[#00C4B0]/15 text-[#087d72] dark:text-[#66ddcf]">
-              {choiceStep === 1 ? <Sparkles className="h-6 w-6" /> : choiceStep === 2 ? <Clock3 className="h-6 w-6" /> : <Users className="h-6 w-6" />}
+          className="min-h-0">
+          <div className="mb-5 max-w-2xl">
+            <span className="mb-3 grid h-10 w-10 place-items-center rounded-xl bg-[#00C4B0]/15 text-[#087d72] dark:text-[#66ddcf]">
+              {choiceStep === 1 ? <Sparkles className="h-5 w-5" /> : choiceStep === 2 ? <Clock3 className="h-5 w-5" /> : <Users className="h-5 w-5" />}
             </span>
-            <h3 className="text-3xl font-black tracking-tight text-zinc-950 dark:text-white sm:text-4xl">{titles[choiceStep - 1]}</h3>
-            <p className="mt-3 text-base leading-7 text-zinc-600 dark:text-zinc-300">{descriptions[choiceStep - 1]}</p>
+            <h3 className="text-2xl font-black tracking-tight text-zinc-950 dark:text-white sm:text-3xl">{titles[choiceStep - 1]}</h3>
+            <p className="mt-1.5 text-sm leading-6 text-zinc-600 dark:text-zinc-300">{descriptions[choiceStep - 1]}</p>
           </div>
 
           {choiceStep === 1 && (
