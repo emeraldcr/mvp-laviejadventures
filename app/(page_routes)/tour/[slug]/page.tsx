@@ -12,6 +12,7 @@ import { getTourGallery, getTourImage } from "@/lib/tour-display";
 import { getTourContent } from "@/lib/tour-content";
 import type { TourPackageOption } from "@/lib/types/index";
 import { SITE_URL } from "@/lib/site-config";
+import JsonLd from "@/app/components/seo/JsonLd";
 
 export const dynamic = "force-dynamic";
 
@@ -150,10 +151,32 @@ export default async function TourDetailPage({ params }: TourDetailPageProps) {
   if (!tour) notFound();
 
   const content = getTourContent(tour.slug);
+  const title = tour.titleEs || tour.titleEn || "Tour";
+  const description = tour.details || tour.descriptionEs || tour.descriptionEn;
+  const difficulty = tour.difficulty.trim();
+  const tourSchema = {
+    "@context": "https://schema.org",
+    "@type": "TouristTrip",
+    name: title,
+    url: `${SITE_URL}/tour/${encodeURIComponent(tour.slug)}`,
+    description,
+    ...(difficulty ? { touristType: `Aventura, nivel ${difficulty}` } : {}),
+    ...(tour.location ? { itinerary: { "@type": "Place", name: tour.location } } : {}),
+    provider: { "@type": "Organization", name: "La Vieja Adventures", url: SITE_URL },
+    offers: tour.packages
+      .filter((pkg) => Number.isFinite(pkg.price) && pkg.price > 0)
+      .map((pkg) => ({
+        "@type": "Offer",
+        name: pkg.nameEs || pkg.name,
+        price: String(pkg.price),
+        priceCurrency: "USD",
+        url: `${SITE_URL}/reservar?tour=${encodeURIComponent(tour.slug)}${pkg.id ? `&package=${encodeURIComponent(pkg.id)}` : ""}`,
+      })),
+  };
 
   const isBirdwatching = tour.slug === "avistamiento-aves" || tour.slug === "avistamiento-aves-norteno";
   if (isBirdwatching && content) {
-    return <BirdwatchingTourPage tour={tour} content={content} />;
+    return <><JsonLd data={tourSchema} /><BirdwatchingTourPage tour={tour} content={content} /></>;
   }
 
   const gallery = content && content.gallery.length > 0 ? content.gallery : getTourGallery(tour.slug);
@@ -163,19 +186,17 @@ export default async function TourDetailPage({ params }: TourDetailPageProps) {
     const packageParam = packageId ? `&package=${encodeURIComponent(packageId)}` : "";
     return `/reservar?tour=${encodeURIComponent(tour.slug)}${packageParam}`;
   };
-  const title = tour.titleEs || tour.titleEn || "Tour";
   const heroTagline = content?.tagline || tour.tagEs || "";
-  const description = tour.details || tour.descriptionEs || tour.descriptionEn;
   const overview = content?.overview.length ? content.overview : [description];
   const inclusions = content?.included.length
     ? content.included
     : tour.inclusions.length > 0
       ? tour.inclusions
       : DEFAULT_TOUR.inclusions;
-  const tourSchema = { "@context": "https://schema.org", "@type": "TouristTrip", name: title, url: `${SITE_URL}/tour/${encodeURIComponent(tour.slug)}`, description, touristType: `Aventura, nivel ${tour.difficulty}`, provider: { "@type": "Organization", name: "La Vieja Adventures", url: SITE_URL }, offers: tour.packages.map((pkg) => ({ "@type": "Offer", name: pkg.nameEs || pkg.name, price: String(pkg.price), priceCurrency: "USD", availability: "https://schema.org/InStock", url: `${SITE_URL}/reservar?tour=${encodeURIComponent(tour.slug)}` })) };
 
   return (
-    <main className="min-h-screen bg-black text-white"><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(tourSchema) }} />
+    <main className="min-h-screen bg-black text-white">
+      <JsonLd data={tourSchema} />
       <DynamicHeroHeader showHeroSlider={false} />
 
       <section className="relative min-h-[78vh] overflow-hidden pt-24">

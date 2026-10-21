@@ -1,85 +1,16 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, ExternalLink, MapPin, MessageCircle, Plus } from "lucide-react";
+import { ArrowRight, ExternalLink, MapPin, MessageCircle } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
 import {
   LA_VIEJA_GOOGLE_MAPS_EMBED_URL,
   LA_VIEJA_GOOGLE_MAPS_URL,
   LA_VIEJA_LOCATION_LABEL,
 } from "@/lib/constants/location";
-import { principalContent } from "@/lib/constants/principal";
 import type { TourSummary } from "@/lib/types/index";
 import { BOOKING_HREF, WHATSAPP_HREF, formatTourPrice, primaryBookingLabel } from "./home-utils";
-
-function FaqSection() {
-  const { lang } = useLanguage();
-  const isEs = lang === "es";
-  const copy = principalContent[lang].conversion;
-  const [open, setOpen] = useState<number | null>(0);
-
-  return (
-    <section className="bg-white py-20 dark:bg-[#0b0a09] md:py-28">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid gap-12 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:gap-20">
-          <div>
-            <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em] text-emerald-700 dark:text-emerald-300">FAQ</p>
-            <h2 className="font-display text-balance text-4xl font-bold leading-[1.02] tracking-tight text-stone-900 dark:text-stone-50 md:text-5xl">
-              {copy.title}
-            </h2>
-            {copy.subtitle && (
-              <p className="mt-4 max-w-md text-base leading-relaxed text-stone-600 dark:text-stone-300">{copy.subtitle}</p>
-            )}
-            <a
-              href={WHATSAPP_HREF}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-7 inline-flex items-center gap-2 rounded-full border border-stone-300 px-6 py-3 text-sm font-bold text-stone-800 transition-colors hover:border-emerald-600 hover:text-emerald-700 dark:border-stone-600 dark:text-stone-200 dark:hover:border-emerald-400 dark:hover:text-emerald-300"
-            >
-              <MessageCircle size={16} />
-              {isEs ? "¿Otra consulta? Escríbanos por WhatsApp" : "Another question? Message us on WhatsApp"}
-            </a>
-          </div>
-
-          <div className="divide-y divide-stone-200 border-y border-stone-200 dark:divide-stone-800 dark:border-stone-800">
-            {copy.faqs.map((faq, index) => {
-              const isOpen = open === index;
-              return (
-                <div key={faq.question}>
-                  <button
-                    type="button"
-                    onClick={() => setOpen(isOpen ? null : index)}
-                    aria-expanded={isOpen}
-                    className="flex w-full items-center justify-between gap-4 py-5 text-left"
-                  >
-                    <span className="text-base font-bold text-stone-900 dark:text-stone-100 md:text-lg">{faq.question}</span>
-                    <span
-                      className={[
-                        "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition-all duration-300",
-                        isOpen
-                          ? "rotate-45 border-emerald-600 bg-emerald-600 text-white"
-                          : "border-stone-300 text-stone-500 dark:border-stone-600 dark:text-stone-400",
-                      ].join(" ")}
-                    >
-                      <Plus size={15} />
-                    </span>
-                  </button>
-                  {isOpen && (
-                    <p className="pb-6 pr-12 text-sm leading-relaxed text-stone-600 dark:text-stone-300 md:text-base">
-                      {faq.answer.replaceAll("**", "")}
-                    </p>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
 
 function FinalCta() {
   const { lang } = useLanguage();
@@ -273,7 +204,6 @@ function MobileStickyCta({ tours }: { tours: TourSummary[] }) {
 export default function HomeFaqFooter({ tours }: { tours: TourSummary[] }) {
   return (
     <>
-      <FaqSection />
       <FinalCta />
       <HomeFooter />
       <MobileStickyCta tours={tours} />

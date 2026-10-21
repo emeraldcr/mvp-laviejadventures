@@ -221,7 +221,7 @@ const es = {
   gallery: {
     title: "Fotos de verdad, del cañón y del río",
     description:
-      "Sendero, agua cristalina del Río La Vieja, paredes de hasta 180 m y el paso bajo el puente viejo. Así se ve Ciudad Esmeralda cuando no hay filtro de catálogo.",
+      "Sendero, agua cristalina del Río La Vieja, paredes de 80 m y el paso bajo el puente viejo. Así se ve Ciudad Esmeralda cuando no hay filtro de catálogo.",
   },
   info: {
     badge: "San Carlos · Ribera del Río La Vieja",
@@ -252,7 +252,7 @@ const es = {
     storyTitle: "Un poquito de la historia del lugar",
     storyParagraphs: [
       "En el recorrido pasamos bajo el Puente sobre el Río La Vieja: un pedazo de historia de la zona, con cuentos de respeto al río que los abuelos todavía recuerdan.",
-      "El Río La Vieja nace a unos 13 km de la ruta. Agua clara, paredes del cañón de hasta 180 metros… y un paisaje que se siente en las piernas y en el pecho.",
+      "El Río La Vieja nace a unos 13 km de la ruta. Agua clara, paredes del cañón de 80 metros… y un paisaje que se siente en las piernas y en el pecho.",
       "Somos un proyecto de 7 hermanos de la zona. Guías locales, protocolos de seguridad y ganas de que te vayás contento — y de que el bosque se quede bien cuidado.",
     ],
     whyTitle: "Por qué la gente nos elige",
@@ -544,7 +544,7 @@ const en = {
   gallery: {
     title: "Real photos from the canyon and the river",
     description:
-      "Trail, clear water on La Vieja River, walls up to 180 m, and the pass under the old bridge. This is Ciudad Esmeralda without the brochure filter.",
+      "Trail, clear water on La Vieja River, 80 m walls, and the pass under the old bridge. This is Ciudad Esmeralda without the brochure filter.",
   },
   info: {
     badge: "San Carlos · La Vieja River",
@@ -575,7 +575,7 @@ const en = {
     storyTitle: "A bit of the place's story",
     storyParagraphs: [
       "On the route we pass under the Bridge over La Vieja River — local history, with old stories of respect for the river that people still tell.",
-      "La Vieja River starts about 13 km from this trail. Clear water, canyon walls up to 180 meters… and a landscape you feel in your legs and your chest.",
+      "La Vieja River starts about 13 km from this trail. Clear water, 80-meter canyon walls… and a landscape you feel in your legs and your chest.",
       "We're a project of 7 siblings from the area. Local guides, real safety protocols, and a goal that you leave happy — and that the forest stays okay.",
     ],
     whyTitle: "Why people pick us",

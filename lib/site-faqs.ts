@@ -6,7 +6,7 @@ export const SITE_FAQS = {
     },
     {
       question: "¿Dónde consulto mi reserva?",
-      answer: "Después de iniciar sesión, puede revisar sus reservas y sus detalles en la sección Mis reservas.",
+      answer: "Revise la confirmación que recibió por correo. Si necesita ayuda, escríbanos por WhatsApp con el nombre usado en la reserva y su fecha.",
     },
     {
       question: "¿Cómo puedo pagar?",
@@ -32,7 +32,7 @@ export const SITE_FAQS = {
     },
     {
       question: "Where can I check my booking?",
-      answer: "After signing in, you can review your bookings and their details in My Bookings.",
+      answer: "Check the confirmation sent to your email. If you need help, message us on WhatsApp with the name used for the booking and your tour date.",
     },
     {
       question: "How can I pay?",

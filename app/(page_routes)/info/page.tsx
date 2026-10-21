@@ -81,7 +81,7 @@ const socialLinks = [
   },
   {
     label: "X (Twitter)",
-    href: "https://x.com/adventuresvieja",
+    href: SOCIAL_URLS.twitter,
     bg: "bg-zinc-900",
     hover: "hover:bg-black",
     ring: "focus-visible:ring-zinc-300",

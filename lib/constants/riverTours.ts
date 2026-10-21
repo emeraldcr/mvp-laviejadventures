@@ -43,7 +43,7 @@ export const RIVER_TOUR_PROFILES: RiverTourProfile[] = [
   {
     slug: "rapel-canon-del-rio",
     name: "Rapel en Cañón del Río",
-    difficulty: "Intermedio a avanzado",
+    difficulty: "Extremo",
     exposure: "canyon-technical",
     watch3hMm: 2,
     avoid3hMm: 6,

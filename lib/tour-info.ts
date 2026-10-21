@@ -27,7 +27,7 @@ export const TOUR_INFO: TourInfo = {
     email: "ciudadesmeraldacr@gmail.com",
     youtube: SOCIAL_URLS.youtube,
     facebook: SOCIAL_URLS.facebook,
-    twitter: "https://x.com/adventuresvieja",
+    twitter: SOCIAL_URLS.twitter,
     instagram: SOCIAL_URLS.instagram,
   },
 };

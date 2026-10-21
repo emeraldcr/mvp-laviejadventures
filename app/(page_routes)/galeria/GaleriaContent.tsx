@@ -119,7 +119,7 @@ export function GaleriaContent({ images }: Props) {
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/35 px-3 py-1.5 text-white/75">
               <Mountain className="h-3.5 w-3.5 text-emerald-200" aria-hidden />
-              {isEs ? "Cañón de 180 m" : "180 m canyon"}
+              {isEs ? "Cañón de 80 m" : "80 m canyon"}
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/35 px-3 py-1.5 text-white/75">
               <Waves className="h-3.5 w-3.5 text-emerald-200" aria-hidden />

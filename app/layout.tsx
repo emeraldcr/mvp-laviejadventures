@@ -4,6 +4,7 @@ import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { BUSINESS_ADDRESS, BUSINESS_NAME, BUSINESS_PHONE, SITE_URL, SOCIAL_URLS } from "@/lib/site-config";
 import { LanguageProvider } from "@/lib/LanguageContext";
+import JsonLd from "@/app/components/seo/JsonLd";
 import { ThemeProvider, THEME_NO_FLASH_SCRIPT } from "@/lib/ThemeContext";
 
 const manrope = Manrope({ subsets: ["latin"], variable: "--font-manrope", display: "swap" });
@@ -11,5 +12,5 @@ const bricolage = Bricolage_Grotesque({ subsets: ["latin"], variable: "--font-br
 export const metadata: Metadata = { metadataBase: new URL(SITE_URL), title: { default: "La Vieja Adventures", template: "%s | La Vieja Adventures" }, description: "Tours con guías locales en San Carlos, Costa Rica.", openGraph: { type: "website", locale: "es_CR", url: SITE_URL, siteName: BUSINESS_NAME } };
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const schema = { "@context": "https://schema.org", "@type": "TouristInformationCenter", name: BUSINESS_NAME, url: SITE_URL, telephone: BUSINESS_PHONE, address: { "@type": "PostalAddress", ...BUSINESS_ADDRESS }, areaServed: "San Carlos, Alajuela, Costa Rica", knowsLanguage: ["es", "en"], sameAs: Object.values(SOCIAL_URLS) };
-  return <html lang="es" className={`dark ${manrope.variable} ${bricolage.variable}`} suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: THEME_NO_FLASH_SCRIPT }} /><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} /></head><body className="antialiased"><ThemeProvider><LanguageProvider>{children}</LanguageProvider></ThemeProvider><Analytics /></body></html>;
+  return <html lang="es" className={`dark ${manrope.variable} ${bricolage.variable}`} suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: THEME_NO_FLASH_SCRIPT }} /><JsonLd data={schema} /></head><body className="antialiased"><ThemeProvider><LanguageProvider>{children}</LanguageProvider></ThemeProvider><Analytics /></body></html>;
 }

@@ -195,7 +195,7 @@ const DEFAULT_TOURS = [
     descriptionEn:
       "Controlled descent through canyon sections with certified guides and professional equipment.",
     duration: "2 horas",
-    difficulty: "Intermedio a avanzado",
+    difficulty: "Extremo",
     priceCRC: 29990,
     tagEs: "Extremo",
     tagEn: "Extreme",

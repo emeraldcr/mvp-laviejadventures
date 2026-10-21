@@ -1,6 +1,6 @@
 "use client";
 
-import { JSX } from "react";
+import type { JSX, ReactNode } from "react";
 import ErrorBoundary from "@/lib/contexts/ErrorBoundary";
 import { useLanguage } from "@/lib/LanguageContext";
 import { principalContent } from "@/lib/constants/principal";
@@ -12,12 +12,24 @@ import FeaturedStory from "@/app/components/home/FeaturedStory";
 import ToursShowcase from "@/app/components/home/ToursShowcase";
 import HomeFaqFooter from "@/app/components/home/HomeFaqFooter";
 
-export default function HomeClient(): JSX.Element {
+export default function HomeClient({ children }: { children: ReactNode }): JSX.Element {
   const { lang } = useLanguage();
   const { tours } = useReservationData();
   const copy = principalContent[lang].errors;
   const ciudadEsmeralda = tours.find((tour) => ["tour-ciudad-esmeralda", "ciudad-esmeralda"].includes(tour.slug));
   const featuredTours = ciudadEsmeralda ? [ciudadEsmeralda] : [];
   const otherTours = tours.filter((tour) => !["tour-ciudad-esmeralda", "ciudad-esmeralda"].includes(tour.slug)).slice(0, 3);
-  return <ErrorBoundary fallback={<div className="flex h-screen items-center justify-center bg-white text-xl text-red-600">{copy.criticalFallback}</div>}><main className="min-h-screen overflow-x-hidden bg-[#FAF9F6] font-sans text-stone-900 dark:bg-[#0b0a09] dark:text-stone-100"><HomeNav /><HomeHero /><HomeConversionRail /><FeaturedStory tours={featuredTours} />{otherTours.length > 0 && <ToursShowcase tours={otherTours} />}<HomeFaqFooter tours={featuredTours} /></main></ErrorBoundary>;
+  return (
+    <ErrorBoundary fallback={<div className="flex h-screen items-center justify-center bg-white text-xl text-red-600">{copy.criticalFallback}</div>}>
+      <main className="min-h-screen overflow-x-hidden bg-[#FAF9F6] font-sans text-stone-900 dark:bg-[#0b0a09] dark:text-stone-100">
+        <HomeNav />
+        <HomeHero />
+        <HomeConversionRail />
+        <FeaturedStory tours={featuredTours} />
+        {otherTours.length > 0 && <ToursShowcase tours={otherTours} />}
+        {children}
+        <HomeFaqFooter tours={featuredTours} />
+      </main>
+    </ErrorBoundary>
+  );
 }

@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/helpers/mongodb";
 import { COLLECTIONS } from "@/lib/constants/db";
 import { fallbackPackagesForTour, normalizeTourPackages } from "@/lib/tour-packages";
+import { SOCIAL_URLS } from "@/lib/site-config";
 
 const DEFAULT_MAIN_TOUR = {
   slug: "tour-ciudad-esmeralda",
@@ -32,10 +33,10 @@ const DEFAULT_MAIN_TOUR = {
   contact: {
     whatsapp: "6233-2535",
     email: "ciudadesmeraldacr@gmail.com",
-    youtube: "https://www.youtube.com/@laviejaadventures",
-    facebook: "https://www.facebook.com/laviejaadventures",
-    twitter: "https://x.com/adventuresvieja",
-    instagram: "https://www.instagram.com/laviejadventures",
+    youtube: SOCIAL_URLS.youtube,
+    facebook: SOCIAL_URLS.facebook,
+    twitter: SOCIAL_URLS.twitter,
+    instagram: SOCIAL_URLS.instagram,
   },
   type: "both",
   iconName: "Star",
