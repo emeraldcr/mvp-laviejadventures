@@ -10,6 +10,7 @@ import {
 } from "./packages";
 import { DEFAULT_DEPARTURE_TIMES } from "./constants";
 import { getPackageDepartureTimes } from "./pricing";
+import type { ReservationAddonDetails } from "./types";
 
 export type ReservationQuoteInput = {
   bookingAttemptId?: string;
@@ -26,6 +27,9 @@ export type ReservationQuoteInput = {
   tourName?: string;
   specialRequests?: string;
   language?: string;
+  addons?: string[];
+  addonIds?: string[];
+  addonDetails?: ReservationAddonDetails;
 };
 
 export type ReservationQuote = {

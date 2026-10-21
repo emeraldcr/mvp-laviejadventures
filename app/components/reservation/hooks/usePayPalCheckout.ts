@@ -266,7 +266,6 @@ export function usePayPalCheckout({
       return `https://www.paypal.com/sdk/js?${sdkParams.toString()}`;
     };
 
-    const buyerCountryCode = getBuyerCountryFromPhone(orderDetails.phone);
     // PayPal returns HTTP 400 for the Spanish locale aliases used by the
     // previous booking page (including es_XC) with this live client ID.
     // Omitting locale lets PayPal choose a supported locale from the buyer's

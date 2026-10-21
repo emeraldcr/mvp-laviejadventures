@@ -3,12 +3,9 @@
 import DynamicHeroHeader from "@/app/components/sections/DynamicHeroHeader";
 import { useLanguage } from "@/lib/LanguageContext";
 import { CircleHelp } from "lucide-react";
-import { SITE_FAQS } from "@/lib/site-faqs";
 
 export default function PreguntasFrecuentesPage() {
   const { lang } = useLanguage();
-  const items = lang === "es" ? SITE_FAQS.es : SITE_FAQS.en;
-
   return (
     <main className="min-h-screen bg-gradient-to-b from-teal-50 via-zinc-50 to-white px-4 py-10 dark:from-black dark:via-zinc-950 dark:to-zinc-900">
       <DynamicHeroHeader showHeroSlider={false} />

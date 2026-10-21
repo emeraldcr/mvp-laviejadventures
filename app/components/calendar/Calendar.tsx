@@ -17,7 +17,6 @@ function CalendarBase() {
     prevMonth,
     goToYear,
     goToToday,
-    selectedDay,
   } = useCalendarContext();
   const { lang } = useLanguage();
   const tr = translations[lang].calendar;
