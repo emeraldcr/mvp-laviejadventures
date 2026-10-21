@@ -6,8 +6,9 @@ import HomeNav from "@/app/components/home/HomeNav";
 
 export const metadata: Metadata = {
   title: "La Vieja Organics | Sostenibilidad organica local",
+  alternates: { canonical: "https://www.laviejaadventures.com/organics" },
   description:
-    "La Vieja Organics is a local organic sustainability project by La Vieja Adventures, created to support the restaurant with seasonal ingredients, compost practices, and a closer relationship with the land.",
+    "La Vieja Organics es un proyecto local de sostenibilidad de La Vieja Adventures, creado para apoyar el restaurante con ingredientes de temporada, compostaje y una relación más cercana con la tierra.",
 };
 
 const pillars = [

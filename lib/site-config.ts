@@ -1,4 +1,4 @@
-export const SITE_URL = "https://laviejaadventures.com";
+export const SITE_URL = "https://www.laviejaadventures.com";
 export const BUSINESS_PHONE = "+506 6233 2535";
 export const BUSINESS_PHONE_E164 = "+50662332535";
 export const BUSINESS_WHATSAPP_URL = `https://wa.me/${BUSINESS_PHONE_E164.replace("+", "")}`;

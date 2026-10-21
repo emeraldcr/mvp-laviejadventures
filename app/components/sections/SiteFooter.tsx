@@ -49,7 +49,7 @@ const socialLinks = [
   },
   {
     label: "TikTok",
-    href: "https://www.tiktok.com/@la.vieja.adventur",
+    href: "https://www.tiktok.com/@la.vieja.adventures",
     icon: Music2,
     className: "from-zinc-100 via-cyan-300 to-rose-400",
   },

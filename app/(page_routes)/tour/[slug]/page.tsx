@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Backpack, CalendarDays, Check, ChevronRight, Clock, HelpCircle, Info, MapPin, Route, ShieldCheck, Sparkles, Users, X } from "lucide-react";
@@ -10,12 +11,21 @@ import { buildStandardPackagesFromPrice, fallbackPackagesForTour, normalizeTourP
 import { getTourGallery, getTourImage } from "@/lib/tour-display";
 import { getTourContent } from "@/lib/tour-content";
 import type { TourPackageOption } from "@/lib/types/index";
+import { SITE_URL } from "@/lib/site-config";
 
 export const dynamic = "force-dynamic";
 
 type TourDetailPageProps = {
   params: Promise<{ slug: string }>;
 };
+
+export async function generateMetadata({ params }: TourDetailPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const tour = await getTour(slug);
+  const title = tour?.titleEs ?? "Tour en San Carlos";
+  const description = tour?.descriptionEs ?? "Experiencias guiadas de naturaleza y aventura en San Carlos, Costa Rica.";
+  return { title, description, alternates: { canonical: `${SITE_URL}/tour/${encodeURIComponent(slug)}` }, openGraph: { title, description, url: `${SITE_URL}/tour/${encodeURIComponent(slug)}` } };
+}
 
 type TourDetail = {
   slug: string;

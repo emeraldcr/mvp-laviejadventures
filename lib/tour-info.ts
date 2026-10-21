@@ -27,6 +27,6 @@ export const TOUR_INFO: TourInfo = {
     youtube: "https://www.youtube.com/@laviejaadventures",
     facebook: "https://www.facebook.com/laviejaadventures",
     twitter: "https://x.com/adventuresvieja",
-    instagram: "https://www.instagram.com/laviejadventures",
+    instagram: "https://www.instagram.com/laviejaadventures",
   },
 };

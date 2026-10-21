@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Tours | La Vieja Adventures",
+  title: "Tours",
+  alternates: { canonical: "https://www.laviejaadventures.com/tours" },
   description:
     "Cañón Ciudad Esmeralda, pozas, ATV, avistamiento de aves y más. Precios claros, guías locales certificados y reserva en línea.",
 };
