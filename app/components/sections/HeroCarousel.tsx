@@ -84,7 +84,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ overlay, height = "5
           <Image
             key={index}
             src={src}
-            alt={`Carousel image ${index + 1}`}
+            alt={`Cañón del Río La Vieja, foto ${index + 1}`}
             fill
             className={`object-cover transition-opacity duration-1000 ease-in-out ${
               index === currentIndex ? "opacity-100" : "opacity-0"

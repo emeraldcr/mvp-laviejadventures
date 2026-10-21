@@ -11,8 +11,20 @@ import { buildStandardPackagesFromPrice, fallbackPackagesForTour, normalizeTourP
 import { getTourGallery, getTourImage } from "@/lib/tour-display";
 import { getTourContent } from "@/lib/tour-content";
 import type { TourPackageOption } from "@/lib/types/index";
-import { SITE_URL } from "@/lib/site-config";
+import { BUSINESS_NAME, BUSINESS_PHONE_E164, SITE_URL } from "@/lib/site-config";
 import JsonLd from "@/app/components/seo/JsonLd";
+
+function metaDescription(text: string, max = 155) {
+  const clean = text.replace(/\s+/g, " ").trim();
+  if (clean.length <= max) return clean;
+  const cut = clean.slice(0, max - 1);
+  return `${cut.slice(0, cut.lastIndexOf(" ") > 80 ? cut.lastIndexOf(" ") : cut.length).replace(/[,.;:]$/, "")}…`;
+}
+
+function tourWhatsAppHref(title: string) {
+  const text = `Hola, me interesa el tour ${title}. ¿Tienen disponibilidad?`;
+  return `https://wa.me/${BUSINESS_PHONE_E164.replace("+", "")}?text=${encodeURIComponent(text)}`;
+}
 
 export const dynamic = "force-dynamic";
 
@@ -24,8 +36,11 @@ export async function generateMetadata({ params }: TourDetailPageProps): Promise
   const { slug } = await params;
   const tour = await getTour(slug);
   const title = tour?.titleEs ?? "Tour en San Carlos";
-  const description = tour?.descriptionEs ?? "Experiencias guiadas de naturaleza y aventura en San Carlos, Costa Rica.";
-  return { title, description, alternates: { canonical: `${SITE_URL}/tour/${encodeURIComponent(slug)}` }, openGraph: { title, description, url: `${SITE_URL}/tour/${encodeURIComponent(slug)}` } };
+  const description = metaDescription(tour?.descriptionEs || "Experiencias guiadas de naturaleza y aventura en San Carlos, Costa Rica.");
+  const url = `${SITE_URL}/tour/${encodeURIComponent(slug)}`;
+  const image = getTourImage(tour?.slug ?? slug);
+  const images = image ? [{ url: image, alt: title }] : undefined;
+  return { title, description, alternates: { canonical: url }, openGraph: { type: "website", locale: "es_CR", siteName: BUSINESS_NAME, title, description, url, images }, twitter: { card: "summary_large_image", title, description, images: image ? [image] : undefined } };
 }
 
 type TourDetail = {
@@ -174,9 +189,23 @@ export default async function TourDetailPage({ params }: TourDetailPageProps) {
       })),
   };
 
+  const tourUrl = `${SITE_URL}/tour/${encodeURIComponent(tour.slug)}`;
+  const tourImage = getTourImage(tour.slug);
+  if (tourImage) Object.assign(tourSchema, { image: tourImage.startsWith("http") ? tourImage : `${SITE_URL}${tourImage}` });
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Inicio", item: `${SITE_URL}/` },
+      { "@type": "ListItem", position: 2, name: "Tours", item: `${SITE_URL}/tours` },
+      { "@type": "ListItem", position: 3, name: title, item: tourUrl },
+    ],
+  };
+  const whatsappHref = tourWhatsAppHref(title);
+
   const isBirdwatching = tour.slug === "avistamiento-aves" || tour.slug === "avistamiento-aves-norteno";
   if (isBirdwatching && content) {
-    return <><JsonLd data={tourSchema} /><BirdwatchingTourPage tour={tour} content={content} /></>;
+    return <><JsonLd data={tourSchema} /><JsonLd data={breadcrumbSchema} /><BirdwatchingTourPage tour={tour} content={content} /></>;
   }
 
   const gallery = content && content.gallery.length > 0 ? content.gallery : getTourGallery(tour.slug);
@@ -197,6 +226,7 @@ export default async function TourDetailPage({ params }: TourDetailPageProps) {
   return (
     <main className="min-h-screen bg-black text-white">
       <JsonLd data={tourSchema} />
+      <JsonLd data={breadcrumbSchema} />
       <DynamicHeroHeader showHeroSlider={false} />
 
       <section className="relative min-h-[78vh] overflow-hidden pt-24">
@@ -228,6 +258,9 @@ export default async function TourDetailPage({ params }: TourDetailPageProps) {
               <Link href="/reservar" className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-6 py-3 text-sm font-bold uppercase tracking-[0.16em] text-white transition hover:border-white/50 hover:bg-white/15">
                 Volver a reserva
               </Link>
+              <a href={whatsappHref} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-full border border-emerald-300/40 bg-emerald-400/15 px-6 py-3 text-sm font-bold uppercase tracking-[0.16em] text-emerald-100 transition hover:border-emerald-200 hover:bg-emerald-400/25">
+                Consultar por WhatsApp
+              </a>
             </div>
           </div>
         </div>

@@ -149,7 +149,7 @@ export function GaleriaContent({ images }: Props) {
             >
               <Image
                 src={src}
-                alt={`La Vieja Adventures ${index + 1}`}
+                alt={`Galería La Vieja Adventures: Cañón del Río La Vieja, foto ${index + 1}`}
                 fill
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                 loading={index < 6 ? "eager" : "lazy"}
@@ -219,7 +219,7 @@ export function GaleriaContent({ images }: Props) {
           >
             <Image
               src={images[lightboxIndex]}
-              alt={`La Vieja Adventures ${lightboxIndex + 1}`}
+              alt={`Galería La Vieja Adventures: Cañón del Río La Vieja, foto ${lightboxIndex + 1}`}
               fill
               sizes="94vw"
               className="object-contain"
