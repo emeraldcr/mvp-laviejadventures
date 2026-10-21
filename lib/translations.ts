@@ -244,7 +244,7 @@ const es = {
     mainToursTitle: "Qué podés hacer con nosotros",
     ratesTitle: "Tarifas y condiciones",
     ratesText1:
-      "Hay opciones desde ₡19.990 (fines de semana en grupo) hasta ₡34.990 (individual entre semana). El precio exacto depende del tour y del paquete.",
+      "Hay opciones desde ₡19.990 hasta ₡51.990, según el tour y el paquete. El precio exacto se confirma antes de reservar.",
     ratesText2:
       "Si llueve fuerte, el río crece o el terreno se pone inseguro, no arriesgamos. Reprogramamos o cambiamos a algo más suave. Pura vida, pero con cabeza.",
     ratesText3:
@@ -567,7 +567,7 @@ const en = {
     mainToursTitle: "What you can do with us",
     ratesTitle: "Rates & conditions",
     ratesText1:
-      "Options run from ₡19,990 (weekend groups) to ₡34,990 (weekend private groups). Exact price depends on the tour and package.",
+      "Options run from ₡19,990 to ₡51,990, depending on the tour and package. The exact price is confirmed before booking.",
     ratesText2:
       "Heavy rain, a rising river, or unsafe ground? We don't push it. We rebook or switch to something gentler. Pura vida, with a clear head.",
     ratesText3:
