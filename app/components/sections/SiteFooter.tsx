@@ -26,6 +26,7 @@ import {
   LA_VIEJA_GOOGLE_MAPS_URL,
 } from "@/lib/constants/location";
 import { TOUR_INFO } from "@/lib/tour-info";
+import { BUSINESS_PHONE, BUSINESS_WHATSAPP_URL } from "@/lib/site-config";
 
 const socialLinks = [
   {
@@ -113,7 +114,7 @@ const routeGroups = {
 export default function SiteFooter() {
   const { lang } = useLanguage();
   const copy = routeGroups[lang];
-  const whatsappHref = "https://wa.me/50662332535";
+  const whatsappHref = BUSINESS_WHATSAPP_URL;
   const emailHref = `mailto:${TOUR_INFO.contact.email}`;
 
   const exploreLinks = [
@@ -130,7 +131,7 @@ export default function SiteFooter() {
 
   const legalLinks = [
     { href: "/terminos-y-condiciones", label: copy.links.terms, icon: ShieldCheck },
-    { href: "/politica-de-privacidad", label: copy.links.privacy, icon: FileText },
+    { href: "/politica-de-privacidad", label: "Política de privacidad", icon: FileText },
   ];
 
   return (
@@ -155,7 +156,7 @@ export default function SiteFooter() {
 
             <div className="grid gap-3 sm:grid-cols-3">
               <ContactAction href={whatsappHref} label={copy.whatsapp} value="+506 6233-2535" icon={<MessageCircle className="h-4 w-4" />} featured />
-              <ContactAction href="tel:+50686430807" label={copy.call} value="+506 8643-0807" icon={<Phone className="h-4 w-4" />} />
+              <ContactAction href={`tel:${BUSINESS_PHONE.replace(/[^+\d]/g, "")}`} label={copy.call} value={BUSINESS_PHONE} icon={<Phone className="h-4 w-4" />} />
               <ContactAction href={emailHref} label={copy.email} value={TOUR_INFO.contact.email} icon={<Mail className="h-4 w-4" />} />
             </div>
 

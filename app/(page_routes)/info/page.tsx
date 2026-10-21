@@ -356,7 +356,7 @@ export default function InfoPage() {
                 <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
                   <Phone size={14} />
                 </span>
-                <span><strong className="font-semibold text-zinc-900 dark:text-white">{tr.phoneLabel}</strong> +506 8643-0807</span>
+                <span><strong className="font-semibold text-zinc-900 dark:text-white">{tr.phoneLabel}</strong> +506 6233-2535</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">

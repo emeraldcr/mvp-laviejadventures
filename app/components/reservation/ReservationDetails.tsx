@@ -19,7 +19,7 @@ import type {
 } from "@/lib/reservation/types";
 import ReservationDetailsStep1Guided from "./ReservationDetailsStep1Guided";
 import ReservationDetailsStep2 from "./ReservationDetailsStep2";
-import InlinePayPalCheckout from "./InlinePayPalCheckout";
+import PaymentModal from "./PaymentModal";
 import type { OrderDetails } from "@/lib/types/index";
 import { ReservationWizardProvider, useReservationWizard } from "./context/ReservationWizardContext";
 import { useReservationStepAnalytics } from "./hooks/useReservationStepAnalytics";
@@ -554,13 +554,7 @@ function ReservationDetailsFlow({
 
       {currentStep === 3 && (
         <>
-          {formState.agreeTerms ? (
-            <InlinePayPalCheckout
-              orderDetails={paypalOrderDetails!}
-              lang={lang}
-              onBack={() => handleChange("agreeTerms", false)}
-            />
-          ) : <ReservationDetailsStep3
+          <ReservationDetailsStep3
             reviewSectionRef={reviewSectionRef}
             termsCheckboxRef={termsCheckboxRef}
             formState={formState}
@@ -585,9 +579,9 @@ function ReservationDetailsFlow({
             onEditStep={(step) => setCurrentStep(step)}
             tr={tr}
             lang={lang}
-          />}
+          />
 
-          {!formState.agreeTerms && <div className="mb-3 hidden gap-2 md:flex">
+          <div className="mb-3 hidden gap-2 md:flex">
             <button
               type="button"
               onClick={() => setCurrentStep(2)}
@@ -595,9 +589,9 @@ function ReservationDetailsFlow({
             >
               {lang === "es" ? "Volver" : "Back"}
             </button>
-          </div>}
+          </div>
 
-          {!formState.agreeTerms && !isFormValid && missingItems.length > 0 && (
+          {!isFormValid && missingItems.length > 0 && (
             <p className="mb-3 text-center text-xs font-semibold text-amber-600 dark:text-amber-400">
               {missingItems.join(" ")}
             </p>
@@ -605,6 +599,14 @@ function ReservationDetailsFlow({
         </>
       )}
       </main>
+
+      {formState.agreeTerms && paypalOrderDetails && (
+        <PaymentModal
+          orderDetails={paypalOrderDetails}
+          onClose={() => handleChange("agreeTerms", false)}
+          onSuccess={() => handleChange("agreeTerms", false)}
+        />
+      )}
 
       {currentStep !== 3 && <BookingStickyBar
         lang={lang}

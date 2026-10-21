@@ -53,7 +53,7 @@ export const BUSINESS = {
   web: "www.laviejaadventures.com",
   email: "info@laviejaadventures.com",
   whatsapp: "6233-2535",
-  phone: "8643-0807",
+  phone: "6233-2535",
   handle: "@laviejaadventures",
   link: "https://wa.me/50662332535",
 };
