@@ -26,7 +26,7 @@ import {
   LA_VIEJA_GOOGLE_MAPS_URL,
 } from "@/lib/constants/location";
 import { TOUR_INFO } from "@/lib/tour-info";
-import { BUSINESS_PHONE, BUSINESS_WHATSAPP_URL } from "@/lib/site-config";
+import { BUSINESS_PHONE, BUSINESS_WHATSAPP_URL, SOCIAL_URLS } from "@/lib/site-config";
 
 const socialLinks = [
   {
@@ -49,7 +49,7 @@ const socialLinks = [
   },
   {
     label: "TikTok",
-    href: "https://www.tiktok.com/@la.vieja.adventures",
+    href: SOCIAL_URLS.tiktok,
     icon: Music2,
     className: "from-zinc-100 via-cyan-300 to-rose-400",
   },

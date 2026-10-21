@@ -1,4 +1,5 @@
 import { TourInfo } from "./types/types";
+import { SOCIAL_URLS } from "./site-config";
 
 export const TOUR_INFO: TourInfo = {
   name: "Tour Ciudad Esmeralda · Cañón del Río La Vieja",
@@ -24,9 +25,9 @@ export const TOUR_INFO: TourInfo = {
   contact: {
     whatsapp: "6233-2535",
     email: "ciudadesmeraldacr@gmail.com",
-    youtube: "https://www.youtube.com/@laviejaadventures",
-    facebook: "https://www.facebook.com/laviejaadventures",
+    youtube: SOCIAL_URLS.youtube,
+    facebook: SOCIAL_URLS.facebook,
     twitter: "https://x.com/adventuresvieja",
-    instagram: "https://www.instagram.com/laviejaadventures",
+    instagram: SOCIAL_URLS.instagram,
   },
 };

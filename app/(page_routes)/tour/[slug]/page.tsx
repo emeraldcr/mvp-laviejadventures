@@ -71,7 +71,7 @@ const DEFAULT_BIRDWATCHING_TOUR: TourDetail = {
   descriptionEn: "Guided birdwatching with binoculars, forest trails, and insight into behavior, habitats, and conservation.",
   details: "Observacion guiada de aves en el corredor biologico Juan Castro Blanco, con ritmo tranquilo y apoyo para identificar especies por canto, silueta y color.",
   duration: "2 horas",
-  difficulty: "Facil",
+  difficulty: "Fácil",
   location: "Juan Castro Blanco, Alajuela Norte, Costa Rica",
   priceCRC: 24990,
   tagEs: "Tour estrella",
@@ -172,9 +172,10 @@ export default async function TourDetailPage({ params }: TourDetailPageProps) {
     : tour.inclusions.length > 0
       ? tour.inclusions
       : DEFAULT_TOUR.inclusions;
+  const tourSchema = { "@context": "https://schema.org", "@type": "TouristTrip", name: title, url: `${SITE_URL}/tour/${encodeURIComponent(tour.slug)}`, description, touristType: `Aventura, nivel ${tour.difficulty}`, provider: { "@type": "Organization", name: "La Vieja Adventures", url: SITE_URL }, offers: tour.packages.map((pkg) => ({ "@type": "Offer", name: pkg.nameEs || pkg.name, price: String(pkg.price), priceCurrency: "USD", availability: "https://schema.org/InStock", url: `${SITE_URL}/reservar?tour=${encodeURIComponent(tour.slug)}` })) };
 
   return (
-    <main className="min-h-screen bg-black text-white">
+    <main className="min-h-screen bg-black text-white"><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(tourSchema) }} />
       <DynamicHeroHeader showHeroSlider={false} />
 
       <section className="relative min-h-[78vh] overflow-hidden pt-24">

@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { SOCIAL_URLS } from "@/lib/site-config";
 import { useLanguage } from "@/lib/LanguageContext";
 import {
   LA_VIEJA_GOOGLE_MAPS_EMBED_URL,
@@ -44,7 +45,7 @@ const socialLinks = [
   },
   {
     label: "Facebook",
-    href: "https://www.facebook.com/laviejaadventures",
+    href: SOCIAL_URLS.facebook,
     bg: "bg-[#1877F2]",
     hover: "hover:bg-[#0d6be0]",
     ring: "focus-visible:ring-blue-300",
@@ -56,7 +57,7 @@ const socialLinks = [
   },
   {
     label: "Instagram",
-    href: "https://www.instagram.com/laviejaadventures",
+    href: SOCIAL_URLS.instagram,
     bg: "bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400",
     hover: "hover:opacity-90",
     ring: "focus-visible:ring-pink-300",
@@ -68,7 +69,7 @@ const socialLinks = [
   },
   {
     label: "TikTok",
-    href: "https://www.tiktok.com/@la.vieja.adventur",
+    href: SOCIAL_URLS.tiktok,
     bg: "bg-black",
     hover: "hover:bg-zinc-800",
     ring: "focus-visible:ring-zinc-300",
@@ -92,7 +93,7 @@ const socialLinks = [
   },
   {
     label: "YouTube",
-    href: "https://www.youtube.com/@laviejaadventures",
+    href: SOCIAL_URLS.youtube,
     bg: "bg-[#FF0000]",
     hover: "hover:bg-[#cc0000]",
     ring: "focus-visible:ring-red-300",

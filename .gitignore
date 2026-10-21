@@ -50,6 +50,8 @@ next-env.d.ts
 skills-lock.json
 .claude/settings.local.json
 py/*
+__pycache__/
+*.pyc
 .chrome-admin-debug/*
 .chrome-debug/*
 .env*.local
