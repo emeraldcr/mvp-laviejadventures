@@ -1,5 +1,7 @@
 "use client";
 
+import { localizeHref } from "@/lib/i18n";
+
 import Link from "next/link";
 import { ArrowRight, CalendarDays, MessageCircle, ShieldCheck } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
@@ -30,7 +32,7 @@ export default function HomeConversionRail() {
 
           <div className="grid gap-px bg-white/10 sm:grid-cols-2 lg:grid-cols-1">
             <Link
-              href={BOOKING_HREF}
+              href={localizeHref(BOOKING_HREF, lang)}
               className="group flex min-h-28 items-center justify-between gap-5 bg-[#00C4B0] p-6 text-[#17211f] transition hover:bg-[#70eee1] lg:px-8"
             >
               <span>
@@ -70,7 +72,7 @@ export default function HomeConversionRail() {
         </div>
         <div className="grid grid-cols-1">
           <Link
-            href={BOOKING_HREF}
+            href={localizeHref(BOOKING_HREF, lang)}
             className="flex items-center gap-2 bg-[#00C4B0] px-5 py-4 text-sm font-black text-[#17211f] transition hover:bg-[#70eee1]"
           >
             <CalendarDays size={16} />

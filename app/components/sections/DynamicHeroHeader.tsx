@@ -17,6 +17,8 @@ import {
   ChevronRight,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { localizeHref } from "@/lib/i18n";
 import useSWR from "swr";
 import { fetcher } from "@/lib/helpers/fetcher";
 import { useInterval } from "@/lib/hooks/useInterval";
@@ -62,6 +64,7 @@ const useScrollY = () => {
 const HeroBookingWidget = memo<{ onSelectTour?: (slug: string) => void }>(
   ({ onSelectTour }) => {
     const { lang } = useLanguage();
+    const router = useRouter();
     const { tours } = useReservationData();
     const [selectedSlug, setSelectedSlug] = useState(tours[0]?.slug ?? "");
     const [people, setPeople] = useState(2);
@@ -77,7 +80,7 @@ const HeroBookingWidget = memo<{ onSelectTour?: (slug: string) => void }>(
       if (onSelectTour) {
         onSelectTour(slug);
       } else {
-        window.location.href = `/reservar?tour=${encodeURIComponent(slug)}`;
+        router.push(localizeHref(`/reservar?tour=${encodeURIComponent(slug)}`, lang));
       }
     };
 

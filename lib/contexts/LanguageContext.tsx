@@ -1,49 +1,27 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, type ReactNode } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { localizeHref, localeFromPath, type Locale } from "@/lib/i18n";
 
-export type Lang = "es" | "en";
-
+export type Lang = Locale;
 interface LanguageContextValue {
   lang: Lang;
   setLang: (lang: Lang) => void;
   toggle: () => void;
 }
-
 const LanguageContext = createContext<LanguageContextValue | null>(null);
 
-export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [lang, setLangState] = useState<Lang>("es");
-
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem("lva-lang") as Lang | null;
-      if (stored === "es" || stored === "en") setLangState(stored);
-    } catch {
-      // localStorage not available
-    }
-  }, []);
-
-  useEffect(() => {
-    document.documentElement.lang = lang;
-  }, [lang]);
-
-  const setLang = (l: Lang) => {
-    setLangState(l);
-    try {
-      localStorage.setItem("lva-lang", l);
-    } catch {
-      // localStorage not available
-    }
+export function LanguageProvider({ children, initialLang = "es" }: { children: ReactNode; initialLang?: Lang }) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const lang = pathname ? localeFromPath(pathname) : initialLang;
+  useEffect(() => { document.documentElement.lang = lang; }, [lang]);
+  const setLang = (next: Lang) => {
+    const href = localizeHref(pathname || "/", next);
+    router.push(href + window.location.search + window.location.hash);
   };
-
-  const toggle = () => setLang(lang === "es" ? "en" : "es");
-
-  return (
-    <LanguageContext.Provider value={{ lang, setLang, toggle }}>
-      {children}
-    </LanguageContext.Provider>
-  );
+  return <LanguageContext.Provider value={{ lang, setLang, toggle: () => setLang(lang === "es" ? "en" : "es") }}>{children}</LanguageContext.Provider>;
 }
 
 export function useLanguage() {

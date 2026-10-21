@@ -8,13 +8,17 @@ import { ArrowRight, Globe, Menu, MessageCircle, Moon, Sun, X } from "lucide-rea
 import { useLanguage } from "@/lib/LanguageContext";
 import { useTheme } from "@/lib/ThemeContext";
 import { BOOKING_HREF, WHATSAPP_HREF, compactBookingLabel, primaryBookingLabel } from "./home-utils";
+import { localizeHref } from "@/lib/i18n";
 
 export default function HomeNav({ solid = false }: { solid?: boolean }) {
-  const { lang, toggle } = useLanguage();
+  const { lang } = useLanguage();
   const { theme, toggle: toggleTheme } = useTheme();
   const isEs = lang === "es";
   const isDark = theme === "dark";
+  const themeLabel = isEs ? (isDark ? "Modo claro" : "Modo oscuro") : (isDark ? "Light mode" : "Dark mode");
   const pathname = usePathname();
+  const currentTour = pathname.match(/\/tour\/([^/]+)/)?.[1];
+  const bookingHref = currentTour ? `/reservar?tour=${currentTour}` : BOOKING_HREF;
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -40,6 +44,7 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
   ];
 
   const onDark = !scrolled && !solid;
+  const languageHref = localizeHref(pathname, isEs ? "en" : "es");
 
   return (
     <>
@@ -54,7 +59,7 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
         <div className="mx-auto flex h-16 max-w-[1520px] items-center justify-between px-4 sm:px-6 md:h-[5.5rem] lg:px-8">
           {/* Brand */}
           <Link
-            href="/"
+            href={localizeHref("/", lang)}
             className={[
               "flex items-center gap-2.5 rounded-full transition-all",
               onDark ? "bg-black/18 py-1.5 pl-1.5 pr-4 backdrop-blur-md" : "",
@@ -70,7 +75,7 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
             />
             <span
               className={[
-                "font-display text-lg font-bold tracking-tight transition-colors md:text-xl",
+                "font-display hidden text-lg font-bold tracking-tight transition-colors min-[440px]:inline md:text-xl",
                 onDark ? "text-white" : "text-stone-900 dark:text-stone-50",
               ].join(" ")}
             >
@@ -86,11 +91,11 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
             ].join(" ")}
           >
             {links.map((link) => {
-              const active = pathname === link.href;
+              const active = pathname === localizeHref(link.href, lang);
               return (
                 <Link
                   key={link.href}
-                  href={link.href}
+                  href={localizeHref(link.href, lang)}
                   className={[
                     "rounded-full px-4 py-2 text-sm font-bold transition-colors",
                     onDark
@@ -112,8 +117,8 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
             <button
               type="button"
               onClick={toggleTheme}
-              aria-label={isDark ? "Modo claro" : "Modo oscuro"}
-              title={isDark ? "Modo claro" : "Modo oscuro"}
+              aria-label={themeLabel}
+              title={themeLabel}
               className={[
                 "inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors",
                 onDark ? "text-white/85 hover:bg-white/10 hover:text-white" : "text-stone-600 hover:bg-stone-100 hover:text-stone-900 dark:text-stone-300 dark:hover:bg-white/10 dark:hover:text-stone-50",
@@ -122,9 +127,8 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
               {isDark ? <Sun size={16} /> : <Moon size={16} />}
             </button>
 
-            <button
-              type="button"
-              onClick={toggle}
+            <Link
+              href={languageHref}
               aria-label={isEs ? "Switch to English" : "Cambiar a Español"}
               className={[
                 "inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-bold transition-colors",
@@ -133,7 +137,7 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
             >
               <Globe size={15} />
               {isEs ? "EN" : "ES"}
-            </button>
+            </Link>
 
             <a
               href={WHATSAPP_HREF}
@@ -149,7 +153,7 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
             </a>
 
             <Link
-              href={BOOKING_HREF}
+              href={localizeHref(bookingHref, lang)}
               className="ml-1 inline-flex items-center gap-2 rounded-full bg-[#00C4B0] px-5 py-2.5 text-sm font-black text-[#17211f] shadow-[0_14px_36px_rgba(0,196,176,0.28)] transition-all hover:-translate-y-0.5 hover:bg-white"
             >
               {compactBookingLabel(isEs)}
@@ -159,10 +163,11 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
 
           {/* Mobile controls */}
           <div className="flex items-center gap-1.5 md:hidden">
+            <Link href={localizeHref(bookingHref, lang)} className="inline-flex min-h-10 items-center rounded-full bg-[#00C4B0] px-3 text-xs font-bold text-[#17211f]">{compactBookingLabel(isEs)}</Link>
             <button
               type="button"
               onClick={toggleTheme}
-              aria-label={isDark ? "Modo claro" : "Modo oscuro"}
+              aria-label={themeLabel}
               className={[
                 "inline-flex h-10 w-10 items-center justify-center rounded-full",
                 onDark ? "text-white" : "text-stone-700 dark:text-stone-200",
@@ -170,9 +175,8 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
             >
               {isDark ? <Sun size={18} /> : <Moon size={18} />}
             </button>
-            <button
-              type="button"
-              onClick={toggle}
+            <Link
+              href={languageHref}
               aria-label={isEs ? "Switch to English" : "Cambiar a Español"}
               className={[
                 "inline-flex items-center gap-1 rounded-full px-2.5 py-2 text-xs font-bold",
@@ -181,7 +185,7 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
             >
               <Globe size={14} />
               {isEs ? "EN" : "ES"}
-            </button>
+            </Link>
             <button
               type="button"
               onClick={() => setMenuOpen(true)}
@@ -218,7 +222,7 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
             {[{ href: "/", label: isEs ? "Inicio" : "Home" }, ...links].map((link, i) => (
               <Link
                 key={link.href}
-                href={link.href}
+                href={localizeHref(link.href, lang)}
                 onClick={() => setMenuOpen(false)}
                 className="font-display border-b border-stone-100 py-4 text-3xl font-bold tracking-tight text-stone-900 transition-colors hover:text-emerald-700 dark:border-stone-800 dark:text-stone-50 dark:hover:text-emerald-300"
                 style={{ transitionDelay: `${i * 30}ms` }}
@@ -230,7 +234,7 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
 
           <div className="space-y-3 px-8 pb-10">
             <Link
-              href={BOOKING_HREF}
+              href={localizeHref(bookingHref, lang)}
               onClick={() => setMenuOpen(false)}
               className="flex items-center justify-center gap-2 rounded-full bg-[#00C4B0] py-4 text-base font-black text-[#17211f] shadow-lg shadow-[#00C4B0]/25"
             >

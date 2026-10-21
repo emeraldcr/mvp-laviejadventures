@@ -1,5 +1,7 @@
 "use client";
 
+import { localizeHref, tourDifficulty, tourDuration } from "@/lib/i18n";
+
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, CalendarDays, Clock3, Info, MapPin, Zap } from "lucide-react";
@@ -29,11 +31,11 @@ export default function ToursShowcase({ tours }: Props) {
             </h2>
           </div>
           <Link
-            href={TOURS_HREF}
+            href={localizeHref(TOURS_HREF, lang)}
             className="group inline-flex items-center gap-2 text-sm font-black text-stone-950 transition-colors hover:text-emerald-700 dark:text-stone-50 dark:hover:text-emerald-300"
           >
             {isEs ? "Explorar todos los tours" : "Explore all tours"}
-            <span className="flex h-9 w-9 items-center justify-center rounded-full border border-stone-300 transition-all group-hover:border-emerald-600 group-hover:bg-emerald-600 group-hover:text-white dark:border-stone-600">
+            <span className="flex h-9 w-9 items-center justify-center rounded-full border border-stone-300 transition-all group-hover:border-emerald-600 group-hover:bg-[#00796B] group-hover:text-white dark:border-stone-600">
               <ArrowRight size={15} />
             </span>
           </Link>
@@ -47,7 +49,7 @@ export default function ToursShowcase({ tours }: Props) {
             return (
               <article key={tour.slug} className="group flex h-full flex-col">
                 <Link
-                  href={`/tour/${encodeURIComponent(tour.slug)}`}
+                  href={localizeHref(`/tour/${encodeURIComponent(tour.slug)}`, lang)}
                   aria-label={`${isEs ? "Ver información de" : "View information about"} ${title}`}
                   className="block w-full text-left"
                 >
@@ -63,8 +65,8 @@ export default function ToursShowcase({ tours }: Props) {
 
                     {tour.difficulty && (
                       <span className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-[11px] font-bold text-stone-900 backdrop-blur-sm">
-                        <Zap size={11} className="text-emerald-600" />
-                        {tour.difficulty}
+                        <Zap size={11} className="text-brand-ink" />
+                        {tourDifficulty(tour.difficulty, lang)}
                       </span>
                     )}
 
@@ -98,7 +100,7 @@ export default function ToursShowcase({ tours }: Props) {
                       {tour.duration && (
                         <span className="inline-flex items-center gap-1.5">
                           <Clock3 size={14} />
-                          {tour.duration}
+                          {tourDuration(tour.duration, lang)}
                         </span>
                       )}
                       <span className="inline-flex items-center gap-1.5">
@@ -114,7 +116,7 @@ export default function ToursShowcase({ tours }: Props) {
                 </Link>
 
                 <Link
-                  href={`/reservar?tour=${encodeURIComponent(tour.slug)}`}
+                  href={localizeHref(`/reservar?tour=${encodeURIComponent(tour.slug)}`, lang)}
                   className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#00C4B0] px-5 py-3 text-sm font-black text-[#17211f] shadow-lg shadow-[#00C4B0]/20 transition-all hover:-translate-y-0.5 hover:bg-[#70eee1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00C4B0] focus-visible:ring-offset-2 dark:ring-offset-stone-950"
                 >
                   <CalendarDays size={16} />

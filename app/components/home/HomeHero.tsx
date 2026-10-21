@@ -1,6 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
+import { Pause, Play } from "lucide-react";
+import GoogleRating from "@/app/components/GoogleRating";
+import { localizeHref } from "@/lib/i18n";
+import { getTourPriceDisplay } from "@/lib/tour-pricing";
+import type { TourSummary } from "@/lib/types/index";
 import {
   ArrowDown,
   ArrowRight,
@@ -13,9 +20,24 @@ import {
 import { useLanguage } from "@/lib/LanguageContext";
 import { BOOKING_HREF, WHATSAPP_HREF, primaryBookingLabel } from "./home-utils";
 
-export default function HomeHero() {
+export default function HomeHero({ tour }: { tour?: TourSummary }) {
   const { lang } = useLanguage();
   const isEs = lang === "es";
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [paused, setPaused] = useState(true);
+  useEffect(() => {
+    const video = videoRef.current;
+    const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const sync = () => { if (preference.matches) video?.pause(); else void video?.play().catch(() => {}); };
+    sync();
+    preference.addEventListener("change", sync);
+    return () => preference.removeEventListener("change", sync);
+  }, []);
+  const toggleVideo = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (video.paused) void video.play().catch(() => {}); else video.pause();
+  };
 
   const facts = isEs
     ? [
@@ -33,15 +55,19 @@ export default function HomeHero() {
 
   return (
     <section className="relative min-h-[100svh] overflow-hidden bg-[#2E2A25] text-white">
+      <Image src="/hero/ciudad-esmeralda-poster.jpg" alt="" fill priority loading="eager" fetchPriority="high" sizes="100vw" className="object-cover" />
       <video
+        id="home-hero-video"
+        ref={videoRef}
         className="absolute inset-0 h-full w-full object-cover"
-        autoPlay
         muted
         loop
         playsInline
         preload="metadata"
         poster="/hero/ciudad-esmeralda-poster.jpg"
         aria-hidden="true"
+        onPlay={() => setPaused(false)}
+        onPause={() => setPaused(true)}
       >
         <source src="/hero/ciudad-esmeralda-hero.mp4" type="video/mp4" />
       </video>
@@ -69,7 +95,7 @@ export default function HomeHero() {
             <span className="h-px w-8 bg-[#00C4B0]" />
           </p>
 
-          <h1 className="max-w-[1300px] font-display text-[clamp(3.5rem,10.7vw,10.5rem)] font-black uppercase leading-[0.78] tracking-[-0.075em] drop-shadow-[0_8px_30px_rgba(0,0,0,.42)]">
+          <h1 className="max-w-full font-display text-[clamp(2.65rem,10.1vw,10.5rem)] font-black uppercase leading-[1.04] tracking-[-0.035em] drop-shadow-[0_8px_30px_rgba(0,0,0,.42)] md:leading-[0.9] md:tracking-[-0.055em]">
             {isEs ? "CIUDAD" : "EMERALD"}
             <span className="mt-2 block text-[#00C4B0]">
               {isEs ? "ESMERALDA" : "CITY"}
@@ -82,9 +108,11 @@ export default function HomeHero() {
               : "La Vieja Adventures' signature canyon: trail, river, and the turquoise pools of El Zafiro Waterfall, with a local bilingual guide and small groups. If the weather turns, we adjust the route or rebook you at no cost."}
           </p>
 
+          <div className="mt-5"><GoogleRating locale={lang} dark /></div>
+          <p data-tour-starting-price className="mt-4 text-base font-bold text-white">{isEs ? "Desde" : "From"} {getTourPriceDisplay(tour, isEs).compact} / {isEs ? "persona" : "person"}</p>
           <div className="mt-7 flex flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
             <Link
-              href={BOOKING_HREF}
+              href={localizeHref(BOOKING_HREF, lang)}
               className="group inline-flex min-h-14 items-center justify-center gap-3 rounded-full bg-[#00C4B0] px-7 text-xs font-black uppercase tracking-[0.12em] text-[#17211f] shadow-[0_18px_50px_rgba(0,196,176,.28)] transition hover:-translate-y-0.5 hover:bg-white"
             >
               {primaryBookingLabel(isEs)}
@@ -134,7 +162,9 @@ export default function HomeHero() {
           </div>
         </div>
       </div>
-
+      <button type="button" onClick={toggleVideo} aria-pressed={paused} aria-label={isEs ? (paused ? "Reproducir video de fondo" : "Pausar video de fondo") : (paused ? "Play background video" : "Pause background video")} className="absolute bottom-4 right-4 z-10 inline-flex min-h-11 items-center gap-2 rounded-full border border-white/40 bg-black/70 px-4 py-2 text-sm font-semibold text-white sm:bottom-36">
+        {paused ? <Play size={16} aria-hidden /> : <Pause size={16} aria-hidden />}{isEs ? (paused ? "Reproducir" : "Pausar video") : (paused ? "Play video" : "Pause video")}
+      </button>
     </section>
   );
 }

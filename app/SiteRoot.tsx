@@ -5,12 +5,13 @@ import "./globals.css";
 import { BUSINESS_ADDRESS, BUSINESS_NAME, BUSINESS_PHONE, SITE_URL, SOCIAL_URLS } from "@/lib/site-config";
 import { LanguageProvider } from "@/lib/LanguageContext";
 import JsonLd from "@/app/components/seo/JsonLd";
+import MobileBookingBar from "@/app/components/navigation/MobileBookingBar";
 import { ThemeProvider, THEME_NO_FLASH_SCRIPT } from "@/lib/ThemeContext";
 
 const manrope = Manrope({ subsets: ["latin"], variable: "--font-manrope", display: "swap" });
 const bricolage = Bricolage_Grotesque({ subsets: ["latin"], variable: "--font-bricolage", display: "swap" });
 export const metadata: Metadata = { metadataBase: new URL(SITE_URL), title: { default: "La Vieja Adventures", template: "%s | La Vieja Adventures" }, description: "Tours con guías locales en San Carlos, Costa Rica.", openGraph: { type: "website", locale: "es_CR", url: SITE_URL, siteName: BUSINESS_NAME, images: [{ url: "/image/IMG_6812.jpg", alt: "Cascada El Zafiro en Ciudad Esmeralda, San Carlos, Costa Rica" }] }, twitter: { card: "summary_large_image", images: ["/image/IMG_6812.jpg"] } };
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default function SiteRoot({ children, locale }: Readonly<{ children: React.ReactNode; locale: "es" | "en" }>) {
   const schema = { "@context": "https://schema.org", "@type": "TouristInformationCenter", name: BUSINESS_NAME, url: SITE_URL, telephone: BUSINESS_PHONE, address: { "@type": "PostalAddress", ...BUSINESS_ADDRESS }, areaServed: "San Carlos, Alajuela, Costa Rica", knowsLanguage: ["es", "en"], sameAs: Object.values(SOCIAL_URLS) };
-  return <html lang="es" className={`dark ${manrope.variable} ${bricolage.variable}`} suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: THEME_NO_FLASH_SCRIPT }} /><JsonLd data={schema} /></head><body className="antialiased"><ThemeProvider><LanguageProvider>{children}</LanguageProvider></ThemeProvider><Analytics /></body></html>;
+  return <html lang={locale} className={`dark ${manrope.variable} ${bricolage.variable}`} suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: THEME_NO_FLASH_SCRIPT }} /><JsonLd data={schema} /></head><body className="antialiased"><ThemeProvider><LanguageProvider initialLang={locale}>{children}<MobileBookingBar /></LanguageProvider></ThemeProvider><Analytics /></body></html>;
 }

@@ -1,16 +1,11 @@
 import type { Metadata } from "next";
-import { SITE_URL } from "@/lib/site-config";
+import { pageMetadata } from "@/lib/seo";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Check, Leaf, Recycle, Sprout, Utensils } from "lucide-react";
 import HomeNav from "@/app/components/home/HomeNav";
 
-export const metadata: Metadata = {
-  title: "La Vieja Organics | Sostenibilidad organica local",
-  alternates: { canonical: `${SITE_URL}/organics` },
-  description:
-    "La Vieja Organics es un proyecto local de sostenibilidad de La Vieja Adventures, creado para apoyar el restaurante con ingredientes de temporada, compostaje y una relación más cercana con la tierra.",
-};
+export const metadata: Metadata = pageMetadata("/organics", "La Vieja Organics: Sostenibilidad local", "Huerta de temporada, compostaje y cocina local: conozca el proyecto de sostenibilidad de La Vieja Adventures en San Carlos.");
 
 const pillars = [
   {

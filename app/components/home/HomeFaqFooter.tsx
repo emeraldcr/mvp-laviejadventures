@@ -1,5 +1,7 @@
 "use client";
 
+import { localizeHref } from "@/lib/i18n";
+
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ExternalLink, MapPin, MessageCircle } from "lucide-react";
@@ -9,8 +11,7 @@ import {
   LA_VIEJA_GOOGLE_MAPS_URL,
   LA_VIEJA_LOCATION_LABEL,
 } from "@/lib/constants/location";
-import type { TourSummary } from "@/lib/types/index";
-import { BOOKING_HREF, WHATSAPP_HREF, formatTourPrice, primaryBookingLabel } from "./home-utils";
+import { BOOKING_HREF, WHATSAPP_HREF, primaryBookingLabel } from "./home-utils";
 
 function FinalCta() {
   const { lang } = useLanguage();
@@ -39,7 +40,7 @@ function FinalCta() {
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
-              href={BOOKING_HREF}
+              href={localizeHref(BOOKING_HREF, lang)}
               className="group inline-flex items-center gap-2 rounded-full bg-white px-8 py-4 text-sm font-bold text-emerald-900 shadow-xl transition-all hover:-translate-y-0.5"
             >
               {primaryBookingLabel(isEs)}
@@ -105,7 +106,7 @@ function HomeFooter() {
             <ul className="mt-4 space-y-2.5">
               {exploreLinks.map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href} className="text-sm transition-colors hover:text-emerald-300">
+                  <Link href={localizeHref(link.href, lang)} className="text-sm transition-colors hover:text-emerald-300">
                     {link.label}
                   </Link>
                 </li>
@@ -172,41 +173,12 @@ function HomeFooter() {
   );
 }
 
-function MobileStickyCta({ tours }: { tours: TourSummary[] }) {
-  const { lang } = useLanguage();
-  const isEs = lang === "es";
-  const main = tours[0];
-
-  return (
-    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-stone-200 bg-white/95 px-4 py-3 backdrop-blur-xl dark:border-stone-800 dark:bg-stone-950/95 md:hidden" style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom, 0px))" }}>
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <p className="text-[10px] font-medium uppercase tracking-widest text-stone-400 dark:text-stone-500">
-            {isEs ? "Desde" : "From"}
-          </p>
-          <p className="font-display text-lg font-bold leading-none text-stone-900 dark:text-stone-50">
-            {formatTourPrice(main, isEs)}
-            <span className="ml-1 text-xs font-medium text-stone-500 dark:text-stone-400">/ {isEs ? "persona" : "person"}</span>
-          </p>
-        </div>
-        <Link
-          href={BOOKING_HREF}
-          className="inline-flex items-center gap-2 rounded-full bg-[#00C4B0] px-6 py-3 text-sm font-black text-[#17211f] shadow-lg shadow-[#00C4B0]/25"
-        >
-          {primaryBookingLabel(isEs)}
-          <ArrowRight size={15} />
-        </Link>
-      </div>
-    </div>
-  );
-}
-
-export default function HomeFaqFooter({ tours }: { tours: TourSummary[] }) {
+export default function HomeFaqFooter() {
   return (
     <>
       <FinalCta />
       <HomeFooter />
-      <MobileStickyCta tours={tours} />
+
     </>
   );
 }

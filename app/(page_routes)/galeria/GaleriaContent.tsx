@@ -1,5 +1,7 @@
 "use client";
 
+import { localizeHref } from "@/lib/i18n";
+
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -15,7 +17,7 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
 import { translations } from "@/lib/translations";
-import { SiteHeader, MobileBottomNav } from "@/app/components/navigation/SiteNavigation";
+import HomeNav from "@/app/components/home/HomeNav";
 
 type Props = {
   images: string[];
@@ -85,7 +87,7 @@ export function GaleriaContent({ images }: Props) {
 
   return (
     <main className="min-h-screen bg-[#030807] pb-24 text-white md:pb-10">
-      <SiteHeader isScrolled />
+      <HomeNav solid />
 
       {/* Hero */}
       <section className="relative overflow-hidden border-b border-white/10 pt-14 md:pt-20">
@@ -126,7 +128,7 @@ export function GaleriaContent({ images }: Props) {
               {isEs ? "Río La Vieja" : "La Vieja River"}
             </span>
             <Link
-              href="/reservar"
+              href={localizeHref("/reservar", lang)}
               className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300/40 bg-emerald-400/15 px-3.5 py-1.5 font-black text-emerald-100 transition hover:bg-emerald-400/25 hover:text-white"
             >
               <CalendarCheck className="h-3.5 w-3.5" aria-hidden />
@@ -183,16 +185,16 @@ export function GaleriaContent({ images }: Props) {
         {/* CTA */}
         <div className="mt-10 rounded-3xl border border-emerald-500/20 bg-emerald-500/[0.07] px-5 py-7 text-center shadow-[0_20px_60px_rgba(0,0,0,0.35)] md:py-9">
           <h2 className="text-xl font-black md:text-2xl">
-            {isEs ? "¿Querés vivirlo en persona?" : "Want to live it in person?"}
+            {isEs ? "¿Quiere vivirlo en persona?" : "Want to live it in person?"}
           </h2>
           <p className="mx-auto mt-2 max-w-md text-sm font-semibold text-white/65">
             {isEs
-              ? "Elegí una fecha y te llevamos a Ciudad Esmeralda."
+              ? "Elija una fecha y le llevamos a Ciudad Esmeralda."
               : "Pick a date and we'll take you to Ciudad Esmeralda."}
           </p>
           <div className="mt-4 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link
-              href="/reservar"
+              href={localizeHref("/reservar", lang)}
               className="inline-flex min-h-11 items-center gap-2 rounded-full bg-emerald-500 px-7 py-2.5 font-black text-emerald-950 shadow-lg shadow-emerald-900/30 transition hover:-translate-y-0.5 hover:bg-emerald-400"
             >
               <CalendarCheck className="h-4 w-4" aria-hidden />
@@ -275,7 +277,7 @@ export function GaleriaContent({ images }: Props) {
         </div>
       )}
 
-      <MobileBottomNav />
+
     </main>
   );
 }

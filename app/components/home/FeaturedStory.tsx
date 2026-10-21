@@ -2,10 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Check, Clock3, Sparkles, Star } from "lucide-react";
+import { ArrowRight, Check, Clock3, Sparkles } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
 import type { TourSummary } from "@/lib/types/index";
 import { BOOKING_HREF, TOURS_HREF, primaryBookingLabel } from "./home-utils";
+import GoogleRating from "@/app/components/GoogleRating";
+import { localizeHref } from "@/lib/i18n";
 
 type Props = {
   tours: TourSummary[];
@@ -77,17 +79,7 @@ export default function FeaturedStory({ tours }: Props) {
             </span>
 
             <div className="absolute -bottom-6 right-4 w-56 rounded-2xl bg-white p-4 shadow-[0_20px_60px_rgba(0,0,0,0.15)] dark:bg-stone-900 dark:shadow-[0_20px_60px_rgba(0,0,0,0.5)] dark:ring-1 dark:ring-white/10 sm:right-8 sm:w-64">
-              <span className="flex gap-0.5 text-amber-400">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Star key={i} size={13} className="fill-current" />
-                ))}
-              </span>
-              <p className="mt-2 text-xs leading-relaxed text-stone-600 dark:text-stone-300">
-                {isEs
-                  ? "“Salimos mojados, cansados y ya queriendo volver. Las pozas se ven de mentira.”"
-                  : "“We left wet, tired, and already wanting to come back. Those pools look unreal.”"}
-              </p>
-              <p className="mt-2 text-[11px] font-bold text-stone-900 dark:text-stone-100">— María F.</p>
+              <GoogleRating locale={lang} />
             </div>
           </div>
 
@@ -135,14 +127,14 @@ export default function FeaturedStory({ tours }: Props) {
 
             <div className="mt-7 flex flex-wrap gap-3">
               <Link
-                href={BOOKING_HREF}
-                className="group inline-flex items-center gap-2 rounded-full bg-emerald-600 px-7 py-3.5 text-sm font-bold text-white shadow-lg shadow-emerald-600/25 transition-all hover:-translate-y-0.5 hover:bg-emerald-500"
+                href={localizeHref(BOOKING_HREF, lang)}
+                className="group inline-flex items-center gap-2 rounded-full bg-[#00796B] px-7 py-3.5 text-sm font-bold text-white shadow-lg shadow-emerald-600/25 transition-all hover:-translate-y-0.5 hover:bg-[#00695C]"
               >
                 {primaryBookingLabel(isEs)}
                 <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
               </Link>
               <Link
-                href={TOURS_HREF}
+                href={localizeHref(TOURS_HREF, lang)}
                 className="group inline-flex items-center gap-2 rounded-full border-2 border-emerald-600 px-7 py-3.5 text-sm font-black text-emerald-800 transition-all hover:-translate-y-0.5 hover:bg-emerald-50 dark:border-emerald-400 dark:text-emerald-300 dark:hover:bg-emerald-950/40"
               >
                 {isEs ? "Explorar otros tours" : "Explore other tours"}

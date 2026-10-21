@@ -29,7 +29,9 @@ import {
   Waves,
   X,
 } from "lucide-react";
-import DynamicHeroHeader from "@/app/components/sections/DynamicHeroHeader";
+import HomeNav from "@/app/components/home/HomeNav";
+import GoogleRating from "@/app/components/GoogleRating";
+import { getTourPriceDisplay } from "@/lib/tour-pricing";
 import { WHATSAPP_HREF } from "@/app/components/home/home-utils";
 import {
   BIRDWATCHING_GALLERY,
@@ -38,7 +40,6 @@ import {
   BIRDWATCHING_LEARNING,
   BIRDWATCHING_SPECIES,
   BIRDWATCHING_STATS,
-  BIRDWATCHING_TESTIMONIALS,
   BIRDWATCHING_VIDEOS,
   LIKELIHOOD_LABELS,
   type BirdHabitat,
@@ -68,10 +69,6 @@ type Props = {
 
 const ASPECTS = ["aspect-[3/4]", "aspect-square", "aspect-[4/3]", "aspect-[3/4]", "aspect-[4/5]", "aspect-square"];
 
-function formatPriceCRC(value: number) {
-  if (!Number.isFinite(value) || value <= 0) return "Consultar";
-  return `CRC ${value.toLocaleString("es-CR").replace(/,/g, ".")}`;
-}
 
 function HabitatIcon({ icon }: { icon: BirdHabitat["icon"] }) {
   const cls = "h-5 w-5 text-emerald-300";
@@ -133,7 +130,8 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
 
   return (
     <main className="min-h-screen bg-[#060a08] text-white">
-      <DynamicHeroHeader showHeroSlider={false} />
+      <HomeNav />
+      <div className="relative z-10 bg-black px-4 pt-24 text-center"><GoogleRating dark /></div>
 
       {/* Hero */}
       <section className="relative min-h-[88vh] overflow-hidden pt-24">
@@ -205,7 +203,7 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
         <InfoCard icon={<Clock className="h-4 w-4" />} label="Duración" value={tour.duration || "2 horas"} />
         <InfoCard icon={<ShieldCheck className="h-4 w-4" />} label="Nivel" value={tour.difficulty || "Fácil"} />
         <InfoCard icon={<MapPin className="h-4 w-4" />} label="Ubicación" value={tour.location || "Juan Castro Blanco"} />
-        <InfoCard icon={<Users className="h-4 w-4" />} label="Desde" value={formatPriceCRC(tour.priceCRC)} />
+        <InfoCard icon={<Users className="h-4 w-4" />} label="Desde" value={getTourPriceDisplay(tour, true).compact} />
       </section>
 
       {/* Overview */}
@@ -310,7 +308,7 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
 
       {/* Species */}
       <section className="mx-auto max-w-7xl px-4 py-16 md:px-8">
-        <SectionHeading icon={<Bird className="h-6 w-6" />} title="Especies que podés encontrar" />
+        <SectionHeading icon={<Bird className="h-6 w-6" />} title="Especies que puede encontrar" />
         <p className="mt-3 max-w-3xl text-base text-zinc-400">
           El corredor Juan Castro Blanco concentra más de 400 especies registradas. Estas son algunas de las más buscadas y frecuentes en nuestro recorrido — el guía adapta la ruta según la temporada y la actividad del día.
         </p>
@@ -347,8 +345,8 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
 
         <div className="mt-10 rounded-3xl border border-emerald-400/20 bg-gradient-to-r from-emerald-950/50 to-transparent p-8 md:flex md:items-center md:justify-between md:gap-8">
           <div>
-            <p className="text-lg font-black text-white">¿Querés una lista personalizada por temporada?</p>
-            <p className="mt-2 text-sm text-zinc-400">Reservá y el guía te comparte la checklist actualizada del corredor antes de la salida.</p>
+            <p className="text-lg font-black text-white">¿Quiere una lista personalizada por temporada?</p>
+            <p className="mt-2 text-sm text-zinc-400">Reserve y el guía le comparte la lista actualizada del corredor antes de la salida.</p>
           </div>
           <Link
             href={bookingHref}
@@ -459,27 +457,7 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
         </section>
       )}
 
-      {/* Testimonials */}
-      <section className="border-y border-white/10 bg-emerald-950/20 py-16">
-        <div className="mx-auto max-w-7xl px-4 md:px-8">
-          <SectionHeading icon={<Star className="h-6 w-6" />} title="Lo que dicen los visitantes" />
-          <div className="mt-10 grid gap-5 md:grid-cols-3">
-            {BIRDWATCHING_TESTIMONIALS.map((item) => (
-              <blockquote key={item.author} className="rounded-3xl border border-white/10 bg-white/[0.03] p-6">
-                <span className="flex gap-0.5 text-amber-400">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Star key={i} className="h-3.5 w-3.5 fill-current" aria-hidden />
-                  ))}
-                </span>
-                <p className="mt-4 text-sm leading-relaxed text-zinc-200">&ldquo;{item.quote}&rdquo;</p>
-                <footer className="mt-4 text-xs font-bold text-emerald-300">
-                  {item.author} · {item.origin}
-                </footer>
-              </blockquote>
-            ))}
-          </div>
-        </div>
-      </section>
+      <section className="border-y border-white/10 py-12 text-center"><h2 className="mb-5 text-2xl font-bold">Opiniones de nuestro operador</h2><GoogleRating dark /></section>
 
       {/* Includes / not included */}
       <section className="mx-auto grid max-w-7xl gap-6 px-4 py-16 md:grid-cols-2 md:px-8">
@@ -563,7 +541,7 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
               <div key={pkg.id ?? pkg.name} className="rounded-3xl border border-white/10 bg-white/[0.04] p-5">
                 <h3 className="text-lg font-black text-white">{pkg.nameEs || pkg.name}</h3>
                 <p className="mt-2 min-h-12 text-sm leading-relaxed text-zinc-400">{pkg.descriptionEs || pkg.descriptionEn}</p>
-                <p className="mt-4 text-2xl font-black text-emerald-200">${pkg.price} USD</p>
+                <p className="mt-4 text-2xl font-black text-emerald-200">{getTourPriceDisplay({ packages: [pkg] }, true).compact}</p>
                 <Link
                   href={bookingHrefForPackage(pkg.id)}
                   className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-emerald-400 px-4 py-3 text-xs font-black uppercase tracking-[0.16em] text-emerald-950 transition hover:bg-white"
@@ -600,7 +578,7 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
         <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-900 p-10 shadow-2xl md:p-14">
           <div className="absolute -right-10 -top-10 h-48 w-48 rounded-full bg-white/10 blur-3xl" aria-hidden />
           <div className="relative z-10 max-w-2xl">
-            <h2 className="text-3xl font-black text-white md:text-4xl">El amanecer no espera. ¿Reservamos tu plaza?</h2>
+            <h2 className="text-3xl font-black text-white md:text-4xl">El amanecer no espera. ¿Reservamos su plaza?</h2>
             <p className="mt-4 text-base leading-relaxed text-emerald-100">
               Salida temprano, guía experto, binoculares y una mañana inolvidable en el corredor biológico más rico de la Zona Norte.
             </p>
@@ -628,7 +606,7 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
 
       {/* Sticky booking bar */}
       <div
-        className={`fixed inset-x-0 bottom-0 z-50 border-t border-emerald-400/20 bg-[#060a08]/95 px-4 py-3 shadow-[0_-12px_40px_rgba(0,0,0,0.5)] backdrop-blur-xl transition-transform duration-300 ${
+        className={`fixed inset-x-0 bottom-0 z-50 hidden border-t md:block border-emerald-400/20 bg-[#060a08]/95 px-4 py-3 shadow-[0_-12px_40px_rgba(0,0,0,0.5)] backdrop-blur-xl transition-transform duration-300 ${
           showStickyBar ? "translate-y-0" : "translate-y-full"
         }`}
         style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom, 0px))" }}
@@ -636,7 +614,7 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
           <div className="min-w-0 hidden sm:block">
             <p className="truncate text-sm font-black text-white">{title}</p>
-            <p className="text-xs text-emerald-300">Desde {formatPriceCRC(tour.priceCRC)} · Salida al amanecer</p>
+            <p className="text-xs text-emerald-300">Desde {getTourPriceDisplay(tour, true).compact} · Salida al amanecer</p>
           </div>
           <Link
             href={bookingHref}

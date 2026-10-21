@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { MobileBottomNav, SiteHeader } from "@/app/components/navigation/SiteNavigation";
+import HomeNav from "@/app/components/home/HomeNav";
 import {
   BarChart, Bar,
   XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
@@ -60,7 +60,7 @@ export default function TourWeatherDashboard() {
 
   return (
     <div className="min-h-screen bg-[#0d0f0f] text-white font-sans selection:bg-[#00C4B0]/30">
-      <SiteHeader isScrolled />
+      <HomeNav solid />
 
       <div className="pt-14 md:pt-20">
         <div className="sticky top-14 z-20 border-b border-white/6 bg-[#0d0f0f]/90 backdrop-blur-xl md:top-20">
@@ -328,7 +328,7 @@ export default function TourWeatherDashboard() {
         </main>
       </div>
 
-      <MobileBottomNav />
+
     </div>
   );
 }

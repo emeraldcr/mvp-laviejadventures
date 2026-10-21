@@ -1,5 +1,7 @@
 "use client";
 
+import { localizeHref } from "@/lib/i18n";
+
 import type { ReactNode } from "react";
 import Link from "next/link";
 import {
@@ -131,7 +133,7 @@ export default function SiteFooter() {
 
   const legalLinks = [
     { href: "/terminos-y-condiciones", label: copy.links.terms, icon: ShieldCheck },
-    { href: "/politica-de-privacidad", label: "Política de privacidad", icon: FileText },
+    { href: "/politica-de-privacidad", label: lang === "es" ? "Política de privacidad" : "Privacy policy", icon: FileText },
   ];
 
   return (
@@ -268,6 +270,7 @@ function FooterLinkColumn({
   title: string;
   links: Array<{ href: string; label: string; icon: LucideIcon }>;
 }) {
+  const { lang } = useLanguage();
   return (
     <nav aria-label={title}>
       <h3 className="mb-3 text-xs font-black uppercase tracking-[0.22em] text-zinc-500">{title}</h3>
@@ -277,7 +280,7 @@ function FooterLinkColumn({
           return (
             <Link
               key={link.href}
-              href={link.href}
+              href={localizeHref(link.href, lang)}
               className="group inline-flex items-center gap-2 rounded-xl border border-transparent px-2 py-2 text-sm font-semibold text-zinc-300 transition hover:border-white/10 hover:bg-white/[0.05] hover:text-white"
             >
               <Icon className="h-4 w-4 text-cyan-300/70 transition group-hover:text-cyan-200" aria-hidden />

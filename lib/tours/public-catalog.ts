@@ -1,4 +1,5 @@
 import { getDb } from "@/lib/helpers/mongodb";
+import { usted } from "@/lib/editorial";
 import { COLLECTIONS } from "@/lib/constants/db";
 import { buildStandardPackagesFromPrice, fallbackPackagesForTour, normalizeTourPackages } from "@/lib/tour-packages";
 import type { TourSummary } from "@/lib/types/index";
@@ -325,7 +326,7 @@ function serializePublicTour(t: Record<string, unknown>): PublicTour {
     iconName: typeof t.iconName === "string" ? t.iconName : undefined,
     titleEs: String(t.titleEs ?? ""),
     titleEn: String(t.titleEn ?? ""),
-    descriptionEs: String(t.descriptionEs ?? ""),
+    descriptionEs: usted(String(t.descriptionEs ?? "")),
     descriptionEn: String(t.descriptionEn ?? ""),
     duration: typeof t.duration === "string" ? t.duration : undefined,
     difficulty: typeof t.difficulty === "string" ? t.difficulty : undefined,

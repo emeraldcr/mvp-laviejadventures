@@ -1,7 +1,10 @@
 "use client";
 
+import { localizeHref, tourDifficulty, tourDuration } from "@/lib/i18n";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowRight, ArrowUpRight, Clock3, MapPin, Zap } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
 import { translations } from "@/lib/translations";
@@ -17,9 +20,10 @@ export function ToursClient({ tours }: { tours: PublicTour[] }) {
   const { lang } = useLanguage();
   const isEs = lang === "es";
   const tr = translations[lang].tours;
+  const router = useRouter();
 
   const handleSelectTour = (slug: string) => {
-    window.location.assign(`/reservar?tour=${encodeURIComponent(slug)}`);
+    router.push(localizeHref(`/reservar?tour=${encodeURIComponent(slug)}`, lang));
   };
 
   return (
@@ -76,8 +80,8 @@ export function ToursClient({ tours }: { tours: PublicTour[] }) {
                       )}
                       {tour.difficulty && (
                         <span className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-[11px] font-bold text-stone-900 backdrop-blur-sm">
-                          <Zap size={11} className="text-emerald-600" />
-                          {tour.difficulty}
+                          <Zap size={11} className="text-brand-ink" />
+                          {tourDifficulty(tour.difficulty, lang)}
                         </span>
                       )}
                     </div>
@@ -113,7 +117,7 @@ export function ToursClient({ tours }: { tours: PublicTour[] }) {
                       {tour.duration && (
                         <span className="inline-flex items-center gap-1.5">
                           <Clock3 size={14} />
-                          {tour.duration}
+                          {tourDuration(tour.duration, lang)}
                         </span>
                       )}
                       <span className="inline-flex items-center gap-1.5">
@@ -126,13 +130,13 @@ export function ToursClient({ tours }: { tours: PublicTour[] }) {
                       <button
                         type="button"
                         onClick={() => handleSelectTour(tour.slug)}
-                        className="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-5 py-2.5 text-xs font-black uppercase tracking-wide text-white transition hover:bg-emerald-500"
+                        className="inline-flex items-center gap-2 rounded-full bg-[#00796B] px-5 py-2.5 text-xs font-black uppercase tracking-wide text-white transition hover:bg-[#00695C]"
                       >
                         {tr.reserve}
                         <ArrowRight size={14} />
                       </button>
                       <Link
-                        href={`/tour/${encodeURIComponent(tour.slug)}`}
+                        href={localizeHref(`/tour/${encodeURIComponent(tour.slug)}`, lang)}
                         className="inline-flex items-center gap-1.5 rounded-full border border-stone-300 px-4 py-2.5 text-xs font-bold text-stone-700 transition hover:border-stone-400 hover:text-stone-900 dark:border-white/15 dark:text-stone-200 dark:hover:border-white/30 dark:hover:text-white"
                       >
                         {isEs ? "Ver detalle" : "View details"}

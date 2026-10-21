@@ -1,0 +1,6 @@
+import HomeNav from "@/app/components/home/HomeNav";
+import Link from "next/link";
+import { pageMetadata } from "@/lib/seo";
+
+export const metadata = pageMetadata("/organics", "La Vieja Organics: Local Sustainability", "Seasonal ingredients, composting and nearby producers support La Vieja Adventures' restaurant and connection with the land.", "en");
+export default function EnglishOrganics() { return <main className="min-h-screen bg-[#FAF9F6] px-5 pb-24 pt-32 text-stone-900 dark:bg-stone-950 dark:text-white"><HomeNav solid /><article className="mx-auto max-w-3xl space-y-7"><p className="font-bold text-[#00796B] dark:text-teal-300">LA VIEJA ORGANICS</p><h1 className="text-4xl font-bold">A closer connection with the land</h1><p>La Vieja Organics is our local sustainability project, supporting the restaurant with fresh seasonal ingredients, composting practices and relationships with nearby producers.</p><h2 className="text-2xl font-bold">Seasonal food, less waste</h2><p>We use organic kitchen waste for compost, work with local growing seasons and connect environmental education with our visitor experience. This is a sustainability project supporting the restaurant, rather than an online store.</p><Link className="inline-flex rounded-full bg-[#00796B] px-6 py-3 font-bold text-white" href="/en/tours">Explore our experiences</Link></article></main>; }

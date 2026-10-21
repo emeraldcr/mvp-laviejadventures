@@ -1,4 +1,5 @@
 import { getTourGallery } from "@/lib/tour-display";
+import { withUstedeo } from "@/lib/editorial";
 
 // Rich, per-tour editorial content for the public tour detail pages.
 // Keyed by tour slug. This layer is additive: it does NOT touch the Mongo
@@ -483,6 +484,6 @@ export const TOUR_CONTENT: Record<string, TourContent> = {
 
 export function getTourContent(slug?: string | null): TourContent | null {
   if (!slug) return null;
-  if (slug === "avistamiento-aves-norteno") return TOUR_CONTENT["avistamiento-aves"] ?? null;
-  return TOUR_CONTENT[slug] ?? null;
+  if (slug === "avistamiento-aves-norteno") return withUstedeo(TOUR_CONTENT["avistamiento-aves"] ?? null);
+  return withUstedeo(TOUR_CONTENT[slug] ?? null);
 }

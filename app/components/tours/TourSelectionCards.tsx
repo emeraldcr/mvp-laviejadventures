@@ -5,6 +5,8 @@ import Link from "next/link";
 import { ArrowRight, Clock3, MapPin, ShieldCheck, Zap } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
 import { getTourImage } from "@/lib/tour-display";
+import { getTourPriceDisplay } from "@/lib/tour-pricing";
+import { localizeHref, tourDifficulty, tourDuration } from "@/lib/i18n";
 import { TourSummary } from "@/lib/types/index";
 
 const TOUR_TAGS_BY_SLUG: Record<string, { tagEs: string; tagEn: string }> = [
@@ -72,7 +74,7 @@ export default function TourSelectionCards({
         const tourTitle = isEs ? tour.titleEs : tour.titleEn;
         const isSelected = selectedTourSlug === tour.slug;
         const isFeatured = tour.slug === "avistamiento-aves-norteno" || tour.slug === "avistamiento-aves";
-        const price = tour.packages?.[0]?.price ? `$${tour.packages[0].price}` : isEs ? "Consultar" : "Ask";
+        const price = getTourPriceDisplay(tour, isEs).compact;
 
         return (
           <article
@@ -153,13 +155,13 @@ export default function TourSelectionCards({
                 {tour.duration && (
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-white/12 bg-white/10 px-2.5 py-1 text-[10px] font-bold text-white/75 backdrop-blur-md">
                     <Clock3 className="h-3 w-3 shrink-0 text-teal-300" />
-                    {tour.duration}
+                    {tourDuration(tour.duration, lang)}
                   </span>
                 )}
                 {tour.difficulty && (
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-white/12 bg-white/10 px-2.5 py-1 text-[10px] font-bold text-white/75 backdrop-blur-md">
                     <Zap className="h-3 w-3 shrink-0 text-amber-300" />
-                    {tour.difficulty}
+                    {tourDifficulty(tour.difficulty, lang)}
                   </span>
                 )}
                 {tour.location && (
@@ -181,7 +183,7 @@ export default function TourSelectionCards({
                   <ArrowRight className="h-3.5 w-3.5" />
                 </button>
                 <Link
-                  href={`/tour/${encodeURIComponent(tour.slug)}`}
+                  href={localizeHref(`/tour/${encodeURIComponent(tour.slug)}`, lang)}
                   className="flex items-center justify-center rounded-xl border border-white/20 bg-white/8 px-4 py-3 text-[11px] font-bold text-white/72 backdrop-blur-md transition hover:border-white/38 hover:text-white"
                 >
                   {isEs ? "Ver" : "Info"}
