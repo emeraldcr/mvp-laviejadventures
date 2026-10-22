@@ -22,7 +22,7 @@ const DAY_TYPES = [
 export default function HomeTourDiscovery({ tours }: { tours: TourSummary[] }) {
   const { lang } = useLanguage();
   const isEs = lang === "es";
-  const [selected, setSelected] = useState<DayType | null>(null);
+  const [selected, setSelected] = useState<DayType>("active");
   const selectedType = DAY_TYPES.find((item) => item.key === selected);
   const matches = useMemo(() => {
     if (!selectedType) return [];
@@ -58,10 +58,10 @@ export default function HomeTourDiscovery({ tours }: { tours: TourSummary[] }) {
         </div>
 
         {selectedType && <div className="mt-8" aria-live="polite">
-          <div className="flex items-end justify-between gap-4"><div><p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300">{isEs ? "Experiencias para comparar" : "Experiences to compare"}</p><h3 className="mt-2 font-display text-2xl font-black text-stone-950 dark:text-white">{isEs ? selectedType.labelEs : selectedType.labelEn}</h3></div><Link href={localizeHref("/tours", lang)} className="hidden items-center gap-2 text-sm font-black text-emerald-800 sm:inline-flex dark:text-emerald-300">{isEs ? "Ver todos" : "See all"}<ArrowRight size={15} /></Link></div>
-          <div className="mt-5 grid gap-5 md:grid-cols-3">
+          <div className="flex items-end justify-between gap-4"><div><p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300">{selected === "active" ? (isEs ? "Una buena primera opción" : "A good first option") : (isEs ? "Experiencias para comparar" : "Experiences to compare")}</p><h3 className="mt-2 font-display text-2xl font-black text-stone-950 dark:text-white">{isEs ? selectedType.labelEs : selectedType.labelEn}</h3></div><Link href={localizeHref("/tours", lang)} className="hidden items-center gap-2 text-sm font-black text-emerald-800 sm:inline-flex dark:text-emerald-300">{isEs ? "Ver todos" : "See all"}<ArrowRight size={15} /></Link></div>
+          {matches.length > 0 ? <div className="mt-5 grid gap-5 md:grid-cols-3">
             {matches.map((tour) => <article key={tour.slug} className="lva-home-panel overflow-hidden"><Link href={localizeHref(`/tour/${encodeURIComponent(tour.slug)}`, lang)}><div className="relative aspect-[16/10]"><Image src={getTourImage(tour.slug)} alt={tourTitle(tour, isEs)} fill sizes="(min-width: 768px) 33vw, 100vw" className="object-cover" /></div><div className="p-5"><h4 className="font-display text-xl font-black">{tourTitle(tour, isEs)}</h4><div className="lva-home-meta mt-2 flex flex-wrap gap-3 font-bold">{tour.duration && <span>{tourDuration(tour.duration, lang)}</span>}{tour.difficulty && <span>{tourDifficulty(tour.difficulty, lang)}</span>}<span>{getTourPriceDisplay(tour, isEs).primary}</span></div><span className="mt-4 inline-flex items-center gap-2 text-xs font-black uppercase tracking-wide text-emerald-800 dark:text-emerald-300">{isEs ? "Comparar detalles" : "Compare details"}<ArrowRight size={14} /></span></div></Link></article>)}
-          </div>
+          </div> : <div className="mt-5 rounded-[var(--lva-radius-soft)] border border-[var(--lva-border)] bg-[var(--lva-surface)] p-6"><p className="text-sm text-stone-600 dark:text-stone-300">{isEs ? "Todavía no hay una experiencia publicada en esta categoría." : "There is not a published experience in this category yet."}</p><Link href={localizeHref("/tours", lang)} className="mt-4 inline-flex items-center gap-2 text-sm font-black text-emerald-800 dark:text-emerald-300">{isEs ? "Ver todos los tours" : "See all tours"}<ArrowRight size={15} /></Link></div>}
         </div>}
       </div>
     </section>
