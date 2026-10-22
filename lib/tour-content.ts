@@ -274,7 +274,7 @@ export const TOUR_CONTENT: Record<string, TourContent> = {
       "No garantizamos especies concretas — es naturaleza viva — pero la zona es excepcionalmente rica.",
       "En temporada lluviosa (mayo–noviembre) el bosque está más activo; traé impermeable ligero.",
       "Niños bienvenidos: el guía adapta el ritmo y la explicación a todas las edades.",
-      "Cancelación gratuita hasta 24 horas antes del tour.",
+      "Cancelación gratuita hasta 48 horas antes del tour.",
     ],
     faqs: [
       { q: "¿Necesito llevar binoculares?", a: "Ayuda mucho tener los propios, pero incluimos binoculares compartidos de alta calidad. Si reservás el paquete privado, consultá por préstamo dedicado." },

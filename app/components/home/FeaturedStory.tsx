@@ -53,7 +53,7 @@ export default function FeaturedStory({ tours }: Props) {
       num: "03",
       title: isEs ? "Viva el cañón" : "Into the canyon",
       body: isEs
-        ? "Llega, conoce a su guía y entra al bosque. El ritmo y la ruta se adaptan a su grupo y a las condiciones del río ese día."
+        ? "Llegue, conozca a su guía y entre al bosque. El ritmo y la ruta se adaptan a su grupo y a las condiciones del río ese día."
         : "You arrive, meet your guide, and head into the forest. Pace and route adapt to your group and the river conditions that day.",
     },
   ];

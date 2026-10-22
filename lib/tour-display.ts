@@ -1,5 +1,3 @@
-import { BIRDWATCHING_GALLERY } from "@/lib/birdwatching-content";
-
 function unsplash(id: string) {
   return `https://images.unsplash.com/photo-${id}?q=82&w=1600&auto=format&fit=crop`;
 }
@@ -61,20 +59,20 @@ export const TOUR_GALLERY_BY_SLUG: Record<string, string[]> = {
     "/image/IMG_5592.jpg",
   ],
   "avistamiento-aves": [
-    unsplash("1550853024-fae8cd4be47f"),
-    unsplash("1550994439-a879aabe0386"),
-    unsplash("1682788820676-2d68c93d3346"),
-    unsplash("1516467508483-a7213fe4af05"),
-    unsplash("1444464666168-49d633b86797"),
-    unsplash("1604584494301-cdf0b1e2e8b1"),
+    "/image/IMG_6805.jpg",
+    "/image/IMG_6806.jpg",
+    "/image/IMG_6809.jpg",
+    "/image/IMG_6810.jpg",
+    "/image/IMG_6811.jpg",
+    "/image/IMG_4514.jpg",
   ],
   "avistamiento-aves-norteno": [
-    unsplash("1550853024-fae8cd4be47f"),
-    unsplash("1550994439-a879aabe0386"),
-    unsplash("1682788820676-2d68c93d3346"),
-    unsplash("1516467508483-a7213fe4af05"),
-    unsplash("1444464666168-49d633b86797"),
-    unsplash("1604584494301-cdf0b1e2e8b1"),
+    "/image/IMG_6805.jpg",
+    "/image/IMG_6806.jpg",
+    "/image/IMG_6809.jpg",
+    "/image/IMG_6810.jpg",
+    "/image/IMG_6811.jpg",
+    "/image/IMG_4514.jpg",
   ],
   "tour-nocturno-la-vieja": [
     "/image/IMG_503888.jpg",
@@ -117,13 +115,24 @@ export function getTourImage(slug?: string | null) {
   return (slug && TOUR_IMAGE_BY_SLUG[slug]) || "/image/IMG_6810.jpg";
 }
 
+const TOUR_SHARE_IMAGE_BY_SLUG: Record<string, string> = {
+  "tour-ciudad-esmeralda": "/og/tours/tour-ciudad-esmeralda.jpg",
+  "ciudad-esmeralda": "/og/tours/tour-ciudad-esmeralda.jpg",
+  "aventuras-cataratas": "/og/tours/aventuras-cataratas.jpg",
+  "pozas-cristalinas": "/og/tours/pozas-cristalinas.jpg",
+  "cascadas-secretas-rio-la-vieja": "/og/tours/cascadas-secretas-rio-la-vieja.jpg",
+  "cuadra-tours-aventura": "/og/tours/cuadra-tours-aventura.jpg",
+  "tour-gastronomico-local": "/og/tours/tour-gastronomico-local.jpg",
+  "lluvia-en-la-naturaleza": "/og/tours/lluvia-en-la-naturaleza.jpg",
+  "avistamiento-aves": "/og/tours/avistamiento-aves.jpg",
+  "avistamiento-aves-norteno": "/og/tours/avistamiento-aves.jpg",
+  "tour-nocturno-la-vieja": "/og/tours/tour-nocturno-la-vieja.jpg",
+  "caminata-volcanes-dormidos": "/og/tours/caminata-volcanes-dormidos.jpg",
+  "rapel-canon-del-rio": "/og/tours/rapel-canon-del-rio.jpg",
+};
+
 export function getTourShareImage(slug?: string | null) {
-  if (slug === "avistamiento-aves" || slug === "avistamiento-aves-norteno") {
-    return BIRDWATCHING_GALLERY[0] ?? "/image/IMG_6810.jpg";
-  }
-  const image = getTourImage(slug);
-  if (!image.startsWith("http")) return image;
-  return image.replace("w=1600", "w=1200").replace("auto=format", "h=630&auto=format");
+  return (slug && TOUR_SHARE_IMAGE_BY_SLUG[slug]) || getTourImage(slug);
 }
 
 export function getTourGallery(slug?: string | null) {

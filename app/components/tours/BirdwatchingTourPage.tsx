@@ -36,7 +36,6 @@ import { whatsappHref } from "@/app/components/home/home-utils";
 import {
   BIRDWATCHING_GALLERY,
   BIRDWATCHING_HABITATS,
-  BIRDWATCHING_IMAGE_CREDITS,
   BIRDWATCHING_LEARNING,
   BIRDWATCHING_SPECIES,
   BIRDWATCHING_STATS,
@@ -267,7 +266,7 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
         <div className="mx-auto max-w-7xl px-4 md:px-8">
           <SectionHeading icon={<Play className="h-6 w-6" />} title="Videos del recorrido" />
           <p className="mt-3 max-w-2xl text-base text-zinc-400">
-            Mirá cómo es una mañana real de avistamiento: senderos, guías, cantos al amanecer y el paisaje del corredor biológico.
+            Mire cómo es una mañana real de avistamiento: senderos, guías, cantos al amanecer y el paisaje del corredor biológico.
           </p>
 
           <div className="mt-8 grid gap-6 lg:grid-cols-[1.4fr_0.6fr]">
@@ -379,7 +378,7 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
 
       {/* What you'll learn */}
       <section className="mx-auto max-w-7xl px-4 py-16 md:px-8">
-        <SectionHeading icon={<Sparkles className="h-6 w-6" />} title="Qué vas a aprender" />
+        <SectionHeading icon={<Sparkles className="h-6 w-6" />} title="Qué va a aprender" />
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {BIRDWATCHING_LEARNING.map((item) => (
             <div key={item} className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
@@ -395,7 +394,7 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
         <div className="mx-auto max-w-7xl px-4 md:px-8">
           <SectionHeading icon={<Expand className="h-6 w-6" />} title="Galería de la experiencia" />
           <p className="mt-3 max-w-2xl text-base text-zinc-400">
-            Fotografías de referencia de las especies que buscamos en el corredor. Tocá cualquier imagen para verla en grande; la fauna silvestre nunca se garantiza.
+            Fotografías propias del entorno del tour. Toque cualquier imagen para verla en grande; la fauna silvestre nunca se garantiza.
           </p>
 
           <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
@@ -408,7 +407,7 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
               >
                 <Image
                   src={image}
-                  alt={BIRDWATCHING_SPECIES[index]?.commonName ?? `Ave del corredor ${index + 1}`}
+                  alt={`Entorno del corredor biológico ${index + 1}`}
                   fill
                   sizes="(min-width:1024px) 25vw, 50vw"
                   className="object-cover transition duration-500 group-hover:scale-105"
@@ -418,14 +417,7 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
             ))}
           </div>
           <p className="mt-5 text-xs leading-relaxed text-zinc-500">
-            Fotografías con licencia abierta vía Wikimedia Commons. {BIRDWATCHING_IMAGE_CREDITS.map((credit, index) => (
-              <span key={credit.source}>
-                {index > 0 ? " · " : ""}
-                <a href={credit.source} target="_blank" rel="noopener noreferrer" className="underline decoration-white/20 underline-offset-2 hover:text-emerald-200">
-                  {credit.author} ({credit.license})
-                </a>
-              </span>
-            ))}
+            Fotografías propias de La Vieja Adventures y del entorno real del tour. Las especies y condiciones dependen de la temporada.
           </p>
         </div>
       </section>

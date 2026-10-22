@@ -4,7 +4,7 @@ const forms: Record<string, string> = {
   "necesitás": "necesita", "estás": "está", "sos": "es", "sentís": "siente", "preferís": "prefiere", "sabés": "sabe", "venís": "viene",
   "buscás": "busca", "llegás": "llega", "salís": "sale", "hacés": "hace", "usás": "usa", "llevás": "lleva", "vayás": "vaya", "reservás": "reserva",
   "elegí": "elija", "reservá": "reserve", "mirá": "mire", "confirmá": "confirme", "llegá": "llegue", "llevá": "lleve", "buscanos": "búsquenos",
-  "preguntá": "pregunte", "escribinos": "escríbanos", "avisá": "avise", "contanos": "cuéntenos", "tomés": "tome",
+  "preguntá": "pregunte", "escribinos": "escríbanos", "avisá": "avise", "contanos": "cuéntenos", "tomés": "tome", "tocá": "toque", "traé": "traiga", "veas": "vea", "vas": "va", "uses": "use",
   "practicás": "practica", "mojarte": "mojarse", "sentirte": "sentirse", "adéntrate": "adéntrese", "descubre": "descubra", "recorre": "recorra",
   "camina": "camine", "disfruta": "disfrute", "vive": "viva", "explora": "explore", "observa": "observe", "escucha": "escuche", "conecta": "conecte",
   "sumérgete": "sumérjase", "enfrenta": "enfrente", "buscá": "busque", "seguí": "siga", "recordá": "recuerde", "preparate": "prepárese", "consultá": "consulte", "consultanos": "consúltenos",

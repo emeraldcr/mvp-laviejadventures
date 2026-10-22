@@ -4,6 +4,7 @@ import { COLLECTIONS } from "@/lib/constants/db";
 import { buildStandardPackagesFromPrice, fallbackPackagesForTour, normalizeTourPackages } from "@/lib/tour-packages";
 import type { TourPackageOption } from "@/lib/types/index";
 import { usted } from "@/lib/editorial";
+import { PUBLIC_CANCELLATION_POLICY_ES } from "@/lib/tour-policy";
 
 export type TourDetail = {
   slug: string;
@@ -37,7 +38,7 @@ const DEFAULT_TOUR: TourDetail = {
   tagEs: "Aventura",
   inclusions: ["Guia certificado", "Equipo de seguridad", "Ingreso a zonas naturales", "Briefing de seguridad"],
   restrictions: "Recomendado para personas en buenas condiciones fisicas.",
-  cancellationPolicy: "Cancelacion gratuita hasta 48 horas antes del tour.",
+  cancellationPolicy: PUBLIC_CANCELLATION_POLICY_ES,
   packages: fallbackPackagesForTour("tour-ciudad-esmeralda"),
 };
 
@@ -60,7 +61,7 @@ const DEFAULT_BIRDWATCHING_TOUR: TourDetail = {
     "Explicaciones educativas sobre avifauna local",
   ],
   restrictions: "Apto para principiantes. Se recomienda ropa de colores neutros.",
-  cancellationPolicy: "Cancelacion gratuita hasta 24 horas antes del tour.",
+  cancellationPolicy: PUBLIC_CANCELLATION_POLICY_ES,
   packages: fallbackPackagesForTour("avistamiento-aves-norteno"),
 };
 
@@ -108,7 +109,7 @@ export const getTour = cache(async (slug: string): Promise<TourDetail | null> =>
       tagEs: String(tour.tagEs ?? ""),
       inclusions: asStringArray(tour.inclusions ?? tour.includes),
       restrictions: String(tour.restrictions ?? ""),
-      cancellationPolicy: String(tour.cancellationPolicy ?? ""),
+      cancellationPolicy: PUBLIC_CANCELLATION_POLICY_ES,
       packages: resolvedPackages,
     };
   } catch (error) {

@@ -71,18 +71,18 @@ export const BIRDWATCHING_VIDEOS: BirdVideo[] = [
 ];
 
 export const BIRDWATCHING_GALLERY: string[] = [
-  img("1550853024-fae8cd4be47f"),
-  img("1516467508483-a7213fe4af05"),
-  img("1444464666168-49d633b86797"),
-  img("1550994439-a879aabe0386"),
-  img("1682788820676-2d68c93d3346"),
-  img("1604584494301-cdf0b1e2e8b1"),
-  img("1598304843779-6d0f0c8e2f1a"),
-  img("1507003211169-0a1dd7228f2d"),
-  img("1518791841217-8f162f1e9881"),
-  img("1548199973-03cce0bbc87b"),
-  img("1552728080-b9123d1349a7"),
-  img("1558618666-fcd25c85cd64"),
+  "/image/IMG_6805.jpg",
+  "/image/IMG_6806.jpg",
+  "/image/IMG_6809.jpg",
+  "/image/IMG_6810.jpg",
+  "/image/IMG_6811.jpg",
+  "/image/IMG_6812.jpg",
+  "/image/IMG_6813.jpg",
+  "/image/IMG_6814.jpg",
+  "/image/IMG_4514.jpg",
+  "/image/IMG_4522.jpg",
+  "/image/IMG_4523.jpg",
+  "/image/IMG_4575.JPG",
 ];
 
 export const BIRDWATCHING_IMAGE_CREDITS = [
@@ -204,7 +204,7 @@ export const BIRDWATCHING_SPECIES: BirdSpecies[] = [
     commonName: "Carpintero de Hoffmann",
     scientificName: "Melanerpes hoffmannii",
     description:
-      "Endémico de Costa Rica y Panamá. Golpeteo rítmico en troncos; el guía lo localiza por sonido antes de que lo veas trepando.",
+      "Endémico de Costa Rica y Panamá. Golpeteo rítmico en troncos; el guía lo localiza por sonido antes de que lo vea trepando.",
     habitat: "Bosque húmedo y árboles maduros",
     likelihood: "frecuente",
     image: img("1558618666-fcd25c85cd64"),

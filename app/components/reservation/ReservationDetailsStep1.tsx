@@ -123,7 +123,7 @@ export default function ReservationDetailsStep1({
                     ? "Fecha, hora y paquete listos. Falta un toque de tus datos."
                     : "Date, time and package ready. Just add your details."
                 : isEs
-                  ? "Fecha y hora se eligen solas. Tocá paquete o personas solo si querés."
+                  ? "Fecha y hora se eligen solas. Toque paquete o personas solo si quiere."
                   : "Date and time auto-pick. Only change package or guests if you want."}
             </p>
           </div>

@@ -1,5 +1,6 @@
 import { getDb } from "@/lib/helpers/mongodb";
 import { usted } from "@/lib/editorial";
+import { PUBLIC_CANCELLATION_POLICY_ES } from "@/lib/tour-policy";
 import { COLLECTIONS } from "@/lib/constants/db";
 import { buildStandardPackagesFromPrice, fallbackPackagesForTour, normalizeTourPackages } from "@/lib/tour-packages";
 import type { TourSummary } from "@/lib/types/index";
@@ -245,35 +246,35 @@ const DEFAULT_TOUR_DETAILS: Record<
     inclusions: ["Guia local", "Equipo de seguridad", "Ruta en senderos privados"],
     exclusions: ["Transporte", "Alimentos y bebidas no especificadas"],
     restrictions: "Intermedio",
-    cancellationPolicy: "Cancelacion gratuita hasta 24 horas antes del tour.",
+    cancellationPolicy: PUBLIC_CANCELLATION_POLICY_ES,
   },
   "cascadas-secretas-rio-la-vieja": {
     location: "Ciudad Esmeralda - Rio La Vieja",
     inclusions: ["Guia local", "Acceso a senderos", "Paradas fotograficas"],
     exclusions: ["Transporte", "Alimentos y bebidas no especificadas"],
     restrictions: "Moderado",
-    cancellationPolicy: "Cancelacion gratuita hasta 24 horas antes del tour.",
+    cancellationPolicy: PUBLIC_CANCELLATION_POLICY_ES,
   },
   "tour-gastronomico-local": {
     location: "Ciudad Esmeralda - Zona Norte",
     inclusions: ["Degustacion local", "Anfitrion local", "Experiencia cultural"],
     exclusions: ["Transporte", "Consumos adicionales"],
     restrictions: "Facil",
-    cancellationPolicy: "Cancelacion gratuita hasta 24 horas antes del tour.",
+    cancellationPolicy: PUBLIC_CANCELLATION_POLICY_ES,
   },
   "lluvia-en-la-naturaleza": {
     location: "Bosque de Ciudad Esmeralda",
     inclusions: ["Guia local", "Equipo especial para lluvia", "Ruta sensorial"],
     exclusions: ["Transporte", "Alimentos y bebidas no especificadas"],
     restrictions: "Facil",
-    cancellationPolicy: "Cancelacion gratuita hasta 24 horas antes del tour.",
+    cancellationPolicy: PUBLIC_CANCELLATION_POLICY_ES,
   },
   "avistamiento-aves": {
     location: "Corredor biologico Juan Castro Blanco",
     inclusions: ["Guia local", "Ruta de observacion", "Apoyo para identificacion de especies"],
     exclusions: ["Transporte", "Binoculares personales"],
     restrictions: "Facil",
-    cancellationPolicy: "Cancelacion gratuita hasta 24 horas antes del tour.",
+    cancellationPolicy: PUBLIC_CANCELLATION_POLICY_ES,
   },
   "avistamiento-aves-norteno": {
     location: "Juan Castro Blanco, Alajuela Norte, Costa Rica",
@@ -285,28 +286,28 @@ const DEFAULT_TOUR_DETAILS: Record<
     ],
     exclusions: ["Transporte", "Binoculares personales", "Alimentos y bebidas no especificadas"],
     restrictions: "Facil",
-    cancellationPolicy: "Cancelacion gratuita hasta 24 horas antes del tour.",
+    cancellationPolicy: PUBLIC_CANCELLATION_POLICY_ES,
   },
   "tour-nocturno-la-vieja": {
     location: "Bosque La Vieja Adventures",
     inclusions: ["Guia local", "Ruta nocturna", "Briefing de seguridad"],
     exclusions: ["Transporte", "Linterna personal"],
     restrictions: "Facil",
-    cancellationPolicy: "Cancelacion gratuita hasta 24 horas antes del tour.",
+    cancellationPolicy: PUBLIC_CANCELLATION_POLICY_ES,
   },
   "rapel-canon-del-rio": {
     location: "Canon del Rio La Vieja",
     inclusions: ["Guia certificado", "Equipo profesional", "Briefing de seguridad"],
     exclusions: ["Transporte", "Alimentos y bebidas no especificadas"],
     restrictions: "Intermedio a avanzado",
-    cancellationPolicy: "Cancelacion gratuita hasta 24 horas antes del tour.",
+    cancellationPolicy: PUBLIC_CANCELLATION_POLICY_ES,
   },
   "caminata-volcanes-dormidos": {
     location: "Parque Nacional del Agua Juan Castro Blanco",
     inclusions: ["Guia local", "Ruta a crateres antiguos", "Miradores naturales"],
     exclusions: ["Transporte", "Alimentos y bebidas no especificadas"],
     restrictions: "Moderado",
-    cancellationPolicy: "Cancelacion gratuita hasta 24 horas antes del tour.",
+    cancellationPolicy: PUBLIC_CANCELLATION_POLICY_ES,
   },
 };
 
@@ -341,7 +342,7 @@ function serializePublicTour(t: Record<string, unknown>): PublicTour {
     exclusions: Array.isArray(t.exclusions)
       ? t.exclusions.map(String)
       : defaults?.exclusions ?? [],
-    cancellationPolicy: String(t.cancellationPolicy ?? defaults?.cancellationPolicy ?? ""),
+    cancellationPolicy: PUBLIC_CANCELLATION_POLICY_ES,
     restrictions: String(t.restrictions ?? defaults?.restrictions ?? ""),
     packages: packages.map((pkg) => ({
       id: pkg.id,

@@ -55,7 +55,7 @@ export default function ReservationSection({ className, preselectedTourSlug, pre
             </p>
             <p className="mx-auto max-w-[240px] text-sm leading-relaxed text-zinc-500">
               {lang === "es"
-                ? "Si este mes no tiene cupos, tocá el mes siguiente o «Próxima disponible»."
+                ? "Si este mes no tiene cupos, toque el mes siguiente o «Próxima disponible»."
                 : "If this month is full, try next month or “Next available.”"}
             </p>
           </div>
