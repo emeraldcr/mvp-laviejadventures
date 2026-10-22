@@ -56,5 +56,5 @@ export default function SiteRoot({ children, locale }: Readonly<{ children: Reac
       },
     ],
   };
-  return <html lang={locale} className={`dark ${manrope.variable} ${bricolage.variable}`} suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: THEME_NO_FLASH_SCRIPT }} /><JsonLd data={schema} /></head><body className="antialiased"><ThemeProvider><LanguageProvider initialLang={locale}>{children}<MobileBookingBar /></LanguageProvider></ThemeProvider><Analytics /></body></html>;
+  return <html lang={locale} className={`${manrope.variable} ${bricolage.variable}`} suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: THEME_NO_FLASH_SCRIPT }} /><JsonLd data={schema} /></head><body className="antialiased"><ThemeProvider><LanguageProvider initialLang={locale}>{children}<MobileBookingBar /></LanguageProvider></ThemeProvider><Analytics /></body></html>;
 }

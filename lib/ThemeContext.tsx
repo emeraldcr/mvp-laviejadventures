@@ -13,7 +13,9 @@ import {
 export type Theme = "light" | "dark";
 
 const STORAGE_KEY = "lva-theme";
-const DEFAULT_THEME: Theme = "dark";
+// The public brand is editorial-light by default. Dark mode remains an
+// explicit user preference, rather than the visual identity of every route.
+const DEFAULT_THEME: Theme = "light";
 
 type ThemeContextValue = {
   theme: Theme;
@@ -79,4 +81,4 @@ export function useTheme(): ThemeContextValue {
 
 // Inline script string injected in <head> to set the theme class before paint,
 // preventing a flash of the wrong theme. Mirrors the logic above.
-export const THEME_NO_FLASH_SCRIPT = `(function(){try{var t=localStorage.getItem('${STORAGE_KEY}');if(t!=='light'&&t!=='dark'){t='${DEFAULT_THEME}';}var r=document.documentElement;r.classList.toggle('dark',t==='dark');r.style.colorScheme=t;}catch(e){document.documentElement.classList.add('dark');}})();`;
+export const THEME_NO_FLASH_SCRIPT = `(function(){try{var t=localStorage.getItem('${STORAGE_KEY}');if(t!=='light'&&t!=='dark'){t='${DEFAULT_THEME}';}var r=document.documentElement;r.classList.toggle('dark',t==='dark');r.style.colorScheme=t;}catch(e){document.documentElement.classList.remove('dark');document.documentElement.style.colorScheme='light';}})();`;

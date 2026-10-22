@@ -8,6 +8,8 @@
   --background: #faf9f6;
   --foreground: #171717;
   --color-brand-ink: #00796b;
+  /* Public brand tokens: pages should consume these semantic roles instead
+     of inventing their own black, green, surface, or border values. */
   --lva-surface: #ffffff;
   --lva-surface-muted: #f4f1eb;
   --lva-border: rgba(68, 64, 60, 0.14);
@@ -17,6 +19,11 @@
   --lva-accent-bright: #00c4b0;
   --lva-accent-ink: #17211f;
   --lva-nav-shadow: 0 1px 24px rgba(0, 0, 0, 0.06);
+  --lva-section-dark-bg: #101916;
+  --lva-section-dark-fg: #f4fffb;
+  --lva-section-dark-muted: rgba(244, 255, 251, 0.72);
+  --lva-section-dark-border: rgba(244, 255, 251, 0.14);
+  --lva-section-dark-accent: #70eee1;
 }
 
 @utility text-brand-ink { color: var(--color-brand-ink); }
@@ -58,6 +65,10 @@ body {
 
 /* Shared public-brand primitives. Private/admin surfaces retain their own theme. */
 .lva-public-shell { background: var(--background); color: var(--foreground); }
+.lva-dark-section { background: var(--lva-section-dark-bg); color: var(--lva-section-dark-fg); }
+.lva-dark-section :where(.lva-muted, .text-muted) { color: var(--lva-section-dark-muted); }
+.lva-dark-section :where(.lva-section-border) { border-color: var(--lva-section-dark-border); }
+.lva-dark-section :where(.lva-section-accent) { color: var(--lva-section-dark-accent); }
 .lva-site-nav { color: var(--lva-ink); }
 .lva-site-nav[data-overlay="false"] { background: color-mix(in srgb, var(--lva-surface) 88%, transparent); box-shadow: var(--lva-nav-shadow); backdrop-filter: blur(18px); }
 .lva-site-nav[data-overlay="true"] { color: #fff; }
@@ -73,21 +84,21 @@ body {
 .lva-mobile-menu { background: var(--background); color: var(--lva-ink); }
 
 /* Shared visual language for the public tour detail and payment surfaces. */
-.tour-detail-page > section:not(:first-of-type) [class*="text-white"] { color: #292524 !important; }
-.tour-detail-page > section:not(:first-of-type) [class*="text-zinc-"] { color: #57534e !important; }
-.tour-detail-page > section:not(:first-of-type) [class*="text-cyan-"] { color: #00796b !important; }
+.tour-detail-page > section:not(:first-of-type) [class*="text-white"] { color: var(--lva-ink) !important; }
+.tour-detail-page > section:not(:first-of-type) [class*="text-zinc-"] { color: var(--lva-ink-muted) !important; }
+.tour-detail-page > section:not(:first-of-type) [class*="text-cyan-"] { color: var(--lva-accent) !important; }
 .tour-detail-page > section:not(:first-of-type) [class*="bg-white/"] { background-color: rgba(255,255,255,.72) !important; }
 .tour-detail-page > section:not(:first-of-type) [class*="bg-cyan-"] { background-color: rgba(0,121,107,.06) !important; }
 .tour-detail-page > section:not(:first-of-type) [class*="border-white/"] { border-color: rgba(120,113,108,.22) !important; }
 .tour-detail-page > section:not(:first-of-type) [class*="border-cyan-"] { border-color: rgba(0,121,107,.2) !important; }
-.tour-detail-page > section:not(:first-of-type) [class*="bg-black"] { background-color: #faf9f6 !important; }
+.tour-detail-page > section:not(:first-of-type) [class*="bg-black"] { background-color: var(--background) !important; }
 .tour-detail-page > section:not(:first-of-type) [class*="border-rose-"] { border-color: rgba(190,24,93,.18) !important; }
 .tour-detail-page > section:not(:first-of-type) [class*="text-rose-"] { color: #be185d !important; }
 .checkout-content [class*="bg-zinc-950"],
 .checkout-content [class*="bg-white/[0.03]"],
 .checkout-content [class*="bg-white/[0.04]"] { background-color: rgba(255,255,255,.72) !important; }
-.checkout-content [class*="text-zinc-"] { color: #57534e !important; }
-.checkout-content [class*="text-white"] { color: #292524 !important; }
+.checkout-content [class*="text-zinc-"] { color: var(--lva-ink-muted) !important; }
+.checkout-content [class*="text-white"] { color: var(--lva-ink) !important; }
 .checkout-content [class*="border-white/"] { border-color: rgba(120,113,108,.22) !important; }
 .checkout-content [class*="bg-red-950"] { background-color: rgba(254,226,226,.72) !important; }
 .checkout-content [class*="text-red-"] { color: #b91c1c !important; }
@@ -97,7 +108,7 @@ body {
 .dark .tour-detail-page > section:not(:first-of-type) [class*="bg-white/"] { background-color: rgba(255,255,255,.04) !important; }
 .dark .tour-detail-page > section:not(:first-of-type) [class*="bg-cyan-"] { background-color: rgba(34,211,238,.04) !important; }
 .dark .tour-detail-page > section:not(:first-of-type) [class*="border-white/"] { border-color: rgba(255,255,255,.1) !important; }
-.dark .tour-detail-page > section:not(:first-of-type) [class*="bg-black"] { background-color: #0b0a09 !important; }
+.dark .tour-detail-page > section:not(:first-of-type) [class*="bg-black"] { background-color: var(--background) !important; }
 .dark .checkout-content [class*="bg-zinc-950"],
 .dark .checkout-content [class*="bg-white/[0.03]"],
 .dark .checkout-content [class*="bg-white/[0.04]"] { background-color: rgba(10,10,12,.72) !important; }
