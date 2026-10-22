@@ -109,7 +109,7 @@ export default function ToursShowcase({ tours }: Props) {
                       </span>
                     </div>
                     <span className="mt-4 inline-flex items-center gap-2 text-xs font-black uppercase tracking-wide text-emerald-800 dark:text-emerald-300">
-                      {isEs ? "Ver fotos y detalles" : "See photos and details"}
+                      {isEs ? "Ver detalles" : "See details"}
                       <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
                     </span>
                   </div>

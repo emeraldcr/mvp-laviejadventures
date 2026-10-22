@@ -4,7 +4,6 @@ import { localizeHref } from "@/lib/i18n";
 
 import Link from "next/link";
 import { ArrowRight, CalendarDays, Clock3, MapPin, MessageCircle, ShieldCheck, Users } from "lucide-react";
-import { useEffect, useState } from "react";
 import { useLanguage } from "@/lib/LanguageContext";
 import { BOOKING_HREF, localizedHomeWhatsAppHref, primaryBookingLabel } from "./home-utils";
 
@@ -12,7 +11,6 @@ export default function HomeConversionRail() {
   const { lang } = useLanguage();
   const isEs = lang === "es";
   const whatsappHref = localizedHomeWhatsAppHref(isEs);
-  const [showFloatingCard, setShowFloatingCard] = useState(false);
   const logistics = isEs
     ? [
         { icon: MapPin, value: "San Carlos", label: "Sucre de Ciudad Quesada" },
@@ -25,16 +23,8 @@ export default function HomeConversionRail() {
         { icon: Clock3, value: "3–4 hours", label: "Trail, canyon & El Zafiro Waterfall" },
       ];
 
-  useEffect(() => {
-    const onScroll = () => setShowFloatingCard(window.scrollY > window.innerHeight * 0.85);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
   return (
-    <>
-      <section className="relative z-10 bg-[#FAF9F6] px-4 py-7 dark:bg-[#0b0a09] sm:px-6 md:py-10 lg:px-8">
+    <section className="relative z-10 bg-[#FAF9F6] px-4 py-7 dark:bg-[#0b0a09] sm:px-6 md:py-10 lg:px-8">
         <div className="mx-auto grid max-w-7xl overflow-hidden rounded-[2rem] border border-[#00C4B0]/25 bg-[#2E2A25] text-white shadow-[0_28px_80px_rgba(46,42,37,.18)] lg:grid-cols-[1.15fr_.85fr]">
           <div className="p-7 sm:p-9 lg:p-12">
             <span className="inline-flex items-center gap-2 rounded-full bg-[#00C4B0]/12 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.16em] text-[#70eee1]">
@@ -93,25 +83,6 @@ export default function HomeConversionRail() {
             </div>
           ))}
         </div>
-      </section>
-
-      <aside className={`fixed bottom-7 right-7 z-40 hidden w-64 overflow-hidden rounded-[1.4rem] border border-[#00C4B0]/35 bg-[#17211f]/95 text-white shadow-[0_24px_70px_rgba(0,0,0,.3)] backdrop-blur-xl transition-all duration-300 md:block ${showFloatingCard ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"}`} aria-hidden={!showFloatingCard}>
-        <div className="border-b border-[#00C4B0]/25 bg-[#073f3b]/80 px-5 py-4">
-          <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#70eee1]">
-            {isEs ? "¿Listo para elegir?" : "Ready to choose?"}
-          </p>
-          <p className="mt-1 text-sm font-bold">{isEs ? "Revise fechas y condiciones de su salida." : "Review dates and conditions for your trip."}</p>
-        </div>
-        <div className="grid grid-cols-1">
-          <Link
-            href={localizeHref(BOOKING_HREF, lang)}
-            className="flex items-center gap-2 bg-[#00C4B0] px-5 py-4 text-sm font-black text-[#17211f] transition hover:bg-[#70eee1]"
-          >
-            <CalendarDays size={16} />
-            {isEs ? "Ver fechas" : "See dates"}
-          </Link>
-        </div>
-      </aside>
-    </>
+    </section>
   );
 }
