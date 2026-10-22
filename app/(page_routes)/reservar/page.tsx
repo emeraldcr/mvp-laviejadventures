@@ -9,6 +9,8 @@ import { useLanguage } from "@/lib/LanguageContext";
 import { useTheme } from "@/lib/ThemeContext";
 import { useReservationData } from "@/lib/hooks/useReservationData";
 import BookingSection from "@/app/components/sections/BookingSection";
+import ReservationPaymentStep from "@/app/components/reservation/ReservationPaymentStep";
+import { CheckoutShell } from "@/app/components/layouts/SharedPageShell";
 
 type UrlBookingParams = {
   tour: string;
@@ -34,6 +36,7 @@ export default function ReservarPage() {
   const { lang, toggle } = useLanguage();
   const { theme, toggle: toggleTheme } = useTheme();
   const { tours } = useReservationData();
+  const [paymentStep, setPaymentStep] = useState(false);
   const [urlParams, setUrlParams] = useState<UrlBookingParams>(DEFAULT_URL_PARAMS);
   const [selectedTourSlug, setSelectedTourSlug] = useState("");
   const [hasReadUrl, setHasReadUrl] = useState(false);
@@ -48,6 +51,7 @@ export default function ReservarPage() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    setPaymentStep(params.get("step") === "pago");
     const tourFromUrl = params.get("tour")?.trim() ?? "";
     const paxRaw = Number(params.get("pax") ?? params.get("tickets"));
 
@@ -87,6 +91,10 @@ export default function ReservarPage() {
         </p>
       </main>
     );
+  }
+
+  if (paymentStep) {
+    return <CheckoutShell><ReservationPaymentStep /></CheckoutShell>;
   }
 
   return (

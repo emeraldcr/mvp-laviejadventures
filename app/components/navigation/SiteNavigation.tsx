@@ -367,7 +367,7 @@ MobileMoreMenu.displayName = "MobileMoreMenu";
 const isPathActive = (pathname: string, href: string) => {
   if (href === "/") return pathname === "/";
   if (href === "/reservar") {
-    return pathname === "/reservar" || pathname.startsWith("/booking");
+    return pathname === "/reservar" || pathname.startsWith("/mis-reservas") || pathname.startsWith("/en/mis-reservas");
   }
   return pathname === href || pathname.startsWith(`${href}/`);
 };

@@ -44,7 +44,7 @@ export async function sendUserWelcomeEmail(email: string, name: string) {
   const resend = getResend();
   if (!resend) return;
 
-  const link = `${BASE_URL}/reservation`;
+  const link = `${BASE_URL}/reservar`;
 
   const { error } = await resend.emails.send({
     from: FROM,

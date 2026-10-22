@@ -1,7 +1,7 @@
 export type Locale = "es" | "en";
 
 export const LOCALIZED_PATHS = new Set([
-  "/", "/tours", "/info", "/galeria", "/reservar", "/tiempo", "/preguntas-frecuentes",
+  "/", "/tours", "/info", "/galeria", "/reservar", "/reservar/voucher", "/mis-reservas", "/tiempo", "/preguntas-frecuentes",
   "/terminos-y-condiciones", "/politica-de-privacidad", "/organics",
 ]);
 

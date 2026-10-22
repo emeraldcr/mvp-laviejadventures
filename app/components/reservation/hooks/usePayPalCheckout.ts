@@ -217,7 +217,7 @@ export function usePayPalCheckout({
           sessionStorage.removeItem("reservationOrderDetails");
           sessionStorage.removeItem(RESERVATION_TRAVELER_DRAFT_KEY);
           onSuccess(output);
-          router.push(`${lang === "en" ? "/en" : ""}/success?orderId=${encodeURIComponent(output.id)}`);
+          router.push(`${lang === "en" ? "/en" : ""}/reservar/voucher?orderId=${encodeURIComponent(output.id)}`);
         },
         onError: (err: unknown) => {
           alert(errorMessage);

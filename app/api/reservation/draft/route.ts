@@ -89,7 +89,7 @@ export async function POST(req: Request) {
       success: true,
       resumeToken: saved.resumeToken,
       expiresAt: saved.expiresAt.toISOString(),
-      resumePath: `/reservation?resume=${encodeURIComponent(saved.resumeToken)}`,
+      resumePath: `/reservar?step=pago&resume=${encodeURIComponent(saved.resumeToken)}`,
       orderDetails: { ...orderDetails, resumeToken: saved.resumeToken },
     });
   } catch (error) {

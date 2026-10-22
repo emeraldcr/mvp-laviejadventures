@@ -37,7 +37,7 @@ export function BookingHeader() {
 
         <div className="grid w-full gap-3 rounded-2xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900 md:max-w-xs">
           <Link
-            href="/"
+            href="/reservar"
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-center text-sm font-semibold text-white shadow-lg shadow-emerald-800/20 transition hover:bg-emerald-700"
           >
             {bookingCopy("bookNewTour", lang)}
