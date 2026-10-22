@@ -8,6 +8,7 @@ import type { TourSummary } from "@/lib/types/index";
 import HomeNav from "@/app/components/home/HomeNav";
 import HomeHero from "@/app/components/home/HomeHero";
 import HomeConversionRail from "@/app/components/home/HomeConversionRail";
+import HomeTrustSection from "@/app/components/home/HomeTrustSection";
 import FeaturedStory from "@/app/components/home/FeaturedStory";
 import ToursShowcase from "@/app/components/home/ToursShowcase";
 import HomeFaqFooter from "@/app/components/home/HomeFaqFooter";
@@ -26,6 +27,7 @@ export default function HomeClient({ children, tours }: { children: ReactNode; t
         <HomeStructuredData tours={tours} locale={lang} />
         <HomeHero tour={ciudadEsmeralda} />
         <HomeConversionRail />
+        <HomeTrustSection tour={ciudadEsmeralda} />
         <FeaturedStory tours={featuredTours} />
         {otherTours.length > 0 && <ToursShowcase tours={otherTours} />}
         {children}
