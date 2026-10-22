@@ -8,6 +8,7 @@ import { ArrowRight, MessageCircle } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
 import { BOOKING_HREF, localizedHomeWhatsAppHref, primaryBookingLabel } from "./home-utils";
 import PageFooter from "@/app/components/sections/PageFooter";
+import { BOOKING_ASSURANCE_EN, BOOKING_ASSURANCE_ES } from "@/lib/tour-policy";
 
 function FinalCta() {
   const { lang } = useLanguage();
@@ -31,8 +32,8 @@ function FinalCta() {
           </h2>
           <p className="mt-4 max-w-xl text-base leading-relaxed text-white/75 md:text-lg">
             {isEs
-              ? "Trabajamos con grupos pequeños a propósito: protege el bosque y el cañón se disfruta mejor sin multitudes. Si el clima o el río no acompañan, le avisamos y reprogramamos sin costo. Pago seguro y cancelación gratuita hasta 48 h antes."
-              : "We keep groups small on purpose: it protects the forest and the canyon feels better without a crowd. If the weather or river don't cooperate, we let you know and rebook at no cost. Secure payment and free cancellation up to 48h before."}
+              ? `Trabajamos con grupos pequeños a propósito: protege el bosque y el cañón se disfruta mejor sin multitudes. ${BOOKING_ASSURANCE_ES}`
+              : `We keep groups small on purpose: it protects the forest and the canyon feels better without a crowd. ${BOOKING_ASSURANCE_EN}`}
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link

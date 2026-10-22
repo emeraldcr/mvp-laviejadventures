@@ -270,11 +270,11 @@ export default function ReservationDetailsStep3({
       <div className="flex flex-wrap justify-center gap-x-5 gap-y-1.5 border-t border-zinc-200 pb-1 pt-4 dark:border-zinc-800">
         <span className="flex items-center gap-1.5 text-xs font-medium text-zinc-500 dark:text-zinc-400">
           <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" aria-hidden />
-          {isEs ? "Cancelación gratuita hasta 24h antes" : "Free cancellation up to 24h before"}
+          {isEs ? "Cancelación gratuita hasta 48h antes" : "Free cancellation up to 48h before"}
         </span>
         <span className="flex items-center gap-1.5 text-xs font-medium text-zinc-500 dark:text-zinc-400">
           <Check className="h-3.5 w-3.5 text-emerald-500" aria-hidden />
-          {isEs ? "Confirmación inmediata" : "Instant confirmation"}
+          {isEs ? "Disponibilidad sujeta a confirmación" : "Availability subject to confirmation"}
         </span>
       </div>
     </>

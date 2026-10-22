@@ -8,6 +8,7 @@ import type { TourSummary } from "@/lib/types/index";
 import { BOOKING_HREF, TOURS_HREF, primaryBookingLabel } from "./home-utils";
 import GoogleRating from "@/app/components/GoogleRating";
 import { localizeHref } from "@/lib/i18n";
+import { BOOKING_ASSURANCE_EN, BOOKING_ASSURANCE_ES } from "@/lib/tour-policy";
 
 type Props = {
   tours: TourSummary[];
@@ -46,8 +47,8 @@ export default function FeaturedStory({ tours }: Props) {
       num: "02",
       title: isEs ? "Confirme y pague en línea" : "Confirm and pay online",
       body: isEs
-        ? "Pago seguro y confirmación en su correo de inmediato."
-        : "Secure payment, and your confirmation email arrives right away.",
+        ? `Pago seguro. ${BOOKING_ASSURANCE_ES}`
+        : `Secure payment. ${BOOKING_ASSURANCE_EN}`,
     },
     {
       num: "03",

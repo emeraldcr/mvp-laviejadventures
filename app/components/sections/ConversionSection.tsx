@@ -61,7 +61,7 @@ export default function ConversionSection() {
                 <div className="mb-8 flex flex-wrap justify-center gap-3">
                   {[
                     { Icon: ShieldCheck, text: isEs ? "Cancelación gratuita 48h" : "Free cancellation 48h" },
-                    { Icon: Zap, text: isEs ? "Confirmación inmediata" : "Instant confirmation" },
+                    { Icon: Zap, text: isEs ? "Disponibilidad sujeta a confirmación" : "Availability subject to confirmation" },
                     { Icon: Users, text: isEs ? "Grupos pequeños" : "Small groups" },
                   ].map(({ Icon, text }) => (
                     <span key={text} className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.06] px-4 py-2 text-xs font-bold text-white/70 backdrop-blur-md">

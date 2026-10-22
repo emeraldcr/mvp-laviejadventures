@@ -5,6 +5,7 @@ import { useLanguage } from "@/lib/LanguageContext";
 import SiteHeader from "@/app/components/navigation/SiteHeader";
 import PageFooter from "@/app/components/sections/PageFooter";
 import { EditorialFinalCta, EditorialIntro, EditorialTrust } from "@/app/components/layouts/EditorialPageBlocks";
+import { BOOKING_ASSURANCE_EN, BOOKING_ASSURANCE_ES } from "@/lib/tour-policy";
 
 type Section = {
   title: string;
@@ -31,7 +32,7 @@ const termsContent = {
         bullets: [
           "Los pagos se procesan a través de proveedores de pago seguros. Aceptamos tarjetas de crédito/débito principales.",
           "Los precios incluyen impuestos aplicables, pero pueden excluir cargos adicionales como propinas o extras opcionales.",
-          "Confirmaremos su reserva por correo electrónico una vez completado el pago.",
+          `${BOOKING_ASSURANCE_ES} Confirmaremos su reserva por correo electrónico una vez completado el pago.`,
         ],
       },
       {
@@ -84,7 +85,7 @@ const termsContent = {
         bullets: [
           "Payments are processed through secure payment providers. We accept major credit/debit cards.",
           "Prices include applicable taxes, but may exclude additional charges such as tips or optional extras.",
-          "We will confirm your booking by email once payment is completed.",
+          `${BOOKING_ASSURANCE_EN} We will confirm your booking by email once payment is completed.`,
         ],
       },
       {

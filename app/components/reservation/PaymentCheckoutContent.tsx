@@ -113,8 +113,8 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
       ? "PayPal, tarjeta, WhatsApp o SINPE. Elegí la opción que te quede más cómoda para confirmar tu aventura."
       : "PayPal, card, WhatsApp, or SINPE. Pick the option that works best to confirm your adventure.",
     checkoutHint: lang === "es"
-      ? "PayPal confirma al instante. WhatsApp y SINPE quedan pendientes hasta que el equipo valide tu pago."
-      : "PayPal confirms instantly. WhatsApp and SINPE stay pending until our team validates your payment.",
+      ? "La disponibilidad queda sujeta a confirmación. PayPal confirma el pago al instante; WhatsApp y SINPE quedan pendientes hasta que el equipo valide tu pago."
+      : "Availability is subject to confirmation. PayPal confirms payment instantly; WhatsApp and SINPE stay pending until our team validates your payment.",
     dateLabel: lang === "es" ? "Fecha" : "Date",
     guestsLabel: lang === "es" ? "Personas" : "Guests",
     tourLabel: lang === "es" ? "Experiencia" : "Experience",
@@ -145,7 +145,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
 
 
   const methodHints: Record<PaymentMethod, string> = {
-    paypal: lang === "es" ? "Confirmación al instante" : "Instant confirmation",
+    paypal: lang === "es" ? "Pago confirmado al instante" : "Payment confirmed instantly",
     whatsapp: lang === "es" ? "Reserva con el equipo" : "Book with the team",
     sinpe: lang === "es" ? "Transferencia local CR" : "Local CR transfer",
   };

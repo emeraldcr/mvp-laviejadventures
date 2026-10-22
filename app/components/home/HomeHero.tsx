@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
 import { BOOKING_HREF, localizedHomeWhatsAppHref, primaryBookingLabel } from "./home-utils";
+import { BOOKING_ASSURANCE_EN, BOOKING_ASSURANCE_ES } from "@/lib/tour-policy";
 
 export default function HomeHero() {
   const { lang } = useLanguage();
@@ -97,8 +98,8 @@ export default function HomeHero() {
 
           <p className="mt-7 max-w-xl text-balance text-sm font-semibold leading-relaxed text-white/85 sm:text-base md:text-lg">
             {isEs
-              ? "El cañón insignia de La Vieja Adventures: sendero, río y las pozas turquesa de la Cascada El Zafiro, con guía local bilingüe y grupos pequeños. Si el clima cambia, ajustamos la ruta o le reprogramamos sin costo."
-              : "La Vieja Adventures' signature canyon: trail, river, and the turquoise pools of El Zafiro Waterfall, with a local bilingual guide and small groups. If the weather turns, we adjust the route or rebook you at no cost."}
+              ? `El cañón insignia de La Vieja Adventures: sendero, río y las pozas turquesa de la Cascada El Zafiro, con guía local bilingüe y grupos pequeños. ${BOOKING_ASSURANCE_ES}`
+              : `La Vieja Adventures' signature canyon: trail, river, and the turquoise pools of El Zafiro Waterfall, with a local bilingual guide and small groups. ${BOOKING_ASSURANCE_EN}`}
           </p>
 
           <div className="mt-7 flex flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:justify-center">

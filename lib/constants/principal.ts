@@ -1,4 +1,5 @@
 import type { Lang } from "@/lib/LanguageContext";
+import { BOOKING_ASSURANCE_EN, BOOKING_ASSURANCE_ES } from "@/lib/tour-policy";
 
 export const principalContent = {
   es: {
@@ -22,7 +23,7 @@ export const principalContent = {
       trustItems: [
         "Cancelás gratis hasta 48 h antes",
         "Pago seguro",
-        "Confirmación al toque",
+        "Disponibilidad sujeta a confirmación",
       ] as readonly string[],
     },
     tours: {
@@ -68,7 +69,7 @@ export const principalContent = {
         {
           question: "¿Cómo funciona la cancelación?",
           answer:
-            "La cancelación es gratuita hasta 48 horas antes. Con menos de 48 horas no hay reembolso. Si el clima o el río impiden la salida, le reprogramamos u ofrecemos una alternativa segura.",
+            `${BOOKING_ASSURANCE_ES} Con menos de 48 horas no hay reembolso.`,
         },
       ],
     },
@@ -154,7 +155,7 @@ export const principalContent = {
         {
           question: "How does cancellation work?",
           answer:
-            "Free cancellation up to 48 hours before. Inside 48 hours, there's no refund. If weather or the river make the outing unsafe, we rebook you or offer a safer alternative.",
+            `${BOOKING_ASSURANCE_EN} Inside 48 hours, there's no refund.`,
         },
       ],
     },

@@ -127,7 +127,7 @@ export default function ToursImmersionSection({ onSelectTour, selectedTourSlug }
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-white/55 md:text-base">
             {isEs
-              ? "Desliza y elige. Reserva en segundos."
+              ? "Desliza y elige. Consultá disponibilidad."
               : "Swipe and choose. Book in seconds."}
           </p>
         </div>
@@ -360,8 +360,8 @@ export default function ToursImmersionSection({ onSelectTour, selectedTourSlug }
                 <p className="mt-4 flex items-center gap-2 text-[10px] text-white/35">
                   <ShieldCheck className="h-3.5 w-3.5 text-emerald-400/60" />
                   {isEs
-                    ? "Cancelación gratuita 48h antes · Confirmación inmediata"
-                    : "Free cancellation 48h before · Instant confirmation"}
+                    ? "Cancelación gratuita 48h antes · Disponibilidad sujeta a confirmación"
+                    : "Free cancellation 48h before · Availability subject to confirmation"}
                 </p>
               </div>
             </div>
