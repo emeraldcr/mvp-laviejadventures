@@ -29,7 +29,7 @@ export default function MobileBookingBar() {
       window.removeEventListener("resize", onScroll);
     };
   }, [isTourDetail, pathname]);
-  if (/\/(reservar|reservation|booking|success|rotulos|add-ons)(\/|$)/.test(pathname)) return null;
+  if (/\/(reservar|reservation|booking|success|add-ons)(\/|$)/.test(pathname)) return null;
   if (!showBookingBar) return null;
   const tour = pathname.match(/\/tour\/([^/]+)/)?.[1];
   const bookingQuery = new URLSearchParams(currentSearch);
