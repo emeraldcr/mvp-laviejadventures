@@ -83,7 +83,9 @@ export default function ReservationDetailsSummaryCard({
           <button
             type="button"
             onClick={onContinue}
+            disabled={!isStep1Valid}
             aria-disabled={!isStep1Valid}
+            aria-describedby={!isStep1Valid ? "reservation-continue-help" : undefined}
             className={`inline-flex min-h-12 w-full items-center justify-center rounded-xl px-5 py-3 font-black text-white transition ${
               !isStep1Valid
                 ? "cursor-not-allowed bg-zinc-400 opacity-70"
@@ -92,6 +94,16 @@ export default function ReservationDetailsSummaryCard({
           >
             {lang === "es" ? "Continuar a mis datos" : "Continue to details"}
           </button>
+          {!isStep1Valid && (
+            <p
+              id="reservation-continue-help"
+              className="text-center text-xs font-semibold text-amber-800 dark:text-amber-200"
+            >
+              {lang === "es"
+                ? "Seleccione fecha y hora para continuar."
+                : "Select a date and time to continue."}
+            </p>
+          )}
         </div>
       </div>
     </aside>
