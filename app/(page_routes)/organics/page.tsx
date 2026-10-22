@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { pageMetadata } from "@/lib/seo";
+import { pageMetadata } from "@/lib/site/seo";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Check, Leaf, Recycle, Sprout, Utensils } from "lucide-react";

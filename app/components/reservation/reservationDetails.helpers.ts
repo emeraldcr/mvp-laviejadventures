@@ -1,5 +1,5 @@
-import { TOUR_INFO } from "@/lib/tour-info";
-import type { MainTourInfo } from "@/lib/types/index";
+import { TOUR_INFO } from "@/lib/tours/info";
+import type { MainTourInfo } from "@/lib/tours/types";
 
 export const resolveSelectedTourSlug = (
   tours: Array<{ slug: string }>,

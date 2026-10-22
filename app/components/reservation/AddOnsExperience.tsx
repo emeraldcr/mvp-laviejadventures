@@ -7,7 +7,7 @@ import {
   ADDON_OPTIONS,
   TRANSPORT_DROPOFF_OPTIONS,
   TRANSPORT_PICKUP_OPTIONS,
-} from "@/lib/reservation/constants";
+} from "@/lib/booking/core/constants";
 import {
   FOOD_MEAL_OPTIONS,
   FOOD_PROTEIN_OPTIONS,
@@ -16,15 +16,15 @@ import {
   getDefaultLodgingDetails,
   isFoodConfigComplete,
   isLodgingConfigComplete,
-} from "@/lib/reservation/addons";
+} from "@/lib/booking/addons/catalog";
 import {
   getDefaultTransportDetails,
   getTransportPerPersonPrice,
   isTransportConfigComplete,
   type TransportQuoteResult,
-} from "@/lib/reservation/transport";
-import type { AddOnOption, ReservationAddonDetails } from "@/lib/reservation/types";
-import { localizeHref } from "@/lib/i18n";
+} from "@/lib/booking/transport/quote";
+import type { AddOnOption, ReservationAddonDetails } from "@/lib/booking/core/types";
+import { localizeHref } from "@/lib/site/i18n";
 
 type Lang = "es" | "en";
 

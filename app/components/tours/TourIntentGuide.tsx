@@ -14,11 +14,11 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useMemo, useState } from "react";
-import { useLanguage } from "@/lib/LanguageContext";
-import { localizeHref, tourDifficulty, tourDuration } from "@/lib/i18n";
-import { getTourImage } from "@/lib/tour-display";
+import { useLanguage } from "@/lib/site/contexts/LanguageContext";
+import { localizeHref, tourDifficulty, tourDuration } from "@/lib/site/i18n";
+import { getTourImage } from "@/lib/tours/display";
 import { getTourPriceDisplay, tourTitle, whatsappHref } from "@/app/components/home/home-utils";
-import type { PublicTour } from "@/lib/tours/public-catalog";
+import type { PublicTour } from "@/lib/tours/catalog/public";
 
 type IntentKey = "adventure" | "family" | "quiet" | "short" | "birds" | "premium";
 

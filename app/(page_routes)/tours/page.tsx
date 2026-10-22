@@ -1,4 +1,4 @@
-import { readPublicTours } from "@/lib/tours/public-catalog";
+import { readPublicTours } from "@/lib/tours/catalog/public";
 import { ToursClient } from "./ToursClient";
 
 export const revalidate = 300;

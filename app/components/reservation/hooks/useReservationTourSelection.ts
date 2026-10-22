@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { TOUR_INFO } from "@/lib/tour-info";
-import { DEFAULT_DEPARTURE_TIMES } from "@/lib/reservation/constants";
+import { TOUR_INFO } from "@/lib/tours/info";
+import { DEFAULT_DEPARTURE_TIMES } from "@/lib/booking/core/constants";
 import {
   getExcludedAddonIds,
   getPackageDepartureTimes,
@@ -11,10 +11,10 @@ import {
   getTourPackageOptions,
   resolveInitialPackage,
   resolveRecommendedPackage,
-} from "@/lib/reservation/pricing";
-import { isPackageAvailableOnDate } from "@/lib/tour-packages";
+} from "@/lib/booking/packages/pricing";
+import { isPackageAvailableOnDate } from "@/lib/tours/packages";
 import { resolveSelectedTourSlug, getDefaultMainTourInfo } from "../reservationDetails.helpers";
-import type { MainTourInfo, TourPackageOption, TourSummary } from "@/lib/types/index";
+import type { MainTourInfo, TourPackageOption, TourSummary } from "@/lib/tours/types";
 
 export function useReservationTourSelection({
   tours,

@@ -15,12 +15,12 @@ import {
   Sparkles,
   Zap,
 } from "lucide-react";
-import { useLanguage } from "@/lib/LanguageContext";
-import { localizeHref } from "@/lib/i18n";
-import { useReservationData } from "@/lib/hooks/useReservationData";
+import { useLanguage } from "@/lib/site/contexts/LanguageContext";
+import { localizeHref } from "@/lib/site/i18n";
+import { useReservationData } from "@/lib/booking/hooks/useReservationData";
 import TourSelectionCards from "@/app/components/tours/TourSelectionCards";
-import { principalContent } from "@/lib/constants/principal";
-import { getTourImage } from "@/lib/tour-display";
+import { principalContent } from "@/lib/content/homepage";
+import { getTourImage } from "@/lib/tours/display";
 
 // All images from /public/image used in the photo-mosaic strip
 const GALLERY_STRIP = [

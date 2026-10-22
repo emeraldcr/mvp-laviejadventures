@@ -4,11 +4,11 @@ import type { KeyboardEvent, RefObject } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Clock3, Minus, Plus, Sparkles, Users } from "lucide-react";
 import PackagePicker from "./PackagePicker";
-import { formatDepartureLabel } from "@/lib/reservation/constants";
-import type { ReservationChoiceStep, TourTime } from "@/lib/reservation/types";
-import type { TourPackageOption } from "@/lib/types/index";
+import { formatDepartureLabel } from "@/lib/booking/core/constants";
+import type { ReservationChoiceStep, TourTime } from "@/lib/booking/core/types";
+import type { TourPackageOption } from "@/lib/tours/types";
 
-type ReservationTranslations = typeof import("@/lib/translations").translations["es"]["reservation"];
+type ReservationTranslations = typeof import("@/lib/site/translations").translations["es"]["reservation"];
 export type ChoiceStep = ReservationChoiceStep;
 
 interface Props {

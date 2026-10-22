@@ -4,7 +4,7 @@ import {
   ComposedChart, Bar, Line, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, ReferenceArea, Cell,
 } from "recharts";
-import type { ForecastHour } from "@/lib/types/tiempo-model";
+import type { ForecastHour } from "@/lib/weather/types/model";
 import { CHART, AXIS_LEFT_MARGIN } from "../chartTheme";
 
 type Row = {

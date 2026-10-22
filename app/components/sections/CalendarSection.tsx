@@ -1,10 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
-import { useCalendarContext } from "@/lib/CalendarContext";
+import { useCalendarContext } from "@/lib/booking/calendar/CalendarContext";
 import Calendar from "@/app/components/calendar/Calendar";
-import { cn } from "@/lib/helpers/utils";
-import { useLanguage } from "@/lib/LanguageContext";
+import { cn } from "@/lib/shared/utils";
+import { useLanguage } from "@/lib/site/contexts/LanguageContext";
 import SafetyBookingNotice from "@/app/components/reservation/SafetyBookingNotice";
 
 type Props = {

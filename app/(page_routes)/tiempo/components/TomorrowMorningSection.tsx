@@ -1,5 +1,5 @@
 import { Sunrise, Umbrella } from "lucide-react";
-import type { MorningSlot } from "@/lib/helpers/tiempoHelpers";
+import type { MorningSlot } from "@/lib/weather/helpers/observations";
 
 function slotTone(slot: MorningSlot): string {
   if (!slot.available) return "border-white/8 bg-white/[0.02]";

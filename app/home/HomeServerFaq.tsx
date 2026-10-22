@@ -1,6 +1,6 @@
-import { SITE_FAQS } from "@/lib/site-faqs";
+import { SITE_FAQS } from "@/lib/content/faqs";
 import JsonLd from "@/app/components/seo/JsonLd";
-import type { Locale } from "@/lib/i18n";
+import type { Locale } from "@/lib/site/i18n";
 
 export default function HomeServerFaq({ locale = "es" }: { locale?: Locale }) {
   const items = SITE_FAQS[locale];

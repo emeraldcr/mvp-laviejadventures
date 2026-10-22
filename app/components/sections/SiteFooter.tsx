@@ -1,6 +1,6 @@
 "use client";
 
-import { localizeHref } from "@/lib/i18n";
+import { localizeHref } from "@/lib/site/i18n";
 
 import type { ReactNode } from "react";
 import Link from "next/link";
@@ -22,13 +22,13 @@ import {
   Youtube,
   type LucideIcon,
 } from "lucide-react";
-import { useLanguage } from "@/lib/LanguageContext";
+import { useLanguage } from "@/lib/site/contexts/LanguageContext";
 import {
   LA_VIEJA_GOOGLE_MAPS_EMBED_URL,
   LA_VIEJA_GOOGLE_MAPS_URL,
-} from "@/lib/constants/location";
-import { TOUR_INFO } from "@/lib/tour-info";
-import { BUSINESS_PHONE, BUSINESS_WHATSAPP_URL, SOCIAL_URLS } from "@/lib/site-config";
+} from "@/lib/site/location";
+import { TOUR_INFO } from "@/lib/tours/info";
+import { BUSINESS_PHONE, BUSINESS_WHATSAPP_URL, SOCIAL_URLS } from "@/lib/site/config";
 
 const socialLinks = [
   {

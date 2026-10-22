@@ -1,5 +1,5 @@
 import { SatelliteDish } from "lucide-react";
-import type { StationHealth } from "@/lib/types/tiempo-api";
+import type { StationHealth } from "@/lib/weather/types/api";
 
 const TONE: Record<StationHealth["quality"], string> = {
   alta: "text-emerald-300 border-emerald-500/30 bg-emerald-500/10",

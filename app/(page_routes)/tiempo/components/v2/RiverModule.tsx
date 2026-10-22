@@ -3,7 +3,7 @@
 import {
   Waves, AlertOctagon, TrendingUp, TrendingDown, Minus, Timer, ArrowDownToLine,
 } from "lucide-react";
-import type { TiempoModel } from "@/lib/types/tiempo-model";
+import type { TiempoModel } from "@/lib/weather/types/model";
 import { ConfidencePill } from "./ConfidencePill";
 import { MethodNote } from "./MethodNote";
 import { RiverProjectionChart } from "./RiverProjectionChart";

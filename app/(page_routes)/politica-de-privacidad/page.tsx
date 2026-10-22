@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useLanguage } from "@/lib/LanguageContext";
+import { useLanguage } from "@/lib/site/contexts/LanguageContext";
 import SiteHeader from "@/app/components/navigation/SiteHeader";
 import PageFooter from "@/app/components/sections/PageFooter";
 import { EditorialFinalCta, EditorialIntro, EditorialTrust } from "@/app/components/layouts/EditorialPageBlocks";

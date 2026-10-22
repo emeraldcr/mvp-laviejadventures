@@ -1,19 +1,19 @@
 "use client";
 
-import { localizeHref, tourDifficulty, tourDuration } from "@/lib/i18n";
+import { localizeHref, tourDifficulty, tourDuration } from "@/lib/site/i18n";
 
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, ArrowUpRight, Clock3, Filter, MapPin, Zap } from "lucide-react";
 import { useMemo, useState } from "react";
-import { useLanguage } from "@/lib/LanguageContext";
-import { translations } from "@/lib/translations";
+import { useLanguage } from "@/lib/site/contexts/LanguageContext";
+import { translations } from "@/lib/site/translations";
 import SiteHeader from "@/app/components/navigation/SiteHeader";
 import PageFooter from "@/app/components/sections/PageFooter";
 import { getTourPriceDisplay, tourTitle } from "@/app/components/home/home-utils";
-import { getTourImage } from "@/lib/tour-display";
-import type { PublicTour } from "@/lib/tours/public-catalog";
+import { getTourImage } from "@/lib/tours/display";
+import type { PublicTour } from "@/lib/tours/catalog/public";
 import TourIntentGuide from "@/app/components/tours/TourIntentGuide";
 
 export type TourData = PublicTour;

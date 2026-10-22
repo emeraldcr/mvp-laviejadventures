@@ -2,10 +2,10 @@
 
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import type { OrderDetails } from "@/lib/types/index";
-import { useLanguage } from "@/lib/LanguageContext";
-import { translations } from "@/lib/translations";
-import { localizeHref } from "@/lib/i18n";
+import type { OrderDetails } from "@/lib/booking/types";
+import { useLanguage } from "@/lib/site/contexts/LanguageContext";
+import { translations } from "@/lib/site/translations";
+import { localizeHref } from "@/lib/site/i18n";
 import PaymentCheckoutContent from "@/app/components/reservation/PaymentCheckoutContent";
 
 const subscribeToClientSnapshot = () => () => {};

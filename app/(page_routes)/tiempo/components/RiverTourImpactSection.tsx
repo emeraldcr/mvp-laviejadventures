@@ -10,8 +10,8 @@ import {
   Minus,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import type { RiverTourImpact, RiverTourVerdict } from "@/lib/helpers/tiempoHelpers";
-import { localizeHref, tourDifficulty, type Locale } from "@/lib/i18n";
+import type { RiverTourImpact, RiverTourVerdict } from "@/lib/weather/helpers/observations";
+import { localizeHref, tourDifficulty, type Locale } from "@/lib/site/i18n";
 
 const VERDICT: Record<
   RiverTourVerdict,

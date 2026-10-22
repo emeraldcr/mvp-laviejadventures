@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { createCredentialsUser, findUserByEmail } from "@/lib/models/user";
+import { createCredentialsUser, findUserByEmail } from "@/lib/auth/users/user";
 import { sendUserWelcomeEmail } from "@/lib/email/user-emails";
-import { BCRYPT_SALT_ROUNDS, MIN_PASSWORD_LENGTH } from "@/lib/constants/auth";
+import { BCRYPT_SALT_ROUNDS, MIN_PASSWORD_LENGTH } from "@/lib/auth/constants";
 
 export async function POST(req: NextRequest) {
   try {

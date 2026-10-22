@@ -3,15 +3,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BOOKING_COMPLETION_STORAGE_KEY, trackAnalyticsEvent } from "@/lib/analytics/client";
-import type { OrderDetails } from "@/lib/types/index";
-import { RESERVATION_TRAVELER_DRAFT_KEY } from "@/lib/reservation/constants";
+import type { OrderDetails } from "@/lib/booking/types";
+import { RESERVATION_TRAVELER_DRAFT_KEY } from "@/lib/booking/core/constants";
 import {
   buildBookingAnalyticsMetadata,
   buildCheckoutKey,
   getBuyerCountryFromPhone,
 } from "@/app/components/reservation/checkoutUtils";
 
-import { loadPayPalSdk, type PayPalButtons } from "@/lib/paypal-sdk";
+import { loadPayPalSdk, type PayPalButtons } from "@/lib/payments/paypal/sdk";
 
 function trackCheckoutEvent(...args: Parameters<typeof trackAnalyticsEvent>) {
   try { void Promise.resolve(trackAnalyticsEvent(...args)).catch(() => {}); } catch { /* Optional analytics. */ }

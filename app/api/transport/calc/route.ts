@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { resolvePoint, calculateTransportCost } from "@/lib/transport/calc";
+import { resolvePoint, calculateTransportCost } from "@/lib/booking/transport/calculate";
 
 type IncomingPoint = { type: "coords" | "ref"; lat?: number; lng?: number; id?: string } | null;
 

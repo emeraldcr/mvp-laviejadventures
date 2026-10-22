@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import { Bricolage_Grotesque, Manrope } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
-import { BUSINESS_ADDRESS, BUSINESS_NAME, BUSINESS_PHONE, SITE_URL, SOCIAL_URLS } from "@/lib/site-config";
-import { LanguageProvider } from "@/lib/LanguageContext";
+import { BUSINESS_ADDRESS, BUSINESS_NAME, BUSINESS_PHONE, SITE_URL, SOCIAL_URLS } from "@/lib/site/config";
+import { LanguageProvider } from "@/lib/site/contexts/LanguageContext";
 import JsonLd from "@/app/components/seo/JsonLd";
 import MobileBookingBar from "@/app/components/navigation/MobileBookingBar";
-import { ThemeProvider, THEME_NO_FLASH_SCRIPT } from "@/lib/ThemeContext";
+import { ThemeProvider, THEME_NO_FLASH_SCRIPT } from "@/lib/site/contexts/ThemeContext";
 
 const manrope = Manrope({ subsets: ["latin"], variable: "--font-manrope", display: "swap" });
 const bricolage = Bricolage_Grotesque({ subsets: ["latin"], variable: "--font-bricolage", display: "swap" });

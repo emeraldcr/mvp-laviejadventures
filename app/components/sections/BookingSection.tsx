@@ -2,8 +2,8 @@
 
 import { Suspense } from "react";
 import { CalendarDays } from "lucide-react";
-import { useLanguage } from "@/lib/LanguageContext";
-import { useCalendarContext } from "@/lib/CalendarContext";
+import { useLanguage } from "@/lib/site/contexts/LanguageContext";
+import { useCalendarContext } from "@/lib/booking/calendar/CalendarContext";
 import CalendarSection from "@/app/components/sections/CalendarSection";
 import ReservationSection from "@/app/components/sections/ReservationSection";
 

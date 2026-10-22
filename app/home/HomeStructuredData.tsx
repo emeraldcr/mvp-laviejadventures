@@ -1,7 +1,7 @@
-import { localizeHref, type Locale } from "@/lib/i18n";
-import { SITE_URL } from "@/lib/site-config";
-import { getTourImage } from "@/lib/tour-display";
-import type { TourSummary } from "@/lib/types/index";
+import { localizeHref, type Locale } from "@/lib/site/i18n";
+import { SITE_URL } from "@/lib/site/config";
+import { getTourImage } from "@/lib/tours/display";
+import type { TourSummary } from "@/lib/tours/types";
 import JsonLd from "@/app/components/seo/JsonLd";
 
 export default function HomeStructuredData({ tours, locale }: { tours: TourSummary[]; locale: Locale }) {

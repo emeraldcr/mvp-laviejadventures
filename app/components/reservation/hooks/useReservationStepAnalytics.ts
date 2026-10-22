@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
-import type { BookingStepId } from "@/lib/reservation/types";
+import type { BookingStepId } from "@/lib/booking/core/types";
 import { BOOKING_COMPLETION_STORAGE_KEY, trackAnalyticsEvent } from "@/lib/analytics/client";
 import { RESERVATION_STEP_LABELS } from "../constants/reservationWizard";
 

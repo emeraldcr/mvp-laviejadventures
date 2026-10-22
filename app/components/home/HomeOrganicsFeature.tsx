@@ -3,8 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Check, Leaf, Recycle, Sprout } from "lucide-react";
-import { useLanguage } from "@/lib/LanguageContext";
-import { localizeHref } from "@/lib/i18n";
+import { useLanguage } from "@/lib/site/contexts/LanguageContext";
+import { localizeHref } from "@/lib/site/i18n";
 
 const points = {
   es: [

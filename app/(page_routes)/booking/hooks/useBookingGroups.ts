@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 
-import { isUpcoming } from "@/lib/helpers/utils";
+import { isUpcoming } from "@/lib/shared/utils";
 
 import type { Booking } from "../types";
 

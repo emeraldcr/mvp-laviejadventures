@@ -3,12 +3,12 @@
 import { useState, useMemo, useCallback, useEffect, useRef, type KeyboardEvent } from "react";
 import { format } from "date-fns";
 import { es, enUS } from "date-fns/locale";
-import { useLanguage } from "@/lib/LanguageContext";
-import { translations } from "@/lib/translations";
+import { useLanguage } from "@/lib/site/contexts/LanguageContext";
+import { translations } from "@/lib/site/translations";
 import {
   formatDepartureLabel,
-} from "@/lib/reservation/constants";
-import { getPackageId, resolveInitialPackage } from "@/lib/reservation/pricing";
+} from "@/lib/booking/core/constants";
+import { getPackageId, resolveInitialPackage } from "@/lib/booking/packages/pricing";
 import ReservationDetailsStep3 from "./ReservationDetailsStep3";
 import BookingStickyBar from "./BookingStickyBar";
 import type {
@@ -16,11 +16,11 @@ import type {
   BookingStepId,
   ReservationChoiceStep,
   ReservationDetailsProps,
-} from "@/lib/reservation/types";
+} from "@/lib/booking/core/types";
 import ReservationDetailsStep1Guided from "./ReservationDetailsStep1Guided";
 import ReservationDetailsStep2 from "./ReservationDetailsStep2";
 import InlinePayPalCheckout from "./InlinePayPalCheckout";
-import type { OrderDetails } from "@/lib/types/index";
+import type { OrderDetails } from "@/lib/booking/types";
 import { ReservationWizardProvider, useReservationWizard } from "./context/ReservationWizardContext";
 import { useReservationStepAnalytics } from "./hooks/useReservationStepAnalytics";
 import { useReservationTourSelection } from "./hooks/useReservationTourSelection";

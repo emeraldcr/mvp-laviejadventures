@@ -13,7 +13,7 @@ import {
   CalendarClock, Clock,
 } from "lucide-react";
 
-import { useTiempoData } from "@/lib/hooks/useTiempoData";
+import { useTiempoData } from "@/lib/weather/hooks/useTiempoData";
 import WeatherMessage from "./components/WeatherMessage";
 import { PulsingDot } from "./components/PulsingDot";
 import { CollapsibleSection } from "./components/CollapsibleSection";
@@ -26,7 +26,7 @@ import { NowModule } from "./components/v2/NowModule";
 import { TomorrowModule } from "./components/v2/TomorrowModule";
 import { RiverModule } from "./components/v2/RiverModule";
 import { EditorialFinalCta, EditorialTrust } from "@/app/components/layouts/EditorialPageBlocks";
-import { localizeHref } from "@/lib/i18n";
+import { localizeHref } from "@/lib/site/i18n";
 
 export default function TourWeatherDashboard({ locale = "es" }: { locale?: "es" | "en" }) {
   const isEnglish = locale === "en";

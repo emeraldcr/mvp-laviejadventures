@@ -6,8 +6,8 @@ import { trackAnalyticsEvent } from "@/lib/analytics/client";
 import {
   buildReservationWhatsAppHref,
   type LocalPaymentMethod,
-} from "@/lib/reservation/checkout-messages";
-import type { OrderDetails } from "@/lib/types/index";
+} from "@/lib/booking/checkout/messages";
+import type { OrderDetails } from "@/lib/booking/types";
 
 export type { LocalPaymentMethod };
 

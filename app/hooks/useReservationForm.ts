@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useEffect, type Dispatch, type SetStateAction } from "react";
-import type { ReservationFormState } from "@/lib/reservation/types";
-import { EMAIL_REGEX, PHONE_NUMBER_REGEX } from "@/lib/reservation/constants";
+import type { ReservationFormState } from "@/lib/booking/core/types";
+import { EMAIL_REGEX, PHONE_NUMBER_REGEX } from "@/lib/booking/core/constants";
 
 interface UseReservationFormReturn {
   formState: ReservationFormState;

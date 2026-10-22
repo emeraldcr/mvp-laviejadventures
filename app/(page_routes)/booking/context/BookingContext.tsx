@@ -2,8 +2,8 @@
 
 import { createContext, useContext, useMemo, type ReactNode } from "react";
 
-import { useLanguage } from "@/lib/LanguageContext";
-import type { Locale } from "@/lib/i18n";
+import { useLanguage } from "@/lib/site/contexts/LanguageContext";
+import type { Locale } from "@/lib/site/i18n";
 
 import { useBookingGroups } from "../hooks/useBookingGroups";
 import type { Booking, BookingClientProps } from "../types";

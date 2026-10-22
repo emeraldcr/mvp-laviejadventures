@@ -1,0 +1,65 @@
+import type { LucideIcon } from "lucide-react";
+import type { AvailabilityMap } from "@/lib/booking/types";
+import type { MainTourInfo, TourPackageOption, TourSummary } from "@/lib/tours/types";
+
+// Re-export for convenience
+export type { TourSummary, MainTourInfo, AvailabilityMap, TourPackageOption };
+
+export type TourTime = string;
+export type BookingStepId = 1 | 2 | 3;
+export type ReservationChoiceStep = 1 | 2 | 3;
+export type ReservationFieldName = "name" | "email" | "phone" | "specialRequests" | "terms";
+export type TourPackage = string;
+
+export interface AddOnOption {
+  id: string;
+  category: "food" | "lodging" | "transport" | "service" | "media";
+  nameEs: string;
+  nameEn: string;
+  descriptionEs: string;
+  descriptionEn: string;
+  price: number;
+  priceNoteEs: string;
+  priceNoteEn: string;
+  priceStatus: "fixed" | "estimated" | "quote";
+  configurable?: boolean;
+  icon: LucideIcon;
+}
+
+export interface ReservationAddonDetails {
+  lodgingType?: "hostel" | "hotel" | "cabin";
+  lodgingNights?: number;
+  lodgingRoom?: string;
+  restaurantMeal?: string;
+  restaurantProtein?: string;
+  restaurantNotes?: string;
+  transportType?: "shared" | "private";
+  pickupLocation?: string;
+  dropoffLocation?: string;
+  transportNotes?: string;
+}
+
+export interface ReservationFormState {
+  name: string;
+  email: string;
+  phoneCode: string;
+  phoneNumber: string;
+  specialRequests: string;
+  agreeTerms: boolean;
+}
+
+export interface ReservationDetailsProps {
+  selectedDate: number;
+  currentMonth: number;
+  monthName: string;
+  tickets: number;
+  setTickets: (n: number) => void;
+  availability: AvailabilityMap;
+  currentYear: number;
+  tourInfo?: MainTourInfo | null;
+  tours: TourSummary[];
+  initialSelectedTourSlug?: string;
+  initialSelectedPackageId?: string;
+  hasPreselectedTour?: boolean;
+  ivaRatePercent?: number;
+}

@@ -89,9 +89,9 @@ function checkout(options = {}) {
   const router = { push: (route) => routes.push(route) };
   const imported = load('app/components/reservation/hooks/usePayPalCheckout.ts', {
     react: runtime.react, 'next/navigation': { useRouter: () => router }, '@/lib/analytics/client': analytics,
-    '@/lib/reservation/constants': { RESERVATION_TRAVELER_DRAFT_KEY: 'draft' },
+    '@/lib/booking/core/constants': { RESERVATION_TRAVELER_DRAFT_KEY: 'draft' },
     '@/app/components/reservation/checkoutUtils': utils,
-    '@/lib/paypal-sdk': { loadPayPalSdk: options.loader ?? (() => Promise.resolve(sdk)) },
+    '@/lib/payments/paypal/sdk': { loadPayPalSdk: options.loader ?? (() => Promise.resolve(sdk)) },
   }, { ...env, sessionStorage: options.storage ?? { setItem() {}, removeItem() {} },
     process: { env: { NEXT_PUBLIC_PAYPAL_MODE: 'live', NEXT_PUBLIC_PAYPAL_CLIENT_ID: 'test-client' } },
     fetch: (...args) => options.fetch(...args),
@@ -106,7 +106,7 @@ function checkout(options = {}) {
 }
 
 test('SDK shares one pending load across mounts and validates configuration', async () => {
-  const env = dom(), { loadPayPalSdk } = load('lib/paypal-sdk.ts', {}, env);
+  const env = dom(), { loadPayPalSdk } = load('lib/payments/paypal/sdk.ts', {}, env);
   const first = loadPayPalSdk('client');
   assert.equal(first, loadPayPalSdk('client'));
   assert.equal(env.scripts.length, 1);
@@ -118,7 +118,7 @@ test('SDK shares one pending load across mounts and validates configuration', as
 });
 test('SDK network errors and timeouts allow an explicit retry', async () => {
   for (const timeout of [false, true]) {
-    const env = dom(), { loadPayPalSdk } = load('lib/paypal-sdk.ts', {}, env);
+    const env = dom(), { loadPayPalSdk } = load('lib/payments/paypal/sdk.ts', {}, env);
     const pending = loadPayPalSdk('client');
     if (timeout) [...env.timers.values()][0](); else env.scripts[0].dispatchEvent(new globalThis.Event('error'));
     await assert.rejects(pending, /load_error/);
@@ -197,10 +197,10 @@ function captureApi(responses, options = {}) {
   const db = { collection: (name) => ({ findOne: async () => name === 'contexts' ? context : null, updateOne: async () => { writes++; } }) };
   const api = load('app/api/paypal/capture-order/route.ts', {
     'next/server': { NextResponse: { json: (body, init) => ({ body, status: init?.status ?? 200 }) } },
-    '@/lib/helpers/paypal': { getPayPalAccessToken: async () => 'token', getPayPalApiBaseUrl: () => 'https://paypal.test' },
-    '@/lib/helpers/mongodb': { getDb: async () => db }, '@/lib/constants/db': { COLLECTIONS: constants },
-    '@/lib/reservation/quote': { quoteReservation: async () => { quotes++; if (options.quoteFails) throw new Error('unavailable'); return { totalWithTax: 100 }; }, isReservationQuoteError: () => false },
-    '@/lib/reservation/capacity-holds': { releaseCapacityHold: async () => {} },
+    '@/lib/payments/paypal/helpers': { getPayPalAccessToken: async () => 'token', getPayPalApiBaseUrl: () => 'https://paypal.test' },
+    '@/lib/data/mongodb': { getDb: async () => db }, '@/lib/data/collections': { COLLECTIONS: constants },
+    '@/lib/booking/checkout/quote': { quoteReservation: async () => { quotes++; if (options.quoteFails) throw new Error('unavailable'); return { totalWithTax: 100 }; }, isReservationQuoteError: () => false },
+    '@/lib/booking/availability/holds': { releaseCapacityHold: async () => {} },
   }, { fetch: async (url, init) => { requests.push({ url, init }); const next = responses.shift(); if (!next) throw new Error('Unexpected fetch'); return { ok: next.ok ?? true, status: next.status ?? 200, json: async () => next.body }; } });
   return { api, requests, get quotes() { return quotes; }, get writes() { return writes; } };
 }
@@ -238,15 +238,15 @@ function createApi() {
   const api = load('app/api/paypal/create-order/route.ts', {
     'next/server': { NextResponse: { json: (body, init) => ({ body, status: init?.status ?? 200 }) } },
     'node:crypto': crypto,
-    '@/lib/helpers/paypal': { getPayPalAccessToken: async () => 'token', getPayPalApiBaseUrl: () => 'https://paypal.test' },
-    '@/lib/helpers/mongodb': { getDb: async () => ({ collection: () => ({ updateOne: async () => ({}) }) }) },
-    '@/lib/constants/paypal': { PAYPAL_CURRENCY: 'USD', PAYPAL_CUSTOM_ID_MAX_LENGTH: 127 },
-    '@/lib/constants/db': { COLLECTIONS: {} },
-    '@/lib/reservation/capacity-holds': { acquireCapacityHold: async () => true, releaseCapacityHold: async () => {} },
-    '@/lib/reservation/capacity': { getRemainingCapacityForTourDate: async () => 10 },
-    '@/lib/helpers/costa-rica-time': { getMinBookableIsoDateInCostaRica: () => '2026-11-01', isDateOnOrAfterMinBookableInCostaRica: () => true },
-    '@/lib/reservation/dates': { normalizeReservationDate: () => order.date },
-    '@/lib/reservation/quote': {
+    '@/lib/payments/paypal/helpers': { getPayPalAccessToken: async () => 'token', getPayPalApiBaseUrl: () => 'https://paypal.test' },
+    '@/lib/data/mongodb': { getDb: async () => ({ collection: () => ({ updateOne: async () => ({}) }) }) },
+    '@/lib/payments/paypal/constants': { PAYPAL_CURRENCY: 'USD', PAYPAL_CUSTOM_ID_MAX_LENGTH: 127 },
+    '@/lib/data/collections': { COLLECTIONS: {} },
+    '@/lib/booking/availability/holds': { acquireCapacityHold: async () => true, releaseCapacityHold: async () => {} },
+    '@/lib/booking/availability/capacity': { getRemainingCapacityForTourDate: async () => 10 },
+    '@/lib/shared/dates/costa-rica-time': { getMinBookableIsoDateInCostaRica: () => '2026-11-01', isDateOnOrAfterMinBookableInCostaRica: () => true },
+    '@/lib/booking/core/dates': { normalizeReservationDate: () => order.date },
+    '@/lib/booking/checkout/quote': {
       isReservationQuoteError: () => false, requiredReservationFieldsPresent: () => true,
       quoteReservation: async () => ({ safeTickets: 2, selectedPackage: { id: 'tour' }, packageLabel: 'Tour', packagePrice: 50, totalWithTax: 100, formattedTotal: '100.00', language: 'es' }),
     },

@@ -4,7 +4,7 @@ import {
   ComposedChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, ReferenceLine, ReferenceDot,
 } from "recharts";
-import type { RiverModel } from "@/lib/types/tiempo-model";
+import type { RiverModel } from "@/lib/weather/types/model";
 import { CHART, AXIS_LEFT_MARGIN } from "../chartTheme";
 
 type Row = {

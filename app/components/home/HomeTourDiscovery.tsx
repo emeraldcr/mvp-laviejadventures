@@ -4,10 +4,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, CalendarDays, Check, Compass, HeartHandshake, Sparkles, Waves, type LucideIcon } from "lucide-react";
 import { useMemo, useState } from "react";
-import { useLanguage } from "@/lib/LanguageContext";
-import { localizeHref, tourDifficulty, tourDuration } from "@/lib/i18n";
-import { getTourImage } from "@/lib/tour-display";
-import type { TourSummary } from "@/lib/types/index";
+import { useLanguage } from "@/lib/site/contexts/LanguageContext";
+import { localizeHref, tourDifficulty, tourDuration } from "@/lib/site/i18n";
+import { getTourImage } from "@/lib/tours/display";
+import type { TourSummary } from "@/lib/tours/types";
 import { getTourPriceDisplay, tourTitle } from "./home-utils";
 
 type DayType = "adventure" | "water" | "nature" | "premium" | "family";

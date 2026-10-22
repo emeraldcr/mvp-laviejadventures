@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { OrderDetails } from "@/lib/types/index";
-import type { TransportQuoteResult } from "@/lib/reservation/transport";
+import type { OrderDetails } from "@/lib/booking/types";
+import type { TransportQuoteResult } from "@/lib/booking/transport/quote";
 
 type CheckoutQuoteState = {
   total: number;

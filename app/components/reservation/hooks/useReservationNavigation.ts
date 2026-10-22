@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, type Dispatch, type KeyboardEvent, type SetStateAction } from "react";
-import type { BookingStepId, ReservationChoiceStep, TourTime } from "@/lib/reservation/types";
+import type { BookingStepId, ReservationChoiceStep, TourTime } from "@/lib/booking/core/types";
 
 type Validation = {
   isNameValid: boolean;

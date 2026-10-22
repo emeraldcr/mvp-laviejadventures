@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, type Dispatch, type ReactNode, type SetStateAction } from "react";
-import type { BookingStepId, ReservationChoiceStep } from "@/lib/reservation/types";
+import type { BookingStepId, ReservationChoiceStep } from "@/lib/booking/core/types";
 
 type ReservationWizardState = {
   currentStep: BookingStepId;

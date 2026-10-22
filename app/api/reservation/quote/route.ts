@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { getDb } from "@/lib/helpers/mongodb";
+import { getDb } from "@/lib/data/mongodb";
 import {
   isReservationQuoteError,
   quoteReservation,
   requiredReservationFieldsPresent,
-} from "@/lib/reservation/quote";
-import type { ReservationAddonDetails } from "@/lib/reservation/types";
+} from "@/lib/booking/checkout/quote";
+import type { ReservationAddonDetails } from "@/lib/booking/core/types";
 
 type QuoteRequest = {
   name?: string;

@@ -22,11 +22,11 @@ import {
   MessageCircle,
   X,
 } from "lucide-react";
-import { useLanguage } from "@/lib/LanguageContext";
-import { translations } from "@/lib/translations";
-import { principalContent } from "@/lib/constants/principal";
-import { localizeHref } from "@/lib/i18n";
-import { BUSINESS_WHATSAPP_URL } from "@/lib/site-config";
+import { useLanguage } from "@/lib/site/contexts/LanguageContext";
+import { translations } from "@/lib/site/translations";
+import { principalContent } from "@/lib/content/homepage";
+import { localizeHref } from "@/lib/site/i18n";
+import { BUSINESS_WHATSAPP_URL } from "@/lib/site/config";
 
 export { default as SiteHeader } from "./SiteHeader";
 

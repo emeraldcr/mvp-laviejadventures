@@ -1,11 +1,11 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { useCalendarContext } from "@/lib/CalendarContext";
-import { useLanguage } from "@/lib/LanguageContext";
-import { translations } from "@/lib/translations";
+import { useCalendarContext } from "@/lib/booking/calendar/CalendarContext";
+import { useLanguage } from "@/lib/site/contexts/LanguageContext";
+import { translations } from "@/lib/site/translations";
 import CalendarDay from "./CalendarDay";
-import { cn } from "@/lib/helpers/utils";
+import { cn } from "@/lib/shared/utils";
 import { getDaysInMonth, startOfMonth, getDay } from "date-fns";
 
 function CalendarBase() {

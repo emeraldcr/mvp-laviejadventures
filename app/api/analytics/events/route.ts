@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { getDb } from "@/lib/helpers/mongodb";
+import { getDb } from "@/lib/data/mongodb";
 import { headers } from "next/headers";
-import { COLLECTIONS } from "@/lib/constants/db";
+import { COLLECTIONS } from "@/lib/data/collections";
 
 type AnalyticsEventName =
   | "page_view"

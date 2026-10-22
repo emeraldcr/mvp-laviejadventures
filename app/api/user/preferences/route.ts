@@ -5,7 +5,7 @@ import {
   getUserPreferencesByEmail,
   updateUserPreferencesByEmail,
   type UserPreferences,
-} from "@/lib/models/user";
+} from "@/lib/auth/users/user";
 
 function isValidPreferences(input: unknown): input is UserPreferences {
   if (!input || typeof input !== "object") return false;

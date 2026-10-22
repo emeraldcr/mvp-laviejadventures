@@ -4,14 +4,14 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { Image as ImageIcon, Pause, Play } from "lucide-react";
-import { localizeHref, tourDifficulty, tourDuration } from "@/lib/i18n";
+import { localizeHref, tourDifficulty, tourDuration } from "@/lib/site/i18n";
 import {
   ArrowRight,
   MapPin,
   MessageCircle,
 } from "lucide-react";
-import { useLanguage } from "@/lib/LanguageContext";
-import type { TourSummary } from "@/lib/types/index";
+import { useLanguage } from "@/lib/site/contexts/LanguageContext";
+import type { TourSummary } from "@/lib/tours/types";
 import { getTourPriceDisplay, BOOKING_HREF, localizedHomeWhatsAppHref, primaryBookingLabel } from "./home-utils";
 
 export default function HomeHero({ tour }: { tour?: TourSummary }) {

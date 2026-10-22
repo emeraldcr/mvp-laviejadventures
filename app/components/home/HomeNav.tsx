@@ -5,10 +5,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowRight, Globe, Menu, MessageCircle, Moon, Sun, X } from "lucide-react";
-import { useLanguage } from "@/lib/LanguageContext";
-import { useTheme } from "@/lib/ThemeContext";
+import { useLanguage } from "@/lib/site/contexts/LanguageContext";
+import { useTheme } from "@/lib/site/contexts/ThemeContext";
 import { BOOKING_HREF, compactBookingLabel, localizedHomeWhatsAppHref, primaryBookingLabel } from "./home-utils";
-import { localizeHref } from "@/lib/i18n";
+import { localizeHref } from "@/lib/site/i18n";
 
 export default function HomeNav({ solid = false }: { solid?: boolean }) {
   const { lang } = useLanguage();

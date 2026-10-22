@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ShieldCheck, ShieldAlert, ShieldQuestion, ChevronDown } from "lucide-react";
-import type { ConfidenceScore } from "@/lib/types/tiempo-model";
+import type { ConfidenceScore } from "@/lib/weather/types/model";
 
 const TONE: Record<ConfidenceScore["level"], { box: string; bar: string; Icon: typeof ShieldCheck }> = {
   alta: { box: "text-emerald-300 border-emerald-500/30 bg-emerald-500/10", bar: "bg-emerald-400", Icon: ShieldCheck },

@@ -6,7 +6,7 @@
  * Fetches a fresh message from OpenAI every time the parent triggers a refresh.
  */
 import { useEffect, useState } from "react";
-import type { WeatherSnapshot } from "@/lib/helpers/weatherMessageHelpers";
+import type { WeatherSnapshot } from "@/lib/weather/message/helpers";
 
 type Props = { snap: WeatherSnapshot | null };
 

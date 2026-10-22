@@ -2,9 +2,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useLanguage } from "@/lib/LanguageContext";
-import { localizeHref } from "@/lib/i18n";
-import { BUSINESS_WHATSAPP_URL } from "@/lib/site-config";
+import { useLanguage } from "@/lib/site/contexts/LanguageContext";
+import { localizeHref } from "@/lib/site/i18n";
+import { BUSINESS_WHATSAPP_URL } from "@/lib/site/config";
 
 export default function MobileBookingBar() {
   const pathname = usePathname();

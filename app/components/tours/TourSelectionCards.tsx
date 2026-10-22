@@ -3,11 +3,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Clock3, MapPin, ShieldCheck, Zap } from "lucide-react";
-import { useLanguage } from "@/lib/LanguageContext";
-import { getTourImage } from "@/lib/tour-display";
-import { getTourPriceDisplay } from "@/lib/tour-pricing";
-import { localizeHref, tourDifficulty, tourDuration } from "@/lib/i18n";
-import { TourSummary } from "@/lib/types/index";
+import { useLanguage } from "@/lib/site/contexts/LanguageContext";
+import { getTourImage } from "@/lib/tours/display";
+import { getTourPriceDisplay } from "@/lib/tours/pricing";
+import { localizeHref, tourDifficulty, tourDuration } from "@/lib/site/i18n";
+import { TourSummary } from "@/lib/tours/types";
 
 const TOUR_TAGS_BY_SLUG: Record<string, { tagEs: string; tagEn: string }> = [
   { slug: "avistamiento-aves-norteno",      tagEs: "Tour estrella", tagEn: "Star tour" },

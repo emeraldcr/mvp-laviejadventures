@@ -36,10 +36,10 @@
         "./lib/*"
       ],
       "@/types": [
-        "./lib/types/index.ts"
+        "./lib/shared/types/index.ts"
       ],
       "@/types/*": [
-        "./lib/types/*"
+        "./lib/shared/types/*"
       ]
     }
   },

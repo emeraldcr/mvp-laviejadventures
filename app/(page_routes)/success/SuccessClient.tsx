@@ -1,16 +1,16 @@
 "use client";
 
-import { useLanguage } from "@/lib/LanguageContext";
+import { useLanguage } from "@/lib/site/contexts/LanguageContext";
 import { BOOKING_COMPLETION_STORAGE_KEY, trackAnalyticsEvent } from "@/lib/analytics/client";
-import { translations } from "@/lib/translations";
-import { localizeHref } from "@/lib/i18n";
-import { LA_VIEJA_GOOGLE_MAPS_URL, LA_VIEJA_LOCATION_LABEL } from "@/lib/constants/location";
-import { BUSINESS_WHATSAPP_URL } from "@/lib/site-config";
+import { translations } from "@/lib/site/translations";
+import { localizeHref } from "@/lib/site/i18n";
+import { LA_VIEJA_GOOGLE_MAPS_URL, LA_VIEJA_LOCATION_LABEL } from "@/lib/site/location";
+import { BUSINESS_WHATSAPP_URL } from "@/lib/site/config";
 import Link from "next/link";
 import { useEffect } from "react";
-import type { SuccessClientProps } from "@/lib/types/types";
+import type { SuccessClientProps } from "@/lib/booking/types";
 import { EditorialFinalCta, EditorialTrust } from "@/app/components/layouts/EditorialPageBlocks";
-import { BOOKING_ASSURANCE_EN, BOOKING_ASSURANCE_ES } from "@/lib/tour-policy";
+import { BOOKING_ASSURANCE_EN, BOOKING_ASSURANCE_ES } from "@/lib/tours/policy";
 
 const PURCHASE_CONVERSION_SEND_TO = "AW-18010006901/uUBECMPq76kcEPXK64tD";
 

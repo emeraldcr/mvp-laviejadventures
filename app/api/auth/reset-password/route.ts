@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { clearUserResetToken, findUserByResetToken, updateUserPassword } from "@/lib/models/user";
-import { BCRYPT_SALT_ROUNDS, MIN_PASSWORD_LENGTH } from "@/lib/constants/auth";
+import { clearUserResetToken, findUserByResetToken, updateUserPassword } from "@/lib/auth/users/user";
+import { BCRYPT_SALT_ROUNDS, MIN_PASSWORD_LENGTH } from "@/lib/auth/constants";
 
 export async function POST(req: NextRequest) {
   try {

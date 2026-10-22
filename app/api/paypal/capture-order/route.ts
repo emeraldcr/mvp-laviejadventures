@@ -1,15 +1,15 @@
 // app/api/paypal/capture-order/route.ts
 
 import { NextResponse } from "next/server";
-import { getPayPalApiBaseUrl, getPayPalAccessToken } from "@/lib/helpers/paypal";
-import { getDb } from "@/lib/helpers/mongodb";
-import { COLLECTIONS } from "@/lib/constants/db";
+import { getPayPalApiBaseUrl, getPayPalAccessToken } from "@/lib/payments/paypal/helpers";
+import { getDb } from "@/lib/data/mongodb";
+import { COLLECTIONS } from "@/lib/data/collections";
 import {
   isReservationQuoteError,
   quoteReservation,
   type ReservationQuoteInput,
-} from "@/lib/reservation/quote";
-import { releaseCapacityHold } from "@/lib/reservation/capacity-holds";
+} from "@/lib/booking/checkout/quote";
+import { releaseCapacityHold } from "@/lib/booking/availability/holds";
 
 interface CaptureRequestBody {
   orderID: string;

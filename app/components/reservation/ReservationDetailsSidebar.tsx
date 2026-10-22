@@ -1,12 +1,12 @@
 "use client";
 
 import { Check, ChevronDown, CloudRain, MessageCircle, ShieldCheck } from "lucide-react";
-import type { BookingStepId, ReservationChoiceStep, TourTime } from "@/lib/reservation/types";
-import { formatDepartureLabel } from "@/lib/reservation/constants";
-import type { TourPackageOption } from "@/lib/types/index";
-import { TOUR_INFO } from "@/lib/tour-info";
+import type { BookingStepId, ReservationChoiceStep, TourTime } from "@/lib/booking/core/types";
+import { formatDepartureLabel } from "@/lib/booking/core/constants";
+import type { TourPackageOption } from "@/lib/tours/types";
+import { TOUR_INFO } from "@/lib/tours/info";
 import ReservationDetailsStepProgress from "./ReservationDetailsStepProgress";
-import { getPackageIncludes } from "@/lib/reservation/package-copy";
+import { getPackageIncludes } from "@/lib/booking/packages/copy";
 
 type StepOption = { id: BookingStepId; label: string };
 

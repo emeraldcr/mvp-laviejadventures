@@ -1,6 +1,6 @@
 import { SatelliteDish, Check, X } from "lucide-react";
-import { ABBREVIATIONS } from "@/lib/types/tiempo-api";
-import type { StationHealth } from "@/lib/types/tiempo-api";
+import { ABBREVIATIONS } from "@/lib/weather/types/api";
+import type { StationHealth } from "@/lib/weather/types/api";
 import { StationHealthBadge } from "./StationHealthBadge";
 
 const MEASURES = [

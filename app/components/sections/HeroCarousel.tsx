@@ -3,11 +3,11 @@
 import { useState, useRef, useEffect, ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 import Image from "next/image";
-import { useInterval } from "@/lib/hooks/useInterval";
+import { useInterval } from "@/lib/shared/react/useInterval";
 import useSWR from "swr";
-import { fetcher } from "@/lib/helpers/fetcher";
-import { useLanguage } from "@/lib/LanguageContext";
-import { principalContent } from "@/lib/constants/principal";
+import { fetcher } from "@/lib/shared/network/fetcher";
+import { useLanguage } from "@/lib/site/contexts/LanguageContext";
+import { principalContent } from "@/lib/content/homepage";
 
 // New: overlay prop to allow custom content (text or an image) and height prop
 interface HeroCarouselProps {

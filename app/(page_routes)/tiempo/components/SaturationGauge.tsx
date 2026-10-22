@@ -1,4 +1,4 @@
-import type { Saturation } from "@/lib/helpers/tiempoHelpers";
+import type { Saturation } from "@/lib/weather/helpers/observations";
 import { Waves } from "lucide-react";
 
 export function SaturationGauge({ saturation }: { saturation: Saturation }) {

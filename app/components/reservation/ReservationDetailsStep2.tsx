@@ -4,9 +4,9 @@ import {
   TravelerInputField,
   TravelerPhoneInput,
 } from "@/app/components/reservation/ReservationFormFields";
-import type { ReservationFormState } from "@/lib/reservation/types";
+import type { ReservationFormState } from "@/lib/booking/core/types";
 
-type ReservationTranslations = typeof import("@/lib/translations").translations["es"]["reservation"];
+type ReservationTranslations = typeof import("@/lib/site/translations").translations["es"]["reservation"];
 
 interface ReservationDetailsStep2Props {
   travelerSectionRef: RefObject<HTMLDivElement | null>;

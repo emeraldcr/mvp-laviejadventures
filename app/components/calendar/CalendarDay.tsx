@@ -1,10 +1,10 @@
 "use client";
 
 import React from "react";
-import { useCalendarContext } from "@/lib/CalendarContext";
-import { useLanguage } from "@/lib/LanguageContext";
-import { translations } from "@/lib/translations";
-import { cn } from "@/lib/helpers/utils";
+import { useCalendarContext } from "@/lib/booking/calendar/CalendarContext";
+import { useLanguage } from "@/lib/site/contexts/LanguageContext";
+import { translations } from "@/lib/site/translations";
+import { cn } from "@/lib/shared/utils";
 
 type Props = {
   day: number | null;

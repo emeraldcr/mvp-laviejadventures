@@ -1,6 +1,6 @@
-import { BUSINESS_WHATSAPP_URL } from "@/lib/site-config";
-export { formatTourPrice, getTourPriceDisplay, tourMinPrice, tourTitle } from "@/lib/tour-pricing";
-export type { TourPriceDisplay } from "@/lib/tour-pricing";
+import { BUSINESS_WHATSAPP_URL } from "@/lib/site/config";
+export { formatTourPrice, getTourPriceDisplay, tourMinPrice, tourTitle } from "@/lib/tours/pricing";
+export type { TourPriceDisplay } from "@/lib/tours/pricing";
 
 export const WHATSAPP_HREF = BUSINESS_WHATSAPP_URL;
 export const CIUDAD_ESMERALDA_SLUG = "tour-ciudad-esmeralda";

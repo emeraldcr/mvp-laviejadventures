@@ -1,10 +1,10 @@
 "use client";
 
-import { localizeHref } from "@/lib/i18n";
+import { localizeHref } from "@/lib/site/i18n";
 
 import Link from "next/link";
 import { ArrowRight, CalendarDays, Clock3, MapPin, MessageCircle, ShieldCheck, Users } from "lucide-react";
-import { useLanguage } from "@/lib/LanguageContext";
+import { useLanguage } from "@/lib/site/contexts/LanguageContext";
 import { BOOKING_HREF, localizedHomeWhatsAppHref, primaryBookingLabel } from "./home-utils";
 
 export default function HomeConversionRail() {

@@ -1,18 +1,18 @@
 import { NextResponse } from "next/server";
-import { getDb } from "@/lib/helpers/mongodb";
-import { COLLECTIONS } from "@/lib/constants/db";
+import { getDb } from "@/lib/data/mongodb";
+import { COLLECTIONS } from "@/lib/data/collections";
 import {
   getMinBookableIsoDateInCostaRica,
   isDateOnOrAfterMinBookableInCostaRica,
-} from "@/lib/helpers/costa-rica-time";
-import { buildReservationReferenceCode } from "@/lib/reservation/checkout-messages";
-import { normalizeReservationDate } from "@/lib/reservation/dates";
+} from "@/lib/shared/dates/costa-rica-time";
+import { buildReservationReferenceCode } from "@/lib/booking/checkout/messages";
+import { normalizeReservationDate } from "@/lib/booking/core/dates";
 import {
   isReservationQuoteError,
   quoteReservation,
   requiredReservationFieldsPresent,
-} from "@/lib/reservation/quote";
-import type { ReservationAddonDetails } from "@/lib/reservation/types";
+} from "@/lib/booking/checkout/quote";
+import type { ReservationAddonDetails } from "@/lib/booking/core/types";
 
 type PendingPaymentMethod = "whatsapp" | "sinpe";
 

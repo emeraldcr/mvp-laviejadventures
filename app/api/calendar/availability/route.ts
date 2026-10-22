@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { getDb } from "@/lib/helpers/mongodb";
-import { COLLECTIONS } from "@/lib/constants/db";
-import { CONFIRMED_RESERVATION_STATUSES, DEFAULT_AVAILABILITY } from "@/lib/constants/business";
-import { normalizeReservationDate } from "@/lib/reservation/dates";
-import { getActiveHeldTicketsForMonth } from "@/lib/reservation/capacity-holds";
+import { getDb } from "@/lib/data/mongodb";
+import { COLLECTIONS } from "@/lib/data/collections";
+import { CONFIRMED_RESERVATION_STATUSES, DEFAULT_AVAILABILITY } from "@/lib/booking/core/business";
+import { normalizeReservationDate } from "@/lib/booking/core/dates";
+import { getActiveHeldTicketsForMonth } from "@/lib/booking/availability/holds";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);

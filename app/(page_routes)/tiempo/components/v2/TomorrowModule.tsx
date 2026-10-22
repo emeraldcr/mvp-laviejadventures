@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { CalendarClock, Sunrise, CloudRain, Umbrella, ChevronDown } from "lucide-react";
-import type { TiempoModel, ForecastBlock } from "@/lib/types/tiempo-model";
+import type { TiempoModel, ForecastBlock } from "@/lib/weather/types/model";
 import { ConfidencePill } from "./ConfidencePill";
 import { MethodNote } from "./MethodNote";
 import { HourlyForecastChart } from "./HourlyForecastChart";

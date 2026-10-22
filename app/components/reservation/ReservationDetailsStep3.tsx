@@ -1,13 +1,13 @@
 import Link from "next/link";
 import type { KeyboardEvent, RefObject } from "react";
 import { Check, Pencil, ShieldCheck, UserRound } from "lucide-react";
-import type { BookingStepId, ReservationAddonDetails, TourTime } from "@/lib/reservation/types";
-import { ADDON_OPTIONS, formatDepartureLabel, getTransportLocationLabel } from "@/lib/reservation/constants";
-import { getAddonPricePerPerson } from "@/lib/reservation/addons";
-import type { ReservationFormState } from "@/lib/reservation/types";
-import { localizeHref } from "@/lib/i18n";
+import type { BookingStepId, ReservationAddonDetails, TourTime } from "@/lib/booking/core/types";
+import { ADDON_OPTIONS, formatDepartureLabel, getTransportLocationLabel } from "@/lib/booking/core/constants";
+import { getAddonPricePerPerson } from "@/lib/booking/addons/catalog";
+import type { ReservationFormState } from "@/lib/booking/core/types";
+import { localizeHref } from "@/lib/site/i18n";
 
-type ReservationTranslations = typeof import("@/lib/translations").translations["es"]["reservation"];
+type ReservationTranslations = typeof import("@/lib/site/translations").translations["es"]["reservation"];
 
 interface ReservationDetailsStep3Props {
   reviewSectionRef: RefObject<HTMLDivElement | null>;

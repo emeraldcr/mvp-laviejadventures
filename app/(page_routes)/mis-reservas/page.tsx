@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { getDb } from "@/lib/helpers/mongodb";
+import { getDb } from "@/lib/data/mongodb";
 import { BookingClient } from "@/app/(page_routes)/booking/BookingClient";
 import { readUserBookings } from "@/app/(page_routes)/booking/lib/booking-data";
 

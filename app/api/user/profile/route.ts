@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { getUserProfileByEmail, updateUserProfileByEmail } from "@/lib/models/user";
+import { getUserProfileByEmail, updateUserProfileByEmail } from "@/lib/auth/users/user";
 
 export async function GET() {
   const session = await auth();

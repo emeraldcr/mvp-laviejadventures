@@ -10,8 +10,8 @@ import {
   parseHourlyRows,
   round1,
 } from "./helpers";
-import { ABBREVIATIONS, CACHE_TTL_SECONDS, FETCH_HEADERS, IMN_URL } from "@/lib/types/tiempo-api";
-import { buildTiempoModel, type ModelSecondaryHour } from "@/lib/helpers/tiempoModel";
+import { ABBREVIATIONS, CACHE_TTL_SECONDS, FETCH_HEADERS, IMN_URL } from "@/lib/weather/types/api";
+import { buildTiempoModel, type ModelSecondaryHour } from "@/lib/weather/model";
 
 // ── Fuente SECUNDARIA (base, no verdad): modelo Open-Meteo para San Carlos /
 //    Ciudad Quesada. Solo entra como un miembro de bajo peso en el ensemble y

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { getDb } from "@/lib/helpers/mongodb";
-import { COLLECTIONS } from "@/lib/constants/db";
+import { getDb } from "@/lib/data/mongodb";
+import { COLLECTIONS } from "@/lib/data/collections";
 
 export async function GET() {
   const session = await auth();

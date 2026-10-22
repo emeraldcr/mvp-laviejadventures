@@ -1,4 +1,4 @@
-import { BOOKING_ASSURANCE_EN, BOOKING_ASSURANCE_ES } from "@/lib/tour-policy";
+import { BOOKING_ASSURANCE_EN, BOOKING_ASSURANCE_ES } from "@/lib/tours/policy";
 
 type Props = {
   lang?: "es" | "en";

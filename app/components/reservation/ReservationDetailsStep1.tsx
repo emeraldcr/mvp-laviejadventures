@@ -8,12 +8,12 @@ import {
   Zap,
   ChevronRight,
 } from "lucide-react";
-import { formatDepartureLabel } from "@/lib/reservation/constants";
+import { formatDepartureLabel } from "@/lib/booking/core/constants";
 import PackagePicker from "@/app/components/reservation/PackagePicker";
-import type { TourTime } from "@/lib/reservation/types";
-import type { TourPackageOption } from "@/lib/types/index";
+import type { TourTime } from "@/lib/booking/core/types";
+import type { TourPackageOption } from "@/lib/tours/types";
 
-type ReservationTranslations = typeof import("@/lib/translations").translations["es"]["reservation"];
+type ReservationTranslations = typeof import("@/lib/site/translations").translations["es"]["reservation"];
 
 interface ReservationDetailsStep1Props {
   scheduleSectionRef: RefObject<HTMLElement | null>;

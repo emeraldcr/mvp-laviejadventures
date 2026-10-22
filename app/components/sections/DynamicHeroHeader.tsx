@@ -18,15 +18,15 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { localizeHref } from "@/lib/i18n";
+import { localizeHref } from "@/lib/site/i18n";
 import useSWR from "swr";
-import { fetcher } from "@/lib/helpers/fetcher";
-import { useInterval } from "@/lib/hooks/useInterval";
-import { useLanguage } from "@/lib/LanguageContext";
-import { principalContent } from "@/lib/constants/principal";
+import { fetcher } from "@/lib/shared/network/fetcher";
+import { useInterval } from "@/lib/shared/react/useInterval";
+import { useLanguage } from "@/lib/site/contexts/LanguageContext";
+import { principalContent } from "@/lib/content/homepage";
 import SiteHeader from "@/app/components/navigation/SiteHeader";
 import { MobileBottomNav } from "@/app/components/navigation/SiteNavigation";
-import { useReservationData } from "@/lib/hooks/useReservationData";
+import { useReservationData } from "@/lib/booking/hooks/useReservationData";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const SCROLL_THRESHOLD = 60;

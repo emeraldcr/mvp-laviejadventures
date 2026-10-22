@@ -5,14 +5,14 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
-import { buildSystemPrompt, buildUserPrompt, type WeatherSnapshot } from "@/lib/helpers/weatherMessageHelpers";
+import { buildSystemPrompt, buildUserPrompt, type WeatherSnapshot } from "@/lib/weather/message/helpers";
 import {
   WEATHER_MESSAGE_CACHE_HEADERS,
   WEATHER_MESSAGE_DEFAULT_TEXT,
   WEATHER_MESSAGE_ERROR_FALLBACK,
   WEATHER_MESSAGE_FALLBACK_CACHE_HEADERS,
   WEATHER_MESSAGE_MAX_TOKENS,
-} from "@/lib/constants/weatherMessageConstants";
+} from "@/lib/weather/message/constants";
 
 const WEATHER_MESSAGE_MODEL =
   process.env.OPENAI_WEATHER_MODEL?.trim() ||

@@ -1,4 +1,4 @@
-import type { BookingStepId } from "@/lib/reservation/types";
+import type { BookingStepId } from "@/lib/booking/core/types";
 
 export const RESERVATION_STEP_LABELS: Record<BookingStepId, string> = {
   1: "schedule",

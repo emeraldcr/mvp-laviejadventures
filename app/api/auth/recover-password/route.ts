@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
-import { findUserByEmail, setUserResetToken } from "@/lib/models/user";
+import { findUserByEmail, setUserResetToken } from "@/lib/auth/users/user";
 import { sendUserPasswordResetEmail } from "@/lib/email/user-emails";
 
 export async function POST(req: NextRequest) {

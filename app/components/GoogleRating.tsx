@@ -1,5 +1,5 @@
-import { formatGoogleReviewsDate, GOOGLE_REVIEWS } from "@/lib/site-config";
-import type { Locale } from "@/lib/i18n";
+import { formatGoogleReviewsDate, GOOGLE_REVIEWS } from "@/lib/site/config";
+import type { Locale } from "@/lib/site/i18n";
 
 export default function GoogleRating({ locale = "es", dark = false }: { locale?: Locale; dark?: boolean }) {
   const updatedAt = formatGoogleReviewsDate(locale);

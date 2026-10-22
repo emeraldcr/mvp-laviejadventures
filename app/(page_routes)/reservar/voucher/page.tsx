@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { SuccessClient } from "@/app/(page_routes)/success/SuccessClient";
 import { processSuccessfulBooking } from "@/app/(page_routes)/success/bookingService";
-import type { SuccessPageProps } from "@/lib/types/types";
+import type { SuccessPageProps } from "@/lib/booking/types";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Voucher de reserva | La Vieja Adventures", robots: { index: false, follow: false } };

@@ -1,6 +1,6 @@
 import { Layers } from "lucide-react";
-import type { RainBaseline } from "@/lib/types/tiempo-api";
-import { mmToColor } from "@/lib/helpers/tiempoHelpers";
+import type { RainBaseline } from "@/lib/weather/types/api";
+import { mmToColor } from "@/lib/weather/helpers/observations";
 
 type WindowStat = { label: string; mm: number };
 

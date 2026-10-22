@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import TourDetailPage from "@/app/components/tours/TourDetailPage";
-import { getTour } from "@/lib/tours/detail";
-import { getTourShareImage } from "@/lib/tour-display";
-import { pageMetadata } from "@/lib/seo";
+import { getTour } from "@/lib/tours/details";
+import { getTourShareImage } from "@/lib/tours/display";
+import { pageMetadata } from "@/lib/site/seo";
 
 type Props = { params: Promise<{ slug: string }> };
 export const revalidate = 300;

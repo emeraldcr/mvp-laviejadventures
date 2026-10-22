@@ -3,8 +3,8 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { ArrowRight, ShieldCheck } from "lucide-react";
-import { useLanguage } from "@/lib/LanguageContext";
-import { localizeHref } from "@/lib/i18n";
+import { useLanguage } from "@/lib/site/contexts/LanguageContext";
+import { localizeHref } from "@/lib/site/i18n";
 
 type EditorialIntroProps = {
   eyebrow: string;

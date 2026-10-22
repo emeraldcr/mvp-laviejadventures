@@ -1,10 +1,10 @@
 "use client";
 
-import { useCalendarContext } from "@/lib/CalendarContext";
+import { useCalendarContext } from "@/lib/booking/calendar/CalendarContext";
 import ReservationDetails from "@/app/components/reservation/ReservationDetails";
-import { useLanguage } from "@/lib/LanguageContext";
+import { useLanguage } from "@/lib/site/contexts/LanguageContext";
 import { useSearchParams } from "next/navigation";
-import { useReservationData, DEFAULT_BOOKABLE_TOUR } from "@/lib/hooks/useReservationData";
+import { useReservationData, DEFAULT_BOOKABLE_TOUR } from "@/lib/booking/hooks/useReservationData";
 
 type Props = {
   className?: string;

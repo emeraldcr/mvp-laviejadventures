@@ -1,10 +1,10 @@
 "use client";
 
 import type { JSX, ReactNode } from "react";
-import ErrorBoundary from "@/lib/contexts/ErrorBoundary";
-import { useLanguage } from "@/lib/LanguageContext";
-import { principalContent } from "@/lib/constants/principal";
-import type { TourSummary } from "@/lib/types/index";
+import ErrorBoundary from "@/lib/site/contexts/ErrorBoundary";
+import { useLanguage } from "@/lib/site/contexts/LanguageContext";
+import { principalContent } from "@/lib/content/homepage";
+import type { TourSummary } from "@/lib/tours/types";
 import SiteHeader from "@/app/components/navigation/SiteHeader";
 import HomeHero from "@/app/components/home/HomeHero";
 import HomeTrustSection from "@/app/components/home/HomeTrustSection";

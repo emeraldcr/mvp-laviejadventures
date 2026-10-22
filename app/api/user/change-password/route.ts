@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { auth } from "@/lib/auth";
-import { findUserByEmail, updateUserPasswordByEmail } from "@/lib/models/user";
-import { BCRYPT_SALT_ROUNDS, MIN_PASSWORD_LENGTH } from "@/lib/constants/auth";
+import { findUserByEmail, updateUserPasswordByEmail } from "@/lib/auth/users/user";
+import { BCRYPT_SALT_ROUNDS, MIN_PASSWORD_LENGTH } from "@/lib/auth/constants";
 
 export async function POST(request: Request) {
   const session = await auth();

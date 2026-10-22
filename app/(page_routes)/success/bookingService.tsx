@@ -1,10 +1,10 @@
 // app/payment/success/bookingService.ts
-import { getPayPalApiBaseUrl, getPayPalAccessToken } from "@/lib/helpers/paypal";
-import { getDb } from "@/lib/helpers/mongodb";
+import { getPayPalApiBaseUrl, getPayPalAccessToken } from "@/lib/payments/paypal/helpers";
+import { getDb } from "@/lib/data/mongodb";
 import { auth } from "@/lib/auth";
 import { sendConfirmationEmail } from "./emailService";
-import { COLLECTIONS } from "@/lib/constants/db";
-import type { BookingRecord } from "@/lib/types/types";
+import { COLLECTIONS } from "@/lib/data/collections";
+import type { BookingRecord } from "@/lib/booking/types";
 
 type PayPalOrderResponse = {
   status?: string;

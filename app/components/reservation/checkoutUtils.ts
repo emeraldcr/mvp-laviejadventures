@@ -1,4 +1,4 @@
-import type { OrderDetails } from "@/lib/types/index";
+import type { OrderDetails } from "@/lib/booking/types";
 import { PHONE_COUNTRIES } from "@/app/components/reservation/phoneCountries";
 
 const DEFAULT_BUYER_COUNTRY = "CR";

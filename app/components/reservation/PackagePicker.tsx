@@ -2,9 +2,9 @@
 
 import { useMemo } from "react";
 import { Check, Star } from "lucide-react";
-import type { TourPackageOption } from "@/lib/types/index";
-import { getPackageDisplayName } from "@/lib/reservation/pricing";
-import { getPackageIncludes } from "@/lib/reservation/package-copy";
+import type { TourPackageOption } from "@/lib/tours/types";
+import { getPackageDisplayName } from "@/lib/booking/packages/pricing";
+import { getPackageIncludes } from "@/lib/booking/packages/copy";
 
 type Props = {
   packages: TourPackageOption[];

@@ -1,5 +1,5 @@
 import { Resend } from "resend";
-import { APP_BASE_URL_DEFAULT, getEmailFrom } from "@/lib/constants/email";
+import { APP_BASE_URL_DEFAULT, getEmailFrom } from "@/lib/email/constants";
 
 const FROM = getEmailFrom();
 const BASE_URL = process.env.APP_BASE_URL || APP_BASE_URL_DEFAULT;

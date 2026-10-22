@@ -1,8 +1,8 @@
-import type { TourTime } from "@/lib/reservation/types";
-import { formatDepartureLabel } from "@/lib/reservation/constants";
-import { BOOKING_ASSURANCE_EN, BOOKING_ASSURANCE_ES } from "@/lib/tour-policy";
+import type { TourTime } from "@/lib/booking/core/types";
+import { formatDepartureLabel } from "@/lib/booking/core/constants";
+import { BOOKING_ASSURANCE_EN, BOOKING_ASSURANCE_ES } from "@/lib/tours/policy";
 
-type ReservationTranslations = typeof import("@/lib/translations").translations["es"]["reservation"];
+type ReservationTranslations = typeof import("@/lib/site/translations").translations["es"]["reservation"];
 
 interface ReservationDetailsSummaryCardProps {
   basePriceUSD: number;

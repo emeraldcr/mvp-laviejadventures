@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { CalendarProvider } from "@/lib/CalendarContext";
-import { useLanguage } from "@/lib/LanguageContext";
-import { useReservationData } from "@/lib/hooks/useReservationData";
+import { CalendarProvider } from "@/lib/booking/calendar/CalendarContext";
+import { useLanguage } from "@/lib/site/contexts/LanguageContext";
+import { useReservationData } from "@/lib/booking/hooks/useReservationData";
 import BookingSection from "@/app/components/sections/BookingSection";
 import ReservationPaymentStep from "@/app/components/reservation/ReservationPaymentStep";
 import { CheckoutShell } from "@/app/components/layouts/SharedPageShell";

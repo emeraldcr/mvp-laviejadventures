@@ -6,7 +6,7 @@ import { signOut } from "next-auth/react";
 
 import { useBookingContext } from "../context/BookingContext";
 import { bookingCopy } from "../lib/booking-copy";
-import { localizeHref } from "@/lib/i18n";
+import { localizeHref } from "@/lib/site/i18n";
 
 export function BookingHeader() {
   const { lang, userEmail, userName } = useBookingContext();

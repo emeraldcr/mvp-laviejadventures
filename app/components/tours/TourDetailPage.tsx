@@ -3,12 +3,12 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { Backpack, CalendarDays, Check, ChevronRight, Clock, HelpCircle, Info, MapPin, Route, ShieldCheck, Sparkles, Users, X } from "lucide-react";
 import BirdwatchingTourPage from "@/app/components/tours/BirdwatchingTourPage";
-import { getTourPriceDisplay } from "@/lib/tour-pricing";
+import { getTourPriceDisplay } from "@/lib/tours/pricing";
 import GoogleRating from "@/app/components/GoogleRating";
-import { getTourGallery, getTourImage } from "@/lib/tour-display";
-import { getLocalizedTourContent } from "@/lib/tour-content-localized";
-import type { TourDetail } from "@/lib/tours/detail";
-import { BUSINESS_WHATSAPP_URL, SITE_URL } from "@/lib/site-config";
+import { getTourGallery, getTourImage } from "@/lib/tours/display";
+import { getLocalizedTourContent } from "@/lib/tours/content/localized";
+import type { TourDetail } from "@/lib/tours/details";
+import { BUSINESS_WHATSAPP_URL, SITE_URL } from "@/lib/site/config";
 import JsonLd from "@/app/components/seo/JsonLd";
 import SharedPageShell from "@/app/components/layouts/SharedPageShell";
 

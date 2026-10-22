@@ -3,13 +3,13 @@
 // locations in the San Carlos / Juan Castro Blanco area of Costa Rica.
 
 import { NextResponse } from "next/server";
-import type { LocationWeather } from "@/lib/types/index";
+import type { LocationWeather } from "@/lib/weather/types/response";
 import {
   REGIONAL_CACHE_TTL_SECONDS,
   REGIONAL_FORECAST_DAYS,
   REGIONAL_FORECAST_HOURS,
   REGIONAL_LOCATIONS,
-} from "@/lib/constants/tiempo";
+} from "@/lib/weather/constants";
 
 // ─── WMO weather code descriptions (Spanish) ─────────────────────────────────
 const WMO: Record<number, { label: string; icon: string }> = {

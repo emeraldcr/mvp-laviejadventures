@@ -12,12 +12,12 @@ import {
   Users,
 } from "lucide-react";
 import GoogleRating from "@/app/components/GoogleRating";
-import { localizeHref } from "@/lib/i18n";
-import { LA_VIEJA_GOOGLE_MAPS_URL, LA_VIEJA_LOCATION_LABEL } from "@/lib/constants/location";
-import type { TourSummary } from "@/lib/types/index";
-import { useLanguage } from "@/lib/LanguageContext";
+import { localizeHref } from "@/lib/site/i18n";
+import { LA_VIEJA_GOOGLE_MAPS_URL, LA_VIEJA_LOCATION_LABEL } from "@/lib/site/location";
+import type { TourSummary } from "@/lib/tours/types";
+import { useLanguage } from "@/lib/site/contexts/LanguageContext";
 import { BOOKING_HREF } from "./home-utils";
-import { BOOKING_ASSURANCE_EN, BOOKING_ASSURANCE_ES } from "@/lib/tour-policy";
+import { BOOKING_ASSURANCE_EN, BOOKING_ASSURANCE_ES } from "@/lib/tours/policy";
 
 type Props = { tour?: TourSummary };
 

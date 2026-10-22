@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { getTransportLocationLabel } from "@/lib/reservation/constants";
-import { buildAddonsBreakdown, getAddonsPricePerPerson } from "@/lib/reservation/addons";
-import { isTransportConfigComplete, type TransportQuoteResult } from "@/lib/reservation/transport";
-import type { ReservationAddonDetails } from "@/lib/reservation/types";
+import { getTransportLocationLabel } from "@/lib/booking/core/constants";
+import { buildAddonsBreakdown, getAddonsPricePerPerson } from "@/lib/booking/addons/catalog";
+import { isTransportConfigComplete, type TransportQuoteResult } from "@/lib/booking/transport/quote";
+import type { ReservationAddonDetails } from "@/lib/booking/core/types";
 import { useTransportQuote } from "./useTransportQuote";
 
 export function useReservationPricing({

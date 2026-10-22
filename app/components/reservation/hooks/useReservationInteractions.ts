@@ -2,7 +2,7 @@
 
 import { useCallback, type MutableRefObject } from "react";
 import { trackAnalyticsEvent } from "@/lib/analytics/client";
-import type { ReservationFieldName, ReservationFormState, TourTime } from "@/lib/reservation/types";
+import type { ReservationFieldName, ReservationFormState, TourTime } from "@/lib/booking/core/types";
 import { RESERVATION_STEP_LABELS } from "../constants/reservationWizard";
 
 type Validation = {

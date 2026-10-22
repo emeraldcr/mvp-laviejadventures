@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { getDb } from "@/lib/helpers/mongodb";
-import { quoteReservation, requiredReservationFieldsPresent, isReservationQuoteError } from "@/lib/reservation/quote";
-import { saveReservationDraft, findReservationDraft } from "@/lib/reservation/drafts";
-import type { ReservationAddonDetails } from "@/lib/reservation/types";
+import { getDb } from "@/lib/data/mongodb";
+import { quoteReservation, requiredReservationFieldsPresent, isReservationQuoteError } from "@/lib/booking/checkout/quote";
+import { saveReservationDraft, findReservationDraft } from "@/lib/booking/checkout/drafts";
+import type { ReservationAddonDetails } from "@/lib/booking/core/types";
 
 type DraftRequest = {
   resumeToken?: string;

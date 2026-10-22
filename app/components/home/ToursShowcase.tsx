@@ -1,13 +1,13 @@
 "use client";
 
-import { localizeHref, tourDifficulty, tourDuration } from "@/lib/i18n";
+import { localizeHref, tourDifficulty, tourDuration } from "@/lib/site/i18n";
 
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, CalendarDays, Clock3, Info, MapPin, Zap } from "lucide-react";
-import { useLanguage } from "@/lib/LanguageContext";
-import { getTourImage } from "@/lib/tour-display";
-import type { TourSummary } from "@/lib/types/index";
+import { useLanguage } from "@/lib/site/contexts/LanguageContext";
+import { getTourImage } from "@/lib/tours/display";
+import type { TourSummary } from "@/lib/tours/types";
 import { TOURS_HREF, getTourPriceDisplay, primaryBookingLabel, tourTitle } from "./home-utils";
 
 type Props = {

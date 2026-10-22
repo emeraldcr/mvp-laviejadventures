@@ -1,7 +1,7 @@
 import SiteHeader from "@/app/components/navigation/SiteHeader";
 import PageFooter from "@/app/components/sections/PageFooter";
 import { CircleHelp } from "lucide-react";
-import { SITE_FAQS } from "@/lib/site-faqs";
+import { SITE_FAQS } from "@/lib/content/faqs";
 import JsonLd from "@/app/components/seo/JsonLd";
 import { EditorialFinalCta, EditorialIntro, EditorialTrust } from "@/app/components/layouts/EditorialPageBlocks";
 

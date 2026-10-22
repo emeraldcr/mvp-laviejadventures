@@ -12,7 +12,7 @@ import type {
   StationHealth,
   StationHealthQuality,
   TiempoSections,
-} from "@/lib/types/tiempo-api";
+} from "@/lib/weather/types/api";
 import {
   RELIABILITY_DEDUCTION_FRESHNESS_HIGH,
   RELIABILITY_DEDUCTION_FRESHNESS_LOW,
@@ -28,7 +28,7 @@ import {
   RELIABILITY_RECORDS_THRESHOLD_FULL,
   RELIABILITY_RECORDS_THRESHOLD_LOW,
   RELIABILITY_SCORE_MAX,
-} from "@/lib/constants/tiempo";
+} from "@/lib/weather/constants";
 
 export function safeParseFloat(s?: string): number {
   if (!s) return 0;

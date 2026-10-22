@@ -32,16 +32,16 @@ import {
 import SiteHeader from "@/app/components/navigation/SiteHeader";
 import PageFooter from "@/app/components/sections/PageFooter";
 import GoogleRating from "@/app/components/GoogleRating";
-import { getTourPriceDisplay } from "@/lib/tour-pricing";
+import { getTourPriceDisplay } from "@/lib/tours/pricing";
 import { whatsappHref } from "@/app/components/home/home-utils";
-import { localizeHref } from "@/lib/i18n";
+import { localizeHref } from "@/lib/site/i18n";
 import {
   BIRDWATCHING_GALLERY,
   type BirdHabitat,
-} from "@/lib/birdwatching-content";
-import { getLocalizedBirdwatchingData } from "@/lib/birdwatching-localized";
-import type { TourContent } from "@/lib/tour-content";
-import type { TourPackageOption } from "@/lib/types/index";
+} from "@/lib/tours/birdwatching/content";
+import { getLocalizedBirdwatchingData } from "@/lib/tours/birdwatching/localized";
+import type { TourContent } from "@/lib/tours/content/catalog";
+import type { TourPackageOption } from "@/lib/tours/types";
 
 type TourDetail = {
   slug: string;

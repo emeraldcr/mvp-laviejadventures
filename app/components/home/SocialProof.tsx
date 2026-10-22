@@ -4,8 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ExternalLink } from "lucide-react";
 import GoogleRating from "@/app/components/GoogleRating";
-import { useLanguage } from "@/lib/LanguageContext";
-import { formatGoogleReviewsDate, GOOGLE_REVIEWS } from "@/lib/site-config";
+import { useLanguage } from "@/lib/site/contexts/LanguageContext";
+import { formatGoogleReviewsDate, GOOGLE_REVIEWS } from "@/lib/site/config";
 
 const GALLERY_ROW_A = [
   "/image/IMG_6810.webp", "/image/IMG_4671.webp", "/image/IMG_4257.webp",

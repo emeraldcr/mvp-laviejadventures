@@ -4,9 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowRight, ChevronLeft, ChevronRight, ShieldCheck, Star, Users, Zap } from "lucide-react";
-import { useLanguage } from "@/lib/LanguageContext";
-import { localizeHref } from "@/lib/i18n";
-import { principalContent } from "@/lib/constants/principal";
+import { useLanguage } from "@/lib/site/contexts/LanguageContext";
+import { localizeHref } from "@/lib/site/i18n";
+import { principalContent } from "@/lib/content/homepage";
 
 export default function ConversionSection() {
   const { lang } = useLanguage();

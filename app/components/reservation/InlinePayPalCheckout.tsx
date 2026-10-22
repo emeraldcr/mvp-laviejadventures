@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import type { OrderDetails } from "@/lib/types/index";
-import { translations } from "@/lib/translations";
+import type { OrderDetails } from "@/lib/booking/types";
+import { translations } from "@/lib/site/translations";
 import { useCheckoutQuote } from "./hooks/useCheckoutQuote";
 import { usePayPalCheckout } from "./hooks/usePayPalCheckout";
 

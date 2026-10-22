@@ -1,4 +1,4 @@
-import { getImages } from "@/lib/helpers/getImages";
+import { getImages } from "@/lib/site/media/getImages";
 import Image from "next/image";
 
 export default function GalleryPage() {

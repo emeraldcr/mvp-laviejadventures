@@ -1,6 +1,6 @@
 "use client";
 
-import { localizeHref } from "@/lib/i18n";
+import { localizeHref } from "@/lib/site/i18n";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
@@ -15,8 +15,8 @@ import {
   Waves,
   X,
 } from "lucide-react";
-import { useLanguage } from "@/lib/LanguageContext";
-import { translations } from "@/lib/translations";
+import { useLanguage } from "@/lib/site/contexts/LanguageContext";
+import { translations } from "@/lib/site/translations";
 import SiteHeader from "@/app/components/navigation/SiteHeader";
 import PageFooter from "@/app/components/sections/PageFooter";
 

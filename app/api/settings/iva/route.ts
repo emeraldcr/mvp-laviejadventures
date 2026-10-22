@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getReservationSettings } from "@/lib/models/reservation-settings";
+import { getReservationSettings } from "@/lib/booking/settings/reservation-settings";
 
 export async function GET() {
   try {

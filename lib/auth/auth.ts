@@ -2,10 +2,10 @@ import NextAuth from "next-auth";
 import Auth0Provider from "next-auth/providers/auth0";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
-import { findUserByEmail, getUserPreferencesByEmail, upsertUserFromAuth0 } from "@/lib/models/user";
-import { getAuth0AuthorizationParams, getAuth0Issuer } from "@/lib/auth0-config";
+import { findUserByEmail, getUserPreferencesByEmail, upsertUserFromAuth0 } from "@/lib/auth/users/user";
+import { getAuth0AuthorizationParams, getAuth0Issuer } from "@/lib/auth/auth0-config";
 import { sendLoginNotificationEmail } from "@/lib/email/login-email";
-import { createLoginLog } from "@/lib/models/login-log";
+import { createLoginLog } from "@/lib/auth/audit/login-log";
 
 const auth0ClientId = process.env.AUTH0_CLIENT_ID?.trim();
 const auth0ClientSecret = process.env.AUTH0_CLIENT_SECRET?.trim();

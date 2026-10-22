@@ -3,12 +3,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Check, Clock3 } from "lucide-react";
-import { useLanguage } from "@/lib/LanguageContext";
-import type { TourSummary } from "@/lib/types/index";
+import { useLanguage } from "@/lib/site/contexts/LanguageContext";
+import type { TourSummary } from "@/lib/tours/types";
 import { BOOKING_HREF, TOURS_HREF, primaryBookingLabel } from "./home-utils";
 import GoogleRating from "@/app/components/GoogleRating";
-import { localizeHref } from "@/lib/i18n";
-import { BOOKING_ASSURANCE_EN, BOOKING_ASSURANCE_ES } from "@/lib/tour-policy";
+import { localizeHref } from "@/lib/site/i18n";
+import { BOOKING_ASSURANCE_EN, BOOKING_ASSURANCE_ES } from "@/lib/tours/policy";
 
 type Props = {
   tours: TourSummary[];

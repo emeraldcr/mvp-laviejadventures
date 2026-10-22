@@ -1,1 +1,1 @@
-export * from "@/lib/types/tiempo-api";
+export * from "@/lib/weather/types/api";

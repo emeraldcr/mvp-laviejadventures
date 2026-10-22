@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ArrowRight, Check, Leaf, Recycle, Sprout, Utensils } from "lucide-react";
 import SiteHeader from "@/app/components/navigation/SiteHeader";
 import PageFooter from "@/app/components/sections/PageFooter";
-import { pageMetadata } from "@/lib/seo";
+import { pageMetadata } from "@/lib/site/seo";
 
 export const metadata: Metadata = pageMetadata("/organics", "La Vieja Organics: Local Sustainability", "Seasonal ingredients, composting and nearby producers support La Vieja Adventures' restaurant and connection with the land.", "en");
 

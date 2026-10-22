@@ -18,18 +18,18 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { BUSINESS_WHATSAPP_URL, SOCIAL_URLS } from "@/lib/site-config";
-import { useLanguage } from "@/lib/LanguageContext";
+import { BUSINESS_WHATSAPP_URL, SOCIAL_URLS } from "@/lib/site/config";
+import { useLanguage } from "@/lib/site/contexts/LanguageContext";
 import {
   LA_VIEJA_GOOGLE_MAPS_EMBED_URL,
   LA_VIEJA_GOOGLE_MAPS_URL,
   LA_VIEJA_WAZE_EMBED_URL,
   LA_VIEJA_WAZE_URL,
-} from "@/lib/constants/location";
-import { translations } from "@/lib/translations";
-import type { TourSummary } from "@/lib/types/index";
-import { formatTourPrice, tourMinPrice } from "@/lib/tour-pricing";
-import { localizeHref } from "@/lib/i18n";
+} from "@/lib/site/location";
+import { translations } from "@/lib/site/translations";
+import type { TourSummary } from "@/lib/tours/types";
+import { formatTourPrice, tourMinPrice } from "@/lib/tours/pricing";
+import { localizeHref } from "@/lib/site/i18n";
 import SiteHeader from "@/app/components/navigation/SiteHeader";
 import PageFooter from "@/app/components/sections/PageFooter";
 

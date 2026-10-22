@@ -2,8 +2,8 @@
 
 import { useEffect, useRef } from "react";
 import useReservationForm from "@/app/hooks/useReservationForm";
-import { ADDON_OPTIONS, RESERVATION_TRAVELER_DRAFT_KEY } from "@/lib/reservation/constants";
-import type { ReservationAddonDetails, TourTime } from "@/lib/reservation/types";
+import { ADDON_OPTIONS, RESERVATION_TRAVELER_DRAFT_KEY } from "@/lib/booking/core/constants";
+import type { ReservationAddonDetails, TourTime } from "@/lib/booking/core/types";
 import { PHONE_COUNTRIES } from "@/app/components/reservation/phoneCountries";
 
 export function useReservationTraveler({

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, type KeyboardEvent, type RefObject } from "react";
 import { ChevronDown, Check, Search } from "lucide-react";
 import { PHONE_COUNTRIES as ALL_PHONE_COUNTRIES } from "@/app/components/reservation/phoneCountries";
-import type { ReservationFormState } from "@/lib/reservation/types";
+import type { ReservationFormState } from "@/lib/booking/core/types";
 
 export const FormError = ({ message }: { message: string }) => (
   <p className="mt-1.5 flex items-center gap-1 text-xs font-semibold text-red-700 dark:text-red-300" role="alert">

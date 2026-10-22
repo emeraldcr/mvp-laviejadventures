@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
-import { SITE_URL } from "@/lib/site-config";
-import { readPublicTours } from "@/lib/tours/public-catalog";
-import { localizeHref } from "@/lib/i18n";
+import { SITE_URL } from "@/lib/site/config";
+import { readPublicTours } from "@/lib/tours/catalog/public";
+import { localizeHref } from "@/lib/site/i18n";
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const routes = ["/", "/info", "/tours", "/galeria", "/tiempo", "/organics", "/preguntas-frecuentes", "/terminos-y-condiciones", "/politica-de-privacidad"];
   let tours: Awaited<ReturnType<typeof readPublicTours>> = [];

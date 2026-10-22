@@ -4,27 +4,27 @@ import { NextResponse } from "next/server";
 import {
   getPayPalApiBaseUrl,
   getPayPalAccessToken,
-} from "@/lib/helpers/paypal";
+} from "@/lib/payments/paypal/helpers";
 
-import { getDb } from "@/lib/helpers/mongodb";
-import { PAYPAL_CURRENCY, PAYPAL_CUSTOM_ID_MAX_LENGTH } from "@/lib/constants/paypal";
-import { COLLECTIONS } from "@/lib/constants/db";
+import { getDb } from "@/lib/data/mongodb";
+import { PAYPAL_CURRENCY, PAYPAL_CUSTOM_ID_MAX_LENGTH } from "@/lib/payments/paypal/constants";
+import { COLLECTIONS } from "@/lib/data/collections";
 import { createHash, randomUUID } from "node:crypto";
-import { acquireCapacityHold, releaseCapacityHold } from "@/lib/reservation/capacity-holds";
-import { getRemainingCapacityForTourDate } from "@/lib/reservation/capacity";
+import { acquireCapacityHold, releaseCapacityHold } from "@/lib/booking/availability/holds";
+import { getRemainingCapacityForTourDate } from "@/lib/booking/availability/capacity";
 
 import {
   getMinBookableIsoDateInCostaRica,
   isDateOnOrAfterMinBookableInCostaRica,
-} from "@/lib/helpers/costa-rica-time";
+} from "@/lib/shared/dates/costa-rica-time";
 
-import type { ReservationAddonDetails } from "@/lib/reservation/types";
-import { normalizeReservationDate } from "@/lib/reservation/dates";
+import type { ReservationAddonDetails } from "@/lib/booking/core/types";
+import { normalizeReservationDate } from "@/lib/booking/core/dates";
 import {
   isReservationQuoteError,
   quoteReservation,
   requiredReservationFieldsPresent,
-} from "@/lib/reservation/quote";
+} from "@/lib/booking/checkout/quote";
 
 interface CreateOrderRequest {
   bookingAttemptId?: string;

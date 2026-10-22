@@ -1,7 +1,7 @@
 // app/payment/success/emailService.ts
 import { Resend } from "resend";
-import type { SendEmailParams } from "@/lib/types/types";
-import { getEmailFrom } from "@/lib/constants/email";
+import type { SendEmailParams } from "@/lib/email/types";
+import { getEmailFrom } from "@/lib/email/constants";
 
 export type ConfirmationEmailResult =
   | { status: "sent" }

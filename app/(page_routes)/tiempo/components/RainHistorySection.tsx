@@ -4,9 +4,9 @@ import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, CartesianGrid,
 } from "recharts";
 import { CloudRain, Activity } from "lucide-react";
-import type { RainNarrative } from "@/lib/helpers/tiempoHelpers";
-import type { AccumulationPoint } from "@/lib/helpers/tiempoHelpers";
-import type { RainBaseline } from "@/lib/types/tiempo-api";
+import type { RainNarrative } from "@/lib/weather/helpers/observations";
+import type { AccumulationPoint } from "@/lib/weather/helpers/observations";
+import type { RainBaseline } from "@/lib/weather/types/api";
 import { CustomBarTooltip } from "./CustomBarTooltip";
 import { AccumulationPanel } from "./AccumulationPanel";
 import { RainAccumulationChart } from "./RainAccumulationChart";

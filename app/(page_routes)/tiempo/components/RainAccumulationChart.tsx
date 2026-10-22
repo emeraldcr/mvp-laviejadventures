@@ -13,7 +13,7 @@ import {
   Legend,
 } from "recharts";
 import { CloudRain } from "lucide-react";
-import type { AccumulationPoint } from "@/lib/helpers/tiempoHelpers";
+import type { AccumulationPoint } from "@/lib/weather/helpers/observations";
 import { CHART, AXIS_LEFT_MARGIN } from "./chartTheme";
 
 type TooltipEntry = { name?: string; value?: number; color?: string };

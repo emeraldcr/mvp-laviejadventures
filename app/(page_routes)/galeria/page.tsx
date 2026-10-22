@@ -1,4 +1,4 @@
-import { getImages } from "@/lib/helpers/getImages";
+import { getImages } from "@/lib/site/media/getImages";
 import { GaleriaContent } from "./GaleriaContent";
 
 export default function GalleryPage() {

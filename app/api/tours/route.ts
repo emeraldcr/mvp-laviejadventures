@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { readPublicTours } from "@/lib/tours/public-catalog";
+import { readPublicTours } from "@/lib/tours/catalog/public";
 
 export async function GET() {
   try {

@@ -1,4 +1,4 @@
-import type { BookingStepId } from "@/lib/reservation/types";
+import type { BookingStepId } from "@/lib/booking/core/types";
 
 interface ReservationDetailsStepProgressProps {
   steps: Array<{ id: BookingStepId; label: string }>;

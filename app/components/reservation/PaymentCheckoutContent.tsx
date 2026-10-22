@@ -2,13 +2,13 @@
 
 import React, { useMemo, useState } from "react";
 import { Building2, CalendarDays, Clock3, CreditCard, Mail, MessageCircle, Phone, ShieldCheck, Ticket, UserRound } from "lucide-react";
-import { useLanguage } from "@/lib/LanguageContext";
-import { translations } from "@/lib/translations";
-import type { OrderDetails } from "@/lib/types/index";
+import { useLanguage } from "@/lib/site/contexts/LanguageContext";
+import { translations } from "@/lib/site/translations";
+import type { OrderDetails } from "@/lib/booking/types";
 import LocalPaymentOptions, { type LocalPaymentMethod } from "@/app/components/reservation/LocalPaymentOptions";
 import { useCheckoutQuote } from "@/app/components/reservation/hooks/useCheckoutQuote";
-import { ADDON_DATA } from "@/lib/reservation/addons";
-import { usePendingBooking } from "@/lib/reservation/use-pending-booking";
+import { ADDON_DATA } from "@/lib/booking/addons/catalog";
+import { usePendingBooking } from "@/lib/booking/checkout/use-pending-booking";
 import { usePayPalCheckout } from "@/app/components/reservation/hooks/usePayPalCheckout";
 import { buildBookingAnalyticsMetadata } from "@/app/components/reservation/checkoutUtils";
 import SafetyBookingNotice from "@/app/components/reservation/SafetyBookingNotice";

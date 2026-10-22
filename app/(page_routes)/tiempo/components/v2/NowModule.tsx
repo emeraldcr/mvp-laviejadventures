@@ -4,8 +4,8 @@ import {
   CloudRain, TrendingUp, TrendingDown, Minus, Droplets, Thermometer,
   Wind, CloudSun, Gauge, Waves,
 } from "lucide-react";
-import type { TiempoModel } from "@/lib/types/tiempo-model";
-import type { RainData } from "@/lib/types/index";
+import type { TiempoModel } from "@/lib/weather/types/model";
+import type { RainData } from "@/lib/weather/types/response";
 import { ConfidencePill } from "./ConfidencePill";
 import { MethodNote } from "./MethodNote";
 

@@ -5,8 +5,8 @@ import {
   isTransportConfigComplete,
   resolveTransportEndpoints,
   type TransportQuoteResult,
-} from "@/lib/reservation/transport";
-import type { ReservationAddonDetails } from "@/lib/reservation/types";
+} from "@/lib/booking/transport/quote";
+import type { ReservationAddonDetails } from "@/lib/booking/core/types";
 
 export function useTransportQuote({
   enabled,
