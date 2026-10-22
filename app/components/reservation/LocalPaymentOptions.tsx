@@ -102,30 +102,30 @@ export default function LocalPaymentOptions({
   if (method === "whatsapp") {
     return (
       <div className="space-y-4">
-        <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-sm leading-relaxed text-emerald-50">
+        <div className="lva-status-success rounded-xl px-4 py-3 text-sm leading-relaxed">
           {isEs
             ? "Confirmá tu reserva por WhatsApp con Allan o Verónica. Guardamos tu solicitud y te respondemos con disponibilidad y pago local si lo preferís."
             : "Confirm your booking on WhatsApp with our team. We save your request and reply with availability and local payment options if you prefer."}
         </div>
 
-        <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4 text-sm text-zinc-300">
-          <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.16em] text-zinc-500">
+        <div className="lva-card-muted rounded-xl p-4 text-sm">
+          <p className="lva-muted mb-2 text-[11px] font-bold uppercase tracking-[0.16em]">
             {isEs ? "Mensaje listo para enviar" : "Ready-to-send message"}
           </p>
-          <pre className="max-h-48 overflow-auto whitespace-pre-wrap break-words font-sans text-xs leading-relaxed text-zinc-200">
+          <pre className="lva-body max-h-48 overflow-auto whitespace-pre-wrap break-words font-sans text-xs leading-relaxed">
             {decodeURIComponent(whatsappHref.split("text=")[1] ?? "")}
           </pre>
         </div>
 
         {saveError && (
-          <p className="rounded-xl border border-red-400/30 bg-red-950/40 px-4 py-3 text-sm text-red-100" role="alert">
+          <p className="lva-alert-error rounded-xl px-4 py-3 text-sm" role="alert">
             {saveError}
           </p>
         )}
 
         {referenceCode && (
-          <div className="flex items-center gap-2 rounded-xl border border-teal-300/20 bg-teal-400/10 px-4 py-3 text-sm text-teal-100">
-            <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden />
+          <div className="lva-status-success flex items-center gap-2 rounded-xl px-4 py-3 text-sm">
+            <CheckCircle2 className="lva-accent h-4 w-4 shrink-0" aria-hidden />
             <span>
               {isEs ? "Referencia guardada:" : "Reference saved:"}{" "}
               <strong>{referenceCode}</strong>
@@ -137,7 +137,7 @@ export default function LocalPaymentOptions({
           type="button"
           onClick={() => void handleWhatsAppClick()}
           disabled={isSaving}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#25D366] px-5 py-3.5 text-sm font-bold text-white shadow-lg shadow-emerald-900/30 transition hover:bg-[#1ebe5d] disabled:cursor-not-allowed disabled:opacity-60"
+          className="lva-button-whatsapp w-full"
         >
           <MessageCircle className="h-5 w-5" aria-hidden />
           {isSaving
@@ -154,7 +154,7 @@ export default function LocalPaymentOptions({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-xl border border-amber-300/20 bg-amber-400/10 px-4 py-3 text-sm leading-relaxed text-amber-50">
+      <div className="lva-status-warning rounded-xl px-4 py-3 text-sm leading-relaxed">
         {isEs
           ? "Pagá con SINPE Móvil o transferencia bancaria. Usá la referencia en el detalle del pago y envianos el comprobante por WhatsApp para confirmar."
           : "Pay with SINPE Móvil or bank transfer. Use the reference in the payment detail and send us the receipt on WhatsApp to confirm."}
@@ -165,7 +165,7 @@ export default function LocalPaymentOptions({
           type="button"
           onClick={() => void handleSinpeStart()}
           disabled={isSaving}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-teal-500 px-5 py-3.5 text-sm font-black text-white transition hover:bg-teal-400 disabled:cursor-not-allowed disabled:opacity-60"
+          className="lva-button-primary w-full"
         >
           {isSaving
             ? isEs ? "Generando referencia…" : "Generating reference…"
@@ -174,25 +174,25 @@ export default function LocalPaymentOptions({
       )}
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
-          <div className="mb-2 flex items-center gap-2 text-teal-200">
+        <div className="lva-card-muted rounded-xl p-4">
+          <div className="lva-accent mb-2 flex items-center gap-2">
             <Smartphone className="h-4 w-4" aria-hidden />
             <p className="text-xs font-bold uppercase tracking-[0.16em]">SINPE Móvil</p>
           </div>
-          <p className="text-lg font-black text-white">{SINPE_PHONE_DISPLAY}</p>
-          <p className="mt-1 text-xs text-zinc-400">
+          <p className="lva-heading text-lg font-black">{SINPE_PHONE_DISPLAY}</p>
+          <p className="lva-muted mt-1 text-xs">
             {isEs ? "Al mismo número de WhatsApp de reservas." : "Same number as booking WhatsApp."}
           </p>
         </div>
 
-        <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
-          <div className="mb-2 flex items-center gap-2 text-teal-200">
+        <div className="lva-card-muted rounded-xl p-4">
+          <div className="lva-accent mb-2 flex items-center gap-2">
             <Building2 className="h-4 w-4" aria-hidden />
             <p className="text-xs font-bold uppercase tracking-[0.16em]">
               {isEs ? "Transferencia" : "Bank transfer"}
             </p>
           </div>
-          <p className="text-sm font-semibold text-zinc-100">
+          <p className="lva-heading text-sm font-semibold">
             {isEs
               ? "Coordinamos los datos bancarios por WhatsApp al enviar tu referencia."
               : "We share bank details on WhatsApp once you send your reference."}
@@ -200,12 +200,12 @@ export default function LocalPaymentOptions({
         </div>
       </div>
 
-      <div className="rounded-xl border border-teal-300/20 bg-teal-400/10 p-4">
-        <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-teal-200">
+      <div className="lva-card-accent rounded-xl p-4">
+        <p className="lva-accent text-[11px] font-bold uppercase tracking-[0.16em]">
           {isEs ? "Monto a transferir" : "Amount to transfer"}
         </p>
-        <p className="mt-1 text-3xl font-black text-white">${orderDetails.total.toFixed(2)} USD</p>
-        <p className="mt-1 text-xs text-teal-100/80">
+        <p className="lva-heading mt-1 text-3xl font-black">${orderDetails.total.toFixed(2)} USD</p>
+        <p className="lva-muted mt-1 text-xs">
           {isEs
             ? "Si pagás en colones, usá el tipo de cambio del día y mencioná la referencia."
             : "If paying in colones, use the day's exchange rate and include the reference."}
@@ -213,34 +213,34 @@ export default function LocalPaymentOptions({
       </div>
 
       {isSaving && (
-        <p className="text-sm text-zinc-400" role="status">
+        <p className="lva-muted text-sm" role="status">
           {isEs ? "Generando referencia de pago..." : "Generating payment reference..."}
         </p>
       )}
 
       {saveError && (
-        <p className="rounded-xl border border-red-400/30 bg-red-950/40 px-4 py-3 text-sm text-red-100" role="alert">
+        <p className="lva-alert-error rounded-xl px-4 py-3 text-sm" role="alert">
           {saveError}
         </p>
       )}
 
       {referenceCode && (
-        <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
-          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-zinc-500">
+        <div className="lva-card-muted rounded-xl p-4">
+          <p className="lva-muted text-[11px] font-bold uppercase tracking-[0.16em]">
             {isEs ? "Referencia obligatoria" : "Required reference"}
           </p>
           <div className="mt-2 flex flex-wrap items-center gap-3">
-            <span className="font-mono text-2xl font-black tracking-wider text-white">{referenceCode}</span>
+            <span className="lva-heading font-mono text-2xl font-black tracking-wider">{referenceCode}</span>
             <button
               type="button"
               onClick={() => void handleCopyReference()}
-              className="inline-flex items-center gap-1.5 rounded-full border border-zinc-600 px-3 py-1.5 text-xs font-semibold text-zinc-200 transition hover:border-teal-300 hover:text-teal-200"
+              className="lva-button-secondary px-3 py-1.5 text-xs"
             >
               <Copy className="h-3.5 w-3.5" aria-hidden />
               {copied ? (isEs ? "Copiado" : "Copied") : isEs ? "Copiar" : "Copy"}
             </button>
           </div>
-          <p className="mt-2 text-xs text-zinc-400">
+          <p className="lva-muted mt-2 text-xs">
             {isEs
               ? "Incluí esta referencia en el detalle del SINPE o transferencia."
               : "Include this reference in your SINPE or transfer detail."}
@@ -267,7 +267,7 @@ export default function LocalPaymentOptions({
           });
         }}
         aria-disabled={!referenceCode}
-        className={`inline-flex w-full items-center justify-center gap-2 rounded-full border border-[#25D366]/40 bg-[#25D366]/15 px-5 py-3 text-sm font-bold text-[#9ef0b8] transition hover:bg-[#25D366]/25 ${!referenceCode ? "cursor-not-allowed opacity-45" : ""}`}
+        className={`lva-button-whatsapp-outline w-full ${!referenceCode ? "cursor-not-allowed opacity-45" : ""}`}
       >
         <MessageCircle className="h-5 w-5" aria-hidden />
         {isEs ? "Enviar comprobante por WhatsApp" : "Send receipt on WhatsApp"}

@@ -30,6 +30,13 @@
   --lva-radius-control: 999px;
   --lva-shadow-card: 0 18px 50px rgba(41, 37, 36, 0.09);
   --lva-shadow-accent: 0 14px 36px rgba(0, 196, 176, 0.28);
+  --lva-footer-bg: #101916;
+  --lva-footer-fg: #f4fffb;
+  --lva-footer-muted: rgba(244, 255, 251, 0.68);
+  --lva-footer-subtle: rgba(244, 255, 251, 0.44);
+  --lva-footer-border: rgba(244, 255, 251, 0.14);
+  --lva-footer-panel: rgba(244, 255, 251, 0.045);
+  --lva-footer-accent: #70eee1;
   --lva-content-max: 80rem;
   --lva-space-section: clamp(4rem, 8vw, 8rem);
 }
@@ -84,10 +91,6 @@ body {
 
 /* Shared public-brand primitives. Private/admin surfaces retain their own theme. */
 .lva-public-shell { background: var(--background); color: var(--foreground); }
-.lva-dark-section { background: var(--lva-section-dark-bg); color: var(--lva-section-dark-fg); }
-.lva-dark-section :where(.lva-muted, .text-muted) { color: var(--lva-section-dark-muted); }
-.lva-dark-section :where(.lva-section-border) { border-color: var(--lva-section-dark-border); }
-.lva-dark-section :where(.lva-section-accent) { color: var(--lva-section-dark-accent); }
 .lva-site-nav { color: var(--lva-ink); }
 .lva-site-nav[data-overlay="false"] { background: color-mix(in srgb, var(--lva-surface) 88%, transparent); box-shadow: var(--lva-nav-shadow); backdrop-filter: blur(18px); }
 .lva-site-nav[data-overlay="true"] { color: #fff; }
@@ -102,38 +105,86 @@ body {
 .lva-nav-cta:hover { background: var(--lva-surface); }
 .lva-mobile-menu { background: var(--background); color: var(--lva-ink); }
 
-/* Shared visual language for the public tour detail and payment surfaces. */
-.tour-detail-page > section:not(:first-of-type) [class*="text-white"] { color: var(--lva-ink) !important; }
-.tour-detail-page > section:not(:first-of-type) [class*="text-zinc-"] { color: var(--lva-ink-muted) !important; }
-.tour-detail-page > section:not(:first-of-type) [class*="text-cyan-"] { color: var(--lva-accent) !important; }
-.tour-detail-page > section:not(:first-of-type) [class*="bg-white/"] { background-color: rgba(255,255,255,.72) !important; }
-.tour-detail-page > section:not(:first-of-type) [class*="bg-cyan-"] { background-color: rgba(0,121,107,.06) !important; }
-.tour-detail-page > section:not(:first-of-type) [class*="border-white/"] { border-color: rgba(120,113,108,.22) !important; }
-.tour-detail-page > section:not(:first-of-type) [class*="border-cyan-"] { border-color: rgba(0,121,107,.2) !important; }
-.tour-detail-page > section:not(:first-of-type) [class*="bg-black"] { background-color: var(--background) !important; }
-.tour-detail-page > section:not(:first-of-type) [class*="border-rose-"] { border-color: rgba(190,24,93,.18) !important; }
-.tour-detail-page > section:not(:first-of-type) [class*="text-rose-"] { color: #be185d !important; }
-.checkout-content [class*="bg-zinc-950"],
-.checkout-content [class*="bg-white/[0.03]"],
-.checkout-content [class*="bg-white/[0.04]"] { background-color: rgba(255,255,255,.72) !important; }
-.checkout-content [class*="text-zinc-"] { color: var(--lva-ink-muted) !important; }
-.checkout-content [class*="text-white"] { color: var(--lva-ink) !important; }
-.checkout-content [class*="border-white/"] { border-color: rgba(120,113,108,.22) !important; }
-.checkout-content [class*="bg-red-950"] { background-color: rgba(254,226,226,.72) !important; }
-.checkout-content [class*="text-red-"] { color: #b91c1c !important; }
-.dark .tour-detail-page > section:not(:first-of-type) [class*="text-white"] { color: #fff !important; }
-.dark .tour-detail-page > section:not(:first-of-type) [class*="text-zinc-"] { color: #d4d4d8 !important; }
-.dark .tour-detail-page > section:not(:first-of-type) [class*="text-cyan-"] { color: #a5f3fc !important; }
-.dark .tour-detail-page > section:not(:first-of-type) [class*="bg-white/"] { background-color: rgba(255,255,255,.04) !important; }
-.dark .tour-detail-page > section:not(:first-of-type) [class*="bg-cyan-"] { background-color: rgba(34,211,238,.04) !important; }
-.dark .tour-detail-page > section:not(:first-of-type) [class*="border-white/"] { border-color: rgba(255,255,255,.1) !important; }
-.dark .tour-detail-page > section:not(:first-of-type) [class*="bg-black"] { background-color: var(--background) !important; }
-.dark .checkout-content [class*="bg-zinc-950"],
-.dark .checkout-content [class*="bg-white/[0.03]"],
-.dark .checkout-content [class*="bg-white/[0.04]"] { background-color: rgba(10,10,12,.72) !important; }
-.dark .checkout-content [class*="text-zinc-"] { color: #d4d4d8 !important; }
-.dark .checkout-content [class*="text-white"] { color: #fff !important; }
-.dark .checkout-content [class*="border-white/"] { border-color: rgba(255,255,255,.1) !important; }
+/* One public footer language shared by the home, tours, detail, weather,
+   gallery, support and legal surfaces. */
+.lva-site-footer { background: var(--lva-footer-bg); color: var(--lva-footer-fg); }
+.lva-footer-accent-line { background: linear-gradient(90deg, transparent, var(--lva-footer-accent), transparent); }
+.lva-footer-glow { background: color-mix(in srgb, var(--lva-accent-bright) 10%, transparent); }
+.lva-footer-kicker, .lva-footer-link-column-title { color: var(--lva-footer-accent); }
+.lva-footer-title { color: var(--lva-footer-fg); }
+.lva-footer-copy, .lva-footer-bottom { color: var(--lva-footer-muted); }
+.lva-footer-border { border-color: var(--lva-footer-border); }
+.lva-footer-panel, .lva-footer-map-card { border-color: var(--lva-footer-border); background: var(--lva-footer-panel); }
+.lva-footer-map-copy { color: var(--lva-footer-muted); }
+.lva-footer-map-link { border-color: color-mix(in srgb, var(--lva-footer-accent) 30%, transparent); color: var(--lva-footer-accent); }
+.lva-footer-contact { border-color: var(--lva-footer-border); background: var(--lva-footer-panel); }
+.lva-footer-contact-featured { border-color: color-mix(in srgb, var(--lva-footer-accent) 35%, transparent); background: color-mix(in srgb, var(--lva-accent-bright) 12%, transparent); }
+.lva-footer-contact-value { color: var(--lva-footer-fg); }
+.lva-footer-social { border-color: var(--lva-footer-border); background: var(--lva-footer-panel); }
+.lva-footer-link { color: var(--lva-footer-muted); }
+.lva-footer-link:hover { border-color: var(--lva-footer-border); background: var(--lva-footer-panel); color: var(--lva-footer-fg); }
+.lva-footer-map-frame { border-color: var(--lva-footer-border); }
+
+/* Semantic public surfaces and controls. Components opt into these roles
+   directly; no route-level selector should reinterpret utility class names. */
+.lva-surface { background: var(--lva-surface); color: var(--lva-ink); }
+.lva-surface-muted { background: var(--lva-surface-muted); color: var(--lva-ink); }
+.lva-card { border: 1px solid var(--lva-border); background: var(--lva-surface); color: var(--lva-ink); box-shadow: var(--lva-shadow-card); }
+.lva-card-muted { border: 1px solid var(--lva-border); background: var(--lva-surface-muted); color: var(--lva-ink); }
+.lva-card-accent { border: 1px solid color-mix(in srgb, var(--lva-accent) 25%, var(--lva-border)); background: color-mix(in srgb, var(--lva-accent) 7%, var(--lva-surface)); color: var(--lva-ink); }
+.lva-card-danger { border-color: color-mix(in srgb, #be185d 20%, var(--lva-border)); background: color-mix(in srgb, #be185d 5%, var(--lva-surface)); }
+.lva-heading { color: var(--lva-ink); }
+.lva-body, .lva-muted { color: var(--lva-ink-muted); }
+.lva-accent { color: var(--lva-accent); }
+.lva-section-border { border-color: var(--lva-border); }
+.lva-divider { background: linear-gradient(to right, var(--lva-border-strong), transparent); }
+.lva-icon-surface { background: color-mix(in srgb, var(--lva-accent) 10%, transparent); color: var(--lva-accent); }
+.lva-chip { border: 1px solid color-mix(in srgb, var(--lva-accent) 22%, var(--lva-border)); background: color-mix(in srgb, var(--lva-accent) 8%, transparent); color: var(--lva-accent); }
+.lva-timeline-dot { border-color: var(--lva-accent); background: var(--background); }
+.lva-button-primary, .lva-button-secondary, .lva-button-whatsapp, .lva-button-whatsapp-outline {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  border-radius: var(--lva-radius-control);
+  padding: .625rem 1.5rem;
+  font-size: .875rem;
+  font-weight: 800;
+  transition: transform 180ms ease, background-color 180ms ease, border-color 180ms ease, color 180ms ease;
+}
+.lva-button-primary { background: var(--lva-accent-bright); color: var(--lva-accent-ink); box-shadow: var(--lva-shadow-accent); }
+.lva-button-primary:hover { background: var(--lva-accent); color: #fff; transform: translateY(-1px); }
+.lva-button-secondary { border: 1px solid var(--lva-border-strong); background: var(--lva-surface); color: var(--lva-ink); }
+.lva-button-secondary:hover { border-color: var(--lva-accent); color: var(--lva-accent); transform: translateY(-1px); }
+.lva-button-whatsapp { background: #25d366; color: #073b27; box-shadow: 0 14px 32px rgba(37, 211, 102, .2); }
+.lva-button-whatsapp:hover { background: #1ebe5d; transform: translateY(-1px); }
+.lva-button-whatsapp-outline { border: 1px solid rgba(37, 211, 102, .4); background: rgba(37, 211, 102, .12); color: #138a4b; }
+.lva-button-whatsapp-outline:hover { background: rgba(37, 211, 102, .2); }
+.lva-button-primary:focus-visible, .lva-button-secondary:focus-visible, .lva-button-whatsapp:focus-visible, .lva-button-whatsapp-outline:focus-visible { outline: 4px solid var(--lva-focus); outline-offset: 2px; }
+.lva-button-primary:disabled, .lva-button-secondary:disabled, .lva-button-whatsapp:disabled { pointer-events: none; opacity: .5; }
+.lva-status-success { border: 1px solid color-mix(in srgb, #16a34a 22%, var(--lva-border)); background: color-mix(in srgb, #16a34a 8%, var(--lva-surface)); color: #166534; }
+.lva-status-warning { border: 1px solid color-mix(in srgb, #d97706 22%, var(--lva-border)); background: color-mix(in srgb, #f59e0b 10%, var(--lva-surface)); color: #92400e; }
+.lva-alert-error { border: 1px solid color-mix(in srgb, #dc2626 24%, var(--lva-border)); background: color-mix(in srgb, #ef4444 8%, var(--lva-surface)); color: #b91c1c; }
+.lva-control { border: 1px solid var(--lva-border); background: var(--lva-surface-muted); color: var(--lva-ink); }
+.lva-control[data-active="true"] { border-color: color-mix(in srgb, var(--lva-accent) 55%, var(--lva-border)); background: color-mix(in srgb, var(--lva-accent) 10%, var(--lva-surface)); color: var(--lva-accent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--lva-accent) 12%, transparent); }
+.lva-control:hover { border-color: color-mix(in srgb, var(--lva-accent) 35%, var(--lva-border)); }
+.lva-payment-panel { border: 1px solid color-mix(in srgb, var(--lva-accent) 22%, var(--lva-border)); background: var(--lva-surface); color: var(--lva-ink); box-shadow: var(--lva-shadow-card); }
+.lva-hero-overlay { background: linear-gradient(to top, rgba(0,0,0,.95), rgba(0,0,0,.7), rgba(0,0,0,.35)); }
+
+.lva-dark-section { background: var(--lva-section-dark-bg); color: var(--lva-section-dark-fg); }
+.lva-dark-section :where(.lva-heading) { color: var(--lva-section-dark-fg); }
+.lva-dark-section :where(.lva-body, .lva-muted) { color: var(--lva-section-dark-muted); }
+.lva-dark-section :where(.lva-accent) { color: var(--lva-section-dark-accent); }
+.lva-dark-section :where(.lva-section-border) { border-color: var(--lva-section-dark-border); }
+.lva-dark-section :where(.lva-divider) { background: linear-gradient(to right, var(--lva-section-dark-border), transparent); }
+.lva-dark-section :where(.lva-link:hover) { color: var(--lva-section-dark-fg); }
+.lva-dark-section :where(.lva-button-secondary) { border-color: rgba(255,255,255,.2); background: rgba(255,255,255,.1); color: #fff; }
+.lva-dark-section :where(.lva-button-secondary:hover) { border-color: rgba(255,255,255,.5); background: rgba(255,255,255,.16); color: #fff; }
+.dark .lva-button-whatsapp-outline { color: #9ef0b8; }
+.dark .lva-status-success { color: #bbf7d0; }
+.dark .lva-status-warning { color: #fde68a; }
+.dark .lva-alert-error { color: #fecaca; }
 
 /* ── Homepage redesign keyframes ── */
 @keyframes lva-kenburns {
