@@ -4,16 +4,17 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { Image as ImageIcon, Pause, Play } from "lucide-react";
-import { localizeHref } from "@/lib/i18n";
+import { localizeHref, tourDifficulty, tourDuration } from "@/lib/i18n";
 import {
   ArrowRight,
   MapPin,
   MessageCircle,
 } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
-import { BOOKING_HREF, localizedHomeWhatsAppHref, primaryBookingLabel } from "./home-utils";
+import type { TourSummary } from "@/lib/types/index";
+import { getTourPriceDisplay, BOOKING_HREF, localizedHomeWhatsAppHref, primaryBookingLabel } from "./home-utils";
 
-export default function HomeHero() {
+export default function HomeHero({ tour }: { tour?: TourSummary }) {
   const { lang } = useLanguage();
   const isEs = lang === "es";
   const whatsappHref = localizedHomeWhatsAppHref(isEs);
@@ -116,6 +117,9 @@ export default function HomeHero() {
               {isEs ? "Hablar con un guía" : "Talk to a guide"}
             </a>
           </div>
+          {tour && <p className="mt-3 max-w-xl text-xs font-bold leading-relaxed text-white/75 sm:text-sm">
+            {tourDuration(tour.duration ?? "", lang)} · {tourDifficulty(tour.difficulty ?? "", lang)} · {isEs ? "desde" : "from"} {getTourPriceDisplay(tour, isEs).compact}/{isEs ? "persona" : "person"} · {isEs ? "cupos sujetos a confirmación" : "spaces subject to confirmation"}
+          </p>}
 
         </div>
       </div>

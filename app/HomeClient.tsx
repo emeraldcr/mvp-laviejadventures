@@ -37,7 +37,7 @@ export default function HomeClient({ children, tours }: { children: ReactNode; t
       <main className="lva-public-shell min-h-screen overflow-x-hidden font-sans">
         <SiteHeader />
         <HomeStructuredData tours={tours} locale={lang} />
-        <HomeHero />
+        <HomeHero tour={ciudadEsmeralda} />
         <HomeTourDiscovery tours={tours} />
         {ciudadEsmeralda && <FeaturedStory tours={[ciudadEsmeralda]} />}
         <HomeTrustSection tour={ciudadEsmeralda} />
