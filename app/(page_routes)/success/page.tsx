@@ -31,11 +31,15 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
       email={result.email}
       phone={result.phone}
       date={result.date}
+      tourName={result.tourName}
+      tourPackage={result.tourPackage}
+      tourTime={result.tourTime}
       tickets={result.tickets}
       amount={result.amount}
       currency={result.currency}
       orderId={result.orderId}
       captureId={result.captureId}
+      reservationId={result.reservationId}
       status={result.status}
     />
   );

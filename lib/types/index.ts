@@ -345,11 +345,15 @@ export type SuccessClientProps = {
   name?: string | null;
   phone?: string | null;
   date?: string | null;
+  tourName?: string | null;
+  tourPackage?: string | null;
+  tourTime?: string | null;
   tickets?: string | number | null;
   amount?: string | number | null;
   currency?: string | null;
   orderId?: string | null;
   captureId?: string | null;
+  reservationId?: string | null;
   status?: string | null;
   error?: string | null;
 };

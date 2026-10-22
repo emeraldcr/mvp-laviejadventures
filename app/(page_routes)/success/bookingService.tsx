@@ -82,11 +82,15 @@ type SuccessPageResult = {
   email?: string | null;
   phone?: string | null;
   date?: string | null;
+  tourName?: string | null;
+  tourPackage?: string | null;
+  tourTime?: string | null;
   tickets?: string | number | null;
   amount?: string | number | null;
   currency?: string | null;
   orderId?: string | null;
   captureId?: string | null;
+  reservationId?: string | null;
   status?: string | null;
 };
 
@@ -114,6 +118,9 @@ export async function processSuccessfulBooking(orderId: string): Promise<Success
       email: parsed.email,
       phone: parsed.phone,
       date: parsed.date,
+      tourName: parsed.tourName,
+      tourPackage: parsed.tourPackage,
+      tourTime: parsed.tourTime,
       tickets: parsed.ticketsStr,
     };
   }
@@ -169,11 +176,15 @@ export async function processSuccessfulBooking(orderId: string): Promise<Success
     email: parsed.email,
     phone: parsed.phone,
     date: parsed.date,
+    tourName: parsed.tourName,
+    tourPackage: parsed.tourPackage,
+    tourTime: parsed.tourTime,
     tickets: parsed.ticketsStr,
     amount: parsed.amountStr,
     currency: parsed.currency,
     orderId,
     captureId: parsed.captureId,
+    reservationId,
     status: parsed.status,
   };
 }

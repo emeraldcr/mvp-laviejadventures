@@ -160,7 +160,6 @@ export function InsertedElementArtwork({
 
   if (element.kind === "image") {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
       <img
         src={element.src}
         alt=""

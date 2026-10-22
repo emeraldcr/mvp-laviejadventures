@@ -3,6 +3,8 @@
 import { useLanguage } from "@/lib/LanguageContext";
 import { trackAnalyticsEvent } from "@/lib/analytics/client";
 import { translations } from "@/lib/translations";
+import { LA_VIEJA_GOOGLE_MAPS_URL, LA_VIEJA_LOCATION_LABEL } from "@/lib/constants/location";
+import { BUSINESS_WHATSAPP_URL } from "@/lib/site-config";
 import Link from "next/link";
 import { useEffect } from "react";
 import type { SuccessClientProps } from "@/lib/types/types";
@@ -100,11 +102,15 @@ function SuccessState({
   email,
   phone,
   date,
+  tourName,
+  tourPackage,
+  tourTime,
   tickets,
   amount,
   currency,
   orderId,
   captureId,
+  reservationId,
   status,
   translations: tr,
 }: SuccessClientProps & { translations: SuccessTranslations }) {
@@ -112,16 +118,28 @@ function SuccessState({
   const displayName = name || defaultCustomer;
 
   return (
-    <section className="max-w-2xl mx-auto px-4 py-20">
-      <div className="rounded-2xl bg-white/90 dark:bg-zinc-900 p-8 shadow-xl border border-zinc-200 dark:border-zinc-800">
-        <h1 className="text-3xl font-bold mb-4 text-teal-600">{tr.title}</h1>
+    <section className="mx-auto max-w-5xl px-4 py-10 sm:py-16">
+      <div className="rounded-3xl border border-zinc-200 bg-white/95 p-5 shadow-xl dark:border-zinc-800 dark:bg-zinc-900 sm:p-8">
+        <div className="flex flex-col gap-4 border-b border-zinc-200 pb-6 dark:border-zinc-800 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p className="mb-2 text-sm font-bold uppercase tracking-[0.16em] text-teal-600">La Vieja Adventures</p>
+            <h1 className="text-3xl font-bold text-teal-600 sm:text-4xl">{tr.title}</h1>
+          </div>
+          <div className="rounded-2xl bg-teal-50 px-4 py-3 text-left dark:bg-teal-950/40 sm:text-right">
+            <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">{tr.referenceLabel}</p>
+            <p className="mt-1 break-all font-mono text-sm font-bold text-zinc-900 dark:text-zinc-100">{orderId || reservationId || "N/A"}</p>
+          </div>
+        </div>
 
         <ThankYouMessage name={displayName} translations={tr} />
         <EmailConfirmationMessage email={email ?? undefined} translations={tr} />
 
-        <div className="mt-8 grid gap-6 sm:grid-cols-2">
+        <div className="mt-8 grid gap-4 sm:grid-cols-2">
           <BookingDetails
             date={date}
+            tourName={tourName}
+            tourPackage={tourPackage}
+            tourTime={tourTime}
             tickets={tickets}
             amount={amount}
             currency={currency}
@@ -142,7 +160,10 @@ function SuccessState({
           translations={tr}
         />
 
-        <div className="mt-8 flex justify-center">
+        <PreparationHub date={date} tourName={tourName} tourTime={tourTime} reference={orderId || reservationId} translations={tr} />
+
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
+          <SupportAction name={displayName} reference={orderId || reservationId} date={date} label={tr.supportAction} />
           <BackButton label={tr.backBtn} />
         </div>
       </div>
@@ -178,11 +199,14 @@ function EmailConfirmationMessage({
 
 function BookingDetails({
   date,
+  tourName,
+  tourPackage,
+  tourTime,
   tickets,
   amount,
   currency,
   translations: tr,
-}: Pick<SuccessClientProps, "date" | "tickets" | "amount" | "currency"> & {
+}: Pick<SuccessClientProps, "date" | "tourName" | "tourPackage" | "tourTime" | "tickets" | "amount" | "currency"> & {
   translations: SuccessTranslations;
 }) {
   return (
@@ -190,6 +214,9 @@ function BookingDetails({
       <h2 className="font-semibold mb-3 text-zinc-900 dark:text-zinc-100">
         {tr.detailsTitle}
       </h2>
+      <DetailLine label={tr.tourLabel} value={tourName ?? "N/A"} />
+      <DetailLine label={tr.packageLabel} value={tourPackage ?? "N/A"} />
+      <DetailLine label={tr.timeLabel} value={tourTime ?? "N/A"} />
       <DetailLine label={tr.dateLabel} value={date ?? "N/A"} />
       <DetailLine label={tr.ticketsLabel} value={tickets ?? "N/A"} />
       <DetailLine
@@ -198,6 +225,103 @@ function BookingDetails({
       />
     </div>
   );
+}
+
+function PreparationHub({
+  date,
+  tourName,
+  tourTime,
+  reference,
+  translations: tr,
+}: Pick<SuccessClientProps, "date" | "tourName" | "tourTime"> & {
+  reference?: string | null;
+  translations: SuccessTranslations;
+}) {
+  const calendarLink = buildGoogleCalendarLink({ date, tourName, tourTime, reference });
+
+  return (
+    <section className="mt-8 rounded-3xl bg-[#f4f0e7] p-5 text-zinc-900 dark:bg-zinc-800/80 dark:text-zinc-100 sm:p-6">
+      <h2 className="text-2xl font-bold">{tr.preparationTitle}</h2>
+      <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-600 dark:text-zinc-300">{tr.preparationIntro}</p>
+
+      <div className="mt-5 grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="rounded-2xl bg-white/80 p-4 dark:bg-zinc-900/70">
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-teal-700 dark:text-teal-300">{tr.meetingPointTitle}</p>
+          <p className="mt-2 font-semibold">{LA_VIEJA_LOCATION_LABEL}</p>
+          <p className="mt-3 text-sm leading-6 text-zinc-600 dark:text-zinc-300">{tr.arrivalCopy}</p>
+          <a href={LA_VIEJA_GOOGLE_MAPS_URL} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex min-h-11 items-center rounded-full bg-teal-700 px-5 font-bold text-white transition hover:bg-teal-800">{tr.directions}</a>
+        </div>
+
+        <div className="rounded-2xl bg-white/80 p-4 dark:bg-zinc-900/70">
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-teal-700 dark:text-teal-300">{tr.arrivalTitle}</p>
+          <p className="mt-2 text-2xl font-black">{arrivalLabel(tourTime)}</p>
+          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">{date || "N/A"}</p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <a href={calendarLink} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-10 items-center rounded-full border border-teal-700 px-4 text-sm font-bold text-teal-800 hover:bg-teal-50 dark:text-teal-300 dark:hover:bg-teal-950/40">{tr.addToGoogleCalendar}</a>
+            <button type="button" onClick={() => downloadCalendar({ date, tourName, tourTime, reference })} className="inline-flex min-h-10 items-center rounded-full border border-zinc-300 px-4 text-sm font-bold hover:bg-white dark:border-zinc-600 dark:hover:bg-zinc-800">{tr.downloadCalendar}</button>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-4 md:grid-cols-2">
+        <div className="rounded-2xl bg-white/80 p-4 dark:bg-zinc-900/70">
+          <h3 className="font-bold">{tr.packingTitle}</h3>
+          <ul className="mt-3 grid gap-2 text-sm text-zinc-700 dark:text-zinc-300">
+            {tr.packingItems.map((item) => <li key={item} className="flex gap-2"><span aria-hidden>✓</span><span>{item}</span></li>)}
+          </ul>
+        </div>
+        <div className="rounded-2xl bg-amber-50 p-4 text-amber-950 dark:bg-amber-950/30 dark:text-amber-100">
+          <h3 className="font-bold">{tr.calendarTitle}</h3>
+          <p className="mt-2 text-sm leading-6">{tr.calendarCopy}</p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function arrivalLabel(tourTime?: string | null) {
+  if (!tourTime) return "Confirmar con el equipo";
+  const match = tourTime.match(/^(\d{1,2}):(\d{2})$/);
+  if (!match) return `30 min antes de ${tourTime}`;
+  const date = new Date(2000, 0, 1, Number(match[1]), Number(match[2]) - 30);
+  return `30 min antes · ${date.toLocaleTimeString("es-CR", { hour: "numeric", minute: "2-digit" })}`;
+}
+
+function calendarParts(date?: string | null, tourTime?: string | null) {
+  const normalized = date?.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  const time = tourTime?.match(/^(\d{1,2}):(\d{2})$/);
+  if (!normalized) return null;
+  const [, year, month, day] = normalized;
+  const hour = Number(time?.[1] ?? 8);
+  const minute = Number(time?.[2] ?? 0);
+  const start = `${year}${month}${day}T${String(hour).padStart(2, "0")}${String(minute).padStart(2, "0")}00`;
+  const endDate = new Date(Number(year), Number(month) - 1, Number(day), hour, minute + 120);
+  const end = `${endDate.getFullYear()}${String(endDate.getMonth() + 1).padStart(2, "0")}${String(endDate.getDate()).padStart(2, "0")}T${String(endDate.getHours()).padStart(2, "0")}${String(endDate.getMinutes()).padStart(2, "0")}00`;
+  return { start, end };
+}
+
+function buildGoogleCalendarLink({ date, tourName, tourTime, reference }: Pick<SuccessClientProps, "date" | "tourName" | "tourTime"> & { reference?: string | null }) {
+  const parts = calendarParts(date, tourTime);
+  const params = new URLSearchParams({ action: "TEMPLATE", text: tourName || "La Vieja Adventures", details: `Reserva: ${reference || "N/A"}. Llegar 30 minutos antes.`, location: LA_VIEJA_LOCATION_LABEL });
+  if (parts) params.set("dates", `${parts.start}/${parts.end}`);
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
+
+function downloadCalendar({ date, tourName, tourTime, reference }: Pick<SuccessClientProps, "date" | "tourName" | "tourTime"> & { reference?: string | null }) {
+  const parts = calendarParts(date, tourTime);
+  if (!parts) return;
+  const ics = [`BEGIN:VCALENDAR`, `VERSION:2.0`, `PRODID:-//La Vieja Adventures//Booking//EN`, `BEGIN:VEVENT`, `UID:${reference || `${date}-${tourName}`}`, `DTSTAMP:${parts.start}`, `DTSTART:${parts.start}`, `DTEND:${parts.end}`, `SUMMARY:${tourName || "La Vieja Adventures"}`, `LOCATION:${LA_VIEJA_LOCATION_LABEL}`, `DESCRIPTION:Reserva ${reference || "N/A"}. Llegar 30 minutos antes.`, `END:VEVENT`, `END:VCALENDAR`].join("\r\n");
+  const url = URL.createObjectURL(new Blob([ics], { type: "text/calendar;charset=utf-8" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "la-vieja-adventures-reserva.ics";
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function SupportAction({ name, reference, date, label }: { name: string; reference?: string | null; date?: string | null; label: string }) {
+  const message = `Hola, soy ${name}. Mi referencia de reserva es ${reference || "N/A"} y la fecha es ${date || "N/A"}. Necesito ayuda con mi aventura.`;
+  return <a href={`${BUSINESS_WHATSAPP_URL}?text=${encodeURIComponent(message)}`} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 items-center rounded-xl bg-[#25D366] px-6 font-bold text-white transition hover:bg-[#1ebe5b]">{label}</a>;
 }
 
 function ContactDetails({
