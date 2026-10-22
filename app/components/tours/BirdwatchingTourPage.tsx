@@ -48,6 +48,7 @@ type TourDetail = {
   titleEs: string;
   titleEn: string;
   descriptionEs: string;
+  descriptionEn: string;
   details: string;
   duration: string;
   difficulty: string;
@@ -179,7 +180,7 @@ export default function BirdwatchingTourPage({ tour, content, locale }: Props) {
             </h1>
             <p className="mt-2 text-lg font-bold italic text-emerald-300/90 md:text-xl">{content.tagline}</p>
             <p className="mt-5 max-w-2xl text-base leading-relaxed text-zinc-200 md:text-lg">
-              {tour.details || tour.descriptionEs}
+              {isEnglish ? tour.descriptionEn || tour.descriptionEs : tour.details || tour.descriptionEs}
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">

@@ -195,7 +195,7 @@ export default function TourWeatherDashboard({ locale = "es" }: { locale?: "es" 
 
             {/* ═══ IMPACTO EN LOS TOURS DE RÍO ═══════════════════════════════ */}
             <div id="tours" className="scroll-mt-40">
-              <RiverTourImpactSection impacts={tourImpacts} />
+              <RiverTourImpactSection impacts={tourImpacts} locale={locale} />
             </div>
 
             {/* ═══ CÓMO HA LLOVIDO (histórico) ══════════════════════════════ */}
