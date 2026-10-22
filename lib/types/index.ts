@@ -356,6 +356,7 @@ export type SuccessClientProps = {
 
 export type OrderDetails = {
   bookingAttemptId?: string;
+  resumeToken?: string;
   name: string;
   email: string;
   phone: string;

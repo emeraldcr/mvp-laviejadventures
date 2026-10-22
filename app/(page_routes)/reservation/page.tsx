@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useSearchParams } from "next/navigation";
 import { useLanguage } from "@/lib/LanguageContext";
 import PaymentCheckoutContent from "@/app/components/reservation/PaymentCheckoutContent";
 import type { OrderDetails } from "@/lib/types/index";
@@ -33,10 +34,43 @@ export default function ReservationPage() {
   const { lang } = useLanguage();
   const paymentTr = translations[lang].payment;
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const resumeToken = searchParams.get("resume");
+  const [resumeDraft, setResumeDraft] = useState<OrderDetails | null>(null);
+  const [isResumeLoading, setIsResumeLoading] = useState(Boolean(resumeToken));
   const isReservationLoaded = useSyncExternalStore(subscribeToClientSnapshot, getClientReadySnapshot, getServerReadySnapshot);
   const storedOrderDetails = useSyncExternalStore(subscribeToClientSnapshot, getStoredOrderDetailsSnapshot, getServerOrderDetailsSnapshot);
   const returnPath = useSyncExternalStore(subscribeToClientSnapshot, getReservationReturnPathSnapshot, getServerReservationReturnPathSnapshot);
-  const orderDetails = useMemo(() => parseStoredOrderDetails(storedOrderDetails), [storedOrderDetails]);
+  useEffect(() => {
+    if (!resumeToken) {
+      setResumeDraft(null);
+      setIsResumeLoading(false);
+      return;
+    }
+
+    let mounted = true;
+    setIsResumeLoading(true);
+    fetch(`/api/reservation/draft?token=${encodeURIComponent(resumeToken)}`, { cache: "no-store" })
+      .then((response) => response.json().then((data) => ({ ok: response.ok, data })))
+      .then(({ ok, data }) => {
+        if (!mounted) return;
+        setResumeDraft(ok && data?.success ? parseStoredOrderDetails(JSON.stringify(data.orderDetails)) : null);
+        setIsResumeLoading(false);
+      })
+      .catch(() => {
+        if (mounted) {
+          setResumeDraft(null);
+          setIsResumeLoading(false);
+        }
+      });
+
+    return () => { mounted = false; };
+  }, [resumeToken]);
+
+  const orderDetails = useMemo(
+    () => resumeToken ? resumeDraft : parseStoredOrderDetails(storedOrderDetails),
+    [resumeDraft, resumeToken, storedOrderDetails],
+  );
 
   return (
     <CheckoutShell>
@@ -49,7 +83,7 @@ export default function ReservationPage() {
         <Link href={returnPath} className="shrink-0 rounded-full border border-stone-300 px-4 py-2 text-sm font-black text-stone-700 transition hover:border-emerald-600 hover:text-emerald-700 dark:border-white/15 dark:text-stone-200 dark:hover:border-emerald-300 dark:hover:text-emerald-300">{paymentTr.backBtn}</Link>
       </div>
       <div className="rounded-[1.75rem] border border-stone-200 bg-white/80 p-4 shadow-[0_24px_70px_rgba(30,24,16,0.1)] backdrop-blur-sm dark:border-white/10 dark:bg-stone-950/70 sm:p-6 lg:p-8">
-        {!isReservationLoaded ? (
+        {!isReservationLoaded || isResumeLoading ? (
           <div className="flex min-h-[180px] items-center justify-center text-sm font-medium text-stone-500 dark:text-stone-300" role="status">{paymentTr.loadingPaymentInfo}</div>
         ) : !orderDetails ? (
           <div className="space-y-4 text-stone-600 dark:text-stone-300"><p>{paymentTr.noActiveReservation}</p><button onClick={() => router.push(returnPath)} className="rounded-full bg-[#00C4B0] px-5 py-2.5 font-black text-[#17211f] transition hover:bg-emerald-300">{paymentTr.goToBooking}</button></div>

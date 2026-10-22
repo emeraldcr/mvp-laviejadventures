@@ -13,6 +13,7 @@ type CheckoutQuoteState = {
   synced: boolean;
   syncing: boolean;
   error: string | null;
+  resumePath: string | null;
 };
 
 export function useCheckoutQuote(orderDetails: OrderDetails, lang: "es" | "en") {
@@ -26,6 +27,7 @@ export function useCheckoutQuote(orderDetails: OrderDetails, lang: "es" | "en") 
     synced: false,
     syncing: true,
     error: null,
+    resumePath: null,
   });
 
   useEffect(() => {
@@ -90,6 +92,7 @@ export function useCheckoutQuote(orderDetails: OrderDetails, lang: "es" | "en") 
           synced: true,
           syncing: false,
           error: null,
+          resumePath: null,
         });
 
         const stored = {
@@ -101,6 +104,26 @@ export function useCheckoutQuote(orderDetails: OrderDetails, lang: "es" | "en") 
           transportQuote: nextTransportQuote,
         };
         sessionStorage.setItem("reservationOrderDetails", JSON.stringify(stored));
+
+        const draftResponse = await fetch("/api/reservation/draft", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...stored,
+            language: lang,
+            resumeToken: orderDetails.resumeToken,
+          }),
+        });
+        const draftData = await draftResponse.json();
+        if (mounted && draftResponse.ok && draftData?.success && typeof draftData.resumePath === "string") {
+          const sharePath = typeof window !== "undefined"
+            ? `${window.location.pathname}?resume=${encodeURIComponent(String(draftData.resumeToken))}`
+            : draftData.resumePath;
+          setState((current) => ({ ...current, resumePath: sharePath }));
+          if (typeof window !== "undefined" && !orderDetails.resumeToken) {
+            window.history.replaceState(window.history.state, "", sharePath);
+          }
+        }
       } catch {
         if (!mounted) return;
         setState((current) => ({
@@ -134,6 +157,7 @@ export function useCheckoutQuote(orderDetails: OrderDetails, lang: "es" | "en") 
     orderDetails.tourSlug,
     orderDetails.tourTime,
     orderDetails.total,
+    orderDetails.resumeToken,
     requestVersion,
   ]);
 

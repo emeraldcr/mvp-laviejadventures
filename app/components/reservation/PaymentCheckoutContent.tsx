@@ -95,6 +95,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
     errorMessage: tr.error,
     onSuccess,
   });
+  const resumePath = checkoutQuote.resumePath;
   const isPaypalLoading = checkoutQuote.syncing || isPayPalSdkLoading;
   const localPaymentAnalyticsMetadata = useMemo(
     () => ({
@@ -266,6 +267,19 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
         <div className="mb-4 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm font-medium text-zinc-300">
           {paymentCopy.checkoutHint}
         </div>
+
+        {resumePath && (
+          <div className="mb-4 flex flex-col gap-2 rounded-xl border border-emerald-300/20 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-50 sm:flex-row sm:items-center sm:justify-between">
+            <span>{lang === "es" ? "¿Vas a terminar después? Guardá este enlace seguro para retomar la reserva." : "Finishing later? Save this secure link to resume your booking."}</span>
+            <button
+              type="button"
+              onClick={() => navigator.clipboard?.writeText(`${window.location.origin}${resumePath}`)}
+              className="shrink-0 rounded-full border border-emerald-200/30 px-3 py-1.5 text-xs font-black text-emerald-100 transition hover:bg-emerald-200/10"
+            >
+              {lang === "es" ? "Copiar enlace" : "Copy link"}
+            </button>
+          </div>
+        )}
 
         {checkoutQuote.error ? (
           <div className="rounded-2xl border border-red-400/30 bg-red-950/40 px-4 py-5 text-center text-sm text-red-100" role="alert">
