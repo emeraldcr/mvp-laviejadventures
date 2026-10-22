@@ -117,7 +117,12 @@ export function useCheckoutQuote(orderDetails: OrderDetails, lang: "es" | "en") 
         const draftData = await draftResponse.json();
         if (mounted && draftResponse.ok && draftData?.success && typeof draftData.resumePath === "string") {
           const sharePath = typeof window !== "undefined"
-            ? `${window.location.pathname}?resume=${encodeURIComponent(String(draftData.resumeToken))}`
+            ? (() => {
+                const shareUrl = new URL(window.location.href);
+                shareUrl.searchParams.set("step", "pago");
+                shareUrl.searchParams.set("resume", String(draftData.resumeToken));
+                return `${shareUrl.pathname}${shareUrl.search}`;
+              })()
             : draftData.resumePath;
           setState((current) => ({ ...current, resumePath: sharePath }));
           if (typeof window !== "undefined" && !orderDetails.resumeToken) {
