@@ -111,11 +111,17 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
     bookingTitle: lang === "es" ? "Resumen de reserva" : "Booking summary",
     paymentTitle: lang === "es" ? "Elija cómo pagar" : "Choose how to pay",
     paymentSubtitle: lang === "es"
-      ? "PayPal, tarjeta, WhatsApp o SINPE. Elija la opción que le quede más cómoda para confirmar su aventura."
-      : "PayPal, card, WhatsApp, or SINPE. Pick the option that works best to confirm your adventure.",
+      ? "Primero verá el pago inmediato con tarjeta o PayPal. Si prefiere pagar localmente, puede solicitar una revisión por WhatsApp o SINPE."
+      : "You’ll see instant card or PayPal payment first. If you prefer local payment, request a review through WhatsApp or SINPE.",
     checkoutHint: lang === "es"
-      ? "La disponibilidad queda sujeta a confirmación. PayPal confirma el pago al instante; WhatsApp y SINPE quedan pendientes hasta que el equipo valide su pago."
-      : "Availability is subject to confirmation. PayPal confirms payment instantly; WhatsApp and SINPE stay pending until our team validates your payment.",
+      ? "Pagar no sustituye la confirmación operativa de disponibilidad. PayPal procesa el pago al instante; WhatsApp y SINPE requieren revisión del equipo antes de quedar confirmados."
+      : "Payment does not replace operational availability confirmation. PayPal processes payment instantly; WhatsApp and SINPE require team review before they are confirmed.",
+    instantTitle: lang === "es" ? "Pago inmediato" : "Instant payment",
+    instantDescription: lang === "es" ? "La opción recomendada para pagar ahora con tarjeta o PayPal." : "The recommended option to pay now by card or PayPal.",
+    manualTitle: lang === "es" ? "Pago local / revisión del equipo" : "Local payment / team review",
+    manualDescription: lang === "es" ? "WhatsApp y SINPE no confirman disponibilidad automáticamente." : "WhatsApp and SINPE do not confirm availability automatically.",
+    recommended: lang === "es" ? "Recomendado" : "Recommended",
+    manualReview: lang === "es" ? "Revisión manual" : "Manual review",
     dateLabel: lang === "es" ? "Fecha" : "Date",
     guestsLabel: lang === "es" ? "Personas" : "Guests",
     tourLabel: lang === "es" ? "Experiencia" : "Experience",
@@ -143,13 +149,6 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
     { id: "whatsapp", label: paymentCopy.methods.whatsapp, icon: <MessageCircle className="h-4 w-4" aria-hidden /> },
     { id: "sinpe", label: paymentCopy.methods.sinpe, icon: <Building2 className="h-4 w-4" aria-hidden /> },
   ];
-
-
-  const methodHints: Record<PaymentMethod, string> = {
-    paypal: lang === "es" ? "Pago confirmado al instante" : "Payment confirmed instantly",
-    whatsapp: lang === "es" ? "Reserva con el equipo" : "Book with the team",
-    sinpe: lang === "es" ? "Transferencia local CR" : "Local CR transfer",
-  };
 
   return (
     <div className="checkout-content grid gap-5 lg:grid-cols-[minmax(0,0.92fr)_minmax(360px,1.08fr)]">
@@ -232,36 +231,57 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
           </div>
         </div>
 
-        <div
-          className="mb-4 grid gap-2 sm:grid-cols-3"
-          role="tablist"
-          aria-label={paymentCopy.paymentTitle}
-        >
-          {paymentTabs.map((tab) => {
-            const isActive = paymentMethod === tab.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                role="tab"
-                aria-selected={isActive}
-                onClick={() => setPaymentMethod(tab.id)}
-                data-active={isActive}
-                className={[
-                  "lva-control flex min-h-[4.25rem] flex-col items-start justify-center gap-1 rounded-2xl px-3 py-2.5 text-left transition",
-                  isActive ? "" : "lva-muted",
-                ].join(" ")}
-              >
-                <span className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-[0.08em]">
-                  {tab.icon}
-                  {tab.label}
-                </span>
-                <span className="lva-muted text-[11px] font-medium">
-                  {methodHints[tab.id]}
-                </span>
-              </button>
-            );
-          })}
+        <div className="mb-4 space-y-3" role="tablist" aria-label={paymentCopy.paymentTitle}>
+          <div>
+            <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+              <h3 className="lva-heading text-sm font-black">{paymentCopy.instantTitle}</h3>
+              <p className="lva-muted text-xs">{paymentCopy.instantDescription}</p>
+            </div>
+            {paymentTabs.slice(0, 1).map((tab) => {
+              const isActive = paymentMethod === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                  onClick={() => setPaymentMethod(tab.id)}
+                  data-active={isActive}
+                  className={["lva-control flex min-h-[4.5rem] w-full items-center justify-between gap-3 rounded-2xl px-4 py-3 text-left transition", isActive ? "" : "lva-muted"].join(" ")}
+                >
+                  <span className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.08em]">
+                    {tab.icon}{tab.label}
+                  </span>
+                  <span className="lva-chip shrink-0 rounded-full px-2 py-1 text-[10px] font-black uppercase tracking-[0.08em]">{paymentCopy.recommended}</span>
+                </button>
+              );
+            })}
+          </div>
+          <div>
+            <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+              <h3 className="lva-heading text-sm font-black">{paymentCopy.manualTitle}</h3>
+              <p className="lva-muted text-xs">{paymentCopy.manualDescription}</p>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {paymentTabs.slice(1).map((tab) => {
+                const isActive = paymentMethod === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={isActive}
+                    onClick={() => setPaymentMethod(tab.id)}
+                    data-active={isActive}
+                    className={["lva-control flex min-h-[4.5rem] items-center justify-between gap-2 rounded-2xl px-3 py-2.5 text-left transition", isActive ? "" : "lva-muted"].join(" ")}
+                  >
+                    <span className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-[0.08em]">{tab.icon}{tab.label}</span>
+                    <span className="lva-muted text-right text-[10px] font-bold">{paymentCopy.manualReview}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
 
         <div className="lva-card-muted mb-4 rounded-xl px-4 py-3 text-sm font-medium">
