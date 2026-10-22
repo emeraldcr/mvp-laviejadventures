@@ -9,12 +9,11 @@ import { getTour } from "@/lib/tours/detail";
 import { pageMetadata } from "@/lib/seo";
 import { getTourPriceDisplay } from "@/lib/tour-pricing";
 import GoogleRating from "@/app/components/GoogleRating";
-import HomeNav from "@/app/components/home/HomeNav";
 import { getTourGallery, getTourImage, getTourShareImage } from "@/lib/tour-display";
 import { getTourContent } from "@/lib/tour-content";
 import { BUSINESS_PHONE_E164, SITE_URL } from "@/lib/site-config";
 import JsonLd from "@/app/components/seo/JsonLd";
-import SiteFooter from "@/app/components/sections/SiteFooter";
+import SharedPageShell from "@/app/components/layouts/SharedPageShell";
 
 function metaDescription(text: string, max = 155) {
   const clean = text.replace(/\s+/g, " ").trim();
@@ -107,10 +106,9 @@ export default async function TourDetailPage({ params }: TourDetailPageProps) {
       : [];
 
   return (
-    <main className="min-h-screen bg-black text-white">
+    <SharedPageShell className="tour-detail-page" footer>
       <JsonLd data={tourSchema} />
       <JsonLd data={breadcrumbSchema} />
-      <HomeNav />
 
       <section className="relative min-h-[78vh] overflow-hidden pt-24">
         <Image src={heroImage} alt={title} fill priority sizes="100vw" className="object-cover" />
@@ -350,8 +348,7 @@ export default async function TourDetailPage({ params }: TourDetailPageProps) {
         </section>
       )}
 
-      <SiteFooter />
-    </main>
+    </SharedPageShell>
   );
 }
 

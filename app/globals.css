@@ -40,6 +40,39 @@ body {
   font-family: var(--font-manrope), Arial, Helvetica, sans-serif;
 }
 
+/* Shared visual language for the public tour detail and payment surfaces. */
+.tour-detail-page > section:not(:first-of-type) [class*="text-white"] { color: #292524 !important; }
+.tour-detail-page > section:not(:first-of-type) [class*="text-zinc-"] { color: #57534e !important; }
+.tour-detail-page > section:not(:first-of-type) [class*="text-cyan-"] { color: #00796b !important; }
+.tour-detail-page > section:not(:first-of-type) [class*="bg-white/"] { background-color: rgba(255,255,255,.72) !important; }
+.tour-detail-page > section:not(:first-of-type) [class*="bg-cyan-"] { background-color: rgba(0,121,107,.06) !important; }
+.tour-detail-page > section:not(:first-of-type) [class*="border-white/"] { border-color: rgba(120,113,108,.22) !important; }
+.tour-detail-page > section:not(:first-of-type) [class*="border-cyan-"] { border-color: rgba(0,121,107,.2) !important; }
+.tour-detail-page > section:not(:first-of-type) [class*="bg-black"] { background-color: #faf9f6 !important; }
+.tour-detail-page > section:not(:first-of-type) [class*="border-rose-"] { border-color: rgba(190,24,93,.18) !important; }
+.tour-detail-page > section:not(:first-of-type) [class*="text-rose-"] { color: #be185d !important; }
+.checkout-content [class*="bg-zinc-950"],
+.checkout-content [class*="bg-white/[0.03]"],
+.checkout-content [class*="bg-white/[0.04]"] { background-color: rgba(255,255,255,.72) !important; }
+.checkout-content [class*="text-zinc-"] { color: #57534e !important; }
+.checkout-content [class*="text-white"] { color: #292524 !important; }
+.checkout-content [class*="border-white/"] { border-color: rgba(120,113,108,.22) !important; }
+.checkout-content [class*="bg-red-950"] { background-color: rgba(254,226,226,.72) !important; }
+.checkout-content [class*="text-red-"] { color: #b91c1c !important; }
+.dark .tour-detail-page > section:not(:first-of-type) [class*="text-white"] { color: #fff !important; }
+.dark .tour-detail-page > section:not(:first-of-type) [class*="text-zinc-"] { color: #d4d4d8 !important; }
+.dark .tour-detail-page > section:not(:first-of-type) [class*="text-cyan-"] { color: #a5f3fc !important; }
+.dark .tour-detail-page > section:not(:first-of-type) [class*="bg-white/"] { background-color: rgba(255,255,255,.04) !important; }
+.dark .tour-detail-page > section:not(:first-of-type) [class*="bg-cyan-"] { background-color: rgba(34,211,238,.04) !important; }
+.dark .tour-detail-page > section:not(:first-of-type) [class*="border-white/"] { border-color: rgba(255,255,255,.1) !important; }
+.dark .tour-detail-page > section:not(:first-of-type) [class*="bg-black"] { background-color: #0b0a09 !important; }
+.dark .checkout-content [class*="bg-zinc-950"],
+.dark .checkout-content [class*="bg-white/[0.03]"],
+.dark .checkout-content [class*="bg-white/[0.04]"] { background-color: rgba(10,10,12,.72) !important; }
+.dark .checkout-content [class*="text-zinc-"] { color: #d4d4d8 !important; }
+.dark .checkout-content [class*="text-white"] { color: #fff !important; }
+.dark .checkout-content [class*="border-white/"] { border-color: rgba(255,255,255,.1) !important; }
+
 /* ── Homepage redesign keyframes ── */
 @keyframes lva-kenburns {
   from { transform: scale(1.12); }

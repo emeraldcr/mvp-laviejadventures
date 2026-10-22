@@ -150,7 +150,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
   };
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[minmax(0,0.92fr)_minmax(360px,1.08fr)]">
+    <div className="checkout-content grid gap-5 lg:grid-cols-[minmax(0,0.92fr)_minmax(360px,1.08fr)]">
       <aside className="order-2 space-y-4 lg:order-1">
         <section className="rounded-2xl border border-white/10 bg-zinc-950/45 p-4 shadow-inner shadow-black/20">
           <div className="mb-3 flex items-center gap-2">
