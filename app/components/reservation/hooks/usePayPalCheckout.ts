@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BOOKING_COMPLETION_STORAGE_KEY, trackAnalyticsEvent } from "@/lib/analytics/client";
 import type { OrderDetails } from "@/lib/types/index";
@@ -11,10 +11,10 @@ import {
   getBuyerCountryFromPhone,
 } from "@/app/components/reservation/checkoutUtils";
 
-declare global {
-  interface Window {
-    paypal?: { Buttons: (config: unknown) => { render: (container: HTMLDivElement) => Promise<void> | void } };
-  }
+import { loadPayPalSdk, type PayPalButtons } from "@/lib/paypal-sdk";
+
+function trackCheckoutEvent(...args: Parameters<typeof trackAnalyticsEvent>) {
+  try { void Promise.resolve(trackAnalyticsEvent(...args)).catch(() => {}); } catch { /* Optional analytics. */ }
 }
 
 function isLivePayPalMode(mode: string | undefined) {
@@ -62,287 +62,210 @@ export function usePayPalCheckout({
   errorMessage: string;
   onSuccess: (orderData: unknown) => void;
 }) {
-  const paypalRef = useRef<HTMLDivElement>(null);
-  const [loadedPaypalKey, setLoadedPaypalKey] = useState<string | null>(null);
-  const [paypalLoadFailure, setPaypalLoadFailure] = useState<{ checkoutKey: string; message: string } | null>(null);
+  const [container, setContainer] = useState<HTMLDivElement | null>(null);
+  const paypalRef = useCallback((node: HTMLDivElement | null) => setContainer(node), []);
+  const [retryVersion, setRetryVersion] = useState(0);
+  const [loadState, setLoadState] = useState<{ key: string; loading: boolean; error: string | null }>({ key: "", loading: true, error: null });
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [isCapturing, setIsCapturing] = useState(false);
+  const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
+  const pendingCapture = useRef<string | null>(null);
+  const captureInFlight = useRef<Promise<void> | null>(null);
+  const completedOrders = useRef(new Set<string>());
+  const latest = useRef({ orderDetails, onSuccess });
   const router = useRouter();
+  const checkoutKey = buildCheckoutKey(orderDetails, lang);
+  const loadKey = `${checkoutKey}:${retryVersion}`;
+  const paypalLoadError = loadState.key === loadKey ? loadState.error : null;
+  const isPaypalLoading = enabled && (loadState.key !== loadKey || loadState.loading);
 
-  const checkoutKey = useMemo(() => buildCheckoutKey(orderDetails, lang), [orderDetails, lang]);
-  const bookingAnalyticsMetadata = useMemo(
-    () => buildBookingAnalyticsMetadata(orderDetails, lang),
-    [orderDetails, lang],
-  );
-  const paypalLoadError = paypalLoadFailure?.checkoutKey === checkoutKey ? paypalLoadFailure.message : null;
-  const isPaypalLoading = enabled && !paypalLoadError && loadedPaypalKey !== checkoutKey;
+  useEffect(() => { latest.current = { orderDetails, onSuccess }; });
 
-  useEffect(() => {
-    if (!enabled) return;
-
-    let isMounted = true;
-    let scriptForCleanup: HTMLScriptElement | null = null;
-    let buttonsRendered = false;
-
-    trackAnalyticsEvent("booking_checkout_started", {
-      metadata: bookingAnalyticsMetadata,
-    });
-
-    const finishLoading = () => {
-      if (isMounted) setLoadedPaypalKey(checkoutKey);
-    };
-
-    const failPayPalLoad = (stage: string, reason: string, error?: unknown) => {
-      if (isMounted) {
-        setPaypalLoadFailure({ checkoutKey, message: reason });
-        setLoadedPaypalKey(checkoutKey);
-      }
-
-      trackAnalyticsEvent("payment_error", {
-        metadata: {
-          ...bookingAnalyticsMetadata,
-          stage,
-          reason,
-        },
-      });
-
-      const sdkError = error instanceof Error ? error : new Error(reason);
-      console.error(`PAYPAL SDK ERROR (${stage}):`, sdkError);
-    };
-
-    const initializeButtons = () => {
-      // React may remount the checkout subtree while the SDK is loading. Read
-      // the current ref at render time instead of keeping the effect's first
-      // (possibly detached) DOM node.
-      const paypalContainer = paypalRef.current;
-      if (!paypalContainer) return false;
-      if (buttonsRendered) return true;
-
-      if (!window.paypal) {
-        failPayPalLoad("paypal_sdk_load", "PayPal SDK loaded, but window.paypal is unavailable.");
-        return false;
-      }
-
-      buttonsRendered = true;
-      paypalContainer.innerHTML = "";
-
-      const buttons = window.paypal.Buttons({
-        style: {
-          layout: "vertical",
-          color: "gold",
-          shape: "pill",
-          label: "paypal",
-        },
-        createOrder: async () => {
-          const res = await fetch("/api/paypal/create-order", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              bookingAttemptId: orderDetails.bookingAttemptId,
-              name: orderDetails.name,
-              email: orderDetails.email,
-              phone: orderDetails.phone,
-              tickets: orderDetails.tickets,
-              date: orderDetails.dateIso ?? orderDetails.date,
-              total: orderDetails.total,
-              tourTime: orderDetails.tourTime,
-              packageId: orderDetails.packageId,
-              tourPackage: orderDetails.tourPackage,
-              packagePrice: orderDetails.packagePrice,
-              tourSlug: orderDetails.tourSlug,
-              tourName: orderDetails.tourName,
-              addons: orderDetails.addons,
-              addonIds: orderDetails.addonIds,
-              addonDetails: orderDetails.addonDetails,
-              specialRequests: orderDetails.specialRequests,
-              language: lang,
-              countryCode: getBuyerCountryFromPhone(orderDetails.phone),
-            }),
-          });
-
-          const data = await res.json();
-
-          if (!res.ok || !data?.orderID) {
-            const reason = getCheckoutErrorMessage(
-              data ?? {},
-              "PayPal create order response did not include orderID.",
-              lang,
-            );
-            const minDate = typeof data?.minBookableDate === "string" ? data.minBookableDate : null;
-            alert(minDate ? `${reason} Earliest available date: ${minDate}.` : reason);
-            throw new Error(reason);
-          }
-
-          trackAnalyticsEvent("payment_order_created", {
-            metadata: {
-              ...bookingAnalyticsMetadata,
-              orderId: data.orderID,
-            },
-          });
-
-          return data.orderID as string;
-        },
-        onApprove: async (data: { orderID: string }) => {
-          const res = await fetch("/api/paypal/capture-order", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ orderID: data.orderID }),
-          });
-
-          const output = await res.json();
-
-          if (!res.ok || !output?.captureID || output?.status !== "COMPLETED") {
-            console.error("PAYPAL CAPTURE FAILED:", output);
-            trackAnalyticsEvent("payment_error", {
-              metadata: {
-                ...bookingAnalyticsMetadata,
-                orderId: data.orderID,
-                stage: "capture",
-                status: output?.status ?? null,
-                reason: output?.message ?? "capture_failed",
-              },
-            });
-            alert(getCheckoutErrorMessage(output ?? {}, errorMessage, lang));
-            return;
-          }
-
-          trackAnalyticsEvent("payment_approved", {
-            metadata: {
-              ...bookingAnalyticsMetadata,
-              orderId: data.orderID,
-              captureId: output.captureID,
-              status: output.status,
-            },
-          });
-
+  const captureOrder = useCallback((orderID: string, actions?: { restart: () => Promise<void> }) => {
+    if (completedOrders.current.has(orderID)) return Promise.resolve();
+    if (captureInFlight.current) return captureInFlight.current;
+    pendingCapture.current = orderID;
+    setPendingOrderId(orderID);
+    setIsCapturing(true);
+    setPaymentError(null);
+    const task = (async () => {
+      try {
+        const res = await fetch("/api/paypal/capture-order", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ orderID }),
+          signal: AbortSignal.timeout(90_000),
+        });
+        const output = await res.json();
+        if (output?.code === "INSTRUMENT_DECLINED" && actions) {
+          pendingCapture.current = null;
+          setPendingOrderId(null);
+          return await actions.restart();
+        }
+        if (!res.ok || !output?.captureID || output?.status !== "COMPLETED") {
+          throw new Error(getCheckoutErrorMessage(output ?? {}, errorMessage, lang));
+        }
+        completedOrders.current.add(orderID);
+        pendingCapture.current = null;
+        setPendingOrderId(null);
+        trackCheckoutEvent("payment_approved", { metadata: {
+          ...buildBookingAnalyticsMetadata(latest.current.orderDetails, lang),
+          orderId: orderID, captureId: output.captureID, status: output.status,
+        } });
+        // Storage and parent callbacks are conveniences, never payment gates.
+        try {
           sessionStorage.setItem(BOOKING_COMPLETION_STORAGE_KEY, "1");
           sessionStorage.removeItem("reservationOrderDetails");
           sessionStorage.removeItem(RESERVATION_TRAVELER_DRAFT_KEY);
-          onSuccess(output);
-          router.push(`${lang === "en" ? "/en" : ""}/reservar/voucher?orderId=${encodeURIComponent(output.id)}`);
-        },
-        onError: (err: unknown) => {
-          alert(errorMessage);
-          trackAnalyticsEvent("payment_error", {
-            metadata: {
-              ...bookingAnalyticsMetadata,
-              stage: "paypal_buttons",
-              reason: err instanceof Error ? err.message : "paypal_error",
-            },
-          });
-          console.error("PAYPAL ERROR:", err);
-        },
-      });
+        } catch { /* Storage may be unavailable in private browsers. */ }
+        try { latest.current.onSuccess(output); } catch (error) { console.error("PayPal success callback:", error); }
+        router.push(`${lang === "en" ? "/en" : ""}/reservar/voucher?orderId=${encodeURIComponent(output.id || orderID)}`);
+      } catch (error) {
+        setPaymentError(error instanceof Error && !(error instanceof SyntaxError) ? error.message : errorMessage);
+        trackCheckoutEvent("payment_error", { metadata: { orderId: orderID, stage: "capture" } });
+      } finally {
+        setIsCapturing(false);
+        captureInFlight.current = null;
+      }
+    })();
+    captureInFlight.current = task;
+    return task;
+  }, [errorMessage, lang, router]);
 
-      Promise.resolve(buttons.render(paypalContainer))
-        .then(finishLoading)
-        .catch((err: unknown) => {
-          buttonsRendered = false;
-          failPayPalLoad("paypal_render", err instanceof Error ? err.message : "paypal_render_error", err);
+  useEffect(() => {
+    if (!enabled || !container || !container.isConnected) return;
+    let active = true;
+    let buttons: PayPalButtons | undefined;
+    let failed = false;
+    const host = document.createElement("div");
+    let renderTimer: ReturnType<typeof setTimeout> | undefined;
+    const orderDetails = latest.current.orderDetails;
+    const bookingAnalyticsMetadata = buildBookingAnalyticsMetadata(orderDetails, lang);
+    setLoadState({ key: loadKey, loading: true, error: null });
+    setPaymentError(null);
+    trackCheckoutEvent("booking_checkout_started", { metadata: bookingAnalyticsMetadata });
+    const closeButtons = () => {
+      try { Promise.resolve(buttons?.close()).catch(() => {}); } catch { /* Already closed. */ }
+    };
+    const failPayPalLoad = (error: unknown) => {
+      if (!active || failed) return;
+      failed = true;
+      clearTimeout(renderTimer);
+      closeButtons();
+      const message = lang === "es"
+        ? "No pudimos cargar PayPal. Revise su conexión e inténtelo de nuevo."
+        : "We couldn't load PayPal. Check your connection and try again.";
+      setLoadState({ key: loadKey, loading: false, error: message });
+      trackCheckoutEvent("payment_error", { metadata: { ...bookingAnalyticsMetadata, stage: "paypal_sdk_load" } });
+      console.error("PAYPAL SDK ERROR:", error);
+    };
+    const initialize = async () => {
+      try {
+        const isLive = isLivePayPalMode(process.env.NEXT_PUBLIC_PAYPAL_MODE);
+        const clientId = (isLive ? process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID : process.env.NEXT_PUBLIC_PAYPAL_SANDBOX_CLIENT_ID)?.trim();
+        if (!isConfiguredPayPalClientId(clientId)) throw new Error("paypal_config_missing");
+        const sdk = await loadPayPalSdk(clientId);
+        if (!active || !container.isConnected) return;
+        container.replaceChildren(host);
+        buttons = sdk.Buttons({
+          style: {
+            layout: "vertical",
+            color: "gold",
+            shape: "pill",
+            label: "paypal",
+          },
+          createOrder: async () => {
+            if (!active || pendingCapture.current) throw new Error(errorMessage);
+            setPaymentError(null);
+            const res = await fetch("/api/paypal/create-order", {
+              method: "POST",
+              signal: AbortSignal.timeout(60_000),
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                bookingAttemptId: orderDetails.bookingAttemptId,
+                name: orderDetails.name,
+                email: orderDetails.email,
+                phone: orderDetails.phone,
+                tickets: orderDetails.tickets,
+                date: orderDetails.dateIso ?? orderDetails.date,
+                total: orderDetails.total,
+                tourTime: orderDetails.tourTime,
+                packageId: orderDetails.packageId,
+                tourPackage: orderDetails.tourPackage,
+                packagePrice: orderDetails.packagePrice,
+                tourSlug: orderDetails.tourSlug,
+                tourName: orderDetails.tourName,
+                addons: orderDetails.addons,
+                addonIds: orderDetails.addonIds,
+                addonDetails: orderDetails.addonDetails,
+                specialRequests: orderDetails.specialRequests,
+                language: lang,
+                countryCode: getBuyerCountryFromPhone(orderDetails.phone),
+              }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok || !data?.orderID) {
+              const reason = getCheckoutErrorMessage(
+                data ?? {},
+                errorMessage,
+                lang,
+              );
+              const minDate = typeof data?.minBookableDate === "string" ? data.minBookableDate : null;
+              const message = minDate ? `${reason} ${lang === "es" ? "Primera fecha disponible" : "Earliest available date"}: ${minDate}.` : reason;
+              setPaymentError(message);
+              throw new Error(message);
+            }
+
+            trackCheckoutEvent("payment_order_created", {
+              metadata: {
+                ...bookingAnalyticsMetadata,
+                orderId: data.orderID,
+              },
+            });
+
+            return data.orderID as string;
+          },
+          onApprove: (data: { orderID: string }, actions: { restart: () => Promise<void> }) => captureOrder(data.orderID, actions),
+          onError: (err: unknown) => {
+            if (!active) return;
+            setPaymentError((current) => current ?? errorMessage);
+            trackCheckoutEvent("payment_error", {
+              metadata: {
+                ...bookingAnalyticsMetadata,
+                stage: "paypal_buttons",
+                reason: err instanceof Error ? err.message : "paypal_error",
+              },
+            });
+            console.error("PAYPAL ERROR:", err);
+          },
         });
-      return true;
+
+        if (buttons.isEligible && !buttons.isEligible()) throw new Error("paypal_not_eligible");
+        // Bound rendering time as well as script loading; never leave a spinner forever.
+        renderTimer = setTimeout(() => failPayPalLoad(new Error("paypal_render_timeout")), 20_000);
+        await buttons.render(host);
+        clearTimeout(renderTimer);
+        if (!active || failed) { closeButtons(); return; }
+        setLoadState({ key: loadKey, loading: false, error: null });
+      } catch (error) { failPayPalLoad(error); }
     };
-
-    const mode = process.env.NEXT_PUBLIC_PAYPAL_MODE;
-    const isLiveMode = isLivePayPalMode(mode);
-    const clientId = (isLiveMode
-      ? process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID
-      : process.env.NEXT_PUBLIC_PAYPAL_SANDBOX_CLIENT_ID)?.trim();
-
-    if (!isConfiguredPayPalClientId(clientId)) {
-      failPayPalLoad(
-        "paypal_config",
-        `Missing or placeholder PayPal ${isLiveMode ? "live" : "sandbox"} client ID for mode "${mode || "sandbox"}".`,
-      );
-      return;
-    }
-
-    const buildSdkSrc = (locale?: string) => {
-      const sdkParams = new URLSearchParams({
-        "client-id": clientId,
-        components: "buttons",
-        currency: "USD",
-        intent: "capture",
-      });
-
-      if (locale) sdkParams.set("locale", locale);
-      return `https://www.paypal.com/sdk/js?${sdkParams.toString()}`;
-    };
-
-    // PayPal returns HTTP 400 for the Spanish locale aliases used by the
-    // previous booking page (including es_XC) with this live client ID.
-    // Omitting locale lets PayPal choose a supported locale from the buyer's
-    // browser and geolocation, and is the SDK's recommended default.
-    const sdkSrc = buildSdkSrc();
-
-    const handleScriptError = () => {
-      document.querySelector<HTMLScriptElement>("#paypal-sdk")?.remove();
-      failPayPalLoad("paypal_sdk_load", "paypal_sdk_load_error");
-    };
-
-    const loadSdkScript = (src: string) => {
-      const script = document.createElement("script");
-      script.id = "paypal-sdk";
-      script.src = src;
-      script.async = true;
-      scriptForCleanup = script;
-
-      script.onload = () => {
-        if (isMounted) {
-          // The ref can be temporarily null during a React remount. Retry
-          // briefly while the already loaded SDK remains available.
-          let attempts = 0;
-          const renderWhenMounted = () => {
-            if (!isMounted || initializeButtons()) return;
-            if (++attempts < 20) window.setTimeout(renderWhenMounted, 50);
-          };
-          renderWhenMounted();
-        }
-      };
-      script.onerror = handleScriptError;
-
-      document.body.appendChild(script);
-    };
-
-    const existing = document.querySelector<HTMLScriptElement>("#paypal-sdk");
-    // A PayPal SDK instance is global and cannot be reconfigured by injecting
-    // a second URL. Reuse an already loaded instance instead of replacing its
-    // script while window.paypal is live.
-    if (existing && window.paypal) {
-      initializeButtons();
-      return () => {
-        isMounted = false;
-        if (paypalRef.current) paypalRef.current.innerHTML = "";
-      };
-    }
-
-    if (existing && existing.src !== sdkSrc) existing.remove();
-
-    const activeScript = document.querySelector<HTMLScriptElement>("#paypal-sdk");
-
-    if (!activeScript) {
-      loadSdkScript(sdkSrc);
-    } else if (window.paypal) {
-      initializeButtons();
-    } else {
-      activeScript.addEventListener("load", initializeButtons, { once: true });
-      activeScript.addEventListener("error", handleScriptError, { once: true });
-    }
-
+    void initialize();
     return () => {
-      isMounted = false;
-      activeScript?.removeEventListener("load", initializeButtons);
-      if (scriptForCleanup) {
-        scriptForCleanup.onload = null;
-        scriptForCleanup.onerror = null;
-      }
-      if (paypalRef.current) {
-        paypalRef.current.innerHTML = "";
-      }
+      active = false;
+      clearTimeout(renderTimer);
+      // PayPal owns its iframe subtree. Close this instance, never clear a
+      // mutable ref that may already point to a newer checkout's container.
+      closeButtons();
+      host.remove();
     };
-  }, [bookingAnalyticsMetadata, checkoutKey, enabled, errorMessage, lang, onSuccess, orderDetails, router]);
+  }, [captureOrder, container, enabled, errorMessage, lang, loadKey]);
 
-  return {
-    paypalRef,
-    paypalLoadError,
-    isPaypalLoading,
-  };
+  const retryPayPal = useCallback(() => setRetryVersion((version) => version + 1), []);
+  const retryCapture = useCallback(() => {
+    if (pendingCapture.current) void captureOrder(pendingCapture.current);
+  }, [captureOrder]);
+
+  return { paypalRef, paypalLoadError, isPaypalLoading, retryPayPal, paymentError, isCapturing, pendingOrderId, retryCapture };
 }

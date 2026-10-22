@@ -31,6 +31,7 @@ interface PayPalCapture {
 }
 
 interface PayPalPurchaseUnit {
+  amount?: { value?: string; currency_code?: string };
   custom_id?: string;
   payments?: {
     captures?: PayPalCapture[];
@@ -42,6 +43,7 @@ interface PayPalCaptureResponse {
   status?: string;
   payer?: PayPalPayer;
   purchase_units?: PayPalPurchaseUnit[];
+  details?: Array<{ issue?: string }>;
 }
 
 // Helper to safely parse custom_id
@@ -56,9 +58,9 @@ function parseCustomData(customId: string | null | undefined) {
 
 export async function POST(req: Request) {
   try {
-    const { orderID }: CaptureRequestBody = await req.json();
-
-    if (!orderID?.trim()) {
+    const body: CaptureRequestBody | null = await req.json().catch(() => null);
+    const orderID = typeof body?.orderID === "string" ? body.orderID.trim() : "";
+    if (!/^[A-Z0-9]{10,32}$/.test(orderID)) {
       return NextResponse.json(
         { success: false, message: "orderID is required" },
         { status: 400 }
@@ -77,70 +79,62 @@ export async function POST(req: Request) {
       });
     }
 
-    const captureValidation = await validateCaptureOrder(orderID.trim());
-    if (!captureValidation.ok) {
-      if (captureValidation.code !== "capture_validation_unavailable") {
-        await releaseOrderCapacityHold(orderID.trim());
-      }
-      return NextResponse.json(
-        {
-          success: false,
-          message: captureValidation.message,
-          code: captureValidation.code,
-          ...captureValidation.details,
-        },
-        { status: captureValidation.status },
-      );
-    }
-
     const accessToken = await getPayPalAccessToken();
-
-    const response = await fetch(
-      `${getPayPalApiBaseUrl()}/v2/checkout/orders/${orderID}/capture`,
-      {
+    const orderUrl = `${getPayPalApiBaseUrl()}/v2/checkout/orders/${encodeURIComponent(orderID)}`;
+    // Reconcile an earlier capture whose response or database write was lost.
+    // An already paid order must not be blocked by a later price/date change.
+    const lookup = await fetch(orderUrl, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      cache: "no-store", signal: AbortSignal.timeout(25_000),
+    });
+    let data: PayPalCaptureResponse = await lookup.json();
+    if (!lookup.ok) return NextResponse.json({ success: false, code: "capture_lookup_failed", message: "Unable to verify PayPal order" }, { status: 502 });
+    const alreadyCompleted = data.status === "COMPLETED" && data.purchase_units?.[0]?.payments?.captures?.some((capture) => capture.status === "COMPLETED" && capture.id);
+    if (!alreadyCompleted) {
+      const captureValidation = await validateCaptureOrder(orderID, data);
+      if (!captureValidation.ok) {
+        if (captureValidation.code !== "capture_validation_unavailable") await releaseOrderCapacityHold(orderID);
+        return NextResponse.json({ success: false, message: captureValidation.message, code: captureValidation.code, ...captureValidation.details }, { status: captureValidation.status });
+      }
+      const response = await fetch(`${orderUrl}/capture`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,
-          "PayPal-Request-Id": `capture-${orderID.trim()}`,
+          "PayPal-Request-Id": `capture-${orderID}`,
+          Prefer: "return=representation",
         },
-        // IMPORTANT: Do NOT send body for simple capture
-      }
-    );
-
-    const data: PayPalCaptureResponse = await response.json();
-
-    if (!response.ok) {
-      console.error("PayPal Capture Failed:", {
-        status: response.status,
-        data,
-        orderID,
+        signal: AbortSignal.timeout(25_000),
       });
-
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Failed to capture PayPal order",
-          error: data,
-        },
-        { status: response.status || 500 }
-      );
+      data = await response.json();
+      if (!response.ok) {
+        const issue = data.details?.[0]?.issue;
+        if (issue === "ORDER_ALREADY_CAPTURED") {
+          const recovered = await fetch(orderUrl, { headers: { Authorization: `Bearer ${accessToken}` }, cache: "no-store", signal: AbortSignal.timeout(25_000) });
+          if (!recovered.ok) return NextResponse.json({ success: false, message: "Unable to verify captured payment" }, { status: 502 });
+          data = await recovered.json();
+        } else {
+          console.error("PayPal Capture Failed:", { status: response.status, issue, orderID });
+          return NextResponse.json({ success: false, message: "Failed to capture PayPal order", code: issue }, { status: response.status });
+        }
+      }
     }
 
     // Success response
     const purchaseUnit = data.purchase_units?.[0];
-    const capture = purchaseUnit?.payments?.captures?.[0];
+    const capture = purchaseUnit?.payments?.captures?.find((entry) => entry.status === "COMPLETED") ?? purchaseUnit?.payments?.captures?.[0];
+    const completed = data.status === "COMPLETED" && capture?.status === "COMPLETED" && Boolean(capture.id);
 
     const payerName =
       [data.payer?.name?.given_name, data.payer?.name?.surname]
         .filter(Boolean)
         .join(" ") || null;
 
-    const bookingSaved = data.status === "COMPLETED" && capture?.id
+    const bookingSaved = completed && capture?.id
       ? await saveCapturedReservation({
           orderId: data.id ?? orderID,
           captureId: capture.id,
-          status: data.status,
+          status: "COMPLETED",
           payerName,
           payerEmail: data.payer?.email_address ?? null,
           amount: capture.amount?.value,
@@ -150,9 +144,9 @@ export async function POST(req: Request) {
       : false;
 
     return NextResponse.json({
-      success: true,
-      id: data.id,
-      status: data.status,
+      success: completed,
+      id: data.id ?? orderID,
+      status: capture?.status ?? data.status,
       captureID: capture?.id ?? null,
       bookingSaved,
       payer: {
@@ -217,7 +211,7 @@ async function findExistingCapture(orderId: string): Promise<string | null> {
   }
 }
 
-async function validateCaptureOrder(orderId: string): Promise<
+async function validateCaptureOrder(orderId: string, paypalOrder: PayPalCaptureResponse): Promise<
   | { ok: true }
   | { ok: false; status: number; code: string; message: string; details?: Record<string, unknown> }
 > {
@@ -247,6 +241,10 @@ async function validateCaptureOrder(orderId: string): Promise<
       };
     }
 
+    const amount = paypalOrder.purchase_units?.[0]?.amount;
+    if (amount?.currency_code !== "USD" || !Number.isFinite(Number(amount.value)) || Math.abs(Number(amount.value) - storedTotal) >= 0.02) {
+      return { ok: false, status: 409, code: "total_mismatch", message: "PayPal order amount does not match the booking total." };
+    }
     return { ok: true };
   } catch (error) {
     if (isReservationQuoteError(error)) {

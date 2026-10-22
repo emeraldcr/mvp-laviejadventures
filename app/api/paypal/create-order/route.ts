@@ -9,7 +9,7 @@ import {
 import { getDb } from "@/lib/helpers/mongodb";
 import { PAYPAL_CURRENCY, PAYPAL_CUSTOM_ID_MAX_LENGTH } from "@/lib/constants/paypal";
 import { COLLECTIONS } from "@/lib/constants/db";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { acquireCapacityHold, releaseCapacityHold } from "@/lib/reservation/capacity-holds";
 import { getRemainingCapacityForTourDate } from "@/lib/reservation/capacity";
 
@@ -56,7 +56,10 @@ interface CreateOrderResponse {
 export async function POST(req: Request) {
   let acquiredHold: { id: string; tourSlug?: string; date: string } | null = null;
   try {
-    const body: CreateOrderRequest = await req.json();
+    const body: CreateOrderRequest | null = await req.json().catch(() => null);
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return NextResponse.json({ success: false, message: "Invalid request body" }, { status: 400 });
+    }
 
     const {
       name,
@@ -76,7 +79,6 @@ export async function POST(req: Request) {
       addonDetails,
       specialRequests,
       language = "es",
-      countryCode,
       bookingAttemptId,
     } = body;
 
@@ -210,33 +212,30 @@ export async function POST(req: Request) {
       lang: language === "en" ? "en" : "es",
     });
 
-    const payer = createPayPalPayer({ name, email, phone, countryCode });
+    const payer = createPayPalPayer({ name, email });
     const accessToken = await getPayPalAccessToken();
 
+    const paypalPayload = {
+      intent: "CAPTURE",
+      payer,
+      purchase_units: [{
+        amount: { currency_code: PAYPAL_CURRENCY, value: formattedTotal },
+        description: `Reserva: ${safeTickets} pax - ${tourName ?? packageLabel}${tourTime ? ` (${tourTime})` : ""} - ${normalizedDate}`.slice(0, 127),
+        custom_id,
+      }],
+    };
+    // Reuse network retries, but never reuse an old amount or buyer after edits.
+    const requestId = `order-${createHash("sha256").update(JSON.stringify([holdId, paypalPayload])).digest("hex").slice(0, 32)}`;
     const res = await fetch(`${getPayPalApiBaseUrl()}/v2/checkout/orders`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${accessToken}`,
         Prefer: "return=representation",
-        ...(isValidBookingAttemptId(bookingAttemptId)
-          ? { "PayPal-Request-Id": bookingAttemptId }
-          : {}),
+        "PayPal-Request-Id": requestId,
       },
-      body: JSON.stringify({
-        intent: "CAPTURE",
-        payer,
-        purchase_units: [
-          {
-            amount: {
-              currency_code: PAYPAL_CURRENCY,
-              value: formattedTotal,
-            },
-            description: `Reserva: ${safeTickets} pax - ${tourName ?? packageLabel}${tourTime ? ` (${tourTime})` : ""} - ${normalizedDate}`,
-            custom_id,
-          },
-        ],
-      }),
+      signal: AbortSignal.timeout(25_000),
+      body: JSON.stringify(paypalPayload),
     });
 
     const data: CreateOrderResponse = await res.json();
@@ -247,7 +246,7 @@ export async function POST(req: Request) {
       console.error("PayPal Create Order Error:", { status: res.status, data });
       return NextResponse.json(
         { success: false, message: "Failed to create PayPal order", error: data },
-        { status: res.status || 500 }
+        { status: res.ok ? 502 : res.status }
       );
     }
 
@@ -286,7 +285,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const approvalUrl = data.links?.find((link) => link.rel === "approve")?.href;
+    const approvalUrl = data.links?.find((link) => link.rel === "approve" || link.rel === "payer-action")?.href;
 
     if (!approvalUrl) {
       await releaseCapacityHold({ db, holdId, tourSlug, date: normalizedDate });
@@ -358,49 +357,25 @@ function createCustomId(data: Record<string, any>): string {
   });
 }
 
-function normalizeCountryCode(countryCode: unknown): string {
-  const normalizedCountryCode = String(countryCode ?? "").trim().toUpperCase();
-  return /^[A-Z]{2}$/.test(normalizedCountryCode) ? normalizedCountryCode : "CR";
-}
-
 function createPayPalPayer({
   name,
   email,
-  phone,
-  countryCode,
 }: {
   name?: string;
   email?: string;
-  phone?: string;
-  countryCode?: string;
 }) {
   const trimmedName = String(name ?? "").trim().replace(/\s+/g, " ");
   const nameParts = trimmedName.split(" ").filter(Boolean);
   const givenName = nameParts[0] ?? undefined;
   const surname = nameParts.length > 1 ? nameParts.slice(1).join(" ") : undefined;
-  const nationalPhone = String(phone ?? "").replace(/^\+\d{1,3}\s*/, "").replace(/\D/g, "");
-  const normalizedCountryCode = normalizeCountryCode(countryCode);
 
   return {
     email_address: String(email ?? "").trim(),
-    address: {
-      country_code: normalizedCountryCode,
-    },
     ...(givenName && surname
       ? {
           name: {
             given_name: givenName,
             surname,
-          },
-        }
-      : {}),
-    ...(nationalPhone
-      ? {
-          phone: {
-            phone_type: "MOBILE",
-            phone_number: {
-              national_number: nationalPhone,
-            },
           },
         }
       : {}),

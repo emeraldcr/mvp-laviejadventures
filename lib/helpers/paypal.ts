@@ -98,6 +98,8 @@ export async function getPayPalAccessToken(): Promise<string> {
       "Content-Type": "application/x-www-form-urlencoded",
     },
     body: "grant_type=client_credentials",
+    cache: "no-store",
+    signal: AbortSignal.timeout(20_000),
   });
 
   const data: PayPalTokenResponse = await res.json();

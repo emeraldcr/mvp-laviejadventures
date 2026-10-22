@@ -16,6 +16,8 @@ export function getBuyerCountryFromPhone(phone: string) {
 
 export function buildCheckoutKey(orderDetails: OrderDetails, lang: string) {
   return [
+    orderDetails.bookingAttemptId,
+    JSON.stringify(orderDetails.addons ?? []),
     orderDetails.name,
     orderDetails.email,
     orderDetails.phone,

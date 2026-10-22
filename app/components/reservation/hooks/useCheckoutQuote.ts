@@ -39,8 +39,10 @@ export function useCheckoutQuote(orderDetails: OrderDetails, lang: "es" | "en") 
       try {
         const res = await fetch("/api/reservation/quote", {
           method: "POST",
+          signal: AbortSignal.timeout(25_000),
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+            bookingAttemptId: orderDetails.bookingAttemptId,
             name: orderDetails.name,
             email: orderDetails.email,
             phone: orderDetails.phone,
@@ -78,6 +80,7 @@ export function useCheckoutQuote(orderDetails: OrderDetails, lang: "es" | "en") 
         }
 
         const nextTotal = Number(data.totalWithTax);
+        if (!Number.isFinite(nextTotal) || nextTotal <= 0) throw new Error("invalid_quote_total");
         const nextAddonsPricePerPerson = Number(data.addonsPricePerPerson ?? 0);
         const nextAddonsPrice = Number(data.addonsPrice ?? 0);
         const nextBreakdown = Array.isArray(data.addonsBreakdown) ? data.addonsBreakdown : [];
@@ -103,32 +106,35 @@ export function useCheckoutQuote(orderDetails: OrderDetails, lang: "es" | "en") 
           addonsBreakdown: nextBreakdown,
           transportQuote: nextTransportQuote,
         };
-        sessionStorage.setItem("reservationOrderDetails", JSON.stringify(stored));
+        try { sessionStorage.setItem("reservationOrderDetails", JSON.stringify(stored)); } catch { /* Optional browser storage. */ }
 
-        const draftResponse = await fetch("/api/reservation/draft", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...stored,
-            language: lang,
-            resumeToken: orderDetails.resumeToken,
-          }),
-        });
-        const draftData = await draftResponse.json();
-        if (mounted && draftResponse.ok && draftData?.success && typeof draftData.resumePath === "string") {
-          const sharePath = typeof window !== "undefined"
-            ? (() => {
-                const shareUrl = new URL(window.location.href);
-                shareUrl.searchParams.set("step", "pago");
-                shareUrl.searchParams.set("resume", String(draftData.resumeToken));
-                return `${shareUrl.pathname}${shareUrl.search}`;
-              })()
-            : draftData.resumePath;
-          setState((current) => ({ ...current, resumePath: sharePath }));
-          if (typeof window !== "undefined" && !orderDetails.resumeToken) {
-            window.history.replaceState(window.history.state, "", sharePath);
+        try {
+          const draftResponse = await fetch("/api/reservation/draft", {
+            method: "POST",
+            signal: AbortSignal.timeout(15_000),
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              ...stored,
+              language: lang,
+              resumeToken: orderDetails.resumeToken,
+            }),
+          });
+          const draftData = await draftResponse.json();
+          if (mounted && draftResponse.ok && draftData?.success && typeof draftData.resumePath === "string") {
+            const sharePath = typeof window !== "undefined"
+              ? (() => {
+                  const shareUrl = new URL(window.location.href);
+                  shareUrl.searchParams.set("step", "pago");
+                  shareUrl.searchParams.set("resume", String(draftData.resumeToken));
+                  return `${shareUrl.pathname}${shareUrl.search}`;
+                })()
+              : draftData.resumePath;
+            setState((current) => ({ ...current, resumePath: sharePath }));
+            if (typeof window !== "undefined" && !orderDetails.resumeToken) {
+              window.history.replaceState(window.history.state, "", sharePath);
+            }
           }
-        }
+        } catch { /* Resume-link persistence must not disable a validated checkout. */ }
       } catch {
         if (!mounted) return;
         setState((current) => ({
@@ -148,6 +154,7 @@ export function useCheckoutQuote(orderDetails: OrderDetails, lang: "es" | "en") 
     };
   }, [
     lang,
+    orderDetails.bookingAttemptId,
     orderDetails.addons,
     orderDetails.addonDetails,
     orderDetails.addonIds,

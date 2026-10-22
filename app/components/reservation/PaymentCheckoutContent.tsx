@@ -87,7 +87,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
   } = usePendingBooking(checkoutOrderDetails, lang);
   const {
     paypalRef,
-    paypalLoadError,
+    paypalLoadError, retryPayPal, paymentError, isCapturing, pendingOrderId, retryCapture,
     isPaypalLoading: isPayPalSdkLoading,
   } = usePayPalCheckout({
     enabled: paymentMethod === "paypal" && checkoutQuote.synced && !checkoutQuote.syncing && !checkoutQuote.error,
@@ -333,9 +333,14 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
               >
                 <p className="font-semibold">{tr.error}</p>
                 <p className="mt-2 break-words text-xs opacity-90">{paypalLoadError}</p>
+                <button type="button" onClick={retryPayPal} className="mt-3 rounded-lg border border-current px-4 py-2 font-bold">{lang === "es" ? "Intentar de nuevo" : "Try again"}</button>
               </div>
             )}
-            <div ref={paypalRef} className="min-h-[140px] w-full" />
+            <div ref={paypalRef} hidden={Boolean(pendingOrderId) || Boolean(paypalLoadError)} className="min-h-[140px] w-full" />
+            {(paymentError || isCapturing) && <div role={paymentError ? "alert" : "status"} className="mt-3 text-sm">
+              <p>{isCapturing ? (lang === "es" ? "Verificando el pago…" : "Checking payment…") : paymentError}</p>
+              {pendingOrderId && !isCapturing && <button type="button" onClick={retryCapture} className="mt-2 rounded-lg border px-4 py-2 font-bold">{lang === "es" ? "Verificar este pago" : "Check this payment"}</button>}
+            </div>}
           </div>
         ) : (
           <LocalPaymentOptions

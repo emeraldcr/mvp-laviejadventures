@@ -36,7 +36,7 @@ export default function InlinePayPalCheckout({
       quote.transportQuote,
     ],
   );
-  const { paypalRef, paypalLoadError, isPaypalLoading } = usePayPalCheckout({
+  const { paypalRef, paypalLoadError, isPaypalLoading, retryPayPal, paymentError, isCapturing, pendingOrderId, retryCapture } = usePayPalCheckout({
     enabled: quote.synced && !quote.syncing && !quote.error,
     orderDetails: quotedOrderDetails,
     lang,
@@ -49,8 +49,8 @@ export default function InlinePayPalCheckout({
       <section className="mt-5 rounded-2xl border border-red-300 bg-red-50 p-4 text-sm text-red-900 dark:border-red-800 dark:bg-red-950/50 dark:text-red-100" role="alert">
         <p className="font-semibold">{quote.error ?? tr.error}</p>
         {paypalLoadError && <p className="mt-2 break-words text-xs">{paypalLoadError}</p>}
-        {quote.error && (
-          <button type="button" onClick={quote.retry} className="mt-3 rounded-lg border border-current px-4 py-2 text-xs font-black">
+        {(quote.error || paypalLoadError) && (
+          <button type="button" onClick={quote.error ? quote.retry : retryPayPal} className="mt-3 rounded-lg border border-current px-4 py-2 text-xs font-black">
             {lang === "es" ? "Intentar de nuevo" : "Try again"}
           </button>
         )}
@@ -69,13 +69,18 @@ export default function InlinePayPalCheckout({
         </h3>
         <p className="text-xl font-black text-emerald-700 dark:text-emerald-300">${quote.total.toFixed(2)} USD</p>
       </div>
-      <div ref={paypalRef} className="min-h-20 w-full rounded-xl bg-white p-2 dark:bg-zinc-950/60">
+      <div className="min-h-20 w-full rounded-xl bg-white p-2 dark:bg-zinc-950/60">
         {(quote.syncing || !quote.synced || isPaypalLoading) && (
           <p className="flex min-h-16 items-center justify-center text-sm text-zinc-500 dark:text-zinc-400" role="status">
             {tr.loadingPaymentInfo}
           </p>
         )}
+        <div ref={paypalRef} hidden={Boolean(pendingOrderId)} />
       </div>
+      {(paymentError || isCapturing) && <div role={paymentError ? "alert" : "status"} className="mt-3 text-sm">
+        <p>{isCapturing ? (lang === "es" ? "Verificando el pago…" : "Checking payment…") : paymentError}</p>
+        {pendingOrderId && !isCapturing && <button type="button" onClick={retryCapture} className="mt-2 rounded-lg border px-4 py-2 font-bold">{lang === "es" ? "Verificar este pago" : "Check this payment"}</button>}
+      </div>}
       <p className="mt-3 text-center text-xs text-zinc-500 dark:text-zinc-400">
         {lang === "es" ? "Pague con PayPal o tarjeta." : "Pay with PayPal or card."}
       </p>

@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "lint": "eslint . --ext .ts,.tsx",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test:paypal": "node --test scripts/paypal.test.mjs"
   },
   "dependencies": {
     "@auth0/nextjs-auth0": "^4.32.1",
