@@ -21,7 +21,7 @@ export default function BookingSection({ selectedTourSlug, initialPackageId }: P
       id="booking"
       className="relative min-h-[calc(100svh-4rem)] overflow-x-hidden bg-[#f4f1ea] dark:bg-[#0b0a09]"
     >
-      <div className="container relative z-10 mx-auto px-2 py-3 sm:px-4 sm:py-4 md:px-8 md:py-6">
+      <div className="container relative z-10 mx-auto px-2 pt-20 pb-3 sm:px-4 sm:pt-24 sm:pb-4 md:px-8 md:pt-28 md:pb-6">
         {selectedTourSlug ? (
           <>
             {!selectedDay && (
