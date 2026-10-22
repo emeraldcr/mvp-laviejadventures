@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import HomeNav from "@/app/components/home/HomeNav";
-import SiteFooter from "@/app/components/sections/SiteFooter";
+import SiteHeader from "@/app/components/navigation/SiteHeader";
+import PageFooter from "@/app/components/sections/PageFooter";
 
 type SharedPageShellProps = {
   children: ReactNode;
@@ -12,9 +12,9 @@ type SharedPageShellProps = {
 export default function SharedPageShell({ children, className = "", footer = true, solidNav = true }: SharedPageShellProps) {
   return (
     <main className={`lva-public-shell min-h-screen overflow-x-hidden font-sans ${className}`}>
-      <HomeNav solid={solidNav} />
+      <SiteHeader solid={solidNav} />
       {children}
-      {footer && <SiteFooter />}
+      {footer && <PageFooter />}
     </main>
   );
 }

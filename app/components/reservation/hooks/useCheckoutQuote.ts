@@ -143,6 +143,7 @@ export function useCheckoutQuote(orderDetails: OrderDetails, lang: "es" | "en") 
     };
   }, [
     lang,
+    orderDetails.addons,
     orderDetails.addonDetails,
     orderDetails.addonIds,
     orderDetails.date,

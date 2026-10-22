@@ -29,21 +29,17 @@ import {
   Waves,
   X,
 } from "lucide-react";
-import HomeNav from "@/app/components/home/HomeNav";
-import SiteFooter from "@/app/components/sections/SiteFooter";
+import SiteHeader from "@/app/components/navigation/SiteHeader";
+import PageFooter from "@/app/components/sections/PageFooter";
 import GoogleRating from "@/app/components/GoogleRating";
 import { getTourPriceDisplay } from "@/lib/tour-pricing";
 import { whatsappHref } from "@/app/components/home/home-utils";
+import { localizeHref } from "@/lib/i18n";
 import {
   BIRDWATCHING_GALLERY,
-  BIRDWATCHING_HABITATS,
-  BIRDWATCHING_LEARNING,
-  BIRDWATCHING_SPECIES,
-  BIRDWATCHING_STATS,
-  BIRDWATCHING_VIDEOS,
-  LIKELIHOOD_LABELS,
   type BirdHabitat,
 } from "@/lib/birdwatching-content";
+import { getLocalizedBirdwatchingData } from "@/lib/birdwatching-localized";
 import type { TourContent } from "@/lib/tour-content";
 import type { TourPackageOption } from "@/lib/types/index";
 
@@ -65,6 +61,7 @@ type TourDetail = {
 type Props = {
   tour: TourDetail;
   content: TourContent;
+  locale: "es" | "en";
 };
 
 
@@ -76,17 +73,40 @@ function HabitatIcon({ icon }: { icon: BirdHabitat["icon"] }) {
   return <TreePine className={cls} aria-hidden />;
 }
 
-export default function BirdwatchingTourPage({ tour, content }: Props) {
+export default function BirdwatchingTourPage({ tour, content, locale }: Props) {
+  const isEnglish = locale === "en";
+  const data = getLocalizedBirdwatchingData(locale);
+  const copy = isEnglish ? {
+    back: "Back to tours", badge: "Star tour", corridor: "Juan Castro Blanco corridor", bookBirdwatching: "Book birdwatching", askGuide: "Ask a guide",
+    duration: "Duration", level: "Level", location: "Location", from: "From", complete: "The full experience", highlights: "Tour highlights", book: "Book",
+    videos: "Route videos", videosIntro: "See a real birding morning: trails, guides, dawn calls, and the landscape of the biological corridor.", videoTitle: "Birdwatching video",
+    species: "Species you may find", speciesIntro: "The Juan Castro Blanco corridor has more than 400 recorded species. These are some of the most sought-after and frequent on our route — your guide adapts the walk to the season and the day's activity.",
+    habitat: "Habitat", seasonalList: "Would you like a seasonal species list?", seasonalListBody: "Book and your guide will share the corridor's current list before departure.", bookNow: "Book now",
+    habitats: "Habitats of the biological corridor", habitatsIntro: "Bird diversity comes from the mix of ecosystems: cloud forest, streams, recovering farms, and Juan Castro Blanco National Park — a vital corridor between Monteverde and Northern Costa Rica.",
+    learn: "What you will learn", gallery: "Experience gallery", galleryIntro: "Original photographs from the tour area. Tap any image to enlarge; wildlife sightings are never guaranteed.", galleryNote: "Original La Vieja Adventures photographs from the real tour environment. Species and conditions depend on the season.",
+    morning: "How the morning works", operator: "Reviews from our operator", included: "Included", notIncluded: "Not included", bring: "What to bring", goodToKnow: "Good to know before you go", packages: "Available packages", select: "Select",
+    faqs: "Frequently asked questions", finalTitle: "Sunrise will not wait. Shall we save your place?", finalBody: "An early departure, expert guide, binoculars, and an unforgettable morning in the richest biological corridor in Northern Costa Rica.", reserve: "Book birdwatching", sunrise: "Sunrise departure", reserveWhatsApp: "Ask on WhatsApp", reserveAria: "Book through WhatsApp", galleryAria: "Expanded gallery", close: "Close", previous: "Previous", next: "Next", image: "Gallery",
+  } : {
+    back: "Tours", badge: "Tour estrella", corridor: "Corredor Juan Castro Blanco", bookBirdwatching: "Reservar avistamiento", askGuide: "Hablar con un guía",
+    duration: "Duración", level: "Nivel", location: "Ubicación", from: "Desde", complete: "La experiencia completa", highlights: "Lo mejor del tour", book: "Reservar",
+    videos: "Videos del recorrido", videosIntro: "Mire cómo es una mañana real de avistamiento: senderos, guías, cantos al amanecer y el paisaje del corredor biológico.", videoTitle: "Video de avistamiento de aves",
+    species: "Especies que puede encontrar", speciesIntro: "El corredor Juan Castro Blanco concentra más de 400 especies registradas. Estas son algunas de las más buscadas y frecuentes en nuestro recorrido — el guía adapta la ruta según la temporada y la actividad del día.",
+    habitat: "Hábitat", seasonalList: "¿Quiere una lista personalizada por temporada?", seasonalListBody: "Reserve y el guía le comparte la lista actualizada del corredor antes de la salida.", bookNow: "Reservar ahora",
+    habitats: "Hábitats del corredor biológico", habitatsIntro: "La riqueza de aves viene de la mezcla de ecosistemas: bosque nuboso, quebradas, fincas en regeneración y el Parque Nacional del Agua Juan Castro Blanco — un corredor vital entre Monteverde y la Zona Norte.",
+    learn: "Qué va a aprender", gallery: "Galería de la experiencia", galleryIntro: "Fotografías propias del entorno del tour. Toque cualquier imagen para verla en grande; la fauna silvestre nunca se garantiza.", galleryNote: "Fotografías propias de La Vieja Adventures y del entorno real del tour. Las especies y condiciones dependen de la temporada.",
+    morning: "Cómo es la mañana", operator: "Opiniones de nuestro operador", included: "Incluye", notIncluded: "No incluye", bring: "Qué llevar", goodToKnow: "Bueno saber antes de ir", packages: "Paquetes disponibles", select: "Seleccionar",
+    faqs: "Preguntas frecuentes", finalTitle: "El amanecer no espera. ¿Reservamos su plaza?", finalBody: "Salida temprano, guía experto, binoculares y una mañana inolvidable en el corredor biológico más rico de la Zona Norte.", reserve: "Reservar avistamiento", sunrise: "Salida al amanecer", reserveWhatsApp: "WhatsApp", reserveAria: "Reservar por WhatsApp", galleryAria: "Galería ampliada", close: "Cerrar", previous: "Anterior", next: "Siguiente", image: "Galería",
+  };
   const [showStickyBar, setShowStickyBar] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-  const [activeVideo, setActiveVideo] = useState(BIRDWATCHING_VIDEOS[0]?.youtubeId ?? "");
+  const [activeVideo, setActiveVideo] = useState(data.videos[0]?.youtubeId ?? "");
 
-  const title = tour.titleEs || "Avistamiento de Aves";
-  const bookingHref = `/reservar?tour=${encodeURIComponent(tour.slug)}`;
-  const whatsappMessageHref = whatsappHref(`Hola, quiero reservar el tour ${title}. ¿Tienen disponibilidad?`);
+  const title = (isEnglish ? tour.titleEn : tour.titleEs) || (isEnglish ? "Northern Birdwatching" : "Avistamiento de Aves");
+  const bookingHref = localizeHref(`/reservar?tour=${encodeURIComponent(tour.slug)}`, locale);
+  const whatsappMessageHref = whatsappHref(isEnglish ? `Hello, I would like to book ${title}. Do you have availability?` : `Hola, quiero reservar el tour ${title}. ¿Tienen disponibilidad?`);
   const bookingHrefForPackage = (packageId?: string | null) => {
     const packageParam = packageId ? `&package=${encodeURIComponent(packageId)}` : "";
-    return `/reservar?tour=${encodeURIComponent(tour.slug)}${packageParam}`;
+    return localizeHref(`/reservar?tour=${encodeURIComponent(tour.slug)}${packageParam}`, locale);
   };
 
   const heroImage = BIRDWATCHING_GALLERY[0] ?? "/image/IMG_6810.webp";
@@ -128,7 +148,7 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
 
   return (
     <main className="min-h-screen bg-[#060a08] text-white">
-      <HomeNav />
+      <SiteHeader />
       <div className="relative z-10 bg-black px-4 pt-24 text-center"><GoogleRating dark /></div>
 
       {/* Hero */}
@@ -139,18 +159,18 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
 
         <div className="container relative z-10 mx-auto flex min-h-[80vh] max-w-7xl flex-col justify-end px-4 pb-12 md:px-8">
           <Link
-            href="/#tours"
+            href={localizeHref("/#tours", locale)}
             className="mb-8 inline-flex w-fit items-center gap-2 rounded-full border border-white/20 bg-black/45 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-white/80 backdrop-blur transition hover:border-emerald-300 hover:text-emerald-200"
           >
             <ArrowLeft className="h-4 w-4" aria-hidden />
-            Tours
+            {copy.back}
           </Link>
 
           <div className="max-w-4xl">
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-4 py-2 backdrop-blur">
               <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" aria-hidden />
               <span className="text-xs font-bold uppercase tracking-wide text-emerald-200">
-                {tour.tagEs || "Tour estrella"} · Corredor Juan Castro Blanco
+                {copy.badge} · {copy.corridor}
               </span>
             </div>
 
@@ -167,7 +187,7 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
                 href={bookingHref}
                 className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#00C4B0] px-7 py-2 text-sm font-black uppercase tracking-[0.14em] text-[#17211f] shadow-[0_20px_55px_rgba(0,196,176,0.28)] transition hover:-translate-y-0.5 hover:bg-white"
               >
-                Reservar avistamiento
+                {copy.bookBirdwatching}
                 <ChevronRight className="h-4 w-4" aria-hidden />
               </Link>
               <a
@@ -177,7 +197,7 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
                 className="inline-flex min-h-14 items-center gap-2 rounded-full border border-white/25 bg-white/8 px-6 py-4 text-sm font-bold text-white backdrop-blur transition hover:border-white/50 hover:bg-white/14"
               >
                 <MessageCircle className="h-4 w-4 text-emerald-300" aria-hidden />
-                Hablar con un guía
+                {copy.askGuide}
               </a>
             </div>
           </div>
@@ -187,7 +207,7 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
       {/* Stats strip */}
       <section className="border-y border-white/10 bg-emerald-950/30">
         <div className="mx-auto grid max-w-7xl grid-cols-2 gap-px bg-white/10 md:grid-cols-4">
-          {BIRDWATCHING_STATS.map((stat) => (
+          {data.stats.map((stat) => (
             <div key={stat.label} className="bg-[#060a08] px-6 py-8 text-center">
               <p className="text-3xl font-black text-emerald-300 md:text-4xl">{stat.value}</p>
               <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-zinc-400">{stat.label}</p>
@@ -198,17 +218,17 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
 
       {/* Quick info + inline CTA */}
       <section className="mx-auto grid max-w-7xl gap-6 px-4 py-12 md:grid-cols-4 md:px-8">
-        <InfoCard icon={<Clock className="h-4 w-4" />} label="Duración" value={tour.duration || "2 horas"} />
-        <InfoCard icon={<ShieldCheck className="h-4 w-4" />} label="Nivel" value={tour.difficulty || "Fácil"} />
-        <InfoCard icon={<MapPin className="h-4 w-4" />} label="Ubicación" value={tour.location || "Juan Castro Blanco"} />
-        <InfoCard icon={<Users className="h-4 w-4" />} label="Desde" value={getTourPriceDisplay(tour, true).compact} />
+        <InfoCard icon={<Clock className="h-4 w-4" />} label={copy.duration} value={tour.duration || (isEnglish ? "2 hours" : "2 horas")} />
+        <InfoCard icon={<ShieldCheck className="h-4 w-4" />} label={copy.level} value={tour.difficulty || (isEnglish ? "Easy" : "Fácil")} />
+        <InfoCard icon={<MapPin className="h-4 w-4" />} label={copy.location} value={tour.location || "Juan Castro Blanco"} />
+        <InfoCard icon={<Users className="h-4 w-4" />} label={copy.from} value={getTourPriceDisplay(tour, !isEnglish).compact} />
       </section>
 
       {/* Overview */}
       <section className="mx-auto max-w-7xl px-4 pb-16 md:px-8">
         <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
           <div>
-            <SectionHeading icon={<Binoculars className="h-6 w-6" />} title="La experiencia completa" />
+            <SectionHeading icon={<Binoculars className="h-6 w-6" />} title={copy.complete} />
             <div className="mt-6 space-y-4">
               {content.overview.map((paragraph, index) => (
                 <p key={index} className="text-base leading-relaxed text-zinc-300 md:text-lg">
@@ -221,7 +241,7 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
               <div className="mt-8 rounded-3xl border border-emerald-400/15 bg-emerald-400/[0.04] p-6">
                 <h3 className="mb-4 flex items-center gap-2 text-lg font-black text-white">
                   <Sparkles className="h-5 w-5 text-emerald-300" aria-hidden />
-                  Lo mejor del tour
+                  {copy.highlights}
                 </h3>
                 <ul className="grid gap-3 sm:grid-cols-2">
                   {content.highlights.map((item) => (
@@ -239,7 +259,7 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
                 href={bookingHref}
                 className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#00C4B0] px-6 py-2 text-sm font-black uppercase tracking-[0.14em] text-[#17211f] transition hover:bg-white"
               >
-                Reservar
+                {copy.book}
                 <CalendarDays className="h-4 w-4" aria-hidden />
               </Link>
             </div>
@@ -265,9 +285,9 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
       {/* Videos */}
       <section className="border-y border-white/10 bg-white/[0.02] py-16">
         <div className="mx-auto max-w-7xl px-4 md:px-8">
-          <SectionHeading icon={<Play className="h-6 w-6" />} title="Videos del recorrido" />
+          <SectionHeading icon={<Play className="h-6 w-6" />} title={copy.videos} />
           <p className="mt-3 max-w-2xl text-base text-zinc-400">
-            Mire cómo es una mañana real de avistamiento: senderos, guías, cantos al amanecer y el paisaje del corredor biológico.
+            {copy.videosIntro}
           </p>
 
           <div className="mt-8 grid gap-6 lg:grid-cols-[1.4fr_0.6fr]">
@@ -276,7 +296,7 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
                 <iframe
                   className="h-full w-full"
                   src={`https://www.youtube.com/embed/${activeVideo}?rel=0`}
-                  title="Video de avistamiento de aves"
+                  title={copy.videoTitle}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
                 />
@@ -284,7 +304,7 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-              {BIRDWATCHING_VIDEOS.map((video) => (
+              {data.videos.map((video) => (
                 <button
                   key={video.youtubeId}
                   type="button"
@@ -306,13 +326,13 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
 
       {/* Species */}
       <section className="mx-auto max-w-7xl px-4 py-16 md:px-8">
-        <SectionHeading icon={<Bird className="h-6 w-6" />} title="Especies que puede encontrar" />
+        <SectionHeading icon={<Bird className="h-6 w-6" />} title={copy.species} />
         <p className="mt-3 max-w-3xl text-base text-zinc-400">
-          El corredor Juan Castro Blanco concentra más de 400 especies registradas. Estas son algunas de las más buscadas y frecuentes en nuestro recorrido — el guía adapta la ruta según la temporada y la actividad del día.
+          {copy.speciesIntro}
         </p>
 
         <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {BIRDWATCHING_SPECIES.map((species) => (
+          {data.species.map((species) => (
             <article
               key={species.scientificName}
               className="group overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] transition hover:border-emerald-400/25 hover:bg-white/[0.05]"
@@ -326,7 +346,7 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
                   className="object-cover transition duration-500 group-hover:scale-105"
                 />
                 <span className="absolute left-3 top-3 rounded-full bg-black/65 px-3 py-1 text-[10px] font-black uppercase tracking-wide text-emerald-200 backdrop-blur">
-                  {LIKELIHOOD_LABELS[species.likelihood]}
+                  {data.likelihoodLabels[species.likelihood]}
                 </span>
               </div>
               <div className="p-5">
@@ -334,7 +354,7 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
                 <p className="text-xs italic text-emerald-300/80">{species.scientificName}</p>
                 <p className="mt-3 text-sm leading-relaxed text-zinc-300">{species.description}</p>
                 <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                  Hábitat: <span className="text-zinc-300">{species.habitat}</span>
+                  {copy.habitat}: <span className="text-zinc-300">{species.habitat}</span>
                 </p>
               </div>
             </article>
@@ -343,14 +363,14 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
 
         <div className="mt-10 rounded-3xl border border-emerald-400/20 bg-gradient-to-r from-emerald-950/50 to-transparent p-8 md:flex md:items-center md:justify-between md:gap-8">
           <div>
-            <p className="text-lg font-black text-white">¿Quiere una lista personalizada por temporada?</p>
-            <p className="mt-2 text-sm text-zinc-400">Reserve y el guía le comparte la lista actualizada del corredor antes de la salida.</p>
+            <p className="text-lg font-black text-white">{copy.seasonalList}</p>
+            <p className="mt-2 text-sm text-zinc-400">{copy.seasonalListBody}</p>
           </div>
           <Link
             href={bookingHref}
             className="mt-5 inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full bg-[#00C4B0] px-6 py-2 text-sm font-black uppercase tracking-[0.14em] text-[#17211f] transition hover:bg-white md:mt-0"
           >
-            Reservar ahora
+            {copy.bookNow}
             <ChevronRight className="h-4 w-4" aria-hidden />
           </Link>
         </div>
@@ -359,12 +379,12 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
       {/* Habitats */}
       <section className="border-y border-white/10 bg-white/[0.02] py-16">
         <div className="mx-auto max-w-7xl px-4 md:px-8">
-          <SectionHeading icon={<TreePine className="h-6 w-6" />} title="Hábitats del corredor biológico" />
+          <SectionHeading icon={<TreePine className="h-6 w-6" />} title={copy.habitats} />
           <p className="mt-3 max-w-3xl text-base text-zinc-400">
-            La riqueza de aves viene de la mezcla de ecosistemas: bosque nuboso, quebradas, fincas en regeneración y el Parque Nacional del Agua Juan Castro Blanco — un corredor vital entre Monteverde y la Zona Norte.
+            {copy.habitatsIntro}
           </p>
           <div className="mt-10 grid gap-5 md:grid-cols-2">
-            {BIRDWATCHING_HABITATS.map((habitat) => (
+            {data.habitats.map((habitat) => (
               <div key={habitat.title} className="rounded-3xl border border-white/10 bg-white/[0.03] p-6">
                 <h3 className="flex items-center gap-2 text-lg font-black text-white">
                   <HabitatIcon icon={habitat.icon} />
@@ -379,9 +399,9 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
 
       {/* What you'll learn */}
       <section className="mx-auto max-w-7xl px-4 py-16 md:px-8">
-        <SectionHeading icon={<Sparkles className="h-6 w-6" />} title="Qué va a aprender" />
+        <SectionHeading icon={<Sparkles className="h-6 w-6" />} title={copy.learn} />
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {BIRDWATCHING_LEARNING.map((item) => (
+          {data.learning.map((item) => (
             <div key={item} className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
               <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" aria-hidden />
               <span className="text-sm leading-relaxed text-zinc-200">{item}</span>
@@ -393,9 +413,9 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
       {/* Full gallery */}
       <section className="border-t border-white/10 py-16">
         <div className="mx-auto max-w-7xl px-4 md:px-8">
-          <SectionHeading icon={<Expand className="h-6 w-6" />} title="Galería de la experiencia" />
+          <SectionHeading icon={<Expand className="h-6 w-6" />} title={copy.gallery} />
           <p className="mt-3 max-w-2xl text-base text-zinc-400">
-            Fotografías propias del entorno del tour. Toque cualquier imagen para verla en grande; la fauna silvestre nunca se garantiza.
+            {copy.galleryIntro}
           </p>
 
           <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
@@ -418,7 +438,7 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
             ))}
           </div>
           <p className="mt-5 text-xs leading-relaxed text-zinc-500">
-            Fotografías propias de La Vieja Adventures y del entorno real del tour. Las especies y condiciones dependen de la temporada.
+             {copy.galleryNote}
           </p>
         </div>
       </section>
@@ -426,7 +446,7 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
       {/* Itinerary */}
       {content.itinerary.length > 0 && (
         <section className="mx-auto max-w-7xl px-4 pb-16 md:px-8">
-          <SectionHeading icon={<Route className="h-6 w-6" />} title="Cómo es la mañana" />
+          <SectionHeading icon={<Route className="h-6 w-6" />} title={copy.morning} />
           <ol className="relative ml-3 mt-8 space-y-6 border-l border-white/10 pl-6">
             {content.itinerary.map((stop, index) => (
               <li key={index} className="relative">
@@ -448,14 +468,14 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
         </section>
       )}
 
-      <section className="border-y border-white/10 py-12 text-center"><h2 className="mb-5 text-2xl font-bold">Opiniones de nuestro operador</h2><GoogleRating dark /></section>
+      <section className="border-y border-white/10 py-12 text-center"><h2 className="mb-5 text-2xl font-bold">{copy.operator}</h2><GoogleRating dark /></section>
 
       {/* Includes / not included */}
       <section className="mx-auto grid max-w-7xl gap-6 px-4 py-16 md:grid-cols-2 md:px-8">
         <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
           <h3 className="mb-4 flex items-center gap-2 text-lg font-black text-white">
             <Check className="h-5 w-5 text-emerald-300" aria-hidden />
-            Incluye
+            {copy.included}
           </h3>
           <ul className="space-y-3">
             {content.included.map((item) => (
@@ -471,7 +491,7 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
             <h3 className="mb-4 flex items-center gap-2 text-lg font-black text-white">
               <X className="h-5 w-5 text-rose-300/80" aria-hidden />
-              No incluye
+              {copy.notIncluded}
             </h3>
             <ul className="space-y-3">
               {content.notIncluded.map((item) => (
@@ -492,7 +512,7 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
             <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
               <h3 className="mb-4 flex items-center gap-2 text-lg font-black text-white">
                 <Backpack className="h-5 w-5 text-emerald-300" aria-hidden />
-                Qué llevar
+                {copy.bring}
               </h3>
               <ul className="space-y-3">
                 {content.whatToBring.map((item) => (
@@ -508,7 +528,7 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
             <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
               <h3 className="mb-4 flex items-center gap-2 text-lg font-black text-white">
                 <Info className="h-5 w-5 text-emerald-300" aria-hidden />
-                Bueno saber antes de ir
+                {copy.goodToKnow}
               </h3>
               <ul className="space-y-3">
                 {content.goodToKnow.map((item) => (
@@ -526,18 +546,18 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
       {/* Packages */}
       {tour.packages.length > 0 && (
         <section className="mx-auto max-w-7xl px-4 pb-16 md:px-8">
-          <SectionHeading title="Paquetes disponibles" />
+          <SectionHeading title={copy.packages} />
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             {tour.packages.map((pkg) => (
               <div key={pkg.id ?? pkg.name} className="rounded-3xl border border-white/10 bg-white/[0.04] p-5">
-                <h3 className="text-lg font-black text-white">{pkg.nameEs || pkg.name}</h3>
-                <p className="mt-2 min-h-12 text-[15px] leading-relaxed text-[#B8BDC4] md:text-base">{pkg.descriptionEs || pkg.descriptionEn}</p>
-                <p className="mt-4 text-2xl font-black text-emerald-200">{getTourPriceDisplay({ packages: [pkg] }, true).compact}</p>
+                <h3 className="text-lg font-black text-white">{(isEnglish ? pkg.name : pkg.nameEs) || pkg.name}</h3>
+                <p className="mt-2 min-h-12 text-[15px] leading-relaxed text-[#B8BDC4] md:text-base">{(isEnglish ? pkg.descriptionEn : pkg.descriptionEs) || pkg.descriptionEn}</p>
+                <p className="mt-4 text-2xl font-black text-emerald-200">{getTourPriceDisplay({ packages: [pkg] }, !isEnglish).compact}</p>
                 <Link
                   href={bookingHrefForPackage(pkg.id)}
                   className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-[#00C4B0] px-4 py-2 text-sm font-black uppercase tracking-[0.12em] text-[#17211f] transition hover:bg-white"
                 >
-                  Seleccionar
+                  {copy.select}
                   <CalendarDays className="h-4 w-4" aria-hidden />
                 </Link>
               </div>
@@ -549,7 +569,7 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
       {/* FAQs */}
       {content.faqs.length > 0 && (
         <section className="mx-auto max-w-7xl px-4 pb-20 md:px-8">
-          <SectionHeading icon={<HelpCircle className="h-6 w-6" />} title="Preguntas frecuentes" />
+          <SectionHeading icon={<HelpCircle className="h-6 w-6" />} title={copy.faqs} />
           <div className="mt-8 space-y-3">
             {content.faqs.map((faq) => (
               <details key={faq.q} className="group rounded-2xl border border-white/10 bg-white/[0.04] p-5 [&_summary::-webkit-details-marker]:hidden">
@@ -569,16 +589,16 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
         <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-900 p-10 shadow-2xl md:p-14">
           <div className="absolute -right-10 -top-10 h-48 w-48 rounded-full bg-white/10 blur-3xl" aria-hidden />
           <div className="relative z-10 max-w-2xl">
-            <h2 className="text-3xl font-black text-white md:text-4xl">El amanecer no espera. ¿Reservamos su plaza?</h2>
+            <h2 className="text-3xl font-black text-white md:text-4xl">{copy.finalTitle}</h2>
             <p className="mt-4 text-base leading-relaxed text-emerald-100">
-              Salida temprano, guía experto, binoculares y una mañana inolvidable en el corredor biológico más rico de la Zona Norte.
+              {copy.finalBody}
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
                 href={bookingHref}
                 className="inline-flex items-center gap-2 rounded-full bg-white px-7 py-4 text-sm font-black uppercase tracking-[0.14em] text-emerald-900 transition hover:bg-emerald-50"
               >
-                Reservar avistamiento
+                {copy.reserve}
                 <ChevronRight className="h-4 w-4" aria-hidden />
               </Link>
               <a
@@ -588,7 +608,7 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
                 className="inline-flex items-center gap-2 rounded-full border border-white/40 px-6 py-4 text-sm font-bold text-white transition hover:bg-white/10"
               >
                 <MessageCircle className="h-4 w-4" aria-hidden />
-                WhatsApp
+                {copy.reserveWhatsApp}
               </a>
             </div>
           </div>
@@ -605,13 +625,13 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
           <div className="min-w-0 hidden sm:block">
             <p className="truncate text-sm font-black text-white">{title}</p>
-            <p className="text-xs text-emerald-300">Desde {getTourPriceDisplay(tour, true).compact} · Salida al amanecer</p>
+            <p className="text-xs text-emerald-300">{copy.from} {getTourPriceDisplay(tour, !isEnglish).compact} · {copy.sunrise}</p>
           </div>
           <Link
             href={bookingHref}
             className="inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-2 rounded-full bg-[#00C4B0] px-6 py-2 text-sm font-black uppercase tracking-[0.12em] text-[#17211f] transition hover:bg-white sm:w-auto"
           >
-            Reservar ahora
+            {copy.bookNow}
             <CalendarDays className="h-4 w-4" aria-hidden />
           </Link>
         </div>
@@ -623,7 +643,7 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
         target="_blank"
         rel="noopener noreferrer"
         className="fixed bottom-24 right-5 z-40 hidden h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-2xl shadow-green-900/40 transition hover:scale-105 hover:bg-[#1ebe5d] md:flex md:bottom-8"
-        aria-label="Reservar por WhatsApp"
+        aria-label={copy.reserveAria}
       >
         <MessageCircle className="h-6 w-6" aria-hidden />
       </a>
@@ -634,13 +654,13 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
           className="fixed inset-0 z-[60] flex items-center justify-center bg-black/95 p-4"
           role="dialog"
           aria-modal="true"
-          aria-label="Galería ampliada"
+           aria-label={copy.galleryAria}
         >
           <button
             type="button"
             onClick={closeLightbox}
             className="absolute right-4 top-4 rounded-full bg-white/10 p-2 text-white transition hover:bg-white/20"
-            aria-label="Cerrar"
+             aria-label={copy.close}
           >
             <X className="h-6 w-6" />
           </button>
@@ -648,7 +668,7 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
             type="button"
             onClick={showPrev}
             className="absolute left-3 rounded-full bg-white/10 p-3 text-white transition hover:bg-white/20 md:left-6"
-            aria-label="Anterior"
+             aria-label={copy.previous}
           >
             <ChevronLeft className="h-6 w-6" />
           </button>
@@ -656,14 +676,14 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
             type="button"
             onClick={showNext}
             className="absolute right-3 rounded-full bg-white/10 p-3 text-white transition hover:bg-white/20 md:right-6"
-            aria-label="Siguiente"
+             aria-label={copy.next}
           >
             <ChevronRight className="h-6 w-6" />
           </button>
           <div className="relative h-[70vh] w-full max-w-5xl">
             <Image
               src={BIRDWATCHING_GALLERY[lightboxIndex]}
-              alt={`Galería ${lightboxIndex + 1}`}
+               alt={`${copy.image} ${lightboxIndex + 1}`}
               fill
               sizes="100vw"
               className="object-contain"
@@ -671,11 +691,11 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
             />
           </div>
           <p className="absolute bottom-6 text-sm text-zinc-400">
-            {lightboxIndex + 1} / {BIRDWATCHING_GALLERY.length}
+             {lightboxIndex + 1} / {BIRDWATCHING_GALLERY.length}
           </p>
         </div>
       )}
-      <SiteFooter />
+      <PageFooter />
     </main>
   );
 }

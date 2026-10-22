@@ -16,6 +16,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
+import { localizeHref } from "@/lib/i18n";
 import { useReservationData } from "@/lib/hooks/useReservationData";
 import TourSelectionCards from "@/app/components/tours/TourSelectionCards";
 import { principalContent } from "@/lib/constants/principal";
@@ -222,7 +223,7 @@ export default function ToursImmersionSection({ onSelectTour, selectedTourSlug }
             {isEs ? "Donde el cañón\nse vuelve esmeralda." : "Where the canyon\nturns emerald."}
           </h3>
           <Link
-            href="/reservar"
+            href={localizeHref("/reservar", lang)}
             className="pointer-events-auto mt-5 inline-flex items-center gap-2 rounded-full bg-emerald-400 px-6 py-3 text-xs font-black uppercase tracking-[0.18em] text-emerald-950 shadow-[0_12px_36px_rgba(16,185,129,0.45)] transition hover:-translate-y-0.5 hover:bg-amber-300 hover:shadow-[0_12px_36px_rgba(245,158,11,0.40)]"
           >
             {isEs ? "Reservar ahora" : "Book now"}
@@ -490,7 +491,7 @@ export default function ToursImmersionSection({ onSelectTour, selectedTourSlug }
             {isEs ? `${tours.length} experiencias disponibles en San Carlos` : `${tours.length} experiences available in San Carlos`}
           </p>
           <Link
-            href="/tours"
+            href={localizeHref("/tours", lang)}
             className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/[0.06] px-7 py-3.5 text-sm font-black text-white/80 backdrop-blur-md transition hover:border-emerald-300/50 hover:text-emerald-200"
           >
             {isEs ? "Ver todos los tours" : "See all tours"}

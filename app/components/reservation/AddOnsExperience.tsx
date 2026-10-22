@@ -24,6 +24,7 @@ import {
   type TransportQuoteResult,
 } from "@/lib/reservation/transport";
 import type { AddOnOption, ReservationAddonDetails } from "@/lib/reservation/types";
+import { localizeHref } from "@/lib/i18n";
 
 type Lang = "es" | "en";
 
@@ -252,7 +253,7 @@ export default function AddOnsExperience({
                     </button>
                   ) : (
                     <Link
-                      href="/reservar"
+                      href={localizeHref("/reservar", lang)}
                       className="flex h-11 w-full items-center justify-center rounded-xl bg-zinc-950 px-3 text-sm font-black text-white transition hover:bg-[#087d72] dark:bg-zinc-100 dark:text-zinc-950"
                     >
                       {addon.priceStatus === "quote"
@@ -581,7 +582,7 @@ function AddonModal({
             </button>
           ) : (
             <Link
-              href="/reservar"
+              href={localizeHref("/reservar", lang)}
               className="inline-flex min-h-11 items-center justify-center rounded-xl bg-emerald-600 px-5 py-2 font-black text-white hover:bg-emerald-500"
             >
               {lang === "es" ? "Reservar con este extra" : "Book with this add-on"}

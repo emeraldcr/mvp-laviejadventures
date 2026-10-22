@@ -5,7 +5,7 @@ import ErrorBoundary from "@/lib/contexts/ErrorBoundary";
 import { useLanguage } from "@/lib/LanguageContext";
 import { principalContent } from "@/lib/constants/principal";
 import type { TourSummary } from "@/lib/types/index";
-import HomeNav from "@/app/components/home/HomeNav";
+import SiteHeader from "@/app/components/navigation/SiteHeader";
 import HomeHero from "@/app/components/home/HomeHero";
 import HomeConversionRail from "@/app/components/home/HomeConversionRail";
 import HomeTrustSection from "@/app/components/home/HomeTrustSection";
@@ -22,8 +22,8 @@ export default function HomeClient({ children, tours }: { children: ReactNode; t
   const otherTours = tours.filter((tour) => !["tour-ciudad-esmeralda", "ciudad-esmeralda"].includes(tour.slug)).slice(0, 3);
   return (
     <ErrorBoundary fallback={<div className="flex h-screen items-center justify-center bg-white text-xl text-red-600">{copy.criticalFallback}</div>}>
-      <main className="min-h-screen overflow-x-hidden bg-[#FAF9F6] font-sans text-stone-900 dark:bg-[#0b0a09] dark:text-stone-100">
-        <HomeNav />
+      <main className="lva-public-shell min-h-screen overflow-x-hidden font-sans">
+        <SiteHeader />
         <HomeStructuredData tours={tours} locale={lang} />
         <HomeHero tour={ciudadEsmeralda} />
         <HomeConversionRail />

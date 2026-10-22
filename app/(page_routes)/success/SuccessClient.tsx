@@ -3,6 +3,7 @@
 import { useLanguage } from "@/lib/LanguageContext";
 import { BOOKING_COMPLETION_STORAGE_KEY, trackAnalyticsEvent } from "@/lib/analytics/client";
 import { translations } from "@/lib/translations";
+import { localizeHref } from "@/lib/i18n";
 import { LA_VIEJA_GOOGLE_MAPS_URL, LA_VIEJA_LOCATION_LABEL } from "@/lib/constants/location";
 import { BUSINESS_WHATSAPP_URL } from "@/lib/site-config";
 import Link from "next/link";
@@ -171,7 +172,7 @@ function SuccessState({
           <BackButton label={tr.backBtn} />
         </div>
         <div className="mt-8">
-          <EditorialFinalCta title={isEnglish ? "Keep exploring San Carlos" : "Siga explorando San Carlos"} body={isEnglish ? "When you are ready, discover another local experience with us." : "Cuando esté listo, descubra otra experiencia local con nosotros."} label={isEnglish ? "Explore tours" : "Explorar tours"} href="/tours" />
+          <EditorialFinalCta title={isEnglish ? "Keep exploring San Carlos" : "Siga explorando San Carlos"} body={isEnglish ? "When you are ready, discover another local experience with us." : "Cuando esté listo, descubra otra experiencia local con nosotros."} label={isEnglish ? "Explore tours" : "Explorar tours"} href={localizeHref("/tours", isEnglish ? "en" : "es")} />
         </div>
       </div>
     </section>

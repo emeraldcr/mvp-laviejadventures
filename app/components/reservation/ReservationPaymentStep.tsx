@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import type { OrderDetails } from "@/lib/types/index";
 import { useLanguage } from "@/lib/LanguageContext";
 import { translations } from "@/lib/translations";
+import { localizeHref } from "@/lib/i18n";
 import PaymentCheckoutContent from "@/app/components/reservation/PaymentCheckoutContent";
 
 const subscribeToClientSnapshot = () => () => {};
@@ -91,7 +92,7 @@ export default function ReservationPaymentStep() {
         ) : !orderDetails ? (
           <div className="space-y-4 text-stone-600 dark:text-stone-300">
             <p>{paymentTr.noActiveReservation}</p>
-            <button type="button" onClick={() => router.push("/reservar")} className="rounded-full bg-[#00C4B0] px-5 py-2.5 font-black text-[#17211f] transition hover:bg-emerald-300">{paymentTr.goToBooking}</button>
+            <button type="button" onClick={() => router.push(localizeHref("/reservar", lang))} className="rounded-full bg-[#00C4B0] px-5 py-2.5 font-black text-[#17211f] transition hover:bg-emerald-300">{paymentTr.goToBooking}</button>
           </div>
         ) : <PaymentCheckoutContent orderDetails={orderDetails} onSuccess={() => undefined} />}
       </div>

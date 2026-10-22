@@ -5,6 +5,7 @@ import type { BookingStepId, ReservationAddonDetails, TourTime } from "@/lib/res
 import { ADDON_OPTIONS, formatDepartureLabel, getTransportLocationLabel } from "@/lib/reservation/constants";
 import { getAddonPricePerPerson } from "@/lib/reservation/addons";
 import type { ReservationFormState } from "@/lib/reservation/types";
+import { localizeHref } from "@/lib/i18n";
 
 type ReservationTranslations = typeof import("@/lib/translations").translations["es"]["reservation"];
 
@@ -240,7 +241,7 @@ export default function ReservationDetailsStep3({
             </span>
             {tr.agreeText}
             <Link
-              href="/terminos-y-condiciones"
+              href={localizeHref("/terminos-y-condiciones", lang)}
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
@@ -250,7 +251,7 @@ export default function ReservationDetailsStep3({
             </Link>{" "}
             {tr.andThe}{" "}
             <Link
-              href="/politica-de-privacidad"
+              href={localizeHref("/politica-de-privacidad", lang)}
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}

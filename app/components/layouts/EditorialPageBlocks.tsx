@@ -1,6 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { ArrowRight, ShieldCheck } from "lucide-react";
+import { useLanguage } from "@/lib/LanguageContext";
+import { localizeHref } from "@/lib/i18n";
 
 type EditorialIntroProps = {
   eyebrow: string;
@@ -25,6 +29,8 @@ export function EditorialIntro({
   children,
   dark = false,
 }: EditorialIntroProps) {
+  const { lang } = useLanguage();
+
   return (
     <header className={`rounded-[2rem] border p-6 shadow-sm sm:p-8 md:p-10 ${dark
       ? "border-white/10 bg-white/[0.045] text-white"
@@ -39,12 +45,12 @@ export function EditorialIntro({
         {promise}
       </p>
       <div className="mt-6 flex flex-wrap gap-3">
-        <Link href={primaryHref} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-emerald-600 px-6 py-3 text-sm font-black text-white shadow-lg shadow-emerald-900/20 transition hover:-translate-y-0.5 hover:bg-emerald-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300">
+        <Link href={localizeHref(primaryHref, lang)} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-emerald-600 px-6 py-3 text-sm font-black text-white shadow-lg shadow-emerald-900/20 transition hover:-translate-y-0.5 hover:bg-emerald-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300">
           {primaryLabel}
           <ArrowRight className="h-4 w-4" aria-hidden />
         </Link>
         {secondaryHref && secondaryLabel && (
-          <Link href={secondaryHref} className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-6 py-3 text-sm font-bold transition ${dark ? "border-white/20 text-white hover:border-white/50 hover:bg-white/10" : "border-zinc-300 text-zinc-800 hover:border-emerald-500 hover:text-emerald-700 dark:border-white/15 dark:text-zinc-100"}`}>
+          <Link href={localizeHref(secondaryHref, lang)} className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-6 py-3 text-sm font-bold transition ${dark ? "border-white/20 text-white hover:border-white/50 hover:bg-white/10" : "border-zinc-300 text-zinc-800 hover:border-emerald-500 hover:text-emerald-700 dark:border-white/15 dark:text-zinc-100"}`}>
             {secondaryLabel}
           </Link>
         )}
@@ -64,11 +70,13 @@ export function EditorialTrust({ children, dark = false }: { children: ReactNode
 }
 
 export function EditorialFinalCta({ title, body, label, href = "/reservar", dark = false }: { title: string; body: string; label: string; href?: string; dark?: boolean }) {
+  const { lang } = useLanguage();
+
   return (
     <section className={`rounded-[2rem] border p-6 sm:p-8 ${dark ? "border-emerald-400/20 bg-emerald-400/[0.08] text-white" : "border-emerald-200 bg-gradient-to-br from-emerald-50 to-amber-50 dark:border-emerald-900/50 dark:from-emerald-950/40 dark:to-amber-950/20"}`}>
       <h2 className="max-w-2xl text-2xl font-black tracking-tight sm:text-3xl">{title}</h2>
       <p className={`mt-2 max-w-2xl text-sm leading-6 ${dark ? "text-white/70" : "text-zinc-600 dark:text-zinc-300"}`}>{body}</p>
-      <Link href={href} className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-full bg-emerald-600 px-6 py-3 text-sm font-black text-white transition hover:bg-emerald-500">
+      <Link href={localizeHref(href, lang)} className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-full bg-emerald-600 px-6 py-3 text-sm font-black text-white transition hover:bg-emerald-500">
         {label}
         <ArrowRight className="h-4 w-4" aria-hidden />
       </Link>

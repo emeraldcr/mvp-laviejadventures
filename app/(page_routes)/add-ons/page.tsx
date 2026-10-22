@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, ShieldCheck } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
+import { localizeHref } from "@/lib/i18n";
 import AddOnsExperience from "@/app/components/reservation/AddOnsExperience";
 
 export default function AddOnsPage() {
@@ -28,10 +29,10 @@ export default function AddOnsPage() {
           </Link>
 
           <nav className="flex items-center gap-2 text-xs font-semibold text-zinc-200 md:gap-4 md:text-sm">
-            <Link href="/tours" className="transition-colors hover:text-white">
+            <Link href={localizeHref("/tours", lang)} className="transition-colors hover:text-white">
               {lang === "es" ? "Tours" : "Tours"}
             </Link>
-            <Link href="/reservar" className="rounded-full border border-emerald-300/40 bg-emerald-400/10 px-3 py-1 text-emerald-200 transition hover:bg-emerald-400/20">
+            <Link href={localizeHref("/reservar", lang)} className="rounded-full border border-emerald-300/40 bg-emerald-400/10 px-3 py-1 text-emerald-200 transition hover:bg-emerald-400/20">
               {lang === "es" ? "Reservar" : "Reserve"}
             </Link>
             <button
@@ -50,7 +51,7 @@ export default function AddOnsPage() {
         <div className="mx-auto grid min-h-[360px] w-full max-w-7xl gap-8 px-4 py-10 md:px-8 lg:grid-cols-[minmax(0,0.8fr)_minmax(320px,0.42fr)] lg:items-end lg:py-14">
           <div>
             <Link
-              href="/reservar"
+              href={localizeHref("/reservar", lang)}
               className="mb-6 inline-flex items-center gap-2 text-sm font-bold text-emerald-200 transition hover:text-white"
             >
               <ArrowLeft className="h-4 w-4" aria-hidden />

@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useLanguage } from "@/lib/LanguageContext";
-import HomeNav from "@/app/components/home/HomeNav";
+import SiteHeader from "@/app/components/navigation/SiteHeader";
+import PageFooter from "@/app/components/sections/PageFooter";
 import { EditorialFinalCta, EditorialIntro, EditorialTrust } from "@/app/components/layouts/EditorialPageBlocks";
 
 type Section = {
@@ -126,7 +127,7 @@ export default function TermsPage() {
 
   return (
     <main className="min-h-screen bg-zinc-50 px-4 pb-16 pt-24 dark:bg-black md:pt-32">
-      <HomeNav solid />
+      <SiteHeader solid />
       <div className="mx-auto flex w-full max-w-4xl items-center justify-between mb-4">
         <Link
           href="/"
@@ -169,6 +170,7 @@ export default function TermsPage() {
         </article>
         <EditorialFinalCta title={lang === "es" ? "¿Ya tiene claro el siguiente paso?" : "Ready for the next step?"} body={lang === "es" ? "Revise las fechas disponibles y le acompañamos durante la reserva." : "Review available dates and we will guide you through the booking."} label={lang === "es" ? "Ir a reservar" : "Book now"} />
       </div>
+      <PageFooter />
     </main>
   );
 }

@@ -137,21 +137,21 @@ export default function SiteFooter() {
   ];
 
   return (
-    <footer className="relative overflow-hidden border-t border-white/10 bg-black text-white">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/70 to-transparent" />
-      <div className="pointer-events-none absolute left-1/2 top-0 h-[420px] w-[820px] -translate-x-1/2 bg-emerald-500/10 blur-[140px]" />
+    <footer className="lva-site-footer relative overflow-hidden border-t lva-footer-border">
+      <div className="lva-footer-accent-line pointer-events-none absolute inset-x-0 top-0 h-px" />
+      <div className="lva-footer-glow pointer-events-none absolute left-1/2 top-0 h-[420px] w-[820px] -translate-x-1/2 blur-[140px]" />
 
       <div className="container relative z-10 mx-auto px-4 py-12 md:px-8 md:py-16">
         <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
           <section className="grid gap-6">
             <div>
-              <p className="mb-3 text-[11px] font-black uppercase tracking-[0.32em] text-cyan-300">
+              <p className="lva-footer-kicker mb-3 text-[11px] font-black uppercase tracking-[0.32em]">
                 La Vieja Adventures
               </p>
-              <h2 className="max-w-2xl text-3xl font-black leading-tight text-white md:text-4xl">
+              <h2 className="lva-footer-title max-w-2xl text-3xl font-black leading-tight md:text-4xl">
                 Ciudad Esmeralda, Canon del Rio La Vieja
               </h2>
-              <p className="mt-4 max-w-xl text-sm leading-relaxed text-zinc-400 md:text-base">
+              <p className="lva-footer-copy mt-4 max-w-xl text-sm leading-relaxed md:text-base">
                 {copy.tagline}
               </p>
             </div>
@@ -185,24 +185,24 @@ export default function SiteFooter() {
             </div>
           </section>
 
-          <section className="overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/[0.045] shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
+          <section className="lva-footer-map-card overflow-hidden rounded-[1.5rem] border shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
             <div className="p-5">
               <div className="mb-4 flex items-start justify-between gap-4">
                 <div>
-                  <h3 className="text-lg font-black text-white">{copy.mapTitle}</h3>
-                  <p className="mt-1 text-sm leading-relaxed text-zinc-400">{copy.mapCopy}</p>
+                  <h3 className="lva-footer-title text-lg font-black">{copy.mapTitle}</h3>
+                  <p className="lva-footer-map-copy mt-1 text-sm leading-relaxed">{copy.mapCopy}</p>
                 </div>
                 <a
                   href={LA_VIEJA_GOOGLE_MAPS_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-cyan-300/30 bg-cyan-300/10 text-cyan-200 transition hover:bg-cyan-300 hover:text-black"
+                  className="lva-footer-map-link inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border transition"
                   aria-label={copy.maps}
                 >
                   <ExternalLink className="h-4 w-4" />
                 </a>
               </div>
-              <div className="overflow-hidden rounded-2xl border border-white/10">
+              <div className="lva-footer-map-frame overflow-hidden rounded-2xl border">
                 <iframe
                   title="La Vieja Adventures en Google Maps"
                   src={LA_VIEJA_GOOGLE_MAPS_EMBED_URL}
@@ -215,13 +215,13 @@ export default function SiteFooter() {
           </section>
         </div>
 
-        <div className="mt-10 grid gap-6 border-t border-white/10 pt-8 md:grid-cols-3">
+        <div className="lva-footer-border mt-10 grid gap-6 border-t pt-8 md:grid-cols-3">
           <FooterLinkColumn title={copy.exploreTitle} links={exploreLinks} />
           <FooterLinkColumn title={copy.utilityTitle} links={utilityLinks} />
           <FooterLinkColumn title={copy.legalTitle} links={legalLinks} />
         </div>
 
-        <div className="mt-10 flex flex-col gap-3 border-t border-white/10 pt-6 text-xs text-zinc-500 sm:flex-row sm:items-center sm:justify-between">
+        <div className="lva-footer-bottom lva-footer-border mt-10 flex flex-col gap-3 border-t pt-6 text-xs sm:flex-row sm:items-center sm:justify-between">
           <p>© {new Date().getFullYear()} {copy.copyright}</p>
           <p>Sucre, Ciudad Quesada, San Carlos, Alajuela, Costa Rica</p>
         </div>
@@ -248,17 +248,17 @@ function ContactAction({
       href={href}
       target={href.startsWith("http") ? "_blank" : undefined}
       rel={href.startsWith("http") ? "noopener noreferrer" : undefined}
-      className={`rounded-2xl border p-4 transition hover:-translate-y-0.5 ${
+      className={`lva-footer-contact rounded-2xl border p-4 transition hover:-translate-y-0.5 ${
         featured
-          ? "border-emerald-300/35 bg-emerald-300/12 shadow-[0_12px_40px_rgba(16,185,129,0.12)]"
-          : "border-white/10 bg-white/[0.045] hover:border-cyan-300/30"
+          ? "lva-footer-contact-featured shadow-[0_12px_40px_rgba(16,185,129,0.12)]"
+          : ""
       }`}
     >
-      <p className="mb-2 flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-cyan-300">
+      <p className="lva-footer-kicker mb-2 flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em]">
         {icon}
         {label}
       </p>
-      <p className="break-words text-sm font-bold leading-snug text-white">{value}</p>
+      <p className="lva-footer-contact-value break-words text-sm font-bold leading-snug">{value}</p>
     </a>
   );
 }
@@ -273,7 +273,7 @@ function FooterLinkColumn({
   const { lang } = useLanguage();
   return (
     <nav aria-label={title}>
-      <h3 className="mb-3 text-xs font-black uppercase tracking-[0.22em] text-zinc-500">{title}</h3>
+      <h3 className="lva-footer-link-column-title mb-3 text-xs font-black uppercase tracking-[0.22em]">{title}</h3>
       <div className="grid gap-2">
         {links.map((link) => {
           const Icon = link.icon;
@@ -281,7 +281,7 @@ function FooterLinkColumn({
             <Link
               key={link.href}
               href={localizeHref(link.href, lang)}
-              className="group inline-flex items-center gap-2 rounded-xl border border-transparent px-2 py-2 text-sm font-semibold text-zinc-300 transition hover:border-white/10 hover:bg-white/[0.05] hover:text-white"
+              className="lva-footer-link group inline-flex items-center gap-2 rounded-xl border border-transparent px-2 py-2 text-sm font-semibold transition"
             >
               <Icon className="h-4 w-4 text-cyan-300/70 transition group-hover:text-cyan-200" aria-hidden />
               {link.label}

@@ -116,8 +116,10 @@ body {
 .lva-footer-border { border-color: var(--lva-footer-border); }
 .lva-footer-panel, .lva-footer-map-card { border-color: var(--lva-footer-border); background: var(--lva-footer-panel); }
 .lva-footer-map-copy { color: var(--lva-footer-muted); }
-.lva-footer-map-link { border-color: color-mix(in srgb, var(--lva-footer-accent) 30%, transparent); color: var(--lva-footer-accent); }
+.lva-footer-map-link { border-color: color-mix(in srgb, var(--lva-footer-accent) 30%, transparent); color: var(--lva-footer-accent); background: color-mix(in srgb, var(--lva-footer-accent) 10%, transparent); }
+.lva-footer-map-link:hover { background: var(--lva-footer-accent); color: var(--lva-accent-ink); }
 .lva-footer-contact { border-color: var(--lva-footer-border); background: var(--lva-footer-panel); }
+.lva-footer-contact:hover { border-color: color-mix(in srgb, var(--lva-footer-accent) 30%, transparent); }
 .lva-footer-contact-featured { border-color: color-mix(in srgb, var(--lva-footer-accent) 35%, transparent); background: color-mix(in srgb, var(--lva-accent-bright) 12%, transparent); }
 .lva-footer-contact-value { color: var(--lva-footer-fg); }
 .lva-footer-social { border-color: var(--lva-footer-border); background: var(--lva-footer-panel); }

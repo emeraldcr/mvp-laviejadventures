@@ -8,7 +8,6 @@ import {
   useRef,
   type ComponentType,
 } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -16,7 +15,6 @@ import {
   CloudSun,
   Compass,
   GalleryHorizontal,
-  Globe,
   HelpCircle,
   Home,
   Info as InfoIcon,
@@ -28,153 +26,13 @@ import { useLanguage } from "@/lib/LanguageContext";
 import { translations } from "@/lib/translations";
 import { principalContent } from "@/lib/constants/principal";
 import { localizeHref } from "@/lib/i18n";
+import { BUSINESS_WHATSAPP_URL } from "@/lib/site-config";
 
-const WHATSAPP_RESERVAS_HREF = "https://wa.me/50662332535";
+export { default as SiteHeader } from "./SiteHeader";
 
 const MORE_PATH_PREFIXES = ["/info", "/tiempo", "/preguntas-frecuentes"];
 
 const MOBILE_NAV_HEIGHT = "4.25rem";
-
-interface NavLinkItem {
-  href: string;
-  label: string;
-  variant?: "default" | "primary";
-  external?: boolean;
-}
-
-// ─── LangToggle ───────────────────────────────────────────────────────────────
-const LangToggle = memo<{ onClick: () => void; currentLang: string; compact?: boolean }>(
-  ({ onClick, currentLang, compact }) => (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={currentLang === "es" ? "Switch to English" : "Cambiar a Español"}
-      className={[
-        "emerald-wave-button rounded-full border border-emerald-100/35 bg-white/10 font-bold text-white",
-        "shadow-[0_8px_24px_rgba(6,78,59,0.22),inset_0_1px_0_rgba(255,255,255,0.2)] backdrop-blur-xl",
-        "transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-100/70 hover:bg-emerald-100/20",
-        compact
-          ? "flex min-h-11 min-w-11 items-center justify-center gap-1 px-2.5 py-1.5 text-xs"
-          : "min-w-[40px] px-3 py-1.5 text-center text-sm",
-      ].join(" ")}
-    >
-      {compact && <Globe size={12} />}
-      {currentLang === "es" ? "EN" : "ES"}
-    </button>
-  ),
-);
-LangToggle.displayName = "LangToggle";
-
-// ─── Site header ──────────────────────────────────────────────────────────────
-export const SiteHeader = memo<{ isScrolled?: boolean }>(({ isScrolled = false }) => {
-  const { lang, toggle } = useLanguage();
-  const tr = translations[lang].nav;
-  const copy = principalContent[lang].header;
-  const pathname = usePathname();
-
-  const navLinks: NavLinkItem[] = [
-    { href: "/info", label: tr.info },
-    { href: "/tours", label: tr.tours },
-    { href: "/galeria", label: tr.gallery },
-    { href: "/tiempo", label: copy.forecast },
-  ];
-
-  return (
-    <header
-      className={[
-        "fixed inset-x-0 top-0 z-50",
-        "border-b border-emerald-100/15 backdrop-blur-2xl",
-        "transition-all duration-300",
-        isScrolled
-          ? "bg-[linear-gradient(120deg,rgba(6,78,59,0.92),rgba(4,47,46,0.85)_48%,rgba(5,150,105,0.40))] shadow-[0_14px_48px_rgba(0,0,0,0.48),inset_0_1px_0_rgba(255,255,255,0.12)]"
-          : "bg-[linear-gradient(120deg,rgba(6,78,59,0.48),rgba(4,47,46,0.34)_50%,rgba(16,185,129,0.18))] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]",
-      ].join(" ")}
-    >
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-emerald-200/45 to-transparent" />
-
-      <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 md:h-20 md:px-8">
-        <Link href="/" className="group/logo flex min-w-0 items-center gap-2.5">
-          <span className="emerald-logo-shell relative grid shrink-0 place-items-center rounded-xl border border-emerald-100/25 bg-white/10 p-1 shadow-[0_12px_34px_rgba(0,0,0,0.32),inset_0_1px_0_rgba(255,255,255,0.24)] backdrop-blur-xl transition-all duration-500 group-hover/logo:-translate-y-0.5 group-hover/logo:border-emerald-100/[0.55] group-hover/logo:bg-emerald-100/[0.16] md:rounded-2xl md:p-1.5">
-            <Image
-              src="/logo2.webp"
-              alt="La Vieja Adventures"
-              width={52}
-              height={52}
-              className="h-9 w-9 rounded-lg object-cover transition-all duration-500 group-hover/logo:scale-[1.03] md:h-[52px] md:w-[52px] md:rounded-xl"
-              priority
-            />
-          </span>
-          <span className="truncate font-black leading-tight tracking-tight text-white">
-            <span className="block text-lg md:hidden">La Vieja</span>
-            <span className="brand-glow-text hidden text-2xl md:block">La Vieja Adventures</span>
-          </span>
-        </Link>
-
-        <nav className="hidden items-center gap-1 text-sm font-medium md:flex">
-          {navLinks.map((link) => {
-            const isActive = pathname === link.href;
-            return (
-              <Link
-                key={link.href}
-                href={localizeHref(link.href, lang)}
-                className={[
-                  "group/nl relative flex flex-col items-center rounded-full px-3.5 py-2 transition-all duration-200",
-                  isActive
-                    ? "bg-emerald-300/10 text-emerald-100"
-                    : "text-white/75 hover:bg-emerald-300/[0.08] hover:text-white",
-                ].join(" ")}
-              >
-                {link.label}
-                <span
-                  className={[
-                    "absolute bottom-1.5 left-1/2 h-0.5 -translate-x-1/2 rounded-full bg-teal-400 transition-all duration-200",
-                    isActive
-                      ? "w-4 opacity-100"
-                      : "w-0 opacity-0 group-hover/nl:w-3 group-hover/nl:opacity-50",
-                  ].join(" ")}
-                />
-              </Link>
-            );
-          })}
-
-          <div className="mx-2 h-5 w-px bg-white/15" />
-
-          <a
-            href={WHATSAPP_RESERVAS_HREF}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={lang === "es" ? "Hablar por WhatsApp" : "Chat on WhatsApp"}
-            className="emerald-wave-button inline-flex items-center gap-2 rounded-full border border-emerald-100/25 bg-white/[0.08] px-3.5 py-2 text-sm font-black text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-100/60 hover:bg-emerald-300/15 hover:text-emerald-50"
-          >
-            <MessageCircle size={16} className="text-emerald-200" />
-            WhatsApp
-          </a>
-          <Link
-            href={localizeHref("/reservar", lang)}
-            className="emerald-wave-button rounded-full border border-emerald-200/[0.45] bg-emerald-300/[0.15] px-5 py-2 font-semibold text-white shadow-[0_8px_26px_rgba(6,78,59,0.28),inset_0_1px_0_rgba(255,255,255,0.28)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-100/80 hover:bg-emerald-200/25 hover:text-white"
-          >
-            {tr.reserve}
-          </Link>
-          <LangToggle onClick={toggle} currentLang={lang} />
-        </nav>
-
-        <div className="flex items-center gap-2 md:hidden">
-          <a
-            href={WHATSAPP_RESERVAS_HREF}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={lang === "es" ? "Hablar por WhatsApp" : "Chat on WhatsApp"}
-            className="emerald-wave-button flex h-11 w-11 items-center justify-center rounded-full border border-emerald-100/30 bg-white/10 text-emerald-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.16)] backdrop-blur-xl transition hover:border-emerald-100/60 hover:bg-emerald-300/15 active:scale-95"
-          >
-            <MessageCircle size={17} />
-          </a>
-          <LangToggle onClick={toggle} currentLang={lang} compact />
-        </div>
-      </div>
-    </header>
-  );
-});
-SiteHeader.displayName = "SiteHeader";
 
 // ─── Mobile more menu ─────────────────────────────────────────────────────────
 interface MoreLink {
@@ -336,7 +194,7 @@ const MobileMoreMenu = memo<{
         </div>
 
         <a
-          href={WHATSAPP_RESERVAS_HREF}
+          href={BUSINESS_WHATSAPP_URL}
           target="_blank"
           rel="noopener noreferrer"
           onClick={onClose}

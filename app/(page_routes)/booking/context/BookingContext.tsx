@@ -3,6 +3,7 @@
 import { createContext, useContext, useMemo, type ReactNode } from "react";
 
 import { useLanguage } from "@/lib/LanguageContext";
+import type { Locale } from "@/lib/i18n";
 
 import { useBookingGroups } from "../hooks/useBookingGroups";
 import type { Booking, BookingClientProps } from "../types";
@@ -12,7 +13,7 @@ type BookingContextValue = {
   upcoming: Booking[];
   past: Booking[];
   hasBookings: boolean;
-  lang: string;
+  lang: Locale;
   userName: string | null;
   userEmail: string | null;
 };

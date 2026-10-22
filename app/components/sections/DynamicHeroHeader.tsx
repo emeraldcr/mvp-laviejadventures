@@ -24,7 +24,8 @@ import { fetcher } from "@/lib/helpers/fetcher";
 import { useInterval } from "@/lib/hooks/useInterval";
 import { useLanguage } from "@/lib/LanguageContext";
 import { principalContent } from "@/lib/constants/principal";
-import { MobileBottomNav, SiteHeader } from "@/app/components/navigation/SiteNavigation";
+import SiteHeader from "@/app/components/navigation/SiteHeader";
+import { MobileBottomNav } from "@/app/components/navigation/SiteNavigation";
 import { useReservationData } from "@/lib/hooks/useReservationData";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -432,7 +433,7 @@ const MainMosaicHero: React.FC = () => {
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link
-                href="/reservar?tour=avistamiento-aves-norteno"
+                href={localizeHref("/reservar?tour=avistamiento-aves-norteno", lang)}
                 className="emerald-wave-button inline-flex min-h-14 items-center gap-3 rounded-full bg-emerald-400 px-8 py-4 text-sm font-black uppercase tracking-[0.22em] text-emerald-950 shadow-[0_18px_50px_rgba(16,185,129,0.42)] transition hover:-translate-y-0.5 hover:bg-amber-300"
               >
                 {isEs ? "Reservar ahora" : "Book now"}
@@ -475,7 +476,7 @@ export default function DynamicHeroHeader({ children, showHeroSlider = true }: D
 
   return (
     <>
-      <SiteHeader isScrolled={isScrolled} />
+      <SiteHeader solid={isScrolled} />
       {showHeroSlider && (
         <section className="relative overflow-hidden">
           <MainMosaicHero />

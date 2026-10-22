@@ -19,8 +19,22 @@ export default function InlinePayPalCheckout({
   const quote = useCheckoutQuote(orderDetails, lang);
   const handleSuccess = useCallback(() => {}, []);
   const quotedOrderDetails = useMemo(
-    () => ({ ...orderDetails, total: quote.total }),
-    [orderDetails, quote.total],
+    () => ({
+      ...orderDetails,
+      total: quote.total,
+      addonsPrice: quote.addonsPrice,
+      addonsPricePerPerson: quote.addonsPricePerPerson,
+      addonsBreakdown: quote.addonsBreakdown,
+      transportQuote: quote.transportQuote,
+    }),
+    [
+      orderDetails,
+      quote.addonsBreakdown,
+      quote.addonsPrice,
+      quote.addonsPricePerPerson,
+      quote.total,
+      quote.transportQuote,
+    ],
   );
   const { paypalRef, paypalLoadError, isPaypalLoading } = usePayPalCheckout({
     enabled: quote.synced && !quote.syncing && !quote.error,

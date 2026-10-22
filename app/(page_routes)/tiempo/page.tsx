@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import HomeNav from "@/app/components/home/HomeNav";
+import SiteHeader from "@/app/components/navigation/SiteHeader";
+import PageFooter from "@/app/components/sections/PageFooter";
 import {
   BarChart, Bar,
   XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
@@ -61,7 +62,7 @@ export default function TourWeatherDashboard() {
 
   return (
     <div className="min-h-screen bg-[#0d0f0f] text-white font-sans selection:bg-[#00C4B0]/30">
-      <HomeNav solid />
+      <SiteHeader solid />
 
       <div className="pt-14 md:pt-20">
         <div className="sticky top-14 z-20 border-b border-white/6 bg-[#0d0f0f]/90 backdrop-blur-xl md:top-20">
@@ -329,6 +330,7 @@ export default function TourWeatherDashboard() {
             <EditorialFinalCta dark title="¿Le ayudamos a elegir una aventura segura?" body="Consulte una fecha y el equipo confirma la disponibilidad y la condición operativa real." label="Consultar y reservar" />
           </div>
         </main>
+        <PageFooter />
       </div>
 
 

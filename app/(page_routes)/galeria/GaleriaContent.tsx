@@ -17,7 +17,8 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
 import { translations } from "@/lib/translations";
-import HomeNav from "@/app/components/home/HomeNav";
+import SiteHeader from "@/app/components/navigation/SiteHeader";
+import PageFooter from "@/app/components/sections/PageFooter";
 
 type Props = {
   images: string[];
@@ -84,7 +85,7 @@ export function GaleriaContent({ images }: Props) {
 
   return (
     <main className="min-h-screen bg-[#030807] pb-24 text-white md:pb-10">
-      <HomeNav solid />
+      <SiteHeader solid />
 
       {/* Hero */}
       <section className="relative overflow-hidden border-b border-white/10 pt-14 md:pt-20">
@@ -274,7 +275,7 @@ export function GaleriaContent({ images }: Props) {
         </div>
       )}
 
-
+      <PageFooter />
     </main>
   );
 }

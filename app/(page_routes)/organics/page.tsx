@@ -3,7 +3,8 @@ import { pageMetadata } from "@/lib/seo";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Check, Leaf, Recycle, Sprout, Utensils } from "lucide-react";
-import HomeNav from "@/app/components/home/HomeNav";
+import SiteHeader from "@/app/components/navigation/SiteHeader";
+import PageFooter from "@/app/components/sections/PageFooter";
 
 export const metadata: Metadata = pageMetadata("/organics", "La Vieja Organics: Sostenibilidad local", "Huerta de temporada, compostaje y cocina local: conozca el proyecto de sostenibilidad de La Vieja Adventures en San Carlos.");
 
@@ -35,7 +36,7 @@ const practices = [
 export default function OrganicsPage() {
   return (
     <main className="min-h-screen bg-[#f4f1ea] text-stone-950 dark:bg-[#0b0a09] dark:text-stone-50">
-      <HomeNav />
+      <SiteHeader />
       <section className="relative flex min-h-[82svh] items-end overflow-hidden bg-stone-950 px-4 pb-12 pt-28 sm:px-6 lg:px-8">
         <Image
           src="/ads/IMG_5670.webp"
@@ -169,6 +170,7 @@ export default function OrganicsPage() {
           </div>
         </div>
       </section>
+      <PageFooter />
     </main>
   );
 }

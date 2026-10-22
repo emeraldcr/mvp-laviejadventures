@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useLanguage } from "@/lib/LanguageContext";
-import HomeNav from "@/app/components/home/HomeNav";
+import SiteHeader from "@/app/components/navigation/SiteHeader";
+import PageFooter from "@/app/components/sections/PageFooter";
 import { EditorialFinalCta, EditorialIntro, EditorialTrust } from "@/app/components/layouts/EditorialPageBlocks";
 
 type Section = {
@@ -178,7 +179,7 @@ export default function PrivacyPage() {
 
   return (
     <main className="min-h-screen bg-zinc-50 px-4 pb-16 pt-24 dark:bg-black md:pt-32">
-      <HomeNav solid />
+      <SiteHeader solid />
       <div className="mx-auto flex w-full max-w-4xl items-center justify-between mb-4">
         <Link
           href="/"
@@ -221,6 +222,7 @@ export default function PrivacyPage() {
         </article>
         <EditorialFinalCta title={lang === "es" ? "¿Tiene una pregunta sobre sus datos?" : "Have a question about your data?"} body={lang === "es" ? "Escríbanos y el equipo le orienta con gusto." : "Contact us and our team will be happy to help."} label={lang === "es" ? "Conocer la aventura" : "Explore the adventure"} href="/info" />
       </div>
+      <PageFooter />
     </main>
   );
 }

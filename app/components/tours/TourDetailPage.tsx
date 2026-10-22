@@ -58,8 +58,8 @@ export default function TourDetailPage({ tour, locale }: TourDetailPageProps) {
   const whatsappHref = `${BUSINESS_WHATSAPP_URL}?text=${encodeURIComponent(isEnglish ? `Hello, I would like to ask about ${title}.` : `Hola, me interesa el tour ${title}. ¿Tienen disponibilidad?`)}`;
 
   const isBirdwatching = tour.slug === "avistamiento-aves" || tour.slug === "avistamiento-aves-norteno";
-  if (!isEnglish && isBirdwatching && content) {
-    return <><JsonLd data={tourSchema} /><JsonLd data={breadcrumbSchema} /><BirdwatchingTourPage tour={tour} content={content} /></>;
+  if (isBirdwatching && content) {
+    return <><JsonLd data={tourSchema} /><JsonLd data={breadcrumbSchema} /><BirdwatchingTourPage tour={tour} content={content} locale={locale} /></>;
   }
 
   const gallery = content && content.gallery.length > 0 ? content.gallery : getTourGallery(tour.slug);

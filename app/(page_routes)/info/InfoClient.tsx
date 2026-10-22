@@ -30,7 +30,8 @@ import { translations } from "@/lib/translations";
 import type { TourSummary } from "@/lib/types/index";
 import { formatTourPrice, tourMinPrice } from "@/lib/tour-pricing";
 import { localizeHref } from "@/lib/i18n";
-import HomeNav from "@/app/components/home/HomeNav";
+import SiteHeader from "@/app/components/navigation/SiteHeader";
+import PageFooter from "@/app/components/sections/PageFooter";
 
 const socialLinks = [
   {
@@ -133,7 +134,7 @@ export default function InfoClient({ tours }: { tours: TourSummary[] }) {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-emerald-50 via-zinc-50 to-white dark:from-zinc-950 dark:via-zinc-950 dark:to-zinc-900">
-      <HomeNav solid />
+      <SiteHeader solid />
 
       {/* Floating WhatsApp CTA */}
       <a
@@ -507,6 +508,7 @@ export default function InfoClient({ tours }: { tours: TourSummary[] }) {
           </div>
         </section>
       </div>
+      <PageFooter />
     </main>
   );
 }

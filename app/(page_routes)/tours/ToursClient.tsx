@@ -9,11 +9,12 @@ import { ArrowRight, ArrowUpRight, Clock3, Filter, MapPin, Zap } from "lucide-re
 import { useMemo, useState } from "react";
 import { useLanguage } from "@/lib/LanguageContext";
 import { translations } from "@/lib/translations";
-import HomeNav from "@/app/components/home/HomeNav";
-import SiteFooter from "@/app/components/sections/SiteFooter";
+import SiteHeader from "@/app/components/navigation/SiteHeader";
+import PageFooter from "@/app/components/sections/PageFooter";
 import { getTourPriceDisplay, tourTitle } from "@/app/components/home/home-utils";
 import { getTourImage } from "@/lib/tour-display";
 import type { PublicTour } from "@/lib/tours/public-catalog";
+import TourIntentGuide from "@/app/components/tours/TourIntentGuide";
 
 export type TourData = PublicTour;
 
@@ -41,8 +42,8 @@ export function ToursClient({ tours }: { tours: PublicTour[] }) {
   };
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#FAF9F6] font-sans text-stone-900 dark:bg-[#0b0a09] dark:text-stone-100">
-      <HomeNav solid />
+    <main className="lva-public-shell min-h-screen overflow-x-hidden font-sans">
+      <SiteHeader solid />
 
       <section className="border-b border-stone-200 bg-white pt-28 pb-10 dark:border-white/10 dark:bg-stone-950 md:pt-32 md:pb-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -67,6 +68,7 @@ export function ToursClient({ tours }: { tours: PublicTour[] }) {
 
       <section className="py-12 md:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <TourIntentGuide candidateTours={filteredTours} onSelectTour={handleSelectTour} />
           <div className="mb-8 rounded-3xl border border-stone-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-stone-900 sm:p-5">
             <div className="flex flex-wrap items-center gap-3">
               <div className="mr-1 inline-flex items-center gap-2 text-sm font-black text-stone-900 dark:text-stone-100">
@@ -201,7 +203,7 @@ export function ToursClient({ tours }: { tours: PublicTour[] }) {
         </div>
       </section>
 
-      <SiteFooter />
+      <PageFooter />
     </main>
   );
 }

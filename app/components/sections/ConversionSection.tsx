@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowRight, ChevronLeft, ChevronRight, ShieldCheck, Star, Users, Zap } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
+import { localizeHref } from "@/lib/i18n";
 import { principalContent } from "@/lib/constants/principal";
 
 export default function ConversionSection() {
@@ -71,7 +72,7 @@ export default function ConversionSection() {
                 </div>
 
                 <Link
-                  href="/reservar"
+                  href={localizeHref("/reservar", lang)}
                   className="emerald-wave-button group inline-flex items-center gap-3 rounded-full bg-emerald-400 px-10 py-4 text-sm font-black uppercase tracking-[0.18em] text-emerald-950 shadow-[0_16px_52px_rgba(16,185,129,0.48)] transition-all duration-200 hover:-translate-y-1 hover:bg-amber-300 hover:shadow-[0_20px_52px_rgba(245,158,11,0.42)]"
                 >
                   {isEs ? "Reservar mi aventura" : "Book my adventure"}
@@ -164,7 +165,7 @@ export default function ConversionSection() {
                 {isEs ? "¿Listo para vivirlo?" : "Ready to experience it?"}
               </p>
               <Link
-                href="/reservar"
+                href={localizeHref("/reservar", lang)}
                 className="inline-flex items-center gap-2 rounded-full bg-emerald-400 px-7 py-3.5 text-xs font-black uppercase tracking-[0.18em] text-emerald-950 shadow-[0_10px_32px_rgba(16,185,129,0.38)] transition hover:-translate-y-0.5 hover:bg-amber-300"
               >
                 {isEs ? "Reservar ahora" : "Book now"}
