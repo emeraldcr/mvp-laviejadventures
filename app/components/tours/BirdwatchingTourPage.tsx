@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import {
   ArrowLeft,
   Backpack,
@@ -101,6 +101,8 @@ export default function BirdwatchingTourPage({ tour, content, locale }: Props) {
   const [showStickyBar, setShowStickyBar] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [activeVideo, setActiveVideo] = useState(data.videos[0]?.youtubeId ?? "");
+  const lightboxCloseRef = useRef<HTMLButtonElement | null>(null);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
 
   const title = (isEnglish ? tour.titleEn : tour.titleEs) || (isEnglish ? "Northern Birdwatching" : "Avistamiento de Aves");
   const bookingHref = localizeHref(`/reservar?tour=${encodeURIComponent(tour.slug)}`, locale);
@@ -118,7 +120,13 @@ export default function BirdwatchingTourPage({ tour, content, locale }: Props) {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const closeLightbox = useCallback(() => setLightboxIndex(null), []);
+  const closeLightbox = useCallback(() => {
+    setLightboxIndex(null);
+    window.setTimeout(() => {
+      returnFocusRef.current?.focus({ preventScroll: true });
+      returnFocusRef.current = null;
+    }, 0);
+  }, []);
 
   const showPrev = useCallback(() => {
     setLightboxIndex((current) =>
@@ -134,10 +142,22 @@ export default function BirdwatchingTourPage({ tour, content, locale }: Props) {
 
   useEffect(() => {
     if (lightboxIndex === null) return;
+    if (!returnFocusRef.current) {
+      returnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    }
+    window.setTimeout(() => lightboxCloseRef.current?.focus({ preventScroll: true }), 0);
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") closeLightbox();
       if (event.key === "ArrowLeft") showPrev();
       if (event.key === "ArrowRight") showNext();
+      if (event.key === "Tab") {
+        const focusable = document.querySelectorAll<HTMLElement>('[data-bird-lightbox] button');
+        if (!focusable.length) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+      }
     };
     document.body.style.overflow = "hidden";
     window.addEventListener("keydown", handleKeyDown);
@@ -438,7 +458,7 @@ export default function BirdwatchingTourPage({ tour, content, locale }: Props) {
               </button>
             ))}
           </div>
-          <p className="mt-5 text-xs leading-relaxed text-zinc-500">
+          <p className="mt-5 text-xs leading-relaxed text-zinc-300">
              {copy.galleryNote}
           </p>
         </div>
@@ -654,11 +674,14 @@ export default function BirdwatchingTourPage({ tour, content, locale }: Props) {
         <div
           className="fixed inset-0 z-[60] flex items-center justify-center bg-black/95 p-4"
           role="dialog"
+          data-bird-lightbox
           aria-modal="true"
-           aria-label={copy.galleryAria}
+          aria-labelledby="bird-lightbox-title"
         >
+          <h2 id="bird-lightbox-title" className="sr-only">{copy.galleryAria}</h2>
           <button
             type="button"
+            ref={lightboxCloseRef}
             onClick={closeLightbox}
             className="absolute right-4 top-4 rounded-full bg-white/10 p-2 text-white transition hover:bg-white/20"
              aria-label={copy.close}

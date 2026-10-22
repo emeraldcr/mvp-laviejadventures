@@ -40,7 +40,10 @@ export function GaleriaContent({ images }: Props) {
 
   const closeLightbox = useCallback(() => {
     setLightboxIndex(null);
-    window.setTimeout(() => returnFocusRef.current?.focus({ preventScroll: true }), 0);
+    window.setTimeout(() => {
+      returnFocusRef.current?.focus({ preventScroll: true });
+      returnFocusRef.current = null;
+    }, 0);
   }, []);
 
   const showPrev = useCallback(() => {
@@ -58,7 +61,9 @@ export function GaleriaContent({ images }: Props) {
   useEffect(() => {
     if (lightboxIndex === null) return;
 
-    returnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    if (!returnFocusRef.current) {
+      returnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    }
     window.setTimeout(() => lightboxCloseRef.current?.focus({ preventScroll: true }), 0);
 
     const handleKeyDown = (event: KeyboardEvent) => {

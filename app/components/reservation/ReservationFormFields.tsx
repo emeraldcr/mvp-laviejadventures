@@ -6,7 +6,7 @@ import { PHONE_COUNTRIES as ALL_PHONE_COUNTRIES } from "@/app/components/reserva
 import type { ReservationFormState } from "@/lib/reservation/types";
 
 export const FormError = ({ message }: { message: string }) => (
-  <p className="mt-1.5 flex items-center gap-1 text-xs font-semibold text-red-600 dark:text-red-400">
+  <p className="mt-1.5 flex items-center gap-1 text-xs font-semibold text-red-700 dark:text-red-300" role="alert">
     {message}
   </p>
 );
@@ -49,6 +49,7 @@ export const TravelerInputField = ({
   const isTouched = value.trim() !== "";
   const showError = isTouched && !isValid;
   const showOk = isTouched && isValid;
+  const errorId = `${id}-error`;
 
   return (
     <div className={className}>
@@ -67,6 +68,8 @@ export const TravelerInputField = ({
           ref={inputRef}
           autoComplete={autoComplete}
           inputMode={inputMode}
+          aria-invalid={showError}
+          aria-describedby={showError ? errorId : undefined}
           className={`w-full rounded-xl border bg-white px-3 py-3 text-sm font-semibold text-zinc-900 outline-none transition focus:ring-4 dark:bg-zinc-900 dark:text-zinc-50 ${
             showError
               ? "border-red-400 focus:border-red-500 focus:ring-red-500/15"
@@ -84,7 +87,7 @@ export const TravelerInputField = ({
           </span>
         )}
       </div>
-      {showError && <FormError message={validationMessage} />}
+      {showError && <p id={errorId} className="mt-1.5 flex items-center gap-1 text-xs font-semibold text-red-700 dark:text-red-300" role="alert">{validationMessage}</p>}
     </div>
   );
 };
@@ -189,6 +192,8 @@ export const TravelerPhoneInput = ({
             className="flex h-12 w-full items-center justify-between gap-2 rounded-xl border border-zinc-300 bg-white px-3 text-left text-sm font-semibold text-zinc-900 transition hover:border-teal-500 focus:border-teal-500 focus:outline-none focus:ring-4 focus:ring-teal-500/15 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
             aria-haspopup="listbox"
             aria-expanded={isCountryOpen}
+            aria-controls="phone-country-list"
+            aria-label={`${label}: ${selectedCountry.name} ${selectedCountry.code}`}
           >
             <span className="flex min-w-0 items-center gap-2">
               <span className="shrink-0 rounded-md bg-zinc-100 px-2 py-1 text-xs font-black text-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
@@ -207,7 +212,9 @@ export const TravelerPhoneInput = ({
               <div className="border-b border-zinc-200 p-2 dark:border-zinc-700">
                 <div className="flex items-center gap-2 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-800">
                   <Search className="h-4 w-4 shrink-0 text-zinc-400" aria-hidden />
+                  <label htmlFor="phone-country-search" className="sr-only">Search country or code</label>
                   <input
+                    id="phone-country-search"
                     type="search"
                     value={countrySearch}
                     onChange={(event) => setCountrySearch(event.target.value)}
@@ -217,7 +224,7 @@ export const TravelerPhoneInput = ({
                   />
                 </div>
               </div>
-              <div className="max-h-64 overflow-y-auto p-1" role="listbox" aria-labelledby="phoneCode">
+              <div id="phone-country-list" className="max-h-64 overflow-y-auto p-1" role="listbox" aria-labelledby="phoneCode">
                 {filteredCountries.map((country) => {
                   const isSelected = country.code === phoneCode;
                   return (
@@ -264,6 +271,8 @@ export const TravelerPhoneInput = ({
             onBlur={onBlur}
             onKeyDown={onKeyDown}
             ref={inputRef}
+            aria-invalid={showError}
+            aria-describedby={showError ? "phoneNumber-error" : undefined}
             className={`w-full rounded-xl border bg-white px-3 py-3 text-sm font-semibold text-zinc-900 outline-none transition focus:ring-4 dark:bg-zinc-900 dark:text-zinc-50 ${
               showError
                 ? "border-red-400 focus:border-red-500 focus:ring-red-500/15"
@@ -282,7 +291,7 @@ export const TravelerPhoneInput = ({
           )}
         </div>
       </div>
-      {showError && <FormError message={validationMessage} />}
+      {showError && <p id="phoneNumber-error" className="mt-1.5 flex items-center gap-1 text-xs font-semibold text-red-700 dark:text-red-300" role="alert">{validationMessage}</p>}
     </div>
   );
 };
