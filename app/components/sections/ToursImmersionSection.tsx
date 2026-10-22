@@ -133,20 +133,28 @@ export default function ToursImmersionSection({ onSelectTour, selectedTourSlug }
         </div>
 
         {/* ── Carousel ── */}
-        <div className="relative -mx-4 md:-mx-8">
-          {/* Nav arrows — visible on md+ */}
+        <div
+          className="relative -mx-4 md:-mx-8"
+          role="region"
+          aria-roledescription="carousel"
+          aria-label={isEs ? "Experiencias disponibles" : "Available experiences"}
+        >
+          {/* Keep both controls available at every width, including touch layouts. */}
           <button
             type="button"
             aria-label="Ver experiencias anteriores"
             onClick={() => scrollCarousel("left")}
             disabled={!canScrollLeft}
-            className="absolute left-3 top-1/2 z-30 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/80 text-white shadow-2xl backdrop-blur-md transition hover:border-emerald-300 hover:bg-emerald-300 hover:text-black disabled:pointer-events-none disabled:opacity-0 md:flex"
+            className="absolute left-3 top-1/2 z-30 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-black/85 text-white shadow-2xl backdrop-blur-md transition hover:border-emerald-300 hover:bg-emerald-300 hover:text-black disabled:pointer-events-none disabled:opacity-0 md:left-5"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
 
           <div
             ref={carouselRef}
+            tabIndex={0}
+            aria-label={isEs ? "Lista desplazable de tours" : "Scrollable list of tours"}
+            aria-live="polite"
             className="
               overflow-x-auto scroll-smooth pb-6
               [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden
@@ -167,36 +175,46 @@ export default function ToursImmersionSection({ onSelectTour, selectedTourSlug }
             />
           </div>
 
+          {canScrollRight && (
+            <div className="pointer-events-none absolute right-0 top-0 z-20 flex h-full w-20 items-center justify-end bg-gradient-to-l from-[#020807] via-[#020807]/75 to-transparent pr-1 sm:w-24">
+              <span className="mr-1 max-w-16 text-right text-[9px] font-black uppercase leading-tight tracking-[0.14em] text-emerald-200/90 sm:max-w-none sm:text-[10px]">
+                {isEs ? "Hay más" : "More tours"}
+              </span>
+            </div>
+          )}
+
           <button
             type="button"
             aria-label="Ver más experiencias"
             onClick={() => scrollCarousel("right")}
             disabled={!canScrollRight}
-            className="absolute right-3 top-1/2 z-30 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/80 text-white shadow-2xl backdrop-blur-md transition hover:border-emerald-300 hover:bg-emerald-300 hover:text-black disabled:pointer-events-none disabled:opacity-0 md:flex"
+            className="absolute right-3 top-1/2 z-30 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-black/85 text-white shadow-2xl backdrop-blur-md transition hover:border-emerald-300 hover:bg-emerald-300 hover:text-black disabled:pointer-events-none disabled:opacity-0 md:right-5"
           >
             <ChevronRight className="h-5 w-5" />
           </button>
         </div>
 
         {/* Progress + dots */}
-        <div className="mt-1 flex items-center justify-center gap-3 md:mt-2">
+        <div className="mt-1 flex items-center justify-center gap-3 md:mt-2" aria-label={isEs ? `Experiencia ${activeIndex + 1} de ${tours.length}` : `Experience ${activeIndex + 1} of ${tours.length}`}>
           <div className="h-1.5 w-28 overflow-hidden rounded-full bg-white/10 md:w-40">
             <div
               className="h-full rounded-full bg-emerald-400 transition-all duration-300"
               style={{ width: `${scrollProgress}%` }}
             />
           </div>
-          <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/35 md:hidden">
-            Desliza
+          <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/55">
+            {isEs ? `${activeIndex + 1} de ${tours.length}` : `${activeIndex + 1} of ${tours.length}`}
           </span>
         </div>
 
-        <div className="mt-5 flex justify-center gap-2">
+        <div className="mt-5 flex justify-center gap-2" role="tablist" aria-label={isEs ? "Elegir experiencia" : "Choose an experience"}>
           {tours.map((tour, index) => (
             <button
               key={tour.slug ?? index}
               type="button"
-              aria-label={`Ir a experiencia ${index + 1}`}
+              role="tab"
+              aria-selected={activeIndex === index}
+              aria-label={`${isEs ? "Ir a experiencia" : "Go to experience"} ${index + 1}: ${isEs ? tour.titleEs : tour.titleEn}`}
               onClick={() => scrollToIndex(index)}
               className={`h-2 rounded-full transition-all duration-300 ${
                 activeIndex === index ? "w-7 bg-emerald-400" : "w-2 bg-white/20 hover:bg-white/40"
