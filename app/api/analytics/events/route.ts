@@ -33,6 +33,17 @@ type AnalyticsEventInput = {
   happenedAt?: string;
 };
 
+type StoredAnalyticsEvent = {
+  event: AnalyticsEventName;
+  path?: string | null;
+  sessionId?: string | null;
+  metadata?: Record<string, unknown>;
+  happenedAt?: Date | string | null;
+  request?: {
+    deviceType?: string | null;
+  };
+};
+
 const VALID_EVENTS: AnalyticsEventName[] = [
   "page_view",
   "click",
@@ -188,5 +199,150 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("analytics events api error", error);
     return NextResponse.json({ error: "Failed to store analytics event" }, { status: 500 });
+  }
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : {};
+}
+
+function asNumber(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function addCount(map: Map<string, number>, key: unknown) {
+  if (typeof key !== "string" || !key) return;
+  map.set(key, (map.get(key) ?? 0) + 1);
+}
+
+function topEntries(map: Map<string, number>, limit = 6) {
+  return [...map.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(([label, count]) => ({ label, count }));
+}
+
+export const dynamic = "force-dynamic";
+
+export async function GET(request: Request) {
+  try {
+    const url = new URL(request.url);
+    const requestedDays = Number(url.searchParams.get("days") ?? "7");
+    const days = [7, 30, 90].includes(requestedDays) ? requestedDays : 7;
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+    const db = await getDb();
+    const events = await db.collection<StoredAnalyticsEvent>(COLLECTIONS.ANALYTICS_EVENTS)
+      .find(
+        { happenedAt: { $gte: since } },
+        { projection: { event: 1, path: 1, sessionId: 1, metadata: 1, happenedAt: 1, request: 1 } },
+      )
+      .sort({ happenedAt: -1 })
+      .limit(10_000)
+      .toArray();
+
+    const eventCounts = new Map<string, number>();
+    const pageCounts = new Map<string, number>();
+    const deviceCounts = new Map<string, number>();
+    const blockerCounts = new Map<string, number>();
+    const paymentCounts = new Map<string, number>();
+    const stepCounts = new Map<string, number>();
+    const sessions = new Set<string>();
+    let pageViews = 0;
+    let clicks = 0;
+    let blocked = 0;
+    let abandoned = 0;
+    let abandonedDurationTotal = 0;
+    let abandonedDurationCount = 0;
+    let progressions = 0;
+    let backtracks = 0;
+    let stepCompletions = 0;
+    let checkoutStarted = 0;
+    let paymentApproved = 0;
+    let paymentErrors = 0;
+    let bookingsCompleted = 0;
+
+    for (const item of events) {
+      addCount(eventCounts, item.event);
+      if (item.sessionId) sessions.add(item.sessionId);
+      if (item.path) addCount(pageCounts, item.path);
+      if (item.request?.deviceType) addCount(deviceCounts, item.request.deviceType);
+
+      if (item.event === "page_view") pageViews += 1;
+      if (item.event === "click") clicks += 1;
+      if (item.event === "booking_step") addCount(stepCounts, asRecord(item.metadata).step === undefined ? null : `step_${asRecord(item.metadata).step}`);
+      if (item.event === "booking_step_progressed") progressions += 1;
+      if (item.event === "booking_step_backtracked") backtracks += 1;
+      if (item.event === "booking_step_completed") stepCompletions += 1;
+      if (item.event === "booking_step_blocked") {
+        blocked += 1;
+        const missingKeys = asRecord(item.metadata).missingKeys;
+        if (Array.isArray(missingKeys)) missingKeys.forEach((key) => addCount(blockerCounts, key));
+      }
+      if (item.event === "booking_step_abandoned") {
+        abandoned += 1;
+        const durationMs = asNumber(asRecord(item.metadata).durationMs);
+        if (durationMs !== null) {
+          abandonedDurationTotal += durationMs;
+          abandonedDurationCount += 1;
+        }
+      }
+      if (item.event === "booking_checkout_started") checkoutStarted += 1;
+      if (item.event === "payment_approved") paymentApproved += 1;
+      if (item.event === "payment_error") paymentErrors += 1;
+      if (item.event === "booking_completed") bookingsCompleted += 1;
+      if (item.event === "whatsapp_checkout_click") addCount(paymentCounts, "whatsapp");
+      if (item.event === "sinpe_checkout_selected") addCount(paymentCounts, "sinpe");
+      if (item.event === "payment_approved") addCount(paymentCounts, "paypal/card");
+    }
+
+    const safeRecentEvents = events.slice(0, 12).map((item) => ({
+      event: item.event,
+      path: item.path ?? null,
+      happenedAt: item.happenedAt instanceof Date ? item.happenedAt.toISOString() : item.happenedAt ?? null,
+    }));
+
+    return NextResponse.json({
+      range: { days, since: since.toISOString(), until: new Date().toISOString() },
+      sampledEvents: events.length,
+      site: {
+        sessions: sessions.size,
+        pageViews,
+        clicks,
+        topPages: topEntries(pageCounts),
+        devices: topEntries(deviceCounts),
+      },
+      reservation: {
+        stepViews: eventCounts.get("booking_step") ?? 0,
+        progressions,
+        backtracks,
+        stepCompletions,
+        blocked,
+        abandoned,
+        topSteps: topEntries(stepCounts),
+      },
+      friction: {
+        blocked,
+        abandoned,
+        averageExitSeconds: abandonedDurationCount
+          ? Math.round(abandonedDurationTotal / abandonedDurationCount / 1000)
+          : 0,
+        topMissingFields: topEntries(blockerCounts),
+      },
+      checkout: {
+        started: checkoutStarted,
+        orderCreated: eventCounts.get("payment_order_created") ?? 0,
+        approved: paymentApproved,
+        errors: paymentErrors,
+        completed: bookingsCompleted,
+        paymentMethods: topEntries(paymentCounts),
+      },
+      eventCounts: topEntries(eventCounts, 20),
+      recentEvents: safeRecentEvents,
+    }, { headers: { "Cache-Control": "no-store" } });
+  } catch (error) {
+    console.error("analytics viewer api error", error);
+    return NextResponse.json({ error: "Failed to load analytics viewer" }, { status: 500 });
   }
 }
