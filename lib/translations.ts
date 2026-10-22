@@ -258,8 +258,8 @@ const es = withUstedeo({
     bookingStepsTitle: "Así de simple",
     bookingSteps: [
       "Elegí el tour y la fecha que te calza.",
-      "Confirmá cupo y detalles por la web o WhatsApp.",
-      "Llegá listo: te mandamos tips del día y del río.",
+      "Revisá la disponibilidad y confirmá los detalles por la web o WhatsApp.",
+      "Recibí la confirmación por correo cuando el pago esté completado y la disponibilidad validada.",
     ],
     mainToursTitle: "Qué podés hacer con nosotros",
     ratesTitle: "Tarifas y condiciones",
@@ -600,8 +600,8 @@ const en = {
     bookingStepsTitle: "This simple",
     bookingSteps: [
       "Pick the tour and date that fits.",
-      "Confirm space and details on the site or WhatsApp.",
-      "Show up ready — we'll send day-of and river tips.",
+      "Review availability and confirm details on the site or WhatsApp.",
+      "Receive email confirmation once payment is completed and availability is validated.",
     ],
     mainToursTitle: "What you can do with us",
     ratesTitle: "Rates & conditions",

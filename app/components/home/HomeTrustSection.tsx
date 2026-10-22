@@ -17,6 +17,7 @@ import { LA_VIEJA_GOOGLE_MAPS_URL, LA_VIEJA_LOCATION_LABEL } from "@/lib/constan
 import type { TourSummary } from "@/lib/types/index";
 import { useLanguage } from "@/lib/LanguageContext";
 import { BOOKING_HREF } from "./home-utils";
+import { BOOKING_ASSURANCE_EN, BOOKING_ASSURANCE_ES } from "@/lib/tour-policy";
 
 type Props = { tour?: TourSummary };
 
@@ -51,8 +52,8 @@ export default function HomeTrustSection({ tour }: Props) {
       icon: CloudRain,
       title: isEs ? "¿Y si llueve?" : "What if it rains?",
       body: isEs
-        ? "Lluvia fuerte o río crecido: no forzamos el cañón. Le ofrecemos una alternativa segura o reprogramamos según la política."
-        : "Heavy rain or a rising river means no canyon push. We offer a safer alternative or reschedule according to the policy.",
+        ? BOOKING_ASSURANCE_ES
+        : BOOKING_ASSURANCE_EN,
       tone: "bg-[var(--lva-surface)] text-[var(--lva-ink)] border-[var(--lva-border)]",
     },
   ];

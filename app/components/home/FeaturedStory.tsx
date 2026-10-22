@@ -8,6 +8,7 @@ import type { TourSummary } from "@/lib/types/index";
 import { BOOKING_HREF, TOURS_HREF, primaryBookingLabel } from "./home-utils";
 import GoogleRating from "@/app/components/GoogleRating";
 import { localizeHref } from "@/lib/i18n";
+import { BOOKING_ASSURANCE_EN, BOOKING_ASSURANCE_ES } from "@/lib/tour-policy";
 
 type Props = {
   tours: TourSummary[];
@@ -68,8 +69,8 @@ export default function FeaturedStory({ tours }: Props) {
             </h2>
             <p className="mt-5 max-w-lg text-base leading-relaxed text-stone-600 dark:text-stone-300 md:text-lg">
               {isEs
-                ? "Es la salida que más nos piden: barro en las botas, agua hasta las rodillas y el cañón abriéndose hasta la cascada. No es un paseo de fotos: exige buena condición física. Y si el clima no acompaña, ajustamos la ruta o le reprogramamos la reserva."
-                : "It's the day people ask for most: mud on your boots, water to your knees, and the canyon opening up to the falls. Not a photo stroll — it takes real fitness. And if the weather doesn't cooperate, we adjust the route or rebook you."}
+                ? `Es la salida que más nos piden: barro en las botas, agua hasta las rodillas y el cañón abriéndose hasta la cascada. No es un paseo de fotos: exige buena condición física. ${BOOKING_ASSURANCE_ES}`
+                : `It's the day people ask for most: mud on your boots, water to your knees, and the canyon opening up to the falls. Not a photo stroll — it takes real fitness. ${BOOKING_ASSURANCE_EN}`}
             </p>
 
             <ul className="mt-7 grid gap-3 sm:grid-cols-2">
