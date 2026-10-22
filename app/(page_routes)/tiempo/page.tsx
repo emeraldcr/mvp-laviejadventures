@@ -26,8 +26,10 @@ import { NowModule } from "./components/v2/NowModule";
 import { TomorrowModule } from "./components/v2/TomorrowModule";
 import { RiverModule } from "./components/v2/RiverModule";
 import { EditorialFinalCta, EditorialTrust } from "@/app/components/layouts/EditorialPageBlocks";
+import { localizeHref } from "@/lib/i18n";
 
-export default function TourWeatherDashboard() {
+export default function TourWeatherDashboard({ locale = "es" }: { locale?: "es" | "en" }) {
+  const isEnglish = locale === "en";
   const {
     rain,
     regional,
@@ -70,12 +72,12 @@ export default function TourWeatherDashboard() {
             <div className="flex items-center gap-4">
               <Link href="/" className="flex items-center gap-1.5 text-zinc-400 hover:text-white transition-colors group">
                 <ArrowLeft size={15} className="group-hover:-translate-x-0.5 transition-transform" />
-                <span className="text-xs font-semibold">Inicio</span>
+                <span className="text-xs font-semibold">{isEnglish ? "Home" : "Inicio"}</span>
               </Link>
               <div className="flex items-center gap-2">
                 <PulsingDot color={loading ? "bg-zinc-500" : "bg-emerald-500"} />
                 <span className="hidden sm:block text-xs font-bold uppercase tracking-widest text-zinc-500">
-                  Clima · Río La Vieja
+                  {isEnglish ? "Weather · La Vieja River" : "Clima · Río La Vieja"}
                 </span>
               </div>
               <StationHealthBadge health={stationHealth} compact />
@@ -83,7 +85,7 @@ export default function TourWeatherDashboard() {
             <div className="flex items-center gap-3">
               {lastRefresh && (
                 <span className="text-[10px] text-zinc-600">
-                  {lastRefresh.toLocaleTimeString("es-CR", { hour: "2-digit", minute: "2-digit" })}
+                  {lastRefresh.toLocaleTimeString(isEnglish ? "en-US" : "es-CR", { hour: "2-digit", minute: "2-digit" })}
                 </span>
               )}
               {cooldown > 0 && !loading && (
@@ -92,7 +94,7 @@ export default function TourWeatherDashboard() {
               <button
                 onClick={fetchAll}
                 disabled={loading || cooldown > 0}
-                title={cooldown > 0 ? `Espera ${cooldown}s para recargar` : "Recargar datos"}
+                  title={cooldown > 0 ? (isEnglish ? `Wait ${cooldown}s to refresh` : `Espera ${cooldown}s para recargar`) : (isEnglish ? "Refresh data" : "Recargar datos")}
                 className="w-7 h-7 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <RefreshCw size={13} className={loading ? "animate-spin text-zinc-400" : "text-zinc-400"} />
@@ -105,57 +107,52 @@ export default function TourWeatherDashboard() {
           <header className="mb-7 max-w-3xl">
             <div className="mb-3 flex items-center gap-2 text-[#66ddcf]">
               <CloudSun size={17} />
-              <p className="text-xs font-bold uppercase tracking-[0.2em]">Guía local del tiempo · v2.0</p>
+              <p className="text-xs font-bold uppercase tracking-[0.2em]">{isEnglish ? "Local weather guide · v2.0" : "Guía local del tiempo · v2.0"}</p>
             </div>
             <h1 className="text-3xl font-black tracking-tight text-white md:text-5xl">
-              Clima, río y pronóstico para su aventura
+              {isEnglish ? "Weather, river, and forecast for your adventure" : "Clima, río y pronóstico para su aventura"}
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-400 md:text-base">
-              Tres lecturas, cada una con su nivel de confianza: cómo está{" "}
-              <strong className="text-zinc-200">ahora</strong>, cómo se ve{" "}
-              <strong className="text-zinc-200">mañana hora por hora</strong> y el{" "}
-              <strong className="text-zinc-200">nivel del río</strong> en el tramo del tour. La fuente
-              primaria es el pluviómetro del IMN en la cuenca alta; todo lo demás entra como apoyo
-              secundario. La decisión final de una salida la toma el guía en sitio.
+              {isEnglish ? <>Three readings, each with a confidence level: what is happening <strong className="text-zinc-200">now</strong>, what <strong className="text-zinc-200">tomorrow looks like hour by hour</strong>, and the <strong className="text-zinc-200">river index</strong> along the tour section. The IMN rain gauge in the upper basin is the primary source; everything else is secondary context. The guide makes the final departure decision on site.</> : <>Tres lecturas, cada una con su nivel de confianza: cómo está <strong className="text-zinc-200">ahora</strong>, cómo se ve <strong className="text-zinc-200">mañana hora por hora</strong> y el <strong className="text-zinc-200">nivel del río</strong> en el tramo del tour. La fuente primaria es el pluviómetro del IMN en la cuenca alta; todo lo demás entra como apoyo secundario. La decisión final de una salida la toma el guía en sitio.</>}
             </p>
-            <EditorialTrust dark>La lectura orienta; la decisión operativa final la toma el guía en sitio. Si el río viene crecido, no forzamos el cañón, mae.</EditorialTrust>
+            <EditorialTrust dark>{isEnglish ? "Readings guide the plan; the guide makes the final operating decision on site. If the river rises, we do not force the canyon." : "La lectura orienta; la decisión operativa final la toma el guía en sitio. Si el río viene crecido, no forzamos el cañón, mae."}</EditorialTrust>
           </header>
 
           {/* Índice de navegación */}
           <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <a href="#ahora" className="group rounded-2xl border border-white/10 bg-white/[0.035] p-4 transition hover:border-[#00C4B0]/35 hover:bg-[#00C4B0]/[0.05]">
               <CloudSun size={18} className="mb-3 text-[#00C4B0]" />
-              <p className="text-sm font-bold">1 · Ahora</p>
-              <p className="mt-1 text-xs leading-5 text-zinc-500">Lluvia medida y estado de la cuenca.</p>
+               <p className="text-sm font-bold">{isEnglish ? "1 · Now" : "1 · Ahora"}</p>
+               <p className="mt-1 text-xs leading-5 text-zinc-500">{isEnglish ? "Measured rain and basin status." : "Lluvia medida y estado de la cuenca."}</p>
             </a>
             <a href="#manana" className="group rounded-2xl border border-white/10 bg-white/[0.035] p-4 transition hover:border-[#00C4B0]/35 hover:bg-[#00C4B0]/[0.05]">
               <CalendarClock size={18} className="mb-3 text-[#00C4B0]" />
-              <p className="text-sm font-bold">2 · Mañana</p>
-              <p className="mt-1 text-xs leading-5 text-zinc-500">Pronóstico hora por hora, con banda.</p>
+               <p className="text-sm font-bold">{isEnglish ? "2 · Tomorrow" : "2 · Mañana"}</p>
+               <p className="mt-1 text-xs leading-5 text-zinc-500">{isEnglish ? "Hourly forecast with uncertainty band." : "Pronóstico hora por hora, con banda."}</p>
             </a>
             <a href="#rio" className="group rounded-2xl border border-white/10 bg-white/[0.035] p-4 transition hover:border-[#00C4B0]/35 hover:bg-[#00C4B0]/[0.05]">
               <Waves size={18} className="mb-3 text-[#00C4B0]" />
-              <p className="text-sm font-bold">3 · Nivel del río</p>
-              <p className="mt-1 text-xs leading-5 text-zinc-500">Índice de caudal y proyección 30 h.</p>
+               <p className="text-sm font-bold">{isEnglish ? "3 · River level" : "3 · Nivel del río"}</p>
+               <p className="mt-1 text-xs leading-5 text-zinc-500">{isEnglish ? "Flow index and 30-hour projection." : "Índice de caudal y proyección 30 h."}</p>
             </a>
             <a href="#estacion" className="group rounded-2xl border border-white/10 bg-white/[0.035] p-4 transition hover:border-[#00C4B0]/35 hover:bg-[#00C4B0]/[0.05]">
               <Gauge size={18} className="mb-3 text-[#00C4B0]" />
-              <p className="text-sm font-bold">La estación IMN</p>
-              <p className="mt-1 text-xs leading-5 text-zinc-500">Qué mide, qué no, y qué tan fresca está.</p>
+               <p className="text-sm font-bold">{isEnglish ? "The IMN station" : "La estación IMN"}</p>
+               <p className="mt-1 text-xs leading-5 text-zinc-500">{isEnglish ? "What it measures, what it does not, and how fresh it is." : "Qué mide, qué no, y qué tan fresca está."}</p>
             </a>
           </div>
 
           <div className="space-y-4">
             {fetchWarning && (
               <div className="rounded-2xl border border-amber-500/35 bg-amber-500/10 px-4 py-3">
-                <p className="text-xs font-semibold text-amber-300 uppercase tracking-wide">Aviso</p>
+                    <p className="text-xs font-semibold text-amber-300 uppercase tracking-wide">{isEnglish ? "Notice" : "Aviso"}</p>
                 <p className="text-sm text-amber-100 mt-1">{fetchWarning}</p>
               </div>
             )}
 
             {(rain?.stats?.wetStreak ?? 0) >= 4 && (
               <div className="rounded-2xl border border-red-500/35 bg-red-500/10 px-4 py-3">
-                <p className="text-xs font-semibold text-red-300 uppercase tracking-wide">Alerta</p>
+                    <p className="text-xs font-semibold text-red-300 uppercase tracking-wide">{isEnglish ? "Alert" : "Alerta"}</p>
                 <p className="text-sm text-red-100 mt-1">
                   <strong>{rain?.stats?.wetStreak} horas seguidas de lluvia.</strong> El río puede seguir
                   subiendo aunque ahora parezca calmado.
@@ -177,10 +174,10 @@ export default function TourWeatherDashboard() {
               </>
             ) : (
               <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 text-center">
-                <p className="text-sm text-zinc-400">
-                  {loading
-                    ? "Cargando datos de la estación IMN…"
-                    : "La estación IMN no tiene suficientes lecturas para el modelo en este momento. Reintente en unos minutos."}
+                  <p className="text-sm text-zinc-400">
+                   {loading
+                     ? (isEnglish ? "Loading IMN station data…" : "Cargando datos de la estación IMN…")
+                     : (isEnglish ? "The IMN station does not have enough readings for the model right now. Try again in a few minutes." : "La estación IMN no tiene suficientes lecturas para el modelo en este momento. Reintente en unos minutos.")}
                 </p>
               </div>
             )}
@@ -224,16 +221,16 @@ export default function TourWeatherDashboard() {
               return (
                 <div className="rounded-2xl border border-white/8 bg-white/[0.02] p-4">
                   <p className="text-xs font-bold text-zinc-300 uppercase tracking-wide mb-1 flex items-center gap-1.5">
-                    <Clock size={12} /> Próximos días · San Carlos
+                     <Clock size={12} /> {isEnglish ? "Next days · San Carlos" : "Próximos días · San Carlos"}
                   </p>
                   <p className="text-[10px] text-zinc-600 mb-3">
-                    Base secundaria (Open-Meteo). Contexto, no sustituye la estación.
+                     {isEnglish ? "Secondary source (Open-Meteo). Context only; it does not replace the station." : "Base secundaria (Open-Meteo). Contexto, no sustituye la estación."}
                   </p>
                   <div className="flex gap-1.5">
                     {days.map((d, i) => (
                       <div key={i} className="flex-1 flex flex-col items-center gap-1 rounded-xl bg-black/25 border border-white/6 py-2.5 px-1">
                         <span className="text-[9px] text-zinc-500">
-                          {i === 0 ? "Hoy" : i === 1 ? "Mañana" : new Date(d.date).toLocaleDateString("es-CR", { weekday: "short" }).replace(".", "")}
+                           {i === 0 ? (isEnglish ? "Today" : "Hoy") : i === 1 ? (isEnglish ? "Tomorrow" : "Mañana") : new Date(d.date).toLocaleDateString(isEnglish ? "en-US" : "es-CR", { weekday: "short" }).replace(".", "")}
                         </span>
                         <span className="text-lg leading-none">{d.weather_icon}</span>
                         <span className="text-[10px] text-zinc-300 font-bold">{Math.round(d.temp_max_c)}°</span>
@@ -259,7 +256,7 @@ export default function TourWeatherDashboard() {
 
             {/* ═══ SUPUESTOS DEL MODELO ═════════════════════════════════════ */}
             {model && (
-              <CollapsibleSection title="Supuestos y límites del modelo" icon={Gauge}>
+                <CollapsibleSection title={isEnglish ? "Model assumptions and limits" : "Supuestos y límites del modelo"} icon={Gauge}>
                 <ul className="space-y-2 text-xs leading-5 text-zinc-400">
                   {model.assumptions.map((a, i) => (
                     <li key={i} className="flex gap-2">
@@ -269,19 +266,19 @@ export default function TourWeatherDashboard() {
                   ))}
                   <li className="flex gap-2 text-zinc-600">
                     <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-zinc-700" />
-                    <span>Motor generado {new Date(model.generatedAtISO).toLocaleString("es-CR")}.</span>
+                    <span>{isEnglish ? "Model generated " : "Motor generado "}{new Date(model.generatedAtISO).toLocaleString(isEnglish ? "en-US" : "es-CR")}.</span>
                   </li>
                 </ul>
               </CollapsibleSection>
             )}
 
             {/* ═══ DETALLES TÉCNICOS ═══════════════════════════════════════ */}
-            <CollapsibleSection title="Más detalles técnicos" icon={Gauge}>
+            <CollapsibleSection title={isEnglish ? "More technical details" : "Más detalles técnicos"} icon={Gauge}>
               <div className="space-y-4">
                 {dailyChart.length > 0 && (
                   <div>
                     <p className="text-[10px] text-zinc-500 mb-2 uppercase tracking-wide flex items-center gap-1">
-                      <CloudRain size={12} /> Lluvia diaria · 7 días
+                     <CloudRain size={12} /> {isEnglish ? "Daily rain · 7 days" : "Lluvia diaria · 7 días"}
                     </p>
                     <ResponsiveContainer width="100%" height={100} minWidth={1} minHeight={1}>
                       <BarChart data={dailyChart} barSize={24} margin={{ top: 4, right: 0, bottom: 0, left: -20 }}>
@@ -298,8 +295,7 @@ export default function TourWeatherDashboard() {
                   </div>
                 )}
                 <p className="text-[10px] text-zinc-600 leading-4">
-                  La curva de acumulación 48 h y las ventanas móviles de 3 h / 6 h están en la
-                  sección <a href="#lluvia" className="text-zinc-400 hover:underline">Cómo ha llovido</a>.
+                   {isEnglish ? <>The 48-hour accumulation curve and 3-hour / 6-hour rolling windows are in the <a href="#lluvia" className="text-zinc-400 hover:underline">rain history</a> section.</> : <>La curva de acumulación 48 h y las ventanas móviles de 3 h / 6 h están en la sección <a href="#lluvia" className="text-zinc-400 hover:underline">Cómo ha llovido</a>.</>}
                 </p>
               </div>
             </CollapsibleSection>
@@ -308,15 +304,14 @@ export default function TourWeatherDashboard() {
               <div className="flex items-start gap-3">
                 <MapPin size={18} className="mt-0.5 shrink-0 text-[#00C4B0]" />
                 <div>
-                  <h2 className="text-sm font-bold">¿Su tour depende del río?</h2>
+                  <h2 className="text-sm font-bold">{isEnglish ? "Does your tour depend on the river?" : "¿Su tour depende del río?"}</h2>
                   <p className="mt-1 max-w-xl text-xs leading-5 text-zinc-400">
-                    Escríbanos antes de salir. Allan o Verónica le confirman la condición operativa real,
-                    sin adivinar disponibilidad ni poner la aventura por encima de la seguridad.
+                    {isEnglish ? "Message us before setting out. Allan or Verónica will confirm the real operating conditions, without guessing availability or putting adventure ahead of safety." : "Escríbanos antes de salir. Allan o Verónica le confirman la condición operativa real, sin adivinar disponibilidad ni poner la aventura por encima de la seguridad."}
                   </p>
                 </div>
               </div>
-              <Link href="/reservar" className="mt-4 inline-flex shrink-0 items-center gap-2 rounded-full bg-[#00C4B0] px-4 py-2.5 text-xs font-black text-[#16211f] transition hover:bg-[#66ddcf] md:mt-0">
-                <MessageCircle size={15} /> Consultar al equipo
+              <Link href={localizeHref("/reservar", locale)} className="mt-4 inline-flex shrink-0 items-center gap-2 rounded-full bg-[#00C4B0] px-4 py-2.5 text-xs font-black text-[#16211f] transition hover:bg-[#66ddcf] md:mt-0">
+                <MessageCircle size={15} /> {isEnglish ? "Ask the team" : "Consultar al equipo"}
               </Link>
             </section>
 
@@ -327,7 +322,7 @@ export default function TourWeatherDashboard() {
                 {new Date(rain.meta.fetchedAt).toLocaleString("es-CR")}
               </p>
             )}
-            <EditorialFinalCta dark title="¿Le ayudamos a elegir una aventura segura?" body="Consulte una fecha y el equipo confirma la disponibilidad y la condición operativa real." label="Consultar y reservar" />
+            <EditorialFinalCta dark title={isEnglish ? "Can we help you choose a safe adventure?" : "¿Le ayudamos a elegir una aventura segura?"} body={isEnglish ? "Choose a date and our team will confirm availability and the real operating conditions." : "Consulte una fecha y el equipo confirma la disponibilidad y la condición operativa real."} label={isEnglish ? "Ask and book" : "Consultar y reservar"} />
           </div>
         </main>
         <PageFooter />
