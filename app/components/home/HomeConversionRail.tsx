@@ -28,15 +28,15 @@ export default function HomeConversionRail() {
           <div className="p-7 sm:p-9 lg:p-12">
             <span className="inline-flex items-center gap-2 rounded-full bg-[#00C4B0]/12 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.16em] text-[#70eee1]">
               <ShieldCheck size={14} />
-              {isEs ? "Reserva en línea · confirmación inmediata" : "Online booking · instant confirmation"}
+              {isEs ? "Reserva en línea · precio claro" : "Online booking · clear pricing"}
             </span>
             <h2 className="mt-5 max-w-2xl font-display text-balance text-3xl font-black leading-[1.02] tracking-tight sm:text-4xl lg:text-5xl">
               {isEs ? "Reserve Ciudad Esmeralda en menos de dos minutos." : "Book Ciudad Esmeralda in under two minutes."}
             </h2>
             <p className="mt-4 max-w-xl text-sm leading-relaxed text-white/68 sm:text-base">
               {isEs
-                ? "Elija la fecha, el número de personas y el paquete. Verá el precio final antes de pagar, con pago seguro y cancelación gratuita hasta 48 h antes. ¿Dudas? Nuestro equipo le ayuda por WhatsApp."
-                : "Choose your date, group size, and package. You will see the final price before paying, with secure payment and free cancellation up to 48h before. Questions? Our team can help on WhatsApp."}
+                ? "Elija la fecha, el número de personas y el paquete. Verá el precio final antes de pagar y la política aplicable. ¿Dudas? Nuestro equipo le ayuda por WhatsApp."
+                : "Choose your date, group size, and package. You will see the final price and applicable policy before paying. Questions? Our team can help on WhatsApp."}
             </p>
           </div>
 
@@ -78,7 +78,7 @@ export default function HomeConversionRail() {
           <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#70eee1]">
             {isEs ? "¿Listo para reservar?" : "Ready to book?"}
           </p>
-          <p className="mt-1 text-sm font-bold">{isEs ? "Disponibilidad durante todo el año." : "Availability year-round."}</p>
+          <p className="mt-1 text-sm font-bold">{isEs ? "Revise fechas y condiciones de salida." : "Review dates and departure conditions."}</p>
         </div>
         <div className="grid grid-cols-1">
           <Link

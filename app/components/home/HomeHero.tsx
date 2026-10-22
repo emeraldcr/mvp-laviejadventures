@@ -129,6 +129,16 @@ export default function HomeHero({ tour }: { tour?: TourSummary }) {
               {isEs ? "Hablar con un guía" : "Talk to a guide"}
             </a>
           </div>
+
+          <div className="mt-8 grid w-full max-w-xl grid-cols-2 gap-2 text-left sm:hidden">
+            {facts.map(({ icon: Icon, value, label }) => (
+              <div key={value} className="rounded-2xl border border-white/15 bg-black/30 p-3 backdrop-blur-md">
+                <Icon size={16} className="text-[#70eee1]" aria-hidden />
+                <strong className="mt-2 block text-xs font-black leading-tight text-white">{value}</strong>
+                <span className="mt-1 block text-[10px] leading-snug text-white/65">{label}</span>
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="absolute inset-x-4 bottom-5 hidden overflow-hidden rounded-[1.6rem] border border-white/15 bg-black/46 shadow-[0_24px_80px_rgba(0,0,0,.34)] backdrop-blur-xl sm:inset-x-7 sm:block lg:inset-x-10">
@@ -137,13 +147,13 @@ export default function HomeHero({ tour }: { tour?: TourSummary }) {
               <div>
                 <p className="text-sm font-bold leading-relaxed text-white/82">
                   {isEs
-                    ? "Reserve en línea y reciba la confirmación al instante."
-                    : "Book online and get your confirmation instantly."}
+                    ? "Reserve en línea y vea el precio final antes de pagar."
+                    : "Book online and see the final price before paying."}
                 </p>
                 <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.15em] text-[#00C4B0]">
                   {isEs
-                    ? "Pago seguro · Cancelación gratis hasta 48 h antes"
-                    : "Secure payment · Free cancellation up to 48h before"}
+                    ? "Pago seguro · política de clima y cancelación visible"
+                    : "Secure payment · weather and cancellation policy shown"}
                 </p>
               </div>
               <ArrowDown size={18} className="hidden shrink-0 text-[#00C4B0] md:block" />

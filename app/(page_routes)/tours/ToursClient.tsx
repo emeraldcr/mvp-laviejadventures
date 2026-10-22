@@ -5,7 +5,8 @@ import { localizeHref, tourDifficulty, tourDuration } from "@/lib/i18n";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, ArrowUpRight, Clock3, MapPin, Zap } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Clock3, Filter, MapPin, Zap } from "lucide-react";
+import { useMemo, useState } from "react";
 import { useLanguage } from "@/lib/LanguageContext";
 import { translations } from "@/lib/translations";
 import HomeNav from "@/app/components/home/HomeNav";
@@ -21,6 +22,19 @@ export function ToursClient({ tours }: { tours: PublicTour[] }) {
   const isEs = lang === "es";
   const tr = translations[lang].tours;
   const router = useRouter();
+  const [difficultyFilter, setDifficultyFilter] = useState("all");
+  const [durationFilter, setDurationFilter] = useState("all");
+
+  const filteredTours = useMemo(() => tours.filter((tour) => {
+    const difficulty = tour.difficulty?.toLowerCase() ?? "";
+    const duration = tour.duration?.toLowerCase() ?? "";
+    const difficultyMatches = difficultyFilter === "all" || difficulty.includes(difficultyFilter);
+    const durationMatches = durationFilter === "all"
+      || (durationFilter === "short" && !duration.includes("3") && !duration.includes("4"))
+      || (durationFilter === "medium" && (duration.includes("2") || duration.includes("3") || duration.includes("4")))
+      || (durationFilter === "long" && (duration.includes("4") || duration.includes("día") || duration.includes("day")));
+    return difficultyMatches && durationMatches;
+  }), [difficultyFilter, durationFilter, tours]);
 
   const handleSelectTour = (slug: string) => {
     router.push(localizeHref(`/reservar?tour=${encodeURIComponent(slug)}`, lang));
@@ -45,7 +59,7 @@ export function ToursClient({ tours }: { tours: PublicTour[] }) {
               </p>
             </div>
             <p className="text-sm font-semibold text-stone-500 dark:text-stone-400">
-              {tours.length} {tr.experiences}
+              {filteredTours.length} {tr.experiences}
             </p>
           </div>
         </div>
@@ -53,8 +67,36 @@ export function ToursClient({ tours }: { tours: PublicTour[] }) {
 
       <section className="py-12 md:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-8 rounded-3xl border border-stone-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-stone-900 sm:p-5">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="mr-1 inline-flex items-center gap-2 text-sm font-black text-stone-900 dark:text-stone-100">
+                <Filter size={16} className="text-emerald-700 dark:text-emerald-300" />
+                {isEs ? "Encuentre su plan" : "Find your plan"}
+              </div>
+              <label className="sr-only" htmlFor="tour-difficulty">{isEs ? "Nivel" : "Level"}</label>
+              <select id="tour-difficulty" value={difficultyFilter} onChange={(event) => setDifficultyFilter(event.target.value)} className="min-h-11 rounded-xl border border-stone-300 bg-white px-3 text-sm font-semibold text-stone-800 dark:border-white/15 dark:bg-stone-950 dark:text-stone-100">
+                <option value="all">{isEs ? "Todos los niveles" : "All levels"}</option>
+                <option value="fácil">{isEs ? "Fácil" : "Easy"}</option>
+                <option value="moderado">{isEs ? "Moderado" : "Moderate"}</option>
+                <option value="intermedio">{isEs ? "Intermedio" : "Intermediate"}</option>
+                <option value="extremo">{isEs ? "Extremo" : "Extreme"}</option>
+              </select>
+              <label className="sr-only" htmlFor="tour-duration">{isEs ? "Duración" : "Duration"}</label>
+              <select id="tour-duration" value={durationFilter} onChange={(event) => setDurationFilter(event.target.value)} className="min-h-11 rounded-xl border border-stone-300 bg-white px-3 text-sm font-semibold text-stone-800 dark:border-white/15 dark:bg-stone-950 dark:text-stone-100">
+                <option value="all">{isEs ? "Cualquier duración" : "Any duration"}</option>
+                <option value="short">{isEs ? "Hasta 2 horas" : "Up to 2 hours"}</option>
+                <option value="medium">{isEs ? "2–4 horas" : "2–4 hours"}</option>
+                <option value="long">{isEs ? "4+ horas" : "4+ hours"}</option>
+              </select>
+              {(difficultyFilter !== "all" || durationFilter !== "all") && (
+                <button type="button" onClick={() => { setDifficultyFilter("all"); setDurationFilter("all"); }} className="min-h-11 px-2 text-sm font-bold text-emerald-800 underline underline-offset-4 dark:text-emerald-300">
+                  {isEs ? "Limpiar" : "Clear"}
+                </button>
+              )}
+            </div>
+          </div>
           <div className="grid gap-x-7 gap-y-10 sm:grid-cols-2 xl:grid-cols-3">
-            {tours.map((tour) => {
+            {filteredTours.map((tour) => {
               const title = tourTitle(tour, isEs);
               const location = tour.location?.split("-")[0]?.trim() || "San Carlos";
               const isFeatured = tour.isFeatured || tour.isMain;
@@ -149,11 +191,11 @@ export function ToursClient({ tours }: { tours: PublicTour[] }) {
             })}
           </div>
 
-          {tours.length === 0 && (
+          {filteredTours.length === 0 && (
             <div className="rounded-3xl border border-dashed border-stone-300 bg-white px-6 py-16 text-center text-stone-500 dark:border-white/15 dark:bg-stone-900 dark:text-stone-400">
               {isEs
-                ? "No hay tours disponibles en este momento."
-                : "No tours available at the moment."}
+                ? "No hay experiencias con esos filtros. Pruebe otra combinación, mae."
+                : "No experiences match those filters. Try another combination."}
             </div>
           )}
         </div>
