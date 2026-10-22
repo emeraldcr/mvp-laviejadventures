@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { Check, Star } from "lucide-react";
 import type { TourPackageOption } from "@/lib/types/index";
 import { getPackageDisplayName } from "@/lib/reservation/pricing";
+import { getPackageIncludes } from "@/lib/reservation/package-copy";
 
 type Props = {
   packages: TourPackageOption[];
@@ -72,6 +73,7 @@ export default function PackagePicker({
         const selected = hasConfirmedSelection && selectedPackageId === id;
         const disabled = isPackageDisabled?.(pkg) ?? false;
         const recommended = !disabled && id === recommendedId;
+        const packageIncludes = getPackageIncludes(pkg, isEs);
 
         return (
           <button
@@ -106,16 +108,16 @@ export default function PackagePicker({
             </p>
             <p className="mt-2 text-2xl font-black text-[#087d72] dark:text-[#66ddcf]">
               ${pkg.price}
-              <span className="text-xs font-semibold text-zinc-500"> / {isEs ? "pax" : "pax"}</span>
+              <span className="text-xs font-semibold text-zinc-500"> / {isEs ? "persona" : "pax"}</span>
             </p>
             {(pkg.descriptionEs || pkg.descriptionEn) && (
               <p className="mt-3 line-clamp-3 flex-1 text-sm leading-6 text-zinc-500 dark:text-zinc-400">
                 {isEs ? pkg.descriptionEs ?? pkg.descriptionEn : pkg.descriptionEn ?? pkg.descriptionEs}
               </p>
             )}
-            {pkg.includes && pkg.includes.length > 0 && (
+            {packageIncludes.length > 0 && (
               <ul className="mt-3 space-y-1 border-t border-zinc-200 pt-3 text-xs font-semibold text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
-                {pkg.includes.slice(0, 3).map((item) => (
+                {packageIncludes.slice(0, 3).map((item) => (
                   <li key={item} className="flex gap-1.5">
                     <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" aria-hidden />
                     <span className="line-clamp-2">{item}</span>

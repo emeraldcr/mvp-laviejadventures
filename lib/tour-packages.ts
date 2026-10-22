@@ -432,6 +432,7 @@ export function normalizeTourPackages(value: unknown): TourPackageOption[] {
         descriptionEn: String(pkg.descriptionEn ?? "").trim() || undefined,
         descriptionEs: String(pkg.descriptionEs ?? "").trim() || undefined,
         includes: Array.isArray(pkg.includes) ? pkg.includes.map((item) => String(item)) : [],
+        includesEs: Array.isArray(pkg.includesEs) ? pkg.includesEs.map((item) => String(item)) : undefined,
         groupTour: pkg.groupTour === false ? false : true,
         departureTimes: Array.isArray(pkg.departureTimes)
           ? pkg.departureTimes.map((time) => String(time).trim()).filter(Boolean)

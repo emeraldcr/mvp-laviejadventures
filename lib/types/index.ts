@@ -42,6 +42,7 @@ export type TourPackageOption = {
   descriptionEn?: string;
   descriptionEs?: string;
   includes?: string[];
+  includesEs?: string[];
   groupTour?: boolean;
   departureTimes?: string[];
   scheduleNote?: string;

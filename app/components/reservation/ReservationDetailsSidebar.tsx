@@ -6,6 +6,7 @@ import { formatDepartureLabel } from "@/lib/reservation/constants";
 import type { TourPackageOption } from "@/lib/types/index";
 import { TOUR_INFO } from "@/lib/tour-info";
 import ReservationDetailsStepProgress from "./ReservationDetailsStepProgress";
+import { getPackageIncludes } from "@/lib/reservation/package-copy";
 
 type StepOption = { id: BookingStepId; label: string };
 
@@ -43,7 +44,7 @@ export default function ReservationDetailsSidebar({
 }: Props) {
   const isEs = lang === "es";
   const isCheckoutAccepted = currentStep === 3 && termsAccepted;
-  const packageIncludes = selectedPackage?.includes?.slice(0, 4) ?? [];
+  const packageIncludes = getPackageIncludes(selectedPackage, isEs).slice(0, 4);
   const whatsappHref = `https://wa.me/506${TOUR_INFO.contact.whatsapp.replace(/\D/g, "")}`;
 
   const summaryContent = (
