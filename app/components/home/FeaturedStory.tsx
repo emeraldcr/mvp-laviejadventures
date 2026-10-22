@@ -8,7 +8,6 @@ import type { TourSummary } from "@/lib/types/index";
 import { BOOKING_HREF, TOURS_HREF, primaryBookingLabel } from "./home-utils";
 import GoogleRating from "@/app/components/GoogleRating";
 import { localizeHref } from "@/lib/i18n";
-import { BOOKING_ASSURANCE_EN, BOOKING_ASSURANCE_ES } from "@/lib/tour-policy";
 
 type Props = {
   tours: TourSummary[];
@@ -34,30 +33,6 @@ export default function FeaturedStory({ tours }: Props) {
         "Local bilingual guide and a clear safety briefing",
         "Route adjusts to the weather and river level",
       ];
-
-  const steps = [
-    {
-      num: "01",
-      title: isEs ? "Elija la fecha y el tamaño del grupo" : "Choose the date and group size",
-      body: isEs
-        ? "Ciudad Esmeralda es una salida fija: indíquenos el día y cuántas personas asistirán."
-        : "Ciudad Esmeralda is a set departure — just tell us the day and how many will join.",
-    },
-    {
-      num: "02",
-      title: isEs ? "Confirme y pague en línea" : "Confirm and pay online",
-      body: isEs
-        ? `Pago seguro. ${BOOKING_ASSURANCE_ES}`
-        : `Secure payment. ${BOOKING_ASSURANCE_EN}`,
-    },
-    {
-      num: "03",
-      title: isEs ? "Viva el cañón" : "Into the canyon",
-      body: isEs
-        ? "Llegue, conozca a su guía y entre al bosque. El ritmo y la ruta se adaptan a su grupo y a las condiciones del río ese día."
-        : "You arrive, meet your guide, and head into the forest. Pace and route adapt to your group and the river conditions that day.",
-    },
-  ];
 
   return (
     <section className="lva-home-section--paper py-20 md:py-28">
@@ -142,32 +117,6 @@ export default function FeaturedStory({ tours }: Props) {
                 <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
               </Link>
             </div>
-          </div>
-        </div>
-
-        <div className="mt-24 md:mt-32">
-          <div className="mb-10 text-center">
-            <p className="lva-home-kicker mb-3">
-              {isEs ? "Reserva sencilla" : "Simple booking"}
-            </p>
-            <h2 className="font-display text-3xl font-bold tracking-tight text-stone-900 dark:text-stone-50 md:text-4xl">
-              {isEs ? "De la reserva al cañón en tres pasos" : "From booking to canyon in three steps"}
-            </h2>
-          </div>
-
-          <div className="grid gap-5 md:grid-cols-3">
-            {steps.map((step) => (
-              <div
-                key={step.num}
-                className="lva-home-panel border-0 bg-[var(--lva-surface-muted)] p-8 shadow-none transition-all hover:-translate-y-1 hover:border-emerald-200 hover:shadow-[0_20px_50px_rgba(0,0,0,0.06)]"
-              >
-                <span className="font-display text-sm font-bold text-emerald-700 dark:text-emerald-300">{step.num}</span>
-                <h3 className="font-display mt-3 text-xl font-bold tracking-tight text-stone-900 dark:text-stone-50">
-                  {step.title}
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-stone-600 dark:text-stone-300">{step.body}</p>
-              </div>
-            ))}
           </div>
         </div>
       </div>

@@ -7,8 +7,8 @@ import { principalContent } from "@/lib/constants/principal";
 import type { TourSummary } from "@/lib/types/index";
 import SiteHeader from "@/app/components/navigation/SiteHeader";
 import HomeHero from "@/app/components/home/HomeHero";
-import HomeConversionRail from "@/app/components/home/HomeConversionRail";
 import HomeTrustSection from "@/app/components/home/HomeTrustSection";
+import FeaturedStory from "@/app/components/home/FeaturedStory";
 import ToursShowcase from "@/app/components/home/ToursShowcase";
 import HomeFaqFooter from "@/app/components/home/HomeFaqFooter";
 import HomeStructuredData from "@/app/home/HomeStructuredData";
@@ -39,10 +39,10 @@ export default function HomeClient({ children, tours }: { children: ReactNode; t
         <HomeStructuredData tours={tours} locale={lang} />
         <HomeHero />
         <HomeTourDiscovery tours={tours} />
+        {ciudadEsmeralda && <FeaturedStory tours={[ciudadEsmeralda]} />}
         <HomeTrustSection tour={ciudadEsmeralda} />
         {otherTours.length > 0 && <ToursShowcase tours={otherTours} />}
         {children}
-        <HomeConversionRail />
         <HomeFaqFooter />
       </main>
     </ErrorBoundary>
