@@ -14,11 +14,24 @@ import HomeFaqFooter from "@/app/components/home/HomeFaqFooter";
 import HomeStructuredData from "@/app/home/HomeStructuredData";
 import HomeTourDiscovery from "@/app/components/home/HomeTourDiscovery";
 
+const HOME_TOUR_ORDER = [
+  "pozas-cristalinas",
+  "avistamiento-aves",
+  "cuadra-tours-aventura",
+  "tour-gastronomico-local",
+  "cascadas-secretas-rio-la-vieja",
+  "tour-nocturno-la-vieja",
+];
+
 export default function HomeClient({ children, tours }: { children: ReactNode; tours: TourSummary[] }): JSX.Element {
   const { lang } = useLanguage();
   const copy = principalContent[lang].errors;
   const ciudadEsmeralda = tours.find((tour) => ["tour-ciudad-esmeralda", "ciudad-esmeralda"].includes(tour.slug));
-  const otherTours = tours.filter((tour) => !["tour-ciudad-esmeralda", "ciudad-esmeralda"].includes(tour.slug)).slice(0, 3);
+  const otherTourPool = tours.filter((tour) => !["tour-ciudad-esmeralda", "ciudad-esmeralda"].includes(tour.slug));
+  const otherTours = [
+    ...HOME_TOUR_ORDER.map((slug) => otherTourPool.find((tour) => tour.slug === slug)).filter(Boolean),
+    ...otherTourPool.filter((tour) => !HOME_TOUR_ORDER.includes(tour.slug)),
+  ].slice(0, 6) as TourSummary[];
   return (
     <ErrorBoundary fallback={<div className="flex h-screen items-center justify-center bg-white text-xl text-red-600">{copy.criticalFallback}</div>}>
       <main className="lva-public-shell min-h-screen overflow-x-hidden font-sans">

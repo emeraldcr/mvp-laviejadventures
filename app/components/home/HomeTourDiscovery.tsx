@@ -35,10 +35,15 @@ export default function HomeTourDiscovery({ tours }: { tours: TourSummary[] }) {
   return (
     <section id="descubrir" className="bg-[#f4f1ea] py-14 dark:bg-[#0b0a09] md:py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="max-w-2xl">
-          <p className="text-xs font-black uppercase tracking-[0.25em] text-emerald-700 dark:text-emerald-300">{isEs ? "Primero, el ritmo del día" : "First, choose your pace"}</p>
-          <h2 className="mt-3 font-display text-balance text-3xl font-black leading-[1.04] tracking-tight text-stone-950 dark:text-white md:text-5xl">{isEs ? "¿Qué tipo de día está buscando?" : "What kind of day are you looking for?"}</h2>
-          <p className="mt-4 text-base leading-relaxed text-stone-600 dark:text-stone-300">{isEs ? "Elija la vibra y compare experiencias que sí combinan con su grupo. Ciudad Esmeralda es una opción, no la única, mae." : "Choose the vibe and compare experiences that fit your group. Ciudad Esmeralda is one option, not the only one."}</p>
+        <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+          <div className="max-w-2xl">
+            <p className="text-xs font-black uppercase tracking-[0.25em] text-emerald-700 dark:text-emerald-300">{isEs ? "Primero, el ritmo del día" : "First, choose your pace"}</p>
+            <h2 className="mt-3 font-display text-balance text-3xl font-black leading-[1.04] tracking-tight text-stone-950 dark:text-white md:text-5xl">{isEs ? "¿Qué tipo de día está buscando?" : "What kind of day are you looking for?"}</h2>
+            <p className="mt-4 text-base leading-relaxed text-stone-600 dark:text-stone-300">{isEs ? "Elija la vibra y compare experiencias que sí combinan con su grupo. Ciudad Esmeralda es una opción, no la única, mae." : "Choose the vibe and compare experiences that fit your group. Ciudad Esmeralda is one option, not the only one."}</p>
+          </div>
+          <Link href={localizeHref("/tours", lang)} className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-[#00796B] px-5 py-3 text-sm font-black text-white shadow-lg shadow-emerald-900/15 transition hover:-translate-y-0.5 hover:bg-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 dark:ring-offset-[#0b0a09]">
+            {isEs ? "Ver todos los tours" : "See all tours"}<ArrowRight size={16} />
+          </Link>
         </div>
 
         <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
