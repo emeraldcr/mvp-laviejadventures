@@ -32,3 +32,10 @@ No abras playwrigth yo confirmo todo manualmente
 always  stop the leftover build workers that were consuming several GB of memory or try to avoid them, if they are working by other nodes or bots let them finish
 
 when u end make sure to add all the details that u did to the commit message and commit as it is
+
+Build and release policy:
+- Keep Next.js Turbopack enabled for production builds. Keep the filesystem build cache and useful experimental optimizations such as `optimizePackageImports` when they remain compatible with the app.
+- Run `npm run type-check`, lint, and the applicable tests before merging or sending changes to `master`; these are pre-release quality gates and should not be repeated as redundant Vercel build steps when they already passed for the release.
+- Vercel production should keep running the final `next build` as the deployment safety gate. Do not skip the production build merely to save seconds.
+- The current Vercel build already skips TypeScript build errors through `next.config.ts`; type-checking remains a separate pre-release check. Vercel is intended to compile and deploy the verified release, not replace local/CI validation.
+- When diagnosing failed deployments, inspect the actual Vercel build logs and distinguish dependency installation time (`npm ci`) from Turbopack compilation time before changing build settings.
