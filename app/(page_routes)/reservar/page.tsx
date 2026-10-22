@@ -98,7 +98,7 @@ export default function ReservarPage() {
       initialTickets={urlParams.pax}
       initialDateIso={urlParams.date || null}
     >
-      <main className="min-h-screen bg-[#FAF9F6] font-sans text-stone-900 dark:bg-[#0b0a09] dark:text-stone-100">
+      <main className="min-h-screen bg-[#FAF9F6] pt-16 font-sans text-stone-900 dark:bg-[#0b0a09] dark:text-stone-100 md:pt-[5.5rem]">
         <SiteHeader solid />
         {/* The shared public header replaces the legacy booking-only header. */}
         {/*
