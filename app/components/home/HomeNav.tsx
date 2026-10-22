@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -24,6 +24,10 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
   const bookingHref = bookingQuery.toString() ? `/reservar?${bookingQuery.toString()}` : BOOKING_HREF;
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const menuDialogRef = useRef<HTMLDivElement>(null);
+  const closeMenuButtonRef = useRef<HTMLButtonElement>(null);
+  const wasMenuOpenRef = useRef(false);
 
   useEffect(() => {
     setCurrentSearch(window.location.search);
@@ -36,12 +40,48 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  const closeMenu = useCallback(() => setMenuOpen(false), []);
+
   useEffect(() => {
-    document.body.style.overflow = menuOpen ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
+    if (!menuOpen) {
+      if (wasMenuOpenRef.current) menuButtonRef.current?.focus();
+      return;
+    }
+
+    wasMenuOpenRef.current = true;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const frame = window.requestAnimationFrame(() => closeMenuButtonRef.current?.focus());
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeMenu();
+        return;
+      }
+      if (event.key !== "Tab") return;
+
+      const focusable = menuDialogRef.current?.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
+      if (!focusable?.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
-  }, [menuOpen]);
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [closeMenu, menuOpen]);
 
   const links = [
     { href: "/tours", label: "Tours" },
@@ -197,8 +237,12 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
             </Link>
             <button
               type="button"
+              ref={menuButtonRef}
               onClick={() => setMenuOpen(true)}
               aria-label={isEs ? "Abrir menú" : "Open menu"}
+              aria-expanded={menuOpen}
+              aria-controls="home-mobile-menu"
+              aria-haspopup="dialog"
               className={[
                 "inline-flex h-10 w-10 items-center justify-center rounded-full",
                 onDark ? "text-white" : "text-stone-900 dark:text-stone-100",
@@ -212,14 +256,23 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
 
       {/* Mobile full-screen menu */}
       {menuOpen && (
-        <div className="fixed inset-0 z-[60] flex flex-col bg-white dark:bg-[#0b0a09] md:hidden">
+        <div
+          ref={menuDialogRef}
+          id="home-mobile-menu"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="home-mobile-menu-title"
+          tabIndex={-1}
+          className="fixed inset-0 z-[60] flex flex-col bg-white dark:bg-[#0b0a09] md:hidden"
+        >
           <div className="flex h-16 items-center justify-between px-4">
-            <span className="font-display text-lg font-bold text-stone-900 dark:text-stone-50">
+            <span id="home-mobile-menu-title" className="font-display text-lg font-bold text-stone-900 dark:text-stone-50">
               La Vieja <span className="text-emerald-700 dark:text-emerald-300">Adventures</span>
             </span>
             <button
               type="button"
-              onClick={() => setMenuOpen(false)}
+              ref={closeMenuButtonRef}
+              onClick={closeMenu}
               aria-label={isEs ? "Cerrar menú" : "Close menu"}
               className="inline-flex h-10 w-10 items-center justify-center rounded-full text-stone-900 hover:bg-stone-100 dark:text-stone-100 dark:hover:bg-white/10"
             >
@@ -232,7 +285,7 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
               <Link
                 key={link.href}
                 href={localizeHref(link.href, lang)}
-                onClick={() => setMenuOpen(false)}
+                onClick={closeMenu}
                 className="font-display border-b border-stone-100 py-4 text-3xl font-bold tracking-tight text-stone-900 transition-colors hover:text-emerald-700 dark:border-stone-800 dark:text-stone-50 dark:hover:text-emerald-300"
                 style={{ transitionDelay: `${i * 30}ms` }}
               >
@@ -244,7 +297,7 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
           <div className="space-y-3 px-8 pb-10">
             <Link
               href={localizeHref(bookingHref, lang)}
-              onClick={() => setMenuOpen(false)}
+              onClick={closeMenu}
               className="flex items-center justify-center gap-2 rounded-full bg-[#00C4B0] py-4 text-base font-black text-[#17211f] shadow-lg shadow-[#00C4B0]/25"
             >
               {primaryBookingLabel(isEs)}

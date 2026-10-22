@@ -193,6 +193,7 @@ const MobileMoreMenu = memo<{
   const tr = translations[lang].nav;
   const copy = principalContent[lang].header;
   const sheetRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
   const isEs = lang === "es";
 
   const links: MoreLink[] = [
@@ -220,13 +221,34 @@ const MobileMoreMenu = memo<{
     if (!open) return;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    const frame = window.requestAnimationFrame(() => closeButtonRef.current?.focus());
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+      if (event.key !== "Tab") return;
+
+      const focusable = sheetRef.current?.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
+      if (!focusable?.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
     document.addEventListener("keydown", handleKeyDown);
 
     return () => {
+      window.cancelAnimationFrame(frame);
       document.body.style.overflow = previousOverflow;
       document.removeEventListener("keydown", handleKeyDown);
     };
@@ -247,7 +269,7 @@ const MobileMoreMenu = memo<{
         ref={sheetRef}
         role="dialog"
         aria-modal="true"
-        aria-label={isEs ? "Más opciones" : "More options"}
+        aria-labelledby="mobile-more-menu-title"
         className="absolute inset-x-0 bottom-0 rounded-t-[1.35rem] border border-emerald-100/20 bg-[linear-gradient(180deg,rgba(4,47,46,0.98),rgba(2,24,22,0.99))] px-4 pb-[calc(4.25rem+env(safe-area-inset-bottom,0px)+0.75rem)] pt-3 shadow-[0_-24px_80px_rgba(0,0,0,0.55)]"
         style={{ animation: "lva-sheet-up 220ms ease-out" }}
       >
@@ -258,10 +280,11 @@ const MobileMoreMenu = memo<{
             <p className="text-[10px] font-black uppercase tracking-[0.28em] text-teal-300/80">
               {isEs ? "Explorar más" : "Explore more"}
             </p>
-            <h2 className="text-lg font-black text-white">{isEs ? "Menú" : "Menu"}</h2>
+            <h2 id="mobile-more-menu-title" className="text-lg font-black text-white">{isEs ? "Menú" : "Menu"}</h2>
           </div>
           <button
             type="button"
+            ref={closeButtonRef}
             onClick={onClose}
             aria-label={isEs ? "Cerrar menú" : "Close menu"}
             className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/8 text-white transition active:scale-95 hover:bg-white/12"
@@ -355,8 +378,12 @@ export const MobileBottomNav = memo(() => {
   const { lang } = useLanguage();
   const tr = translations[lang].nav;
   const [moreOpen, setMoreOpen] = useState(false);
+  const moreButtonRef = useRef<HTMLButtonElement>(null);
 
-  const closeMore = useCallback(() => setMoreOpen(false), []);
+  const closeMore = useCallback(() => {
+    setMoreOpen(false);
+    moreButtonRef.current?.focus();
+  }, []);
 
   type MobileTab =
     | {
@@ -415,6 +442,7 @@ export const MobileBottomNav = memo(() => {
                 <button
                   key={tab.id}
                   type="button"
+                  ref={moreButtonRef}
                   onClick={() => setMoreOpen(true)}
                   aria-expanded={moreOpen}
                   aria-haspopup="dialog"
