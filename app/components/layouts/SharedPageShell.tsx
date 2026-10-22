@@ -11,7 +11,7 @@ type SharedPageShellProps = {
 
 export default function SharedPageShell({ children, className = "", footer = true, solidNav = true }: SharedPageShellProps) {
   return (
-    <main className={`min-h-screen overflow-x-hidden bg-[#FAF9F6] font-sans text-stone-900 dark:bg-[#0b0a09] dark:text-stone-100 ${className}`}>
+    <main className={`lva-public-shell min-h-screen overflow-x-hidden font-sans ${className}`}>
       <HomeNav solid={solidNav} />
       {children}
       {footer && <SiteFooter />}

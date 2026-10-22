@@ -8,6 +8,15 @@
   --background: #faf9f6;
   --foreground: #171717;
   --color-brand-ink: #00796b;
+  --lva-surface: #ffffff;
+  --lva-surface-muted: #f4f1eb;
+  --lva-border: rgba(68, 64, 60, 0.14);
+  --lva-ink: #292524;
+  --lva-ink-muted: #57534e;
+  --lva-accent: #00796b;
+  --lva-accent-bright: #00c4b0;
+  --lva-accent-ink: #17211f;
+  --lva-nav-shadow: 0 1px 24px rgba(0, 0, 0, 0.06);
 }
 
 @utility text-brand-ink { color: var(--color-brand-ink); }
@@ -24,6 +33,13 @@
   --color-brand-ink: #70eee1;
   --background: #0b0a09;
   --foreground: #ededed;
+  --lva-surface: #171412;
+  --lva-surface-muted: #211d1a;
+  --lva-border: rgba(255, 255, 255, 0.12);
+  --lva-ink: #f5f5f4;
+  --lva-ink-muted: #d6d3d1;
+  --lva-accent: #70eee1;
+  --lva-nav-shadow: 0 1px 24px rgba(0, 0, 0, 0.5);
 }
 
 @theme inline {
@@ -39,6 +55,22 @@ body {
   color: var(--foreground);
   font-family: var(--font-manrope), Arial, Helvetica, sans-serif;
 }
+
+/* Shared public-brand primitives. Private/admin surfaces retain their own theme. */
+.lva-public-shell { background: var(--background); color: var(--foreground); }
+.lva-site-nav { color: var(--lva-ink); }
+.lva-site-nav[data-overlay="false"] { background: color-mix(in srgb, var(--lva-surface) 88%, transparent); box-shadow: var(--lva-nav-shadow); backdrop-filter: blur(18px); }
+.lva-site-nav[data-overlay="true"] { color: #fff; }
+.lva-nav-surface { border: 1px solid transparent; }
+.lva-site-nav[data-overlay="true"] .lva-nav-surface { border-color: rgba(255,255,255,.14); background: rgba(0,0,0,.2); backdrop-filter: blur(18px); }
+.lva-site-nav[data-overlay="false"] .lva-nav-surface { border-color: var(--lva-border); background: color-mix(in srgb, var(--lva-surface) 88%, transparent); box-shadow: var(--lva-nav-shadow); backdrop-filter: blur(18px); }
+.lva-nav-link, .lva-nav-control { color: var(--lva-ink-muted); transition: background-color 180ms ease, color 180ms ease; }
+.lva-site-nav[data-overlay="true"] .lva-nav-link, .lva-site-nav[data-overlay="true"] .lva-nav-control { color: rgba(255,255,255,.86); }
+.lva-nav-link:hover, .lva-nav-control:hover, .lva-nav-link[data-active="true"] { background: var(--lva-surface-muted); color: var(--lva-ink); }
+.lva-site-nav[data-overlay="true"] .lva-nav-link:hover, .lva-site-nav[data-overlay="true"] .lva-nav-control:hover, .lva-site-nav[data-overlay="true"] .lva-nav-link[data-active="true"] { background: rgba(255,255,255,.14); color: #fff; }
+.lva-nav-cta { background: var(--lva-accent-bright); color: var(--lva-accent-ink); box-shadow: 0 14px 36px rgba(0,196,176,.28); }
+.lva-nav-cta:hover { background: var(--lva-surface); }
+.lva-mobile-menu { background: var(--background); color: var(--lva-ink); }
 
 /* Shared visual language for the public tour detail and payment surfaces. */
 .tour-detail-page > section:not(:first-of-type) [class*="text-white"] { color: #292524 !important; }

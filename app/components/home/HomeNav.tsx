@@ -98,10 +98,11 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
   return (
     <>
       <header
+        data-overlay={onDark ? "true" : "false"}
         className={[
-          "fixed inset-x-0 top-0 z-50 transition-all duration-300",
+          "lva-site-nav fixed inset-x-0 top-0 z-50 transition-all duration-300",
           scrolled || solid
-            ? "border-b border-stone-200/70 bg-white/88 shadow-[0_1px_24px_rgba(0,0,0,0.06)] backdrop-blur-xl dark:border-white/10 dark:bg-stone-950/85 dark:shadow-[0_1px_24px_rgba(0,0,0,0.5)]"
+            ? "border-b border-[var(--lva-border)]"
             : "bg-transparent",
         ].join(" ")}
       >
@@ -125,18 +126,17 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
             <span
               className={[
                 "font-display hidden text-lg font-bold tracking-tight transition-colors min-[440px]:inline md:text-xl",
-                onDark ? "text-white" : "text-stone-900 dark:text-stone-50",
+                "text-[var(--lva-ink)]",
               ].join(" ")}
             >
-              La Vieja <span className={onDark ? "text-emerald-300" : "text-emerald-700 dark:text-emerald-300"}>Adventures</span>
+              La Vieja <span className="text-[var(--lva-accent)]">Adventures</span>
             </span>
           </Link>
 
           {/* Desktop nav */}
           <nav
             className={[
-              "hidden items-center gap-1 rounded-full p-1.5 md:flex",
-              onDark ? "border border-white/12 bg-black/20 backdrop-blur-xl" : "",
+              "lva-nav-surface hidden items-center gap-1 rounded-full p-1.5 md:flex",
             ].join(" ")}
           >
             {links.map((link) => {
@@ -146,22 +146,16 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
                   key={link.href}
                   href={localizeHref(link.href, lang)}
                   className={[
-                    "rounded-full px-4 py-2 text-sm font-bold transition-colors",
-                    onDark
-                      ? active
-                        ? "bg-white/15 text-white"
-                        : "text-white/85 hover:bg-white/10 hover:text-white"
-                      : active
-                        ? "bg-stone-100 text-stone-900 dark:bg-white/10 dark:text-stone-50"
-                        : "text-stone-600 hover:bg-stone-100 hover:text-stone-900 dark:text-stone-300 dark:hover:bg-white/10 dark:hover:text-stone-50",
+                    "lva-nav-link rounded-full px-4 py-2 text-sm font-bold",
                   ].join(" ")}
+                  data-active={active ? "true" : "false"}
                 >
                   {link.label}
                 </Link>
               );
             })}
 
-            <span className={`mx-2 h-5 w-px ${onDark ? "bg-white/25" : "bg-stone-300 dark:bg-white/15"}`} />
+            <span className="mx-2 h-5 w-px bg-[var(--lva-border)]" />
 
             <button
               type="button"
@@ -169,8 +163,7 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
               aria-label={themeLabel}
               title={themeLabel}
               className={[
-                "inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors",
-                onDark ? "text-white/85 hover:bg-white/10 hover:text-white" : "text-stone-600 hover:bg-stone-100 hover:text-stone-900 dark:text-stone-300 dark:hover:bg-white/10 dark:hover:text-stone-50",
+                "lva-nav-control inline-flex h-9 w-9 items-center justify-center rounded-full",
               ].join(" ")}
             >
               {isDark ? <Sun size={16} /> : <Moon size={16} />}
@@ -180,8 +173,7 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
               href={languageHref}
               aria-label={isEs ? "Switch to English" : "Cambiar a Español"}
               className={[
-                "inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-bold transition-colors",
-                onDark ? "text-white/85 hover:bg-white/10 hover:text-white" : "text-stone-600 hover:bg-stone-100 hover:text-stone-900 dark:text-stone-300 dark:hover:bg-white/10 dark:hover:text-stone-50",
+                "lva-nav-control inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-bold",
               ].join(" ")}
             >
               <Globe size={15} />
@@ -194,8 +186,7 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
               rel="noopener noreferrer"
               aria-label="WhatsApp"
               className={[
-                "inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors",
-                onDark ? "text-white/85 hover:bg-white/10 hover:text-white" : "text-stone-600 hover:bg-stone-100 hover:text-stone-900 dark:text-stone-300 dark:hover:bg-white/10 dark:hover:text-stone-50",
+                "lva-nav-control inline-flex h-9 w-9 items-center justify-center rounded-full",
               ].join(" ")}
             >
               <MessageCircle size={18} />
@@ -203,7 +194,7 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
 
             <Link
               href={localizeHref(bookingHref, lang)}
-              className="ml-1 inline-flex items-center gap-2 rounded-full bg-[#00C4B0] px-5 py-2.5 text-sm font-black text-[#17211f] shadow-[0_14px_36px_rgba(0,196,176,0.28)] transition-all hover:-translate-y-0.5 hover:bg-white"
+              className="lva-nav-cta ml-1 inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-black transition-all hover:-translate-y-0.5"
             >
               {compactBookingLabel(isEs)}
               <ArrowRight size={15} />
@@ -212,14 +203,13 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
 
           {/* Mobile controls */}
           <div className="flex items-center gap-1.5 md:hidden">
-            <Link href={localizeHref(bookingHref, lang)} className="inline-flex min-h-10 items-center rounded-full bg-[#00C4B0] px-3 text-xs font-bold text-[#17211f]">{compactBookingLabel(isEs)}</Link>
+            <Link href={localizeHref(bookingHref, lang)} className="lva-nav-cta inline-flex min-h-10 items-center rounded-full px-3 text-xs font-bold">{compactBookingLabel(isEs)}</Link>
             <button
               type="button"
               onClick={toggleTheme}
               aria-label={themeLabel}
               className={[
-                "inline-flex h-10 w-10 items-center justify-center rounded-full",
-                onDark ? "text-white" : "text-stone-700 dark:text-stone-200",
+                "lva-nav-control inline-flex h-10 w-10 items-center justify-center rounded-full",
               ].join(" ")}
             >
               {isDark ? <Sun size={18} /> : <Moon size={18} />}
@@ -228,8 +218,7 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
               href={languageHref}
               aria-label={isEs ? "Switch to English" : "Cambiar a Español"}
               className={[
-                "inline-flex items-center gap-1 rounded-full px-2.5 py-2 text-xs font-bold",
-                onDark ? "text-white" : "text-stone-700 dark:text-stone-200",
+                "lva-nav-control inline-flex items-center gap-1 rounded-full px-2.5 py-2 text-xs font-bold",
               ].join(" ")}
             >
               <Globe size={14} />
@@ -244,8 +233,7 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
               aria-controls="home-mobile-menu"
               aria-haspopup="dialog"
               className={[
-                "inline-flex h-10 w-10 items-center justify-center rounded-full",
-                onDark ? "text-white" : "text-stone-900 dark:text-stone-100",
+                "lva-nav-control inline-flex h-10 w-10 items-center justify-center rounded-full",
               ].join(" ")}
             >
               <Menu size={22} />
@@ -263,18 +251,18 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
           aria-modal="true"
           aria-labelledby="home-mobile-menu-title"
           tabIndex={-1}
-          className="fixed inset-0 z-[60] flex flex-col bg-white dark:bg-[#0b0a09] md:hidden"
+          className="lva-mobile-menu fixed inset-0 z-[60] flex flex-col md:hidden"
         >
           <div className="flex h-16 items-center justify-between px-4">
-            <span id="home-mobile-menu-title" className="font-display text-lg font-bold text-stone-900 dark:text-stone-50">
-              La Vieja <span className="text-emerald-700 dark:text-emerald-300">Adventures</span>
+            <span id="home-mobile-menu-title" className="font-display text-lg font-bold">
+              La Vieja <span className="text-[var(--lva-accent)]">Adventures</span>
             </span>
             <button
               type="button"
               ref={closeMenuButtonRef}
               onClick={closeMenu}
               aria-label={isEs ? "Cerrar menú" : "Close menu"}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full text-stone-900 hover:bg-stone-100 dark:text-stone-100 dark:hover:bg-white/10"
+              className="lva-nav-control inline-flex h-10 w-10 items-center justify-center rounded-full"
             >
               <X size={24} />
             </button>
@@ -286,7 +274,7 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
                 key={link.href}
                 href={localizeHref(link.href, lang)}
                 onClick={closeMenu}
-                className="font-display border-b border-stone-100 py-4 text-3xl font-bold tracking-tight text-stone-900 transition-colors hover:text-emerald-700 dark:border-stone-800 dark:text-stone-50 dark:hover:text-emerald-300"
+                className="lva-nav-link font-display border-b border-[var(--lva-border)] py-4 text-3xl font-bold tracking-tight"
                 style={{ transitionDelay: `${i * 30}ms` }}
               >
                 {link.label}
@@ -298,7 +286,7 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
             <Link
               href={localizeHref(bookingHref, lang)}
               onClick={closeMenu}
-              className="flex items-center justify-center gap-2 rounded-full bg-[#00C4B0] py-4 text-base font-black text-[#17211f] shadow-lg shadow-[#00C4B0]/25"
+              className="lva-nav-cta flex items-center justify-center gap-2 rounded-full py-4 text-base font-black"
             >
               {primaryBookingLabel(isEs)}
               <ArrowRight size={17} />
@@ -307,7 +295,7 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
               href={localizedHomeWhatsAppHref(isEs)}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 rounded-full border border-stone-300 py-4 text-base font-bold text-stone-800 dark:border-stone-600 dark:text-stone-200"
+              className="lva-nav-control flex items-center justify-center gap-2 rounded-full border border-[var(--lva-border)] py-4 text-base font-bold"
             >
               <MessageCircle size={17} className="text-emerald-600 dark:text-emerald-400" />
               WhatsApp
