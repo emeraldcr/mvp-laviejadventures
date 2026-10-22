@@ -30,6 +30,7 @@ import {
   X,
 } from "lucide-react";
 import HomeNav from "@/app/components/home/HomeNav";
+import SiteFooter from "@/app/components/sections/SiteFooter";
 import GoogleRating from "@/app/components/GoogleRating";
 import { getTourPriceDisplay } from "@/lib/tour-pricing";
 import { whatsappHref } from "@/app/components/home/home-utils";
@@ -674,6 +675,7 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
           </p>
         </div>
       )}
+      <SiteFooter />
     </main>
   );
 }
