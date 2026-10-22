@@ -55,7 +55,7 @@ export default function ReservationDetailsStep1Guided(props: Props) {
   const reduceMotion = useReducedMotion();
   const guestPresets = GUEST_PRESETS.filter((count) => count <= Math.max(1, slots));
   const titles = isEs
-    ? ["Elegí su paquete", "Elegí el horario", "¿Cuántas personas van?"]
+    ? ["Elija su paquete", "Elija el horario", "¿Cuántas personas van?"]
     : ["Choose your package", "Choose a departure", "How many guests?"];
   const descriptions = isEs
     ? [
@@ -89,11 +89,33 @@ export default function ReservationDetailsStep1Guided(props: Props) {
         </div>
       </div>
 
-      <div className="mb-8 hidden gap-2" aria-label={isEs ? "Progreso de selección" : "Selection progress"}>
-        {[1, 2, 3].map((step) => (
-          <div key={step} className={`h-1.5 flex-1 rounded-full transition-colors duration-500 ${step <= choiceStep ? "bg-emerald-500" : "bg-zinc-200 dark:bg-zinc-700"}`} />
-        ))}
-      </div>
+      <nav className="mb-8 overflow-x-auto rounded-2xl border border-zinc-200 bg-white/90 px-3 py-3 shadow-sm backdrop-blur dark:border-zinc-700 dark:bg-zinc-900/85" aria-label={isEs ? "Progreso de la reserva" : "Reservation progress"}>
+        <ol className="flex min-w-max items-center gap-2 text-xs font-bold sm:justify-between sm:gap-3">
+          {(isEs ? ["Paquete", "Hora", "Personas", "Datos", "Pago"] : ["Package", "Time", "Guests", "Details", "Payment"]).map((label, index) => {
+            const step = index + 1;
+            const isCurrent = step === choiceStep;
+            const isComplete = step < choiceStep;
+            return (
+              <li key={label} className="flex items-center gap-2">
+                <span
+                  aria-current={isCurrent ? "step" : undefined}
+                  className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-[11px] transition-colors ${
+                    isCurrent
+                      ? "bg-emerald-600 text-white shadow-sm"
+                      : isComplete
+                        ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200"
+                        : "bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400"
+                  }`}
+                >
+                  {step}
+                </span>
+                <span className={isCurrent ? "text-emerald-700 dark:text-emerald-300" : "text-zinc-600 dark:text-zinc-300"}>{label}</span>
+                {step < 5 && <span className="text-zinc-300 dark:text-zinc-600" aria-hidden="true">→</span>}
+              </li>
+            );
+          })}
+        </ol>
+      </nav>
 
       <AnimatePresence mode="wait" initial={false}>
         <motion.div key={choiceStep}
