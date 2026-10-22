@@ -206,26 +206,6 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
             <Link href={localizeHref(bookingHref, lang)} className="lva-nav-cta inline-flex min-h-10 items-center rounded-full px-3 text-xs font-bold">{compactBookingLabel(isEs)}</Link>
             <button
               type="button"
-              onClick={toggleTheme}
-              aria-label={themeLabel}
-              className={[
-                "lva-nav-control inline-flex h-10 w-10 items-center justify-center rounded-full",
-              ].join(" ")}
-            >
-              {isDark ? <Sun size={18} /> : <Moon size={18} />}
-            </button>
-            <Link
-              href={languageHref}
-              aria-label={isEs ? "Switch to English" : "Cambiar a Español"}
-              className={[
-                "lva-nav-control inline-flex items-center gap-1 rounded-full px-2.5 py-2 text-xs font-bold",
-              ].join(" ")}
-            >
-              <Globe size={14} />
-              {isEs ? "EN" : "ES"}
-            </Link>
-            <button
-              type="button"
               ref={menuButtonRef}
               onClick={() => setMenuOpen(true)}
               aria-label={isEs ? "Abrir menú" : "Open menu"}
@@ -283,6 +263,26 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
           </nav>
 
           <div className="space-y-3 px-8 pb-10">
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={toggleTheme}
+                aria-label={themeLabel}
+                className="lva-nav-control flex min-h-12 items-center justify-center gap-2 rounded-full border border-[var(--lva-border)] px-4 py-3 text-sm font-bold"
+              >
+                {isDark ? <Sun size={17} /> : <Moon size={17} />}
+                {themeLabel}
+              </button>
+              <Link
+                href={languageHref}
+                onClick={closeMenu}
+                aria-label={isEs ? "Switch to English" : "Cambiar a Español"}
+                className="lva-nav-control flex min-h-12 items-center justify-center gap-2 rounded-full border border-[var(--lva-border)] px-4 py-3 text-sm font-bold"
+              >
+                <Globe size={17} />
+                {isEs ? "English" : "Español"}
+              </Link>
+            </div>
             <Link
               href={localizeHref(bookingHref, lang)}
               onClick={closeMenu}
