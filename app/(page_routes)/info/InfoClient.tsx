@@ -162,7 +162,7 @@ export default function InfoClient({ tours }: { tours: TourSummary[] }) {
                 <Sparkles size={14} />
                 {tr.badge}
               </p>
-              <h1 className="text-3xl font-extrabold tracking-tight text-white drop-shadow md:text-4xl lg:text-5xl">
+              <h1 className="text-[36px] font-extrabold leading-[1.08] tracking-tight text-white drop-shadow md:text-[48px]">
                 {tr.title}
               </h1>
               <p className="text-base leading-relaxed text-emerald-100 md:text-lg">

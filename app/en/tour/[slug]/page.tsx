@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTour } from "@/lib/tours/detail";
-import { getTourImage } from "@/lib/tour-display";
+import { getTourImage, getTourShareImage } from "@/lib/tour-display";
 import { getTourPriceDisplay } from "@/lib/tour-pricing";
 import { tourDifficulty, tourDuration } from "@/lib/i18n";
 import { pageMetadata } from "@/lib/seo";
@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
   const tour = await getTour(slug);
   if (!tour) notFound();
-  return pageMetadata(`/tour/${slug}`, tour.titleEn, tour.descriptionEn, "en", getTourImage(slug));
+  return pageMetadata(`/tour/${slug}`, tour.titleEn, tour.descriptionEn, "en", getTourShareImage(slug));
 }
 
 export default async function EnglishTour({ params }: Props) {
@@ -39,7 +39,7 @@ export default async function EnglishTour({ params }: Props) {
       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-black/30" />
       <div className="relative mx-auto w-full max-w-6xl space-y-6">
         <Link href="/en/tours" className="inline-flex min-h-11 items-center underline">All tours</Link>
-        <h1 className="max-w-4xl text-4xl font-black leading-tight sm:text-6xl">{tour.titleEn}</h1>
+        <h1 className="max-w-4xl text-[36px] font-black leading-[1.08] md:text-[48px]">{tour.titleEn}</h1>
         <p className="max-w-3xl text-lg leading-relaxed">{tour.descriptionEn}</p>
         <GoogleRating locale="en" dark />
         <div className="flex flex-wrap gap-3"><Link href={booking} className="inline-flex min-h-12 items-center rounded-full bg-[#00C4B0] px-7 font-bold text-stone-950">Book now</Link><a href={`${BUSINESS_WHATSAPP_URL}?text=${encodeURIComponent(`Hello, I would like to ask about ${tour.titleEn}.`)}`} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 items-center rounded-full border border-white/60 px-7 font-bold">Ask on WhatsApp</a></div>

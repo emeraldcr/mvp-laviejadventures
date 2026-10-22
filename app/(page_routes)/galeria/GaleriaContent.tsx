@@ -26,9 +26,6 @@ type Props = {
 const INITIAL_VISIBLE = 18;
 const LOAD_MORE_STEP = 18;
 
-// Cycle of aspect ratios so the masonry columns get an editorial rhythm
-const ASPECTS = ["aspect-[3/4]", "aspect-square", "aspect-[4/3]", "aspect-[3/4]", "aspect-[4/5]", "aspect-square"];
-
 export function GaleriaContent({ images }: Props) {
   const { lang } = useLanguage();
   const tr = translations[lang].gallery;
@@ -107,7 +104,7 @@ export function GaleriaContent({ images }: Props) {
             <Camera className="h-3.5 w-3.5" aria-hidden />
             {isEs ? "Momentos reales" : "Real moments"}
           </span>
-          <h1 className="mt-4 max-w-2xl text-balance text-3xl font-black leading-tight md:text-5xl">
+          <h1 className="mt-4 max-w-2xl text-balance text-[28px] font-black leading-[1.08] md:text-[48px]">
             {tr.title}
           </h1>
           <p className="mt-3 max-w-2xl text-sm font-semibold leading-relaxed text-white/70 md:text-base">
@@ -140,13 +137,13 @@ export function GaleriaContent({ images }: Props) {
 
       {/* Masonry grid */}
       <section className="mx-auto max-w-7xl px-3 py-6 md:px-8 md:py-10">
-        <div className="columns-2 gap-3 sm:columns-3 md:gap-4 lg:columns-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-4">
           {visibleImages.map((src, index) => (
             <button
               key={src}
               type="button"
               onClick={() => setLightboxIndex(index)}
-              className={`group relative mb-3 block w-full overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.03] outline-none transition-all focus-visible:ring-2 focus-visible:ring-emerald-300 md:mb-4 ${ASPECTS[index % ASPECTS.length]}`}
+              className="group relative block aspect-[4/3] w-full overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.03] outline-none transition-all focus-visible:ring-2 focus-visible:ring-emerald-300"
               aria-label={`${isEs ? "Ver foto" : "View photo"} ${index + 1} ${isEs ? "de" : "of"} ${images.length}`}
             >
               <Image
@@ -184,7 +181,7 @@ export function GaleriaContent({ images }: Props) {
 
         {/* CTA */}
         <div className="mt-10 rounded-3xl border border-emerald-500/20 bg-emerald-500/[0.07] px-5 py-7 text-center shadow-[0_20px_60px_rgba(0,0,0,0.35)] md:py-9">
-          <h2 className="text-xl font-black md:text-2xl">
+          <h2 className="text-[28px] font-black leading-[1.08] md:text-[36px]">
             {isEs ? "¿Quiere vivirlo en persona?" : "Want to live it in person?"}
           </h2>
           <p className="mx-auto mt-2 max-w-md text-sm font-semibold text-white/65">

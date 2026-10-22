@@ -65,7 +65,7 @@ export const BIRDWATCHING_PACKAGES: TourPackageOption[] = [
     name: "Essential Package",
     nameEs: "Paquete Esencial",
     price: 45,
-    priceCRC: 24990,
+    priceCRC: 23500,
     descriptionEn: "Guided birdwatching tour with an expert naturalist",
     descriptionEs: "Tour guiado de avistamiento de aves con naturalista experto",
     includes: ["Naturalist guide", "Shared binoculars", "Observed species checklist"],

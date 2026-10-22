@@ -540,7 +540,7 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
             {tour.packages.map((pkg) => (
               <div key={pkg.id ?? pkg.name} className="rounded-3xl border border-white/10 bg-white/[0.04] p-5">
                 <h3 className="text-lg font-black text-white">{pkg.nameEs || pkg.name}</h3>
-                <p className="mt-2 min-h-12 text-sm leading-relaxed text-zinc-400">{pkg.descriptionEs || pkg.descriptionEn}</p>
+                <p className="mt-2 min-h-12 text-[15px] leading-relaxed text-[#B8BDC4] md:text-base">{pkg.descriptionEs || pkg.descriptionEn}</p>
                 <p className="mt-4 text-2xl font-black text-emerald-200">{getTourPriceDisplay({ packages: [pkg] }, true).compact}</p>
                 <Link
                   href={bookingHrefForPackage(pkg.id)}
@@ -691,7 +691,7 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
 function SectionHeading({ icon, title }: { icon?: ReactNode; title: string }) {
   return (
     <div className="flex items-center gap-4">
-      <h2 className="flex items-center gap-2 text-2xl font-black text-white md:text-3xl">
+      <h2 className="flex items-center gap-2 text-[28px] font-black leading-[1.08] text-white md:text-[36px]">
         {icon && <span className="text-emerald-300">{icon}</span>}
         {title}
       </h2>

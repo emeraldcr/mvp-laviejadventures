@@ -51,7 +51,7 @@ const DEFAULT_BIRDWATCHING_TOUR: TourDetail = {
   duration: "2 horas",
   difficulty: "Fácil",
   location: "Juan Castro Blanco, Alajuela Norte, Costa Rica",
-  priceCRC: 24990,
+  priceCRC: 23500,
   tagEs: "Tour estrella",
   inclusions: [
     "Guia especializado en aves bilingue",
@@ -85,8 +85,9 @@ export const getTour = cache(async (slug: string): Promise<TourDetail | null> =>
 
     if (!tour) return getFallbackTour(slug);
 
-    const packages = normalizeTourPackages(tour.packages);
     const resolvedSlug = String(tour.slug ?? slug);
+    const isBirdwatching = resolvedSlug === "avistamiento-aves" || resolvedSlug === "avistamiento-aves-norteno";
+    const packages = isBirdwatching ? [] : normalizeTourPackages(tour.packages);
     const slugFallback = packages.length > 0 ? packages : fallbackPackagesForTour(resolvedSlug);
     const priceCRC = Number(tour.priceCRC ?? tour.retailPricePerPax ?? 0);
     const resolvedPackages = slugFallback.length > 0

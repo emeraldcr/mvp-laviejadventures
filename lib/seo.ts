@@ -12,7 +12,7 @@ export function pageMetadata(path: string, title: string, description: string, l
   return {
     title: { absolute: absoluteTitle }, description,
     alternates: { canonical, languages: { es, en, "x-default": es } },
-    openGraph: { type: "website", title: absoluteTitle, description, url: canonical, siteName: BUSINESS_NAME, locale: locale === "es" ? "es_CR" : "en_US", images: [{ url: imageUrl, alt: title }] },
+    openGraph: { type: "website", title: absoluteTitle, description, url: canonical, siteName: BUSINESS_NAME, locale: locale === "es" ? "es_CR" : "en_US", images: [{ url: imageUrl, width: 1200, height: 630, alt: title }] },
     twitter: { card: "summary_large_image", title: absoluteTitle, description, images: [imageUrl] },
   };
 }

@@ -4,12 +4,21 @@ import { localizeHref } from "@/lib/i18n";
 
 import Link from "next/link";
 import { ArrowRight, CalendarDays, MessageCircle, ShieldCheck } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useLanguage } from "@/lib/LanguageContext";
 import { BOOKING_HREF, WHATSAPP_HREF, primaryBookingLabel } from "./home-utils";
 
 export default function HomeConversionRail() {
   const { lang } = useLanguage();
   const isEs = lang === "es";
+  const [showFloatingCard, setShowFloatingCard] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setShowFloatingCard(window.scrollY > window.innerHeight * 0.85);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
     <>
@@ -63,7 +72,7 @@ export default function HomeConversionRail() {
         </div>
       </section>
 
-      <aside className="fixed bottom-7 right-7 z-40 hidden w-64 overflow-hidden rounded-[1.4rem] border border-white/10 bg-[#2E2A25]/95 text-white shadow-[0_24px_70px_rgba(0,0,0,.3)] backdrop-blur-xl md:block">
+      <aside className={`fixed bottom-7 right-7 z-40 hidden w-64 overflow-hidden rounded-[1.4rem] border border-white/10 bg-[#2E2A25]/95 text-white shadow-[0_24px_70px_rgba(0,0,0,.3)] backdrop-blur-xl transition-all duration-300 md:block ${showFloatingCard ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"}`} aria-hidden={!showFloatingCard}>
         <div className="border-b border-white/10 px-5 py-4">
           <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#70eee1]">
             {isEs ? "¿Listo para reservar?" : "Ready to book?"}

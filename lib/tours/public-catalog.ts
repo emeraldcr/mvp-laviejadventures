@@ -155,7 +155,7 @@ const DEFAULT_TOURS = [
       "Dawn or morning in the Juan Castro Blanco corridor: real birds, guides who know the calls, easy pace.",
     duration: "2 horas",
     difficulty: "Fácil",
-    priceCRC: 22990,
+    priceCRC: 23500,
     tagEs: "Aves",
     tagEn: "Birds",
     accent: "from-lime-900/40 to-lime-950/60",
@@ -314,7 +314,8 @@ function serializePublicTour(t: Record<string, unknown>): PublicTour {
   const slug = String(t.slug ?? "");
   const defaults = DEFAULT_TOUR_DETAILS[slug] ?? null;
 
-  const sourcePackages = normalizeTourPackages(t.packages);
+  const isBirdwatching = slug === "avistamiento-aves" || slug === "avistamiento-aves-norteno";
+  const sourcePackages = isBirdwatching ? [] : normalizeTourPackages(t.packages);
   const slugFallback = sourcePackages.length > 0 ? sourcePackages : fallbackPackagesForTour(slug);
   const packages = slugFallback.length > 0
     ? slugFallback

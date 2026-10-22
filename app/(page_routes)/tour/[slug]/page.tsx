@@ -9,7 +9,7 @@ import { pageMetadata } from "@/lib/seo";
 import { getTourPriceDisplay } from "@/lib/tour-pricing";
 import GoogleRating from "@/app/components/GoogleRating";
 import HomeNav from "@/app/components/home/HomeNav";
-import { getTourGallery, getTourImage } from "@/lib/tour-display";
+import { getTourGallery, getTourImage, getTourShareImage } from "@/lib/tour-display";
 import { getTourContent } from "@/lib/tour-content";
 import { BUSINESS_PHONE_E164, SITE_URL } from "@/lib/site-config";
 import JsonLd from "@/app/components/seo/JsonLd";
@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: TourDetailPageProps): Promise
   const tour = await getTour(slug);
   const title = tour?.titleEs ?? "Tour en San Carlos";
   const description = metaDescription(tour?.descriptionEs || "Experiencias guiadas de naturaleza y aventura en San Carlos, Costa Rica.");
-  return pageMetadata(`/tour/${encodeURIComponent(slug)}`, title, description, "es", getTourImage(slug));
+  return pageMetadata(`/tour/${encodeURIComponent(slug)}`, title, description, "es", getTourShareImage(slug));
 }
 
 export default async function TourDetailPage({ params }: TourDetailPageProps) {
@@ -125,7 +125,7 @@ export default async function TourDetailPage({ params }: TourDetailPageProps) {
             <p className="mb-3 text-[11px] font-black uppercase tracking-[0.32em] text-cyan-300">
               {tour.tagEs || "Experiencia La Vieja"}
             </p>
-            <h1 className="max-w-3xl text-4xl font-black leading-tight text-white sm:text-6xl">
+            <h1 className="max-w-3xl text-[36px] font-black leading-[1.08] text-white md:text-[48px]">
               {title}
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-relaxed text-zinc-200 md:text-lg">
@@ -157,7 +157,7 @@ export default async function TourDetailPage({ params }: TourDetailPageProps) {
 
       <section className="mx-auto grid max-w-7xl gap-8 px-4 pb-16 md:grid-cols-[1.1fr_0.9fr] md:px-8">
         <div>
-          <h2 className="text-2xl font-black text-white">Sobre esta experiencia</h2>
+          <h2 className="text-[28px] font-black leading-[1.08] text-white md:text-[36px]">Sobre esta experiencia</h2>
           {heroTagline && (
             <p className="mt-3 text-base font-bold italic leading-relaxed text-cyan-200/90">{heroTagline}</p>
           )}
@@ -203,7 +203,7 @@ export default async function TourDetailPage({ params }: TourDetailPageProps) {
       {content && content.itinerary.length > 0 && (
         <section className="mx-auto max-w-7xl px-4 pb-16 md:px-8">
           <div className="mb-6 flex items-center gap-4">
-            <h2 className="flex items-center gap-2 text-2xl font-black text-white">
+          <h2 className="flex items-center gap-2 text-[28px] font-black leading-[1.08] text-white md:text-[36px]">
               <Route className="h-6 w-6 text-cyan-300" aria-hidden />
               Cómo es el recorrido
             </h2>
@@ -304,7 +304,7 @@ export default async function TourDetailPage({ params }: TourDetailPageProps) {
       {content && content.faqs.length > 0 && (
         <section className="mx-auto max-w-7xl px-4 pb-16 md:px-8">
           <div className="mb-6 flex items-center gap-4">
-            <h2 className="flex items-center gap-2 text-2xl font-black text-white">
+            <h2 className="flex items-center gap-2 text-[28px] font-black leading-[1.08] text-white md:text-[36px]">
               <HelpCircle className="h-6 w-6 text-cyan-300" aria-hidden />
               Preguntas frecuentes
             </h2>
@@ -327,7 +327,7 @@ export default async function TourDetailPage({ params }: TourDetailPageProps) {
       {tour.packages.length > 0 && (
         <section className="mx-auto max-w-7xl px-4 pb-20 md:px-8">
           <div className="mb-6 flex items-center gap-4">
-            <h2 className="text-2xl font-black text-white">Paquetes disponibles</h2>
+            <h2 className="text-[28px] font-black leading-[1.08] text-white md:text-[36px]">Paquetes disponibles</h2>
             <div className="h-px flex-1 bg-gradient-to-r from-white/20 to-transparent" />
           </div>
           <div className="grid gap-4 md:grid-cols-3">

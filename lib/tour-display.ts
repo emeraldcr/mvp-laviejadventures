@@ -115,6 +115,12 @@ export function getTourImage(slug?: string | null) {
   return (slug && TOUR_IMAGE_BY_SLUG[slug]) || "/image/IMG_6810.jpg";
 }
 
+export function getTourShareImage(slug?: string | null) {
+  const image = getTourImage(slug);
+  if (!image.startsWith("http")) return image;
+  return image.replace("w=1600", "w=1200").replace("auto=format", "h=630&auto=format");
+}
+
 export function getTourGallery(slug?: string | null) {
   if (slug && TOUR_GALLERY_BY_SLUG[slug]) return TOUR_GALLERY_BY_SLUG[slug];
 

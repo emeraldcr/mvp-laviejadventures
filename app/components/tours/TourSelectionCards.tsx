@@ -190,7 +190,7 @@ export default function TourSelectionCards({
                 </Link>
               </div>
 
-              <p className="mt-2.5 flex items-center gap-1.5 text-[9px] font-medium text-white/35">
+              <p className="mt-2.5 flex items-center gap-1.5 text-sm font-medium text-[#B8BDC4] sm:text-[15px]">
                 <ShieldCheck className="h-3 w-3 text-emerald-300/60" />
                 {isEs
                   ? "Confirmamos disponibilidad antes del cobro"

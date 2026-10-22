@@ -125,7 +125,7 @@ function createMailBody(params: SendEmailParams): string {
   </ul>
   <p class="marked">
     ${copy.assistance}
-    <a href="https://wa.me/message/IVJFG5N6K6VVB1" target="_blank">+506 6233 2535</a>
+    <a href="https://wa.me/message/IVJFG5N6K6VVB1" target="_blank">+506 6233-2535</a>
     ${copy.assistanceSuffix}
   </p>
   <p>${copy.regards}</p>

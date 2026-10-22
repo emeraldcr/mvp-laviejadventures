@@ -127,7 +127,7 @@ function HomeFooter() {
                   className="inline-flex items-center gap-2 transition-colors hover:text-emerald-300"
                 >
                   <MessageCircle size={15} className="text-emerald-400" />
-                  +506 6233 2535
+                  +506 6233-2535
                 </a>
               </li>
               <li className="inline-flex items-center gap-2">
