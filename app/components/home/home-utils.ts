@@ -7,8 +7,8 @@ export const CIUDAD_ESMERALDA_SLUG = "tour-ciudad-esmeralda";
 export const BOOKING_HREF = `/reservar?tour=${CIUDAD_ESMERALDA_SLUG}`;
 export const TOURS_HREF = "/tours";
 
-export function primaryBookingLabel(isEs: boolean) { return isEs ? "Reservar" : "Book now"; }
-export function compactBookingLabel(isEs: boolean) { return isEs ? "Reservar" : "Book now"; }
+export function primaryBookingLabel(isEs: boolean) { return isEs ? "Consultar disponibilidad" : "Check availability"; }
+export function compactBookingLabel(isEs: boolean) { return isEs ? "Consultar disponibilidad" : "Check availability"; }
 
 export function whatsappHref(message: string) {
   return `${BUSINESS_WHATSAPP_URL}?text=${encodeURIComponent(message)}`;

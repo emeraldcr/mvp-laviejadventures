@@ -75,6 +75,11 @@ export default function ReservationDetailsSummaryCard({
               <span className="font-bold text-zinc-900 dark:text-zinc-50">${taxes.toFixed(2)}</span>
             </div>
           </div>
+          <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-xs leading-relaxed text-amber-950 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-100">
+            {lang === "es"
+              ? "Total estimado. La disponibilidad se confirma antes del pago. Si el clima o el nivel del río no permiten operar, coordinamos reprogramación o una alternativa segura."
+              : "Estimated total. Availability is confirmed before payment. If weather or river conditions do not allow the tour to operate, we will coordinate a reschedule or a safe alternative."}
+          </p>
           <button
             type="button"
             onClick={onContinue}
