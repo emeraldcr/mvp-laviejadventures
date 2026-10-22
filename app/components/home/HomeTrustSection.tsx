@@ -37,7 +37,7 @@ export default function HomeTrustSection({ tour }: Props) {
       body: isEs
         ? "El guía revisa el terreno, el clima y el nivel del río antes de entrar. Si no está seguro, el cañón espera."
         : "Your guide checks the terrain, weather, and river conditions before departure. If it is not safe, the canyon waits.",
-      tone: "bg-emerald-50 text-emerald-900 border-emerald-100 dark:bg-emerald-950/30 dark:text-emerald-100 dark:border-emerald-900/50",
+      tone: "bg-[var(--lva-surface)] text-[var(--lva-ink)] border-[var(--lva-border)]",
     },
     {
       icon: Users,
@@ -45,7 +45,7 @@ export default function HomeTrustSection({ tour }: Props) {
       body: isEs
         ? "Conoce los senderos, el cañón y cuándo el río manda. Menos gente, más atención a cada persona."
         : "Knows the trails, the canyon, and when the river calls the shots. Fewer people means more attention for each guest.",
-      tone: "bg-sky-50 text-sky-900 border-sky-100 dark:bg-sky-950/30 dark:text-sky-100 dark:border-sky-900/50",
+      tone: "bg-[var(--lva-surface)] text-[var(--lva-ink)] border-[var(--lva-border)]",
     },
     {
       icon: CloudRain,
@@ -53,7 +53,7 @@ export default function HomeTrustSection({ tour }: Props) {
       body: isEs
         ? "Lluvia fuerte o río crecido: no forzamos el cañón. Le ofrecemos una alternativa segura o reprogramamos según la política."
         : "Heavy rain or a rising river means no canyon push. We offer a safer alternative or reschedule according to the policy.",
-      tone: "bg-amber-50 text-amber-950 border-amber-100 dark:bg-amber-950/30 dark:text-amber-100 dark:border-amber-900/50",
+      tone: "bg-[var(--lva-surface)] text-[var(--lva-ink)] border-[var(--lva-border)]",
     },
   ];
 
@@ -70,11 +70,11 @@ export default function HomeTrustSection({ tour }: Props) {
       ];
 
   return (
-    <section id="confianza" className="bg-[#f3f0e9] py-16 dark:bg-[#151210] md:py-24">
+    <section id="confianza" className="lva-home-section py-20 md:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid gap-10 lg:grid-cols-[.85fr_1.15fr] lg:items-end">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.28em] text-emerald-700 dark:text-emerald-300">
+            <p className="lva-home-kicker">
               {isEs ? "Antes de reservar" : "Before you book"}
             </p>
             <h2 className="mt-3 max-w-xl font-display text-balance text-4xl font-black leading-[.98] tracking-tight text-stone-950 dark:text-white md:text-6xl">
@@ -95,7 +95,7 @@ export default function HomeTrustSection({ tour }: Props) {
 
           <div className="grid gap-3 sm:grid-cols-3">
             {trustItems.map(({ icon: Icon, title, body, tone }) => (
-              <article key={title} className={`rounded-3xl border p-5 ${tone}`}>
+              <article key={title} className={`lva-home-panel rounded-[var(--lva-radius-soft)] p-5 shadow-none ${tone}`}>
                 <Icon size={22} aria-hidden />
                 <h3 className="mt-5 text-base font-black leading-tight">{title}</h3>
                 <p className="mt-3 text-sm leading-relaxed opacity-80">{body}</p>
@@ -139,11 +139,11 @@ export default function HomeTrustSection({ tour }: Props) {
 
         <div className="mt-16">
           <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
-            <div><p className="text-xs font-black uppercase tracking-[0.25em] text-emerald-700 dark:text-emerald-300">{isEs ? "Encuentre su ritmo" : "Find your pace"}</p><h3 className="mt-2 font-display text-3xl font-black text-stone-950 dark:text-white md:text-4xl">{isEs ? "¿Cuál tour es para usted?" : "Which tour fits you?"}</h3></div>
+            <div><p className="lva-home-kicker">{isEs ? "Encuentre su ritmo" : "Find your pace"}</p><h3 className="mt-2 font-display text-3xl font-black text-stone-950 dark:text-white md:text-4xl">{isEs ? "¿Cuál tour es para usted?" : "Which tour fits you?"}</h3></div>
             <Link href={localizeHref("/tours", lang)} className="inline-flex items-center gap-2 text-sm font-black text-emerald-700 dark:text-emerald-300">{isEs ? "Comparar todos" : "Compare all"}<ArrowRight size={16} /></Link>
           </div>
           <div className="mt-6 grid gap-3 md:grid-cols-3">
-            {fitCards.map(({ icon: Icon, title, body, href }) => <Link key={title} href={href} className="group rounded-3xl border border-stone-200 bg-white p-6 transition hover:-translate-y-1 hover:border-emerald-400 hover:shadow-lg dark:border-stone-800 dark:bg-stone-900"><Icon className="text-emerald-700 dark:text-emerald-300" size={22} /><h4 className="mt-5 font-black text-stone-950 dark:text-white">{title}</h4><p className="mt-2 text-sm leading-relaxed text-stone-600 dark:text-stone-300">{body}</p><span className="mt-5 inline-flex items-center gap-1 text-xs font-black text-emerald-700 dark:text-emerald-300">{isEs ? "Ver opciones" : "See options"}<ArrowRight size={14} className="transition group-hover:translate-x-1" /></span></Link>)}
+            {fitCards.map(({ icon: Icon, title, body, href }) => <Link key={title} href={href} className="lva-home-panel group rounded-[var(--lva-radius-soft)] p-6 shadow-none transition hover:-translate-y-1 hover:border-emerald-400 hover:shadow-lg"><Icon className="text-emerald-700 dark:text-emerald-300" size={22} /><h4 className="mt-5 font-black text-stone-950 dark:text-white">{title}</h4><p className="mt-2 text-sm leading-relaxed text-stone-600 dark:text-stone-300">{body}</p><span className="mt-5 inline-flex items-center gap-1 text-xs font-black text-emerald-700 dark:text-emerald-300">{isEs ? "Ver opciones" : "See options"}<ArrowRight size={14} className="transition group-hover:translate-x-1" /></span></Link>)}
           </div>
         </div>
       </div>

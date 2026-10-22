@@ -19,11 +19,11 @@ export default function ToursShowcase({ tours }: Props) {
   const isEs = lang === "es";
 
   return (
-    <section id="tours" className="bg-[#f4f1ea] py-16 dark:bg-[#0b0a09] md:py-24">
+    <section id="tours" className="lva-home-section py-20 md:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div>
-            <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em] text-emerald-700 dark:text-emerald-300">
+            <p className="lva-home-kicker mb-3">
               {isEs ? "Más experiencias" : "More experiences"}
             </p>
             <h2 className="font-display max-w-2xl text-balance text-[28px] font-black leading-[1.08] tracking-tight text-stone-950 dark:text-stone-50 md:text-[36px]">
@@ -70,7 +70,7 @@ export default function ToursShowcase({ tours }: Props) {
                       </span>
                     )}
 
-                    <span className="absolute bottom-4 left-4 max-w-[calc(100%-5.5rem)] rounded-2xl bg-white px-4 py-2.5 text-stone-900 shadow-lg">
+                    <span className="absolute bottom-4 left-4 max-w-[calc(100%-5.5rem)] rounded-xl bg-white px-4 py-2.5 text-stone-900 shadow-lg">
                       <span className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
                         <span className="text-[11px] font-black uppercase tracking-wide text-stone-500">
                           {isEs ? "Desde" : "From"}

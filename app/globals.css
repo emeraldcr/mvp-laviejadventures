@@ -39,6 +39,8 @@
   --lva-footer-accent: #70eee1;
   --lva-content-max: 80rem;
   --lva-space-section: clamp(4rem, 8vw, 8rem);
+  --lva-radius-soft: 1.25rem;
+  --lva-radius-panel: 1.75rem;
 }
 
 @utility text-brand-ink { color: var(--color-brand-ink); }
@@ -187,6 +189,16 @@ body {
 .dark .lva-status-success { color: #bbf7d0; }
 .dark .lva-status-warning { color: #fde68a; }
 .dark .lva-alert-error { color: #fecaca; }
+
+/* Homepage rhythm: one warm editorial system around the cinematic hero. */
+.lva-home-section { background: var(--lva-surface-muted); color: var(--lva-ink); }
+.lva-home-section--paper { background: var(--lva-surface); }
+.lva-home-panel { border: 1px solid var(--lva-border); border-radius: var(--lva-radius-panel); background: var(--lva-surface); box-shadow: var(--lva-shadow-card); }
+.lva-home-kicker { color: var(--lva-accent); font-size: .72rem; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; }
+.lva-home-meta { color: var(--lva-ink-muted); font-size: .875rem; }
+.lva-home-section :where(h2, h3, h4) { letter-spacing: -.025em; }
+.dark .lva-home-section { background: var(--lva-surface-muted); }
+.dark .lva-home-section--paper { background: var(--background); }
 
 /* ── Homepage redesign keyframes ── */
 @keyframes lva-kenburns {

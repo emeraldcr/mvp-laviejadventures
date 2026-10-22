@@ -60,7 +60,7 @@ export default function FeaturedStory({ tours }: Props) {
   ];
 
   return (
-    <section className="bg-white py-20 dark:bg-[#0b0a09] md:py-28">
+    <section className="lva-home-section--paper py-20 md:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
           <div className="relative">
@@ -85,7 +85,7 @@ export default function FeaturedStory({ tours }: Props) {
           </div>
 
           <div>
-            <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em] text-emerald-700 dark:text-emerald-300">
+            <p className="lva-home-kicker mb-3">
               {isEs ? "San Carlos · Juan Castro Blanco" : "San Carlos · Juan Castro Blanco"}
             </p>
             <h2 className="font-display text-balance text-4xl font-bold leading-[1.02] tracking-tight text-stone-900 dark:text-stone-50 md:text-5xl">
@@ -120,7 +120,7 @@ export default function FeaturedStory({ tours }: Props) {
                   {isEs ? "de sendero, río y cañón" : "of trail, river and canyon"}
                 </span>
               </div>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-stone-100 px-3.5 py-2 text-xs font-semibold text-stone-600 dark:bg-stone-800 dark:text-stone-300">
+              <span className="lva-home-meta inline-flex items-center gap-1.5 rounded-full border border-stone-200 bg-stone-50 px-3.5 py-2 font-semibold dark:border-stone-800 dark:bg-stone-900">
                 <Clock3 size={13} />
                 {featuredTour.duration || (isEs ? "Duración por confirmar" : "Duration to confirm")}
               </span>
@@ -147,7 +147,7 @@ export default function FeaturedStory({ tours }: Props) {
 
         <div className="mt-24 md:mt-32">
           <div className="mb-10 text-center">
-            <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em] text-emerald-700 dark:text-emerald-300">
+            <p className="lva-home-kicker mb-3">
               {isEs ? "Reserva sencilla" : "Simple booking"}
             </p>
             <h2 className="font-display text-3xl font-bold tracking-tight text-stone-900 dark:text-stone-50 md:text-4xl">
@@ -159,7 +159,7 @@ export default function FeaturedStory({ tours }: Props) {
             {steps.map((step) => (
               <div
                 key={step.num}
-                className="rounded-3xl border border-stone-200 bg-[#FAF9F6] p-8 transition-all hover:-translate-y-1 hover:border-emerald-200 hover:shadow-[0_20px_50px_rgba(0,0,0,0.06)] dark:border-stone-800 dark:bg-white/[0.03] dark:hover:border-emerald-500/40"
+                className="lva-home-panel border-0 bg-[var(--lva-surface-muted)] p-8 shadow-none transition-all hover:-translate-y-1 hover:border-emerald-200 hover:shadow-[0_20px_50px_rgba(0,0,0,0.06)]"
               >
                 <span className="font-display text-sm font-bold text-emerald-700 dark:text-emerald-300">{step.num}</span>
                 <h3 className="font-display mt-3 text-xl font-bold tracking-tight text-stone-900 dark:text-stone-50">
