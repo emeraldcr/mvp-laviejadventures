@@ -10,6 +10,7 @@ import { SITE_URL, BUSINESS_WHATSAPP_URL } from "@/lib/site-config";
 import HomeNav from "@/app/components/home/HomeNav";
 import GoogleRating from "@/app/components/GoogleRating";
 import JsonLd from "@/app/components/seo/JsonLd";
+import { ChevronRight } from "lucide-react";
 
 type Props = { params: Promise<{ slug: string }> };
 export async function generateMetadata({ params }: Props) {
@@ -28,17 +29,26 @@ export default async function EnglishTour({ params }: Props) {
     "@type": "Offer", name: pkg.name, price: String(pkg.price), priceCurrency: "USD",
     url: `${SITE_URL}${booking}${pkg.id ? `&package=${encodeURIComponent(pkg.id)}` : ""}`,
   }));
+  const breadcrumbSchema = { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Home", item: `${SITE_URL}/en` },
+    { "@type": "ListItem", position: 2, name: "Tours", item: `${SITE_URL}/en/tours` },
+    { "@type": "ListItem", position: 3, name: tour.titleEn, item: `${SITE_URL}/en/tour/${slug}` },
+  ] };
   const schema = { "@context": "https://schema.org", "@type": "TouristTrip", name: tour.titleEn, description: tour.descriptionEn,
     url: `${SITE_URL}/en/tour/${slug}`, ...(tour.difficulty ? { touristType: tourDifficulty(tour.difficulty, "en") } : {}),
     ...(tour.location ? { itinerary: { "@type": "Place", name: tour.location } } : {}),
     provider: { "@type": "Organization", name: "La Vieja Adventures", url: `${SITE_URL}/en` }, offers };
   return <main className="min-h-screen bg-[#FAF9F6] text-stone-900 dark:bg-stone-950 dark:text-white">
-    <HomeNav /><JsonLd data={schema} />
+    <HomeNav /><JsonLd data={schema} /><JsonLd data={breadcrumbSchema} />
     <section className="relative flex min-h-[75svh] items-end bg-stone-950 px-5 pb-12 pt-28 text-white">
       <Image src={getTourImage(slug)} alt={tour.titleEn} fill priority sizes="100vw" className="object-cover" />
       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-black/30" />
       <div className="relative mx-auto w-full max-w-6xl space-y-6">
-        <Link href="/en/tours" className="inline-flex min-h-11 items-center underline">All tours</Link>
+        <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm text-white/75">
+          <Link href="/en" className="hover:text-white">Home</Link><ChevronRight size={15} aria-hidden />
+          <Link href="/en/tours" className="hover:text-white">Tours</Link><ChevronRight size={15} aria-hidden />
+          <span className="truncate text-white">{tour.titleEn}</span>
+        </nav>
         <h1 className="max-w-4xl text-[36px] font-black leading-[1.08] md:text-[48px]">{tour.titleEn}</h1>
         <p className="max-w-3xl text-lg leading-relaxed">{tour.descriptionEn}</p>
         <GoogleRating locale="en" dark />

@@ -32,7 +32,7 @@ import {
 import HomeNav from "@/app/components/home/HomeNav";
 import GoogleRating from "@/app/components/GoogleRating";
 import { getTourPriceDisplay } from "@/lib/tour-pricing";
-import { WHATSAPP_HREF } from "@/app/components/home/home-utils";
+import { whatsappHref } from "@/app/components/home/home-utils";
 import {
   BIRDWATCHING_GALLERY,
   BIRDWATCHING_HABITATS,
@@ -83,15 +83,15 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [activeVideo, setActiveVideo] = useState(BIRDWATCHING_VIDEOS[0]?.youtubeId ?? "");
 
+  const title = tour.titleEs || "Avistamiento de Aves";
   const bookingHref = `/reservar?tour=${encodeURIComponent(tour.slug)}`;
+  const whatsappMessageHref = whatsappHref(`Hola, quiero reservar el tour ${title}. ¿Tienen disponibilidad?`);
   const bookingHrefForPackage = (packageId?: string | null) => {
     const packageParam = packageId ? `&package=${encodeURIComponent(packageId)}` : "";
     return `/reservar?tour=${encodeURIComponent(tour.slug)}${packageParam}`;
   };
 
   const heroImage = BIRDWATCHING_GALLERY[0] ?? "/image/IMG_6810.jpg";
-  const title = tour.titleEs || "Avistamiento de Aves";
-
   useEffect(() => {
     const onScroll = () => setShowStickyBar(window.scrollY > 480);
     onScroll();
@@ -173,7 +173,7 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
                 <ChevronRight className="h-4 w-4" aria-hidden />
               </Link>
               <a
-                href={WHATSAPP_HREF}
+                href={whatsappMessageHref}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex min-h-14 items-center gap-2 rounded-full border border-white/25 bg-white/8 px-6 py-4 text-sm font-bold text-white backdrop-blur transition hover:border-white/50 hover:bg-white/14"
@@ -591,7 +591,7 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
                 <ChevronRight className="h-4 w-4" aria-hidden />
               </Link>
               <a
-                href={WHATSAPP_HREF}
+                href={whatsappMessageHref}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 rounded-full border border-white/40 px-6 py-4 text-sm font-bold text-white transition hover:bg-white/10"
@@ -628,7 +628,7 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
 
       {/* Floating WhatsApp */}
       <a
-        href={WHATSAPP_HREF}
+        href={whatsappMessageHref}
         target="_blank"
         rel="noopener noreferrer"
         className="fixed bottom-24 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-2xl shadow-green-900/40 transition hover:scale-105 hover:bg-[#1ebe5d] md:bottom-8"

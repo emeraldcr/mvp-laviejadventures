@@ -30,3 +30,5 @@ Piensa paso a paso. Usa tools cuando haga falta. Output estructurado si tool cal
 No abras playwrigth yo confirmo todo manualmente
 
 always  stop the leftover build workers that were consuming several GB of memory or try to avoid them
+
+when u end make sure to add all the details that u did to the commit message and commit as it is

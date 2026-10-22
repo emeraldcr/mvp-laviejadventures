@@ -1,3 +1,5 @@
+import { BIRDWATCHING_GALLERY } from "@/lib/birdwatching-content";
+
 function unsplash(id: string) {
   return `https://images.unsplash.com/photo-${id}?q=82&w=1600&auto=format&fit=crop`;
 }
@@ -116,6 +118,9 @@ export function getTourImage(slug?: string | null) {
 }
 
 export function getTourShareImage(slug?: string | null) {
+  if (slug === "avistamiento-aves" || slug === "avistamiento-aves-norteno") {
+    return BIRDWATCHING_GALLERY[0] ?? "/image/IMG_6810.jpg";
+  }
   const image = getTourImage(slug);
   if (!image.startsWith("http")) return image;
   return image.replace("w=1600", "w=1200").replace("auto=format", "h=630&auto=format");

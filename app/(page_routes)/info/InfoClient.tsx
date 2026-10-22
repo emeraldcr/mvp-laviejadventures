@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { SOCIAL_URLS } from "@/lib/site-config";
+import { BUSINESS_WHATSAPP_URL, SOCIAL_URLS } from "@/lib/site-config";
 import { useLanguage } from "@/lib/LanguageContext";
 import {
   LA_VIEJA_GOOGLE_MAPS_EMBED_URL,
@@ -122,11 +122,12 @@ const whyColors = [
   "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300",
   "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
 ];
-const whatsappHref = "https://wa.me/50662332535?text=Hola%2C%20quiero%20reservar%20un%20tour%20en%20La%20Vieja%20Adventures.%20Me%20pueden%20ayudar%20con%20la%20disponibilidad%20y%20los%20detalles%3F";
-
 export default function InfoClient({ tours }: { tours: TourSummary[] }) {
   const { lang } = useLanguage();
   const tr = translations[lang].info;
+  const whatsappHref = `${BUSINESS_WHATSAPP_URL}?text=${encodeURIComponent(lang === "es"
+    ? "Hola, quiero reservar un tour en La Vieja Adventures. ¿Me ayudan con la disponibilidad y los detalles?"
+    : "Hello, I would like to book a tour with La Vieja Adventures. Could you help me with availability and details?")}`;
   const pricedTours = tours.filter((tour) => tourMinPrice(tour));
   const lowestTour = [...pricedTours].sort((a, b) => (tourMinPrice(a)?.usd ?? Infinity) - (tourMinPrice(b)?.usd ?? Infinity))[0];
 
@@ -136,7 +137,7 @@ export default function InfoClient({ tours }: { tours: TourSummary[] }) {
 
       {/* Floating WhatsApp CTA */}
       <a
-        href="https://wa.me/50662332535"
+        href={whatsappHref}
         target="_blank"
         rel="noopener noreferrer"
         className="fixed bottom-24 right-6 md:bottom-6 z-50 flex items-center gap-2 rounded-full bg-[#25D366] px-5 py-3 text-sm font-bold text-white shadow-2xl shadow-green-700/30 transition-all hover:scale-105 hover:bg-[#1ebe5d] hover:shadow-green-600/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-300"

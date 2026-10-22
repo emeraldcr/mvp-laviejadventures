@@ -18,11 +18,12 @@ import {
   Users,
 } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
-import { BOOKING_HREF, WHATSAPP_HREF, primaryBookingLabel } from "./home-utils";
+import { BOOKING_HREF, localizedHomeWhatsAppHref, primaryBookingLabel } from "./home-utils";
 
 export default function HomeHero({ tour }: { tour?: TourSummary }) {
   const { lang } = useLanguage();
   const isEs = lang === "es";
+  const whatsappHref = localizedHomeWhatsAppHref(isEs);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [paused, setPaused] = useState(true);
   useEffect(() => {
@@ -119,7 +120,7 @@ export default function HomeHero({ tour }: { tour?: TourSummary }) {
               <ArrowRight size={17} className="transition-transform group-hover:translate-x-1" />
             </Link>
             <a
-              href={WHATSAPP_HREF}
+              href={whatsappHref}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex min-h-14 items-center justify-center gap-3 rounded-full border border-white/30 bg-black/22 px-7 text-xs font-black uppercase tracking-[0.12em] text-white backdrop-blur-md transition hover:border-white/60 hover:bg-white/12"

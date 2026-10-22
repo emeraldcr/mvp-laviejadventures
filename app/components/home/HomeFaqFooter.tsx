@@ -11,7 +11,7 @@ import {
   LA_VIEJA_GOOGLE_MAPS_URL,
   LA_VIEJA_LOCATION_LABEL,
 } from "@/lib/constants/location";
-import { BOOKING_HREF, WHATSAPP_HREF, primaryBookingLabel } from "./home-utils";
+import { BOOKING_HREF, localizedHomeWhatsAppHref, primaryBookingLabel } from "./home-utils";
 
 function FinalCta() {
   const { lang } = useLanguage();
@@ -47,7 +47,7 @@ function FinalCta() {
               <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
             </Link>
             <a
-              href={WHATSAPP_HREF}
+              href={localizedHomeWhatsAppHref(isEs)}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-full border border-white/40 px-8 py-4 text-sm font-bold text-white backdrop-blur-sm transition-colors hover:border-white hover:bg-white/10"
@@ -121,7 +121,7 @@ function HomeFooter() {
             <ul className="mt-4 space-y-2.5 text-sm">
               <li>
                 <a
-                  href={WHATSAPP_HREF}
+                  href={localizedHomeWhatsAppHref(isEs)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 transition-colors hover:text-emerald-300"

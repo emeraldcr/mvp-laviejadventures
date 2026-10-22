@@ -6,11 +6,12 @@ import Link from "next/link";
 import { ArrowRight, CalendarDays, MessageCircle, ShieldCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLanguage } from "@/lib/LanguageContext";
-import { BOOKING_HREF, WHATSAPP_HREF, primaryBookingLabel } from "./home-utils";
+import { BOOKING_HREF, localizedHomeWhatsAppHref, primaryBookingLabel } from "./home-utils";
 
 export default function HomeConversionRail() {
   const { lang } = useLanguage();
   const isEs = lang === "es";
+  const whatsappHref = localizedHomeWhatsAppHref(isEs);
   const [showFloatingCard, setShowFloatingCard] = useState(false);
 
   useEffect(() => {
@@ -54,7 +55,7 @@ export default function HomeConversionRail() {
               <ArrowRight size={20} className="transition-transform group-hover:translate-x-1" />
             </Link>
             <a
-              href={WHATSAPP_HREF}
+              href={whatsappHref}
               target="_blank"
               rel="noopener noreferrer"
               className="group flex min-h-28 items-center justify-between gap-5 bg-[#27241f] p-6 transition hover:bg-[#34302a] lg:px-8"

@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 import { ArrowRight, Globe, Menu, MessageCircle, Moon, Sun, X } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
 import { useTheme } from "@/lib/ThemeContext";
-import { BOOKING_HREF, WHATSAPP_HREF, compactBookingLabel, primaryBookingLabel } from "./home-utils";
+import { BOOKING_HREF, compactBookingLabel, localizedHomeWhatsAppHref, primaryBookingLabel } from "./home-utils";
 import { localizeHref } from "@/lib/i18n";
 
 export default function HomeNav({ solid = false }: { solid?: boolean }) {
@@ -140,7 +140,7 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
             </Link>
 
             <a
-              href={WHATSAPP_HREF}
+              href={localizedHomeWhatsAppHref(isEs)}
               target="_blank"
               rel="noopener noreferrer"
               aria-label="WhatsApp"
@@ -242,7 +242,7 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
               <ArrowRight size={17} />
             </Link>
             <a
-              href={WHATSAPP_HREF}
+              href={localizedHomeWhatsAppHref(isEs)}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 rounded-full border border-stone-300 py-4 text-base font-bold text-stone-800 dark:border-stone-600 dark:text-stone-200"
