@@ -322,7 +322,7 @@ export default function TourWeatherDashboard({ locale = "es" }: { locale?: "es" 
                 {new Date(rain.meta.fetchedAt).toLocaleString("es-CR")}
               </p>
             )}
-            <EditorialFinalCta dark title={isEnglish ? "Can we help you choose a safe adventure?" : "¿Le ayudamos a elegir una aventura segura?"} body={isEnglish ? "Choose a date and our team will confirm availability and the real operating conditions." : "Consulte una fecha y el equipo confirma la disponibilidad y la condición operativa real."} label={isEnglish ? "Ask and book" : "Consultar y reservar"} />
+            <EditorialFinalCta dark title={isEnglish ? "Can we help you choose a safe adventure?" : "¿Le ayudamos a elegir una aventura segura?"} body={isEnglish ? "Choose a date and our team will confirm availability and the real operating conditions." : "Consulte una fecha y el equipo confirma la disponibilidad y la condición operativa real."} label={isEnglish ? "Pregunte y reserve" : "Consulte y reserve"} />
           </div>
         </main>
         <PageFooter />

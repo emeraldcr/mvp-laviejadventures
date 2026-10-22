@@ -187,7 +187,7 @@ export async function POST(req: Request) {
           code: "capacity",
           message: language === "en"
             ? "Those spots were just taken. Please choose another date or fewer guests."
-            : "Esos cupos se acaban de ocupar. Elegí otra fecha o menos personas.",
+            : "Esos cupos se acaban de ocupar. Elija otra fecha o menos personas.",
         },
         { status: 409 },
       );

@@ -18,12 +18,12 @@ export const principalContent = {
       scrollToMainAria: "Ir al contenido principal",
       locationBadge: "San Carlos · Costa Rica",
       title: "El cañón te está esperando. ¿Entramos?",
-      subtitle: "Tours con guías de la zona · Grupos chicos · Desde $30",
+      subtitle: "Tours con guías de la zona · Precios calculados en línea · Desde $30",
       socialProof: "4.9 · +500 personas que ya se metieron al río · Guías locales",
       trustItems: [
         "Cancelás gratis hasta 48 h antes",
         "Pago seguro",
-        "Disponibilidad sujeta a confirmación",
+        "Cupo sujeto a confirmación · Río y clima los confirma el equipo",
       ] as readonly string[],
     },
     tours: {
@@ -78,7 +78,7 @@ export const principalContent = {
       eyebrow: "Nueva reserva",
       title: "Tu próximo tour arranca acá",
       description:
-        "Elegí fecha, dejá tus datos y si te trabás en algo, usá el botón de AI o escribinos por WhatsApp.",
+        "Elija fecha, deje sus datos y si se traba en algo, use el botón de AI o escríbanos por WhatsApp.",
       steps: {
         date: "Paso 1 · Fecha",
         details: "Paso 2 · Detalles",
@@ -104,12 +104,12 @@ export const principalContent = {
       scrollToMainAria: "Scroll to main content",
       locationBadge: "San Carlos · Costa Rica",
       title: "The canyon is waiting. Ready to go in?",
-      subtitle: "Local guides · Small groups · From $30",
+      subtitle: "Local guides · Online price estimates · From $30",
       socialProof: "4.9 · 500+ people who already got wet · Local guides",
       trustItems: [
         "Free cancel up to 48h",
         "Secure payment",
-        "Quick confirmation",
+        "Spots subject to confirmation · Team confirms river and weather",
       ] as readonly string[],
     },
     tours: {

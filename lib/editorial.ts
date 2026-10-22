@@ -3,11 +3,11 @@ const forms: Record<string, string> = {
   "vos": "usted", "tú": "usted", "tu": "su", "tus": "sus", "te": "le", "tenés": "tiene", "querés": "quiere", "podés": "puede",
   "necesitás": "necesita", "estás": "está", "sos": "es", "sentís": "siente", "preferís": "prefiere", "sabés": "sabe", "venís": "viene",
   "buscás": "busca", "llegás": "llega", "salís": "sale", "hacés": "hace", "usás": "usa", "llevás": "lleva", "vayás": "vaya", "reservás": "reserva",
-  "elegí": "elija", "reservá": "reserve", "mirá": "mire", "confirmá": "confirme", "llegá": "llegue", "llevá": "lleve", "buscanos": "búsquenos",
+  "elegí": "elija", "elige": "elija", "reservá": "reserve", "mirá": "mire", "confirmá": "confirme", "llegá": "llegue", "llevá": "lleve", "buscanos": "búsquenos",
   "preguntá": "pregunte", "escribinos": "escríbanos", "avisá": "avise", "contanos": "cuéntenos", "tomés": "tome", "tocá": "toque", "traé": "traiga", "veas": "vea", "vas": "va", "uses": "use",
-  "practicás": "practica", "mojarte": "mojarse", "sentirte": "sentirse", "adéntrate": "adéntrese", "descubre": "descubra", "recorre": "recorra",
+  "practicás": "practica", "mojarte": "mojarse", "sentirte": "sentirse", "adéntrate": "adéntrese", "descubre": "descubra", "recorre": "recorra", "deja": "deje", "usa": "use", "escribe": "escriba", "revisa": "revise", "acepta": "acepte", "prefiere": "prefiere", "finaliza": "finalice", "has": "ha",
   "camina": "camine", "disfruta": "disfrute", "vive": "viva", "explora": "explore", "observa": "observe", "escucha": "escuche", "conecta": "conecte",
-  "sumérgete": "sumérjase", "enfrenta": "enfrente", "buscá": "busque", "seguí": "siga", "recordá": "recuerde", "preparate": "prepárese", "consultá": "consulte", "consultanos": "consúltenos",
+  "sumérgete": "sumérjase", "enfrenta": "enfrente", "buscá": "busque", "seguí": "siga", "recordá": "recuerde", "preparate": "prepárese", "consultá": "consulte", "consultanos": "consúltenos", "selecciona": "seleccione", "continúa": "continúe", "completa": "complete", "intenta": "intente",
 };
 const pattern = new RegExp(`(?<![\\p{L}\\p{N}_])(${Object.keys(forms).join("|")})(?![\\p{L}\\p{N}_])`, "giu");
 export function usted(text: string): string {

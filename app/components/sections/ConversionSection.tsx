@@ -48,7 +48,7 @@ export default function ConversionSection() {
 
                 <h2 className="mb-4 text-balance text-4xl font-black leading-[0.94] text-white md:text-6xl">
                   {isEs
-                    ? "Tu aventura arranca con una reserva."
+                    ? "Su aventura arranca con una reserva."
                     : "Your adventure starts with a booking."}
                 </h2>
                 <p className="mx-auto mb-8 max-w-xl text-base font-medium leading-relaxed text-white/60 md:text-lg">

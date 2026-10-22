@@ -11,6 +11,7 @@ import { ADDON_DATA } from "@/lib/reservation/addons";
 import { usePendingBooking } from "@/lib/reservation/use-pending-booking";
 import { usePayPalCheckout } from "@/app/components/reservation/hooks/usePayPalCheckout";
 import { buildBookingAnalyticsMetadata } from "@/app/components/reservation/checkoutUtils";
+import SafetyBookingNotice from "@/app/components/reservation/SafetyBookingNotice";
 
 const SummaryRow = ({
   icon,
@@ -108,12 +109,12 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
   const paymentCopy = {
     contactTitle: lang === "es" ? "Datos del viajero" : "Traveler details",
     bookingTitle: lang === "es" ? "Resumen de reserva" : "Booking summary",
-    paymentTitle: lang === "es" ? "Elegí cómo pagar" : "Choose how to pay",
+    paymentTitle: lang === "es" ? "Elija cómo pagar" : "Choose how to pay",
     paymentSubtitle: lang === "es"
-      ? "PayPal, tarjeta, WhatsApp o SINPE. Elegí la opción que te quede más cómoda para confirmar tu aventura."
+      ? "PayPal, tarjeta, WhatsApp o SINPE. Elija la opción que le quede más cómoda para confirmar su aventura."
       : "PayPal, card, WhatsApp, or SINPE. Pick the option that works best to confirm your adventure.",
     checkoutHint: lang === "es"
-      ? "La disponibilidad queda sujeta a confirmación. PayPal confirma el pago al instante; WhatsApp y SINPE quedan pendientes hasta que el equipo valide tu pago."
+      ? "La disponibilidad queda sujeta a confirmación. PayPal confirma el pago al instante; WhatsApp y SINPE quedan pendientes hasta que el equipo valide su pago."
       : "Availability is subject to confirmation. PayPal confirms payment instantly; WhatsApp and SINPE stay pending until our team validates your payment.",
     dateLabel: lang === "es" ? "Fecha" : "Date",
     guestsLabel: lang === "es" ? "Personas" : "Guests",
@@ -266,6 +267,8 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
         <div className="lva-card-muted mb-4 rounded-xl px-4 py-3 text-sm font-medium">
           {paymentCopy.checkoutHint}
         </div>
+
+        <SafetyBookingNotice lang={lang} className="mb-4" />
 
         {resumePath && (
           <div className="lva-status-success mb-4 flex flex-col gap-2 rounded-xl px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">

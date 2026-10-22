@@ -127,7 +127,7 @@ export default function ToursImmersionSection({ onSelectTour, selectedTourSlug }
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-white/55 md:text-base">
             {isEs
-              ? "Desliza y elige. Consultá disponibilidad."
+              ? "Deslice y elija. Consulte disponibilidad."
               : "Swipe and choose. Book in seconds."}
           </p>
         </div>
@@ -378,8 +378,8 @@ export default function ToursImmersionSection({ onSelectTour, selectedTourSlug }
                 <p className="mt-4 flex items-center gap-2 text-[10px] text-white/35">
                   <ShieldCheck className="h-3.5 w-3.5 text-emerald-400/60" />
                   {isEs
-                    ? "Cancelación gratuita 48h antes · Disponibilidad sujeta a confirmación"
-                    : "Free cancellation 48h before · Availability subject to confirmation"}
+                    ? "Precio calculado en línea · Cupo sujeto a confirmación · Río y clima los confirma el equipo"
+                    : "Price calculated online · Spots subject to confirmation · Team confirms river and weather"}
                 </p>
               </div>
             </div>
@@ -497,6 +497,11 @@ export default function ToursImmersionSection({ onSelectTour, selectedTourSlug }
                       <ArrowRight className="h-3.5 w-3.5" />
                     </button>
                   </div>
+                  <p className="mt-3 max-w-md text-[10px] leading-relaxed text-white/38">
+                    {isEs
+                      ? "El monto mostrado es una referencia calculada en línea; el cupo y la condición segura del río/clima se confirman antes de operar."
+                      : "The amount shown is an online estimate; the team confirms availability and safe river/weather conditions before operating."}
+                  </p>
                 </div>
               </article>
             );

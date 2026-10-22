@@ -342,7 +342,7 @@ function getAddonPriceDisplay({
   if (addon.id === "almuerzo") {
     if (!isFoodConfigComplete(addonDetails) && !selected) {
       return {
-        note: lang === "es" ? "Elegí comida y proteína" : "Choose meal and protein",
+        note: lang === "es" ? "Elija comida y proteína" : "Choose meal and protein",
         value: lang === "es" ? "Configurar" : "Configure",
         muted: true,
       };

@@ -110,17 +110,17 @@ export default function ReservationDetailsStep1({
                   ? "Ya está casi listo."
                   : "Almost done."
                 : isEs
-                  ? "Lo armamos por vos."
+                  ? "Lo armamos para usted."
                   : "We set it up for you."}
             </h3>
             <p className={`mt-1 text-xs font-medium sm:text-sm ${ready ? "text-white/90" : "text-zinc-500"}`}>
               {ready
                 ? travelerReady
                   ? isEs
-                    ? "Fecha, hora, paquete y tus datos — solo confirmá."
+                    ? "Fecha, hora, paquete y sus datos — solo confirme."
                     : "Date, time, package and your details — just confirm."
                   : isEs
-                    ? "Fecha, hora y paquete listos. Falta un toque de tus datos."
+                    ? "Fecha, hora y paquete listos. Falta un toque de sus datos."
                     : "Date, time and package ready. Just add your details."
                 : isEs
                   ? "Fecha y hora se eligen solas. Toque paquete o personas solo si quiere."

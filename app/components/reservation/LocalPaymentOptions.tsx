@@ -104,7 +104,7 @@ export default function LocalPaymentOptions({
       <div className="space-y-4">
         <div className="lva-status-success rounded-xl px-4 py-3 text-sm leading-relaxed">
           {isEs
-            ? "Confirmá tu reserva por WhatsApp con Allan o Verónica. Guardamos tu solicitud y te respondemos con disponibilidad y pago local si lo preferís."
+            ? "Confirme su reserva por WhatsApp con Allan o Verónica. Guardamos su solicitud y le respondemos con disponibilidad y pago local si lo prefiere."
             : "Confirm your booking on WhatsApp with our team. We save your request and reply with availability and local payment options if you prefer."}
         </div>
 

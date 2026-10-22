@@ -102,7 +102,7 @@ export default function ReservationDetailsSidebar({
 
       <div className="mt-4 rounded-xl border border-zinc-200 bg-zinc-50 p-3 text-xs dark:border-zinc-700 dark:bg-zinc-950/40">
         <p className="font-black text-zinc-900 dark:text-zinc-50">{isEs ? "¿Qué pasa después?" : "What happens next?"}</p>
-        <p className="mt-1 leading-relaxed text-zinc-600 dark:text-zinc-300">{isEs ? "Revisás los datos, aceptás las políticas y PayPal carga el pago seguro. Después te llevamos a la confirmación de tu reserva." : "Review your details, accept the policies, and PayPal loads the secure payment. Then we take you to your booking confirmation."}</p>
+        <p className="mt-1 leading-relaxed text-zinc-600 dark:text-zinc-300">{isEs ? "Revise los datos, acepte las políticas y PayPal carga el pago seguro. Después le llevamos a la confirmación de su reserva." : "Review your details, accept the policies, and PayPal loads the secure payment. Then we take you to your booking confirmation."}</p>
       </div>
 
       <a href={whatsappHref} target="_blank" rel="noreferrer" className="mt-3 flex items-center justify-center gap-2 rounded-xl border border-emerald-300 px-3 py-2.5 text-xs font-black text-emerald-800 transition hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-200 dark:hover:bg-emerald-950/40">

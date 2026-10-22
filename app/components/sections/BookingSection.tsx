@@ -28,7 +28,7 @@ export default function BookingSection({ selectedTourSlug, initialPackageId }: P
               <div className="mx-auto mb-2 max-w-2xl text-center md:mb-3">
                 <p className="text-[10px] font-semibold tracking-wide text-stone-500 dark:text-stone-400 sm:text-xs">
                   {lang === "es"
-                    ? "Paso 1 de 3 · Elegí una fecha · Los días disponibles están marcados"
+                    ? "Paso 1 de 3 · Elija una fecha · Los días disponibles están marcados"
                     : "Step 1 of 3 · Choose a date · Available days are marked"}
                 </p>
               </div>
@@ -75,7 +75,7 @@ export default function BookingSection({ selectedTourSlug, initialPackageId }: P
           <div className="mx-auto max-w-2xl rounded-2xl border border-emerald-200 bg-emerald-50 px-6 py-8 text-center dark:border-emerald-800/50 dark:bg-emerald-950/30">
             <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
               {lang === "es"
-                ? "No pudimos cargar el tour. Volvé al inicio e intentá nuevamente."
+                ? "No pudimos cargar el tour. Vuelva al inicio e intente nuevamente."
                 : "We could not load the tour. Return home and try again."}
             </p>
           </div>

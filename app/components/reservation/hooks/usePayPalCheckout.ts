@@ -33,12 +33,12 @@ function getCheckoutErrorMessage(payload: { code?: string; message?: string }, f
   const isEs = lang === "es";
   if (payload.code === "capacity") {
     return isEs
-      ? "Esos cupos se acaban de ocupar. Volvé a la reserva para elegir otra fecha o menos personas."
+      ? "Esos cupos se acaban de ocupar. Vuelva a la reserva para elegir otra fecha o menos personas."
       : "Those spots were just taken. Return to booking to choose another date or fewer guests.";
   }
   if (payload.code === "total_mismatch") {
     return isEs
-      ? "El total cambió antes del pago. Volvé a revisar la reserva."
+      ? "El total cambió antes del pago. Vuelva a revisar la reserva."
       : "The total changed before payment. Please review the booking again.";
   }
   if (payload.code === "booking_context_missing" || payload.code === "capture_validation_unavailable") {

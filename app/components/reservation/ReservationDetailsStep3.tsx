@@ -75,7 +75,7 @@ export default function ReservationDetailsStep3({
           <div className="mb-3 flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="text-[11px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
-                {isEs ? "Tu aventura" : "Your adventure"}
+                {isEs ? "Su aventura" : "Your adventure"}
               </p>
               <h3 className="truncate text-base font-black text-zinc-900 dark:text-zinc-50">{selectedTourName}</h3>
               <p className="mt-0.5 text-xs font-semibold capitalize text-zinc-500">{formattedDate}</p>
