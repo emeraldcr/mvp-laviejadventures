@@ -16,7 +16,6 @@ const TOUR_TAGS_BY_SLUG: Record<string, { tagEs: string; tagEn: string }> = [
   { slug: "tour-ciudad-esmeralda", tagEs: "Top 3 aventura", tagEn: "Top 3 adventure" },
   { slug: "ciudad-esmeralda",      tagEs: "Top 3 aventura", tagEn: "Top 3 adventure" },
   { slug: "aventuras-cataratas",   tagEs: "Temporada lluviosa", tagEn: "Rainy season pick" },
-  { slug: "pozas-cristalinas",     tagEs: "Mas vendido", tagEn: "Best seller" },
   { slug: "cuadra-tours-aventura", tagEs: "Adrenalina", tagEn: "Adrenaline" },
   { slug: "cascadas-secretas-rio-la-vieja", tagEs: "Cataratas", tagEn: "Waterfalls" },
   { slug: "tour-gastronomico-local",        tagEs: "Cultura local", tagEn: "Local culture" },
