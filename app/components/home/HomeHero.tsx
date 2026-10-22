@@ -120,11 +120,11 @@ export default function HomeHero() {
         </div>
       </div>
       {videoEnabled ? (
-        <button type="button" onClick={toggleVideo} aria-pressed={!paused} aria-label={isEs ? (paused ? "Reproducir video de fondo" : "Pausar video de fondo") : (paused ? "Play background video" : "Pause background video")} className="absolute bottom-4 right-4 z-10 inline-flex min-h-11 items-center gap-2 rounded-full border border-white/40 bg-black/70 px-4 py-2 text-sm font-semibold text-white sm:bottom-36">
+        <button type="button" onClick={toggleVideo} aria-pressed={!paused} aria-label={isEs ? (paused ? "Reproducir video de fondo" : "Pausar video de fondo") : (paused ? "Play background video" : "Pause background video")} className="absolute bottom-4 right-4 z-10 hidden min-h-11 items-center gap-2 rounded-full border border-white/40 bg-black/70 px-4 py-2 text-sm font-semibold text-white sm:inline-flex sm:bottom-36">
           {paused ? <Play size={16} aria-hidden /> : <Pause size={16} aria-hidden />}{isEs ? (paused ? "Reproducir" : "Pausar video") : (paused ? "Play video" : "Pause video")}
         </button>
       ) : (
-        <div className="absolute bottom-4 right-4 z-10 inline-flex min-h-11 items-center gap-2 rounded-full border border-white/25 bg-black/60 px-4 py-2 text-sm font-semibold text-white/90 backdrop-blur-md sm:bottom-36" role="status">
+        <div className="absolute bottom-4 right-4 z-10 hidden min-h-11 items-center gap-2 rounded-full border border-white/25 bg-black/60 px-4 py-2 text-sm font-semibold text-white/90 backdrop-blur-md sm:inline-flex sm:bottom-36" role="status">
           <ImageIcon size={16} aria-hidden />
           {isEs ? "Vista de portada" : "Poster view"}
         </div>

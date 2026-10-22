@@ -14,10 +14,18 @@ export default function MobileBookingBar() {
   useEffect(() => {
     setCurrentSearch(window.location.search);
     // Let the first content block breathe before introducing a persistent CTA.
-    const onScroll = () => setShowBookingBar(window.scrollY > window.innerHeight * 1.05);
+    const onScroll = () => {
+      const passedFirstBlock = window.scrollY > window.innerHeight * 1.05;
+      const nearFooter = window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 160;
+      setShowBookingBar(passedFirstBlock && !nearFooter);
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    window.addEventListener("resize", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
   }, [pathname]);
   if (/\/(reservar|reservation|booking|success|rotulos|add-ons)(\/|$)/.test(pathname)) return null;
   if (!showBookingBar) return null;
