@@ -2,8 +2,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Star } from "lucide-react";
+import { ArrowRight, ExternalLink } from "lucide-react";
+import GoogleRating from "@/app/components/GoogleRating";
 import { useLanguage } from "@/lib/LanguageContext";
+import { formatGoogleReviewsDate, GOOGLE_REVIEWS } from "@/lib/site-config";
 
 const GALLERY_ROW_A = [
   "/image/IMG_6810.webp", "/image/IMG_4671.webp", "/image/IMG_4257.webp",
@@ -17,70 +19,69 @@ const GALLERY_ROW_B = [
   "/image/IMG_3751.webp", "/image/IMG_4514.webp",
 ];
 
-const TESTIMONIALS = [
-  {
-    name: "María F.",
-    experience: { es: "Ciudad Esmeralda", en: "Ciudad Esmeralda" },
-    origin: { es: "San José, Costa Rica", en: "San José, Costa Rica" },
-    es: "El cañón nos dejó sin palabras. Aguas esmeralda, guía que conocía cada rincón y un ritmo que nos retó sin agobiarnos. Pura vida de verdad.",
-    en: "The canyon left us speechless. Emerald waters, a guide who knew every corner, and a pace that challenged us without overwhelming us. Real pura vida.",
-  },
-  {
-    name: "Daniel R.",
-    experience: { es: "Pozas Cristalinas", en: "Crystal Pools" },
-    origin: { es: "Alajuela, Costa Rica", en: "Alajuela, Costa Rica" },
-    es: "Fuimos en familia con niños y todos disfrutaron. Pozas cristalinas, caminata suave y el guía muy pendiente de la seguridad del grupo.",
-    en: "We went as a family with kids and everyone loved it. Crystal pools, an easy hike, and a guide who was very attentive to the group's safety.",
-  },
-  {
-    name: "Emily & Jake",
-    experience: { es: "Avistamiento de Aves", en: "Birdwatching" },
-    origin: { es: "Texas, EE. UU.", en: "Texas, USA" },
-    es: "Escuchamos tucanes antes de verlos. Sin multitudes, bosque vivo y un equipo local que sabe de aves como nadie en la zona.",
-    en: "We heard toucans before we saw them. No crowds, living forest, and a local crew that knows birds like no one else in the area.",
-  },
-];
-
 export default function SocialProof() {
   const { lang } = useLanguage();
   const isEs = lang === "es";
+  const updatedAt = formatGoogleReviewsDate(lang);
 
   return (
     <section className="overflow-hidden bg-[#FAF9F6] py-20 dark:bg-[#0b0a09] md:py-28">
-      {/* Testimonials */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-12 text-center">
           <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em] text-emerald-700 dark:text-emerald-300">
-            {isEs ? "Lo que dicen" : "What they say"}
+            {isEs ? "Reseñas públicas" : "Public reviews"}
           </p>
           <h2 className="font-display mx-auto max-w-2xl text-balance text-4xl font-bold leading-[1.02] tracking-tight text-stone-900 dark:text-stone-50 md:text-5xl">
-            {isEs ? "Historias de quienes ya vivieron la aventura" : "Stories from those who lived the adventure"}
+            {isEs ? "Lo que puede comprobar en Google" : "What you can verify on Google"}
           </h2>
+          <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-stone-600 dark:text-stone-300">
+            {isEs
+              ? "No publicamos citas atribuidas sin autorización ni fuente. Consulte las reseñas originales directamente en el perfil público de La Vieja Adventures."
+              : "We do not publish attributed quotes without permission or a verifiable source. Read the original reviews directly on La Vieja Adventures' public profile."}
+          </p>
         </div>
 
-        <div className="grid gap-5 md:grid-cols-3">
-          {TESTIMONIALS.map((t) => (
-            <figure
-              key={t.name}
-              className="flex flex-col rounded-3xl border border-stone-200 bg-white p-8 shadow-[0_10px_40px_rgba(0,0,0,0.04)] dark:border-stone-800 dark:bg-white/[0.03]"
-            >
-              <span className="flex gap-0.5 text-amber-400">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Star key={i} size={14} className="fill-current" />
-                ))}
-              </span>
-              <span className="mt-4 inline-flex w-fit rounded-full bg-emerald-50 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300">
-                {isEs ? t.experience.es : t.experience.en}
-              </span>
-              <blockquote className="mt-4 flex-1 text-sm leading-relaxed text-stone-600 dark:text-stone-300">
-                “{isEs ? t.es : t.en}”
-              </blockquote>
-              <figcaption className="mt-5">
-                <p className="text-sm font-bold text-stone-900 dark:text-stone-100">{t.name}</p>
-                <p className="text-xs text-stone-500 dark:text-stone-400">{isEs ? t.origin.es : t.origin.en}</p>
-              </figcaption>
-            </figure>
-          ))}
+        <div className="grid gap-5 md:grid-cols-[1.1fr_.9fr]">
+          <article className="rounded-3xl border border-stone-200 bg-white p-8 shadow-[0_10px_40px_rgba(0,0,0,0.04)] dark:border-stone-800 dark:bg-white/[0.03]">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300">
+              {isEs ? "Resumen del listado" : "Listing summary"}
+            </p>
+            <h3 className="mt-3 font-display text-2xl font-bold text-stone-900 dark:text-stone-50">
+              {isEs ? "Reseñas reales, en su fuente" : "Real reviews, at their source"}
+            </h3>
+            <div className="mt-6">
+              <GoogleRating locale={lang} />
+            </div>
+            <p className="mt-5 text-sm leading-relaxed text-stone-600 dark:text-stone-300">
+              {isEs
+                ? "La calificación y el conteo corresponden al resumen del listado de Google. El contenido completo, los nombres y las fechas de cada reseña se consultan allí."
+                : "The rating and count come from the Google listing summary. Full review text, names, and dates remain available there."}
+            </p>
+            <p className="mt-4 text-xs font-semibold text-stone-500 dark:text-stone-400">
+              {isEs ? `Dato actualizado: ${updatedAt}.` : `Updated: ${updatedAt}.`}
+            </p>
+          </article>
+
+          <a
+            href={GOOGLE_REVIEWS.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex min-h-56 flex-col justify-between rounded-3xl bg-[#2e2a25] p-8 text-white shadow-[0_10px_40px_rgba(0,0,0,0.12)] transition hover:-translate-y-1 hover:bg-[#403a33]"
+          >
+            <div>
+              <ExternalLink className="text-[#70eee1]" size={24} aria-hidden="true" />
+              <h3 className="mt-6 font-display text-2xl font-bold">
+                {isEs ? "Leer las reseñas completas" : "Read the full reviews"}
+              </h3>
+              <p className="mt-3 text-sm leading-relaxed text-white/70">
+                {isEs ? "Abrir el perfil de La Vieja Adventures en Google y revisar la fuente original." : "Open La Vieja Adventures on Google and review the original source."}
+              </p>
+            </div>
+            <span className="mt-8 inline-flex items-center gap-2 text-sm font-bold text-[#70eee1]">
+              {isEs ? "Ver en Google" : "View on Google"}
+              <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+            </span>
+          </a>
         </div>
       </div>
 
