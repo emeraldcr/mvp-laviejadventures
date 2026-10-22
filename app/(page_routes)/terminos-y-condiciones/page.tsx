@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useLanguage } from "@/lib/LanguageContext";
+import HomeNav from "@/app/components/home/HomeNav";
+import { EditorialFinalCta, EditorialIntro, EditorialTrust } from "@/app/components/layouts/EditorialPageBlocks";
 
 type Section = {
   title: string;
@@ -123,8 +125,9 @@ export default function TermsPage() {
   const content = termsContent[lang];
 
   return (
-    <main className="min-h-screen bg-zinc-50 dark:bg-black flex flex-col items-center py-10 px-4">
-      <div className="w-full max-w-4xl flex items-center justify-between mb-4">
+    <main className="min-h-screen bg-zinc-50 px-4 pb-16 pt-24 dark:bg-black md:pt-32">
+      <HomeNav solid />
+      <div className="mx-auto flex w-full max-w-4xl items-center justify-between mb-4">
         <Link
           href="/"
           className="text-sm text-zinc-500 hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400 transition-colors"
@@ -140,8 +143,9 @@ export default function TermsPage() {
           {lang === "es" ? "EN" : "ES"}
         </button>
       </div>
-      <div className="w-full max-w-4xl bg-white dark:bg-zinc-950 rounded-2xl shadow-2xl p-10 border border-zinc-200 dark:border-zinc-800 flex-1">
-        <h1 className="text-3xl font-bold mb-6 text-center">{content.title}</h1>
+      <div className="mx-auto w-full max-w-4xl space-y-6">
+        <EditorialIntro eyebrow={lang === "es" ? "Reservar con claridad" : "Book with clarity"} title={content.title} promise={lang === "es" ? "Condiciones claras para disfrutar la aventura con expectativas correctas y decisiones informadas." : "Clear terms so you can enjoy the adventure with the right expectations and informed decisions."} primaryHref="/reservar" primaryLabel={lang === "es" ? "Ver fechas y reservar" : "See dates and book"} secondaryHref="/preguntas-frecuentes" secondaryLabel={lang === "es" ? "Leer preguntas frecuentes" : "Read FAQs"}><EditorialTrust>{lang === "es" ? "La disponibilidad se confirma antes del pago y el clima puede cambiar el plan por seguridad." : "Availability is confirmed before payment, and weather may change the plan for safety."}</EditorialTrust></EditorialIntro>
+        <article className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xl dark:border-zinc-800 dark:bg-zinc-950 sm:p-10">
 
         {content.sections.map((section) => (
           <section key={section.title} className="mb-8">
@@ -162,6 +166,8 @@ export default function TermsPage() {
         ))}
 
         <p className="text-center text-zinc-500 dark:text-zinc-500 mt-8">{content.lastUpdated}</p>
+        </article>
+        <EditorialFinalCta title={lang === "es" ? "¿Ya tiene claro el siguiente paso?" : "Ready for the next step?"} body={lang === "es" ? "Revise las fechas disponibles y le acompañamos durante la reserva." : "Review available dates and we will guide you through the booking."} label={lang === "es" ? "Ir a reservar" : "Book now"} />
       </div>
     </main>
   );

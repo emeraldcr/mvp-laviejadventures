@@ -24,6 +24,7 @@ import { StationHealthBadge } from "./components/StationHealthBadge";
 import { NowModule } from "./components/v2/NowModule";
 import { TomorrowModule } from "./components/v2/TomorrowModule";
 import { RiverModule } from "./components/v2/RiverModule";
+import { EditorialFinalCta, EditorialTrust } from "@/app/components/layouts/EditorialPageBlocks";
 
 export default function TourWeatherDashboard() {
   const {
@@ -116,6 +117,7 @@ export default function TourWeatherDashboard() {
               primaria es el pluviómetro del IMN en la cuenca alta; todo lo demás entra como apoyo
               secundario. La decisión final de una salida la toma el guía en sitio.
             </p>
+            <EditorialTrust dark>La lectura orienta; la decisión operativa final la toma el guía en sitio. Si el río viene crecido, no forzamos el cañón, mae.</EditorialTrust>
           </header>
 
           {/* Índice de navegación */}
@@ -324,6 +326,7 @@ export default function TourWeatherDashboard() {
                 {new Date(rain.meta.fetchedAt).toLocaleString("es-CR")}
               </p>
             )}
+            <EditorialFinalCta dark title="¿Le ayudamos a elegir una aventura segura?" body="Consulte una fecha y el equipo confirma la disponibilidad y la condición operativa real." label="Consultar y reservar" />
           </div>
         </main>
       </div>

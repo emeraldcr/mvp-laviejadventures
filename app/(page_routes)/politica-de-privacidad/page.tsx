@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useLanguage } from "@/lib/LanguageContext";
+import HomeNav from "@/app/components/home/HomeNav";
+import { EditorialFinalCta, EditorialIntro, EditorialTrust } from "@/app/components/layouts/EditorialPageBlocks";
 
 type Section = {
   title: string;
@@ -175,8 +177,9 @@ export default function PrivacyPage() {
   const content = privacyContent[lang];
 
   return (
-    <main className="min-h-screen bg-zinc-50 dark:bg-black flex flex-col items-center py-10 px-4">
-      <div className="w-full max-w-4xl flex items-center justify-between mb-4">
+    <main className="min-h-screen bg-zinc-50 px-4 pb-16 pt-24 dark:bg-black md:pt-32">
+      <HomeNav solid />
+      <div className="mx-auto flex w-full max-w-4xl items-center justify-between mb-4">
         <Link
           href="/"
           className="text-sm text-zinc-500 hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400 transition-colors"
@@ -192,8 +195,9 @@ export default function PrivacyPage() {
           {lang === "es" ? "EN" : "ES"}
         </button>
       </div>
-      <div className="w-full max-w-4xl bg-white dark:bg-zinc-950 rounded-2xl shadow-2xl p-10 border border-zinc-200 dark:border-zinc-800 flex-1">
-        <h1 className="text-3xl font-bold mb-6 text-center">{content.title}</h1>
+      <div className="mx-auto w-full max-w-4xl space-y-6">
+        <EditorialIntro eyebrow={lang === "es" ? "Datos y confianza" : "Data and trust"} title={content.title} promise={lang === "es" ? "Conozca qué información usamos, por qué la necesitamos y cómo puede ejercer sus derechos." : "Learn what information we use, why we need it, and how you can exercise your rights."} primaryHref="/reservar" primaryLabel={lang === "es" ? "Ir a reservar" : "Book a tour"} secondaryHref="/terminos-y-condiciones" secondaryLabel={lang === "es" ? "Ver términos" : "View terms"}><EditorialTrust>{lang === "es" ? "Los pagos son procesados por plataformas externas; no almacenamos los datos completos de su tarjeta." : "Payments are processed by external platforms; we do not store your full card details."}</EditorialTrust></EditorialIntro>
+        <article className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-2xl dark:border-zinc-800 dark:bg-zinc-950 sm:p-10">
 
         {content.sections.map((section) => (
           <section key={section.title} className="mb-8">
@@ -214,6 +218,8 @@ export default function PrivacyPage() {
         ))}
 
         <p className="text-center text-zinc-500 dark:text-zinc-500 mt-8">{content.lastUpdated}</p>
+        </article>
+        <EditorialFinalCta title={lang === "es" ? "¿Tiene una pregunta sobre sus datos?" : "Have a question about your data?"} body={lang === "es" ? "Escríbanos y el equipo le orienta con gusto." : "Contact us and our team will be happy to help."} label={lang === "es" ? "Conocer la aventura" : "Explore the adventure"} href="/info" />
       </div>
     </main>
   );

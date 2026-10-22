@@ -8,6 +8,7 @@ import { BUSINESS_WHATSAPP_URL } from "@/lib/site-config";
 import Link from "next/link";
 import { useEffect } from "react";
 import type { SuccessClientProps } from "@/lib/types/types";
+import { EditorialFinalCta, EditorialTrust } from "@/app/components/layouts/EditorialPageBlocks";
 
 const PURCHASE_CONVERSION_SEND_TO = "AW-18010006901/uUBECMPq76kcEPXK64tD";
 
@@ -117,6 +118,7 @@ function SuccessState({
 }: SuccessClientProps & { translations: SuccessTranslations }) {
   const defaultCustomer = tr.title.startsWith("Booking") ? "Customer" : "Cliente";
   const displayName = name || defaultCustomer;
+  const isEnglish = tr.title.startsWith("Booking");
 
   return (
     <section className="mx-auto max-w-5xl px-4 py-10 sm:py-16">
@@ -134,6 +136,7 @@ function SuccessState({
 
         <ThankYouMessage name={displayName} translations={tr} />
         <EmailConfirmationMessage email={email ?? undefined} translations={tr} />
+        <EditorialTrust>{isEnglish ? "Your reference keeps the booking traceable. Keep it handy when contacting our team." : "Su referencia mantiene la reserva identificada. Téngala a mano si necesita contactar al equipo."}</EditorialTrust>
 
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
           <BookingDetails
@@ -166,6 +169,9 @@ function SuccessState({
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <SupportAction name={displayName} reference={orderId || reservationId} date={date} label={tr.supportAction} />
           <BackButton label={tr.backBtn} />
+        </div>
+        <div className="mt-8">
+          <EditorialFinalCta title={isEnglish ? "Keep exploring San Carlos" : "Siga explorando San Carlos"} body={isEnglish ? "When you are ready, discover another local experience with us." : "Cuando esté listo, descubra otra experiencia local con nosotros."} label={isEnglish ? "Explore tours" : "Explorar tours"} href="/tours" />
         </div>
       </div>
     </section>
