@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Check, Leaf, Recycle, Sprout } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
+import { localizeHref } from "@/lib/i18n";
 
 const points = {
   es: [
@@ -73,14 +74,14 @@ export default function HomeOrganicsFeature() {
 
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
-                href="/organics"
+                href={localizeHref("/organics", lang)}
                 className="group inline-flex items-center gap-2 rounded-full bg-emerald-600 px-7 py-3.5 text-sm font-bold text-white shadow-lg shadow-emerald-600/25 transition-all hover:-translate-y-0.5 hover:bg-emerald-500"
               >
                 {isEs ? "Conocer el proyecto" : "Explore the project"}
                 <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
               </Link>
               <Link
-                href="/info"
+                href={localizeHref("/info", lang)}
                 className="inline-flex items-center gap-2 rounded-full border border-stone-300 px-7 py-3.5 text-sm font-bold text-stone-800 transition-colors hover:border-emerald-600 hover:text-emerald-700 dark:border-stone-600 dark:text-stone-200 dark:hover:border-emerald-400 dark:hover:text-emerald-300"
               >
                 <Sprout size={16} />

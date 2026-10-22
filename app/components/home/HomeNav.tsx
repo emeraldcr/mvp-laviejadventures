@@ -18,9 +18,16 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
   const themeLabel = isEs ? (isDark ? "Modo claro" : "Modo oscuro") : (isDark ? "Light mode" : "Dark mode");
   const pathname = usePathname();
   const currentTour = pathname.match(/\/tour\/([^/]+)/)?.[1];
-  const bookingHref = currentTour ? `/reservar?tour=${currentTour}` : BOOKING_HREF;
+  const [currentSearch, setCurrentSearch] = useState("");
+  const bookingQuery = new URLSearchParams(currentSearch);
+  if (currentTour) bookingQuery.set("tour", decodeURIComponent(currentTour));
+  const bookingHref = bookingQuery.toString() ? `/reservar?${bookingQuery.toString()}` : BOOKING_HREF;
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    setCurrentSearch(window.location.search);
+  }, [pathname]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -44,7 +51,9 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
   ];
 
   const onDark = !scrolled && !solid;
-  const languageHref = localizeHref(pathname, isEs ? "en" : "es");
+  const currentQuery = currentSearch.replace(/^\?/, "");
+  const languagePath = localizeHref(pathname, isEs ? "en" : "es");
+  const languageHref = `${languagePath}${currentQuery ? `?${currentQuery}` : ""}`;
 
   return (
     <>

@@ -27,6 +27,7 @@ import {
 import { useLanguage } from "@/lib/LanguageContext";
 import { translations } from "@/lib/translations";
 import { principalContent } from "@/lib/constants/principal";
+import { localizeHref } from "@/lib/i18n";
 
 const WHATSAPP_RESERVAS_HREF = "https://wa.me/50662332535";
 
@@ -115,7 +116,7 @@ export const SiteHeader = memo<{ isScrolled?: boolean }>(({ isScrolled = false }
             return (
               <Link
                 key={link.href}
-                href={link.href}
+                href={localizeHref(link.href, lang)}
                 className={[
                   "group/nl relative flex flex-col items-center rounded-full px-3.5 py-2 transition-all duration-200",
                   isActive
@@ -149,7 +150,7 @@ export const SiteHeader = memo<{ isScrolled?: boolean }>(({ isScrolled = false }
             WhatsApp
           </a>
           <Link
-            href="/reservar"
+            href={localizeHref("/reservar", lang)}
             className="emerald-wave-button rounded-full border border-emerald-200/[0.45] bg-emerald-300/[0.15] px-5 py-2 font-semibold text-white shadow-[0_8px_26px_rgba(6,78,59,0.28),inset_0_1px_0_rgba(255,255,255,0.28)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-100/80 hover:bg-emerald-200/25 hover:text-white"
           >
             {tr.reserve}
@@ -304,7 +305,7 @@ const MobileMoreMenu = memo<{
             }
 
             return (
-              <Link key={href} href={href} className={className} onClick={onClose}>
+              <Link key={href} href={localizeHref(href, lang)} className={className} onClick={onClose}>
                 {content}
               </Link>
             );
@@ -450,7 +451,7 @@ export const MobileBottomNav = memo(() => {
               return (
                 <Link
                   key={tab.id}
-                  href={href}
+                  href={localizeHref(href, lang)}
                   aria-current={isActive ? "page" : undefined}
                   className="relative flex min-h-[52px] flex-col items-center justify-end pb-2 transition-transform active:scale-95"
                 >
@@ -479,7 +480,7 @@ export const MobileBottomNav = memo(() => {
             return (
               <Link
                 key={tab.id}
-                href={href}
+                href={localizeHref(href, lang)}
                 aria-current={isActive ? "page" : undefined}
                 className="relative flex min-h-[52px] flex-col items-center justify-center gap-1 py-2 transition-transform active:scale-95"
               >
