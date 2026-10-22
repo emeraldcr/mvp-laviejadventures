@@ -2,8 +2,10 @@
 import { SuccessClient } from "./SuccessClient";
 import { processSuccessfulBooking } from "./bookingService";
 import type { SuccessPageProps } from "@/lib/types/types";
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = { title: "Reserva confirmada | La Vieja Adventures", robots: { index: false, follow: false } };
 
 export default async function SuccessPage({ searchParams }: SuccessPageProps) {
   const { orderId } = await searchParams;

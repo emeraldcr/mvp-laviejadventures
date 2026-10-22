@@ -1,4 +1,4 @@
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 import InfoClient from "./InfoClient";
 import { getPublicTours } from "@/lib/tours/read";
 

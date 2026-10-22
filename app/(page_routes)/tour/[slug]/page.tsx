@@ -1,8 +1,9 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Backpack, CalendarDays, Check, ChevronRight, Clock, HelpCircle, Info, MapPin, Route, ShieldCheck, Sparkles, Users, X } from "lucide-react";
+import { Backpack, CalendarDays, Check, ChevronRight, Clock, HelpCircle, Info, MapPin, Route, ShieldCheck, Sparkles, Users, X } from "lucide-react";
 import BirdwatchingTourPage from "@/app/components/tours/BirdwatchingTourPage";
 import { getTour } from "@/lib/tours/detail";
 import { pageMetadata } from "@/lib/seo";
@@ -13,6 +14,7 @@ import { getTourGallery, getTourImage, getTourShareImage } from "@/lib/tour-disp
 import { getTourContent } from "@/lib/tour-content";
 import { BUSINESS_PHONE_E164, SITE_URL } from "@/lib/site-config";
 import JsonLd from "@/app/components/seo/JsonLd";
+import SiteFooter from "@/app/components/sections/SiteFooter";
 
 function metaDescription(text: string, max = 155) {
   const clean = text.replace(/\s+/g, " ").trim();
@@ -26,7 +28,7 @@ function tourWhatsAppHref(title: string) {
   return `https://wa.me/${BUSINESS_PHONE_E164.replace("+", "")}?text=${encodeURIComponent(text)}`;
 }
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 type TourDetailPageProps = {
   params: Promise<{ slug: string }>;
@@ -111,14 +113,17 @@ export default async function TourDetailPage({ params }: TourDetailPageProps) {
       <HomeNav />
 
       <section className="relative min-h-[78vh] overflow-hidden pt-24">
-        <img src={heroImage} alt={title} loading="eager" fetchPriority="high" className="absolute inset-0 h-full w-full object-cover" />
+        <Image src={heroImage} alt={title} fill priority sizes="100vw" className="object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-black/35" />
 
         <div className="container relative z-10 mx-auto flex min-h-[70vh] max-w-7xl flex-col justify-end px-4 pb-10 md:px-8">
-          <Link href="/#tours" className="mb-8 inline-flex w-fit items-center gap-2 rounded-full border border-white/20 bg-black/45 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-white/80 backdrop-blur transition hover:border-cyan-300 hover:text-cyan-200">
-            <ArrowLeft className="h-4 w-4" aria-hidden />
-            Tours
-          </Link>
+          <nav aria-label="Migas de pan" className="mb-8 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-white/75">
+            <Link href="/" className="transition hover:text-white">Inicio</Link>
+            <ChevronRight className="h-4 w-4" aria-hidden />
+            <Link href="/tours" className="transition hover:text-white">Tours</Link>
+            <ChevronRight className="h-4 w-4" aria-hidden />
+            <span className="truncate text-white">{title}</span>
+          </nav>
 
           <div className="max-w-4xl">
             <GoogleRating dark />
@@ -189,13 +194,12 @@ export default async function TourDetailPage({ params }: TourDetailPageProps) {
 
         <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-1">
           {gallery.map((image, index) => (
-            <img
+            <div
               key={`${image}-${index}`}
-              src={image}
-              alt={`${title} ${index + 1}`}
-              loading={index === 0 ? undefined : "lazy"}
-              className="h-56 w-full rounded-3xl border border-white/10 object-cover shadow-2xl sm:h-64"
-            />
+              className="relative h-56 w-full overflow-hidden rounded-3xl border border-white/10 shadow-2xl sm:h-64"
+            >
+              <Image src={image} alt={`${title} — imagen ${index + 1}`} fill sizes="(min-width: 768px) 40vw, 100vw" loading={index === 0 ? "eager" : "lazy"} className="object-cover" />
+            </div>
           ))}
         </div>
       </section>
@@ -345,6 +349,8 @@ export default async function TourDetailPage({ params }: TourDetailPageProps) {
           </div>
         </section>
       )}
+
+      <SiteFooter />
     </main>
   );
 }

@@ -11,6 +11,7 @@ import HomeConversionRail from "@/app/components/home/HomeConversionRail";
 import FeaturedStory from "@/app/components/home/FeaturedStory";
 import ToursShowcase from "@/app/components/home/ToursShowcase";
 import HomeFaqFooter from "@/app/components/home/HomeFaqFooter";
+import HomeStructuredData from "@/app/home/HomeStructuredData";
 
 export default function HomeClient({ children, tours }: { children: ReactNode; tours: TourSummary[] }): JSX.Element {
   const { lang } = useLanguage();
@@ -22,6 +23,7 @@ export default function HomeClient({ children, tours }: { children: ReactNode; t
     <ErrorBoundary fallback={<div className="flex h-screen items-center justify-center bg-white text-xl text-red-600">{copy.criticalFallback}</div>}>
       <main className="min-h-screen overflow-x-hidden bg-[#FAF9F6] font-sans text-stone-900 dark:bg-[#0b0a09] dark:text-stone-100">
         <HomeNav />
+        <HomeStructuredData tours={tours} locale={lang} />
         <HomeHero tour={ciudadEsmeralda} />
         <HomeConversionRail />
         <FeaturedStory tours={featuredTours} />

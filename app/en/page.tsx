@@ -1,4 +1,4 @@
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 import HomeClient from "@/app/HomeClient";
 import HomeServerFaq from "@/app/home/HomeServerFaq";
 import { getPublicTours } from "@/lib/tours/read";

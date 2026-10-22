@@ -11,8 +11,11 @@ import HomeNav from "@/app/components/home/HomeNav";
 import GoogleRating from "@/app/components/GoogleRating";
 import JsonLd from "@/app/components/seo/JsonLd";
 import { ChevronRight } from "lucide-react";
+import SiteFooter from "@/app/components/sections/SiteFooter";
 
 type Props = { params: Promise<{ slug: string }> };
+export const revalidate = 300;
+
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
   const tour = await getTour(slug);
@@ -62,5 +65,6 @@ export default async function EnglishTour({ params }: Props) {
       <div className="mt-6 grid gap-5 md:grid-cols-3">{tour.packages.map(pkg=><article key={pkg.id || pkg.name} className="rounded-3xl border border-stone-300 bg-white p-6 dark:border-stone-700 dark:bg-stone-900"><h3 className="text-xl font-bold">{pkg.name}</h3><p className="mt-3 leading-relaxed">{pkg.descriptionEn}</p><ul className="mt-4 list-inside list-disc space-y-2">{pkg.includes?.map(item=><li key={item}>{item}</li>)}</ul><p className="mt-5 text-lg font-bold">{getTourPriceDisplay({packages:[pkg]}, false).compact} / person</p><Link href={`${booking}${pkg.id ? `&package=${encodeURIComponent(pkg.id)}` : ''}`} className="mt-5 inline-flex min-h-12 items-center rounded-full bg-[#00796B] px-5 font-bold text-white">Select package</Link></article>)}</div>
     </section>
     <section className="mx-auto max-w-6xl space-y-4 px-5 pb-24"><h2 className="text-2xl font-bold">Plan your visit</h2><p>Bring comfortable clothing, secure footwear with good grip, water and any personal medication. Ask our team for the requirements that apply to your activity, including age, fitness, group size and transport.</p><p>For river activities, bring a dry change of clothes and protect your phone from water. Heavy rain or a rising river can change the route or require rescheduling. Your guide makes the safety decision.</p><p>Meeting point: {tour.location || 'Sucre de Ciudad Quesada, San Carlos, Costa Rica'}. Confirm the exact meeting time when booking.</p></section>
+    <SiteFooter />
   </main>;
 }

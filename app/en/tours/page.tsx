@@ -1,4 +1,4 @@
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 import { ToursClient } from "@/app/(page_routes)/tours/ToursClient";
 import { getPublicTours } from "@/lib/tours/read";
 import { pageMetadata } from "@/lib/seo";
