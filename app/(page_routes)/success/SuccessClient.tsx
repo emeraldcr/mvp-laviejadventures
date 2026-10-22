@@ -10,6 +10,7 @@ import Link from "next/link";
 import { useEffect } from "react";
 import type { SuccessClientProps } from "@/lib/types/types";
 import { EditorialFinalCta, EditorialTrust } from "@/app/components/layouts/EditorialPageBlocks";
+import { BOOKING_ASSURANCE_EN, BOOKING_ASSURANCE_ES } from "@/lib/tour-policy";
 
 const PURCHASE_CONVERSION_SEND_TO = "AW-18010006901/uUBECMPq76kcEPXK64tD";
 
@@ -115,6 +116,7 @@ function SuccessState({
   captureId,
   reservationId,
   status,
+  emailStatus,
   translations: tr,
 }: SuccessClientProps & { translations: SuccessTranslations }) {
   const defaultCustomer = tr.title.startsWith("Booking") ? "Customer" : "Cliente";
@@ -136,8 +138,8 @@ function SuccessState({
         </div>
 
         <ThankYouMessage name={displayName} translations={tr} />
-        <EmailConfirmationMessage email={email ?? undefined} translations={tr} />
-        <EditorialTrust>{isEnglish ? "Your reference keeps the booking traceable. Keep it handy when contacting our team." : "Su referencia mantiene la reserva identificada. Téngala a mano si necesita contactar al equipo."}</EditorialTrust>
+        <EmailConfirmationMessage email={email ?? undefined} emailStatus={emailStatus} translations={tr} />
+        <EditorialTrust>{isEnglish ? BOOKING_ASSURANCE_EN : BOOKING_ASSURANCE_ES}</EditorialTrust>
 
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
           <BookingDetails
@@ -195,12 +197,16 @@ function ThankYouMessage({
 
 function EmailConfirmationMessage({
   email,
+  emailStatus,
   translations: tr,
-}: { email?: string; translations: SuccessTranslations }) {
+}: { email?: string; emailStatus?: SuccessClientProps["emailStatus"]; translations: SuccessTranslations }) {
+  if (emailStatus === "sent") {
+    return <p className="mt-4 text-zinc-700 dark:text-zinc-300">{tr.emailSentPrefix} <strong>{email}</strong>.</p>;
+  }
+
   return (
-    <p className="mt-4 text-zinc-700 dark:text-zinc-300">
-      {tr.emailSentPrefix}{" "}
-      <strong>{email || (tr.title.startsWith("Booking") ? "your email" : "tu correo electrónico")}</strong>.
+    <p className="mt-4 text-amber-800 dark:text-amber-200">
+      {emailStatus === "failed" ? tr.emailFailed : tr.emailPending}
     </p>
   );
 }

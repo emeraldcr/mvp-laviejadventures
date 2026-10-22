@@ -192,8 +192,8 @@ export default function TourSelectionCards({
               <p className="mt-2.5 flex items-center gap-1.5 text-sm font-medium text-[#B8BDC4] sm:text-[15px]">
                 <ShieldCheck className="h-3 w-3 text-emerald-300/60" />
                 {isEs
-                  ? "Confirmamos disponibilidad antes del cobro"
-                  : "We confirm availability before charging"}
+                  ? "Disponibilidad sujeta a confirmación; el equipo valida la operación antes del tour"
+                  : "Availability is subject to confirmation; the team validates operations before the tour"}
               </p>
             </div>
           </article>

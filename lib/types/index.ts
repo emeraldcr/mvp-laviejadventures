@@ -355,6 +355,7 @@ export type SuccessClientProps = {
   captureId?: string | null;
   reservationId?: string | null;
   status?: string | null;
+  emailStatus?: "sent" | "failed" | "not_configured" | "not_requested";
   error?: string | null;
 };
 

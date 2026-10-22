@@ -1,5 +1,6 @@
 import type { TourTime } from "@/lib/reservation/types";
 import { formatDepartureLabel } from "@/lib/reservation/constants";
+import { BOOKING_ASSURANCE_EN, BOOKING_ASSURANCE_ES } from "@/lib/tour-policy";
 
 type ReservationTranslations = typeof import("@/lib/translations").translations["es"]["reservation"];
 
@@ -77,8 +78,8 @@ export default function ReservationDetailsSummaryCard({
           </div>
           <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-xs leading-relaxed text-amber-950 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-100">
             {lang === "es"
-              ? "Total estimado. La disponibilidad se confirma antes del pago. Si el clima o el nivel del río no permiten operar, coordinamos reprogramación o una alternativa segura."
-              : "Estimated total. Availability is confirmed before payment. If weather or river conditions do not allow the tour to operate, we will coordinate a reschedule or a safe alternative."}
+              ? `Total estimado. ${BOOKING_ASSURANCE_ES}`
+              : `Estimated total. ${BOOKING_ASSURANCE_EN}`}
           </p>
           <button
             type="button"

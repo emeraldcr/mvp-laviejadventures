@@ -13,5 +13,5 @@ export default async function ReservationVoucherPage({ searchParams }: SuccessPa
   }
 
   const result = await processSuccessfulBooking(orderId);
-  return <SuccessClient error={result.error} name={result.name} email={result.email} phone={result.phone} date={result.date} tourName={result.tourName} tourPackage={result.tourPackage} tourTime={result.tourTime} tickets={result.tickets} amount={result.amount} currency={result.currency} orderId={result.orderId} captureId={result.captureId} reservationId={result.reservationId} status={result.status} />;
+  return <SuccessClient error={result.error} name={result.name} email={result.email} phone={result.phone} date={result.date} tourName={result.tourName} tourPackage={result.tourPackage} tourTime={result.tourTime} tickets={result.tickets} amount={result.amount} currency={result.currency} orderId={result.orderId} captureId={result.captureId} reservationId={result.reservationId} status={result.status} emailStatus={result.emailStatus} />;
 }

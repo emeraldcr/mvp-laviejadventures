@@ -32,7 +32,7 @@ const termsContent = {
         bullets: [
           "Los pagos se procesan a través de proveedores de pago seguros. Aceptamos tarjetas de crédito/débito principales.",
           "Los precios incluyen impuestos aplicables, pero pueden excluir cargos adicionales como propinas o extras opcionales.",
-          `${BOOKING_ASSURANCE_ES} Confirmaremos su reserva por correo electrónico una vez completado el pago.`,
+          `${BOOKING_ASSURANCE_ES} El voucher muestra el resultado real del pago y del envío de correo; si el correo falla, la reserva sigue guardada y puede contactarnos por WhatsApp.`,
         ],
       },
       {
@@ -85,7 +85,7 @@ const termsContent = {
         bullets: [
           "Payments are processed through secure payment providers. We accept major credit/debit cards.",
           "Prices include applicable taxes, but may exclude additional charges such as tips or optional extras.",
-          `${BOOKING_ASSURANCE_EN} We will confirm your booking by email once payment is completed.`,
+          `${BOOKING_ASSURANCE_EN} The voucher shows the real payment and email-delivery result; if email delivery fails, the booking remains saved and you can contact us on WhatsApp.`,
         ],
       },
       {
@@ -146,7 +146,7 @@ export default function TermsPage() {
         </button>
       </div>
       <div className="mx-auto w-full max-w-4xl space-y-6">
-        <EditorialIntro eyebrow={lang === "es" ? "Reservar con claridad" : "Book with clarity"} title={content.title} promise={lang === "es" ? "Condiciones claras para disfrutar la aventura con expectativas correctas y decisiones informadas." : "Clear terms so you can enjoy the adventure with the right expectations and informed decisions."} primaryHref="/reservar" primaryLabel={lang === "es" ? "Ver fechas y reservar" : "See dates and book"} secondaryHref="/preguntas-frecuentes" secondaryLabel={lang === "es" ? "Leer preguntas frecuentes" : "Read FAQs"}><EditorialTrust>{lang === "es" ? "La disponibilidad se confirma antes del pago y el clima puede cambiar el plan por seguridad." : "Availability is confirmed before payment, and weather may change the plan for safety."}</EditorialTrust></EditorialIntro>
+        <EditorialIntro eyebrow={lang === "es" ? "Reservar con claridad" : "Book with clarity"} title={content.title} promise={lang === "es" ? "Condiciones claras para disfrutar la aventura con expectativas correctas y decisiones informadas." : "Clear terms so you can enjoy the adventure with the right expectations and informed decisions."} primaryHref="/reservar" primaryLabel={lang === "es" ? "Ver fechas y reservar" : "See dates and book"} secondaryHref="/preguntas-frecuentes" secondaryLabel={lang === "es" ? "Leer preguntas frecuentes" : "Read FAQs"}><EditorialTrust>{lang === "es" ? BOOKING_ASSURANCE_ES : BOOKING_ASSURANCE_EN}</EditorialTrust></EditorialIntro>
         <article className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xl dark:border-zinc-800 dark:bg-zinc-950 sm:p-10">
 
         {content.sections.map((section) => (

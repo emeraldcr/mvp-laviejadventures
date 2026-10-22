@@ -92,6 +92,7 @@ type SuccessPageResult = {
   captureId?: string | null;
   reservationId?: string | null;
   status?: string | null;
+  emailStatus?: "sent" | "failed" | "not_configured" | "not_requested";
 };
 
 export async function processSuccessfulBooking(orderId: string): Promise<SuccessPageResult> {
@@ -149,9 +150,10 @@ export async function processSuccessfulBooking(orderId: string): Promise<Success
 
   const reservationId = await saveBookingToDb(booking);
 
-  // 4. Send confirmation email (non-blocking)
+  // 4. Send confirmation email and expose the real delivery result to the voucher.
+  let emailStatus: SuccessPageResult["emailStatus"] = "not_requested";
   if (parsed.email) {
-    sendConfirmationEmail({
+    const emailResult = await sendConfirmationEmail({
       to: parsed.email,
       name: parsed.name,
       phone: parsed.phone,
@@ -167,7 +169,8 @@ export async function processSuccessfulBooking(orderId: string): Promise<Success
       tourName: parsed.tourName,
       tourPackage: parsed.tourPackage,
       tourTime: parsed.tourTime,
-    }).catch(console.error);
+    });
+    emailStatus = emailResult.status;
   }
 
   return {
@@ -186,6 +189,7 @@ export async function processSuccessfulBooking(orderId: string): Promise<Success
     captureId: parsed.captureId,
     reservationId,
     status: parsed.status,
+    emailStatus,
   };
 }
 

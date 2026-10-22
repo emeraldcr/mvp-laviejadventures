@@ -3,11 +3,16 @@ import { Resend } from "resend";
 import type { SendEmailParams } from "@/lib/types/types";
 import { getEmailFrom } from "@/lib/constants/email";
 
-export async function sendConfirmationEmail(params: SendEmailParams) {
+export type ConfirmationEmailResult =
+  | { status: "sent" }
+  | { status: "not_configured"; error: string }
+  | { status: "failed"; error: string };
+
+export async function sendConfirmationEmail(params: SendEmailParams): Promise<ConfirmationEmailResult> {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
     console.warn("RESEND_API_KEY not set, skipping email sending");
-    return;
+    return { status: "not_configured", error: "El servicio de correo no está configurado." };
   }
 
   const resend = new Resend(apiKey);
@@ -26,8 +31,10 @@ export async function sendConfirmationEmail(params: SendEmailParams) {
 
   if (error) {
     console.error("Resend error:", error);
+    return { status: "failed", error: error.message || "No se pudo enviar el correo." };
   } else {
     console.log("Confirmation email sent via Resend");
+    return { status: "sent" };
   }
 }
 
