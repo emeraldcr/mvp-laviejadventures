@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef } from "react";
 import type { BookingStepId } from "@/lib/reservation/types";
-import { trackAnalyticsEvent } from "@/lib/analytics/client";
+import { BOOKING_COMPLETION_STORAGE_KEY, trackAnalyticsEvent } from "@/lib/analytics/client";
 import { RESERVATION_STEP_LABELS } from "../constants/reservationWizard";
 
 type Args = {
@@ -41,6 +41,7 @@ export function useReservationStepAnalytics({
   const currentStepRef = useRef<BookingStepId>(1);
   const stepEnteredAtRef = useRef(0);
   const completedStepsRef = useRef(new Set<BookingStepId>());
+  const exitTrackedRef = useRef(false);
 
   const getMissingKeysForStep = useCallback((step: BookingStepId) => {
     if (step === 1) return missingStep1Keys;
@@ -96,16 +97,18 @@ export function useReservationStepAnalytics({
     if (previousStep === currentStep) return;
 
     const durationMs = Date.now() - stepEnteredAtRef.current;
-    trackAnalyticsEvent("booking_step_abandoned", {
+    const isProgression = currentStep > previousStep;
+    trackAnalyticsEvent(isProgression ? "booking_step_progressed" : "booking_step_backtracked", {
       metadata: {
-        step: previousStep,
-        stepLabel: RESERVATION_STEP_LABELS[previousStep],
+        fromStep: previousStep,
+        fromStepLabel: RESERVATION_STEP_LABELS[previousStep],
+        toStep: currentStep,
+        toStepLabel: RESERVATION_STEP_LABELS[currentStep],
+        transitionType: isProgression ? "progression" : "backtracking",
         durationMs,
         durationSeconds: Math.round(durationMs / 1000),
-        missingKeys: getMissingKeysForStep(previousStep),
         completed: completedStepsRef.current.has(previousStep),
-        nextStep: currentStep,
-        nextStepLabel: RESERVATION_STEP_LABELS[currentStep],
+        missingKeys: getMissingKeysForStep(previousStep),
         booking: getBookingSnapshot(),
       },
     });
@@ -116,6 +119,10 @@ export function useReservationStepAnalytics({
 
   useEffect(() => {
     const handlePageHide = () => {
+      if (exitTrackedRef.current) return;
+      exitTrackedRef.current = true;
+      if (sessionStorage.getItem(BOOKING_COMPLETION_STORAGE_KEY) === "1") return;
+
       const activeStep = currentStepRef.current;
       const durationMs = Date.now() - stepEnteredAtRef.current;
 
@@ -127,8 +134,8 @@ export function useReservationStepAnalytics({
           durationSeconds: Math.round(durationMs / 1000),
           missingKeys: getMissingKeysForStep(activeStep),
           completed: completedStepsRef.current.has(activeStep),
-          nextStep: null,
-          nextStepLabel: null,
+          abandonmentType: "page_exit",
+          exitReason: "pagehide",
           source: "pagehide",
           booking: getBookingSnapshot(),
         },

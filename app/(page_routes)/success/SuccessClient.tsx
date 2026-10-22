@@ -1,7 +1,7 @@
 "use client";
 
 import { useLanguage } from "@/lib/LanguageContext";
-import { trackAnalyticsEvent } from "@/lib/analytics/client";
+import { BOOKING_COMPLETION_STORAGE_KEY, trackAnalyticsEvent } from "@/lib/analytics/client";
 import { translations } from "@/lib/translations";
 import { LA_VIEJA_GOOGLE_MAPS_URL, LA_VIEJA_LOCATION_LABEL } from "@/lib/constants/location";
 import { BUSINESS_WHATSAPP_URL } from "@/lib/site-config";
@@ -45,6 +45,7 @@ export function SuccessClient(props: SuccessClientProps) {
         language: lang,
       },
     });
+    sessionStorage.removeItem(BOOKING_COMPLETION_STORAGE_KEY);
 
     const transactionId = props.captureId || props.orderId || "";
     const conversionStorageKey = `google-ads-purchase-conversion:${transactionId}`;

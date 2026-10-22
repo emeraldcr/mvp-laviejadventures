@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { trackAnalyticsEvent } from "@/lib/analytics/client";
+import { BOOKING_COMPLETION_STORAGE_KEY, trackAnalyticsEvent } from "@/lib/analytics/client";
 import type { OrderDetails } from "@/lib/types/index";
 import { RESERVATION_TRAVELER_DRAFT_KEY } from "@/lib/reservation/constants";
 import {
@@ -213,6 +213,7 @@ export function usePayPalCheckout({
             },
           });
 
+          sessionStorage.setItem(BOOKING_COMPLETION_STORAGE_KEY, "1");
           sessionStorage.removeItem("reservationOrderDetails");
           sessionStorage.removeItem(RESERVATION_TRAVELER_DRAFT_KEY);
           onSuccess(output);

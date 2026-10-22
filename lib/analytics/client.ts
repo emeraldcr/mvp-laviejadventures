@@ -4,6 +4,8 @@ export type AnalyticsEventName =
   | "page_view"
   | "click"
   | "booking_step"
+  | "booking_step_progressed"
+  | "booking_step_backtracked"
   | "booking_step_completed"
   | "booking_step_blocked"
   | "booking_step_abandoned"
@@ -26,6 +28,7 @@ export type AnalyticsPayload = {
 };
 
 const SESSION_STORAGE_KEY = "lva_analytics_session_id";
+export const BOOKING_COMPLETION_STORAGE_KEY = "lva_booking_flow_completed";
 
 function getOrCreateSessionId(): string {
   if (typeof window === "undefined") return "";
