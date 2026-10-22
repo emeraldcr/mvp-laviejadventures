@@ -19,7 +19,7 @@ import type {
 } from "@/lib/reservation/types";
 import ReservationDetailsStep1Guided from "./ReservationDetailsStep1Guided";
 import ReservationDetailsStep2 from "./ReservationDetailsStep2";
-import PaymentModal from "./PaymentModal";
+import InlinePayPalCheckout from "./InlinePayPalCheckout";
 import type { OrderDetails } from "@/lib/types/index";
 import { ReservationWizardProvider, useReservationWizard } from "./context/ReservationWizardContext";
 import { useReservationStepAnalytics } from "./hooks/useReservationStepAnalytics";
@@ -596,17 +596,17 @@ function ReservationDetailsFlow({
               {missingItems.join(" ")}
             </p>
           )}
+
+          {formState.agreeTerms && paypalOrderDetails && (
+            <InlinePayPalCheckout
+              orderDetails={paypalOrderDetails}
+              lang={lang}
+              onBack={() => handleChange("agreeTerms", false)}
+            />
+          )}
         </>
       )}
       </main>
-
-      {formState.agreeTerms && paypalOrderDetails && (
-        <PaymentModal
-          orderDetails={paypalOrderDetails}
-          onClose={() => handleChange("agreeTerms", false)}
-          onSuccess={() => handleChange("agreeTerms", false)}
-        />
-      )}
 
       {currentStep !== 3 && <BookingStickyBar
         lang={lang}

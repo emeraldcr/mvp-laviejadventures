@@ -378,9 +378,3 @@ export type OrderDetails = {
   addonDetails?: import("@/lib/reservation/types").ReservationAddonDetails;
   transportQuote?: import("@/lib/reservation/transport").TransportQuoteResult | null;
 };
-
-export type PaymentModalProps = {
-  orderDetails: OrderDetails;
-  onClose: () => void;
-  onSuccess: (orderData: unknown) => void;
-};
