@@ -344,7 +344,7 @@ export default function ToursImmersionSection({ onSelectTour, selectedTourSlug }
                         ? `$${ciudadEsmeraldaTour.packages[0].price}`
                         : isEs ? "Consultar" : "Ask"}
                     </span>
-                    <span className="ml-2 text-sm text-white/40">{isEs ? "/ persona" : "/ person"}</span>
+                    <span className="ml-2 text-sm text-white/40">/ persona</span>
                   </div>
                   <button
                     type="button"
@@ -467,7 +467,7 @@ export default function ToursImmersionSection({ onSelectTour, selectedTourSlug }
                         {isEs ? "Desde" : "From"}
                       </span>
                       <span className="text-2xl font-black text-amber-100">{price}</span>
-                      <span className="ml-1.5 text-xs text-white/38">{isEs ? "/ persona" : "/ person"}</span>
+                      <span className="ml-1.5 text-xs text-white/38">/ persona</span>
                     </div>
                     <button
                       type="button"

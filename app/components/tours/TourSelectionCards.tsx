@@ -153,19 +153,19 @@ export default function TourSelectionCards({
               {/* Stat pills */}
               <div className="mb-4 flex flex-wrap gap-1.5">
                 {tour.duration && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/12 bg-white/10 px-2.5 py-1 text-[10px] font-bold text-white/75 backdrop-blur-md">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/12 bg-white/10 px-2.5 py-1 text-sm font-bold text-[#B8BDC4] backdrop-blur-md">
                     <Clock3 className="h-3 w-3 shrink-0 text-teal-300" />
                     {tourDuration(tour.duration, lang)}
                   </span>
                 )}
                 {tour.difficulty && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/12 bg-white/10 px-2.5 py-1 text-[10px] font-bold text-white/75 backdrop-blur-md">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/12 bg-white/10 px-2.5 py-1 text-sm font-bold text-[#B8BDC4] backdrop-blur-md">
                     <Zap className="h-3 w-3 shrink-0 text-amber-300" />
                     {tourDifficulty(tour.difficulty, lang)}
                   </span>
                 )}
                 {tour.location && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/12 bg-white/10 px-2.5 py-1 text-[10px] font-bold text-white/75 backdrop-blur-md">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/12 bg-white/10 px-2.5 py-1 text-sm font-bold text-[#B8BDC4] backdrop-blur-md">
                     <MapPin className="h-3 w-3 shrink-0 text-emerald-300" />
                     {tour.location.split("-")[0]?.trim()}
                   </span>
@@ -177,14 +177,14 @@ export default function TourSelectionCards({
                 <button
                   type="button"
                   onClick={() => onSelectTour(tour.slug)}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-400 py-3 text-[11px] font-black uppercase tracking-[0.14em] text-emerald-950 shadow-[0_8px_26px_rgba(16,185,129,0.40)] transition-all duration-200 hover:bg-amber-300 hover:shadow-[0_8px_26px_rgba(245,158,11,0.38)] active:scale-[0.97]"
+                  className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-[#00C4B0] px-4 py-2 text-sm font-black uppercase tracking-[0.12em] text-[#17211f] shadow-[0_8px_26px_rgba(0,196,176,0.28)] transition-all duration-200 hover:bg-white active:scale-[0.97]"
                 >
                   {isEs ? "Reservar ahora" : "Book now"}
                   <ArrowRight className="h-3.5 w-3.5" />
                 </button>
                 <Link
                   href={localizeHref(`/tour/${encodeURIComponent(tour.slug)}`, lang)}
-                  className="flex items-center justify-center rounded-xl border border-white/20 bg-white/8 px-4 py-3 text-[11px] font-bold text-white/72 backdrop-blur-md transition hover:border-white/38 hover:text-white"
+                  className="flex min-h-11 items-center justify-center rounded-xl border border-white/20 bg-white/8 px-4 py-2 text-sm font-bold text-[#B8BDC4] backdrop-blur-md transition hover:border-white/38 hover:text-white"
                 >
                   {isEs ? "Ver" : "Info"}
                 </Link>

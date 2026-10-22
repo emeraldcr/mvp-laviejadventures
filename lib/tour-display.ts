@@ -37,7 +37,7 @@ export const TOUR_GALLERY_BY_SLUG: Record<string, string[]> = {
     "/image/IMG_6812.jpg",
   ],
   "cuadra-tours-aventura": [
-    unsplash("1675428604186-a165487f857c"),
+    "/image/IMG_4522.jpg",
     unsplash("1653859465778-58b3e964cadc"),
     unsplash("1496521061024-90e1c1221555"),
     unsplash("1515007507252-fc11563a273e"),
@@ -45,7 +45,7 @@ export const TOUR_GALLERY_BY_SLUG: Record<string, string[]> = {
     unsplash("1533246696441-571a1d6d1281"),
   ],
   "tour-gastronomico-local": [
-    unsplash("1743630458593-286a8ae99625"),
+    "/image/IMG_3505.jpg",
     unsplash("1721314678207-8b7bd43e677b"),
     unsplash("1621295239171-6f95272fdf45"),
     unsplash("1715828202780-915fd3571413"),
@@ -53,7 +53,7 @@ export const TOUR_GALLERY_BY_SLUG: Record<string, string[]> = {
     unsplash("1630527910939-275499aa3650"),
   ],
   "lluvia-en-la-naturaleza": [
-    unsplash("1630574232726-fc3ea90637b8"),
+    "/image/IMG_11447.jpg",
     unsplash("1500354960738-4c480ed785bc"),
     unsplash("1604956080929-0aaf39237d5c"),
     "/image/IMG_11447.jpg",
@@ -77,7 +77,7 @@ export const TOUR_GALLERY_BY_SLUG: Record<string, string[]> = {
     unsplash("1604584494301-cdf0b1e2e8b1"),
   ],
   "tour-nocturno-la-vieja": [
-    unsplash("1769122993287-5e75d186b100"),
+    "/image/IMG_503888.jpg",
     unsplash("1605157085246-86c83ffcadd2"),
     unsplash("1631006860710-3f270ead6c51"),
     unsplash("1584468247714-715aea60d3e0"),
@@ -85,7 +85,7 @@ export const TOUR_GALLERY_BY_SLUG: Record<string, string[]> = {
     unsplash("1630574232726-fc3ea90637b8"),
   ],
   "caminata-volcanes-dormidos": [
-    unsplash("1664532869454-53ac5942d959"),
+    "/image/IMG_39145.jpg",
     unsplash("1705351978871-2b3316c25e6d"),
     unsplash("1639417443882-8d710bccf8b2"),
     unsplash("1532885399978-d1721c804f3e"),
@@ -93,7 +93,7 @@ export const TOUR_GALLERY_BY_SLUG: Record<string, string[]> = {
     unsplash("1580259679654-9276b39fd2d5"),
   ],
   "rapel-canon-del-rio": [
-    unsplash("1704386596483-ea345dfa9034"),
+    "/image/IMG_6028.jpg",
     unsplash("1600198718659-01e18c32e13c"),
     unsplash("1621693113354-8b32a9e0ba39"),
     "/image/IMG_6028.jpg",

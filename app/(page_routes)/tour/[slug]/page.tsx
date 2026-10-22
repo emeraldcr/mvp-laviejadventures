@@ -133,7 +133,7 @@ export default async function TourDetailPage({ params }: TourDetailPageProps) {
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link href={bookingHref} className="inline-flex items-center gap-2 rounded-full bg-cyan-300 px-6 py-3 text-sm font-black uppercase tracking-[0.16em] text-black shadow-lg shadow-cyan-950/60 transition hover:bg-white">
+              <Link href={bookingHref} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#00C4B0] px-6 py-2 text-sm font-black uppercase tracking-[0.14em] text-[#17211f] shadow-lg shadow-[#00C4B0]/25 transition hover:bg-white">
                 Reservar este tour
                 <ChevronRight className="h-4 w-4" aria-hidden />
               </Link>
@@ -336,7 +336,7 @@ export default async function TourDetailPage({ params }: TourDetailPageProps) {
                 <h3 className="text-lg font-black text-white">{pkg.nameEs || pkg.name}</h3>
                 <p className="mt-2 min-h-12 text-sm leading-relaxed text-zinc-400">{pkg.descriptionEs || pkg.descriptionEn}</p>
                 <p className="mt-4 text-2xl font-black text-cyan-200">{getTourPriceDisplay({ packages: [pkg] }, true).compact}</p>
-                <Link href={bookingHrefForPackage(pkg.id)} className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-cyan-300 px-4 py-3 text-xs font-black uppercase tracking-[0.16em] text-black transition hover:bg-white">
+                <Link href={bookingHrefForPackage(pkg.id)} className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-[#00C4B0] px-4 py-2 text-sm font-black uppercase tracking-[0.12em] text-[#17211f] transition hover:bg-white">
                   Seleccionar
                   <CalendarDays className="h-4 w-4" aria-hidden />
                 </Link>

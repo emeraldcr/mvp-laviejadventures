@@ -23,7 +23,7 @@ type Props = {
   images: string[];
 };
 
-const INITIAL_VISIBLE = 18;
+const INITIAL_VISIBLE = 24;
 const LOAD_MORE_STEP = 18;
 
 export function GaleriaContent({ images }: Props) {
@@ -79,8 +79,8 @@ export function GaleriaContent({ images }: Props) {
     else showNext();
   };
 
-  const visibleImages = images.slice(0, visibleCount);
-  const remaining = images.length - visibleCount;
+  const visibleImages = images.slice(0, Math.min(visibleCount, 24));
+  const remaining = Math.max(0, 24 - visibleImages.length);
 
   return (
     <main className="min-h-screen bg-[#030807] pb-24 text-white md:pb-10">
@@ -104,7 +104,7 @@ export function GaleriaContent({ images }: Props) {
             <Camera className="h-3.5 w-3.5" aria-hidden />
             {isEs ? "Momentos reales" : "Real moments"}
           </span>
-          <h1 className="mt-4 max-w-2xl text-balance text-[28px] font-black leading-[1.08] md:text-[48px]">
+          <h1 className="mt-4 max-w-2xl text-balance text-[36px] font-black leading-[1.08] md:text-[48px]">
             {tr.title}
           </h1>
           <p className="mt-3 max-w-2xl text-sm font-semibold leading-relaxed text-white/70 md:text-base">

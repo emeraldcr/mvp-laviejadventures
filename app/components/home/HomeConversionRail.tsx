@@ -73,8 +73,8 @@ export default function HomeConversionRail() {
         </div>
       </section>
 
-      <aside className={`fixed bottom-7 right-7 z-40 hidden w-64 overflow-hidden rounded-[1.4rem] border border-white/10 bg-[#2E2A25]/95 text-white shadow-[0_24px_70px_rgba(0,0,0,.3)] backdrop-blur-xl transition-all duration-300 md:block ${showFloatingCard ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"}`} aria-hidden={!showFloatingCard}>
-        <div className="border-b border-white/10 px-5 py-4">
+      <aside className={`fixed bottom-7 right-7 z-40 hidden w-64 overflow-hidden rounded-[1.4rem] border border-[#00C4B0]/35 bg-[#17211f]/95 text-white shadow-[0_24px_70px_rgba(0,0,0,.3)] backdrop-blur-xl transition-all duration-300 md:block ${showFloatingCard ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"}`} aria-hidden={!showFloatingCard}>
+        <div className="border-b border-[#00C4B0]/25 bg-[#073f3b]/80 px-5 py-4">
           <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#70eee1]">
             {isEs ? "¿Listo para reservar?" : "Ready to book?"}
           </p>

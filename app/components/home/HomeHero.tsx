@@ -110,7 +110,7 @@ export default function HomeHero({ tour }: { tour?: TourSummary }) {
           </p>
 
           <div className="mt-5"><GoogleRating locale={lang} dark /></div>
-          <p data-tour-starting-price className="mt-4 text-base font-bold text-white">{isEs ? "Desde" : "From"} {getTourPriceDisplay(tour, isEs).compact} / {isEs ? "persona" : "person"}</p>
+          <p data-tour-starting-price className="mt-4 text-base font-bold text-white">{isEs ? "Desde" : "From"} {getTourPriceDisplay(tour, isEs).compact} / persona</p>
           <div className="mt-7 flex flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
             <Link
               href={localizeHref(BOOKING_HREF, lang)}

@@ -67,8 +67,6 @@ type Props = {
   content: TourContent;
 };
 
-const ASPECTS = ["aspect-[3/4]", "aspect-square", "aspect-[4/3]", "aspect-[3/4]", "aspect-[4/5]", "aspect-square"];
-
 
 function HabitatIcon({ icon }: { icon: BirdHabitat["icon"] }) {
   const cls = "h-5 w-5 text-emerald-300";
@@ -156,7 +154,7 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
               </span>
             </div>
 
-            <h1 className="max-w-3xl text-4xl font-black leading-[0.95] text-white sm:text-6xl lg:text-7xl">
+            <h1 className="max-w-3xl text-[36px] font-black leading-[1.08] text-white md:text-[48px]">
               {title}
             </h1>
             <p className="mt-2 text-lg font-bold italic text-emerald-300/90 md:text-xl">{content.tagline}</p>
@@ -167,7 +165,7 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
                 href={bookingHref}
-                className="inline-flex min-h-14 items-center gap-2 rounded-full bg-emerald-400 px-7 py-4 text-sm font-black uppercase tracking-[0.14em] text-emerald-950 shadow-[0_20px_55px_rgba(52,211,153,0.28)] transition hover:-translate-y-0.5 hover:bg-white"
+                className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#00C4B0] px-7 py-2 text-sm font-black uppercase tracking-[0.14em] text-[#17211f] shadow-[0_20px_55px_rgba(0,196,176,0.28)] transition hover:-translate-y-0.5 hover:bg-white"
               >
                 Reservar avistamiento
                 <ChevronRight className="h-4 w-4" aria-hidden />
@@ -239,9 +237,9 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
             <div className="mt-8">
               <Link
                 href={bookingHref}
-                className="inline-flex items-center gap-2 rounded-full bg-emerald-400 px-6 py-3 text-sm font-black uppercase tracking-[0.14em] text-emerald-950 transition hover:bg-white"
+                className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#00C4B0] px-6 py-2 text-sm font-black uppercase tracking-[0.14em] text-[#17211f] transition hover:bg-white"
               >
-                Ver disponibilidad
+                Reservar
                 <CalendarDays className="h-4 w-4" aria-hidden />
               </Link>
             </div>
@@ -350,7 +348,7 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
           </div>
           <Link
             href={bookingHref}
-            className="mt-5 inline-flex shrink-0 items-center gap-2 rounded-full bg-emerald-400 px-6 py-3 text-sm font-black uppercase tracking-[0.14em] text-emerald-950 transition hover:bg-white md:mt-0"
+            className="mt-5 inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full bg-[#00C4B0] px-6 py-2 text-sm font-black uppercase tracking-[0.14em] text-[#17211f] transition hover:bg-white md:mt-0"
           >
             Reservar ahora
             <ChevronRight className="h-4 w-4" aria-hidden />
@@ -400,13 +398,13 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
             Fotografías de referencia de las especies que buscamos en el corredor. Tocá cualquier imagen para verla en grande; la fauna silvestre nunca se garantiza.
           </p>
 
-          <div className="mt-10 columns-2 gap-3 sm:columns-3 lg:columns-4">
+          <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
             {BIRDWATCHING_GALLERY.map((image, index) => (
               <button
                 key={`${image}-${index}`}
                 type="button"
                 onClick={() => setLightboxIndex(index)}
-                className={`group relative mb-3 block w-full overflow-hidden rounded-2xl border border-white/10 ${ASPECTS[index % ASPECTS.length]}`}
+                className="group relative block aspect-[4/3] w-full overflow-hidden rounded-2xl border border-white/10"
               >
                 <Image
                   src={image}
@@ -544,7 +542,7 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
                 <p className="mt-4 text-2xl font-black text-emerald-200">{getTourPriceDisplay({ packages: [pkg] }, true).compact}</p>
                 <Link
                   href={bookingHrefForPackage(pkg.id)}
-                  className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-emerald-400 px-4 py-3 text-xs font-black uppercase tracking-[0.16em] text-emerald-950 transition hover:bg-white"
+                  className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-[#00C4B0] px-4 py-2 text-sm font-black uppercase tracking-[0.12em] text-[#17211f] transition hover:bg-white"
                 >
                   Seleccionar
                   <CalendarDays className="h-4 w-4" aria-hidden />
@@ -618,7 +616,7 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
           </div>
           <Link
             href={bookingHref}
-            className="inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-full bg-emerald-400 px-6 py-3.5 text-sm font-black uppercase tracking-[0.12em] text-emerald-950 transition hover:bg-white sm:w-auto"
+            className="inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-2 rounded-full bg-[#00C4B0] px-6 py-2 text-sm font-black uppercase tracking-[0.12em] text-[#17211f] transition hover:bg-white sm:w-auto"
           >
             Reservar ahora
             <CalendarDays className="h-4 w-4" aria-hidden />
@@ -631,7 +629,7 @@ export default function BirdwatchingTourPage({ tour, content }: Props) {
         href={whatsappMessageHref}
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed bottom-24 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-2xl shadow-green-900/40 transition hover:scale-105 hover:bg-[#1ebe5d] md:bottom-8"
+        className="fixed bottom-24 right-5 z-40 hidden h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-2xl shadow-green-900/40 transition hover:scale-105 hover:bg-[#1ebe5d] md:flex md:bottom-8"
         aria-label="Reservar por WhatsApp"
       >
         <MessageCircle className="h-6 w-6" aria-hidden />

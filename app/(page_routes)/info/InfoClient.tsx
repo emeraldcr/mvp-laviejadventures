@@ -226,7 +226,7 @@ export default function InfoClient({ tours }: { tours: TourSummary[] }) {
             </div>
             <div className="space-y-4 text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
               <div className="rounded-xl bg-emerald-50 p-4 dark:bg-emerald-900/10">
-                <p className="font-medium text-emerald-800 dark:text-emerald-300">{lowestTour ? `${lang === "es" ? "Desde" : "From"} ${formatTourPrice(lowestTour, lang === "es")} / ${lang === "es" ? "persona" : "person"}` : (lang === "es" ? "Consulte las tarifas del tour elegido." : "Ask us about your selected tour.")}</p>
+                <p className="font-medium text-emerald-800 dark:text-emerald-300">{lowestTour ? `${lang === "es" ? "Desde" : "From"} ${formatTourPrice(lowestTour, lang === "es")} / persona` : (lang === "es" ? "Consulte las tarifas del tour elegido." : "Ask us about your selected tour.")}</p>
               </div>
               <ul className="space-y-3">{pricedTours.map((tour) => <li key={tour.slug} className="flex flex-wrap justify-between gap-2"><Link className="font-bold underline" href={localizeHref(`/tour/${tour.slug}`, lang)}>{lang === "es" ? tour.titleEs : tour.titleEn}</Link><span>{lang === "es" ? "Desde" : "From"} {formatTourPrice(tour, lang === "es")}</span></li>)}</ul>
               <p>{tr.ratesText2}</p>
