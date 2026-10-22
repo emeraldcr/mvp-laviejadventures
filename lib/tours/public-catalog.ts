@@ -6,6 +6,10 @@ import { buildStandardPackagesFromPrice, fallbackPackagesForTour, normalizeTourP
 import type { TourSummary } from "@/lib/types/index";
 
 export type PublicTour = TourSummary & {
+  durationHours?: {
+    min: number;
+    max: number;
+  };
   iconName?: string;
   accent?: string;
   border?: string;
@@ -26,6 +30,21 @@ const TOUR_PRIORITY_BY_SLUG: Record<string, number> = {
 
 function tourPriority(slug: string) {
   return TOUR_PRIORITY_BY_SLUG[slug] ?? 50;
+}
+
+function parseDurationHours(value: unknown) {
+  if (typeof value !== "string") return undefined;
+
+  const normalized = value.toLocaleLowerCase("es").replace(/,/g, ".");
+  const numbers = [...normalized.matchAll(/\d+(?:\.\d+)?/g)].map((match) => Number(match[0]));
+  if (numbers.length === 0) return undefined;
+
+  const multiplier = /d[ií]a|day/.test(normalized) ? 24 : 1;
+  const hours = numbers.map((number) => number * multiplier);
+  return {
+    min: Math.min(...hours),
+    max: Math.max(...hours),
+  };
 }
 
 function prioritizeTours<T extends { slug?: string; priceCRC?: number }>(tours: T[]) {
@@ -314,6 +333,7 @@ const DEFAULT_TOUR_DETAILS: Record<
 function serializePublicTour(t: Record<string, unknown>): PublicTour {
   const slug = String(t.slug ?? "");
   const defaults = DEFAULT_TOUR_DETAILS[slug] ?? null;
+  const duration = typeof t.duration === "string" ? t.duration : undefined;
 
   const isBirdwatching = slug === "avistamiento-aves" || slug === "avistamiento-aves-norteno";
   const sourcePackages = isBirdwatching ? [] : normalizeTourPackages(t.packages);
@@ -330,7 +350,8 @@ function serializePublicTour(t: Record<string, unknown>): PublicTour {
     titleEn: String(t.titleEn ?? ""),
     descriptionEs: usted(String(t.descriptionEs ?? "")),
     descriptionEn: String(t.descriptionEn ?? ""),
-    duration: typeof t.duration === "string" ? t.duration : undefined,
+    duration,
+    durationHours: parseDurationHours(duration),
     difficulty: typeof t.difficulty === "string" ? t.difficulty : undefined,
     priceCRC: typeof t.priceCRC === "number" ? t.priceCRC : undefined,
     location: String(t.location ?? defaults?.location ?? ""),

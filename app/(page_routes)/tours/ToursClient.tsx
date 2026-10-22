@@ -28,12 +28,14 @@ export function ToursClient({ tours }: { tours: PublicTour[] }) {
 
   const filteredTours = useMemo(() => tours.filter((tour) => {
     const difficulty = tour.difficulty?.toLowerCase() ?? "";
-    const duration = tour.duration?.toLowerCase() ?? "";
+    const duration = tour.durationHours;
     const difficultyMatches = difficultyFilter === "all" || difficulty.includes(difficultyFilter);
     const durationMatches = durationFilter === "all"
-      || (durationFilter === "short" && !duration.includes("3") && !duration.includes("4"))
-      || (durationFilter === "medium" && (duration.includes("2") || duration.includes("3") || duration.includes("4")))
-      || (durationFilter === "long" && (duration.includes("4") || duration.includes("día") || duration.includes("day")));
+      || (duration !== undefined && (
+        (durationFilter === "short" && duration.max <= 2)
+        || (durationFilter === "medium" && duration.min <= 4 && duration.max >= 2)
+        || (durationFilter === "long" && duration.max >= 4)
+      ));
     return difficultyMatches && durationMatches;
   }), [difficultyFilter, durationFilter, tours]);
 

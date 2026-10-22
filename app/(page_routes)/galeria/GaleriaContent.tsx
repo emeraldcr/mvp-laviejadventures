@@ -35,8 +35,13 @@ export function GaleriaContent({ images }: Props) {
   const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const touchStartX = useRef<number | null>(null);
+  const lightboxCloseRef = useRef<HTMLButtonElement | null>(null);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
 
-  const closeLightbox = useCallback(() => setLightboxIndex(null), []);
+  const closeLightbox = useCallback(() => {
+    setLightboxIndex(null);
+    window.setTimeout(() => returnFocusRef.current?.focus({ preventScroll: true }), 0);
+  }, []);
 
   const showPrev = useCallback(() => {
     setLightboxIndex((current) =>
@@ -53,10 +58,21 @@ export function GaleriaContent({ images }: Props) {
   useEffect(() => {
     if (lightboxIndex === null) return;
 
+    returnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    window.setTimeout(() => lightboxCloseRef.current?.focus({ preventScroll: true }), 0);
+
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") closeLightbox();
       if (event.key === "ArrowLeft") showPrev();
       if (event.key === "ArrowRight") showNext();
+      if (event.key === "Tab") {
+        const focusable = document.querySelectorAll<HTMLElement>('[data-gallery-lightbox] button');
+        if (!focusable.length) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+      }
     };
 
     document.body.style.overflow = "hidden";
@@ -80,8 +96,8 @@ export function GaleriaContent({ images }: Props) {
     else showNext();
   };
 
-  const visibleImages = images.slice(0, Math.min(visibleCount, 24));
-  const remaining = Math.max(0, 24 - visibleImages.length);
+  const visibleImages = images.slice(0, visibleCount);
+  const remaining = Math.max(0, images.length - visibleImages.length);
 
   return (
     <main className="min-h-screen bg-[#030807] pb-24 text-white md:pb-10">
@@ -108,20 +124,20 @@ export function GaleriaContent({ images }: Props) {
           <h1 className="mt-4 max-w-2xl text-balance text-[36px] font-black leading-[1.08] md:text-[48px]">
             {tr.title}
           </h1>
-          <p className="mt-3 max-w-2xl text-sm font-semibold leading-relaxed text-white/70 md:text-base">
+          <p className="mt-3 max-w-2xl text-sm font-semibold leading-relaxed text-white/85 md:text-base">
             {tr.description}
           </p>
 
           <div className="mt-5 flex flex-wrap items-center gap-2 text-[11px] font-bold uppercase tracking-wider">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/35 px-3 py-1.5 text-white/75">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-black/50 px-3 py-1.5 text-white/90">
               <Camera className="h-3.5 w-3.5 text-emerald-200" aria-hidden />
               {images.length} {isEs ? "fotos" : "photos"}
             </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/35 px-3 py-1.5 text-white/75">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-black/50 px-3 py-1.5 text-white/90">
               <Mountain className="h-3.5 w-3.5 text-emerald-200" aria-hidden />
               {isEs ? "Cañón de 80 m" : "80 m canyon"}
             </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/35 px-3 py-1.5 text-white/75">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-black/50 px-3 py-1.5 text-white/90">
               <Waves className="h-3.5 w-3.5 text-emerald-200" aria-hidden />
               {isEs ? "Río La Vieja" : "La Vieja River"}
             </span>
@@ -185,7 +201,7 @@ export function GaleriaContent({ images }: Props) {
           <h2 className="text-[28px] font-black leading-[1.08] md:text-[36px]">
             {isEs ? "¿Quiere vivirlo en persona?" : "Want to live it in person?"}
           </h2>
-          <p className="mx-auto mt-2 max-w-md text-sm font-semibold text-white/65">
+          <p className="mx-auto mt-2 max-w-md text-sm font-semibold text-white/80">
             {isEs
               ? "Elija una fecha y le llevamos a Ciudad Esmeralda."
               : "Pick a date and we'll take you to Ciudad Esmeralda."}
@@ -207,8 +223,9 @@ export function GaleriaContent({ images }: Props) {
         <div
           className="fixed inset-0 z-[70] flex items-center justify-center bg-black/95 backdrop-blur-sm"
           role="dialog"
+          data-gallery-lightbox
           aria-modal="true"
-          aria-label={tr.title}
+          aria-labelledby="gallery-lightbox-title"
           onClick={closeLightbox}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
@@ -217,6 +234,7 @@ export function GaleriaContent({ images }: Props) {
             className="relative h-[80vh] w-[94vw] max-w-6xl md:h-[86vh]"
             onClick={(event) => event.stopPropagation()}
           >
+            <h2 id="gallery-lightbox-title" className="sr-only">{tr.title}</h2>
             <Image
               src={images[lightboxIndex]}
               alt={`Galería La Vieja Adventures: Cañón del Río La Vieja, foto ${lightboxIndex + 1}`}
@@ -235,6 +253,7 @@ export function GaleriaContent({ images }: Props) {
 
           <button
             type="button"
+            ref={lightboxCloseRef}
             onClick={closeLightbox}
             className="absolute right-3 top-3 flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur transition hover:bg-white/20 md:right-5 md:top-5"
             aria-label={isEs ? "Cerrar" : "Close"}
@@ -267,8 +286,8 @@ export function GaleriaContent({ images }: Props) {
 
           <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-3 rounded-full border border-white/15 bg-black/60 px-4 py-1.5 text-xs font-black tracking-wider text-white/85 backdrop-blur">
             <span>{lightboxIndex + 1} / {images.length}</span>
-            <span className="hidden text-white/40 sm:inline">·</span>
-            <span className="hidden font-semibold text-white/55 sm:inline">
+            <span className="hidden text-white/60 sm:inline">·</span>
+            <span className="hidden font-semibold text-white/75 sm:inline">
               {isEs ? "Usá ← → o deslizá" : "Use ← → or swipe"}
             </span>
           </div>
