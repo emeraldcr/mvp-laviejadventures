@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Binoculars, Compass, Utensils, Waves } from "lucide-react";
+import { ArrowRight, Binoculars, Check, Compass, Utensils, Waves } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useLanguage } from "@/lib/LanguageContext";
 import { localizeHref, tourDifficulty, tourDuration } from "@/lib/i18n";
@@ -49,15 +49,21 @@ export default function HomeTourDiscovery({ tours }: { tours: TourSummary[] }) {
         <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {DAY_TYPES.map(({ key, icon: Icon, labelEs, labelEn, bodyEs, bodyEn }) => {
             const active = selected === key;
-            return <button key={key} type="button" aria-pressed={active} onClick={() => setSelected(key)} className={`min-h-36 rounded-[var(--lva-radius-soft)] border p-5 text-left transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 ${active ? "border-[var(--lva-accent)] bg-[var(--lva-accent)] text-white shadow-lg" : "border-[var(--lva-border)] bg-[var(--lva-surface)] text-[var(--lva-ink)] shadow-sm"}`}>
-              <Icon size={23} className={active ? "text-[#70eee1]" : "text-emerald-700 dark:text-emerald-300"} aria-hidden />
+            return <button key={key} type="button" aria-pressed={active} onClick={() => setSelected(key)} className={`group relative min-h-36 rounded-[var(--lva-radius-soft)] border p-5 text-left transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--lva-bg)] ${active ? "border-[var(--lva-accent)] bg-[var(--lva-accent)] text-white shadow-lg" : "border-[var(--lva-border)] bg-[var(--lva-surface)] text-[var(--lva-ink)] shadow-sm hover:border-emerald-500/60"}`}>
+              <div className="flex items-start justify-between gap-3">
+                <Icon size={23} className={active ? "text-[#70eee1]" : "text-emerald-700 dark:text-emerald-300"} aria-hidden />
+                {active && <span className="inline-flex items-center gap-1 rounded-full border border-white/40 bg-white/15 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-white"><Check size={12} aria-hidden />{isEs ? "Elegido" : "Selected"}</span>}
+              </div>
               <strong className="mt-5 block text-base font-black">{isEs ? labelEs : labelEn}</strong>
               <span className={`mt-1 block text-sm leading-snug ${active ? "text-white/75" : "text-stone-500 dark:text-stone-400"}`}>{isEs ? bodyEs : bodyEn}</span>
             </button>;
           })}
         </div>
 
-        {selectedType && <div className="mt-8" aria-live="polite">
+        {selectedType && <div className="mt-8">
+          <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+            {isEs ? `${matches.length} ${matches.length === 1 ? "experiencia coincide" : "experiencias coinciden"} con ${selectedType.labelEs}.` : `${matches.length} ${matches.length === 1 ? "experience matches" : "experiences match"} ${selectedType.labelEn}.`}
+          </p>
           <div className="flex items-end justify-between gap-4"><div><p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300">{selected === "active" ? (isEs ? "Una buena primera opción" : "A good first option") : (isEs ? "Experiencias para comparar" : "Experiences to compare")}</p><h3 className="mt-2 font-display text-2xl font-black text-stone-950 dark:text-white">{isEs ? selectedType.labelEs : selectedType.labelEn}</h3></div><Link href={localizeHref("/tours", lang)} className="hidden items-center gap-2 text-sm font-black text-emerald-800 sm:inline-flex dark:text-emerald-300">{isEs ? "Ver todos" : "See all"}<ArrowRight size={15} /></Link></div>
           {matches.length > 0 ? <div className="mt-5 grid gap-5 md:grid-cols-3">
             {matches.map((tour) => <article key={tour.slug} className="lva-home-panel overflow-hidden"><Link href={localizeHref(`/tour/${encodeURIComponent(tour.slug)}`, lang)}><div className="relative aspect-[16/10]"><Image src={getTourImage(tour.slug)} alt={tourTitle(tour, isEs)} fill sizes="(min-width: 768px) 33vw, 100vw" className="object-cover" /></div><div className="p-5"><h4 className="font-display text-xl font-black">{tourTitle(tour, isEs)}</h4><div className="lva-home-meta mt-2 flex flex-wrap gap-3 font-bold">{tour.duration && <span>{tourDuration(tour.duration, lang)}</span>}{tour.difficulty && <span>{tourDifficulty(tour.difficulty, lang)}</span>}<span>{getTourPriceDisplay(tour, isEs).primary}</span></div><span className="mt-4 inline-flex items-center gap-2 text-xs font-black uppercase tracking-wide text-emerald-800 dark:text-emerald-300">{isEs ? "Comparar detalles" : "Compare details"}<ArrowRight size={14} /></span></div></Link></article>)}
