@@ -196,6 +196,8 @@ body {
 .lva-home-panel { border: 1px solid var(--lva-border); border-radius: var(--lva-radius-panel); background: var(--lva-surface); box-shadow: var(--lva-shadow-card); }
 .lva-home-kicker { color: var(--lva-accent); font-size: .72rem; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; }
 .lva-home-meta { color: var(--lva-ink-muted); font-size: .875rem; }
+.lva-home-button { min-height: 3rem; border-radius: var(--lva-radius-control); padding-inline: 1.5rem; font-size: .875rem; font-weight: 800; }
+.lva-home-section-title { max-width: 42rem; font-family: var(--font-bricolage), var(--font-manrope), system-ui, sans-serif; font-size: clamp(2rem, 4vw, 3.75rem); font-weight: 800; line-height: 1; letter-spacing: -.035em; }
 .lva-home-section :where(h2, h3, h4) { letter-spacing: -.025em; }
 .dark .lva-home-section { background: var(--lva-surface-muted); }
 .dark .lva-home-section--paper { background: var(--background); }

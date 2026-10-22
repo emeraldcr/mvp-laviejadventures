@@ -117,7 +117,7 @@ export default function ToursShowcase({ tours }: Props) {
 
                 <Link
                   href={localizeHref(`/reservar?tour=${encodeURIComponent(tour.slug)}`, lang)}
-                  className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#00C4B0] px-5 py-3 text-sm font-black text-[#17211f] shadow-lg shadow-[#00C4B0]/20 transition-all hover:-translate-y-0.5 hover:bg-[#70eee1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00C4B0] focus-visible:ring-offset-2 dark:ring-offset-stone-950"
+                  className="lva-button-primary mt-4 w-full"
                 >
                   <CalendarDays size={16} />
                   {primaryBookingLabel(isEs)}

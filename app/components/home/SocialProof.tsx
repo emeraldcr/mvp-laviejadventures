@@ -25,10 +25,10 @@ export default function SocialProof() {
   const updatedAt = formatGoogleReviewsDate(lang);
 
   return (
-    <section className="overflow-hidden bg-[#FAF9F6] py-20 dark:bg-[#0b0a09] md:py-28">
+    <section className="lva-home-section overflow-hidden py-20 md:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-12 text-center">
-          <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em] text-emerald-700 dark:text-emerald-300">
+          <p className="lva-home-kicker mb-3">
             {isEs ? "Reseñas públicas" : "Public reviews"}
           </p>
           <h2 className="font-display mx-auto max-w-2xl text-balance text-4xl font-bold leading-[1.02] tracking-tight text-stone-900 dark:text-stone-50 md:text-5xl">
@@ -42,7 +42,7 @@ export default function SocialProof() {
         </div>
 
         <div className="grid gap-5 md:grid-cols-[1.1fr_.9fr]">
-          <article className="rounded-3xl border border-stone-200 bg-white p-8 shadow-[0_10px_40px_rgba(0,0,0,0.04)] dark:border-stone-800 dark:bg-white/[0.03]">
+          <article className="lva-home-panel rounded-[var(--lva-radius-soft)] p-8 shadow-none">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300">
               {isEs ? "Resumen del listado" : "Listing summary"}
             </p>

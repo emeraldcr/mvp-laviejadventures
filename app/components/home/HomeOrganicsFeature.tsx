@@ -24,9 +24,9 @@ export default function HomeOrganicsFeature() {
   const isEs = lang === "es";
 
   return (
-    <section className="bg-[#f4f1ea] py-16 dark:bg-[#0b0a09] md:py-24">
+    <section className="lva-home-section py-20 md:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid overflow-hidden rounded-[2rem] border border-stone-200 bg-white shadow-[0_28px_90px_rgba(30,24,16,0.12)] dark:border-white/10 dark:bg-white/[0.04] dark:shadow-[0_28px_90px_rgba(0,0,0,0.45)] lg:grid-cols-[0.92fr_1.08fr]">
+        <div className="lva-home-panel grid overflow-hidden shadow-none lg:grid-cols-[0.92fr_1.08fr]">
           <div className="relative min-h-[360px] bg-stone-900 lg:min-h-[520px]">
             <Image
               src="/ads/IMG_5670.webp"
@@ -37,7 +37,7 @@ export default function HomeOrganicsFeature() {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
             <div className="absolute bottom-5 left-5 right-5 flex flex-wrap items-center gap-3">
-              <span className="inline-flex items-center gap-2 rounded-full bg-white/95 px-4 py-2 text-xs font-black uppercase tracking-wide text-emerald-900 shadow-lg">
+              <span className="inline-flex items-center gap-2 rounded-full bg-white/95 px-4 py-2 text-xs font-black uppercase tracking-wide text-emerald-900">
                 <Leaf size={14} />
                 La Vieja Organics
               </span>
@@ -49,7 +49,7 @@ export default function HomeOrganicsFeature() {
           </div>
 
           <div className="flex flex-col justify-center p-7 sm:p-10 lg:p-14">
-            <p className="mb-3 text-xs font-bold uppercase tracking-[0.25em] text-emerald-700 dark:text-emerald-300">
+            <p className="lva-home-kicker mb-3">
               {isEs ? "Nuevo de la familia La Vieja" : "New from the La Vieja family"}
             </p>
             <h2 className="font-display max-w-3xl text-balance text-4xl font-black leading-[0.98] tracking-tight text-stone-950 dark:text-stone-50 md:text-6xl">

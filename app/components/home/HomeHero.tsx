@@ -101,7 +101,7 @@ export default function HomeHero() {
           <div className="mt-6 flex w-full max-w-sm flex-col items-stretch gap-3 sm:mt-7 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-center">
             <Link
               href={localizeHref(BOOKING_HREF, lang)}
-              className="group inline-flex min-h-12 items-center justify-center gap-3 rounded-full bg-[#00C4B0] px-6 text-xs font-black uppercase tracking-[0.12em] text-[#17211f] shadow-[0_18px_50px_rgba(0,196,176,.28)] transition hover:-translate-y-0.5 hover:bg-white sm:min-h-14 sm:px-7"
+              className="lva-home-button group inline-flex items-center justify-center gap-3 bg-[#00C4B0] text-xs uppercase tracking-[0.12em] text-[#17211f] shadow-[0_18px_50px_rgba(0,196,176,.28)] transition hover:-translate-y-0.5 hover:bg-white sm:px-7"
             >
               {primaryBookingLabel(isEs)}
               <ArrowRight size={17} className="transition-transform group-hover:translate-x-1" />
@@ -110,7 +110,7 @@ export default function HomeHero() {
               href={whatsappHref}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex min-h-12 items-center justify-center gap-3 rounded-full border border-white/30 bg-black/22 px-6 text-xs font-black uppercase tracking-[0.12em] text-white backdrop-blur-md transition hover:border-white/60 hover:bg-white/12 sm:min-h-14 sm:px-7"
+              className="lva-home-button inline-flex items-center justify-center gap-3 border border-white/30 bg-black/22 px-6 text-xs font-black uppercase tracking-[0.12em] text-white backdrop-blur-md transition hover:border-white/60 hover:bg-white/12 sm:px-7"
             >
               <MessageCircle size={17} />
               {isEs ? "Hablar con un guía" : "Talk to a guide"}

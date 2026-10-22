@@ -24,10 +24,10 @@ export default function HomeConversionRail() {
       ];
 
   return (
-    <section className="relative z-10 bg-[#FAF9F6] px-4 py-7 dark:bg-[#0b0a09] sm:px-6 md:py-10 lg:px-8">
-        <div className="mx-auto grid max-w-7xl overflow-hidden rounded-[2rem] border border-[#00C4B0]/25 bg-[#2E2A25] text-white shadow-[0_28px_80px_rgba(46,42,37,.18)] lg:grid-cols-[1.15fr_.85fr]">
+      <section className="lva-home-section relative z-10 px-4 py-10 sm:px-6 md:py-14 lg:px-8">
+        <div className="mx-auto grid max-w-7xl overflow-hidden rounded-[var(--lva-radius-panel)] border border-[var(--lva-border)] bg-[var(--lva-section-dark-bg)] text-white shadow-none lg:grid-cols-[1.15fr_.85fr]">
           <div className="p-7 sm:p-9 lg:p-12">
-            <span className="inline-flex items-center gap-2 rounded-full bg-[#00C4B0]/12 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.16em] text-[#70eee1]">
+            <span className="lva-home-kicker inline-flex items-center gap-2 text-[var(--lva-section-dark-accent)]">
               <ShieldCheck size={14} />
               {isEs ? "Reserva en línea · precio claro" : "Online booking · clear pricing"}
             </span>
@@ -44,7 +44,7 @@ export default function HomeConversionRail() {
           <div className="grid gap-px bg-white/10 sm:grid-cols-2 lg:grid-cols-1">
             <Link
               href={localizeHref(BOOKING_HREF, lang)}
-              className="group flex min-h-28 items-center justify-between gap-5 bg-[#00C4B0] p-6 text-[#17211f] transition hover:bg-[#70eee1] lg:px-8"
+              className="group flex min-h-28 items-center justify-between gap-5 bg-[var(--lva-accent-bright)] p-6 text-[var(--lva-accent-ink)] transition hover:bg-[var(--lva-section-dark-accent)] lg:px-8"
             >
               <span>
                 <CalendarDays size={20} />
@@ -59,7 +59,7 @@ export default function HomeConversionRail() {
               href={whatsappHref}
               target="_blank"
               rel="noopener noreferrer"
-              className="group flex min-h-28 items-center justify-between gap-5 bg-[#27241f] p-6 transition hover:bg-[#34302a] lg:px-8"
+              className="group flex min-h-28 items-center justify-between gap-5 bg-black/20 p-6 transition hover:bg-white/10 lg:px-8"
             >
               <span>
                 <MessageCircle size={20} className="text-[#00C4B0]" />
@@ -74,7 +74,7 @@ export default function HomeConversionRail() {
         </div>
         <div className="mx-auto mt-5 grid max-w-7xl gap-3 sm:grid-cols-3">
           {logistics.map(({ icon: Icon, value, label }) => (
-            <div key={value} className="flex items-center gap-3 rounded-2xl border border-stone-200 bg-white px-4 py-4 dark:border-stone-800 dark:bg-[#171513]">
+            <div key={value} className="lva-home-panel flex items-center gap-3 rounded-[var(--lva-radius-soft)] px-4 py-4 shadow-none">
               <Icon size={18} className="shrink-0 text-[#00a995]" aria-hidden />
               <div>
                 <strong className="block text-sm font-black text-stone-900 dark:text-white">{value}</strong>

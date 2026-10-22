@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Check, Clock3, Sparkles } from "lucide-react";
+import { ArrowRight, Check, Clock3 } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
 import type { TourSummary } from "@/lib/types/index";
 import { BOOKING_HREF, TOURS_HREF, primaryBookingLabel } from "./home-utils";
@@ -49,11 +49,6 @@ export default function FeaturedStory({ tours }: Props) {
                 className="object-cover"
               />
             </div>
-
-            <span className="absolute left-6 top-6 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-4 py-2 text-xs font-bold text-stone-900 shadow-lg backdrop-blur-sm">
-              <Sparkles size={13} className="text-amber-500" />
-              {isEs ? "La de la casa" : "Our house favorite"}
-            </span>
 
             <div className="absolute -bottom-6 right-4 w-56 rounded-2xl bg-white p-4 shadow-[0_20px_60px_rgba(0,0,0,0.15)] dark:bg-stone-900 dark:shadow-[0_20px_60px_rgba(0,0,0,0.5)] dark:ring-1 dark:ring-white/10 sm:right-8 sm:w-64">
               <GoogleRating locale={lang} />
@@ -105,14 +100,14 @@ export default function FeaturedStory({ tours }: Props) {
             <div className="mt-7 flex flex-wrap gap-3">
               <Link
                 href={localizeHref(BOOKING_HREF, lang)}
-                className="group inline-flex items-center gap-2 rounded-full bg-[#00796B] px-7 py-3.5 text-sm font-bold text-white shadow-lg shadow-emerald-600/25 transition-all hover:-translate-y-0.5 hover:bg-[#00695C]"
+                className="lva-button-primary group"
               >
                 {primaryBookingLabel(isEs)}
                 <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
               </Link>
               <Link
                 href={localizeHref(TOURS_HREF, lang)}
-                className="group inline-flex items-center gap-2 rounded-full border-2 border-emerald-600 px-7 py-3.5 text-sm font-black text-emerald-800 transition-all hover:-translate-y-0.5 hover:bg-emerald-50 dark:border-emerald-400 dark:text-emerald-300 dark:hover:bg-emerald-950/40"
+                className="lva-button-secondary group"
               >
                 {isEs ? "Explorar otros tours" : "Explore other tours"}
                 <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
