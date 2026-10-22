@@ -4,23 +4,16 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { Pause, Play } from "lucide-react";
-import GoogleRating from "@/app/components/GoogleRating";
 import { localizeHref } from "@/lib/i18n";
-import { getTourPriceDisplay } from "@/lib/tour-pricing";
-import type { TourSummary } from "@/lib/types/index";
 import {
-  ArrowDown,
   ArrowRight,
-  Clock3,
   MapPin,
   MessageCircle,
-  ShieldCheck,
-  Users,
 } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
 import { BOOKING_HREF, localizedHomeWhatsAppHref, primaryBookingLabel } from "./home-utils";
 
-export default function HomeHero({ tour }: { tour?: TourSummary }) {
+export default function HomeHero() {
   const { lang } = useLanguage();
   const isEs = lang === "es";
   const whatsappHref = localizedHomeWhatsAppHref(isEs);
@@ -55,20 +48,6 @@ export default function HomeHero({ tour }: { tour?: TourSummary }) {
     if (video.paused) void video.play().catch(() => {}); else video.pause();
   };
 
-  const facts = isEs
-    ? [
-        { icon: MapPin, value: "San Carlos", label: "Sucre de Ciudad Quesada" },
-        { icon: Users, value: "Grupos pequeños", label: "Guía local bilingüe" },
-        { icon: Clock3, value: "3–4 horas", label: "Sendero, cañón y Cascada El Zafiro" },
-        { icon: ShieldCheck, value: "Reserva flexible", label: "Cancelación gratis hasta 48 h antes" },
-      ]
-    : [
-        { icon: MapPin, value: "San Carlos", label: "Sucre de Ciudad Quesada" },
-        { icon: Users, value: "Small groups", label: "Local bilingual guide" },
-        { icon: Clock3, value: "3–4 hours", label: "Trail, canyon & El Zafiro Waterfall" },
-        { icon: ShieldCheck, value: "Flexible booking", label: "Free cancellation up to 48h before" },
-      ];
-
   return (
     <section className="relative min-h-[100svh] overflow-hidden bg-[#2E2A25] text-white">
       <Image src="/hero/ciudad-esmeralda-poster.webp" alt="" fill priority loading="eager" fetchPriority="high" sizes="100vw" className="object-cover" />
@@ -100,10 +79,6 @@ export default function HomeHero({ tour }: { tour?: TourSummary }) {
             <MapPin size={13} className="text-[#00C4B0]" />
             {isEs ? "San Carlos · Costa Rica" : "San Carlos · Costa Rica"}
           </span>
-          <span className="hidden items-center gap-2 rounded-full border border-[#00C4B0]/40 bg-black/25 px-4 py-2 text-[10px] font-extrabold uppercase tracking-[0.2em] text-white/90 backdrop-blur-md sm:inline-flex">
-            <span className="h-2 w-2 animate-pulse rounded-full bg-[#00C4B0]" />
-            {isEs ? "Reserva en línea" : "Book online"}
-          </span>
         </div>
 
         <div className="flex flex-1 flex-col items-center justify-center pb-28 pt-12 text-center sm:pb-32">
@@ -120,14 +95,12 @@ export default function HomeHero({ tour }: { tour?: TourSummary }) {
             </span>
           </h1>
 
-          <p className="mt-7 max-w-2xl text-balance text-sm font-semibold leading-relaxed text-white/85 sm:text-base md:text-lg">
+          <p className="mt-7 max-w-xl text-balance text-sm font-semibold leading-relaxed text-white/85 sm:text-base md:text-lg">
             {isEs
               ? "El cañón insignia de La Vieja Adventures: sendero, río y las pozas turquesa de la Cascada El Zafiro, con guía local bilingüe y grupos pequeños. Si el clima cambia, ajustamos la ruta o le reprogramamos sin costo."
               : "La Vieja Adventures' signature canyon: trail, river, and the turquoise pools of El Zafiro Waterfall, with a local bilingual guide and small groups. If the weather turns, we adjust the route or rebook you at no cost."}
           </p>
 
-          <div className="mt-5"><GoogleRating locale={lang} dark /></div>
-          <p data-tour-starting-price className="mt-4 text-base font-bold text-white">{isEs ? "Desde" : "From"} {getTourPriceDisplay(tour, isEs).compact} / persona</p>
           <div className="mt-7 flex flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
             <Link
               href={localizeHref(BOOKING_HREF, lang)}
@@ -147,47 +120,6 @@ export default function HomeHero({ tour }: { tour?: TourSummary }) {
             </a>
           </div>
 
-          <div className="mt-8 grid w-full max-w-xl grid-cols-2 gap-2 text-left sm:hidden">
-            {facts.map(({ icon: Icon, value, label }) => (
-              <div key={value} className="rounded-2xl border border-white/15 bg-black/30 p-3 backdrop-blur-md">
-                <Icon size={16} className="text-[#70eee1]" aria-hidden />
-                <strong className="mt-2 block text-xs font-black leading-tight text-white">{value}</strong>
-                <span className="mt-1 block text-[10px] leading-snug text-white/65">{label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="absolute inset-x-4 bottom-5 hidden overflow-hidden rounded-[1.6rem] border border-white/15 bg-black/46 shadow-[0_24px_80px_rgba(0,0,0,.34)] backdrop-blur-xl sm:inset-x-7 sm:block lg:inset-x-10">
-          <div className="grid sm:grid-cols-[1.35fr_repeat(3,1fr)]">
-            <div className="flex min-h-24 items-center justify-between gap-5 border-b border-white/12 p-5 sm:border-b-0 sm:border-r sm:p-6">
-              <div>
-                <p className="text-sm font-bold leading-relaxed text-white/82">
-                  {isEs
-                    ? "Reserve en línea y vea el precio final antes de pagar."
-                    : "Book online and see the final price before paying."}
-                </p>
-                <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.15em] text-[#00C4B0]">
-                  {isEs
-                    ? "Pago seguro · política de clima y cancelación visible"
-                    : "Secure payment · weather and cancellation policy shown"}
-                </p>
-              </div>
-              <ArrowDown size={18} className="hidden shrink-0 text-[#00C4B0] md:block" />
-            </div>
-            {facts.slice(1).map(({ icon: Icon, value, label }) => (
-              <div
-                key={value}
-                className="hidden min-h-24 items-center gap-3 border-r border-white/12 p-5 last:border-r-0 sm:flex lg:p-6"
-              >
-                <Icon size={18} className="shrink-0 text-[#00C4B0]" />
-                <div className="min-w-0">
-                  <strong className="block text-xs font-black uppercase tracking-wide">{value}</strong>
-                  <span className="mt-1 block text-[10px] font-semibold text-white/55">{label}</span>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
       <button type="button" onClick={toggleVideo} aria-pressed={paused} aria-label={isEs ? (paused ? "Reproducir video de fondo" : "Pausar video de fondo") : (paused ? "Play background video" : "Pause background video")} className="absolute bottom-4 right-4 z-10 inline-flex min-h-11 items-center gap-2 rounded-full border border-white/40 bg-black/70 px-4 py-2 text-sm font-semibold text-white sm:bottom-36">

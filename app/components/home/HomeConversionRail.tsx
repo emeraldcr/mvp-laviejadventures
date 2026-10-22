@@ -3,7 +3,7 @@
 import { localizeHref } from "@/lib/i18n";
 
 import Link from "next/link";
-import { ArrowRight, CalendarDays, MessageCircle, ShieldCheck } from "lucide-react";
+import { ArrowRight, CalendarDays, Clock3, MapPin, MessageCircle, ShieldCheck, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLanguage } from "@/lib/LanguageContext";
 import { BOOKING_HREF, localizedHomeWhatsAppHref, primaryBookingLabel } from "./home-utils";
@@ -13,6 +13,17 @@ export default function HomeConversionRail() {
   const isEs = lang === "es";
   const whatsappHref = localizedHomeWhatsAppHref(isEs);
   const [showFloatingCard, setShowFloatingCard] = useState(false);
+  const logistics = isEs
+    ? [
+        { icon: MapPin, value: "San Carlos", label: "Sucre de Ciudad Quesada" },
+        { icon: Users, value: "Grupos pequeños", label: "Guía local bilingüe" },
+        { icon: Clock3, value: "3–4 horas", label: "Sendero, cañón y Cascada El Zafiro" },
+      ]
+    : [
+        { icon: MapPin, value: "San Carlos", label: "Sucre de Ciudad Quesada" },
+        { icon: Users, value: "Small groups", label: "Local bilingual guide" },
+        { icon: Clock3, value: "3–4 hours", label: "Trail, canyon & El Zafiro Waterfall" },
+      ];
 
   useEffect(() => {
     const onScroll = () => setShowFloatingCard(window.scrollY > window.innerHeight * 0.85);
@@ -70,6 +81,17 @@ export default function HomeConversionRail() {
               <ArrowRight size={20} className="text-[#00C4B0] transition-transform group-hover:translate-x-1" />
             </a>
           </div>
+        </div>
+        <div className="mx-auto mt-5 grid max-w-7xl gap-3 sm:grid-cols-3">
+          {logistics.map(({ icon: Icon, value, label }) => (
+            <div key={value} className="flex items-center gap-3 rounded-2xl border border-stone-200 bg-white px-4 py-4 dark:border-stone-800 dark:bg-[#171513]">
+              <Icon size={18} className="shrink-0 text-[#00a995]" aria-hidden />
+              <div>
+                <strong className="block text-sm font-black text-stone-900 dark:text-white">{value}</strong>
+                <span className="mt-1 block text-xs text-stone-500 dark:text-stone-400">{label}</span>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
