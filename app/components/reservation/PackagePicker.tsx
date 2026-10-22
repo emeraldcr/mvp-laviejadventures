@@ -113,6 +113,16 @@ export default function PackagePicker({
                 {isEs ? pkg.descriptionEs ?? pkg.descriptionEn : pkg.descriptionEn ?? pkg.descriptionEs}
               </p>
             )}
+            {pkg.includes && pkg.includes.length > 0 && (
+              <ul className="mt-3 space-y-1 border-t border-zinc-200 pt-3 text-xs font-semibold text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
+                {pkg.includes.slice(0, 3).map((item) => (
+                  <li key={item} className="flex gap-1.5">
+                    <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" aria-hidden />
+                    <span className="line-clamp-2">{item}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
             {disabled && (
               <p className="mt-1 text-[10px] font-bold uppercase tracking-wide text-amber-700">
                 {isEs ? "No disponible esta fecha" : "Not available this date"}

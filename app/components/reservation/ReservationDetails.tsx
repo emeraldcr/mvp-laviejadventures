@@ -470,6 +470,13 @@ function ReservationDetailsFlow({
         currentStep={currentStep}
         choiceStep={choiceStep}
         packageLabel={packageLabel}
+        selectedPackage={selectedPackage}
+        slots={slots}
+        pricePerPerson={pricePerPerson}
+        subtotal={subtotal}
+        taxes={taxes}
+        ivaRatePercent={ivaRatePercent}
+        cancellationPolicy={localizedCancellationPolicy}
         hasConfirmedPackage={hasConfirmedPackage}
         steps={wizardSteps}
         maxReachableStep={
