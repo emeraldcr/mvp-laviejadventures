@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
 import { BOOKING_HREF, localizedHomeWhatsAppHref, primaryBookingLabel } from "./home-utils";
-import { BOOKING_ASSURANCE_EN, BOOKING_ASSURANCE_ES } from "@/lib/tour-policy";
 
 export default function HomeHero() {
   const { lang } = useLanguage();
@@ -25,6 +24,9 @@ export default function HomeHero() {
     const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
     if (preference.matches) return;
     const enable = () => setVideoEnabled(true);
+    const handlePreferenceChange = (event: MediaQueryListEvent) => {
+      if (!event.matches) enable();
+    };
     let cancel = () => {};
     if ("requestIdleCallback" in window) {
       const idle = window.requestIdleCallback(enable, { timeout: 1800 });
@@ -33,9 +35,9 @@ export default function HomeHero() {
       const timeout = globalThis.setTimeout(enable, 1200);
       cancel = () => globalThis.clearTimeout(timeout);
     }
-    preference.addEventListener("change", enable);
+    preference.addEventListener("change", handlePreferenceChange);
     return () => {
-      preference.removeEventListener("change", enable);
+      preference.removeEventListener("change", handlePreferenceChange);
       cancel();
     };
   }, []);
@@ -74,7 +76,7 @@ export default function HomeHero() {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,transparent_10%,rgba(0,0,0,.22)_72%)]" />
       <div className="pointer-events-none absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-black/28 to-transparent" />
 
-      <div className="relative mx-auto flex min-h-[100svh] w-full max-w-[1600px] flex-col px-4 pb-5 pt-28 sm:px-7 md:pt-32 lg:px-10">
+      <div className="relative mx-auto flex min-h-[100svh] w-full max-w-[1600px] flex-col px-4 pb-5 pt-20 sm:px-7 sm:pt-28 md:pt-32 lg:px-10 max-[700px]:pt-16">
         <div className="flex items-center justify-between gap-4">
           <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/25 px-4 py-2 text-[10px] font-extrabold uppercase tracking-[0.2em] backdrop-blur-md sm:text-xs">
             <MapPin size={13} className="text-[#00C4B0]" />
@@ -82,30 +84,24 @@ export default function HomeHero() {
           </span>
         </div>
 
-        <div className="flex flex-1 flex-col items-center justify-center pb-24 pt-10 text-center sm:pb-32 sm:pt-12">
-          <p className="mb-4 flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.32em] text-white/80 sm:text-xs">
-            <span className="h-px w-8 bg-[#00C4B0]" />
-            {isEs ? "Cañón del Río La Vieja" : "La Vieja River Canyon"}
-            <span className="h-px w-8 bg-[#00C4B0]" />
-          </p>
-
-          <h1 className="max-w-full font-display text-[clamp(2.65rem,10.1vw,10.5rem)] font-black uppercase leading-[1.04] tracking-[-0.035em] drop-shadow-[0_8px_30px_rgba(0,0,0,.42)] md:leading-[0.9] md:tracking-[-0.055em]">
+        <div className="flex flex-1 flex-col items-center justify-center pb-16 pt-6 text-center sm:pb-28 sm:pt-10 max-[700px]:justify-center max-[700px]:pb-12">
+          <h1 className="max-w-full font-display text-[clamp(2.25rem,9vw,9rem)] font-black uppercase leading-[0.95] tracking-[-0.035em] drop-shadow-[0_8px_30px_rgba(0,0,0,.42)] md:leading-[0.9] md:tracking-[-0.055em]">
             {isEs ? "CIUDAD" : "EMERALD"}
             <span className="mt-2 block text-[#00C4B0]">
               {isEs ? "ESMERALDA" : "CITY"}
             </span>
           </h1>
 
-          <p className="mt-7 max-w-xl text-balance text-sm font-semibold leading-relaxed text-white/85 sm:text-base md:text-lg">
+          <p className="mt-5 max-w-lg text-balance text-sm font-semibold leading-relaxed text-white/85 sm:mt-6 sm:text-base md:text-lg">
             {isEs
-              ? `El cañón insignia de La Vieja Adventures: sendero, río y las pozas turquesa de la Cascada El Zafiro, con guía local bilingüe y grupos pequeños. ${BOOKING_ASSURANCE_ES}`
-              : `La Vieja Adventures' signature canyon: trail, river, and the turquoise pools of El Zafiro Waterfall, with a local bilingual guide and small groups. ${BOOKING_ASSURANCE_EN}`}
+              ? "Río, bosque y pozas turquesa en Ciudad Esmeralda, con un guía local que cuida cada paso."
+              : "River, forest, and turquoise pools at Ciudad Esmeralda, with a local guide caring for every step."}
           </p>
 
-          <div className="mt-7 flex flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
+          <div className="mt-6 flex w-full max-w-sm flex-col items-stretch gap-3 sm:mt-7 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-center">
             <Link
               href={localizeHref(BOOKING_HREF, lang)}
-              className="group inline-flex min-h-14 items-center justify-center gap-3 rounded-full bg-[#00C4B0] px-7 text-xs font-black uppercase tracking-[0.12em] text-[#17211f] shadow-[0_18px_50px_rgba(0,196,176,.28)] transition hover:-translate-y-0.5 hover:bg-white"
+              className="group inline-flex min-h-12 items-center justify-center gap-3 rounded-full bg-[#00C4B0] px-6 text-xs font-black uppercase tracking-[0.12em] text-[#17211f] shadow-[0_18px_50px_rgba(0,196,176,.28)] transition hover:-translate-y-0.5 hover:bg-white sm:min-h-14 sm:px-7"
             >
               {primaryBookingLabel(isEs)}
               <ArrowRight size={17} className="transition-transform group-hover:translate-x-1" />
@@ -114,7 +110,7 @@ export default function HomeHero() {
               href={whatsappHref}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex min-h-14 items-center justify-center gap-3 rounded-full border border-white/30 bg-black/22 px-7 text-xs font-black uppercase tracking-[0.12em] text-white backdrop-blur-md transition hover:border-white/60 hover:bg-white/12"
+              className="inline-flex min-h-12 items-center justify-center gap-3 rounded-full border border-white/30 bg-black/22 px-6 text-xs font-black uppercase tracking-[0.12em] text-white backdrop-blur-md transition hover:border-white/60 hover:bg-white/12 sm:min-h-14 sm:px-7"
             >
               <MessageCircle size={17} />
               {isEs ? "Hablar con un guía" : "Talk to a guide"}
@@ -124,11 +120,11 @@ export default function HomeHero() {
         </div>
       </div>
       {videoEnabled ? (
-        <button type="button" onClick={toggleVideo} aria-pressed={paused} aria-label={isEs ? (paused ? "Reproducir video de fondo" : "Pausar video de fondo") : (paused ? "Play background video" : "Pause background video")} className="absolute bottom-4 right-4 z-10 hidden min-h-11 items-center gap-2 rounded-full border border-white/40 bg-black/70 px-4 py-2 text-sm font-semibold text-white sm:inline-flex sm:bottom-36">
+        <button type="button" onClick={toggleVideo} aria-pressed={!paused} aria-label={isEs ? (paused ? "Reproducir video de fondo" : "Pausar video de fondo") : (paused ? "Play background video" : "Pause background video")} className="absolute bottom-4 right-4 z-10 inline-flex min-h-11 items-center gap-2 rounded-full border border-white/40 bg-black/70 px-4 py-2 text-sm font-semibold text-white sm:bottom-36">
           {paused ? <Play size={16} aria-hidden /> : <Pause size={16} aria-hidden />}{isEs ? (paused ? "Reproducir" : "Pausar video") : (paused ? "Play video" : "Pause video")}
         </button>
       ) : (
-        <div className="absolute bottom-4 right-4 z-10 hidden min-h-11 items-center gap-2 rounded-full border border-white/25 bg-black/60 px-4 py-2 text-sm font-semibold text-white/90 backdrop-blur-md sm:inline-flex sm:bottom-36" role="status">
+        <div className="absolute bottom-4 right-4 z-10 inline-flex min-h-11 items-center gap-2 rounded-full border border-white/25 bg-black/60 px-4 py-2 text-sm font-semibold text-white/90 backdrop-blur-md sm:bottom-36" role="status">
           <ImageIcon size={16} aria-hidden />
           {isEs ? "Vista de portada" : "Poster view"}
         </div>
