@@ -117,7 +117,7 @@ export default function HomeTrustSection({ tour }: Props) {
               {visibleInclusions.map((item) => <li key={item} className="flex gap-2 text-sm leading-relaxed text-stone-700 dark:text-stone-300"><Check size={17} className="mt-0.5 shrink-0 text-emerald-600" />{item}</li>)}
             </ul>
             <Link href={localizeHref(BOOKING_HREF, lang)} className="mt-7 inline-flex items-center gap-2 text-sm font-black text-emerald-700 hover:text-emerald-900 dark:text-emerald-300 dark:hover:text-emerald-200">
-              {isEs ? "Ver fecha y paquete exactos" : "See exact date and package"}<ArrowRight size={16} />
+              {isEs ? "Ver qué incluye" : "See what’s included"}<ArrowRight size={16} />
             </Link>
           </article>
 

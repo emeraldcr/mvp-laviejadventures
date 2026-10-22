@@ -27,14 +27,14 @@ export default function ToursShowcase({ tours }: Props) {
               {isEs ? "Más experiencias" : "More experiences"}
             </p>
             <h2 className="font-display max-w-2xl text-balance text-[28px] font-black leading-[1.08] tracking-tight text-stone-950 dark:text-stone-50 md:text-[36px]">
-              {isEs ? "¿Busca otro plan? Compare y reserve" : "Looking for another plan? Compare and book"}
+              {isEs ? "Encuentre la aventura que va con su ritmo" : "Find the adventure that fits your pace"}
             </h2>
           </div>
           <Link
             href={localizeHref(TOURS_HREF, lang)}
             className="group inline-flex items-center gap-2 text-sm font-black text-stone-950 transition-colors hover:text-emerald-700 dark:text-stone-50 dark:hover:text-emerald-300"
           >
-            {isEs ? "Explorar todos los tours" : "Explore all tours"}
+            {isEs ? "Comparar tours" : "Compare tours"}
             <span className="flex h-9 w-9 items-center justify-center rounded-full border border-stone-300 transition-all group-hover:border-emerald-600 group-hover:bg-[#00796B] group-hover:text-white dark:border-stone-600">
               <ArrowRight size={15} />
             </span>
