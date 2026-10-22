@@ -325,9 +325,9 @@ const es = withUstedeo({
   },
   tours: {
     badge: "La Vieja Adventures",
-    title: "Nuestros tours",
+    title: "Tours en San Carlos, Costa Rica",
     description:
-      "Desde el cañón hasta un almuerzo tico o un paseo de aves: mire qué le llama y reserve con guías de la zona. Si el clima se complica, le decimos a tiempo.",
+      "Explore el cañón Ciudad Esmeralda, las pozas del Río La Vieja y actividades al aire libre en San Carlos: senderismo, avistamiento de aves y tours en cuadraciclo con guías locales. El equipo confirma las condiciones y la disponibilidad antes de salir.",
     featuredLabel: "La estrella de la casa",
     mostBooked: "La que más piden",
     featuredTitle: "Ciudad Esmeralda",
@@ -670,9 +670,9 @@ const en = {
   },
   tours: {
     badge: "La Vieja Adventures",
-    title: "Our tours",
+    title: "Adventure tours in San Carlos, Costa Rica",
     description:
-      "From the canyon to a tico lunch or a bird walk: see what pulls you in and book with local guides. If the weather turns, we'll tell you early.",
+      "Discover Ciudad Esmeralda Canyon, La Vieja River pools, and outdoor activities in San Carlos: hiking, birdwatching, and ATV tours with local guides. Our team confirms conditions and availability before each outing.",
     featuredLabel: "House favorite",
     mostBooked: "Most requested",
     featuredTitle: "Ciudad Esmeralda",

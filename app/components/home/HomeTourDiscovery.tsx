@@ -41,8 +41,8 @@ export default function HomeTourDiscovery({ tours }: { tours: TourSummary[] }) {
         <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <div className="max-w-2xl">
             <p className="lva-home-kicker">{isEs ? "Primero, el ritmo del día" : "First, choose your pace"}</p>
-            <h2 className="mt-3 font-display text-balance text-3xl font-black leading-[1.04] tracking-tight text-stone-950 dark:text-white md:text-5xl">{isEs ? "¿Qué tipo de día está buscando?" : "What kind of day are you looking for?"}</h2>
-            <p className="mt-4 text-base leading-relaxed text-stone-600 dark:text-stone-300">{isEs ? "Elegí la vibra y compará experiencias que sí combinan con tu grupo. Ciudad Esmeralda es una opción, no la única, mae." : "Choose the vibe and compare experiences that fit your group. Ciudad Esmeralda is one option, not the only one."}</p>
+            <h2 className="mt-3 font-display text-balance text-3xl font-black leading-[1.04] tracking-tight text-stone-950 dark:text-white md:text-5xl">{isEs ? "Actividades al aire libre en San Carlos" : "Outdoor activities in San Carlos"}</h2>
+            <p className="mt-4 text-base leading-relaxed text-stone-600 dark:text-stone-300">{isEs ? "¿Busca qué hacer en San Carlos, Costa Rica? Compare tours de aventura, pozas cristalinas, senderismo y avistamiento de aves con La Vieja Adventures. Elija el ritmo que le va a su grupo, pura vida." : "Looking for things to do in San Carlos, Costa Rica? Compare adventure tours, natural pools, hiking, and birdwatching with La Vieja Adventures. Choose a pace that suits your group."}</p>
           </div>
           <Link href={localizeHref("/tours", lang)} className="lva-button-primary shrink-0">
             {isEs ? "Ver todos los tours" : "See all tours"}<ArrowRight size={16} />

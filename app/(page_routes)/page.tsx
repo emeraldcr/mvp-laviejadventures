@@ -5,7 +5,7 @@ import HomeServerFaq from "@/app/home/HomeServerFaq";
 import { getPublicTours } from "@/lib/tours/read";
 import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = pageMetadata("/", "Ciudad Esmeralda: Tour de Cañón en San Carlos, CR", "Cañón del Río La Vieja hasta la Cascada El Zafiro: guía local bilingüe, pozas turquesa y paquetes de aventura en San Carlos.", "es");
+export const metadata: Metadata = pageMetadata("/", "Ciudad Esmeralda Costa Rica | La Vieja Adventures", "Explore el cañón Ciudad Esmeralda en San Carlos, Costa Rica: Río La Vieja, Cascada El Zafiro y pozas turquesa con guías locales de La Vieja Adventures.", "es");
 
 export default async function HomePage() {
   const tours = await getPublicTours();

@@ -95,8 +95,8 @@ export default function HomeHero({ tour }: { tour?: TourSummary }) {
 
           <p className="mt-5 max-w-lg text-balance text-sm font-semibold leading-relaxed text-white/85 sm:mt-6 sm:text-base md:text-lg">
             {isEs
-              ? "Río, bosque y pozas turquesa en Ciudad Esmeralda, con un guía local que cuida cada paso."
-              : "River, forest, and turquoise pools at Ciudad Esmeralda, with a local guide caring for every step."}
+              ? "Explore el cañón Ciudad Esmeralda en Costa Rica: Río La Vieja, bosque y pozas turquesa con guías locales de San Carlos."
+              : "Explore Ciudad Esmeralda Canyon in Costa Rica: La Vieja River, forest, and turquoise pools with local guides from San Carlos."}
           </p>
 
           <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.16em] sm:text-xs">
