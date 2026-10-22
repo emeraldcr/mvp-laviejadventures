@@ -17,12 +17,13 @@ type TourDetailPageProps = { tour: TourDetail; locale: Locale };
 
 export default function TourDetailPage({ tour, locale }: TourDetailPageProps) {
   const isEnglish = locale === "en";
-  const copy = isEnglish ? { home: "Home", tours: "Tours", breadcrumb: "Breadcrumb", book: "Book this tour", back: "Back to booking", whatsapp: "Ask on WhatsApp", duration: "Duration", difficulty: "Difficulty", location: "Location", from: "From", overview: "About this experience", highlights: "Tour highlights", itinerary: "How the route works", included: "Included", notIncluded: "Not included", bring: "What to bring", know: "Good to know before you go", faqs: "Frequently asked questions", packages: "Available packages", select: "Select", ask: "Ask us", costaRica: "Costa Rica", image: "image" } : { home: "Inicio", tours: "Tours", breadcrumb: "Migas de pan", book: "Reservar este tour", back: "Volver a reserva", whatsapp: "Consultar por WhatsApp", duration: "Duración", difficulty: "Nivel", location: "Ubicación", from: "Desde", overview: "Sobre esta experiencia", highlights: "Lo mejor del tour", itinerary: "Cómo es el recorrido", included: "Incluye", notIncluded: "No incluye", bring: "Qué llevar", know: "Bueno saber antes de ir", faqs: "Preguntas frecuentes", packages: "Paquetes disponibles", select: "Seleccionar", ask: "Consultar", costaRica: "Costa Rica", image: "imagen" };
+  const copy = isEnglish ? { home: "Home", tours: "Tours", breadcrumb: "Breadcrumb", book: "Book this tour", back: "Back to booking", whatsapp: "Ask on WhatsApp", duration: "Duration", difficulty: "Difficulty", location: "Location", from: "From", availability: "Availability", availabilityValue: "To be confirmed", overview: "About this experience", highlights: "Tour highlights", itinerary: "How the route works", included: "Included", notIncluded: "Not included", bring: "What to bring", know: "Good to know before you go", faqs: "Frequently asked questions", packages: "Available packages", select: "Select", ask: "Ask us", costaRica: "Costa Rica", image: "image", readyTitle: "Ready to plan your adventure?", readyBody: "Choose a date and our team will confirm availability before your reservation is finalized." } : { home: "Inicio", tours: "Tours", breadcrumb: "Migas de pan", book: "Reservar este tour", back: "Volver a reserva", whatsapp: "Consultar por WhatsApp", duration: "Duración", difficulty: "Nivel", location: "Ubicación", from: "Desde", availability: "Disponibilidad", availabilityValue: "Por confirmar", overview: "Sobre esta experiencia", highlights: "Lo mejor del tour", itinerary: "Cómo es el recorrido", included: "Incluye", notIncluded: "No incluye", bring: "Qué llevar", know: "Bueno saber antes de ir", faqs: "Preguntas frecuentes", packages: "Paquetes disponibles", select: "Seleccionar", ask: "Consultar", costaRica: "Costa Rica", image: "imagen", readyTitle: "¿Listo para planear su aventura?", readyBody: "Elija una fecha y nuestro equipo le confirma la disponibilidad antes de finalizar la reserva." };
   const prefix = isEnglish ? "/en" : "";
   const content = getLocalizedTourContent(tour, locale);
   const title = (isEnglish ? tour.titleEn : tour.titleEs) || tour.titleEs || tour.titleEn || "Tour";
   const description = isEnglish ? tour.descriptionEn || tour.descriptionEs : tour.details || tour.descriptionEs || tour.descriptionEn;
   const difficulty = tour.difficulty.trim();
+  const physicalLevel = getPhysicalLevel(tour, locale);
   const tourSchema = {
     "@context": "https://schema.org",
     "@type": "TouristTrip",
@@ -123,11 +124,12 @@ export default function TourDetailPage({ tour, locale }: TourDetailPageProps) {
         </div>
       </section>
 
-      <section className="lva-surface-muted mx-auto grid max-w-7xl gap-6 px-4 py-12 md:grid-cols-4 md:px-8">
+      <section aria-label={isEnglish ? "Tour summary" : "Resumen del tour"} className="lva-surface-muted mx-auto grid max-w-7xl gap-4 px-4 py-8 md:grid-cols-5 md:px-8 md:py-10">
+        <InfoCard emphasized icon={<Users className="h-4 w-4" />} label={copy.from} value={getTourPriceDisplay(tour, !isEnglish).compact} />
         <InfoCard icon={<Clock className="h-4 w-4" />} label={copy.duration} value={tour.duration || copy.ask} />
-        <InfoCard icon={<ShieldCheck className="h-4 w-4" />} label={copy.difficulty} value={tour.difficulty || copy.ask} />
+        <InfoCard icon={<ShieldCheck className="h-4 w-4" />} label={copy.difficulty} value={physicalLevel} />
         <InfoCard icon={<MapPin className="h-4 w-4" />} label={copy.location} value={tour.location || copy.costaRica} />
-        <InfoCard icon={<Users className="h-4 w-4" />} label={copy.from} value={getTourPriceDisplay(tour, !isEnglish).compact} />
+        <InfoCard icon={<CalendarDays className="h-4 w-4" />} label={copy.availability} value={copy.availabilityValue} />
       </section>
 
       <section className="mx-auto grid max-w-7xl gap-8 px-4 pb-16 md:grid-cols-[1.1fr_0.9fr] md:px-8">
@@ -275,6 +277,19 @@ export default function TourDetailPage({ tour, locale }: TourDetailPageProps) {
         </section>
       )}
 
+      <section className="mx-auto max-w-7xl px-4 pb-16 md:px-8">
+        <div className="lva-card-accent flex flex-col items-start justify-between gap-5 rounded-3xl p-6 md:flex-row md:items-center md:p-8">
+          <div>
+            <h2 className="lva-heading text-2xl font-black">{copy.readyTitle}</h2>
+            <p className="lva-body mt-2 max-w-2xl text-sm leading-relaxed">{copy.readyBody}</p>
+          </div>
+          <Link href={bookingHref} className="lva-button-primary shrink-0 uppercase tracking-[0.14em]">
+            {copy.book}
+            <ChevronRight className="h-4 w-4" aria-hidden />
+          </Link>
+        </div>
+      </section>
+
       {content && content.faqs.length > 0 && (
         <section className="mx-auto max-w-7xl px-4 pb-16 md:px-8">
           <div className="mb-6 flex items-center gap-4">
@@ -324,14 +339,57 @@ export default function TourDetailPage({ tour, locale }: TourDetailPageProps) {
   );
 }
 
-function InfoCard({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
+function getPhysicalLevel(tour: TourDetail, locale: Locale) {
+  const isEnglish = locale === "en";
+  const slug = tour.slug.toLowerCase();
+  const isRappel = slug.includes("rapel") || slug.includes("rappel");
+  const isCanyon = slug.includes("ciudad-esmeralda") || slug.includes("canon") || slug.includes("canyon");
+
+  if (isRappel) {
+    return {
+      label: isEnglish ? "Physical level" : "Nivel físico",
+      level: isEnglish ? "High" : "Alto",
+      detail: isEnglish
+        ? "Requires walking, getting wet, and taking part in rappelling. Not recommended if you have mobility limitations."
+        : "Requiere caminar, mojarse y participar en rappel. No recomendado si tiene limitaciones de movilidad.",
+    };
+  }
+
+  if (isCanyon) {
+    return {
+      label: isEnglish ? "Physical level" : "Nivel físico",
+      level: isEnglish ? "Intermediate-technical" : "Intermedio-técnico",
+      detail: isEnglish
+        ? "Requires walking on uneven terrain and getting wet. The guide evaluates river and weather conditions before departure."
+        : "Requiere caminar por terreno irregular y mojarse. El guía evalúa las condiciones del río y el clima antes de salir.",
+    };
+  }
+
+  const rawDifficulty = tour.difficulty.trim().toLowerCase();
+  const level = rawDifficulty.includes("fácil") || rawDifficulty.includes("facil") || rawDifficulty.includes("easy")
+    ? (isEnglish ? "Low" : "Bajo")
+    : rawDifficulty.includes("extremo") || rawDifficulty.includes("avanz") || rawDifficulty.includes("extreme") || rawDifficulty.includes("advanced")
+      ? (isEnglish ? "High" : "Alto")
+      : (isEnglish ? "Moderate" : "Moderado");
+
+  return {
+    label: isEnglish ? "Physical level" : "Nivel físico",
+    level,
+    detail: isEnglish ? "Check the route details and ask our team about the conditions for your group." : "Revise el recorrido y consulte las condiciones para su grupo.",
+  };
+}
+
+function InfoCard({ icon, label, value, emphasized = false }: { icon: ReactNode; label: string; value: string | { label: string; level: string; detail: string }; emphasized?: boolean }) {
+  const detailValue = typeof value === "string" ? null : value;
+  const displayValue = typeof value === "string" ? value : `${value.label}: ${value.level}`;
   return (
-    <div className="lva-card rounded-3xl p-5">
+    <div className={`lva-card rounded-3xl p-5 ${emphasized ? "ring-2 ring-[var(--lva-accent)]/40" : ""}`}>
       <p className="lva-accent mb-2 flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em]">
         {icon}
         {label}
       </p>
-      <p className="lva-heading text-base font-bold leading-snug">{value}</p>
+      <p className={`lva-heading font-bold leading-snug ${emphasized ? "text-xl" : "text-base"}`}>{displayValue}</p>
+      {detailValue && <p className="lva-muted mt-2 text-sm leading-relaxed">{detailValue.detail}</p>}
     </div>
   );
 }
