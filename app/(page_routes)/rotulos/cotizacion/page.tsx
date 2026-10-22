@@ -31,7 +31,7 @@ export default function RotulosCotizacionPage() {
               <p className="text-xs text-[#706b65]">Expediente de cotización</p>
             </div>
             <Image
-              src="/logo2.jpg"
+              src="/logo2.webp"
               alt="Logo de La Vieja Adventures"
               width={48}
               height={48}

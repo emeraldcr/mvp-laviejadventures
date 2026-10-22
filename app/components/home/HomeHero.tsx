@@ -26,14 +26,29 @@ export default function HomeHero({ tour }: { tour?: TourSummary }) {
   const whatsappHref = localizedHomeWhatsAppHref(isEs);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [paused, setPaused] = useState(true);
+  const [videoEnabled, setVideoEnabled] = useState(false);
   useEffect(() => {
-    const video = videoRef.current;
     const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const sync = () => { if (preference.matches) video?.pause(); else void video?.play().catch(() => {}); };
-    sync();
-    preference.addEventListener("change", sync);
-    return () => preference.removeEventListener("change", sync);
+    if (preference.matches) return;
+    const enable = () => setVideoEnabled(true);
+    let cancel = () => {};
+    if ("requestIdleCallback" in window) {
+      const idle = window.requestIdleCallback(enable, { timeout: 1800 });
+      cancel = () => window.cancelIdleCallback(idle);
+    } else {
+      const timeout = globalThis.setTimeout(enable, 1200);
+      cancel = () => globalThis.clearTimeout(timeout);
+    }
+    preference.addEventListener("change", enable);
+    return () => {
+      preference.removeEventListener("change", enable);
+      cancel();
+    };
   }, []);
+  useEffect(() => {
+    if (!videoEnabled) return;
+    void videoRef.current?.play().catch(() => {});
+  }, [videoEnabled]);
   const toggleVideo = () => {
     const video = videoRef.current;
     if (!video) return;
@@ -56,22 +71,24 @@ export default function HomeHero({ tour }: { tour?: TourSummary }) {
 
   return (
     <section className="relative min-h-[100svh] overflow-hidden bg-[#2E2A25] text-white">
-      <Image src="/hero/ciudad-esmeralda-poster.jpg" alt="" fill priority loading="eager" fetchPriority="high" sizes="100vw" className="object-cover" />
-      <video
-        id="home-hero-video"
-        ref={videoRef}
-        className="absolute inset-0 h-full w-full object-cover"
-        muted
-        loop
-        playsInline
-        preload="metadata"
-        poster="/hero/ciudad-esmeralda-poster.jpg"
-        aria-hidden="true"
-        onPlay={() => setPaused(false)}
-        onPause={() => setPaused(true)}
-      >
-        <source src="/hero/ciudad-esmeralda-hero.mp4" type="video/mp4" />
-      </video>
+      <Image src="/hero/ciudad-esmeralda-poster.webp" alt="" fill priority loading="eager" fetchPriority="high" sizes="100vw" className="object-cover" />
+      {videoEnabled && (
+        <video
+          id="home-hero-video"
+          ref={videoRef}
+          className="absolute inset-0 h-full w-full object-cover"
+          muted
+          loop
+          playsInline
+          preload="none"
+          poster="/hero/ciudad-esmeralda-poster.webp"
+          aria-hidden="true"
+          onPlay={() => setPaused(false)}
+          onPause={() => setPaused(true)}
+        >
+          <source src="/hero/ciudad-esmeralda-hero.mp4" type="video/mp4" />
+        </video>
+      )}
 
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(10,12,11,.52)_0%,rgba(8,10,9,.12)_33%,rgba(7,9,8,.55)_72%,rgba(6,7,6,.96)_100%)]" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,transparent_10%,rgba(0,0,0,.22)_72%)]" />

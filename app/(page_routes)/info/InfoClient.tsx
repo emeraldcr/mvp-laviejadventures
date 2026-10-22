@@ -293,9 +293,9 @@ export default function InfoClient({ tours }: { tours: TourSummary[] }) {
           <div className="space-y-10">
             {tr.storyParagraphs.map((paragraph, index) => {
               const images = [
-                "/image/IMG_6813.jpg",
-                "/image/IMG_6805.jpg",
-                "/image/IMG_4522.jpg",
+                "/image/IMG_6813.webp",
+                "/image/IMG_6805.webp",
+                "/image/IMG_4522.webp",
               ];
 
               return (

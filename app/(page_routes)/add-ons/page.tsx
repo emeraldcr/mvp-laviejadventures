@@ -15,7 +15,7 @@ export default function AddOnsPage() {
         <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 md:px-8">
           <Link href="/" className="flex items-center gap-3">
             <Image
-              src="/logo2.jpg"
+              src="/logo2.webp"
               alt="La Vieja Adventures Logo"
               width={40}
               height={40}

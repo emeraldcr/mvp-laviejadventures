@@ -21,7 +21,7 @@ function FinalCta() {
     <section className="bg-white px-4 pb-20 dark:bg-[#0b0a09] sm:px-6 md:pb-28 lg:px-8">
       <div className="relative mx-auto max-w-7xl overflow-hidden rounded-[2.5rem]">
         <Image
-          src="/image/IMG_6812.jpg"
+          src="/image/IMG_6812.webp"
           alt={isEs ? "Cascada El Zafiro en Ciudad Esmeralda" : "El Zafiro Waterfall at Ciudad Esmeralda"}
           fill
           sizes="100vw"
@@ -82,7 +82,7 @@ function HomeFooter() {
           <div>
             <div className="flex items-center gap-2.5">
               <Image
-                src="/logo2.jpg"
+                src="/logo2.webp"
                 alt="La Vieja Adventures"
                 width={44}
                 height={44}

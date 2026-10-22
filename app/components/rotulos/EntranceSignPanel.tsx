@@ -50,7 +50,7 @@ export default function EntranceSignPanel({ panel, eager }: { panel: Panel; eage
                 {panel.brands.map((brand) => (
                   <div key={brand} className="bg-white p-1.5 shadow-xl shadow-black/30">
                     <Image
-                      src={brand === "lva" ? "/logo2.jpg" : "/logo1.jpg"}
+                      src={brand === "lva" ? "/logo2.webp" : "/logo1.webp"}
                       alt={
                         brand === "lva"
                           ? "La Vieja Adventures, logo oscuro"
@@ -184,7 +184,7 @@ export default function EntranceSignPanel({ panel, eager }: { panel: Panel; eage
                 className={`absolute right-5 top-5 z-10 p-1.5 xl:right-7 xl:top-7 print:hidden ${GLASS_BASE} bg-[rgba(24,24,27,0.42)]`}
               >
                 <Image
-                  src="/logo1.jpg"
+                  src="/logo1.webp"
                   alt="La Vieja Adventures, logo turquesa"
                   width={56}
                   height={56}

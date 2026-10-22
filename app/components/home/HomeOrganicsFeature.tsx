@@ -29,7 +29,7 @@ export default function HomeOrganicsFeature() {
         <div className="grid overflow-hidden rounded-[2rem] border border-stone-200 bg-white shadow-[0_28px_90px_rgba(30,24,16,0.12)] dark:border-white/10 dark:bg-white/[0.04] dark:shadow-[0_28px_90px_rgba(0,0,0,0.45)] lg:grid-cols-[0.92fr_1.08fr]">
           <div className="relative min-h-[360px] bg-stone-900 lg:min-h-[520px]">
             <Image
-              src="/ads/IMG_5670.jpg"
+              src="/ads/IMG_5670.webp"
               alt={isEs ? "Cocina local conectada con La Vieja Organics" : "Local kitchen connected with La Vieja Organics"}
               fill
               sizes="(min-width: 1024px) 45vw, 100vw"

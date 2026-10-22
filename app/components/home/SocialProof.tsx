@@ -6,15 +6,15 @@ import { ArrowRight, Star } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
 
 const GALLERY_ROW_A = [
-  "/image/IMG_6810.jpg", "/image/IMG_4671.jpg", "/image/IMG_4257.jpg",
-  "/image/IMG_6813.jpg", "/image/IMG_3698.jpg", "/image/IMG_4943.jpg",
-  "/image/IMG_4522.jpg", "/image/IMG_4200.jpg",
+  "/image/IMG_6810.webp", "/image/IMG_4671.webp", "/image/IMG_4257.webp",
+  "/image/IMG_6813.webp", "/image/IMG_3698.webp", "/image/IMG_4943.webp",
+  "/image/IMG_4522.webp", "/image/IMG_4200.webp",
 ];
 
 const GALLERY_ROW_B = [
-  "/image/IMG_6812.jpg", "/image/IMG_3705.jpg", "/image/IMG_4917.jpg",
-  "/image/IMG_4672.jpg", "/image/IMG_6809.jpg", "/image/IMG_4523.jpg",
-  "/image/IMG_3751.jpg", "/image/IMG_4514.jpg",
+  "/image/IMG_6812.webp", "/image/IMG_3705.webp", "/image/IMG_4917.webp",
+  "/image/IMG_4672.webp", "/image/IMG_6809.webp", "/image/IMG_4523.webp",
+  "/image/IMG_3751.webp", "/image/IMG_4514.webp",
 ];
 
 const TESTIMONIALS = [

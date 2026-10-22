@@ -65,7 +65,7 @@ export default function FeaturedStory({ tours }: Props) {
           <div className="relative">
             <div className="relative aspect-[4/5] overflow-hidden rounded-[2.5rem]">
               <Image
-                src="/image/IMG_4671.jpg"
+                src="/image/IMG_4671.webp"
                 alt={isEs ? "Cañón de Ciudad Esmeralda en Costa Rica" : "Ciudad Esmeralda Canyon in Costa Rica"}
                 fill
                 sizes="(min-width: 1024px) 50vw, 100vw"

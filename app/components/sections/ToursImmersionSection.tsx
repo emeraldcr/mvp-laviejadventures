@@ -23,16 +23,16 @@ import { getTourImage } from "@/lib/tour-display";
 
 // All images from /public/image used in the photo-mosaic strip
 const GALLERY_STRIP = [
-  "/image/IMG_6810.jpg", "/image/IMG_6812.jpg", "/image/IMG_4671.jpg",
-  "/image/IMG_4257.jpg", "/image/IMG_6813.jpg", "/image/IMG_4197.jpg",
-  "/image/IMG_3698.jpg", "/image/IMG_4943.jpg", "/image/IMG_5585.jpg",
-  "/image/IMG_4522.jpg", "/image/IMG_6814.jpg", "/image/IMG_4200.jpg",
-  "/image/IMG_3705.jpg", "/image/IMG_4917.jpg", "/image/IMG_4672.jpg",
-  "/image/IMG_6809.jpg", "/image/IMG_6806.jpg", "/image/IMG_6811.jpg",
-  "/image/IMG_4523.jpg", "/image/IMG_4210.jpg", "/image/IMG_3751.jpg",
-  "/image/IMG_2439.jpg", "/image/IMG_2443.jpg", "/image/IMG_4514.jpg",
-  "/image/IMG_6805.jpg", "/image/IMG_4376.jpg", "/image/IMG_4389.jpg",
-  "/image/IMG_4575.jpg", "/image/IMG_3920.jpg", "/image/IMG_5592.jpg",
+  "/image/IMG_6810.webp", "/image/IMG_6812.webp", "/image/IMG_4671.webp",
+  "/image/IMG_4257.webp", "/image/IMG_6813.webp", "/image/IMG_4197.webp",
+  "/image/IMG_3698.webp", "/image/IMG_4943.webp", "/image/IMG_5585.webp",
+  "/image/IMG_4522.webp", "/image/IMG_6814.webp", "/image/IMG_4200.webp",
+  "/image/IMG_3705.webp", "/image/IMG_4917.webp", "/image/IMG_4672.webp",
+  "/image/IMG_6809.webp", "/image/IMG_6806.webp", "/image/IMG_6811.webp",
+  "/image/IMG_4523.webp", "/image/IMG_4210.webp", "/image/IMG_3751.webp",
+  "/image/IMG_2439.webp", "/image/IMG_2443.webp", "/image/IMG_4514.webp",
+  "/image/IMG_6805.webp", "/image/IMG_4376.webp", "/image/IMG_4389.webp",
+  "/image/IMG_4575.webp", "/image/IMG_3920.webp", "/image/IMG_5592.webp",
 ];
 
 type Props = {

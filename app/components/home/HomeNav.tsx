@@ -116,7 +116,7 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
             ].join(" ")}
           >
             <Image
-              src="/logo2.jpg"
+              src="/logo2.webp"
               alt="La Vieja Adventures"
               width={40}
               height={40}

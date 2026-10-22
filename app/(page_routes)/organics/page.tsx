@@ -38,7 +38,7 @@ export default function OrganicsPage() {
       <HomeNav />
       <section className="relative flex min-h-[82svh] items-end overflow-hidden bg-stone-950 px-4 pb-12 pt-28 sm:px-6 lg:px-8">
         <Image
-          src="/ads/IMG_5670.jpg"
+          src="/ads/IMG_5670.webp"
           alt="Cocina local de La Vieja Organics"
           fill
           priority
@@ -116,7 +116,7 @@ export default function OrganicsPage() {
         <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 sm:px-6 lg:grid-cols-2 lg:px-8">
           <div className="relative aspect-[4/5] overflow-hidden rounded-[2rem] bg-stone-900 shadow-[0_28px_90px_rgba(30,24,16,0.16)]">
             <Image
-              src="/ads/IMG_5667.jpg"
+              src="/ads/IMG_5667.webp"
               alt="Restaurante local de La Vieja"
               fill
               sizes="(min-width: 1024px) 50vw, 100vw"

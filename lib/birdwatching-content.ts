@@ -71,18 +71,18 @@ export const BIRDWATCHING_VIDEOS: BirdVideo[] = [
 ];
 
 export const BIRDWATCHING_GALLERY: string[] = [
-  "/image/IMG_6805.jpg",
-  "/image/IMG_6806.jpg",
-  "/image/IMG_6809.jpg",
-  "/image/IMG_6810.jpg",
-  "/image/IMG_6811.jpg",
-  "/image/IMG_6812.jpg",
-  "/image/IMG_6813.jpg",
-  "/image/IMG_6814.jpg",
-  "/image/IMG_4514.jpg",
-  "/image/IMG_4522.jpg",
-  "/image/IMG_4523.jpg",
-  "/image/IMG_4575.JPG",
+  "/image/IMG_6805.webp",
+  "/image/IMG_6806.webp",
+  "/image/IMG_6809.webp",
+  "/image/IMG_6810.webp",
+  "/image/IMG_6811.webp",
+  "/image/IMG_6812.webp",
+  "/image/IMG_6813.webp",
+  "/image/IMG_6814.webp",
+  "/image/IMG_4514.webp",
+  "/image/IMG_4522.webp",
+  "/image/IMG_4523.webp",
+  "/image/IMG_4575.webp",
 ];
 
 export const BIRDWATCHING_IMAGE_CREDITS = [

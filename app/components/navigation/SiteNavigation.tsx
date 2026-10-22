@@ -96,7 +96,7 @@ export const SiteHeader = memo<{ isScrolled?: boolean }>(({ isScrolled = false }
         <Link href="/" className="group/logo flex min-w-0 items-center gap-2.5">
           <span className="emerald-logo-shell relative grid shrink-0 place-items-center rounded-xl border border-emerald-100/25 bg-white/10 p-1 shadow-[0_12px_34px_rgba(0,0,0,0.32),inset_0_1px_0_rgba(255,255,255,0.24)] backdrop-blur-xl transition-all duration-500 group-hover/logo:-translate-y-0.5 group-hover/logo:border-emerald-100/[0.55] group-hover/logo:bg-emerald-100/[0.16] md:rounded-2xl md:p-1.5">
             <Image
-              src="/logo2.jpg"
+              src="/logo2.webp"
               alt="La Vieja Adventures"
               width={52}
               height={52}

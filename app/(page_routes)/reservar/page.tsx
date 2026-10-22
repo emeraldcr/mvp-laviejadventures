@@ -1,16 +1,13 @@
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Moon, Sun } from "lucide-react";
 import { CalendarProvider } from "@/lib/CalendarContext";
 import { useLanguage } from "@/lib/LanguageContext";
-import { useTheme } from "@/lib/ThemeContext";
 import { useReservationData } from "@/lib/hooks/useReservationData";
 import BookingSection from "@/app/components/sections/BookingSection";
 import ReservationPaymentStep from "@/app/components/reservation/ReservationPaymentStep";
 import { CheckoutShell } from "@/app/components/layouts/SharedPageShell";
+import SiteHeader from "@/app/components/navigation/SiteHeader";
 
 type UrlBookingParams = {
   tour: string;
@@ -33,14 +30,12 @@ const PACKAGE_QUERY_ALIASES: Record<string, string> = {
 };
 
 export default function ReservarPage() {
-  const { lang, toggle } = useLanguage();
-  const { theme, toggle: toggleTheme } = useTheme();
+  const { lang } = useLanguage();
   const { tours } = useReservationData();
   const [paymentStep, setPaymentStep] = useState(false);
   const [urlParams, setUrlParams] = useState<UrlBookingParams>(DEFAULT_URL_PARAMS);
   const [selectedTourSlug, setSelectedTourSlug] = useState("");
   const [hasReadUrl, setHasReadUrl] = useState(false);
-  const isDark = theme === "dark";
   const isEs = lang === "es";
 
   const activeTour = useMemo(
@@ -104,11 +99,13 @@ export default function ReservarPage() {
       initialDateIso={urlParams.date || null}
     >
       <main className="min-h-screen bg-[#FAF9F6] font-sans text-stone-900 dark:bg-[#0b0a09] dark:text-stone-100">
-        <header className="sticky top-0 z-40 border-b border-stone-200/80 bg-white/90 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-stone-950/85">
+        <SiteHeader solid />
+        {/* The shared public header replaces the legacy booking-only header. */}
+        {/*
           <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-8">
             <Link href="/" className="flex min-w-0 items-center gap-3">
               <Image
-                src="/logo2.jpg"
+                src="/logo2.webp"
                 alt="La Vieja Adventures"
                 width={42}
                 height={42}
@@ -146,7 +143,7 @@ export default function ReservarPage() {
               </button>
             </nav>
           </div>
-        </header>
+        </header> */}
 
         <BookingSection selectedTourSlug={bookingTourSlug} initialPackageId={urlParams.package} />
       </main>

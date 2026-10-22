@@ -48,7 +48,7 @@ export const ROTULOS: Rotulo[] = [
         brands: ["lva"],
         arrow: "right",
         pictogram: "canon",
-        photos: ["/image/IMG_4946.JPG"],
+        photos: ["/image/IMG_4946.webp"],
         price: TIER_PRICE.grande,
       },
     ],

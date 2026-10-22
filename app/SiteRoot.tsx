@@ -21,9 +21,9 @@ export const metadata: Metadata = {
     locale: "es_CR",
     url: SITE_URL,
     siteName: BUSINESS_NAME,
-    images: [{ url: "/image/IMG_6812.jpg", width: 1200, height: 630, alt: "Cascada El Zafiro en Ciudad Esmeralda, San Carlos, Costa Rica" }],
+    images: [{ url: "/image/IMG_6812.webp", width: 1200, height: 630, alt: "Cascada El Zafiro en Ciudad Esmeralda, San Carlos, Costa Rica" }],
   },
-  twitter: { card: "summary_large_image", images: ["/image/IMG_6812.jpg"] },
+  twitter: { card: "summary_large_image", images: ["/image/IMG_6812.webp"] },
 };
 export default function SiteRoot({ children, locale }: Readonly<{ children: React.ReactNode; locale: "es" | "en" }>) {
   const schema = {
@@ -34,8 +34,8 @@ export default function SiteRoot({ children, locale }: Readonly<{ children: Reac
         "@id": `${SITE_URL}/#business`,
         name: BUSINESS_NAME,
         url: SITE_URL,
-        image: `${SITE_URL}/image/IMG_6812.jpg`,
-        logo: `${SITE_URL}/logo2.jpg`,
+        image: `${SITE_URL}/image/IMG_6812.webp`,
+        logo: `${SITE_URL}/logo2.webp`,
         telephone: BUSINESS_PHONE,
         address: { "@type": "PostalAddress", ...BUSINESS_ADDRESS },
         areaServed: [
@@ -56,5 +56,5 @@ export default function SiteRoot({ children, locale }: Readonly<{ children: Reac
       },
     ],
   };
-  return <html lang={locale} className={`${manrope.variable} ${bricolage.variable}`} suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: THEME_NO_FLASH_SCRIPT }} /><JsonLd data={schema} /></head><body className="antialiased"><ThemeProvider><LanguageProvider initialLang={locale}>{children}<MobileBookingBar /></LanguageProvider></ThemeProvider><Analytics /></body></html>;
+  return <html lang={locale} className={`${manrope.variable} ${bricolage.variable}`} suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: THEME_NO_FLASH_SCRIPT }} /><JsonLd data={schema} /></head><body className="antialiased"><a className="lva-skip-link" href="#main-content">{locale === "es" ? "Saltar al contenido" : "Skip to content"}</a><ThemeProvider><LanguageProvider initialLang={locale}><div id="main-content">{children}</div><MobileBookingBar /></LanguageProvider></ThemeProvider><Analytics /></body></html>;
 }

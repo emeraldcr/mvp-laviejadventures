@@ -42,7 +42,7 @@ export default function SignPanel({ panel, kind, large, eager }: SignPanelProps)
   const Arrow = ARROWS[panel.arrow ?? "right"];
   const Picto = PICTOGRAMS[panel.pictogram];
   const theme = SIGN_THEME[kind];
-  const logo = panel.brands[0] === "lva-turquoise" ? "/logo1.jpg" : "/logo2.jpg";
+  const logo = panel.brands[0] === "lva-turquoise" ? "/logo1.webp" : "/logo2.webp";
   const hasPhotos = panel.photos.length > 0;
   const brandForward = panel.brandForward === true;
   const showAmenities = kind === "destino" || kind === "indicador";

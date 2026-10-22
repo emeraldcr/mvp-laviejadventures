@@ -53,7 +53,7 @@ export default function ProposalMock({ variant }: { variant: Variant }) {
             style={{ backgroundColor: SIGN_COLORS.yellow, borderColor: "#8a6b00" }}
           >
             <Image
-              src="/logo2.jpg"
+              src="/logo2.webp"
               alt=""
               width={38}
               height={38}
@@ -163,7 +163,7 @@ export default function ProposalMock({ variant }: { variant: Variant }) {
       <div className="w-full max-w-[380px] overflow-hidden rounded-[3px] border-[3px] border-white shadow-[0_10px_24px_-12px_rgba(0,0,0,0.9)]">
         <div className="relative h-[120px]">
           <Image
-            src="/image/IMG_4671.jpg"
+            src="/image/IMG_4671.webp"
             alt=""
             fill
             sizes="380px"
@@ -173,14 +173,14 @@ export default function ProposalMock({ variant }: { variant: Variant }) {
           <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(6,78,59,0.95)_0%,rgba(6,78,59,0.35)_60%,transparent_100%)]" />
           <div className="absolute inset-0 flex items-center gap-2 p-3">
             <Image
-              src="/logo2.jpg"
+              src="/logo2.webp"
               alt=""
               width={52}
               height={52}
               className="rounded-lg border-2 border-white/80 object-cover"
             />
             <Image
-              src="/logo1.jpg"
+              src="/logo1.webp"
               alt=""
               width={52}
               height={52}
@@ -239,7 +239,7 @@ export default function ProposalMock({ variant }: { variant: Variant }) {
             <div className="relative flex flex-col items-center text-center">
               <div className="rounded-full border border-[#9c7b45]/50 bg-black/30 p-1.5">
                 <Image
-                  src="/logo1.jpg"
+                  src="/logo1.webp"
                   alt=""
                   width={40}
                   height={40}

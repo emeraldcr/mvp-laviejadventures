@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { localizeHref, type Locale } from "./i18n";
 import { BUSINESS_NAME, SITE_URL } from "./site-config";
 
-export function pageMetadata(path: string, title: string, description: string, locale: Locale = "es", image = "/hero/ciudad-esmeralda-poster.jpg"): Metadata {
+export function pageMetadata(path: string, title: string, description: string, locale: Locale = "es", image = "/hero/ciudad-esmeralda-poster.webp"): Metadata {
   description = description.length > 155 ? `${description.slice(0, 152).replace(/\s+\S*$/, "")}…` : description;
   const es = `${SITE_URL}${localizeHref(path, "es")}`;
   const en = `${SITE_URL}${localizeHref(path, "en")}`;
