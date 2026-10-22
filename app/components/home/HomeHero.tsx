@@ -99,6 +99,17 @@ export default function HomeHero({ tour }: { tour?: TourSummary }) {
               : "River, forest, and turquoise pools at Ciudad Esmeralda, with a local guide caring for every step."}
           </p>
 
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.16em] sm:text-xs">
+            <span className="rounded-full border border-amber-200/50 bg-amber-300/15 px-3 py-1.5 text-amber-100 backdrop-blur-sm">
+              {isEs ? "Aventura intensa" : "Intense adventure"}
+            </span>
+            <span className="text-white/75">
+              {isEs
+                ? "También: pozas cristalinas, bosque nuboso, aves y experiencias premium"
+                : "Also: crystal pools, cloud forest, birding, and premium escapes"}
+            </span>
+          </div>
+
           <div className="mt-6 flex w-full max-w-sm flex-col items-stretch gap-3 sm:mt-7 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-center">
             <Link
               href={localizeHref(BOOKING_HREF, lang)}
@@ -120,6 +131,13 @@ export default function HomeHero({ tour }: { tour?: TourSummary }) {
           {tour && <p className="mt-3 max-w-xl text-xs font-bold leading-relaxed text-white/75 sm:text-sm">
             {tourDuration(tour.duration ?? "", lang)} · {tourDifficulty(tour.difficulty ?? "", lang)} · {isEs ? "desde" : "from"} {getTourPriceDisplay(tour, isEs).compact}/{isEs ? "persona" : "person"} · {isEs ? "cupos sujetos a confirmación" : "spaces subject to confirmation"}
           </p>}
+
+          <Link
+            href="#descubrir"
+            className="mt-6 inline-flex min-h-11 items-center justify-center rounded-full border border-white/35 bg-black/20 px-5 py-2 text-xs font-black uppercase tracking-[0.12em] text-white backdrop-blur-md transition hover:border-white/70 hover:bg-white/15"
+          >
+            {isEs ? "Elegí tu tipo de día" : "Choose your kind of day"}
+          </Link>
 
         </div>
       </div>
