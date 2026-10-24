@@ -1,0 +1,707 @@
+{
+  "date": "2026-10-23",
+  "timezone": "America/Costa_Rica",
+  "sourceHead": "ba320af",
+  "method": "Source inspection and HTTP only; no browser or field metrics.",
+  "pages": [
+    {
+      "route": "/",
+      "status": 200,
+      "url": "https://www.laviejaadventures.com/",
+      "ttfbMs": 421,
+      "totalMs": 484,
+      "htmlBytes": 232689,
+      "headers": {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "public, max-age=0, must-revalidate",
+        "x-vercel-cache": "STALE",
+        "x-robots-tag": null,
+        "server": "Vercel"
+      },
+      "title": [
+        "Ciudad Esmeralda Costa Rica | La Vieja Adventures"
+      ],
+      "lang": "es",
+      "description": [
+        "Explore el cañón Ciudad Esmeralda en San Carlos, Costa Rica: Río La Vieja, Cascada El Zafiro y pozas turquesa con guías locales de La Vieja Adventures."
+      ],
+      "robots": [],
+      "canonical": [
+        "https://www.laviejaadventures.com"
+      ],
+      "alternates": [
+        {
+          "lang": "es",
+          "href": "https://www.laviejaadventures.com"
+        },
+        {
+          "lang": "en",
+          "href": "https://www.laviejaadventures.com/en"
+        },
+        {
+          "lang": "x-default",
+          "href": "https://www.laviejaadventures.com"
+        }
+      ],
+      "schemas": [
+        {
+          "type": "Graph"
+        },
+        {
+          "type": "ItemList",
+          "items": 0
+        },
+        {
+          "type": "FAQPage",
+          "questions": 9
+        },
+        {
+          "type": "ItemList",
+          "items": 9
+        },
+        {
+          "type": "FAQPage",
+          "questions": 9
+        }
+      ]
+    },
+    {
+      "route": "/en",
+      "status": 200,
+      "url": "https://www.laviejaadventures.com/en",
+      "ttfbMs": 497,
+      "totalMs": 510,
+      "htmlBytes": 160914,
+      "headers": {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "public, max-age=0, must-revalidate",
+        "x-vercel-cache": "STALE",
+        "x-robots-tag": null,
+        "server": "Vercel"
+      },
+      "title": [
+        "Ciudad Esmeralda Canyon, Costa Rica | La Vieja Adventures"
+      ],
+      "lang": "en",
+      "description": [
+        "Discover Ciudad Esmeralda Canyon, La Vieja River and El Zafiro Waterfall in San Carlos. Adventure tours in Costa Rica with La Vieja Adventures."
+      ],
+      "robots": [],
+      "canonical": [
+        "https://www.laviejaadventures.com/en"
+      ],
+      "alternates": [
+        {
+          "lang": "es",
+          "href": "https://www.laviejaadventures.com"
+        },
+        {
+          "lang": "en",
+          "href": "https://www.laviejaadventures.com/en"
+        },
+        {
+          "lang": "x-default",
+          "href": "https://www.laviejaadventures.com"
+        }
+      ],
+      "schemas": [
+        {
+          "type": "Graph"
+        },
+        {
+          "type": "ItemList",
+          "items": 9
+        },
+        {
+          "type": "FAQPage",
+          "questions": 9
+        }
+      ]
+    },
+    {
+      "route": "/robots.txt",
+      "status": 200,
+      "url": "https://www.laviejaadventures.com/robots.txt",
+      "ttfbMs": 367,
+      "totalMs": 369,
+      "htmlBytes": 128,
+      "headers": {
+        "content-type": "text/plain; charset=utf-8",
+        "cache-control": "public, max-age=0, must-revalidate",
+        "x-vercel-cache": "HIT",
+        "x-robots-tag": null,
+        "server": "Vercel"
+      },
+      "title": [],
+      "description": [],
+      "robots": [],
+      "canonical": [],
+      "alternates": [],
+      "schemas": []
+    },
+    {
+      "route": "/sitemap.xml",
+      "status": 200,
+      "url": "https://www.laviejaadventures.com/sitemap.xml",
+      "ttfbMs": 342,
+      "totalMs": 363,
+      "htmlBytes": 17877,
+      "headers": {
+        "content-type": "application/xml",
+        "cache-control": "public, max-age=0, must-revalidate",
+        "x-vercel-cache": "HIT",
+        "x-robots-tag": null,
+        "server": "Vercel"
+      },
+      "title": [],
+      "description": [],
+      "robots": [],
+      "canonical": [],
+      "alternates": [],
+      "schemas": []
+    }
+  ],
+  "links": [
+    {
+      "url": "https://www.laviejaadventures.com/galeria",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/galeria",
+      "title": "Galería: Cañón y Cascada El Zafiro | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/galeria"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/tours",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/tours",
+      "title": "Tours en San Carlos, Costa Rica | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/tours"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/",
+      "title": "Ciudad Esmeralda Costa Rica | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/info",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/info",
+      "title": "Info, Tarifas y Cómo Llegar | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/info"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/index",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/index",
+      "title": "Ciudad Esmeralda Costa Rica | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/tiempo",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/tiempo",
+      "title": "Pronóstico del Tiempo en el Cañón | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/tiempo"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/reservar?tour=tour-ciudad-esmeralda",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/reservar?tour=tour-ciudad-esmeralda",
+      "title": "Reservar Tour en San Carlos | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/reservar",
+      "robots": "noindex, follow"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/reservar",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/reservar",
+      "title": "Reservar Tour en San Carlos | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/reservar",
+      "robots": "noindex, follow"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/organics",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/organics",
+      "title": "La Vieja Organics: Sostenibilidad local | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/organics"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/terminos-y-condiciones",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/terminos-y-condiciones",
+      "title": "Términos y Condiciones | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/terminos-y-condiciones"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/politica-de-privacidad",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/politica-de-privacidad",
+      "title": "Política de Privacidad | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/politica-de-privacidad"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/tour/rapel-canon-del-rio",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/tour/rapel-canon-del-rio",
+      "title": "Rapel en Cañón del Río | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/tour/rapel-canon-del-rio"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/reservar?tour=rapel-canon-del-rio",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/reservar?tour=rapel-canon-del-rio",
+      "title": "Reservar Tour en San Carlos | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/reservar",
+      "robots": "noindex, follow"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/reservar?tour=cuadra-tours-aventura",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/reservar?tour=cuadra-tours-aventura",
+      "title": "Reservar Tour en San Carlos | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/reservar",
+      "robots": "noindex, follow"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/tour/cuadra-tours-aventura",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/tour/cuadra-tours-aventura",
+      "title": "Cuadra-Tours Aventura | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/tour/cuadra-tours-aventura"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/reservar?tour=tour-gastronomico-local",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/reservar?tour=tour-gastronomico-local",
+      "title": "Reservar Tour en San Carlos | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/reservar",
+      "robots": "noindex, follow"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/tour/tour-gastronomico-local",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/tour/tour-gastronomico-local",
+      "title": "Tour Gastronómico Local | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/tour/tour-gastronomico-local"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/reservar?tour=cascadas-secretas-rio-la-vieja",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/reservar?tour=cascadas-secretas-rio-la-vieja",
+      "title": "Reservar Tour en San Carlos | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/reservar",
+      "robots": "noindex, follow"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/tour/cascadas-secretas-rio-la-vieja",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/tour/cascadas-secretas-rio-la-vieja",
+      "title": "Cascadas Secretas del Río La Vieja | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/tour/cascadas-secretas-rio-la-vieja"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/tour/tour-nocturno-la-vieja",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/tour/tour-nocturno-la-vieja",
+      "title": "Tour Nocturno La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/tour/tour-nocturno-la-vieja"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/reservar?tour=tour-nocturno-la-vieja",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/reservar?tour=tour-nocturno-la-vieja",
+      "title": "Reservar Tour en San Carlos | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/reservar",
+      "robots": "noindex, follow"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/tour/avistamiento-aves-norteno",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/tour/avistamiento-aves-norteno",
+      "title": "Avistamiento de Aves Norteño | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/tour/avistamiento-aves-norteno"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/reservar?tour=avistamiento-aves-norteno",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/reservar?tour=avistamiento-aves-norteno",
+      "title": "Reservar Tour en San Carlos | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/reservar",
+      "robots": "noindex, follow"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/tour/caminata-volcanes-dormidos",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/tour/caminata-volcanes-dormidos",
+      "title": "Caminata a Volcanes Dormidos | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/tour/caminata-volcanes-dormidos"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/reservar?tour=caminata-volcanes-dormidos",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/reservar?tour=caminata-volcanes-dormidos",
+      "title": "Reservar Tour en San Carlos | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/reservar",
+      "robots": "noindex, follow"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/en",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/en",
+      "title": "Ciudad Esmeralda Canyon, Costa Rica | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/en"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/en/galeria",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/en/galeria",
+      "title": "Ciudad Esmeralda Canyon and Waterfall Photos | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/en/galeria"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/en/info",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/en/info",
+      "title": "Visitor Information, Prices and Directions | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/en/info"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/en/tours",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/en/tours",
+      "title": "Adventure Tours in San Carlos, Costa Rica | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/en/tours"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/en/tiempo",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/en/tiempo",
+      "title": "Weather and River Conditions in San Carlos | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/en/tiempo"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/en/reservar?tour=tour-ciudad-esmeralda",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/en/reservar?tour=tour-ciudad-esmeralda",
+      "title": "Book Your San Carlos Tour | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/en/reservar",
+      "robots": "noindex, follow"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/en/tour/tour-ciudad-esmeralda",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/en/tour/tour-ciudad-esmeralda",
+      "title": "Emerald City Canyon Tour | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/en/tour/tour-ciudad-esmeralda"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/en/tour/rapel-canon-del-rio",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/en/tour/rapel-canon-del-rio",
+      "title": "River Canyon Rappelling | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/en/tour/rapel-canon-del-rio"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/en/reservar?tour=rapel-canon-del-rio",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/en/reservar?tour=rapel-canon-del-rio",
+      "title": "Book Your San Carlos Tour | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/en/reservar",
+      "robots": "noindex, follow"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/en/reservar?tour=cuadra-tours-aventura",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/en/reservar?tour=cuadra-tours-aventura",
+      "title": "Book Your San Carlos Tour | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/en/reservar",
+      "robots": "noindex, follow"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/tour/tour-ciudad-esmeralda",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/tour/tour-ciudad-esmeralda",
+      "title": "Tour Ciudad Esmeralda | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/tour/tour-ciudad-esmeralda"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/en/reservar?tour=tour-gastronomico-local",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/en/reservar?tour=tour-gastronomico-local",
+      "title": "Book Your San Carlos Tour | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/en/reservar",
+      "robots": "noindex, follow"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/en/tour/cuadra-tours-aventura",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/en/tour/cuadra-tours-aventura",
+      "title": "ATV Adventure Tours | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/en/tour/cuadra-tours-aventura"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/en/tour/tour-gastronomico-local",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/en/tour/tour-gastronomico-local",
+      "title": "Local Gastronomic Tour | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/en/tour/tour-gastronomico-local"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/en/tour/cascadas-secretas-rio-la-vieja",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/en/tour/cascadas-secretas-rio-la-vieja",
+      "title": "Secret Waterfalls of La Vieja River | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/en/tour/cascadas-secretas-rio-la-vieja"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/en/reservar?tour=cascadas-secretas-rio-la-vieja",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/en/reservar?tour=cascadas-secretas-rio-la-vieja",
+      "title": "Book Your San Carlos Tour | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/en/reservar",
+      "robots": "noindex, follow"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/en/tour/tour-nocturno-la-vieja",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/en/tour/tour-nocturno-la-vieja",
+      "title": "La Vieja Adventures Night Tour",
+      "canonical": "https://www.laviejaadventures.com/en/tour/tour-nocturno-la-vieja"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/en/reservar?tour=tour-nocturno-la-vieja",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/en/reservar?tour=tour-nocturno-la-vieja",
+      "title": "Book Your San Carlos Tour | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/en/reservar",
+      "robots": "noindex, follow"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/en/reservar?tour=avistamiento-aves-norteno",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/en/reservar?tour=avistamiento-aves-norteno",
+      "title": "Book Your San Carlos Tour | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/en/reservar",
+      "robots": "noindex, follow"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/en/reservar?tour=caminata-volcanes-dormidos",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/en/reservar?tour=caminata-volcanes-dormidos",
+      "title": "Book Your San Carlos Tour | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/en/reservar",
+      "robots": "noindex, follow"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/en/tour/avistamiento-aves-norteno",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/en/tour/avistamiento-aves-norteno",
+      "title": "Northern Birdwatching | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/en/tour/avistamiento-aves-norteno"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/en/organics",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/en/organics",
+      "title": "La Vieja Organics: Local Sustainability | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/en/organics"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/en/tour/caminata-volcanes-dormidos",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/en/tour/caminata-volcanes-dormidos",
+      "title": "Hike to Dormant Volcanoes | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/en/tour/caminata-volcanes-dormidos"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/en/reservar",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/en/reservar",
+      "title": "Book Your San Carlos Tour | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/en/reservar",
+      "robots": "noindex, follow"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/en/politica-de-privacidad",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/en/politica-de-privacidad",
+      "title": "Privacy Policy | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/en/politica-de-privacidad"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/en/terminos-y-condiciones",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/en/terminos-y-condiciones",
+      "title": "Terms and Conditions | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/en/terminos-y-condiciones"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/en/preguntas-frecuentes",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/en/preguntas-frecuentes",
+      "title": "Frequently Asked Questions | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/en/preguntas-frecuentes"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/preguntas-frecuentes",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/preguntas-frecuentes",
+      "title": "Preguntas Frecuentes | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/preguntas-frecuentes"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/tour/lluvia-en-la-naturaleza",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/tour/lluvia-en-la-naturaleza",
+      "title": "Lluvia en la Naturaleza | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/tour/lluvia-en-la-naturaleza"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/en/tour/avistamiento-aves",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/en/tour/avistamiento-aves",
+      "title": "Northern Birdwatching | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/en/tour/avistamiento-aves"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/en/tour/lluvia-en-la-naturaleza",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/en/tour/lluvia-en-la-naturaleza",
+      "title": "Rain in Nature | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/en/tour/lluvia-en-la-naturaleza"
+    },
+    {
+      "url": "https://www.laviejaadventures.com/tour/avistamiento-aves",
+      "status": 200,
+      "finalUrl": "https://www.laviejaadventures.com/tour/avistamiento-aves",
+      "title": "Avistamiento de Aves Norteno | La Vieja Adventures",
+      "canonical": "https://www.laviejaadventures.com/tour/avistamiento-aves"
+    }
+  ],
+  "extra": {
+    "pages": [
+      {
+        "route": "/",
+        "status": 200,
+        "lang": "es",
+        "switches": [
+          {
+            "href": "/index",
+            "label": "Switch to English"
+          },
+          {
+            "href": "/index",
+            "label": "Switch to English"
+          }
+        ]
+      },
+      {
+        "route": "/en",
+        "status": 200,
+        "lang": "en",
+        "switches": [
+          {
+            "href": "/",
+            "label": "Cambiar a Español"
+          }
+        ],
+        "englishSpanishFragments": [
+          "3-4 horas",
+          "Entrada a instalaciones",
+          "Guía profesional bilingüe (español e inglés)",
+          "Equipo de seguridad completo (casco, chaleco salvavidas, arnés)",
+          "Kit de primeros auxilios"
+        ]
+      },
+      {
+        "route": "/index",
+        "status": 200,
+        "lang": "es",
+        "switches": [
+          {
+            "href": "/index",
+            "label": "Switch to English"
+          },
+          {
+            "href": "/index",
+            "label": "Switch to English"
+          }
+        ]
+      }
+    ],
+    "assets": [
+      {
+        "path": "/logo2.webp",
+        "status": 200,
+        "bytes": 21854,
+        "type": "image/webp"
+      },
+      {
+        "path": "/hero/ciudad-esmeralda-poster.webp",
+        "status": 200,
+        "bytes": 48224,
+        "type": "image/webp"
+      },
+      {
+        "path": "/image/IMG_6812.webp",
+        "status": 200,
+        "bytes": 184970,
+        "type": "image/webp"
+      },
+      {
+        "path": "/image/IMG_4671.webp",
+        "status": 200,
+        "bytes": 189864,
+        "type": "image/webp"
+      },
+      {
+        "path": "/image/IMG_6028.webp",
+        "status": 200,
+        "bytes": 246930,
+        "type": "image/webp"
+      },
+      {
+        "path": "/image/IMG_4522.webp",
+        "status": 200,
+        "bytes": 118392,
+        "type": "image/webp"
+      },
+      {
+        "path": "/image/IMG_3505.webp",
+        "status": 200,
+        "bytes": 220378,
+        "type": "image/webp"
+      },
+      {
+        "path": "/image/IMG_4376.webp",
+        "status": 200,
+        "bytes": 219832,
+        "type": "image/webp"
+      },
+      {
+        "path": "/image/IMG_503888.webp",
+        "status": 200,
+        "bytes": 188448,
+        "type": "image/webp"
+      },
+      {
+        "path": "/image/IMG_6805.webp",
+        "status": 200,
+        "bytes": 286858,
+        "type": "image/webp"
+      },
+      {
+        "path": "/image/IMG_39145.webp",
+        "status": 200,
+        "bytes": 348408,
+        "type": "image/webp"
+      }
+    ],
+    "contrast": {
+      "whiteOnMint": 1.4,
+      "accentInkOnDarkSurface": 1.11
+    }
+  }
+}
