@@ -29,7 +29,7 @@ function validateMongoUri(connectionUri: string): void {
       }
     } catch (err) {
       if (err instanceof Error && err.message.startsWith("MONGODB_URI")) throw err;
-      throw new Error(`MONGODB_URI is not a valid URL. ${err}`);
+      throw new Error("MONGODB_URI is not a valid URL.", { cause: err });
     }
   }
 }

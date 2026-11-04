@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { auth } from "@/lib/auth";
 import { findUserByEmail, updateUserPasswordByEmail } from "@/lib/auth/users/user";
-import { BCRYPT_SALT_ROUNDS, MIN_PASSWORD_LENGTH } from "@/lib/auth/constants";
+import { BCRYPT_SALT_ROUNDS } from "@/lib/auth/constants";
+
+import { validPassword } from "@/lib/security/validation";
 
 export async function POST(request: Request) {
   const session = await auth();
@@ -27,9 +29,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid password payload" }, { status: 400 });
   }
 
-  if (newPassword.length < MIN_PASSWORD_LENGTH) {
+  if (!validPassword(newPassword) || Buffer.byteLength(currentPassword, "utf8") > 72) {
     return NextResponse.json(
-      { error: `New password must be at least ${MIN_PASSWORD_LENGTH} characters.` },
+      { error: "Password must be at least 8 characters and at most 72 UTF-8 bytes." },
       { status: 400 }
     );
   }

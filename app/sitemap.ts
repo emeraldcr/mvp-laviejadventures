@@ -4,7 +4,7 @@ import { readPublicTours } from "@/lib/tours/catalog/public";
 import { localizeHref } from "@/lib/site/i18n";
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const routes = ["/", "/info", "/tours", "/galeria", "/tiempo", "/organics", "/preguntas-frecuentes", "/terminos-y-condiciones", "/politica-de-privacidad"];
-  let tours: Awaited<ReturnType<typeof readPublicTours>> = [];
+  let tours: Awaited<ReturnType<typeof readPublicTours>>;
   try {
     tours = await readPublicTours();
   } catch {

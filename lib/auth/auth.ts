@@ -7,6 +7,9 @@ import { getAuth0AuthorizationParams, getAuth0Issuer } from "@/lib/auth/auth0-co
 import { sendLoginNotificationEmail } from "@/lib/email/login-email";
 import { createLoginLog } from "@/lib/auth/audit/login-log";
 
+import { validEmail } from "@/lib/security/validation";
+import { allowRequest } from "@/lib/security/rate-limit";
+
 const auth0ClientId = process.env.AUTH0_CLIENT_ID?.trim();
 const auth0ClientSecret = process.env.AUTH0_CLIENT_SECRET?.trim();
 const auth0Issuer = getAuth0Issuer();
@@ -28,10 +31,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const email = credentials?.email;
         const password = credentials?.password;
 
-        if (typeof email !== "string" || typeof password !== "string") {
+        if (!validEmail(email) || typeof password !== "string" || Buffer.byteLength(password, "utf8") > 72) {
           return null;
         }
 
+        if (!await allowRequest(`login:${email.trim().toLowerCase()}`, 10, 900_000)) return null;
         const user = await findUserByEmail(email);
         if (!user?.passwordHash) {
           return null;
@@ -89,6 +93,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
   callbacks: {
+    async signIn({ account, profile }) {
+      if (account?.provider === "auth0") {
+        return profile?.email_verified === true && validEmail(profile.email);
+      }
+      return true;
+    },
     async jwt({ token, account, profile, user }) {
       if (user?.id) {
         token.sub = user.id;
@@ -100,16 +110,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           email?: string;
           name?: string;
           picture?: string;
+          email_verified?: boolean;
         };
 
         const localUser = await upsertUserFromAuth0({
           auth0Sub: auth0Profile.sub,
+          emailVerified: auth0Profile.email_verified,
           email: auth0Profile.email,
           name: auth0Profile.name,
           image: auth0Profile.picture,
         });
 
-        if (localUser?._id) {
+        if (!localUser?._id) throw new Error("Account linking requires reauthentication");
+        if (localUser._id) {
           token.sub = localUser._id.toString();
           token.email = localUser.email;
           token.name = localUser.name;
@@ -117,9 +130,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
       }
 
+      if (token.email) {
+        const currentUser = await findUserByEmail(token.email);
+        if (!currentUser || currentUser._id?.toString() !== token.sub) return null;
+        if (account || user) token.sessionVersion = currentUser.sessionVersion ?? 0;
+        if ((token.sessionVersion ?? 0) !== (currentUser.sessionVersion ?? 0)) return null;
+        token.emailVerified = currentUser.emailVerified === true;
+      }
       return token;
     },
     async session({ session, token }) {
+      if (session.user) (session.user as { verifiedEmail?: boolean }).verifiedEmail = token.emailVerified === true;
       if (session.user && token.sub) {
         (session.user as { id?: string }).id = token.sub;
       }

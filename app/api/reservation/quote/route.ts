@@ -67,9 +67,8 @@ export async function POST(req: Request) {
     }
 
     console.error("POST /api/reservation/quote error:", error);
-    const message = error instanceof Error ? error.message : "Unknown internal error";
     return NextResponse.json(
-      { success: false, message: "Internal server error", error: message },
+      { success: false, message: "Internal server error" },
       { status: 500 },
     );
   }

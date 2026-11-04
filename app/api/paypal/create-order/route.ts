@@ -1,5 +1,7 @@
 // app/api/paypal/create-order/route.ts
 
+import { setPaymentOwner } from "@/lib/security/payment-owner";
+import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import {
   getPayPalApiBaseUrl,
@@ -245,13 +247,15 @@ export async function POST(req: Request) {
       acquiredHold = null;
       console.error("PayPal Create Order Error:", { status: res.status, data });
       return NextResponse.json(
-        { success: false, message: "Failed to create PayPal order", error: data },
+        { success: false, message: "Failed to create PayPal order" },
         { status: res.ok ? 502 : res.status }
       );
     }
 
+    const session = await auth();
     // Save context in database
     const contextSaved = await saveOrderContext(data.id, {
+      userId: session?.user?.id ?? null,
       bookingAttemptId: holdId,
       name,
       email,
@@ -297,6 +301,7 @@ export async function POST(req: Request) {
       );
     }
 
+    await setPaymentOwner(data.id);
     return NextResponse.json({
       success: true,
       orderID: data.id,
@@ -328,10 +333,9 @@ export async function POST(req: Request) {
 
     console.error("Create Order Route Error:", error);
 
-    const message = error instanceof Error ? error.message : "Unknown internal error";
 
     return NextResponse.json(
-      { success: false, message: "Internal server error", error: message },
+      { success: false, message: "Internal server error" },
       { status: 500 }
     );
   }

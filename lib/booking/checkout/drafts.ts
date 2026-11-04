@@ -34,8 +34,9 @@ export async function saveReservationDraft(
 ) {
   const now = new Date();
   const expiresAt = new Date(now.getTime() + DRAFT_TTL_DAYS * 24 * 60 * 60 * 1000);
-  const suppliedToken = token?.trim();
-  const resumeToken = suppliedToken && /^[A-Za-z0-9_-]{40,64}$/.test(suppliedToken)
+  const suppliedToken = typeof token === "string" ? token.trim() : "";
+  const existing = suppliedToken ? await findReservationDraft(db, suppliedToken) : null;
+  const resumeToken = existing && suppliedToken && /^[A-Za-z0-9_-]{40,64}$/.test(suppliedToken)
     ? suppliedToken
     : createResumeToken();
   const tokenHash = hashResumeToken(resumeToken);

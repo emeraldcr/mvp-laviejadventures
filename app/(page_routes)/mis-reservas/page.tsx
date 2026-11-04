@@ -13,7 +13,7 @@ export default async function MyBookingsPage() {
   const userId = (session.user as { id?: string }).id ?? null;
   const userEmail = session.user.email ?? null;
   const db = await getDb();
-  const bookings = await readUserBookings(db, userId, userEmail);
+  const bookings = await readUserBookings(db, userId, userEmail, (session.user as { verifiedEmail?: boolean }).verifiedEmail === true);
 
   return <BookingClient bookings={bookings} userName={session.user.name ?? null} userEmail={userEmail} />;
 }

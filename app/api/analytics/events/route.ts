@@ -65,12 +65,13 @@ const VALID_EVENTS: AnalyticsEventName[] = [
   "sinpe_checkout_selected",
 ];
 
-function sanitizeValue(value: unknown): unknown {
+function sanitizeValue(value: unknown, depth = 0): unknown {
+  if (depth > 8) return null;
   if (value === undefined) return null;
   if (value === null) return null;
 
   if (Array.isArray(value)) {
-    return value.map((item) => sanitizeValue(item));
+    return value.slice(0, 100).map((item) => sanitizeValue(item, depth + 1));
   }
 
   if (typeof value === "number") {
@@ -83,18 +84,18 @@ function sanitizeValue(value: unknown): unknown {
 
   if (typeof value === "object") {
     return Object.fromEntries(
-      Object.entries(value as Record<string, unknown>).map(([key, nestedValue]) => [
+      Object.entries(value as Record<string, unknown>).filter(([key]) => !/email|phone|name|token|password|address|referrer/i.test(key)).slice(0, 100).map(([key, nestedValue]) => [
         key,
-        sanitizeValue(nestedValue),
+        sanitizeValue(nestedValue, depth + 1),
       ])
     );
   }
 
   if (typeof value === "string" || typeof value === "boolean") {
-    return value;
+    return typeof value === "string" ? value.slice(0, 500) : value;
   }
 
-  return String(value);
+  return null;
 }
 
 async function safeAuthSession() {
@@ -174,15 +175,14 @@ export async function POST(request: Request) {
 
     await db.collection(COLLECTIONS.ANALYTICS_EVENTS).insertOne({
       event: body.event,
-      path: body.path ?? null,
-      referrer: body.referrer ?? null,
+      path: typeof body.path === "string" ? body.path.split(/[?#]/)[0].slice(0, 500) : null,
+      referrer: typeof body.referrer === "string" ? body.referrer.split(/[?#]/)[0].slice(0, 500) : null,
       sessionId: body.sessionId ?? null,
       metadata: sanitizeValue(body.metadata ?? {}),
       happenedAt,
       user: {
         userId: (session?.user as { id?: string } | undefined)?.id ?? null,
-        email: session?.user?.email ?? null,
-        name: session?.user?.name ?? null,
+
       },
       request: {
         ipAnonymized: anonymizedIp,
@@ -228,6 +228,12 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   try {
+    const session = await auth();
+    const verified = (session?.user as { verifiedEmail?: boolean } | undefined)?.verifiedEmail === true;
+    const allowed = (process.env.ANALYTICS_ADMIN_EMAILS ?? "").split(",").map(email => email.trim().toLowerCase()).filter(Boolean);
+    if (!verified || !session?.user?.email || !allowed.includes(session.user.email.toLowerCase())) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     const url = new URL(request.url);
     const requestedDays = Number(url.searchParams.get("days") ?? "7");
     const days = [7, 30, 90].includes(requestedDays) ? requestedDays : 7;

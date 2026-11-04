@@ -1,4 +1,5 @@
 // app/payment/success/emailService.ts
+import { escapeHtml } from "@/lib/security/validation";
 import { Resend } from "resend";
 import type { SendEmailParams } from "@/lib/email/types";
 import { getEmailFrom } from "@/lib/email/constants";
@@ -27,7 +28,7 @@ export async function sendConfirmationEmail(params: SendEmailParams): Promise<Co
     cc: adminEmail,
     subject: `${params.language === "en" ? "New booking created" : "Nueva reservación creada"}: ${params.orderId}`,
     html,
-  });
+  }, { idempotencyKey: `booking-confirmation-${params.orderId}` });
 
   if (error) {
     console.error("Resend error:", error);
@@ -116,19 +117,19 @@ function createMailBody(params: SendEmailParams): string {
   <p>${copy.greeting}</p>
   <p>${copy.intro}</p>
   <ul>
-    <li><b>${copy.fullName}:</b> ${displayName}</li>
-    <li><b>${copy.email}:</b> ${params.to ?? naLabel}</li>
-    <li><b>${copy.phone}:</b> ${displayPhone}</li>
-    <li><b>${copy.date}:</b> ${displayDate}</li>
-    <li><b>${copy.tickets}:</b> ${displayTickets}</li>
-    <li><b>${copy.tour}:</b> ${displayTourName}</li>
-    <li><b>${copy.package}:</b> ${displayTourPackage}</li>
-    <li><b>${copy.tourTime}:</b> ${displayTourTime}</li>
-    <li><b>${copy.total}:</b> ${displayAmount}</li>
-    <li><b>${copy.orderId}:</b> ${displayOrderId}</li>
-    <li><b>${copy.paymentId}:</b> ${displayCaptureId}</li>
-    <li><b>${copy.paymentStatus}:</b> ${displayStatus}</li>
-    <li><b>${copy.reservationId}:</b> ${displayReservationId}</li>
+    <li><b>${copy.fullName}:</b> ${escapeHtml(String(displayName))}</li>
+    <li><b>${copy.email}:</b> ${escapeHtml(String(params.to ?? naLabel))}</li>
+    <li><b>${copy.phone}:</b> ${escapeHtml(String(displayPhone))}</li>
+    <li><b>${copy.date}:</b> ${escapeHtml(String(displayDate))}</li>
+    <li><b>${copy.tickets}:</b> ${escapeHtml(String(displayTickets))}</li>
+    <li><b>${copy.tour}:</b> ${escapeHtml(String(displayTourName))}</li>
+    <li><b>${copy.package}:</b> ${escapeHtml(String(displayTourPackage))}</li>
+    <li><b>${copy.tourTime}:</b> ${escapeHtml(String(displayTourTime))}</li>
+    <li><b>${copy.total}:</b> ${escapeHtml(String(displayAmount))}</li>
+    <li><b>${copy.orderId}:</b> ${escapeHtml(String(displayOrderId))}</li>
+    <li><b>${copy.paymentId}:</b> ${escapeHtml(String(displayCaptureId))}</li>
+    <li><b>${copy.paymentStatus}:</b> ${escapeHtml(String(displayStatus))}</li>
+    <li><b>${copy.reservationId}:</b> ${escapeHtml(String(displayReservationId))}</li>
   </ul>
   <p class="marked">
     ${copy.assistance}

@@ -38,7 +38,7 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: "Invalid profile payload" }, { status: 400 });
   }
 
-  if (!name.trim()) {
+  if (!name.trim() || name.length > 120 || phone.length > 40) {
     return NextResponse.json({ error: "Name is required" }, { status: 400 });
   }
 

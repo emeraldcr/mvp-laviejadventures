@@ -100,8 +100,17 @@ export function requiredReservationFieldsPresent(input: ReservationQuoteInput, o
 }
 
 export async function quoteReservation(db: Db, input: ReservationQuoteInput): Promise<ReservationQuote> {
+  if (!input || typeof input !== "object" || Array.isArray(input)) throw new ReservationQuoteError("invalid_request", "Invalid booking request");
+  for (const key of ["bookingAttemptId", "name", "email", "phone", "date", "dateIso", "tourTime", "packageId", "tourPackage", "tourSlug", "tourName", "specialRequests", "language"] as const) {
+    if (input[key] !== undefined && (typeof input[key] !== "string" || input[key].length > (key === "specialRequests" ? 2000 : 254))) throw new ReservationQuoteError("invalid_request", "Invalid booking field");
+  }
+  for (const values of [input.addons, input.addonIds]) {
+    if (values !== undefined && (!Array.isArray(values) || values.length > 30 || values.some(value => typeof value !== "string" || value.length > 100))) throw new ReservationQuoteError("invalid_request", "Invalid addons");
+  }
+  if (input.addonDetails !== undefined && (!input.addonDetails || typeof input.addonDetails !== "object" || Array.isArray(input.addonDetails) || Object.values(input.addonDetails).some(value => typeof value !== "string" && typeof value !== "number"))) throw new ReservationQuoteError("invalid_request", "Invalid addon details");
+  if (typeof input.tickets !== "string" && typeof input.tickets !== "number") throw new ReservationQuoteError("invalid_tickets", "Invalid ticket quantity");
   const safeTickets = Number(input.tickets);
-  if (!Number.isInteger(safeTickets) || safeTickets < 1) {
+  if (!Number.isSafeInteger(safeTickets) || safeTickets < 1 || safeTickets > 500) {
     throw new ReservationQuoteError("invalid_tickets", "Invalid ticket quantity");
   }
 

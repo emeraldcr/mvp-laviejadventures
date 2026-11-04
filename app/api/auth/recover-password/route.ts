@@ -3,23 +3,29 @@ import crypto from "crypto";
 import { findUserByEmail, setUserResetToken } from "@/lib/auth/users/user";
 import { sendUserPasswordResetEmail } from "@/lib/email/user-emails";
 
+import { validEmail } from "@/lib/security/validation";
+import { allowRequest } from "@/lib/security/rate-limit";
+
 export async function POST(req: NextRequest) {
   try {
     const { email } = await req.json();
     const normalizedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
 
-    if (!normalizedEmail) {
+    if (!validEmail(normalizedEmail)) {
       return NextResponse.json({ error: "Email is required." }, { status: 400 });
     }
 
-    const user = await findUserByEmail(normalizedEmail);
+    const permitted = await allowRequest(`recovery:${normalizedEmail}`, 3, 3_600_000);
+    const user = permitted ? await findUserByEmail(normalizedEmail) : null;
 
-    if (user?._id) {
+    if (user?._id && user.passwordHash) {
       const token = crypto.randomBytes(32).toString("hex");
       const expiry = new Date(Date.now() + 1000 * 60 * 60);
 
       await setUserResetToken(user._id.toString(), token, expiry);
-      await sendUserPasswordResetEmail(normalizedEmail, user.name, token);
+      await sendUserPasswordResetEmail(normalizedEmail, user.name, token).catch(() => {
+        console.error("Password recovery delivery failed");
+      });
     }
 
     return NextResponse.json({

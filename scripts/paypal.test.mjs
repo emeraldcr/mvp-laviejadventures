@@ -184,8 +184,8 @@ test('draft/storage failures do not invalidate a verified quote; own capacity ho
       return { ok: true, json: async () => ({ success: true, totalWithTax: 100 }) };
     },
   });
-  let result = runtime.render(() => imported.useCheckoutQuote(order, 'es')); await tick();
-  result = runtime.render(() => imported.useCheckoutQuote(order, 'es'));
+  runtime.render(() => imported.useCheckoutQuote(order, 'es')); await tick();
+  const result = runtime.render(() => imported.useCheckoutQuote(order, 'es'));
   assert.equal(result.synced, true); assert.equal(result.error, null);
   assert.equal(bodies[0].bookingAttemptId, order.bookingAttemptId);
 });
@@ -194,8 +194,10 @@ function captureApi(responses, options = {}) {
   let quotes = 0, writes = 0; const requests = [];
   const context = { booking: { total: 100, date: order.date, tickets: 2 }, customer: {} };
   const constants = { RESERVATIONS: 'reservations', PAYPAL_ORDER_CONTEXTS: 'contexts' };
-  const db = { collection: (name) => ({ findOne: async () => name === 'contexts' ? context : null, updateOne: async () => { writes++; } }) };
+  const db = { collection: (name) => ({ createIndex: async () => 'orderId_1', findOne: async () => name === 'contexts' ? context : null, updateOne: async () => { writes++; } }) };
   const api = load('app/api/paypal/capture-order/route.ts', {
+    '@/lib/security/payment-owner': { ownsPayment: async () => options.ownsPayment !== false, setPaymentOwner: async () => {} },
+    '@/lib/auth': { auth: async () => null },
     'next/server': { NextResponse: { json: (body, init) => ({ body, status: init?.status ?? 200 }) } },
     '@/lib/payments/paypal/helpers': { getPayPalAccessToken: async () => 'token', getPayPalApiBaseUrl: () => 'https://paypal.test' },
     '@/lib/data/mongodb': { getDb: async () => db }, '@/lib/data/collections': { COLLECTIONS: constants },
@@ -236,6 +238,8 @@ test('pending captures are never reported as completed and declines expose a rec
 function createApi() {
   const sent = [];
   const api = load('app/api/paypal/create-order/route.ts', {
+    '@/lib/security/payment-owner': { ownsPayment: async () => true, setPaymentOwner: async () => {} },
+    '@/lib/auth': { auth: async () => null },
     'next/server': { NextResponse: { json: (body, init) => ({ body, status: init?.status ?? 200 }) } },
     'node:crypto': crypto,
     '@/lib/payments/paypal/helpers': { getPayPalAccessToken: async () => 'token', getPayPalApiBaseUrl: () => 'https://paypal.test' },
@@ -286,4 +290,19 @@ test('blocked analytics cannot interrupt payment rendering or completion', async
     await app.settle(); await app.configs[0].onApprove({ orderID: approved.id }); await app.settle();
     assert.equal(app.routes.length, 1);
   } finally { analytics.trackAnalyticsEvent = previous; }
+});
+
+test('capture refuses an order without browser ownership before any PayPal call', async () => {
+  const app = captureApi([], { ownsPayment: false });
+  assert.equal((await app.api.POST(request())).status, 403);
+  assert.equal(app.requests.length, 0);
+  assert.equal(app.writes, 0);
+});
+
+test('completed orders with unexpected currency or amount cannot create paid reservations', async () => {
+  const wrong = JSON.parse(JSON.stringify(completed));
+  wrong.purchase_units[0].payments.captures[0].amount.value = '1.00';
+  const app = captureApi([{ body: wrong }]);
+  assert.equal((await app.api.POST(request())).body.bookingSaved, false);
+  assert.equal(app.writes, 0);
 });

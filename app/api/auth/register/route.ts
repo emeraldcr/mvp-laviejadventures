@@ -2,19 +2,21 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { createCredentialsUser, findUserByEmail } from "@/lib/auth/users/user";
 import { sendUserWelcomeEmail } from "@/lib/email/user-emails";
-import { BCRYPT_SALT_ROUNDS, MIN_PASSWORD_LENGTH } from "@/lib/auth/constants";
+import { BCRYPT_SALT_ROUNDS } from "@/lib/auth/constants";
+
+import { validEmail, validPassword } from "@/lib/security/validation";
 
 export async function POST(req: NextRequest) {
   try {
     const { name, email, password } = await req.json();
 
-    if (!name || !email || !password) {
+    if (typeof name !== "string" || name.trim().length < 2 || name.length > 120 || !validEmail(email)) {
       return NextResponse.json({ error: "Name, email and password are required." }, { status: 400 });
     }
 
-    if (typeof password !== "string" || password.length < MIN_PASSWORD_LENGTH) {
+    if (!validPassword(password)) {
       return NextResponse.json(
-        { error: "Password must be at least 8 characters." },
+        { error: "Password must be at least 8 characters and at most 72 UTF-8 bytes." },
         { status: 400 }
       );
     }

@@ -1,3 +1,4 @@
+import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/data/mongodb";
 import { COLLECTIONS } from "@/lib/data/collections";
@@ -143,7 +144,9 @@ export async function POST(req: Request) {
       language,
     });
 
+    const session = await auth();
     const reservationDocument = {
+      userId: session?.user?.id ?? null,
       ...(pendingId ? { _id: pendingId } : {}),
       orderId: null,
       captureId: null,
@@ -205,9 +208,8 @@ export async function POST(req: Request) {
     }
 
     console.error("Pending booking route error:", error);
-    const message = error instanceof Error ? error.message : "Unknown internal error";
     return NextResponse.json(
-      { success: false, message: "Internal server error", error: message },
+      { success: false, message: "Internal server error" },
       { status: 500 },
     );
   }

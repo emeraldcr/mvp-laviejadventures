@@ -1,5 +1,6 @@
 // app/api/paypal/capture-order/route.ts
 
+import { ownsPayment } from "@/lib/security/payment-owner";
 import { NextResponse } from "next/server";
 import { getPayPalApiBaseUrl, getPayPalAccessToken } from "@/lib/payments/paypal/helpers";
 import { getDb } from "@/lib/data/mongodb";
@@ -46,15 +47,7 @@ interface PayPalCaptureResponse {
   details?: Array<{ issue?: string }>;
 }
 
-// Helper to safely parse custom_id
-function parseCustomData(customId: string | null | undefined) {
-  if (!customId) return null;
-  try {
-    return JSON.parse(customId);
-  } catch {
-    return { rawCustomId: customId };
-  }
-}
+let reservationIndexReady: Promise<string> | undefined;
 
 export async function POST(req: Request) {
   try {
@@ -67,6 +60,13 @@ export async function POST(req: Request) {
       );
     }
 
+    if (!await ownsPayment(orderID)) return NextResponse.json({ success: false, message: "Forbidden" }, { status: 403 });
+
+    const reservations = (await getDb()).collection(COLLECTIONS.RESERVATIONS);
+    reservationIndexReady ??= reservations.createIndex({ orderId: 1 }, {
+      unique: true, partialFilterExpression: { orderId: { $type: "string" } },
+    }).catch(error => { reservationIndexReady = undefined; throw error; });
+    await reservationIndexReady;
     const existingCapture = await findExistingCapture(orderID.trim());
     if (existingCapture) {
       return NextResponse.json({
@@ -149,25 +149,16 @@ export async function POST(req: Request) {
       status: capture?.status ?? data.status,
       captureID: capture?.id ?? null,
       bookingSaved,
-      payer: {
-        name: payerName,
-        email: data.payer?.email_address ?? null,
-        payerID: data.payer?.payer_id ?? null,
-      },
-      metadata: parseCustomData(purchaseUnit?.custom_id),
     });
 
   } catch (error: unknown) {
     console.error("Capture Route Error:", error);
 
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown internal error";
 
     return NextResponse.json(
       {
         success: false,
         message: "Internal server error",
-        error: errorMessage,
       },
       { status: 500 }
     );
@@ -297,7 +288,9 @@ async function saveCapturedReservation({
       return false;
     }
 
-    const numericAmount = Number(amount ?? booking.total ?? 0);
+    const numericAmount = Number(amount);
+    const expectedAmount = Number(booking.total);
+    if (currency !== "USD" || !Number.isFinite(numericAmount) || !Number.isFinite(expectedAmount) || Math.abs(numericAmount - expectedAmount) >= 0.02) return false;
     await db.collection(COLLECTIONS.RESERVATIONS).updateOne(
       { orderId },
       {
@@ -308,6 +301,7 @@ async function saveCapturedReservation({
         },
         $setOnInsert: {
           orderId,
+          userId: booking.userId ?? null,
           name: customer?.name ?? payerName,
           email: customer?.email ?? payerEmail,
           phone: customer?.phone ?? null,

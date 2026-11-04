@@ -15,15 +15,17 @@ export async function GET() {
 
   const db = await getDb();
 
-  // Query by userId if available (most reliable), fallback to email match
-  const query = userId
-    ? { $or: [{ userId }, { userEmail }, { email: userEmail }] }
-    : { email: userEmail };
+  const verified = (session.user as { verifiedEmail?: boolean }).verifiedEmail === true;
+  if (!verified && !userId) return NextResponse.json({ bookings: [] });
+  const query = verified
+    ? { $or: [...(userId ? [{ userId }] : []), { userEmail }, { email: userEmail }] }
+    : { userId };
 
   const docs = await db
     .collection(COLLECTIONS.RESERVATIONS)
     .find(query)
     .sort({ createdAt: -1 })
+    .limit(100)
     .toArray();
 
   const bookings = docs.map((doc) => ({

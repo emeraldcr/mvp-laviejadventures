@@ -72,12 +72,8 @@ export async function GET(request: NextRequest) {
       : await collection.findOne({ isMain: true, isActive: { $ne: false } });
 
     if (!tour && (!slug || slug === DEFAULT_MAIN_TOUR.slug)) {
-      await collection.updateOne(
-        { slug: DEFAULT_MAIN_TOUR.slug },
-        { $set: DEFAULT_MAIN_TOUR },
-        { upsert: true }
-      );
-      tour = await collection.findOne({ slug: DEFAULT_MAIN_TOUR.slug, isActive: { $ne: false } });
+      const existing = await collection.findOne({ slug: DEFAULT_MAIN_TOUR.slug }, { projection: { _id: 1 } });
+      if (!existing) tour = { ...DEFAULT_MAIN_TOUR } as unknown as typeof tour;
     }
 
     if (!tour) {

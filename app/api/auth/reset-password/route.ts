@@ -1,19 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { clearUserResetToken, findUserByResetToken, updateUserPassword } from "@/lib/auth/users/user";
-import { BCRYPT_SALT_ROUNDS, MIN_PASSWORD_LENGTH } from "@/lib/auth/constants";
+import { findUserByResetToken, consumeUserResetToken } from "@/lib/auth/users/user";
+import { BCRYPT_SALT_ROUNDS } from "@/lib/auth/constants";
+
+import { validPassword, validResetToken } from "@/lib/security/validation";
 
 export async function POST(req: NextRequest) {
   try {
     const { token, password } = await req.json();
 
-    if (!token || !password) {
+    if (!validResetToken(token) || !validPassword(password)) {
       return NextResponse.json({ error: "Token and new password are required." }, { status: 400 });
     }
 
-    if (typeof password !== "string" || password.length < MIN_PASSWORD_LENGTH) {
-      return NextResponse.json({ error: "Password must be at least 8 characters." }, { status: 400 });
-    }
 
     const user = await findUserByResetToken(token);
     if (!user?._id) {
@@ -24,8 +23,9 @@ export async function POST(req: NextRequest) {
     }
 
     const hashed = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
-    await updateUserPassword(user._id.toString(), hashed);
-    await clearUserResetToken(user._id.toString());
+    if (!await consumeUserResetToken(token, hashed)) {
+      return NextResponse.json({ error: "Invalid or expired reset link." }, { status: 400 });
+    }
 
     return NextResponse.json({ message: "Password updated successfully." });
   } catch (err) {

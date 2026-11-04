@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+import { validEmail, validResetToken } from "@/lib/security/validation";
 import { ObjectId } from "mongodb";
 import { getDb } from "@/lib/data/mongodb";
 import { COLLECTIONS } from "@/lib/data/collections";
@@ -13,6 +15,9 @@ export interface AppUser {
   name: string;
   passwordHash?: string;
   resetToken?: string | null;
+  resetTokenHash?: string | null;
+  emailVerified?: boolean;
+  sessionVersion?: number;
   resetExpiry?: Date | null;
   auth0Sub?: string;
   image?: string;
@@ -31,14 +36,23 @@ function mergeUserPreferences(preferences?: Partial<UserPreferences> | null): Us
   };
 }
 
+let userIndexesReady: Promise<unknown> | undefined;
+
 async function getUsersCollection() {
   const db = await getDb();
-  return db.collection<AppUser>(COLLECTIONS.USERS);
+  const users = db.collection<AppUser>(COLLECTIONS.USERS);
+  userIndexesReady ??= Promise.all([
+    users.createIndex({ email: 1 }, { unique: true }),
+    users.createIndex({ auth0Sub: 1 }, { unique: true, partialFilterExpression: { auth0Sub: { $type: "string" } } }),
+  ]).catch(error => { userIndexesReady = undefined; throw error; });
+  await userIndexesReady;
+  return users;
 }
 
 export async function findUserByEmail(email: string) {
+  if (!validEmail(email)) return null;
   const users = await getUsersCollection();
-  return users.findOne({ email: email.toLowerCase() });
+  return users.findOne({ email: email.trim().toLowerCase() });
 }
 
 export async function getUserPreferencesByEmail(email: string): Promise<UserPreferences | null> {
@@ -55,7 +69,7 @@ export async function updateUserPreferencesByEmail(
   const mergedPreferences = mergeUserPreferences(preferences);
 
   const result = await users.findOneAndUpdate(
-    { email: email.toLowerCase() },
+    { email: email.trim().toLowerCase() },
     {
       $set: {
         preferences: mergedPreferences,
@@ -79,7 +93,7 @@ export async function createCredentialsUser(input: {
   const users = await getUsersCollection();
   const now = new Date();
   const result = await users.insertOne({
-    email: input.email.toLowerCase(),
+    email: input.email.trim().toLowerCase(),
     name: input.name,
     passwordHash: input.passwordHash,
     preferences: DEFAULT_USER_PREFERENCES,
@@ -91,23 +105,36 @@ export async function createCredentialsUser(input: {
 }
 
 export async function findUserByResetToken(token: string) {
+  if (!validResetToken(token)) return null;
   const users = await getUsersCollection();
-  return users.findOne({ resetToken: token, resetExpiry: { $gt: new Date() } });
+  return users.findOne({ resetTokenHash: createHash("sha256").update(token).digest("hex"), resetExpiry: { $gt: new Date() } });
 }
 
 export async function setUserResetToken(id: string, token: string, expiry: Date) {
   const users = await getUsersCollection();
   return users.updateOne(
     { _id: new ObjectId(id) },
-    { $set: { resetToken: token, resetExpiry: expiry, updatedAt: new Date() } }
+    { $set: { resetTokenHash: createHash("sha256").update(token).digest("hex"), resetExpiry: expiry, updatedAt: new Date() }, $unset: { resetToken: "" } }
   );
+}
+
+export async function consumeUserResetToken(token: unknown, passwordHash: string) {
+  if (!validResetToken(token)) return false;
+  const users = await getUsersCollection();
+  const result = await users.updateOne(
+    { resetTokenHash: createHash("sha256").update(token).digest("hex"), resetExpiry: { $gt: new Date() } },
+    { $set: { passwordHash, emailVerified: true, updatedAt: new Date() },
+      $unset: { resetToken: "", resetTokenHash: "", resetExpiry: "" },
+      $inc: { sessionVersion: 1 } },
+  );
+  return result.modifiedCount === 1;
 }
 
 export async function clearUserResetToken(id: string) {
   const users = await getUsersCollection();
   return users.updateOne(
     { _id: new ObjectId(id) },
-    { $set: { resetToken: null, resetExpiry: null, updatedAt: new Date() } }
+    { $set: { resetToken: null, resetTokenHash: null, resetExpiry: null, updatedAt: new Date() } }
   );
 }
 
@@ -118,8 +145,12 @@ export async function updateUserPassword(id: string, passwordHash: string) {
     {
       $set: {
         passwordHash,
+        resetToken: null,
+        resetTokenHash: null,
+        resetExpiry: null,
         updatedAt: new Date(),
       },
+      $inc: { sessionVersion: 1 },
     }
   );
 }
@@ -127,12 +158,16 @@ export async function updateUserPassword(id: string, passwordHash: string) {
 export async function updateUserPasswordByEmail(email: string, passwordHash: string) {
   const users = await getUsersCollection();
   return users.updateOne(
-    { email: email.toLowerCase() },
+    { email: email.trim().toLowerCase() },
     {
       $set: {
         passwordHash,
+        resetToken: null,
+        resetTokenHash: null,
+        resetExpiry: null,
         updatedAt: new Date(),
       },
+      $inc: { sessionVersion: 1 },
     }
   );
 }
@@ -161,7 +196,7 @@ export async function updateUserProfileByEmail(
   const users = await getUsersCollection();
 
   const result = await users.findOneAndUpdate(
-    { email: email.toLowerCase() },
+    { email: email.trim().toLowerCase() },
     {
       $set: {
         name: updates.name.trim(),
@@ -185,22 +220,25 @@ export async function updateUserProfileByEmail(
 
 export async function upsertUserFromAuth0(input: {
   auth0Sub?: string;
+  emailVerified?: boolean;
   email?: string;
   name?: string;
   image?: string;
 }) {
+  if (input.emailVerified !== true || !validEmail(input.email) || typeof input.auth0Sub !== "string" || !input.auth0Sub) return null;
   const users = await getUsersCollection();
   const now = new Date();
 
   if (input.auth0Sub) {
     const existingBySub = await users.findOne({ auth0Sub: input.auth0Sub });
     if (existingBySub) {
-      const normalizedEmail = input.email?.toLowerCase();
+      if (existingBySub.email !== input.email.trim().toLowerCase()) return null;
       await users.updateOne(
         { _id: existingBySub._id },
         {
           $set: {
-            email: normalizedEmail ?? existingBySub.email,
+            email: existingBySub.email,
+            emailVerified: true,
             name: input.name ?? existingBySub.name,
             image: input.image ?? existingBySub.image,
             preferences: mergeUserPreferences(existingBySub.preferences),
@@ -215,30 +253,18 @@ export async function upsertUserFromAuth0(input: {
 
   if (!input.email) return null;
 
-  const email = input.email.toLowerCase();
+  const email = input.email.trim().toLowerCase();
 
   const existing = await users.findOne({ email });
-  if (existing) {
-    await users.updateOne(
-      { _id: existing._id },
-      {
-        $set: {
-          auth0Sub: input.auth0Sub ?? existing.auth0Sub,
-          name: input.name ?? existing.name,
-          image: input.image ?? existing.image,
-          preferences: mergeUserPreferences(existing.preferences),
-          updatedAt: now,
-        },
-      }
-    );
-
-    return users.findOne({ _id: existing._id });
-  }
+  // Linking identities requires reauthentication of both accounts. A matching
+  // email alone must never replace an existing identity or password account.
+  if (existing) return null;
 
   const result = await users.insertOne({
     email,
     name: input.name ?? email.split("@")[0],
     auth0Sub: input.auth0Sub,
+    emailVerified: true,
     image: input.image,
     preferences: DEFAULT_USER_PREFERENCES,
     createdAt: now,
@@ -251,5 +277,5 @@ export async function upsertUserFromAuth0(input: {
 
 export async function listUsers() {
   const users = await getUsersCollection();
-  return users.find({}, { projection: { passwordHash: 0 } }).sort({ createdAt: -1 }).toArray();
+  return users.find({}, { projection: { passwordHash: 0, resetToken: 0, resetTokenHash: 0, resetExpiry: 0 } }).sort({ createdAt: -1 }).toArray();
 }
