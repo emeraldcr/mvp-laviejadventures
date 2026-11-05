@@ -13,7 +13,7 @@ export const DEFAULT_BOOKABLE_TOUR: TourSummary = {
   descriptionEn: "A hike through trails, river, and canyon to El Zafiro Waterfall and its natural pools.",
   duration: "3-4 horas",
   difficulty: "Moderado",
-  priceCRC: 25000,
+  priceCRC: 28750,
   location: "Sucre de Ciudad Quesada, San Carlos, Alajuela, Costa Rica",
   packages: CIUDAD_ESMERALDA_PACKAGES,
 };

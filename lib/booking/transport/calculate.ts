@@ -71,8 +71,8 @@ export function haversineDistanceKm(lat1: number, lon1: number, lat2: number, lo
 }
 
 export function priceForDistanceUSD(distanceKm: number, opts?: { ratePerKm?: number; minimum?: number }) {
-  const rate = opts?.ratePerKm ?? 0.67; // default USD per km, tweakable
-  const minimum = opts?.minimum ?? 15; // minimum charge
+  const rate = opts?.ratePerKm ?? 0.77; // default USD per km, tweakable
+  const minimum = opts?.minimum ?? 17; // minimum charge
   const raw = Math.max(minimum, distanceKm * rate);
   return Math.round(raw);
 }
@@ -85,27 +85,27 @@ type RouteVehicleRates = {
 // Market-based one-way estimates to/from La Vieja Adventures.
 // `car` covers 1–4 passengers; `minibus` covers 5–15 passengers.
 const FIXED_ROUTE_TOTALS_USD: Record<string, RouteVehicleRates> = {
-  "hotel-san-vicente|la-vieja-adventures": { car: 25, minibus: 70 },
-  "la-vieja-adventures|san-vicente": { car: 25, minibus: 70 },
-  "la-vieja-adventures|san-carlos": { car: 60, minibus: 110 },
-  "ciudad-quesada|la-vieja-adventures": { car: 70, minibus: 120 },
-  "hotel-ciudad-quesada|la-vieja-adventures": { car: 70, minibus: 120 },
-  "hotel-airbnb|la-vieja-adventures": { car: 70, minibus: 120 },
-  "la-fortuna|la-vieja-adventures": { car: 100, minibus: 160 },
-  "hotel-la-fortuna-central|la-vieja-adventures": { car: 100, minibus: 160 },
-  "hotel-arenal-area|la-vieja-adventures": { car: 120, minibus: 180 },
-  "hotel-san-jose-airport|la-vieja-adventures": { car: 200, minibus: 300 },
-  "la-vieja-adventures|san-jose": { car: 220, minibus: 330 },
-  "guanacaste-liberia|la-vieja-adventures": { car: 300, minibus: 450 },
-  "guanacaste-tamarindo|la-vieja-adventures": { car: 350, minibus: 500 },
-  "guanacaste-playa-hermosa|la-vieja-adventures": { car: 320, minibus: 470 },
-  "la-vieja-adventures|limon-puerto": { car: 300, minibus: 440 },
-  "la-vieja-adventures|limon-cahuita": { car: 340, minibus: 490 },
-  "la-vieja-adventures|limon-puerto-viejo": { car: 390, minibus: 560 },
-  "la-vieja-adventures|puntarenas-puerto": { car: 220, minibus: 330 },
-  "la-vieja-adventures|puntarenas-uvita": { car: 420, minibus: 600 },
-  "la-vieja-adventures|puntarenas-dominical": { car: 380, minibus: 550 },
-  "la-vieja-adventures|perez-zeledon": { car: 300, minibus: 450 },
+  "hotel-san-vicente|la-vieja-adventures": { car: 29, minibus: 81 },
+  "la-vieja-adventures|san-vicente": { car: 29, minibus: 81 },
+  "la-vieja-adventures|san-carlos": { car: 69, minibus: 127 },
+  "ciudad-quesada|la-vieja-adventures": { car: 81, minibus: 138 },
+  "hotel-ciudad-quesada|la-vieja-adventures": { car: 81, minibus: 138 },
+  "hotel-airbnb|la-vieja-adventures": { car: 81, minibus: 138 },
+  "la-fortuna|la-vieja-adventures": { car: 115, minibus: 184 },
+  "hotel-la-fortuna-central|la-vieja-adventures": { car: 115, minibus: 184 },
+  "hotel-arenal-area|la-vieja-adventures": { car: 138, minibus: 207 },
+  "hotel-san-jose-airport|la-vieja-adventures": { car: 230, minibus: 345 },
+  "la-vieja-adventures|san-jose": { car: 253, minibus: 380 },
+  "guanacaste-liberia|la-vieja-adventures": { car: 345, minibus: 518 },
+  "guanacaste-tamarindo|la-vieja-adventures": { car: 403, minibus: 575 },
+  "guanacaste-playa-hermosa|la-vieja-adventures": { car: 368, minibus: 541 },
+  "la-vieja-adventures|limon-puerto": { car: 345, minibus: 506 },
+  "la-vieja-adventures|limon-cahuita": { car: 391, minibus: 564 },
+  "la-vieja-adventures|limon-puerto-viejo": { car: 449, minibus: 644 },
+  "la-vieja-adventures|puntarenas-puerto": { car: 253, minibus: 380 },
+  "la-vieja-adventures|puntarenas-uvita": { car: 483, minibus: 690 },
+  "la-vieja-adventures|puntarenas-dominical": { car: 437, minibus: 633 },
+  "la-vieja-adventures|perez-zeledon": { car: 345, minibus: 518 },
 };
 
 function fixedRoutePrice(pickupRefId?: string | null, dropoffRefId?: string | null, pax = 1) {

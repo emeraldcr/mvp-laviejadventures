@@ -5,7 +5,7 @@ export const TOUR_INFO: TourInfo = {
   name: "Tour Ciudad Esmeralda · Cañón del Río La Vieja",
   operator: "Operado por La Vieja Adventures",
   duration: "3–4 horas",
-  price: "₡25,000 por persona",
+  price: "₡28,750 por persona",
   location: "Sucre de Ciudad Quesada, San Carlos, Alajuela, Costa Rica",
   inclusions: [
     "Acceso a las instalaciones y áreas del recorrido.",

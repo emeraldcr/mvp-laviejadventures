@@ -4,7 +4,7 @@ import type { TourPackageOption, TourSummary } from "@/lib/tours/types";
 export const CRC_PER_USD = 525;
 export const DEFAULT_GENERAL_ENTRY_USD = 30;
 export const DEFAULT_MAIN_TOUR_SLUG = "avistamiento-aves-norteno";
-export const DEFAULT_MAIN_TOUR_PRICE_CRC = 24990;
+export const DEFAULT_MAIN_TOUR_PRICE_CRC = 28740;
 
 const GENERAL_ENTRY_KEYS = new Set([
   "entrada-general",

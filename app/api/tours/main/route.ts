@@ -14,7 +14,7 @@ const DEFAULT_MAIN_TOUR = {
   name: "Tour a Ciudad Esmeralda, Cañón del Río La Vieja",
   operator: "Operado por La Vieja Adventures",
   duration: "3-4 horas",
-  price: "₡25,000 por persona",
+  price: "₡28,750 por persona",
   location: "Sucre de Ciudad Quesada, San Carlos, Alajuela, Costa Rica",
   inclusions: [
     "Entrada a instalaciones.",
@@ -47,8 +47,8 @@ const DEFAULT_MAIN_TOUR = {
   descriptionEn:
     "A unique experience in the La Vieja River Canyon. Hiking through jungle trails, swimming in natural pools and impressive canyon views.",
   difficulty: "Moderado",
-  priceCRC: 25000,
-  retailPricePerPax: 25000,
+  priceCRC: 28750,
+  retailPricePerPax: 28750,
   currency: "CRC",
   minPax: 1,
   maxPax: 20,

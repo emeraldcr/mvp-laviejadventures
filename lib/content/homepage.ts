@@ -18,7 +18,7 @@ export const principalContent = {
       scrollToMainAria: "Ir al contenido principal",
       locationBadge: "San Carlos · Costa Rica",
       title: "El cañón te está esperando. ¿Entramos?",
-      subtitle: "Tours con guías de la zona · Precios calculados en línea · Desde $30",
+      subtitle: "Tours con guías de la zona · Precios calculados en línea · Desde $35",
       socialProof: "4.9 · +500 personas que ya se metieron al río · Guías locales",
       trustItems: [
         "Cancelás gratis hasta 48 h antes",
@@ -104,7 +104,7 @@ export const principalContent = {
       scrollToMainAria: "Scroll to main content",
       locationBadge: "San Carlos · Costa Rica",
       title: "The canyon is waiting. Ready to go in?",
-      subtitle: "Local guides · Online price estimates · From $30",
+      subtitle: "Local guides · Online price estimates · From $35",
       socialProof: "4.9 · 500+ people who already got wet · Local guides",
       trustItems: [
         "Free cancel up to 48h",

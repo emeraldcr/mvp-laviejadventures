@@ -34,7 +34,7 @@ const DEFAULT_TOUR: TourDetail = {
   duration: "3-4 horas",
   difficulty: "Moderado",
   location: "Juan Castro Blanco, Alajuela Norte, Costa Rica",
-  priceCRC: 21000,
+  priceCRC: 24150,
   tagEs: "Aventura",
   inclusions: ["Guia certificado", "Equipo de seguridad", "Ingreso a zonas naturales", "Briefing de seguridad"],
   restrictions: "Recomendado para personas en buenas condiciones fisicas.",
@@ -52,7 +52,7 @@ const DEFAULT_BIRDWATCHING_TOUR: TourDetail = {
   duration: "2 horas",
   difficulty: "Fácil",
   location: "Juan Castro Blanco, Alajuela Norte, Costa Rica",
-  priceCRC: 23500,
+  priceCRC: 27030,
   tagEs: "Tour estrella",
   inclusions: [
     "Guia especializado en aves bilingue",
