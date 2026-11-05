@@ -443,10 +443,13 @@ export function normalizeTourPackages(value: unknown): TourPackageOption[] {
     .filter((pkg) => pkg.name && Number.isFinite(pkg.price));
 }
 
-export function getPackageSchedule(_pkg: Pick<TourPackageOption, "id" | "name" | "nameEs" | "groupTour"> | null | undefined): PackageSchedule {
-  // Package availability is confirmed separately by the operator/calendar.
-  // Do not block a date based on the package label or group/private status.
-  return "any";
+export function getPackageSchedule(
+  pkg: Pick<TourPackageOption, "id" | "name" | "nameEs" | "groupTour"> | null | undefined,
+): PackageSchedule {
+  // Group packages (Essential, Basic/Plus, Full-day, etc.) operate on weekends.
+  // Private packages operate on weekdays only. Keep this rule centralized so
+  // the picker and the server-side checkout validation stay aligned.
+  return pkg?.groupTour === false ? "weekday" : "weekend";
 }
 
 export function isWeekendIsoDate(dateIso: string): boolean | null {
