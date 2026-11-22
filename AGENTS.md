@@ -39,3 +39,13 @@ Build and release policy:
 - Vercel production should keep running the final `next build` as the deployment safety gate. Do not skip the production build merely to save seconds.
 - The current Vercel build already skips TypeScript build errors through `next.config.ts`; type-checking remains a separate pre-release check. Vercel is intended to compile and deploy the verified release, not replace local/CI validation.
 - When diagnosing failed deployments, inspect the actual Vercel build logs and distinguish dependency installation time (`npm ci`) from Turbopack compilation time before changing build settings.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+## This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

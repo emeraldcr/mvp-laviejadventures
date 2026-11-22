@@ -112,7 +112,9 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
             href={localizeHref("/", lang)}
             className={[
               "flex items-center gap-2.5 rounded-full transition-all",
-              onDark ? "bg-black/18 py-1.5 pl-1.5 pr-4 backdrop-blur-md" : "",
+              onDark
+                ? "border border-white/15 bg-black/35 py-1.5 pl-1.5 pr-4 shadow-lg shadow-black/10 backdrop-blur-xl"
+                : "",
             ].join(" ")}
           >
             <Image
@@ -126,10 +128,12 @@ export default function HomeNav({ solid = false }: { solid?: boolean }) {
             <span
               className={[
                 "font-display hidden text-lg font-bold tracking-tight transition-colors min-[440px]:inline md:text-xl",
-                "text-[var(--lva-ink)]",
+                onDark
+                  ? "text-white drop-shadow-[0_1px_6px_rgba(0,0,0,0.9)]"
+                  : "text-[var(--lva-ink)]",
               ].join(" ")}
             >
-              La Vieja <span className="text-[var(--lva-accent)]">Adventures</span>
+              La Vieja <span className={onDark ? "text-[#70eee1]" : "text-[var(--lva-accent)]"}>Adventures</span>
             </span>
           </Link>
 
