@@ -28,7 +28,7 @@ import {
   LA_VIEJA_GOOGLE_MAPS_URL,
 } from "@/lib/site/location";
 import { TOUR_INFO } from "@/lib/tours/info";
-import { BUSINESS_PHONE, BUSINESS_WHATSAPP_URL, SOCIAL_URLS } from "@/lib/site/config";
+import { BUSINESS_PHONE, BUSINESS_WHATSAPP_PHONE, BUSINESS_WHATSAPP_URL, SOCIAL_URLS } from "@/lib/site/config";
 
 const socialLinks = [
   {
@@ -157,7 +157,7 @@ export default function SiteFooter() {
             </div>
 
             <div className="grid gap-3 sm:grid-cols-3">
-              <ContactAction href={whatsappHref} label={copy.whatsapp} value="+506 6233-2535" icon={<MessageCircle className="h-4 w-4" />} featured />
+              <ContactAction href={whatsappHref} label={copy.whatsapp} value={BUSINESS_WHATSAPP_PHONE} icon={<MessageCircle className="h-4 w-4" />} featured />
               <ContactAction href={`tel:${BUSINESS_PHONE.replace(/[^+\d]/g, "")}`} label={copy.call} value={BUSINESS_PHONE} icon={<Phone className="h-4 w-4" />} />
               <ContactAction href={emailHref} label={copy.email} value={TOUR_INFO.contact.email} icon={<Mail className="h-4 w-4" />} />
             </div>

@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { BUSINESS_WHATSAPP_URL, SOCIAL_URLS } from "@/lib/site/config";
+import { BUSINESS_PHONE, BUSINESS_WHATSAPP_URL, SOCIAL_URLS } from "@/lib/site/config";
 import { useLanguage } from "@/lib/site/contexts/LanguageContext";
 import {
   LA_VIEJA_GOOGLE_MAPS_EMBED_URL,
@@ -365,7 +365,7 @@ export default function InfoClient({ tours }: { tours: TourSummary[] }) {
                 <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
                   <Phone size={14} />
                 </span>
-                <span><strong className="font-semibold text-zinc-900 dark:text-white">{tr.phoneLabel}</strong> +506 6233-2535</span>
+                <span><strong className="font-semibold text-zinc-900 dark:text-white">{tr.phoneLabel}</strong> {BUSINESS_PHONE}</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
