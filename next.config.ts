@@ -47,6 +47,7 @@ const nextConfig: NextConfig = {
 
   // Good: optimize heavy imports
   experimental: {
+    agentUpgrade: "security",
     optimizePackageImports: [
       "framer-motion",
       "recharts",
