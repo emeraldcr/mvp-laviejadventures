@@ -17,6 +17,7 @@ function load(file, imports = {}, globals = {}) {
   vm.runInNewContext(code, {
     module, exports: module.exports, require: (name) => {
       if (name in imports) return imports[name];
+      if (name === '@/lib/booking/checkout/error-messages') return load('lib/booking/checkout/error-messages.ts');
       throw new Error(`Unexpected dependency: ${name}`);
     }, URLSearchParams: globalThis.URLSearchParams, URL: globalThis.URL, AbortSignal: globalThis.AbortSignal, console: quiet, Error, SyntaxError, ...globals,
   }, { filename: file });

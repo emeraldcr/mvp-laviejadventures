@@ -36,7 +36,7 @@ export default function PackagePicker({
         disabled={disabled}
         aria-pressed={hasConfirmedSelection}
         onClick={() => onSelect(id!)}
-        className={`flex min-h-32 w-full items-center justify-between gap-4 rounded-3xl border-2 p-5 text-left transition ${
+        className={`flex min-h-32 w-full flex-wrap items-center justify-between gap-4 rounded-3xl border-2 p-5 text-left transition ${
           hasConfirmedSelection
             ? "border-[#00C4B0] bg-[#00C4B0]/10 shadow-lg shadow-[#00C4B0]/10"
             : "border-zinc-200 bg-white hover:border-[#00C4B0] dark:border-zinc-700 dark:bg-zinc-950/40"
@@ -46,7 +46,7 @@ export default function PackagePicker({
           {getPackageDisplayName(pkg, isEs)}
           {disabled && <span className="mt-1 block text-xs text-amber-700">{isEs ? "No disponible esta fecha" : "Not available this date"}</span>}
         </span>
-        <span className="shrink-0 text-xl font-black text-[#087d72] dark:text-[#66ddcf]">
+        <span className="text-xl font-black text-[#087d72] dark:text-[#66ddcf]">
           ${pkg.price} / {isEs ? "persona, antes de IVA" : "person, before tax"}
         </span>
       </button>

@@ -144,7 +144,7 @@ export default function ReservationDetailsStep2({
               onBlur={() => onFieldBlur("specialRequests")}
               rows={2}
               maxLength={2000}
-              className="w-full rounded-xl border border-zinc-300 bg-white p-3 text-sm font-semibold text-zinc-900 outline-none transition focus:border-teal-500 focus:ring-4 focus:ring-teal-500/15 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+              className="w-full rounded-xl border border-zinc-300 bg-white p-3 text-base font-semibold text-zinc-900 outline-none transition focus:border-teal-500 focus:ring-4 focus:ring-teal-500/15 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 sm:text-sm"
               placeholder={
                 lang === "es"
                   ? "Ej: transporte desde hotel, comida vegetariana, cumpleaños, guia privado, fotos..."

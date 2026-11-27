@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { OrderDetails } from "@/lib/booking/types";
 import type { LocalPaymentMethod } from "@/lib/booking/checkout/messages";
+import { checkoutErrorMessage } from "@/lib/booking/checkout/error-messages";
 
 type PendingBookingResult = {
   referenceCode: string;
@@ -63,12 +64,7 @@ export function usePendingBooking(orderDetails: OrderDetails, lang: "es" | "en")
         const data = await res.json();
 
         if (!res.ok || !data?.referenceCode) {
-          const reason =
-            typeof data?.message === "string"
-              ? data.message
-              : isEs
-                ? "No pudimos guardar la reserva pendiente."
-                : "We couldn't save the pending booking.";
+          const reason = checkoutErrorMessage(data?.code, lang);
           setSaveError(reason);
           return null;
         }

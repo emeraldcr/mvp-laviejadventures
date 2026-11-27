@@ -1,6 +1,6 @@
 "use client";
 
-import type { KeyboardEvent, RefObject } from "react";
+import { useEffect, useState, type KeyboardEvent, type RefObject } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Clock3, Minus, Plus, Sparkles, Users } from "lucide-react";
 import PackagePicker from "./PackagePicker";
@@ -54,6 +54,8 @@ export default function ReservationDetailsStep1Guided(props: Props) {
     onTourTimeSelect, onTicketsChange, onStep1Enter, onContinue, tr, lang,
   } = props;
   const isEs = lang === "es";
+  const [ticketsDraft, setTicketsDraft] = useState(String(tickets));
+  useEffect(() => { setTicketsDraft(String(tickets)); }, [tickets]);
   const groupMessage = isEs
     ? `Hola, quisiera consultar por una reserva para ${tickets} personas el ${reservationDateIso}. ¿Me pueden ayudar con la disponibilidad?`
     : `Hello, I would like to ask about a booking for ${tickets} guests on ${reservationDateIso}. Can you help me check availability?`;
@@ -161,7 +163,7 @@ export default function ReservationDetailsStep1Guided(props: Props) {
                   {availableTimeSlots.map((slot) => {
                     const selected = tourTime === slot;
                     return (
-                      <button key={slot} type="button" onClick={() => onTourTimeSelect(slot as TourTime)}
+                      <button key={slot} type="button" aria-pressed={selected && hasConfirmedTime} onClick={() => onTourTimeSelect(slot as TourTime)}
                         className={`min-h-24 rounded-3xl border-2 px-4 text-xl font-black transition ${selected ? "border-[#00C4B0] bg-[#00C4B0] text-[#16312e] shadow-lg shadow-[#00C4B0]/20" : "border-zinc-200 bg-white text-zinc-800 hover:border-[#00C4B0] dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"}`}>
                         {formatDepartureLabel(slot)}
                       </button>
@@ -184,14 +186,14 @@ export default function ReservationDetailsStep1Guided(props: Props) {
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   {guestPresets.map((count) => (
-                    <button key={count} type="button" onClick={() => onTicketsChange(String(count))}
+                    <button key={count} type="button" aria-pressed={tickets === count && hasConfirmedTickets} onClick={() => onTicketsChange(String(count))}
                       className={`h-16 min-w-16 rounded-2xl border-2 px-5 text-lg font-black transition ${tickets === count && hasConfirmedTickets ? "border-[#00C4B0] bg-[#00C4B0] text-[#16312e]" : "border-zinc-300 bg-white text-zinc-700 hover:border-[#00C4B0] dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"}`}>
                       {count}
                     </button>
                   ))}
                   <div className="ml-auto flex items-center gap-2">
                     <button type="button" onClick={() => onTicketsChange(String(tickets - 1))} disabled={tickets <= 1} className="grid h-14 w-14 place-items-center rounded-2xl border border-zinc-300 disabled:opacity-40 dark:border-zinc-700" aria-label={isEs ? "Reducir personas" : "Decrease guests"}><Minus className="h-5 w-5" /></button>
-                    <input ref={ticketsInputRef} id="tickets" type="number" min={1} value={tickets} onChange={(e) => onTicketsChange(e.target.value)} onKeyDown={onStep1Enter} aria-label={isEs ? "Cantidad de personas" : "Number of guests"} className="h-14 w-20 rounded-2xl border border-zinc-300 bg-white text-center text-xl font-black dark:border-zinc-700 dark:bg-zinc-900" />
+                    <input ref={ticketsInputRef} id="tickets" type="number" inputMode="numeric" min={1} value={ticketsDraft} onChange={(e) => { const value = e.target.value; setTicketsDraft(value); if (value !== "") onTicketsChange(value); }} onBlur={() => setTicketsDraft(String(tickets))} onKeyDown={onStep1Enter} aria-label={isEs ? "Cantidad de personas" : "Number of guests"} className="h-14 w-20 rounded-2xl border border-zinc-300 bg-white text-center text-xl font-black dark:border-zinc-700 dark:bg-zinc-900" />
                     <button type="button" onClick={() => onTicketsChange(String(tickets + 1))} disabled={tickets >= Number.MAX_SAFE_INTEGER} className="grid h-14 w-14 place-items-center rounded-2xl border border-zinc-300 disabled:opacity-40 dark:border-zinc-700" aria-label={isEs ? "Aumentar personas" : "Increase guests"}><Plus className="h-5 w-5" /></button>
                   </div>
                 </div>

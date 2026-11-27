@@ -72,7 +72,7 @@ export const TravelerInputField = ({
           inputMode={inputMode}
           aria-invalid={showError}
           aria-describedby={showError ? errorId : undefined}
-          className={`w-full rounded-xl border bg-white px-3 py-3 text-sm font-semibold text-zinc-900 outline-none transition focus:ring-4 dark:bg-zinc-900 dark:text-zinc-50 ${
+          className={`w-full rounded-xl border bg-white px-3 py-3 text-base font-semibold text-zinc-900 outline-none transition focus:ring-4 dark:bg-zinc-900 dark:text-zinc-50 sm:text-sm ${
             showError
               ? "border-red-400 focus:border-red-500 focus:ring-red-500/15"
               : showOk
@@ -222,7 +222,7 @@ export const TravelerPhoneInput = ({
                     value={countrySearch}
                     onChange={(event) => setCountrySearch(event.target.value)}
                     placeholder="Search country or code"
-                    className="w-full bg-transparent text-sm text-zinc-900 outline-none placeholder:text-zinc-400 dark:text-zinc-100"
+                    className="w-full bg-transparent text-base text-zinc-900 outline-none placeholder:text-zinc-400 dark:text-zinc-100 sm:text-sm"
                     autoFocus
                   />
                 </div>
@@ -277,7 +277,7 @@ export const TravelerPhoneInput = ({
             ref={inputRef}
             aria-invalid={showError}
             aria-describedby={showError ? "phoneNumber-error" : undefined}
-            className={`w-full rounded-xl border bg-white px-3 py-3 text-sm font-semibold text-zinc-900 outline-none transition focus:ring-4 dark:bg-zinc-900 dark:text-zinc-50 ${
+            className={`w-full rounded-xl border bg-white px-3 py-3 text-base font-semibold text-zinc-900 outline-none transition focus:ring-4 dark:bg-zinc-900 dark:text-zinc-50 sm:text-sm ${
               showError
                 ? "border-red-400 focus:border-red-500 focus:ring-red-500/15"
                 : showOk

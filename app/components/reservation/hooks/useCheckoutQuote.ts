@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { OrderDetails } from "@/lib/booking/types";
 import type { TransportQuoteResult } from "@/lib/booking/transport/quote";
+import { checkoutErrorMessage } from "@/lib/booking/checkout/error-messages";
 
 type CheckoutQuoteState = {
   total: number;
@@ -78,9 +79,7 @@ export function useCheckoutQuote(orderDetails: OrderDetails, lang: "es" | "en") 
             ...current,
             syncing: false,
             synced: false,
-            error: typeof data?.message === "string"
-              ? data.message
-              : (lang === "es" ? "No pudimos validar el total." : "We couldn't validate the total."),
+            error: checkoutErrorMessage(data?.code, lang),
           }));
           return;
         }

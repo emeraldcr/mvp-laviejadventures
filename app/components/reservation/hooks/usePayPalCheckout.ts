@@ -12,6 +12,7 @@ import {
 } from "@/app/components/reservation/checkoutUtils";
 
 import { loadPayPalSdk, type PayPalButtons } from "@/lib/payments/paypal/sdk";
+import { checkoutErrorMessage } from "@/lib/booking/checkout/error-messages";
 
 function trackCheckoutEvent(...args: Parameters<typeof trackAnalyticsEvent>) {
   try { void Promise.resolve(trackAnalyticsEvent(...args)).catch(() => {}); } catch { /* Optional analytics. */ }
@@ -27,26 +28,6 @@ function isConfiguredPayPalClientId(clientId: string | undefined): clientId is s
 
   const normalizedClientId = clientId.trim().toLowerCase();
   return Boolean(normalizedClientId) && !normalizedClientId.startsWith("your-");
-}
-
-function getCheckoutErrorMessage(payload: { code?: string; message?: string }, fallback: string, lang: string) {
-  const isEs = lang === "es";
-  if (payload.code === "capacity") {
-    return isEs
-      ? "Esos cupos se acaban de ocupar. Vuelva a la reserva para elegir otra fecha o menos personas."
-      : "Those spots were just taken. Return to booking to choose another date or fewer guests.";
-  }
-  if (payload.code === "total_mismatch") {
-    return isEs
-      ? "El total cambió antes del pago. Vuelva a revisar la reserva."
-      : "The total changed before payment. Please review the booking again.";
-  }
-  if (payload.code === "booking_context_missing" || payload.code === "capture_validation_unavailable") {
-    return isEs
-      ? "No pudimos verificar la reserva antes de cobrar. Intentá nuevamente en un momento."
-      : "We couldn't verify the booking before charging. Please try again in a moment.";
-  }
-  return payload.message || fallback;
 }
 
 export function usePayPalCheckout({
@@ -107,7 +88,7 @@ export function usePayPalCheckout({
           throw new Error(lang === "es" ? "El pago se recibió, pero aún no pudimos confirmar la reserva. Reintente la confirmación o contacte a Allan o Verónica con su número de orden." : "Payment was received, but the booking is not yet confirmed. Retry confirmation or contact Allan or Verónica with your order ID.");
         }
         if (!res.ok || !output?.success || !output?.bookingSaved || !output?.captureID || output?.status !== "COMPLETED") {
-          throw new Error(getCheckoutErrorMessage(output ?? {}, errorMessage, lang));
+          throw new Error(checkoutErrorMessage(output?.code, lang));
         }
         completedOrders.current.add(orderID);
         pendingCapture.current = null;
@@ -211,11 +192,7 @@ export function usePayPalCheckout({
             const data = await res.json();
 
             if (!res.ok || !data?.orderID) {
-              const reason = getCheckoutErrorMessage(
-                data ?? {},
-                errorMessage,
-                lang,
-              );
+              const reason = checkoutErrorMessage(data?.code, lang);
               const minDate = typeof data?.minBookableDate === "string" ? data.minBookableDate : null;
               const message = minDate ? `${reason} ${lang === "es" ? "Primera fecha disponible" : "Earliest available date"}: ${minDate}.` : reason;
               setPaymentError(message);
