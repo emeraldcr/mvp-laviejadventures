@@ -46,6 +46,30 @@ interface PendingBookingRequest {
   paymentMethod?: PendingPaymentMethod;
 }
 
+function stableValue(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(stableValue).join(",")}]`;
+  if (value && typeof value === "object") return `{${Object.entries(value).sort(([a], [b]) => a.localeCompare(b)).map(([key, item]) => `${JSON.stringify(key)}:${stableValue(item)}`).join(",")}}`;
+  return JSON.stringify(value ?? null);
+}
+
+function matchesPending(existing: PendingReservationDocument, body: PendingBookingRequest, date: string): boolean {
+  const text = (value: unknown) => typeof value === "string" ? value.trim() : "";
+  const requestedAddons = body.addonIds?.length ? body.addonIds : body.addons ?? [];
+  const savedAddons = Array.isArray(existing.addonIds) && existing.addonIds.length ? existing.addonIds : existing.addons ?? [];
+  const expectedTotal = Number(body.total);
+  const savedTotal = Number(existing.amount);
+  return existing.status === "pending_payment" && existing.paymentStatus === "not_paid" &&
+    text(existing.name) === text(body.name) && text(existing.email).toLowerCase() === text(body.email).toLowerCase() &&
+    text(existing.phone) === text(body.phone) && Number(existing.tickets) === Number(body.tickets) &&
+    existing.date === date && text(existing.tourTime) === text(body.tourTime) && text(existing.tourSlug) === text(body.tourSlug) &&
+    text(existing.tourName) === text(body.tourName) && text(existing.tourPackage) === text(body.tourPackage) &&
+    (!body.packageId || text(existing.packageId) === text(body.packageId)) &&
+    Number.isFinite(expectedTotal) && Number.isFinite(savedTotal) && Math.round(expectedTotal * 100) === Math.round(savedTotal * 100) &&
+    stableValue([...requestedAddons].sort()) === stableValue(Array.isArray(savedAddons) ? [...savedAddons].sort() : []) &&
+    stableValue(existing.addonDetails ?? {}) === stableValue(body.addonDetails ?? {}) &&
+    text(existing.specialRequests) === text(body.specialRequests);
+}
+
 export async function POST(req: Request) {
   try {
     const body = (await req.json()) as PendingBookingRequest;
@@ -108,16 +132,19 @@ export async function POST(req: Request) {
       : null;
     const pendingId = safeAttemptId ? `pending:${safeAttemptId}` : null;
     const reservations = db.collection<PendingReservationDocument>(COLLECTIONS.RESERVATIONS);
+    const reusePending = (existing: PendingReservationDocument) => {
+      if (!matchesPending(existing, body, normalizedDate)) return NextResponse.json({
+        success: false,
+        code: "pending_details_changed",
+        message: language === "en" ? "This request already has a reference with different details. Contact the team before paying or creating another request." : "Esta solicitud ya tiene una referencia con datos distintos. Consulte al equipo antes de pagar o crear otra solicitud.",
+      }, { status: 409 });
+      return NextResponse.json({ success: true, reservationId: pendingId, referenceCode: String(existing.referenceCode), reused: true });
+    };
 
     if (pendingId) {
       const existing = await reservations.findOne({ _id: pendingId });
       if (existing?.referenceCode) {
-        return NextResponse.json({
-          success: true,
-          reservationId: pendingId,
-          referenceCode: String(existing.referenceCode),
-          reused: true,
-        });
+        return reusePending(existing);
       }
     }
 
@@ -191,7 +218,7 @@ export async function POST(req: Request) {
 
       const existing = await reservations.findOne({ _id: pendingId });
       if (!existing?.referenceCode) throw error;
-      reservationId = pendingId;
+      return reusePending(existing);
     }
 
     return NextResponse.json({

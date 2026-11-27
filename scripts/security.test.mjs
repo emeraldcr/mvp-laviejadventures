@@ -267,6 +267,29 @@ test('a resume link does not reopen checkout after its payment was captured', as
   assert.equal((await response.json()).success, true);
 });
 
+test('pending references are reused only for matching booking details', async () => {
+  const body = { bookingAttemptId: '12345678-1234-1234-1234-123456789012', name: 'Guest', email: 'guest@example.com', phone: '+506 88888888', tickets: 2, total: 113, date: '2026-12-20', tourTime: '08:00', packageId: 'standard', tourPackage: 'Standard', tourSlug: 'tour', tourName: 'Tour', addonIds: [], addonDetails: {}, language: 'es' };
+  const record = { referenceCode: 'LVA-123', status: 'pending_payment', paymentStatus: 'not_paid', name: body.name, email: body.email, phone: body.phone, tickets: body.tickets, amount: body.total, date: body.date, tourTime: body.tourTime, packageId: body.packageId, tourPackage: body.tourPackage, tourSlug: body.tourSlug, tourName: body.tourName, addonIds: [], addonDetails: {} };
+  const api = load('app/api/bookings/pending/route.ts', {
+    'next/server': next, '@/lib/auth': { auth: async () => null },
+    '@/lib/data/mongodb': { getDb: async () => ({ collection: () => ({ findOne: async () => record }) }) },
+    '@/lib/data/collections': { COLLECTIONS: {} },
+    '@/lib/shared/dates/costa-rica-time': { isDateOnOrAfterMinBookableInCostaRica: () => true },
+    '@/lib/booking/core/dates': { normalizeReservationDate: date => date },
+    '@/lib/booking/checkout/messages': {},
+    '@/lib/booking/checkout/quote': { requiredReservationFieldsPresent: () => true, isReservationQuoteError: () => false },
+  });
+  const request = value => new globalThis.Request('https://example.com/api/bookings/pending', { method: 'POST', body: JSON.stringify(value) });
+  const same = await api.POST(request(body));
+  assert.equal(same.status, 200);
+  assert.equal((await same.json()).referenceCode, 'LVA-123');
+  for (const change of [{ tickets: 3 }, { date: '2026-12-21' }, { total: 120 }, { specialRequests: 'New request' }, { addonIds: ['extra'] }]) {
+    const response = await api.POST(request({ ...body, ...change }));
+    assert.equal(response.status, 409);
+    assert.equal((await response.json()).code, 'pending_details_changed');
+  }
+});
+
 test('server booking queries never include email for unverified users or match null identities', () => {
   const api = load('app/(page_routes)/booking/lib/booking-data.ts', { '../constants': { RESERVATIONS_COLLECTION: 'reservations' } });
   assert.equal(JSON.stringify(api.bookingQueryForUser('attacker', 'victim@example.com')), '{"$or":[{"userId":"attacker"}]}');
