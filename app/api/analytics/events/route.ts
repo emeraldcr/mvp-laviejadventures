@@ -242,6 +242,13 @@ export async function GET(request: Request) {
       .limit(10_001)
       .toArray();
 
+    // One current outcome per order, based on creation date rather than client events.
+    const orderOutcomes = await db.collection(COLLECTIONS.PAYPAL_ORDER_CONTEXTS).aggregate<{ _id: string; count: number }>([
+      { $match: { createdAt: { $gte: since } } },
+      { $group: { _id: { $ifNull: ["$status", "created"] }, count: { $sum: 1 } } },
+    ]).toArray();
+    const outcomes = Object.fromEntries(orderOutcomes.map(({ _id, count }) => [_id, count]));
+
     const truncated = events.length > 10_000;
     if (truncated) events.pop();
 
@@ -341,6 +348,7 @@ export async function GET(request: Request) {
         errors: paymentErrors,
         completed: bookingsCompleted,
         paymentMethods: topEntries(paymentCounts),
+        orderOutcomes: { created: outcomes.created ?? 0, returned: outcomes.returned ?? 0, cancelled: outcomes.cancelled ?? 0, paymentFailed: outcomes.payment_failed ?? 0, capturedUnconfirmed: outcomes.captured_unconfirmed ?? 0, confirmed: outcomes.confirmed ?? 0 },
       },
       eventCounts: topEntries(eventCounts, 20),
       recentEvents: safeRecentEvents,

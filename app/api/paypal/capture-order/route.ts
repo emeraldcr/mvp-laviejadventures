@@ -69,6 +69,7 @@ export async function POST(req: Request) {
     await reservationIndexReady;
     const existingCapture = await findExistingCapture(orderID.trim());
     if (existingCapture) {
+      await recordOrderState(orderID, "confirmed", { captureId: existingCapture, confirmedAt: new Date() });
       return NextResponse.json({
         success: true,
         id: orderID.trim(),
@@ -79,6 +80,7 @@ export async function POST(req: Request) {
       });
     }
 
+    await recordOrderState(orderID, "returned", { returnedAt: new Date() });
     const accessToken = await getPayPalAccessToken();
     const orderUrl = `${getPayPalApiBaseUrl()}/v2/checkout/orders/${encodeURIComponent(orderID)}`;
     // Reconcile an earlier capture whose response or database write was lost.
@@ -114,6 +116,7 @@ export async function POST(req: Request) {
           if (!recovered.ok) return NextResponse.json({ success: false, message: "Unable to verify captured payment" }, { status: 502 });
           data = await recovered.json();
         } else {
+          if (response.status >= 400 && response.status < 500 && issue !== "INSTRUMENT_DECLINED") await recordOrderState(orderID, "payment_failed", { failureCode: issue ?? "capture_rejected", failedAt: new Date() });
           console.error("PayPal Capture Failed:", { status: response.status, issue, orderID });
           return NextResponse.json({ success: false, message: "Failed to capture PayPal order", code: issue }, { status: response.status });
         }
@@ -130,6 +133,7 @@ export async function POST(req: Request) {
         .filter(Boolean)
         .join(" ") || null;
 
+    if (completed && capture?.id) await recordOrderState(orderID, "captured_unconfirmed", { captureId: capture.id, capturedAt: new Date() });
     const bookingSaved = completed && capture?.id
       ? await saveCapturedReservation({
           orderId: data.id ?? orderID,
@@ -144,7 +148,7 @@ export async function POST(req: Request) {
       : false;
 
     return NextResponse.json({
-      success: completed,
+      success: completed && bookingSaved,
       id: data.id ?? orderID,
       status: capture?.status ?? data.status,
       captureID: capture?.id ?? null,
@@ -163,6 +167,16 @@ export async function POST(req: Request) {
       { status: 500 }
     );
   }
+}
+
+async function recordOrderState(orderId: string, status: string, details: Record<string, unknown>) {
+  try {
+    const db = await getDb();
+    await db.collection(COLLECTIONS.PAYPAL_ORDER_CONTEXTS).updateOne(
+      { orderId, ...(status === "confirmed" ? {} : { status: { $nin: ["confirmed", "captured_unconfirmed"] } }) },
+      { $set: { status, ...details, updatedAt: new Date() } },
+    );
+  } catch (error) { console.error("Failed to record PayPal order state:", error); }
 }
 
 async function releaseOrderCapacityHold(orderId: string) {
@@ -333,7 +347,7 @@ async function saveCapturedReservation({
     );
     await db.collection(COLLECTIONS.PAYPAL_ORDER_CONTEXTS).updateOne(
       { orderId },
-      { $set: { status: "captured", captureId, capturedAt: new Date(), updatedAt: new Date() } },
+      { $set: { status: "confirmed", captureId, confirmedAt: new Date(), updatedAt: new Date() } },
     );
     if (
       typeof booking.bookingAttemptId === "string" &&

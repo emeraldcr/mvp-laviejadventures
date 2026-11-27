@@ -157,7 +157,7 @@ test('capture retry keeps the same approved order, deduplicates callbacks, and s
     fetch: async (url, init) => {
       ids.push(JSON.parse(init.body).orderID);
       if (++count === 1) throw new Error('offline');
-      return { ok: true, json: async () => ({ status: 'COMPLETED', captureID: 'capture' }) };
+      return { ok: true, json: async () => ({ status: 'COMPLETED', captureID: 'capture', success: true, bookingSaved: true }) };
     },
   }); await app.settle();
   await app.configs[0].onApprove({ orderID: 'PAYPALORDER1234567' }); await app.settle();
@@ -191,10 +191,10 @@ test('draft/storage failures do not invalidate a verified quote; own capacity ho
 });
 
 function captureApi(responses, options = {}) {
-  let quotes = 0, writes = 0; const requests = [];
+  let quotes = 0, writes = 0, reservationWrites = 0; const requests = [];
   const context = { booking: { total: 100, date: order.date, tickets: 2 }, customer: {} };
   const constants = { RESERVATIONS: 'reservations', PAYPAL_ORDER_CONTEXTS: 'contexts' };
-  const db = { collection: (name) => ({ createIndex: async () => 'orderId_1', findOne: async () => name === 'contexts' ? context : null, updateOne: async () => { writes++; } }) };
+  const db = { collection: (name) => ({ createIndex: async () => 'orderId_1', findOne: async () => name === 'contexts' ? context : null, updateOne: async () => { writes++; if (name === "reservations") reservationWrites++; } }) };
   const api = load('app/api/paypal/capture-order/route.ts', {
     '@/lib/security/payment-owner': { ownsPayment: async () => options.ownsPayment !== false, setPaymentOwner: async () => {} },
     '@/lib/auth': { auth: async () => null },
@@ -204,7 +204,7 @@ function captureApi(responses, options = {}) {
     '@/lib/booking/checkout/quote': { quoteReservation: async () => { quotes++; if (options.quoteFails) throw new Error('unavailable'); return { totalWithTax: 100 }; }, isReservationQuoteError: () => false },
     '@/lib/booking/availability/holds': { releaseCapacityHold: async () => {} },
   }, { fetch: async (url, init) => { requests.push({ url, init }); const next = responses.shift(); if (!next) throw new Error('Unexpected fetch'); return { ok: next.ok ?? true, status: next.status ?? 200, json: async () => next.body }; } });
-  return { api, requests, get quotes() { return quotes; }, get writes() { return writes; } };
+  return { api, requests, get quotes() { return quotes; }, get writes() { return writes; }, get reservationWrites() { return reservationWrites; } };
 }
 const approved = { id: 'PAYPALORDER1234567', status: 'APPROVED', purchase_units: [{ amount: { value: '100.00', currency_code: 'USD' } }] };
 const completed = { id: approved.id, status: 'COMPLETED', purchase_units: [{ payments: { captures: [{ id: 'CAPTURE123', status: 'COMPLETED', amount: { value: '100.00', currency_code: 'USD' } }] } }] };
@@ -286,7 +286,7 @@ test('blocked analytics cannot interrupt payment rendering or completion', async
   const previous = analytics.trackAnalyticsEvent;
   analytics.trackAnalyticsEvent = () => Promise.reject(new Error('storage unavailable'));
   try {
-    const app = checkout({ fetch: async () => ({ ok: true, json: async () => ({ id: approved.id, status: 'COMPLETED', captureID: 'capture' }) }) });
+    const app = checkout({ fetch: async () => ({ ok: true, json: async () => ({ id: approved.id, status: 'COMPLETED', captureID: 'capture', success: true, bookingSaved: true }) }) });
     await app.settle(); await app.configs[0].onApprove({ orderID: approved.id }); await app.settle();
     assert.equal(app.routes.length, 1);
   } finally { analytics.trackAnalyticsEvent = previous; }
@@ -296,7 +296,7 @@ test('capture refuses an order without browser ownership before any PayPal call'
   const app = captureApi([], { ownsPayment: false });
   assert.equal((await app.api.POST(request())).status, 403);
   assert.equal(app.requests.length, 0);
-  assert.equal(app.writes, 0);
+  assert.equal(app.reservationWrites, 0);
 });
 
 test('completed orders with unexpected currency or amount cannot create paid reservations', async () => {
@@ -304,5 +304,30 @@ test('completed orders with unexpected currency or amount cannot create paid res
   wrong.purchase_units[0].payments.captures[0].amount.value = '1.00';
   const app = captureApi([{ body: wrong }]);
   assert.equal((await app.api.POST(request())).body.bookingSaved, false);
-  assert.equal(app.writes, 0);
+  assert.equal(app.reservationWrites, 0);
+});
+
+
+test('cancellation reports its order and leaves checkout usable', async () => {
+  const requests = [];
+  const app = checkout({ fetch: async (url, init) => {
+    requests.push({ url, body: JSON.parse(init.body) });
+    return { ok: true, json: async () => ({ orderID: approved.id }) };
+  } });
+  await app.settle();
+  await app.configs[0].createOrder();
+  app.configs[0].onCancel({ orderID: approved.id });
+  await app.settle();
+  assert.equal(requests[1].url, '/api/paypal/order-outcome');
+  assert.equal(requests[1].body.orderID, approved.id);
+  assert.equal(await app.configs[0].createOrder(), approved.id);
+});
+
+test('captured payment without a saved reservation stays on checkout for reconciliation', async () => {
+  const app = checkout({ fetch: async () => ({ ok: true, json: async () => ({ success: false, status: 'COMPLETED', captureID: 'capture', bookingSaved: false }) }) });
+  await app.settle();
+  await app.configs[0].onApprove({ orderID: approved.id }, { restart: async () => {} });
+  await app.settle();
+  assert.equal(app.routes.length, 0);
+  assert.equal(app.result.pendingOrderId, approved.id);
 });

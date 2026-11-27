@@ -70,6 +70,7 @@ export function usePayPalCheckout({
   const [isCapturing, setIsCapturing] = useState(false);
   const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
   const pendingCapture = useRef<string | null>(null);
+  const activeOrder = useRef<string | null>(null);
   const captureInFlight = useRef<Promise<void> | null>(null);
   const completedOrders = useRef(new Set<string>());
   const latest = useRef({ orderDetails, onSuccess });
@@ -102,7 +103,10 @@ export function usePayPalCheckout({
           setPendingOrderId(null);
           return await actions.restart();
         }
-        if (!res.ok || !output?.captureID || output?.status !== "COMPLETED") {
+        if (output?.status === "COMPLETED" && output?.captureID && !output?.bookingSaved) {
+          throw new Error(lang === "es" ? "El pago se recibió, pero aún no pudimos confirmar la reserva. Reintente la confirmación o contacte a Allan o Verónica con su número de orden." : "Payment was received, but the booking is not yet confirmed. Retry confirmation or contact Allan or Verónica with your order ID.");
+        }
+        if (!res.ok || !output?.success || !output?.bookingSaved || !output?.captureID || output?.status !== "COMPLETED") {
           throw new Error(getCheckoutErrorMessage(output ?? {}, errorMessage, lang));
         }
         completedOrders.current.add(orderID);
@@ -225,7 +229,16 @@ export function usePayPalCheckout({
               },
             });
 
+            activeOrder.current = data.orderID as string;
             return data.orderID as string;
+          },
+          onCancel: (data: { orderID?: string }) => {
+            const orderID = data?.orderID ?? activeOrder.current;
+            if (orderID) void fetch("/api/paypal/order-outcome", {
+              method: "POST", headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ orderID }), keepalive: true,
+            }).catch(() => {});
+            activeOrder.current = null;
           },
           onApprove: (data: { orderID: string }, actions: { restart: () => Promise<void> }) => captureOrder(data.orderID, actions),
           onError: (err: unknown) => {

@@ -402,7 +402,7 @@ async function saveOrderContext(orderId: string, bookingData: any) {
           booking: bookingData,
           updatedAt: new Date(),
         },
-        $setOnInsert: { createdAt: new Date() },
+        $setOnInsert: { createdAt: new Date(), status: "created" },
       },
       { upsert: true }
     );

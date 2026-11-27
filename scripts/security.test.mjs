@@ -151,7 +151,7 @@ test('analytics page rankings count page views and report truncated results', as
   const api = load('app/api/analytics/events/route.ts', {
     'next/server': next,
     '@/lib/auth': { auth: async () => null },
-    '@/lib/data/mongodb': { getDb: async () => ({ collection: () => ({ find: () => ({ sort: () => ({ limit: () => ({ toArray: async () => events }) }) }) }) }) },
+    '@/lib/data/mongodb': { getDb: async () => ({ collection: () => ({ aggregate: () => ({ toArray: async () => [] }), find: () => ({ sort: () => ({ limit: () => ({ toArray: async () => events }) }) }) }) }) },
     'next/headers': {}, '@/lib/data/collections': { COLLECTIONS: {} },
   });
   const data = await (await api.GET(new globalThis.Request('https://example.com/api/analytics/events'))).json();
