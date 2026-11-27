@@ -23,6 +23,20 @@ function load(file, imports = {}, globals = {}) {
 const validation = load('lib/security/validation.ts');
 const next = { NextResponse: { json: (body, init) => globalThis.Response.json(body, init), next: () => new globalThis.Response(null) } };
 
+test('booking reminders avoid inventing a time, duration or meeting point', () => {
+  const reminders = load('lib/booking/calendar/reminder.ts', {}, { URLSearchParams: globalThis.URLSearchParams });
+  const input = { date: '2026-12-31', tourName: 'Aventura', tourTime: 'flexible', reference: 'ORDER', lang: 'es' };
+  const link = new globalThis.URL(reminders.googleCalendarReminder(input));
+  assert.equal(link.searchParams.get('dates'), '20261231/20270101');
+  assert.match(link.searchParams.get('details'), /Horario por coordinar/);
+  assert.equal(link.searchParams.has('location'), false);
+  const ics = reminders.calendarReminderIcs(input, new Date('2026-11-26T12:00:00Z'));
+  assert.match(ics, /DTSTART;VALUE=DATE:20261231/);
+  assert.match(ics, /DTEND;VALUE=DATE:20270101/);
+  assert.doesNotMatch(ics, /080000|LOCATION:/);
+  assert.equal(reminders.calendarReminderIcs({ ...input, date: '2026-02-30' }), null);
+});
+
 test('reset tokens reject Mongo operators and malformed values; bcrypt limits count UTF-8 bytes', () => {
   for (const value of [{ $ne: null }, [], null, 123, 'a'.repeat(63), 'z'.repeat(64)]) assert.equal(validation.validResetToken(value), false);
   assert.equal(validation.validResetToken('a'.repeat(64)), true);

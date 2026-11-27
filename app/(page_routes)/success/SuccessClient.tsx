@@ -4,8 +4,8 @@ import { useLanguage } from "@/lib/site/contexts/LanguageContext";
 import { BOOKING_COMPLETION_STORAGE_KEY, trackAnalyticsEvent } from "@/lib/analytics/client";
 import { translations } from "@/lib/site/translations";
 import { localizeHref } from "@/lib/site/i18n";
-import { LA_VIEJA_GOOGLE_MAPS_URL, LA_VIEJA_LOCATION_LABEL } from "@/lib/site/location";
 import { BUSINESS_WHATSAPP_URL } from "@/lib/site/config";
+import { googleCalendarReminder, calendarReminderIcs } from "@/lib/booking/calendar/reminder";
 import Link from "next/link";
 import { useEffect } from "react";
 import type { SuccessClientProps } from "@/lib/booking/types";
@@ -263,7 +263,9 @@ function PreparationHub({
   reference?: string | null;
   translations: SuccessTranslations;
 }) {
-  const calendarLink = buildGoogleCalendarLink({ date, tourName, tourTime, reference });
+  const lang = tr.title.startsWith("Booking") ? "en" : "es";
+  const reminder = { date, tourName, tourTime, reference, lang } as const;
+  const calendarLink = googleCalendarReminder(reminder);
 
   return (
     <section className="mt-8 rounded-3xl bg-[#f4f0e7] p-5 text-zinc-900 dark:bg-zinc-800/80 dark:text-zinc-100 sm:p-6">
@@ -273,18 +275,18 @@ function PreparationHub({
       <div className="mt-5 grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
         <div className="rounded-2xl bg-white/80 p-4 dark:bg-zinc-900/70">
           <p className="text-xs font-bold uppercase tracking-[0.14em] text-teal-700 dark:text-teal-300">{tr.meetingPointTitle}</p>
-          <p className="mt-2 font-semibold">{LA_VIEJA_LOCATION_LABEL}</p>
+          <p className="mt-2 font-semibold">{lang === "es" ? "Por confirmar con el equipo" : "To be confirmed with the team"}</p>
           <p className="mt-3 text-sm leading-6 text-zinc-600 dark:text-zinc-300">{tr.arrivalCopy}</p>
-          <a href={LA_VIEJA_GOOGLE_MAPS_URL} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex min-h-11 items-center rounded-full bg-teal-700 px-5 font-bold text-white transition hover:bg-teal-800">{tr.directions}</a>
+          <a href={BUSINESS_WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex min-h-11 items-center rounded-full bg-teal-700 px-5 font-bold text-white transition hover:bg-teal-800">{tr.supportAction}</a>
         </div>
 
         <div className="rounded-2xl bg-white/80 p-4 dark:bg-zinc-900/70">
           <p className="text-xs font-bold uppercase tracking-[0.14em] text-teal-700 dark:text-teal-300">{tr.arrivalTitle}</p>
-          <p className="mt-2 text-2xl font-black">{arrivalLabel(tourTime)}</p>
+          <p className="mt-2 text-lg font-black">{tourTime && /^([01]?\d|2[0-3]):[0-5]\d$/.test(tourTime) ? `${tourTime} · ${lang === "es" ? "hora seleccionada" : "selected time"}` : (lang === "es" ? "Horario por coordinar" : "Time to be arranged")}</p>
           <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">{date || "N/A"}</p>
           <div className="mt-4 flex flex-wrap gap-2">
-            <a href={calendarLink} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-10 items-center rounded-full border border-teal-700 px-4 text-sm font-bold text-teal-800 hover:bg-teal-50 dark:text-teal-300 dark:hover:bg-teal-950/40">{tr.addToGoogleCalendar}</a>
-            <button type="button" onClick={() => downloadCalendar({ date, tourName, tourTime, reference })} className="inline-flex min-h-10 items-center rounded-full border border-zinc-300 px-4 text-sm font-bold hover:bg-white dark:border-zinc-600 dark:hover:bg-zinc-800">{tr.downloadCalendar}</button>
+            {calendarLink && <><a href={calendarLink} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-10 items-center rounded-full border border-teal-700 px-4 text-sm font-bold text-teal-800 hover:bg-teal-50 dark:text-teal-300 dark:hover:bg-teal-950/40">{tr.addToGoogleCalendar}</a>
+            <button type="button" onClick={() => downloadCalendar(reminder)} className="inline-flex min-h-10 items-center rounded-full border border-zinc-300 px-4 text-sm font-bold hover:bg-white dark:border-zinc-600 dark:hover:bg-zinc-800">{tr.downloadCalendar}</button></>}
           </div>
         </div>
       </div>
@@ -305,38 +307,9 @@ function PreparationHub({
   );
 }
 
-function arrivalLabel(tourTime?: string | null) {
-  if (!tourTime) return "Confirmar con el equipo";
-  const match = tourTime.match(/^(\d{1,2}):(\d{2})$/);
-  if (!match) return `30 min antes de ${tourTime}`;
-  const date = new Date(2000, 0, 1, Number(match[1]), Number(match[2]) - 30);
-  return `30 min antes · ${date.toLocaleTimeString("es-CR", { hour: "numeric", minute: "2-digit" })}`;
-}
-
-function calendarParts(date?: string | null, tourTime?: string | null) {
-  const normalized = date?.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  const time = tourTime?.match(/^(\d{1,2}):(\d{2})$/);
-  if (!normalized) return null;
-  const [, year, month, day] = normalized;
-  const hour = Number(time?.[1] ?? 8);
-  const minute = Number(time?.[2] ?? 0);
-  const start = `${year}${month}${day}T${String(hour).padStart(2, "0")}${String(minute).padStart(2, "0")}00`;
-  const endDate = new Date(Number(year), Number(month) - 1, Number(day), hour, minute + 120);
-  const end = `${endDate.getFullYear()}${String(endDate.getMonth() + 1).padStart(2, "0")}${String(endDate.getDate()).padStart(2, "0")}T${String(endDate.getHours()).padStart(2, "0")}${String(endDate.getMinutes()).padStart(2, "0")}00`;
-  return { start, end };
-}
-
-function buildGoogleCalendarLink({ date, tourName, tourTime, reference }: Pick<SuccessClientProps, "date" | "tourName" | "tourTime"> & { reference?: string | null }) {
-  const parts = calendarParts(date, tourTime);
-  const params = new URLSearchParams({ action: "TEMPLATE", text: tourName || "La Vieja Adventures", details: `Reserva: ${reference || "N/A"}. Llegar 30 minutos antes.`, location: LA_VIEJA_LOCATION_LABEL });
-  if (parts) params.set("dates", `${parts.start}/${parts.end}`);
-  return `https://calendar.google.com/calendar/render?${params.toString()}`;
-}
-
-function downloadCalendar({ date, tourName, tourTime, reference }: Pick<SuccessClientProps, "date" | "tourName" | "tourTime"> & { reference?: string | null }) {
-  const parts = calendarParts(date, tourTime);
-  if (!parts) return;
-  const ics = [`BEGIN:VCALENDAR`, `VERSION:2.0`, `PRODID:-//La Vieja Adventures//Booking//EN`, `BEGIN:VEVENT`, `UID:${reference || `${date}-${tourName}`}`, `DTSTAMP:${parts.start}`, `DTSTART:${parts.start}`, `DTEND:${parts.end}`, `SUMMARY:${tourName || "La Vieja Adventures"}`, `LOCATION:${LA_VIEJA_LOCATION_LABEL}`, `DESCRIPTION:Reserva ${reference || "N/A"}. Llegar 30 minutos antes.`, `END:VEVENT`, `END:VCALENDAR`].join("\r\n");
+function downloadCalendar(reminder: Parameters<typeof calendarReminderIcs>[0]) {
+  const ics = calendarReminderIcs(reminder);
+  if (!ics) return;
   const url = URL.createObjectURL(new Blob([ics], { type: "text/calendar;charset=utf-8" }));
   const link = document.createElement("a");
   link.href = url;
