@@ -256,18 +256,18 @@ test('server booking queries never include email for unverified users or match n
   assert.equal(api.bookingQueryForUser('owner', 'owner@example.com', true).$or.length, 3);
 });
 
-function voucherFixture({ browserOwner = false, user = null, emailDeliveryStatus = 'sent' } = {}) {
+function voucherFixture({ browserOwner = false, user = null, emailDeliveryStatus = 'sent', failEmailStage = '' } = {}) {
   let reads = 0, mails = 0, claimed = false, sent = emailDeliveryStatus === 'sent';
   const record = { _id: 'reservation', orderId: 'PAYPALORDER1234567', captureId: 'CAPTURE', status: 'COMPLETED', userId: 'owner', email: 'owner@example.com', amount: 100, currency: 'USD' };
   const collection = {
     findOne: async () => { reads++; return { ...record, emailDeliveryStatus: sent ? 'sent' : emailDeliveryStatus }; },
-    findOneAndUpdate: async () => { if (claimed || sent) return null; claimed = true; return record; },
-    updateOne: async (query, update) => { sent = update.$set.emailDeliveryStatus === 'sent'; return {}; },
+    findOneAndUpdate: async () => { if (failEmailStage === 'claim') throw new Error('claim failed'); if (claimed || sent) return null; claimed = true; return record; },
+    updateOne: async (query, update) => { if (failEmailStage === 'update') throw new Error('update failed'); sent = update.$set.emailDeliveryStatus === 'sent'; return {}; },
   };
   const api = load('app/(page_routes)/success/bookingService.tsx', {
     '@/lib/auth': { auth: async () => user ? { user } : null },
     '@/lib/security/payment-owner': { ownsPayment: async () => browserOwner },
-    '@/lib/security/rate-limit': { allowRequest: async () => true },
+    '@/lib/security/rate-limit': { allowRequest: async () => { if (failEmailStage === 'rate') throw new Error('rate limiter failed'); return true; } },
     '@/lib/data/mongodb': { getDb: async () => ({ collection: () => collection }) },
     '@/lib/data/collections': { COLLECTIONS: {} },
     './emailService': { sendConfirmationEmail: async () => { mails++; return { status: 'sent' }; } },
@@ -283,6 +283,16 @@ test('vouchers deny anonymous ID bearers and unrelated/unverified accounts', asy
     const fixture = voucherFixture({ user });
     const result = await fixture.api.processSuccessfulBooking('PAYPALORDER1234567');
     assert.ok(result.error); assert.equal(result.email, undefined); assert.equal(fixture.mails, 0);
+  }
+});
+
+test('email service failures do not hide an authorized paid voucher', async () => {
+  for (const stage of ['rate', 'claim', 'update']) {
+    const fixture = voucherFixture({ browserOwner: true, emailDeliveryStatus: 'not_requested', failEmailStage: stage });
+    const result = await fixture.api.processSuccessfulBooking('PAYPALORDER1234567');
+    assert.equal(result.error, null);
+    assert.equal(result.captureId, 'CAPTURE');
+    assert.equal(result.emailStatus, stage === 'update' ? 'sent' : 'failed');
   }
 });
 

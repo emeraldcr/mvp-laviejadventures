@@ -3,6 +3,7 @@ import { escapeHtml } from "@/lib/security/validation";
 import { Resend } from "resend";
 import type { SendEmailParams } from "@/lib/email/types";
 import { getEmailFrom } from "@/lib/email/constants";
+import { BOOKING_ASSURANCE_EN, BOOKING_ASSURANCE_ES } from "@/lib/tours/policy";
 
 export type ConfirmationEmailResult =
   | { status: "sent" }
@@ -116,6 +117,7 @@ function createMailBody(params: SendEmailParams): string {
   <h1>${copy.heading}</h1>
   <p>${copy.greeting}</p>
   <p>${copy.intro}</p>
+  <p>${escapeHtml(isEnglish ? BOOKING_ASSURANCE_EN : BOOKING_ASSURANCE_ES)}</p>
   <ul>
     <li><b>${copy.fullName}:</b> ${escapeHtml(String(displayName))}</li>
     <li><b>${copy.email}:</b> ${escapeHtml(String(params.to ?? naLabel))}</li>
@@ -138,7 +140,6 @@ function createMailBody(params: SendEmailParams): string {
   </p>
   <p>${copy.regards}</p>
   <p>La Vieja Adventures</p>
-  <p>Ciudad Esmeralda Tour</p>
 </body>
 </html>`;
 }

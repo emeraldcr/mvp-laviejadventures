@@ -44,31 +44,38 @@ export async function processSuccessfulBooking(orderId: string): Promise<Success
     if (!browserOwner && !accountOwner) return unavailable;
 
     let emailStatus: SuccessPageResult["emailStatus"] = record.emailDeliveryStatus === "sent" ? "sent" : "not_requested";
-    if (record.email && emailStatus !== "sent" && await allowRequest(`voucher-email:${orderId}`, 3, 3_600_000)) {
-      const claim = randomUUID();
-      const claimed = await reservations.findOneAndUpdate({
-        _id: record._id, emailDeliveryStatus: { $ne: "sent" },
-        $or: [{ emailDeliveryLeaseUntil: { $exists: false } }, { emailDeliveryLeaseUntil: { $lte: new Date() } }],
-      }, { $set: { emailDeliveryClaim: claim, emailDeliveryLeaseUntil: new Date(Date.now() + 120_000) } }, { returnDocument: "after" });
-      if (claimed) {
-        try {
-          const result = await sendConfirmationEmail({
-            to: record.email, name: record.name, phone: record.phone, date: record.date,
-            tickets: String(record.tickets ?? ""), amount: String(record.amount ?? ""),
-            currency: record.currency, orderId, captureId: record.captureId,
-            status: record.status, reservationId: record._id.toString(),
-            language: record.language === "en" ? "en" : "es", tourName: record.tourName,
-            tourPackage: record.tourPackage, tourTime: record.tourTime,
+    try {
+      if (record.email && emailStatus !== "sent" && await allowRequest(`voucher-email:${orderId}`, 3, 3_600_000)) {
+        const claim = randomUUID();
+        const claimed = await reservations.findOneAndUpdate({
+          _id: record._id, emailDeliveryStatus: { $ne: "sent" },
+          $or: [{ emailDeliveryLeaseUntil: { $exists: false } }, { emailDeliveryLeaseUntil: { $lte: new Date() } }],
+        }, { $set: { emailDeliveryClaim: claim, emailDeliveryLeaseUntil: new Date(Date.now() + 120_000) } }, { returnDocument: "after" });
+        if (claimed) {
+          try {
+            const result = await sendConfirmationEmail({
+              to: record.email, name: record.name, phone: record.phone, date: record.date,
+              tickets: String(record.tickets ?? ""), amount: String(record.amount ?? ""),
+              currency: record.currency, orderId, captureId: record.captureId,
+              status: record.status, reservationId: record._id.toString(),
+              language: record.language === "en" ? "en" : "es", tourName: record.tourName,
+              tourPackage: record.tourPackage, tourTime: record.tourTime,
+            });
+            emailStatus = result.status;
+          } catch {
+            emailStatus = "failed";
+          }
+          await reservations.updateOne({ _id: record._id, emailDeliveryClaim: claim }, {
+            $set: { emailDeliveryStatus: emailStatus },
+            $unset: { emailDeliveryClaim: "", emailDeliveryLeaseUntil: "" },
           });
-          emailStatus = result.status;
-        } catch {
-          emailStatus = "failed";
         }
-        await reservations.updateOne({ _id: record._id, emailDeliveryClaim: claim }, {
-          $set: { emailDeliveryStatus: emailStatus },
-          $unset: { emailDeliveryClaim: "", emailDeliveryLeaseUntil: "" },
-        });
       }
+    } catch (error) {
+      // Delivery and bookkeeping are optional once ownership and payment are verified.
+      // A failed status write leaves the existing lease to expire before another attempt.
+      console.error("Voucher email processing failed:", error);
+      if (emailStatus !== "sent") emailStatus = "failed";
     }
     return {
       error: null, name: record.name, email: record.email, phone: record.phone,
