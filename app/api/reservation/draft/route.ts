@@ -3,6 +3,7 @@ import { getDb } from "@/lib/data/mongodb";
 import { quoteReservation, requiredReservationFieldsPresent, isReservationQuoteError } from "@/lib/booking/checkout/quote";
 import { saveReservationDraft, findReservationDraft } from "@/lib/booking/checkout/drafts";
 import type { ReservationAddonDetails } from "@/lib/booking/core/types";
+import { COLLECTIONS } from "@/lib/data/collections";
 
 type DraftRequest = {
   resumeToken?: string;
@@ -32,8 +33,16 @@ export async function GET(req: Request) {
   if (!token) return NextResponse.json({ success: false, message: "Missing resume token" }, { status: 400 });
 
   try {
-    const draft = await findReservationDraft(await getDb(), token);
+    const db = await getDb();
+    const draft = await findReservationDraft(db, token);
     if (!draft) return NextResponse.json({ success: false, message: "This resume link has expired or is invalid." }, { status: 404 });
+    if (typeof draft.bookingAttemptId === "string" && /^[a-f0-9-]{36}$/i.test(draft.bookingAttemptId)) {
+      const paidOrder = await db.collection(COLLECTIONS.PAYPAL_ORDER_CONTEXTS).findOne(
+        { "booking.bookingAttemptId": draft.bookingAttemptId, status: { $in: ["confirmed", "captured_unconfirmed"] } },
+        { projection: { orderId: 1, status: 1 } },
+      );
+      if (paidOrder) return NextResponse.json({ success: false, code: "payment_received", orderId: typeof paidOrder.orderId === "string" ? paidOrder.orderId : null, confirmed: paidOrder.status === "confirmed" }, { status: 409, headers: { "Cache-Control": "private, no-store" } });
+    }
     return NextResponse.json({ success: true, orderDetails: draft }, {
       headers: { "Cache-Control": "private, no-store" },
     });

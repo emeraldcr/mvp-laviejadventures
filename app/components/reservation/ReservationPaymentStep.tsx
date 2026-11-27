@@ -7,12 +7,16 @@ import { useLanguage } from "@/lib/site/contexts/LanguageContext";
 import { translations } from "@/lib/site/translations";
 import { localizeHref } from "@/lib/site/i18n";
 import PaymentCheckoutContent from "@/app/components/reservation/PaymentCheckoutContent";
+import { BUSINESS_WHATSAPP_URL } from "@/lib/site/config";
+import Link from "next/link";
 
 const subscribeToClientSnapshot = () => () => {};
 const getClientReadySnapshot = () => true;
 const getServerReadySnapshot = () => false;
-const getStoredOrderDetailsSnapshot = (): string | null =>
-  typeof window === "undefined" ? null : sessionStorage.getItem("reservationOrderDetails");
+const getStoredOrderDetailsSnapshot = (): string | null => {
+  try { return typeof window === "undefined" ? null : sessionStorage.getItem("reservationOrderDetails"); }
+  catch { return null; }
+};
 const getServerOrderDetailsSnapshot = () => null;
 
 function parseStoredOrderDetails(stored: string | null): OrderDetails | null {
@@ -20,7 +24,7 @@ function parseStoredOrderDetails(stored: string | null): OrderDetails | null {
   try {
     return JSON.parse(stored) as OrderDetails;
   } catch {
-    if (typeof window !== "undefined") sessionStorage.removeItem("reservationOrderDetails");
+    try { if (typeof window !== "undefined") sessionStorage.removeItem("reservationOrderDetails"); } catch { /* Storage is optional. */ }
     return null;
   }
 }
@@ -33,6 +37,9 @@ export default function ReservationPaymentStep() {
   const paymentTr = translations[lang].payment;
   const [resumeDraft, setResumeDraft] = useState<OrderDetails | null>(null);
   const [isResumeLoading, setIsResumeLoading] = useState(Boolean(resumeToken));
+  const [resumeError, setResumeError] = useState<"expired" | "temporary" | "paid" | null>(null);
+  const [paidOrder, setPaidOrder] = useState<{ id: string | null; confirmed: boolean } | null>(null);
+  const [retryVersion, setRetryVersion] = useState(0);
   const isReservationLoaded = useSyncExternalStore(
     subscribeToClientSnapshot,
     getClientReadySnapshot,
@@ -52,23 +59,36 @@ export default function ReservationPaymentStep() {
     }
 
     let mounted = true;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 20_000);
     setIsResumeLoading(true);
-    fetch(`/api/reservation/draft?token=${encodeURIComponent(resumeToken)}`, { cache: "no-store" })
-      .then((response) => response.json().then((data) => ({ ok: response.ok, data })))
-      .then(({ ok, data }) => {
+    setResumeError(null);
+    setPaidOrder(null);
+    setResumeDraft(null);
+    fetch(`/api/reservation/draft?token=${encodeURIComponent(resumeToken)}`, { cache: "no-store", signal: controller.signal })
+      .then((response) => response.json().then((data) => ({ ok: response.ok, status: response.status, data })))
+      .then(({ ok, status, data }) => {
         if (!mounted) return;
-        setResumeDraft(ok && data?.success ? parseStoredOrderDetails(JSON.stringify(data.orderDetails)) : null);
+        if (status === 409 && data?.code === "payment_received") {
+          setPaidOrder({ id: typeof data.orderId === "string" && /^[A-Z0-9]{10,32}$/.test(data.orderId) ? data.orderId : null, confirmed: data.confirmed === true });
+          setResumeError("paid");
+        } else if (!ok || !data?.success || !data.orderDetails) {
+          setResumeError(status === 404 ? "expired" : "temporary");
+        } else {
+          setResumeDraft(parseStoredOrderDetails(JSON.stringify(data.orderDetails)));
+        }
         setIsResumeLoading(false);
       })
       .catch(() => {
         if (mounted) {
           setResumeDraft(null);
+          setResumeError("temporary");
           setIsResumeLoading(false);
         }
-      });
+      }).finally(() => clearTimeout(timeout));
 
-    return () => { mounted = false; };
-  }, [resumeToken]);
+    return () => { mounted = false; clearTimeout(timeout); controller.abort(); };
+  }, [resumeToken, retryVersion]);
 
   const orderDetails = useMemo(
     () => (resumeToken ? resumeDraft : parseStoredOrderDetails(storedOrderDetails)),
@@ -91,8 +111,14 @@ export default function ReservationPaymentStep() {
           <div className="flex min-h-[180px] items-center justify-center text-sm font-medium text-stone-500 dark:text-stone-300" role="status">{paymentTr.loadingPaymentInfo}</div>
         ) : !orderDetails ? (
           <div className="space-y-4 text-stone-600 dark:text-stone-300">
-            <p>{paymentTr.noActiveReservation}</p>
-            <button type="button" onClick={() => router.push(localizeHref("/reservar", lang))} className="rounded-full bg-[#00C4B0] px-5 py-2.5 font-black text-[#17211f] transition hover:bg-emerald-300">{paymentTr.goToBooking}</button>
+            <p role="alert">{resumeError === "paid" ? (lang === "es" ? "Este intento ya registra un pago. No vuelva a pagar; revise su voucher o consulte al equipo." : "This booking attempt already has a payment. Do not pay again; check your voucher or contact the team.") : resumeError === "expired" ? (lang === "es" ? "Este enlace venció o no es válido. Si ya pagó, consulte al equipo antes de intentar otra vez." : "This link has expired or is invalid. If you already paid, contact the team before trying again.") : resumeError === "temporary" ? (lang === "es" ? "No pudimos cargar la reserva. Intente de nuevo; si ya pagó, consulte al equipo antes de repetir el pago." : "We couldn't load the booking. Try again; if you already paid, contact the team before paying again.") : paymentTr.noActiveReservation}</p>
+            {paidOrder?.id && <p className="break-all text-sm">{lang === "es" ? "Orden PayPal" : "PayPal order"}: {paidOrder.id}</p>}
+            <div className="flex flex-wrap gap-3">
+              {resumeError === "temporary" && <button type="button" onClick={() => setRetryVersion((value) => value + 1)} className="rounded-full border px-5 py-2.5 font-bold">{lang === "es" ? "Reintentar" : "Try again"}</button>}
+              {paidOrder?.confirmed && paidOrder.id && <Link href={localizeHref(`/reservar/voucher?orderId=${encodeURIComponent(paidOrder.id)}`, lang)} className="rounded-full border px-5 py-2.5 font-bold">{lang === "es" ? "Ver voucher" : "View voucher"}</Link>}
+              <a href={`${BUSINESS_WHATSAPP_URL}?text=${encodeURIComponent(lang === "es" ? `Hola, necesito ayuda con mi reserva${paidOrder?.id ? ` y la orden PayPal ${paidOrder.id}` : ""}.` : `Hello, I need help with my booking${paidOrder?.id ? ` and PayPal order ${paidOrder.id}` : ""}.`)}`} target="_blank" rel="noopener noreferrer" className="rounded-full border px-5 py-2.5 font-bold">WhatsApp</a>
+              {resumeError !== "paid" && <button type="button" onClick={() => router.push(localizeHref("/reservar", lang))} className="rounded-full bg-[#00C4B0] px-5 py-2.5 font-black text-[#17211f] transition hover:bg-emerald-300">{paymentTr.goToBooking}</button>}
+            </div>
           </div>
         ) : <PaymentCheckoutContent orderDetails={orderDetails} onSuccess={() => undefined} />}
       </div>

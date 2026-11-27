@@ -249,6 +249,24 @@ test('expired draft capabilities cannot be resurrected or chosen by a client', a
   assert.equal(stored.update.$set.orderDetails.resumeToken, undefined);
 });
 
+test('a resume link does not reopen checkout after its payment was captured', async () => {
+  let paidOrder = { orderId: 'PAYPALORDER1234567', status: 'captured_unconfirmed' };
+  const api = load('app/api/reservation/draft/route.ts', {
+    'next/server': next,
+    '@/lib/data/mongodb': { getDb: async () => ({ collection: () => ({ findOne: async () => paidOrder }) }) },
+    '@/lib/data/collections': { COLLECTIONS: { PAYPAL_ORDER_CONTEXTS: 'orders' } },
+    '@/lib/booking/checkout/drafts': { findReservationDraft: async () => ({ bookingAttemptId: '12345678-1234-1234-1234-123456789012' }) },
+    '@/lib/booking/checkout/quote': {},
+  });
+  let response = await api.GET(new globalThis.Request('https://example.com/api/reservation/draft?token=token'));
+  assert.equal(response.status, 409);
+  assert.deepEqual(await response.json(), { success: false, code: 'payment_received', orderId: 'PAYPALORDER1234567', confirmed: false });
+  paidOrder = null;
+  response = await api.GET(new globalThis.Request('https://example.com/api/reservation/draft?token=token'));
+  assert.equal(response.status, 200);
+  assert.equal((await response.json()).success, true);
+});
+
 test('server booking queries never include email for unverified users or match null identities', () => {
   const api = load('app/(page_routes)/booking/lib/booking-data.ts', { '../constants': { RESERVATIONS_COLLECTION: 'reservations' } });
   assert.equal(JSON.stringify(api.bookingQueryForUser('attacker', 'victim@example.com')), '{"$or":[{"userId":"attacker"}]}');
