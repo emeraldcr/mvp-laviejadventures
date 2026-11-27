@@ -27,7 +27,7 @@ export type TourDetail = {
 const DEFAULT_TOUR: TourDetail = {
   slug: "tour-ciudad-esmeralda",
   titleEs: "Tour Ciudad Esmeralda",
-  titleEn: "Ciudad Esmeralda Tour",
+  titleEn: "Ciudad Esmeralda Canyon Tour",
   descriptionEs: "Adentrate en el Canon del Rio La Vieja y descubre Ciudad Esmeralda entre senderos, pozas naturales y paisajes de aventura.",
   descriptionEn: "Explore La Vieja River Canyon and discover Ciudad Esmeralda through trails, natural pools, and adventure landscapes.",
   details: "Recorrido guiado por senderos, rio y canon hacia Cascada El Zafiro. Ideal para viajeros que quieren una experiencia natural con buena dosis de aventura.",
@@ -98,7 +98,9 @@ export const getTour = cache(async (slug: string): Promise<TourDetail | null> =>
     return {
       slug: resolvedSlug,
       titleEs: String(tour.titleEs ?? tour.name ?? DEFAULT_TOUR.titleEs),
-      titleEn: String(tour.titleEn ?? tour.name ?? tour.titleEs ?? DEFAULT_TOUR.titleEn),
+      titleEn: resolvedSlug === DEFAULT_TOUR.slug
+        ? DEFAULT_TOUR.titleEn
+        : String(tour.titleEn ?? tour.name ?? tour.titleEs ?? DEFAULT_TOUR.titleEn),
       descriptionEs: usted(String(tour.descriptionEs ?? tour.details ?? "")),
       descriptionEn: String(tour.descriptionEn ?? tour.descriptionEs ?? tour.details ?? ""),
       details: usted(String(tour.details ?? tour.descriptionEs ?? tour.descriptionEn ?? "")),

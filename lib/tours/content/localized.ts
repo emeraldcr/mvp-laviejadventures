@@ -120,7 +120,7 @@ const ENGLISH_ROUTE_CONTENT: Record<string, EnglishEditorial> = {
     ],
   },
   "tour-ciudad-esmeralda": {
-    tagline: "Our signature route: trail, river and canyon to El Zafiro",
+    tagline: "Ciudad Esmeralda (Emerald City): our signature canyon route to El Zafiro",
     itinerary: [
       { time: "0:00", title: "Welcome and safety briefing", description: "Check-in, equipment and a straightforward explanation of the route and the guide's safety decisions." },
       { time: "0:20", title: "Into the forest", description: "Enter the trail toward the canyon." },
