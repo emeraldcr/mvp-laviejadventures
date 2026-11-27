@@ -104,7 +104,7 @@ export function usePayPalCheckout({
           return await actions.restart();
         }
         if (output?.status === "COMPLETED" && output?.captureID && !output?.bookingSaved) {
-          throw new Error(lang === "es" ? "El pago se recibió, pero aún no pudimos confirmar la reserva. Reintente la confirmación o contacte a Allan o Verónica con su número de orden." : "Payment was received, but the booking is not yet confirmed. Retry confirmation or contact Allan or Verónica with your order ID.");
+          throw new Error(lang === "es" ? "El pago se recibiÃ³, pero aÃºn no pudimos confirmar la reserva. Reintente la confirmaciÃ³n o contacte a Allan o VerÃ³nica con su nÃºmero de orden." : "Payment was received, but the booking is not yet confirmed. Retry confirmation or contact Allan or VerÃ³nica with your order ID.");
         }
         if (!res.ok || !output?.success || !output?.bookingSaved || !output?.captureID || output?.status !== "COMPLETED") {
           throw new Error(getCheckoutErrorMessage(output ?? {}, errorMessage, lang));
