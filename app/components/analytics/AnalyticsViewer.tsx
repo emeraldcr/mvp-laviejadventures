@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { Activity, AlertTriangle, ArrowDownLeft, ArrowUpRight, CalendarClock, CheckCircle2, CircleDollarSign, Eye, MousePointer2, RefreshCw, Route, Users, XCircle } from "lucide-react";
 
 type Count = { label: string; count: number };
@@ -56,7 +57,7 @@ export default function AnalyticsViewer() {
     <div className="mx-auto max-w-[1500px]">
       <header className="mb-6 flex flex-col gap-4 border-b border-white/10 pb-5 md:flex-row md:items-end md:justify-between">
         <div><p className="mb-2 text-xs font-bold uppercase tracking-[0.22em] text-teal-300">La Vieja Adventures · observatorio</p><h1 className="text-3xl font-black tracking-tight sm:text-4xl">Analítica</h1><p className="mt-2 max-w-2xl text-sm text-zinc-400">Una lectura rápida de lo que hacen las personas en el sitio y dónde se frena la reserva.</p></div>
-        <div className="flex items-center gap-2"><select aria-label="Período de análisis" value={days} onChange={(event) => setDays(Number(event.target.value))} className="rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-sm font-bold text-white outline-none"><option value={7} className="bg-zinc-900">Últimos 7 días</option><option value={30} className="bg-zinc-900">Últimos 30 días</option><option value={90} className="bg-zinc-900">Últimos 90 días</option></select><button type="button" onClick={() => void load()} className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-sm font-bold transition hover:bg-white/15"><RefreshCw size={15} className={loading ? "animate-spin" : ""} /> Actualizar</button></div>
+        <div className="flex flex-wrap items-center gap-2"><Link href="/reservations" className="rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-sm font-bold hover:bg-white/15">Reservas</Link><select aria-label="Período de análisis" value={days} onChange={(event) => setDays(Number(event.target.value))} className="rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-sm font-bold text-white outline-none"><option value={7} className="bg-zinc-900">Últimos 7 días</option><option value={30} className="bg-zinc-900">Últimos 30 días</option><option value={90} className="bg-zinc-900">Últimos 90 días</option></select><button type="button" onClick={() => void load()} className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-sm font-bold transition hover:bg-white/15"><RefreshCw size={15} className={loading ? "animate-spin" : ""} /> Actualizar</button></div>
       </header>
 
       {error && <div className="mb-6 rounded-2xl border border-rose-400/30 bg-rose-400/10 p-4 text-sm text-rose-200">{error}.</div>}

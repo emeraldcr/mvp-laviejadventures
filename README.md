@@ -148,3 +148,7 @@ If you'd like, I can also:
 - add a CONTRIBUTING.md with rules for PRs and releases
 
 Tell me which of these you'd like next and I will implement it.
+
+### Panel de reservas
+
+El panel administrativo está disponible en `/reservations`. Configure `RESERVATIONS_ADMIN_EMAILS` con los correos administrativos separados por comas; si no está definido, se usa `ANALYTICS_ADMIN_EMAILS`. Cada administrador debe iniciar sesión con un correo verificado.

@@ -162,6 +162,33 @@ test('analytics page rankings count page views and report truncated results', as
   assert.equal(data.reservation.topSteps[0].label, '2');
 });
 
+test('admin reservations require a verified allowlisted account before database access', async () => {
+  for (const user of [null, { email: 'owner@example.com', verifiedEmail: false }, { email: 'other@example.com', verifiedEmail: true }]) {
+    const api = load('app/api/admin/reservations/route.ts', {
+      'next/server': next, '@/lib/auth': { auth: async () => user ? { user } : null },
+      '@/lib/data/mongodb': { getDb: async () => { throw Error('database must not be accessed'); } },
+      '@/lib/data/collections': { COLLECTIONS: {} },
+    }, { process: { env: { RESERVATIONS_ADMIN_EMAILS: 'owner@example.com' } } });
+    assert.equal((await api.GET(new globalThis.Request('https://example.com/api/admin/reservations'))).status, 403);
+  }
+});
+
+test('admin reservations paginate and omit unneeded payment data', async () => {
+  let skip;
+  const api = load('app/api/admin/reservations/route.ts', {
+    'next/server': next, '@/lib/auth': { auth: async () => ({ user: { email: 'owner@example.com', verifiedEmail: true } }) },
+    '@/lib/data/mongodb': { getDb: async () => ({ collection: () => ({
+      countDocuments: async () => 51,
+      find: () => ({ sort: () => ({ skip: n => { skip = n; return { limit: () => ({ toArray: async () => [{ _id: 'id', name: 'Guest', paypalRaw: 'secret' }] }) }; } }) }),
+    }) }) }, '@/lib/data/collections': { COLLECTIONS: {} },
+  }, { process: { env: { RESERVATIONS_ADMIN_EMAILS: 'owner@example.com' } } });
+  const response = await api.GET(new globalThis.Request('https://example.com/api/admin/reservations?page=2'));
+  const data = await response.json();
+  assert.equal(response.status, 200); assert.equal(skip, 50); assert.equal(data.total, 51);
+  assert.equal(data.reservations[0].name, 'Guest'); assert.equal(data.reservations[0].paypalRaw, undefined);
+  assert.equal(response.headers.get('cache-control'), 'private, no-store');
+});
+
 test('unverified accounts can query reservations only by their own authenticated user ID', async () => {
   let query;
   const api = load('app/api/bookings/route.ts', {
