@@ -113,7 +113,7 @@ export default function TourDetailPage({ tour, locale }: TourDetailPageProps) {
                 {copy.book}
                 <ChevronRight className="h-4 w-4" aria-hidden />
               </Link>
-              <Link href={`${prefix}/reservar`} className="lva-button-secondary uppercase tracking-[0.16em]">
+              <Link href={bookingHref} className="lva-button-secondary uppercase tracking-[0.16em]">
                 {copy.back}
               </Link>
               <a href={whatsappHref} target="_blank" rel="noopener noreferrer" className="lva-button-whatsapp-outline uppercase tracking-[0.16em]">
