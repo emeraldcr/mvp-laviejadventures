@@ -23,7 +23,7 @@ const HOME_TOUR_ORDER = [
   "tour-nocturno-la-vieja",
 ];
 
-export default function HomeClient({ children, tours }: { children: ReactNode; tours: TourSummary[] }): JSX.Element {
+export default function HomeClient({ children, tours, toursLoading = false }: { children: ReactNode; tours: TourSummary[]; toursLoading?: boolean }): JSX.Element {
   const { lang } = useLanguage();
   const copy = principalContent[lang].errors;
   const ciudadEsmeralda = tours.find((tour) => ["tour-ciudad-esmeralda", "ciudad-esmeralda"].includes(tour.slug));
@@ -38,7 +38,7 @@ export default function HomeClient({ children, tours }: { children: ReactNode; t
         <SiteHeader />
         <HomeStructuredData tours={tours} locale={lang} />
         <HomeHero tour={ciudadEsmeralda} />
-        <HomeTourDiscovery tours={tours} />
+        <HomeTourDiscovery tours={tours} loading={toursLoading} />
         {ciudadEsmeralda && <FeaturedStory tours={[ciudadEsmeralda]} />}
         <HomeTrustSection tour={ciudadEsmeralda} />
         {otherTours.length > 0 && <ToursShowcase tours={otherTours} />}

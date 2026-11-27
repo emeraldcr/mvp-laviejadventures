@@ -36,6 +36,15 @@ export function tourMinPrice(tour?: TourPricingInput | null): PricePair | null {
   return isPositiveNumber(tour?.priceCRC) ? { usd: null, crc: tour.priceCRC } : null;
 }
 
+export function lowestPricePackage(tour?: TourPricingInput | null) {
+  const minimum = tourMinPrice(tour);
+  if (!minimum) return undefined;
+  return tour?.packages?.find((pkg) =>
+    (isPositiveNumber(pkg.priceCRC) ? pkg.priceCRC : null) === minimum.crc &&
+    (isPositiveNumber(pkg.price) ? pkg.price : null) === minimum.usd,
+  );
+}
+
 function formatUsd(value: number, isEs: boolean): string {
   return `US$${value.toLocaleString(isEs ? "es-CR" : "en-US", {
     maximumFractionDigits: value % 1 === 0 ? 0 : 2,

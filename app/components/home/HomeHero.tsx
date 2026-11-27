@@ -12,12 +12,16 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/lib/site/contexts/LanguageContext";
 import type { TourSummary } from "@/lib/tours/types";
+import { lowestPricePackage } from "@/lib/tours/pricing";
+import { getAddonPricePerPerson } from "@/lib/booking/addons/catalog";
+import { packageIncludesLunch } from "@/lib/booking/packages/pricing";
 import { getTourPriceDisplay, BOOKING_HREF, localizedHomeWhatsAppHref, primaryBookingLabel } from "./home-utils";
 
 export default function HomeHero({ tour }: { tour?: TourSummary }) {
   const { lang } = useLanguage();
   const isEs = lang === "es";
   const whatsappHref = localizedHomeWhatsAppHref(isEs);
+  const startingPackage = lowestPricePackage(tour);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [paused, setPaused] = useState(true);
   const [videoEnabled, setVideoEnabled] = useState(false);
@@ -133,6 +137,11 @@ export default function HomeHero({ tour }: { tour?: TourSummary }) {
           </p>
           {tour && <p className="mt-3 max-w-xl text-xs font-bold leading-relaxed text-white/75 sm:text-sm">
             {tourDuration(tour.duration ?? "", lang)} · {tourDifficulty(tour.difficulty ?? "", lang)} · {isEs ? "desde" : "from"} {getTourPriceDisplay(tour, isEs).compact}/{isEs ? "persona" : "person"} · {isEs ? "cupos sujetos a confirmación" : "spaces subject to confirmation"}
+          </p>}
+          {startingPackage && <p className="mt-2 max-w-xl text-xs leading-relaxed text-white/85">
+            {isEs ? startingPackage.nameEs || startingPackage.name : startingPackage.name}: {isEs ? startingPackage.descriptionEs : startingPackage.descriptionEn} {packageIncludesLunch(startingPackage)
+              ? (isEs ? "Almuerzo incluido." : "Lunch included.")
+              : (isEs ? `Almuerzo opcional desde US$${getAddonPricePerPerson("almuerzo")} por persona.` : `Optional lunch from US$${getAddonPricePerPerson("almuerzo")} per person.`)} {isEs ? "El total se calcula según el grupo y los extras antes de pagar." : "The total is calculated for your group and extras before payment."}
           </p>}
 
           <Link

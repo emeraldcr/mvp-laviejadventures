@@ -130,7 +130,6 @@ export default function InfoClient({ tours }: { tours: TourSummary[] }) {
     ? "Hola, quiero reservar un tour en La Vieja Adventures. ¿Me ayudan con la disponibilidad y los detalles?"
     : "Hello, I would like to book a tour with La Vieja Adventures. Could you help me with availability and details?")}`;
   const pricedTours = tours.filter((tour) => tourMinPrice(tour));
-  const lowestTour = [...pricedTours].sort((a, b) => (tourMinPrice(a)?.usd ?? Infinity) - (tourMinPrice(b)?.usd ?? Infinity))[0];
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-emerald-50 via-zinc-50 to-white dark:from-zinc-950 dark:via-zinc-950 dark:to-zinc-900">
@@ -227,9 +226,9 @@ export default function InfoClient({ tours }: { tours: TourSummary[] }) {
             </div>
             <div className="space-y-4 text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
               <div className="rounded-xl bg-emerald-50 p-4 dark:bg-emerald-900/10">
-                <p className="font-medium text-emerald-800 dark:text-emerald-300">{lowestTour ? `${lang === "es" ? "Desde" : "From"} ${formatTourPrice(lowestTour, lang === "es")} / persona` : (lang === "es" ? "Consulte las tarifas del tour elegido." : "Ask us about your selected tour.")}</p>
+                <p className="font-medium text-emerald-800 dark:text-emerald-300">{lang === "es" ? "Precios desde, por persona y según el paquete elegido. Consulte el total antes de pagar." : "Starting prices per person depend on the selected package. Review the total before paying."}</p>
               </div>
-              <ul className="space-y-3">{pricedTours.map((tour) => <li key={tour.slug} className="flex flex-wrap justify-between gap-2"><Link className="font-bold underline" href={localizeHref(`/tour/${tour.slug}`, lang)}>{lang === "es" ? tour.titleEs : tour.titleEn}</Link><span>{lang === "es" ? "Desde" : "From"} {formatTourPrice(tour, lang === "es")}</span></li>)}</ul>
+              <ul className="space-y-3">{pricedTours.map((tour) => <li key={tour.slug} className="flex flex-wrap justify-between gap-2"><Link className="font-bold underline" href={localizeHref(`/tour/${tour.slug}`, lang)}>{lang === "es" ? tour.titleEs : tour.titleEn}</Link><span>{lang === "es" ? "Desde" : "From"} {formatTourPrice(tour, lang === "es")} / {lang === "es" ? "persona" : "person"}</span></li>)}</ul>
               <p>{tr.ratesText2}</p>
               <p>{tr.ratesText3}</p>
             </div>

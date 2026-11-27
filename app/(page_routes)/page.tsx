@@ -15,7 +15,7 @@ async function HomeWithTours() {
 
 export default function HomePage() {
   return (
-    <Suspense fallback={<HomeClient tours={[]}><HomeServerFaq /></HomeClient>}>
+    <Suspense fallback={<HomeClient tours={[]} toursLoading><HomeServerFaq /></HomeClient>}>
       <HomeWithTours />
     </Suspense>
   );
