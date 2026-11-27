@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/data/mongodb";
 import { COLLECTIONS } from "@/lib/data/collections";
+import { isAuthorizedAdmin } from "@/lib/security/admin";
 
 export const dynamic = "force-dynamic";
 const PAGE_SIZE = 50;
 
 export async function GET(request: Request) {
   try {
+    if (!await isAuthorizedAdmin()) return NextResponse.json({ error: "Forbidden" }, { status: 403, headers: { "Cache-Control": "private, no-store" } });
     const requested = Number(new URL(request.url).searchParams.get("page") ?? "1");
     const page = Number.isSafeInteger(requested) && requested > 0 && requested <= 100000 ? requested : 1;
     const db = await getDb();

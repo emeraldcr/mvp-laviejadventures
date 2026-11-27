@@ -151,6 +151,7 @@ test('analytics page rankings count page views and report truncated results', as
   const api = load('app/api/analytics/events/route.ts', {
     'next/server': next,
     '@/lib/auth': { auth: async () => null },
+    '@/lib/security/admin': { isAuthorizedAdmin: async () => true },
     '@/lib/data/mongodb': { getDb: async () => ({ collection: () => ({ aggregate: () => ({ toArray: async () => [] }), find: () => ({ sort: () => ({ limit: () => ({ toArray: async () => events }) }) }) }) }) },
     'next/headers': {}, '@/lib/data/collections': { COLLECTIONS: {} },
   });
@@ -165,6 +166,7 @@ test('analytics page rankings count page views and report truncated results', as
 test('admin reservations paginate and omit unneeded payment data', async () => {
   let skip;
   const api = load('app/api/admin/reservations/route.ts', {
+    '@/lib/security/admin': { isAuthorizedAdmin: async () => true },
     'next/server': next, '@/lib/data/mongodb': { getDb: async () => ({ collection: () => ({
       countDocuments: async () => 51,
       find: () => ({ sort: () => ({ skip: n => { skip = n; return { limit: () => ({ toArray: async () => [{ _id: 'id', name: 'Guest', paypalRaw: 'secret' }] }) }; } }) }),
@@ -175,6 +177,18 @@ test('admin reservations paginate and omit unneeded payment data', async () => {
   assert.equal(response.status, 200); assert.equal(skip, 50); assert.equal(data.total, 51);
   assert.equal(data.reservations[0].name, 'Guest'); assert.equal(data.reservations[0].paypalRaw, undefined);
   assert.equal(response.headers.get('cache-control'), 'private, no-store');
+});
+
+test('internal reservation and analytics APIs reject unauthorized access', async () => {
+  for (const path of ['app/api/admin/reservations/route.ts', 'app/api/analytics/events/route.ts']) {
+    const api = load(path, {
+      'next/server': next, '@/lib/auth': { auth: async () => null },
+      '@/lib/security/admin': { isAuthorizedAdmin: async () => false },
+      '@/lib/data/mongodb': { getDb: async () => { throw new Error('must not query database'); } },
+      'next/headers': {}, '@/lib/data/collections': { COLLECTIONS: {} },
+    });
+    assert.equal((await api.GET(new globalThis.Request('https://example.com/api/internal'))).status, 403);
+  }
 });
 
 test('unverified accounts can query reservations only by their own authenticated user ID', async () => {

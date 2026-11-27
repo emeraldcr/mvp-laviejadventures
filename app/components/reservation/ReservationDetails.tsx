@@ -303,6 +303,7 @@ function ReservationDetailsFlow({
     resetCompletedSteps,
   } = useReservationStepAnalytics({
     currentStep,
+    choiceStep,
     isStep1Valid,
     isStep2Valid,
     termsAccepted: validation.isAgreeTermsValid,

@@ -1,12 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
-import type { BookingStepId } from "@/lib/booking/core/types";
+import type { BookingStepId, ReservationChoiceStep } from "@/lib/booking/core/types";
 import { BOOKING_COMPLETION_STORAGE_KEY, trackAnalyticsEvent } from "@/lib/analytics/client";
 import { RESERVATION_STEP_LABELS } from "../constants/reservationWizard";
 
 type Args = {
   currentStep: BookingStepId;
+  choiceStep: ReservationChoiceStep;
   isStep1Valid: boolean;
   isStep2Valid: boolean;
   termsAccepted: boolean;
@@ -24,6 +25,7 @@ type Args = {
 
 export function useReservationStepAnalytics({
   currentStep,
+  choiceStep,
   isStep1Valid,
   isStep2Valid,
   termsAccepted,
@@ -42,6 +44,7 @@ export function useReservationStepAnalytics({
   const stepEnteredAtRef = useRef(0);
   const completedStepsRef = useRef(new Set<BookingStepId>());
   const exitTrackedRef = useRef(false);
+  const stepViewMetadataRef = useRef<Record<string, unknown>>({});
 
   const getMissingKeysForStep = useCallback((step: BookingStepId) => {
     if (step === 1) return missingStep1Keys;
@@ -53,10 +56,9 @@ export function useReservationStepAnalytics({
     if (stepEnteredAtRef.current === 0) stepEnteredAtRef.current = Date.now();
   }, []);
 
-  useEffect(() => {
-    trackAnalyticsEvent("booking_step", {
-      metadata: {
+  stepViewMetadataRef.current = {
         step: currentStep,
+        choiceStep: currentStep === 1 ? choiceStep : null,
         stepLabel: RESERVATION_STEP_LABELS[currentStep],
         completion: {
           step1Valid: isStep1Valid,
@@ -73,24 +75,11 @@ export function useReservationStepAnalytics({
         currentMonth,
         currentYear,
         tickets,
-      },
-    });
-  }, [
-    currentStep,
-    isStep1Valid,
-    isStep2Valid,
-    termsAccepted,
-    isFormValid,
-    missingStep1Items,
-    missingStep2Items,
-    missingStep1Keys,
-    missingStep2Keys,
-    getBookingSnapshot,
-    selectedDate,
-    currentMonth,
-    currentYear,
-    tickets,
-  ]);
+  };
+
+  useEffect(() => {
+    void trackAnalyticsEvent("booking_step", { metadata: stepViewMetadataRef.current });
+  }, [currentStep, choiceStep]);
 
   useEffect(() => {
     const previousStep = currentStepRef.current;
@@ -121,7 +110,9 @@ export function useReservationStepAnalytics({
     const handlePageHide = () => {
       if (exitTrackedRef.current) return;
       exitTrackedRef.current = true;
-      if (sessionStorage.getItem(BOOKING_COMPLETION_STORAGE_KEY) === "1") return;
+      try {
+        if (sessionStorage.getItem(BOOKING_COMPLETION_STORAGE_KEY) === "1") return;
+      } catch { /* Storage is optional. */ }
 
       const activeStep = currentStepRef.current;
       const durationMs = Date.now() - stepEnteredAtRef.current;
@@ -129,6 +120,7 @@ export function useReservationStepAnalytics({
       trackAnalyticsEvent("booking_step_abandoned", {
         metadata: {
           step: activeStep,
+          choiceStep: activeStep === 1 ? choiceStep : null,
           stepLabel: RESERVATION_STEP_LABELS[activeStep],
           durationMs,
           durationSeconds: Math.round(durationMs / 1000),
@@ -142,9 +134,14 @@ export function useReservationStepAnalytics({
       });
     };
 
+    const handlePageShow = () => { exitTrackedRef.current = false; };
     window.addEventListener("pagehide", handlePageHide);
-    return () => window.removeEventListener("pagehide", handlePageHide);
-  }, [getBookingSnapshot, getMissingKeysForStep]);
+    window.addEventListener("pageshow", handlePageShow);
+    return () => {
+      window.removeEventListener("pagehide", handlePageHide);
+      window.removeEventListener("pageshow", handlePageShow);
+    };
+  }, [choiceStep, getBookingSnapshot, getMissingKeysForStep]);
 
   const trackBlockedStep = useCallback((targetStep: BookingStepId | "checkout", source: string) => {
     trackAnalyticsEvent("booking_step_blocked", {

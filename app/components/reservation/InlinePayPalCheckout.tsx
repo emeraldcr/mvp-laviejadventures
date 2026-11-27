@@ -5,6 +5,7 @@ import type { OrderDetails } from "@/lib/booking/types";
 import { translations } from "@/lib/site/translations";
 import { useCheckoutQuote } from "./hooks/useCheckoutQuote";
 import { usePayPalCheckout } from "./hooks/usePayPalCheckout";
+import { BUSINESS_WHATSAPP_URL } from "@/lib/site/config";
 
 export default function InlinePayPalCheckout({
   orderDetails,
@@ -57,6 +58,7 @@ export default function InlinePayPalCheckout({
         <button type="button" onClick={onBack} className="ml-2 mt-3 rounded-lg border border-current px-4 py-2 text-xs font-black">
           {lang === "es" ? "Volver a revisar la reserva" : "Return to reservation review"}
         </button>
+        <p className="mt-3"><a className="font-bold underline" href={BUSINESS_WHATSAPP_URL} target="_blank" rel="noopener noreferrer">{lang === "es" ? "Pedir ayuda por WhatsApp" : "Get help on WhatsApp"}</a></p>
       </section>
     );
   }
@@ -82,6 +84,7 @@ export default function InlinePayPalCheckout({
       {(paymentError || isCapturing) && <div role={paymentError ? "alert" : "status"} className="mt-3 text-sm">
         <p>{isCapturing ? (lang === "es" ? "Verificando el pago…" : "Checking payment…") : paymentError}</p>
         {pendingOrderId && !isCapturing && <button type="button" onClick={retryCapture} className="mt-2 rounded-lg border px-4 py-2 font-bold">{lang === "es" ? "Verificar este pago" : "Check this payment"}</button>}
+        {paymentError && <p className="mt-2"><a className="font-bold underline" href={BUSINESS_WHATSAPP_URL} target="_blank" rel="noopener noreferrer">{lang === "es" ? "Pedir ayuda por WhatsApp" : "Get help on WhatsApp"}</a></p>}
       </div>}
       <p className="mt-3 text-center text-xs text-zinc-500 dark:text-zinc-400">
         {lang === "es" ? "Pague con PayPal o tarjeta." : "Pay with PayPal or card."}

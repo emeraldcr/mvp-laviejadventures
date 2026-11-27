@@ -33,12 +33,15 @@ export const BOOKING_COMPLETION_STORAGE_KEY = "lva_booking_flow_completed";
 function getOrCreateSessionId(): string {
   if (typeof window === "undefined") return "";
 
-  const existing = window.localStorage.getItem(SESSION_STORAGE_KEY);
-  if (existing) return existing;
-
-  const next = crypto.randomUUID();
-  window.localStorage.setItem(SESSION_STORAGE_KEY, next);
-  return next;
+  try {
+    const existing = window.sessionStorage.getItem(SESSION_STORAGE_KEY);
+    if (existing) return existing;
+    const next = crypto.randomUUID();
+    window.sessionStorage.setItem(SESSION_STORAGE_KEY, next);
+    return next;
+  } catch {
+    return "";
+  }
 }
 
 function getDefaultMetadata() {
@@ -76,8 +79,7 @@ export async function trackAnalyticsEvent(event: AnalyticsEventName, payload: An
 
   if (navigator.sendBeacon) {
     const blob = new Blob([body], { type: "application/json" });
-    navigator.sendBeacon("/api/analytics/events", blob);
-    return;
+    if (navigator.sendBeacon("/api/analytics/events", blob)) return;
   }
 
   try {

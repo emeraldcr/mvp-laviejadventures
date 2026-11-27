@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/data/mongodb";
 import { headers } from "next/headers";
 import { COLLECTIONS } from "@/lib/data/collections";
+import { isAuthorizedAdmin } from "@/lib/security/admin";
 
 type AnalyticsEventName =
   | "page_view"
@@ -228,6 +229,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   try {
+    if (!await isAuthorizedAdmin()) return NextResponse.json({ error: "Forbidden" }, { status: 403, headers: { "Cache-Control": "private, no-store" } });
     const url = new URL(request.url);
     const requestedDays = Number(url.searchParams.get("days") ?? "7");
     const days = [7, 30, 90].includes(requestedDays) ? requestedDays : 7;

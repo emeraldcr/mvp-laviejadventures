@@ -48,7 +48,7 @@ export const TravelerInputField = ({
 }: TravelerInputFieldProps) => {
   const [blurred, setBlurred] = useState(false);
   const isTouched = value.trim() !== "";
-  const showError = (blurred || isTouched) && !isValid;
+  const showError = blurred && !isValid;
   const showOk = isTouched && isValid;
   const errorId = `${id}-error`;
 
