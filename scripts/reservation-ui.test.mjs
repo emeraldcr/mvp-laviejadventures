@@ -83,3 +83,23 @@ test('a single unavailable package cannot be selected', () => {
   assert.match(html, /disabled/);
   assert.match(html, /No disponible esta fecha/);
 });
+
+test('checkout requires explicit acceptance before a changed total can be paid', () => {
+  let total = 113; let enabled;
+  const Checkout = load('app/components/reservation/InlinePayPalCheckout.tsx', {
+    '@/lib/site/translations': { translations: { es: { payment: { error: 'Error', loadingPaymentInfo: 'Cargando' } } } },
+    './hooks/useCheckoutQuote': { useCheckoutQuote: () => ({ total, synced: true, syncing: false, error: null, subtotal: 100, ivaRatePercent: 13, packagePrice: 50, addonsPrice: 0, addonsPricePerPerson: 0, addonsBreakdown: [], transportQuote: null }) },
+    './hooks/usePayPalCheckout': { usePayPalCheckout: options => { enabled = options.enabled; return { paypalRef() {}, isPaypalLoading: false }; } },
+    '@/lib/site/config': { BUSINESS_WHATSAPP_URL: 'https://wa.me/50662332535' },
+  });
+  const props = { lang: 'es', onBack() {}, orderDetails: { total: 100, tickets: 2, tourName: 'Tour', date: '2026-12-20' } };
+  const changed = renderToStaticMarkup(React.createElement(Checkout, props));
+  assert.equal(enabled, false);
+  assert.match(changed, /Acepto el nuevo total/);
+  assert.match(changed, /\$100\.00/);
+  assert.match(changed, /\$113\.00/);
+  total = 100;
+  const unchanged = renderToStaticMarkup(React.createElement(Checkout, props));
+  assert.equal(enabled, true);
+  assert.doesNotMatch(unchanged, /Acepto el nuevo total/);
+});

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { OrderDetails } from "@/lib/booking/types";
 import { translations } from "@/lib/site/translations";
 import { useCheckoutQuote } from "./hooks/useCheckoutQuote";
@@ -18,6 +18,9 @@ export default function InlinePayPalCheckout({
 }) {
   const tr = translations[lang].payment;
   const quote = useCheckoutQuote(orderDetails, lang);
+  const [acceptedTotal, setAcceptedTotal] = useState<number | null>(null);
+  const totalChanged = quote.synced && Math.round(quote.total * 100) !== Math.round(orderDetails.total * 100);
+  const needsTotalAcceptance = totalChanged && acceptedTotal !== quote.total;
   const handleSuccess = useCallback(() => {}, []);
   const quotedOrderDetails = useMemo(
     () => ({
@@ -38,12 +41,16 @@ export default function InlinePayPalCheckout({
     ],
   );
   const { paypalRef, paypalLoadError, isPaypalLoading, retryPayPal, paymentError, isCapturing, pendingOrderId, retryCapture } = usePayPalCheckout({
-    enabled: quote.synced && !quote.syncing && !quote.error,
+    enabled: quote.synced && !quote.syncing && !quote.error && !needsTotalAcceptance,
     orderDetails: quotedOrderDetails,
     lang,
     errorMessage: tr.error,
     onSuccess: handleSuccess,
   });
+  const supportMessage = pendingOrderId
+    ? (lang === "es" ? `Hola, necesito ayuda para verificar mi pago. Orden PayPal: ${pendingOrderId}.` : `Hello, I need help checking my payment. PayPal order: ${pendingOrderId}.`)
+    : (lang === "es" ? `Hola, necesito ayuda con mi reserva de ${orderDetails.tourName}, fecha ${orderDetails.dateIso ?? orderDetails.date}, para ${orderDetails.tickets} personas.` : `Hello, I need help with my booking for ${orderDetails.tourName}, ${orderDetails.dateIso ?? orderDetails.date}, for ${orderDetails.tickets} guests.`);
+  const supportHref = `${BUSINESS_WHATSAPP_URL}?text=${encodeURIComponent(supportMessage)}`;
 
   if (quote.error || paypalLoadError) {
     return (
@@ -58,7 +65,7 @@ export default function InlinePayPalCheckout({
         <button type="button" onClick={onBack} className="ml-2 mt-3 rounded-lg border border-current px-4 py-2 text-xs font-black">
           {lang === "es" ? "Volver a revisar la reserva" : "Return to reservation review"}
         </button>
-        <p className="mt-3"><a className="font-bold underline" href={BUSINESS_WHATSAPP_URL} target="_blank" rel="noopener noreferrer">{lang === "es" ? "Pedir ayuda por WhatsApp" : "Get help on WhatsApp"}</a></p>
+        <p className="mt-3"><a className="font-bold underline" href={supportHref} target="_blank" rel="noopener noreferrer">{lang === "es" ? "Pedir ayuda por WhatsApp" : "Get help on WhatsApp"}</a></p>
       </section>
     );
   }
@@ -72,6 +79,11 @@ export default function InlinePayPalCheckout({
         <p className="text-xl font-black text-emerald-700 dark:text-emerald-300">${quote.total.toFixed(2)} USD</p>
       </div>
       {quote.synced && quote.subtotal !== null && <div className="mb-3 space-y-1 text-sm"><p>{lang === "es" ? "Paquete por persona, antes de IVA" : "Package per person, before tax"}: ${quote.packagePrice.toFixed(2)}</p><p>Subtotal: ${quote.subtotal.toFixed(2)} · {lang === "es" ? "IVA" : "Tax"} ({quote.ivaRatePercent}%): ${(quote.total - quote.subtotal).toFixed(2)}</p><p>{lang === "es" ? "Total del grupo" : "Group total"}: ${quote.total.toFixed(2)}</p></div>}
+      {totalChanged && <div className="mb-3 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-100" role="status">
+        <p className="font-bold">{lang === "es" ? "El total cambió al validar su reserva." : "The total changed when we checked your booking."}</p>
+        <p className="mt-1">{lang === "es" ? "Total anterior" : "Previous total"}: ${orderDetails.total.toFixed(2)} USD · {lang === "es" ? "Nuevo total" : "New total"}: ${quote.total.toFixed(2)} USD</p>
+        <label className="mt-3 flex cursor-pointer items-start gap-2 font-semibold"><input type="checkbox" checked={!needsTotalAcceptance} onChange={(event) => setAcceptedTotal(event.target.checked ? quote.total : null)} className="mt-0.5 h-5 w-5 shrink-0" />{lang === "es" ? "Acepto el nuevo total para continuar al pago." : "I accept the new total to continue to payment."}</label>
+      </div>}
       <p className="mb-3 text-xs">{lang === "es" ? "El pago no confirma la disponibilidad. El equipo confirmará su reserva después de validar la operación." : "Payment does not confirm availability. The team will confirm your booking after checking operations."}</p>
       <div className="min-h-20 w-full rounded-xl bg-white p-2 dark:bg-zinc-950/60">
         {(quote.syncing || !quote.synced || isPaypalLoading) && (
@@ -79,12 +91,14 @@ export default function InlinePayPalCheckout({
             {tr.loadingPaymentInfo}
           </p>
         )}
+        {needsTotalAcceptance && <p className="flex min-h-16 items-center justify-center text-center text-sm text-zinc-600 dark:text-zinc-300">{lang === "es" ? "Confirme el nuevo total para mostrar las opciones de pago." : "Confirm the new total to show payment options."}</p>}
         <div ref={paypalRef} hidden={Boolean(pendingOrderId)} />
       </div>
       {(paymentError || isCapturing) && <div role={paymentError ? "alert" : "status"} className="mt-3 text-sm">
         <p>{isCapturing ? (lang === "es" ? "Verificando el pago…" : "Checking payment…") : paymentError}</p>
+        {pendingOrderId && !isCapturing && <p className="mt-2 break-all text-xs">{lang === "es" ? "Orden PayPal" : "PayPal order"}: {pendingOrderId}</p>}
         {pendingOrderId && !isCapturing && <button type="button" onClick={retryCapture} className="mt-2 rounded-lg border px-4 py-2 font-bold">{lang === "es" ? "Verificar este pago" : "Check this payment"}</button>}
-        {paymentError && <p className="mt-2"><a className="font-bold underline" href={BUSINESS_WHATSAPP_URL} target="_blank" rel="noopener noreferrer">{lang === "es" ? "Pedir ayuda por WhatsApp" : "Get help on WhatsApp"}</a></p>}
+        {paymentError && <p className="mt-2"><a className="font-bold underline" href={supportHref} target="_blank" rel="noopener noreferrer">{lang === "es" ? "Pedir ayuda por WhatsApp" : "Get help on WhatsApp"}</a></p>}
       </div>}
       <p className="mt-3 text-center text-xs text-zinc-500 dark:text-zinc-400">
         {lang === "es" ? "Pague con PayPal o tarjeta." : "Pay with PayPal or card."}
