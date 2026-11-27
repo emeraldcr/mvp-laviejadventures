@@ -127,7 +127,7 @@ export default function LocalPaymentOptions({
               : "Saving request..."
             : isEs
               ? "Guardar solicitud"
-              : "Save request"}
+              : "Request this date"}
         </button> : <a href={whatsappHref} target="_blank" rel="noopener noreferrer" onClick={() => trackWhatsAppClick("whatsapp_request")} className="lva-button-whatsapp w-full">
           <MessageCircle className="h-5 w-5" aria-hidden />{isEs ? "Abrir WhatsApp y enviar mensaje" : "Open WhatsApp and send message"}
         </a>}

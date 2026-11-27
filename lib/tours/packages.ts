@@ -9,7 +9,7 @@ export const CIUDAD_ESMERALDA_PACKAGES: TourPackageOption[] = [
     nameEs: "Paquete Esencial",
     price: 46,
     priceCRC: 24150,
-    descriptionEn: "Complete canyon hike with safety equipment and professional guide",
+    descriptionEn: "Guided hike",
     descriptionEs: "Caminata completa por el canon con equipo de seguridad y guia profesional",
     includes: [
       "Entrance fee",
@@ -27,7 +27,7 @@ export const CIUDAD_ESMERALDA_PACKAGES: TourPackageOption[] = [
     nameEs: "Paquete con Almuerzo",
     price: 69,
     priceCRC: 36230,
-    descriptionEn: "Essential package plus traditional Costa Rican lunch",
+    descriptionEn: "Guided hike + Costa Rican lunch",
     descriptionEs: "Paquete Esencial + almuerzo tipico costarricense",
     includes: [
       "Everything in Essential Package",
@@ -44,7 +44,7 @@ export const CIUDAD_ESMERALDA_PACKAGES: TourPackageOption[] = [
     nameEs: "Paquete Privado",
     price: 92,
     priceCRC: 48300,
-    descriptionEn: "Private canyon adventure with lunch and personalized attention",
+    descriptionEn: "Private guided hike + lunch + photos",
     descriptionEs: "Aventura privada por el canon con almuerzo y atencion personalizada",
     includes: [
       "Everything in Lunch Package",

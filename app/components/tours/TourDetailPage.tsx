@@ -9,6 +9,7 @@ import { getTourGallery, getTourImage } from "@/lib/tours/display";
 import { getLocalizedTourContent } from "@/lib/tours/content/localized";
 import type { TourDetail } from "@/lib/tours/details";
 import { BUSINESS_WHATSAPP_URL, SITE_URL } from "@/lib/site/config";
+import { LA_VIEJA_GOOGLE_MAPS_URL, LA_VIEJA_LOCATION_LABEL } from "@/lib/site/location";
 import JsonLd from "@/app/components/seo/JsonLd";
 import SharedPageShell from "@/app/components/layouts/SharedPageShell";
 
@@ -17,6 +18,7 @@ type TourDetailPageProps = { tour: TourDetail; locale: Locale };
 
 export default function TourDetailPage({ tour, locale }: TourDetailPageProps) {
   const isEnglish = locale === "en";
+  const isCiudad = tour.slug === "tour-ciudad-esmeralda";
   const copy = isEnglish ? { home: "Home", tours: "Tours", breadcrumb: "Breadcrumb", book: "Book this tour", back: "Back to booking", whatsapp: "Ask on WhatsApp", duration: "Duration", difficulty: "Difficulty", location: "Location", from: "From", availability: "Availability", availabilityValue: "To be confirmed", overview: "About this experience", highlights: "Tour highlights", itinerary: "How the route works", included: "Included", notIncluded: "Not included", bring: "What to bring", know: "Good to know before you go", faqs: "Frequently asked questions", packages: "Available packages", select: "Select", ask: "Ask us", costaRica: "Costa Rica", image: "image", readyTitle: "Ready to plan your adventure?", readyBody: "Choose a date and our team will confirm availability before your reservation is finalized." } : { home: "Inicio", tours: "Tours", breadcrumb: "Migas de pan", book: "Reservar este tour", back: "Volver a reserva", whatsapp: "Consultar por WhatsApp", duration: "Duración", difficulty: "Nivel", location: "Ubicación", from: "Desde", availability: "Disponibilidad", availabilityValue: "Por confirmar", overview: "Sobre esta experiencia", highlights: "Lo mejor del tour", itinerary: "Cómo es el recorrido", included: "Incluye", notIncluded: "No incluye", bring: "Qué llevar", know: "Bueno saber antes de ir", faqs: "Preguntas frecuentes", packages: "Paquetes disponibles", select: "Seleccionar", ask: "Consultar", costaRica: "Costa Rica", image: "imagen", readyTitle: "¿Listo para planear su aventura?", readyBody: "Elija una fecha y nuestro equipo le confirma la disponibilidad antes de finalizar la reserva." };
   const prefix = isEnglish ? "/en" : "";
   const content = getLocalizedTourContent(tour, locale);
@@ -110,25 +112,55 @@ export default function TourDetailPage({ tour, locale }: TourDetailPageProps) {
 
             <div className="mt-8 flex flex-wrap gap-3">
               <Link href={bookingHref} className="lva-button-primary uppercase tracking-[0.14em]">
-                {copy.book}
+                {isCiudad ? (isEnglish ? "Check dates & prices" : "Consultar fechas y precios") : copy.book}
                 <ChevronRight className="h-4 w-4" aria-hidden />
               </Link>
-              <Link href={bookingHref} className="lva-button-secondary uppercase tracking-[0.16em]">
+              {!isCiudad && <Link href={bookingHref} className="lva-button-secondary uppercase tracking-[0.16em]">
                 {copy.back}
-              </Link>
+              </Link>}
               <a href={whatsappHref} target="_blank" rel="noopener noreferrer" className="lva-button-whatsapp-outline uppercase tracking-[0.16em]">
                 {copy.whatsapp}
               </a>
             </div>
+            {isCiudad && <p className="lva-body mt-4 text-sm">{isEnglish ? "Our team confirms availability and pricing. Choose WhatsApp to request a review, or PayPal to pay the full total at checkout; payment alone does not confirm your booking." : "El equipo confirma disponibilidad y tarifas. Elija WhatsApp para solicitar una revisión o PayPal para pagar el total en el último paso; el pago por sí solo no confirma la reserva."}</p>}
           </div>
         </div>
       </section>
 
+      {tour.packages.length > 0 && (
+        <section className="mx-auto max-w-7xl px-4 py-10 md:px-8">
+          <div className="mb-6 flex items-center gap-4">
+            <h2 className="lva-heading text-[28px] font-black leading-[1.08] md:text-[36px]">{copy.packages}</h2>
+            <div className="lva-divider h-px flex-1" />
+          </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            {tour.packages.map((pkg) => (
+              <div key={pkg.id ?? pkg.name} className="lva-card rounded-3xl p-5">
+                <h3 className="lva-heading text-lg font-black">{(isEnglish ? pkg.name : pkg.nameEs) || pkg.name}</h3>
+                <p className="lva-muted mt-2 min-h-12 text-sm leading-relaxed">{(isEnglish ? pkg.descriptionEn : pkg.descriptionEs) || pkg.descriptionEn}</p>
+                <p className="lva-accent mt-4 text-2xl font-black">{getTourPriceDisplay({ packages: [pkg] }, !isEnglish).compact}</p>
+                {isCiudad && <p className="lva-muted mt-2 text-xs">{isEnglish ? "Per person; price subject to confirmation." : "Por persona; tarifa sujeta a confirmación."}</p>}
+                <Link href={bookingHrefForPackage(pkg.id)} className="lva-button-primary mt-5 w-full uppercase tracking-[0.12em]">
+                  {copy.select}
+                  <CalendarDays className="h-4 w-4" aria-hidden />
+                </Link>
+              </div>
+            ))}
+          </div>
+          {isCiudad && <div className="lva-body mt-5 flex flex-wrap gap-x-6 gap-y-3 text-sm font-bold">
+            <a className="underline" href={LA_VIEJA_GOOGLE_MAPS_URL} target="_blank" rel="noopener noreferrer">{isEnglish ? "Open location in Maps" : "Abrir ubicación en Maps"}</a>
+            <a className="underline" href={`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent("La Fortuna, Costa Rica")}&destination=${encodeURIComponent("La Vieja Adventures Canyon Tour, Sucre de Ciudad Quesada, Costa Rica")}&travelmode=driving`} target="_blank" rel="noopener noreferrer">{isEnglish ? "Coming from La Fortuna? See driving directions" : "¿Viene de La Fortuna? Ver indicaciones"}</a>
+            <a className="underline" href={`${BUSINESS_WHATSAPP_URL}?text=${encodeURIComponent(isEnglish ? "Hello, I would like a pickup quote for Ciudad Esmeralda. Hotel: ; date: ; number of guests: ." : "Hola, quisiera cotizar transporte para Ciudad Esmeralda. Hotel: ; fecha: ; número de personas: .")}`} target="_blank" rel="noopener noreferrer">{isEnglish ? "Ask about pickup" : "Consultar transporte"}</a>
+            <span className="w-full font-normal">{isEnglish ? "Please confirm the exact meeting point with our team before departure." : "Confirme el punto exacto de encuentro con el equipo antes de salir."}</span>
+          </div>}
+        </section>
+      )}
+
       <section aria-label={isEnglish ? "Tour summary" : "Resumen del tour"} className="lva-surface-muted mx-auto grid max-w-7xl gap-4 px-4 py-8 md:grid-cols-5 md:px-8 md:py-10">
         <InfoCard emphasized icon={<Users className="h-4 w-4" />} label={copy.from} value={getTourPriceDisplay(tour, !isEnglish).compact} />
-        <InfoCard icon={<Clock className="h-4 w-4" />} label={copy.duration} value={tour.duration || copy.ask} />
+        <InfoCard icon={<Clock className="h-4 w-4" />} label={copy.duration} value={isCiudad && isEnglish ? "3–4 hours" : tour.duration || copy.ask} />
         <InfoCard icon={<ShieldCheck className="h-4 w-4" />} label={copy.difficulty} value={physicalLevel} />
-        <InfoCard icon={<MapPin className="h-4 w-4" />} label={copy.location} value={tour.location || copy.costaRica} />
+        <InfoCard icon={<MapPin className="h-4 w-4" />} label={copy.location} value={isCiudad ? LA_VIEJA_LOCATION_LABEL : tour.location || copy.costaRica} />
         <InfoCard icon={<CalendarDays className="h-4 w-4" />} label={copy.availability} value={copy.availabilityValue} />
       </section>
 
@@ -303,7 +335,7 @@ export default function TourDetailPage({ tour, locale }: TourDetailPageProps) {
             <p className="lva-body mt-2 max-w-2xl text-sm leading-relaxed">{copy.readyBody}</p>
           </div>
           <Link href={bookingHref} className="lva-button-primary shrink-0 uppercase tracking-[0.14em]">
-            {copy.book}
+            {isCiudad ? (isEnglish ? "Check dates & prices" : "Consultar fechas y precios") : copy.book}
             <ChevronRight className="h-4 w-4" aria-hidden />
           </Link>
         </div>
@@ -332,27 +364,7 @@ export default function TourDetailPage({ tour, locale }: TourDetailPageProps) {
         </section>
       )}
 
-      {tour.packages.length > 0 && (
-        <section className="mx-auto max-w-7xl px-4 pb-20 md:px-8">
-          <div className="mb-6 flex items-center gap-4">
-            <h2 className="lva-heading text-[28px] font-black leading-[1.08] md:text-[36px]">{copy.packages}</h2>
-            <div className="lva-divider h-px flex-1" />
-          </div>
-          <div className="grid gap-4 md:grid-cols-3">
-            {tour.packages.map((pkg) => (
-              <div key={pkg.id ?? pkg.name} className="lva-card rounded-3xl p-5">
-                <h3 className="lva-heading text-lg font-black">{(isEnglish ? pkg.name : pkg.nameEs) || pkg.name}</h3>
-                <p className="lva-muted mt-2 min-h-12 text-sm leading-relaxed">{(isEnglish ? pkg.descriptionEn : pkg.descriptionEs) || pkg.descriptionEn}</p>
-                <p className="lva-accent mt-4 text-2xl font-black">{getTourPriceDisplay({ packages: [pkg] }, !isEnglish).compact}</p>
-                <Link href={bookingHrefForPackage(pkg.id)} className="lva-button-primary mt-5 w-full uppercase tracking-[0.12em]">
-                  {copy.select}
-                  <CalendarDays className="h-4 w-4" aria-hidden />
-                </Link>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
+
 
     </SharedPageShell>
   );
