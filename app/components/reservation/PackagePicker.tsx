@@ -56,7 +56,7 @@ export default function PackagePicker({
           {getPackageDisplayName(pkg, isEs)}
         </span>
         <span className="shrink-0 text-xl font-black text-[#087d72] dark:text-[#66ddcf]">
-          ${pkg.price} / {isEs ? "persona" : "person"}
+          ${pkg.price} / {isEs ? "persona, antes de IVA" : "person, before tax"}
         </span>
       </button>
     );
@@ -108,7 +108,7 @@ export default function PackagePicker({
             </p>
             <p className="mt-2 text-2xl font-black text-[#087d72] dark:text-[#66ddcf]">
               ${pkg.price}
-              <span className="text-xs font-semibold text-zinc-500"> / {isEs ? "persona" : "pax"}</span>
+              <span className="text-xs font-semibold text-zinc-500"> / {isEs ? "persona, antes de IVA" : "person, before tax"}</span>
             </p>
             {(pkg.descriptionEs || pkg.descriptionEn) && (
               <p className="mt-3 line-clamp-3 flex-1 text-sm leading-6 text-zinc-500 dark:text-zinc-400">

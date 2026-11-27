@@ -59,7 +59,6 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
     tourTime,
     tourPackage,
     tourName,
-    packagePrice,
   } = orderDetails;
 
   const checkoutQuote = useCheckoutQuote(orderDetails, lang);
@@ -114,8 +113,8 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
       ? "Primero verá el pago inmediato con tarjeta o PayPal. Si prefiere pagar localmente, puede solicitar una revisión por WhatsApp o SINPE."
       : "You’ll see instant card or PayPal payment first. If you prefer local payment, request a review through WhatsApp or SINPE.",
     checkoutHint: lang === "es"
-      ? "Pagar no sustituye la confirmación operativa de disponibilidad. PayPal procesa el pago al instante; WhatsApp y SINPE requieren revisión del equipo antes de quedar confirmados."
-      : "Payment does not replace operational availability confirmation. PayPal processes payment instantly; WhatsApp and SINPE require team review before they are confirmed.",
+      ? "PayPal cobra el total hoy. La reserva queda sujeta a disponibilidad hasta que el equipo confirme la operación. WhatsApp y SINPE requieren revisión del equipo."
+      : "PayPal charges the full total today. The booking remains subject to availability until the team confirms operations. WhatsApp and SINPE require team review.",
     instantTitle: lang === "es" ? "Pago inmediato" : "Instant payment",
     instantDescription: lang === "es" ? "La opción recomendada para pagar ahora con tarjeta o PayPal." : "The recommended option to pay now by card or PayPal.",
     manualTitle: lang === "es" ? "Pago local / revisión del equipo" : "Local payment / team review",
@@ -182,7 +181,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
             <SummaryRow
               icon={<CreditCard className="h-4 w-4" aria-hidden />}
               label={paymentCopy.packagePriceLabel}
-              value={`${packageName} ($${packagePrice} USD/${tr.pricePerPersonUnit})`}
+              value={`${packageName} ($${checkoutQuote.packagePrice.toFixed(2)} USD/${tr.pricePerPersonUnit}, ${lang === "es" ? "antes de IVA" : "before tax"})`}
             />
             {addonSummaryLines.length > 0 && (
               <SummaryRow
@@ -211,7 +210,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
             <p className="lva-muted max-w-xl text-sm leading-relaxed">{paymentCopy.paymentSubtitle}</p>
           </div>
           <div className="lva-card-accent rounded-2xl px-4 py-3 text-right">
-            <p className="lva-accent text-[11px] font-bold uppercase tracking-[0.16em]">{tr.total}</p>
+            <p className="lva-accent text-[11px] font-bold uppercase tracking-[0.16em]">{lang === "es" ? "A pagar hoy (total completo)" : "Due today (full total)"}</p>
             <p className="lva-heading text-3xl font-black leading-none">
               {checkoutQuote.syncing ? "…" : `$${total.toFixed(2)}`}
             </p>
@@ -231,6 +230,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
           </div>
         </div>
 
+        {checkoutQuote.synced && checkoutQuote.subtotal !== null && <div className="lva-card-muted mb-4 rounded-xl px-4 py-3 text-sm"><p>Subtotal: ${checkoutQuote.subtotal.toFixed(2)}</p><p>{lang === "es" ? "IVA" : "Tax"} ({checkoutQuote.ivaRatePercent}%): ${(total - checkoutQuote.subtotal).toFixed(2)}</p><p className="font-bold">{lang === "es" ? "Total del grupo" : "Group total"}: ${total.toFixed(2)}</p></div>}
         <div className="mb-4 space-y-3" role="tablist" aria-label={paymentCopy.paymentTitle}>
           <div>
             <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">

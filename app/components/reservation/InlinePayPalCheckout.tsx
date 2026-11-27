@@ -65,10 +65,12 @@ export default function InlinePayPalCheckout({
     <section className="mt-5 rounded-2xl border border-emerald-300/70 bg-emerald-50/70 p-4 shadow-sm dark:border-emerald-700/50 dark:bg-emerald-950/25 sm:p-5" aria-busy={quote.syncing || !quote.synced || isPaypalLoading} aria-live="polite">
       <div className="mb-3 flex items-center justify-between gap-2">
         <h3 className="text-sm font-black text-zinc-900 dark:text-zinc-50">
-          {lang === "es" ? "Pague su reserva" : "Pay for your booking"}
+          {lang === "es" ? "A pagar hoy (total completo)" : "Due today (full total)"}
         </h3>
         <p className="text-xl font-black text-emerald-700 dark:text-emerald-300">${quote.total.toFixed(2)} USD</p>
       </div>
+      {quote.synced && quote.subtotal !== null && <div className="mb-3 space-y-1 text-sm"><p>{lang === "es" ? "Paquete por persona, antes de IVA" : "Package per person, before tax"}: ${quote.packagePrice.toFixed(2)}</p><p>Subtotal: ${quote.subtotal.toFixed(2)} · {lang === "es" ? "IVA" : "Tax"} ({quote.ivaRatePercent}%): ${(quote.total - quote.subtotal).toFixed(2)}</p><p>{lang === "es" ? "Total del grupo" : "Group total"}: ${quote.total.toFixed(2)}</p></div>}
+      <p className="mb-3 text-xs">{lang === "es" ? "El pago no confirma la disponibilidad. El equipo confirmará su reserva después de validar la operación." : "Payment does not confirm availability. The team will confirm your booking after checking operations."}</p>
       <div className="min-h-20 w-full rounded-xl bg-white p-2 dark:bg-zinc-950/60">
         {(quote.syncing || !quote.synced || isPaypalLoading) && (
           <p className="flex min-h-16 items-center justify-center text-sm text-zinc-500 dark:text-zinc-400" role="status">

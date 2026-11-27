@@ -21,6 +21,7 @@ export function useReservationNavigation({
   hasConfirmedPackage,
   hasConfirmedTime,
   hasConfirmedTickets,
+  hasFlexibleSchedule,
   tourTime,
   validation,
   trackBlockedStep,
@@ -37,6 +38,7 @@ export function useReservationNavigation({
   hasConfirmedPackage: boolean;
   hasConfirmedTime: boolean;
   hasConfirmedTickets: boolean;
+  hasFlexibleSchedule: boolean;
   tourTime: TourTime | null;
   validation: Validation;
   trackBlockedStep: (targetStep: BookingStepId | "checkout", source: string) => void;
@@ -124,7 +126,7 @@ export function useReservationNavigation({
   const goToNextStep = useCallback(() => {
     if (currentStep === 1) {
       if (choiceStep === 1) {
-        if (hasConfirmedPackage) setChoiceStep(2);
+        if (hasConfirmedPackage) setChoiceStep(hasFlexibleSchedule ? 3 : 2);
         return;
       }
       if (choiceStep === 2) {
@@ -136,7 +138,7 @@ export function useReservationNavigation({
       return;
     }
     if (currentStep === 2) goToStep(3, "next_button");
-  }, [choiceStep, currentStep, goToStep, hasConfirmedPackage, hasConfirmedTickets, hasConfirmedTime, isTicketsValid, setChoiceStep, tourTime]);
+  }, [choiceStep, currentStep, goToStep, hasConfirmedPackage, hasConfirmedTickets, hasConfirmedTime, hasFlexibleSchedule, isTicketsValid, setChoiceStep, tourTime]);
 
   const handleStep1Enter = useCallback((event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key !== "Enter") return;

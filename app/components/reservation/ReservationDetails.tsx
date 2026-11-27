@@ -69,7 +69,7 @@ function ReservationDetailsFlow({
     { locale: dateLocale }
   );
 
-  const [tourTime, setTourTime] = useState<TourTime | null>(null);
+  const [chosenTourTime, setTourTime] = useState<TourTime | null>(null);
   const paymentAttemptIdRef = useRef<string | null>(null);
 
   const {
@@ -97,14 +97,17 @@ function ReservationDetailsFlow({
     tourInfo,
     defaultCancellationPolicy: tr.defaultCancellationPolicy,
   });
-  const [hasConfirmedTime, setHasConfirmedTime] = useState(false);
-  const [hasConfirmedTickets, setHasConfirmedTickets] = useState(false);
+  const [hasChosenTime, setHasConfirmedTime] = useState(false);
+  const [hasConfirmedTickets, setHasConfirmedTickets] = useState(true);
+  const hasFlexibleSchedule = hasConfirmedPackage && availableTimeSlots.length === 1 && availableTimeSlots[0].trim().toLowerCase() === "flexible";
+  const tourTime = hasFlexibleSchedule ? availableTimeSlots[0] as TourTime : chosenTourTime;
+  const hasConfirmedTime = hasFlexibleSchedule || hasChosenTime;
 
   useEffect(() => {
-    if (tourTime && !availableTimeSlots.includes(tourTime)) {
+    if (chosenTourTime && !availableTimeSlots.includes(chosenTourTime)) {
       setTourTime(null);
     }
-  }, [availableTimeSlots, tourTime]);
+  }, [availableTimeSlots, chosenTourTime]);
 
   const {
     selectedAddons,
@@ -343,6 +346,7 @@ function ReservationDetailsFlow({
     hasConfirmedPackage,
     hasConfirmedTime,
     hasConfirmedTickets,
+    hasFlexibleSchedule,
     tourTime,
     validation,
     trackBlockedStep,
@@ -386,7 +390,7 @@ function ReservationDetailsFlow({
     setTourTime(null);
     setHasConfirmedPackage(false);
     setHasConfirmedTime(false);
-    setHasConfirmedTickets(false);
+    setHasConfirmedTickets(true);
     handleChange("agreeTerms", false);
   }, [handleChange, reservationDateIso, resetCompletedSteps, resetPendingFocus, setChoiceStep, setCurrentStep]);
 
@@ -476,6 +480,7 @@ function ReservationDetailsFlow({
         total={totalWithTaxes}
         currentStep={currentStep}
         choiceStep={choiceStep}
+        hasFlexibleSchedule={hasFlexibleSchedule}
         packageLabel={packageLabel}
         selectedPackage={selectedPackage}
         slots={slots}
@@ -512,6 +517,7 @@ function ReservationDetailsFlow({
       {currentStep === 1 && (
         <ReservationDetailsStep1Guided
           choiceStep={choiceStep}
+          hasFlexibleSchedule={hasFlexibleSchedule}
           onChoiceStepChange={setChoiceStep}
           scheduleSectionRef={scheduleSectionRef}
           ticketsInputRef={ticketsInputRef}
@@ -626,7 +632,7 @@ function ReservationDetailsFlow({
         lang={lang}
         label={stickyLabel}
         secondaryLabel={stickySecondaryLabel}
-        total={totalWithTaxes}
+        total={hasConfirmedPackage && hasConfirmedTickets && isTicketsValid ? totalWithTaxes : null}
         disabled={
           (currentStep === 1
             ? choiceStep === 1
@@ -642,7 +648,7 @@ function ReservationDetailsFlow({
         }
         onBack={
           currentStep === 1 && choiceStep > 1
-            ? () => setChoiceStep((choiceStep - 1) as ReservationChoiceStep)
+            ? () => setChoiceStep(hasFlexibleSchedule && choiceStep === 3 ? 1 : (choiceStep - 1) as ReservationChoiceStep)
             : currentStep > 1
               ? () => setCurrentStep((currentStep - 1) as BookingStepId)
               : undefined

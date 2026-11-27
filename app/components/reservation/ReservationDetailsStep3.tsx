@@ -207,9 +207,11 @@ export default function ReservationDetailsStep3({
             <span className="font-semibold">${taxes.toFixed(2)}</span>
           </div>
           <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 border-t border-emerald-200/80 pt-2 text-lg font-black dark:border-emerald-800/50">
-            <span>{tr.total}</span>
+            <span>{isEs ? "Total del grupo" : "Group total"}</span>
             <span className="text-emerald-700 dark:text-emerald-300">${totalWithTaxes.toFixed(2)}</span>
           </div>
+          <div className="mt-2 flex justify-between gap-3 text-sm font-bold"><span>{isEs ? "A pagar hoy (total completo)" : "Due today (full total)"}</span><span>${totalWithTaxes.toFixed(2)}</span></div>
+          <p className="mt-2 text-xs">{isEs ? "El pago no confirma la disponibilidad. El equipo confirmará la reserva después de validar la operación." : "Payment does not confirm availability. The team will confirm your booking after checking operations."}</p>
         </section>
       </div>
 

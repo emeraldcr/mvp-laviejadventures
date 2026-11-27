@@ -5,7 +5,7 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 type Props = {
   lang: "es" | "en";
   label: string;
-  total: number;
+  total: number | null;
   disabled?: boolean;
   onAction: () => void;
   onBack?: () => void;
@@ -42,7 +42,7 @@ export default function BookingStickyBar({
           )}
           <p className="text-sm font-black text-stone-900 dark:text-stone-50">
             {isEs ? "Total est." : "Est. total"}{" "}
-            <span className="text-emerald-700 dark:text-emerald-300">${total.toFixed(2)}</span>
+            <span className="text-emerald-700 dark:text-emerald-300">{total === null ? "—" : `$${total.toFixed(2)}`}</span>
           </p>
           <p className="text-[10px] font-medium text-stone-400 dark:text-stone-500">
             {isEs ? "IVA incluido" : "Tax included"}

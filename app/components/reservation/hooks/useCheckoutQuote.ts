@@ -6,6 +6,9 @@ import type { TransportQuoteResult } from "@/lib/booking/transport/quote";
 
 type CheckoutQuoteState = {
   total: number;
+  subtotal: number | null;
+  ivaRatePercent: number | null;
+  packagePrice: number;
   addonsPricePerPerson: number;
   addonsPrice: number;
   addonsBreakdown: Array<{ id: string; pricePerPerson: number }>;
@@ -20,6 +23,9 @@ export function useCheckoutQuote(orderDetails: OrderDetails, lang: "es" | "en") 
   const [requestVersion, setRequestVersion] = useState(0);
   const [state, setState] = useState<CheckoutQuoteState>({
     total: orderDetails.total,
+    subtotal: null,
+    ivaRatePercent: null,
+    packagePrice: orderDetails.packagePrice,
     addonsPricePerPerson: orderDetails.addonsPricePerPerson ?? 0,
     addonsPrice: orderDetails.addonsPrice ?? 0,
     addonsBreakdown: orderDetails.addonsBreakdown ?? [],
@@ -88,6 +94,9 @@ export function useCheckoutQuote(orderDetails: OrderDetails, lang: "es" | "en") 
 
         setState({
           total: nextTotal,
+          subtotal: Number(data.subtotal),
+          ivaRatePercent: Number(data.ivaRatePercent),
+          packagePrice: Number(data.packagePrice),
           addonsPricePerPerson: nextAddonsPricePerPerson,
           addonsPrice: nextAddonsPrice,
           addonsBreakdown: nextBreakdown,

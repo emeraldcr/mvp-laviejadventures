@@ -13,6 +13,7 @@ export type ChoiceStep = ReservationChoiceStep;
 
 interface Props {
   choiceStep: ChoiceStep;
+  hasFlexibleSchedule: boolean;
   onChoiceStepChange: (step: ChoiceStep) => void;
   scheduleSectionRef: RefObject<HTMLElement | null>;
   ticketsInputRef: RefObject<HTMLInputElement | null>;
@@ -44,7 +45,7 @@ const GUEST_PRESETS = [1, 2, 3, 4, 6] as const;
 
 export default function ReservationDetailsStep1Guided(props: Props) {
   const {
-    choiceStep, onChoiceStepChange, scheduleSectionRef, ticketsInputRef, tourTime,
+    choiceStep, hasFlexibleSchedule, onChoiceStepChange, scheduleSectionRef, ticketsInputRef, tourTime,
     availableTimeSlots, isTicketsValid, hasConfirmedPackage, hasConfirmedTime,
     hasConfirmedTickets, tickets, slots, packages, selectedPackageId,
     packageLabel,
@@ -70,7 +71,7 @@ export default function ReservationDetailsStep1Guided(props: Props) {
       ];
 
   const goNext = () => {
-    if (choiceStep < 3) onChoiceStepChange((choiceStep + 1) as ChoiceStep);
+    if (choiceStep < 3) onChoiceStepChange(hasFlexibleSchedule && choiceStep === 1 ? 3 : (choiceStep + 1) as ChoiceStep);
     else onContinue();
   };
 
@@ -91,10 +92,11 @@ export default function ReservationDetailsStep1Guided(props: Props) {
 
       <nav className="mb-8 overflow-x-auto rounded-2xl border border-zinc-200 bg-white/90 px-3 py-3 shadow-sm backdrop-blur dark:border-zinc-700 dark:bg-zinc-900/85" aria-label={isEs ? "Progreso de la reserva" : "Reservation progress"}>
         <ol className="flex min-w-max items-center gap-2 text-xs font-bold sm:justify-between sm:gap-3">
-          {(isEs ? ["Paquete", "Hora", "Personas", "Datos", "Pago"] : ["Package", "Time", "Guests", "Details", "Payment"]).map((label, index) => {
+          {(hasFlexibleSchedule ? (isEs ? ["Paquete", "Personas", "Datos", "Pago"] : ["Package", "Guests", "Details", "Payment"]) : (isEs ? ["Paquete", "Hora", "Personas", "Datos", "Pago"] : ["Package", "Time", "Guests", "Details", "Payment"])).map((label, index, labels) => {
             const step = index + 1;
-            const isCurrent = step === choiceStep;
-            const isComplete = step < choiceStep;
+            const current = hasFlexibleSchedule && choiceStep === 3 ? 2 : choiceStep;
+            const isCurrent = step === current;
+            const isComplete = step < current;
             return (
               <li key={label} className="flex items-center gap-2">
                 <span
@@ -110,7 +112,7 @@ export default function ReservationDetailsStep1Guided(props: Props) {
                   {step}
                 </span>
                 <span className={isCurrent ? "text-emerald-700 dark:text-emerald-300" : "text-zinc-600 dark:text-zinc-300"}>{label}</span>
-                {step < 5 && <span className="text-zinc-300 dark:text-zinc-600" aria-hidden="true">→</span>}
+                {step < labels.length && <span className="text-zinc-300 dark:text-zinc-600" aria-hidden="true">→</span>}
               </li>
             );
           })}
@@ -161,6 +163,7 @@ export default function ReservationDetailsStep1Guided(props: Props) {
 
           {choiceStep === 3 && (
             <section>
+              {hasFlexibleSchedule && <p className="mb-4 text-sm font-bold text-emerald-700 dark:text-emerald-300">{isEs ? "Horario flexible · lo coordinamos contigo" : "Flexible schedule · we’ll coordinate it with you"}</p>}
               <div className="rounded-3xl border border-zinc-200 bg-zinc-50/70 p-4 dark:border-zinc-700 dark:bg-zinc-950/30 sm:p-6">
                 <div className="mb-3 flex items-center justify-between gap-3">
                   <p className="flex items-center gap-2 text-sm font-black text-zinc-900 dark:text-white"><Users className="h-4 w-4 text-emerald-600" />{tr.numPeople}</p>
@@ -188,7 +191,7 @@ export default function ReservationDetailsStep1Guided(props: Props) {
 
       <div className="mt-8 hidden items-center gap-3 border-t border-zinc-200 pt-5 dark:border-zinc-700 md:flex">
         {choiceStep > 1 && (
-          <button type="button" onClick={() => onChoiceStepChange((choiceStep - 1) as ChoiceStep)} className="inline-flex min-h-12 items-center gap-2 rounded-full border border-zinc-300 px-6 font-bold dark:border-zinc-600">
+          <button type="button" onClick={() => onChoiceStepChange(hasFlexibleSchedule && choiceStep === 3 ? 1 : (choiceStep - 1) as ChoiceStep)} className="inline-flex min-h-12 items-center gap-2 rounded-full border border-zinc-300 px-6 font-bold dark:border-zinc-600">
             <ArrowLeft className="h-4 w-4" /> {isEs ? "Atrás" : "Back"}
           </button>
         )}

@@ -46,8 +46,9 @@ export const TravelerInputField = ({
   autoComplete,
   inputMode,
 }: TravelerInputFieldProps) => {
+  const [blurred, setBlurred] = useState(false);
   const isTouched = value.trim() !== "";
-  const showError = isTouched && !isValid;
+  const showError = (blurred || isTouched) && !isValid;
   const showOk = isTouched && isValid;
   const errorId = `${id}-error`;
 
@@ -60,10 +61,11 @@ export const TravelerInputField = ({
       <div className="relative">
         <input
           id={id}
+          name={id}
           type={type}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          onBlur={onBlur}
+          onBlur={() => { setBlurred(true); onBlur?.(); }}
           onKeyDown={onKeyDown}
           ref={inputRef}
           autoComplete={autoComplete}
@@ -121,8 +123,9 @@ export const TravelerPhoneInput = ({
   placeholder,
   validationMessage,
 }: TravelerPhoneInputProps) => {
+  const [blurred, setBlurred] = useState(false);
   const isTouched = phoneNumber.trim() !== "";
-  const showError = isTouched && !isValid;
+  const showError = (blurred || isTouched) && !isValid;
   const showOk = isTouched && isValid;
   const [isCountryOpen, setIsCountryOpen] = useState(false);
   const [countrySearch, setCountrySearch] = useState("");
@@ -263,12 +266,13 @@ export const TravelerPhoneInput = ({
         <div className="relative">
           <input
             id="phoneNumber"
+            name="tel-national"
             type="tel"
             inputMode="tel"
             autoComplete="tel-national"
             value={phoneNumber}
             onChange={(e) => setPhoneNumber(e.target.value)}
-            onBlur={onBlur}
+            onBlur={() => { setBlurred(true); onBlur?.(); }}
             onKeyDown={onKeyDown}
             ref={inputRef}
             aria-invalid={showError}
