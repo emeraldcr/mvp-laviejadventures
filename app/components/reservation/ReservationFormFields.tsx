@@ -125,7 +125,7 @@ export const TravelerPhoneInput = ({
 }: TravelerPhoneInputProps) => {
   const [blurred, setBlurred] = useState(false);
   const isTouched = phoneNumber.trim() !== "";
-  const showError = (blurred || isTouched) && !isValid;
+  const showError = blurred && !isValid;
   const showOk = isTouched && isValid;
   const [isCountryOpen, setIsCountryOpen] = useState(false);
   const [countrySearch, setCountrySearch] = useState("");

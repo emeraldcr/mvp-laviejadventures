@@ -133,7 +133,7 @@ const es = withUstedeo({
     nameRequired: "El nombre es obligatorio.",
     emailInvalid: "Por favor, introduce un correo electrónico válido.",
     phoneInvalid:
-      "Número de teléfono no válido. Formato sugerido: #### ####.",
+      "Revise el número: use al menos 6 dígitos y hasta 15 en total, incluido el código de país.",
     namePlaceholder: "Ej. Juan Pérez",
     emailPlaceholder: "Ej. juan@example.com",
     phonePlaceholder: "Ej. 1234 5678",
@@ -478,7 +478,7 @@ const en = {
     },
     nameRequired: "Name is required.",
     emailInvalid: "Please enter a valid email address.",
-    phoneInvalid: "Invalid phone number. Suggested format: #### ####.",
+    phoneInvalid: "Check the number: use at least 6 digits and no more than 15 in total, including the country code.",
     namePlaceholder: "E.g. John Smith",
     emailPlaceholder: "E.g. john@example.com",
     phonePlaceholder: "E.g. 1234 5678",

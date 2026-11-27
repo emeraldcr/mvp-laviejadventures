@@ -85,6 +85,16 @@ test('entering a group larger than remaining capacity preserves the requested nu
   assert.equal(tickets, 25);
 });
 
+test('phone validation counts the country code in the server limit', () => {
+  const validate = load('app/hooks/useReservationForm.ts', {
+    '@/lib/booking/core/constants': { EMAIL_REGEX: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, PHONE_NUMBER_REGEX: /^[\d\s().-]{6,20}$/ },
+  }, {}, 'isValidReservationPhone');
+  assert.equal(validate('+506', '123456789012'), true);
+  assert.equal(validate('+506', '1234567890123'), false);
+  assert.equal(validate('+1', '12345'), false);
+  assert.equal(validate('+506', '8888 8888'), true);
+});
+
 test('a single unavailable package cannot be selected', () => {
   const Picker = load('app/components/reservation/PackagePicker.tsx', {
     'lucide-react': { Check: () => null },

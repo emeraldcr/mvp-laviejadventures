@@ -15,6 +15,12 @@ interface UseReservationFormReturn {
   };
 }
 
+export function isValidReservationPhone(phoneCode: string, phoneNumber: string): boolean {
+  const localDigits = phoneNumber.replace(/\D/g, "");
+  const fullDigits = `${phoneCode}${phoneNumber}`.replace(/\D/g, "");
+  return PHONE_NUMBER_REGEX.test(phoneNumber.trim()) && localDigits.length >= 6 && fullDigits.length <= 15;
+}
+
 const useReservationForm = (
   initialState: ReservationFormState,
   options: { storageKey?: string } = {},
@@ -72,15 +78,10 @@ const useReservationForm = (
   const validation = useMemo(() => {
     const normalizedName = formState.name.trim();
     const normalizedEmail = formState.email.trim();
-    const phoneDigits = formState.phoneNumber.replace(/\D/g, "");
     const isNameValid = normalizedName.length >= 2 && normalizedName.length <= 120;
     const isEmailValid =
       normalizedEmail.length <= 254 && EMAIL_REGEX.test(normalizedEmail);
-    const isPhoneNumberValid =
-      formState.phoneNumber.trim() !== "" &&
-      PHONE_NUMBER_REGEX.test(formState.phoneNumber.trim()) &&
-      phoneDigits.length >= 6 &&
-      phoneDigits.length <= 15;
+    const isPhoneNumberValid = isValidReservationPhone(formState.phoneCode, formState.phoneNumber);
 
     return {
       isNameValid,
