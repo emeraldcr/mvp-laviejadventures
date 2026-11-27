@@ -173,7 +173,7 @@ test('WhatsApp checkout provides a direct link after saving and a fallback after
 
 test('booking does not substitute a default tour while the requested tour is missing', () => {
   const Booking = load('app/components/sections/BookingSection.tsx', {
-    '@/lib/booking/packages/pricing': { getTourPackageOptions: () => [], resolveInitialPackage: () => null },
+    '@/lib/booking/packages/pricing': { getTourPackageOptions: () => [], resolveInitialPackage: () => null, findRequestedPackage: () => null },
     './UpcomingDepartures': { __esModule: true, default: () => React.createElement('p', null, 'Departures') },
     'lucide-react': { CalendarDays: () => null },
     '@/lib/site/contexts/LanguageContext': { useLanguage: () => ({ lang: 'es' }) },
@@ -191,6 +191,10 @@ test('booking does not substitute a default tour while the requested tour is mis
   const loading = renderToStaticMarkup(React.createElement(Booking, { ...props, catalogStatus: 'loading' }));
   assert.match(loading, /Cargando su experiencia/);
   assert.doesNotMatch(loading, /Reservation form|Departures/);
+  const missingPackage = renderToStaticMarkup(React.createElement(Booking, { ...props, tour: { slug: 'requested-tour' }, initialPackageId: 'old-package', catalogStatus: 'ready' }));
+  assert.match(missingPackage, /El paquete del enlace ya no está disponible/);
+  assert.match(missingPackage, /Elegir otro paquete/);
+  assert.doesNotMatch(missingPackage, /Reservation form|Departures/);
 });
 
 test('upcoming departures distinguishes a lookup failure from no matching dates', () => {

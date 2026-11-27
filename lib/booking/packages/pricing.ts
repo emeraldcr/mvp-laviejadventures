@@ -18,23 +18,29 @@ export function getTourPackageOptions(tour: TourSummary | null | undefined): Tou
   return [buildGeneralEntryPackage(tour, tour?.slug)];
 }
 
+export function findRequestedPackage(
+  packages: TourPackageOption[],
+  preferredId?: string | null,
+): TourPackageOption | null {
+  if (!preferredId) return null;
+  const aliases: Record<string, string[]> = {
+    "essential-package": ["essential-package", "paquete-esencial"],
+    "paquete-esencial": ["essential-package", "paquete-esencial"],
+    "lunch-package": ["lunch-package", "paquete-con-almuerzo"],
+    "paquete-con-almuerzo": ["lunch-package", "paquete-con-almuerzo"],
+    "private-package": ["private-package", "paquete-privado"],
+    "paquete-privado": ["private-package", "paquete-privado"],
+  };
+  const accepted = aliases[preferredId] ?? [preferredId];
+  return packages.find((pkg) => Boolean(pkg.id && accepted.includes(pkg.id)) || pkg.name === preferredId || pkg.nameEs === preferredId) ?? null;
+}
+
 export function resolveInitialPackage(
   packages: TourPackageOption[],
   preferredId?: string | null,
 ): TourPackageOption {
   if (preferredId) {
-    const knownAliases: Record<string, string[]> = {
-      "essential-package": ["essential-package", "paquete-esencial"],
-      "paquete-esencial": ["essential-package", "paquete-esencial"],
-      "lunch-package": ["lunch-package", "paquete-con-almuerzo"],
-      "paquete-con-almuerzo": ["lunch-package", "paquete-con-almuerzo"],
-      "private-package": ["private-package", "paquete-privado"],
-      "paquete-privado": ["private-package", "paquete-privado"],
-    };
-    const acceptedIds = knownAliases[preferredId] ?? [preferredId];
-    const match = packages.find((pkg) =>
-      (pkg.id && acceptedIds.includes(pkg.id)) || pkg.name === preferredId,
-    );
+    const match = findRequestedPackage(packages, preferredId);
     if (match) return match;
 
     const normalize = (value: string) => value

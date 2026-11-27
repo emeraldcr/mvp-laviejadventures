@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useState } from "react";
-import { getTourPackageOptions, resolveInitialPackage } from "@/lib/booking/packages/pricing";
+import { findRequestedPackage, getTourPackageOptions, resolveInitialPackage } from "@/lib/booking/packages/pricing";
 import type { TourSummary } from "@/lib/tours/types";
 import UpcomingDepartures from "./UpcomingDepartures";
 import { CalendarDays } from "lucide-react";
@@ -34,6 +34,13 @@ export default function BookingSection({ selectedTourSlug, initialPackageId, tou
   const { lang } = useLanguage();
   const { selectedDay, selectDay, availability, availabilityStatus, retryAvailability } = useCalendarContext();
   const showDetails = selectedDay !== null && availabilityStatus === "ready" && (availability[selectedDay] ?? 0) > 0;
+  const missingPackage = Boolean(tour && chosenPackage && !findRequestedPackage(getTourPackageOptions(tour), chosenPackage));
+  const clearUnavailablePackage = () => {
+    setChosenPackage("");
+    const url = new URL(window.location.href);
+    url.searchParams.delete("package");
+    window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+  };
 
   return (
     <section
@@ -47,6 +54,11 @@ export default function BookingSection({ selectedTourSlug, initialPackageId, tou
           <div role="alert" className="mx-auto max-w-2xl rounded-2xl border border-amber-200 bg-amber-50 p-6 text-center text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
             <p className="font-semibold">{catalogStatus === "error" ? (lang === "es" ? "No pudimos cargar los tours. Intente de nuevo o consulte al equipo." : "We couldn't load the tours. Try again or contact the team.") : (lang === "es" ? "No encontramos el tour solicitado. Elija otra experiencia o consulte al equipo." : "We couldn't find the requested tour. Choose another experience or contact the team.")}</p>
             <div className="mt-4 flex flex-wrap justify-center gap-3 font-bold">{catalogStatus === "error" && <button type="button" onClick={retryCatalog} className="underline">{lang === "es" ? "Reintentar" : "Try again"}</button>}<Link href={localizeHref("/tours", lang)} className="underline">{lang === "es" ? "Ver tours" : "See tours"}</Link><a href={BUSINESS_WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="underline">WhatsApp</a></div>
+          </div>
+        ) : missingPackage ? (
+          <div role="alert" className="mx-auto max-w-2xl rounded-2xl border border-amber-200 bg-amber-50 p-6 text-center text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
+            <p className="font-semibold">{lang === "es" ? "El paquete del enlace ya no está disponible para este tour. Puede elegir otro o consultar al equipo." : "The package in this link is no longer available for this tour. Choose another or contact the team."}</p>
+            <div className="mt-4 flex flex-wrap justify-center gap-3 font-bold"><button type="button" onClick={clearUnavailablePackage} className="underline">{lang === "es" ? "Elegir otro paquete" : "Choose another package"}</button><a href={BUSINESS_WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="underline">WhatsApp</a></div>
           </div>
         ) : selectedTourSlug ? (
           <>

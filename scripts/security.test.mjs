@@ -37,6 +37,13 @@ test('booking reminders avoid inventing a time, duration or meeting point', () =
   assert.equal(reminders.calendarReminderIcs({ ...input, date: '2026-02-30' }), null);
 });
 
+test('requested package matching preserves known aliases without inventing a replacement', () => {
+  const pricing = load('lib/booking/packages/pricing.ts', { '@/lib/tours/packages': {}, './catalog': {} });
+  const packages = [{ id: 'paquete-esencial', name: 'Essential' }, { id: 'paquete-privado', name: 'Private' }];
+  assert.equal(pricing.findRequestedPackage(packages, 'essential-package').id, 'paquete-esencial');
+  assert.equal(pricing.findRequestedPackage(packages, 'private-expired-package'), null);
+});
+
 test('reset tokens reject Mongo operators and malformed values; bcrypt limits count UTF-8 bytes', () => {
   for (const value of [{ $ne: null }, [], null, 123, 'a'.repeat(63), 'z'.repeat(64)]) assert.equal(validation.validResetToken(value), false);
   assert.equal(validation.validResetToken('a'.repeat(64)), true);
