@@ -1,5 +1,7 @@
 "use client";
 
+import { sendBookingGoogleEvent } from "./google";
+
 export type AnalyticsEventName =
   | "page_view"
   | "click"
@@ -64,6 +66,8 @@ function getDefaultMetadata() {
 
 export async function trackAnalyticsEvent(event: AnalyticsEventName, payload: AnalyticsPayload = {}) {
   if (typeof window === "undefined") return;
+
+  sendBookingGoogleEvent(event, payload.metadata);
 
   const body = JSON.stringify({
     event,

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { OrderDetails } from "@/lib/booking/types";
 import type { LocalPaymentMethod } from "@/lib/booking/checkout/messages";
 import { checkoutErrorMessage } from "@/lib/booking/checkout/error-messages";
+import { sendGoogleEvent } from "@/lib/analytics/google";
 
 type PendingBookingResult = {
   referenceCode: string;
@@ -75,6 +76,7 @@ export function usePendingBooking(orderDetails: OrderDetails, lang: "es" | "en")
 
         setReferenceCode(nextReference);
         setReservationId(nextReservationId);
+        sendGoogleEvent("booking_request_saved", { payment_method: paymentMethod });
         return {
           referenceCode: nextReference,
           reservationId: nextReservationId,

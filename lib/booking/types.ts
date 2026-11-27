@@ -37,6 +37,7 @@ export type SuccessClientProps = {
   tickets?: string | number | null;
   amount?: string | number | null;
   currency?: string | null;
+  ivaRate?: number | null;
   orderId?: string | null;
   captureId?: string | null;
   reservationId?: string | null;

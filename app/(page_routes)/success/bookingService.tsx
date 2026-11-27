@@ -18,6 +18,7 @@ type SuccessPageResult = {
   tickets?: string | number | null;
   amount?: string | number | null;
   currency?: string | null;
+  ivaRate?: number | null;
   orderId?: string | null;
   captureId?: string | null;
   reservationId?: string | null;
@@ -81,7 +82,7 @@ export async function processSuccessfulBooking(orderId: string): Promise<Success
       error: null, name: record.name, email: record.email, phone: record.phone,
       date: record.date, tourName: record.tourName, tourPackage: record.tourPackage,
       tourTime: record.tourTime, tickets: record.tickets, amount: record.amount,
-      currency: record.currency, orderId, captureId: record.captureId,
+      currency: record.currency, ivaRate: record.ivaRate, orderId, captureId: record.captureId,
       reservationId: record._id.toString(), status: record.status, emailStatus,
     };
   } catch {

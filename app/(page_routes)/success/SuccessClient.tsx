@@ -2,6 +2,7 @@
 
 import { useLanguage } from "@/lib/site/contexts/LanguageContext";
 import { BOOKING_COMPLETION_STORAGE_KEY, trackAnalyticsEvent } from "@/lib/analytics/client";
+import { sendGoogleEvent } from "@/lib/analytics/google";
 import { translations } from "@/lib/site/translations";
 import { localizeHref } from "@/lib/site/i18n";
 import { BUSINESS_WHATSAPP_URL } from "@/lib/site/config";
@@ -59,6 +60,24 @@ export function SuccessClient(props: SuccessClientProps) {
     }
 
     const transactionId = props.captureId || props.orderId || "";
+    if (props.status === "COMPLETED" && props.captureId) {
+      const purchaseKey = `ga4-purchase:${props.captureId}`;
+      let alreadySent = false;
+      try { alreadySent = sessionStorage.getItem(purchaseKey) === "1"; } catch { /* GA4 also deduplicates by transaction ID. */ }
+      if (!alreadySent) {
+        const amount = Number(props.amount);
+        const hasAmount = props.amount != null && props.amount !== "" && Number.isFinite(amount) && amount >= 0;
+        const currency = /^[A-Z]{3}$/.test(props.currency ?? "") ? props.currency : undefined;
+        const hasTaxRate = typeof props.ivaRate === "number" && Number.isFinite(props.ivaRate) && props.ivaRate >= 0;
+        const subtotal = hasAmount && hasTaxRate ? Math.round((amount / (1 + props.ivaRate! / 100)) * 100) / 100 : undefined;
+        sendGoogleEvent("purchase", {
+          transaction_id: props.captureId,
+          ...(subtotal !== undefined && currency ? { value: subtotal, tax: Math.round((amount - subtotal) * 100) / 100, currency } : {}),
+          items: [{ item_name: props.tourName || "Tour", ...(props.tourPackage ? { item_variant: props.tourPackage } : {}), quantity: 1, ...(subtotal !== undefined && currency ? { price: subtotal } : {}) }],
+        });
+        try { sessionStorage.setItem(purchaseKey, "1"); } catch { /* Storage is optional. */ }
+      }
+    }
     const conversionStorageKey = `google-ads-purchase-conversion:${transactionId}`;
 
     let conversionAlreadyTracked = false;
@@ -80,7 +99,7 @@ export function SuccessClient(props: SuccessClientProps) {
         transaction_id: transactionId,
       });
     }
-  }, [lang, props.amount, props.captureId, props.currency, props.date, props.error, props.orderId, props.status, props.tickets]);
+  }, [lang, props.amount, props.captureId, props.currency, props.date, props.error, props.ivaRate, props.orderId, props.status, props.tickets, props.tourName, props.tourPackage]);
 
   return props.error ? (
     <ErrorState error={props.error} translations={tr} />
