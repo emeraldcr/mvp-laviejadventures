@@ -88,14 +88,17 @@ export function CalendarProvider({
   useEffect(() => {
     if (!selectedTourSlug) return;
     const controller = new AbortController();
-    fetch(`/api/calendar/availability?year=${currentYear}&month=${currentMonth}&tourSlug=${encodeURIComponent(selectedTourSlug)}`, { signal: AbortSignal.any([controller.signal, AbortSignal.timeout(20_000)]) })
+    let timedOut = false;
+    const timeout = setTimeout(() => { timedOut = true; controller.abort(); }, 20_000);
+    fetch(`/api/calendar/availability?year=${currentYear}&month=${currentMonth}&tourSlug=${encodeURIComponent(selectedTourSlug)}`, { signal: controller.signal })
       .then((response) => { if (!response.ok) throw new Error("Availability unavailable"); return response.json(); })
       .then((data) => {
         if (!data?.availability || typeof data.availability !== "object" || Array.isArray(data.availability) || Object.values(data.availability).some((value) => typeof value !== "number" || !Number.isFinite(value) || value < 0)) throw new Error("Invalid availability");
         if (!controller.signal.aborted) setLoadedAvailability({ key: availabilityKey, data: data.availability });
       })
-      .catch(() => { if (!controller.signal.aborted) setFailedAvailabilityKey(availabilityKey); });
-    return () => controller.abort();
+      .catch(() => { if (!controller.signal.aborted || timedOut) setFailedAvailabilityKey(availabilityKey); })
+      .finally(() => clearTimeout(timeout));
+    return () => { clearTimeout(timeout); timedOut = false; controller.abort(); };
   }, [availabilityKey, currentMonth, currentYear, selectedTourSlug, retryVersion]);
 
   const monthLabel = useMemo(
@@ -171,6 +174,8 @@ export function CalendarProvider({
     }
 
     if (normalizedDate.getFullYear() !== currentYear || normalizedDate.getMonth() !== currentMonth) {
+      setLoadedAvailability(null);
+      setFailedAvailabilityKey(null);
       setCurrentYear(normalizedDate.getFullYear());
       setCurrentMonth(normalizedDate.getMonth());
     }
@@ -182,23 +187,12 @@ export function CalendarProvider({
     setTicketsState(Math.max(1, count));
   }, []);
 
-  useEffect(() => {
-    if (selectedDay == null || loadedAvailability?.key !== availabilityKey) return;
-
-    const remaining = availability[selectedDay] ?? 0;
-    if (remaining < 1) {
-      setSelectedDay(null);
-      setTicketsState(1);
-      return;
-    }
-
-    setTicketsState((current) => Math.min(current, remaining));
-  }, [availability, availabilityKey, loadedAvailability, selectedDay]);
-
   const changeMonth = useCallback(
     (delta: number) => {
       const d = new Date(currentYear, currentMonth + delta, 1);
       d.setHours(0, 0, 0, 0);
+      setLoadedAvailability(null);
+      setFailedAvailabilityKey(null);
       setCurrentMonth(d.getMonth());
       setCurrentYear(d.getFullYear());
       setSelectedDay(null);
@@ -210,10 +204,14 @@ export function CalendarProvider({
   const prevMonth = useCallback(() => changeMonth(-1), [changeMonth]);
   const goToYear = useCallback((year: number) => {
     if (!Number.isInteger(year)) return;
+    if (year !== currentYear || currentMonth !== 0) {
+      setLoadedAvailability(null);
+      setFailedAvailabilityKey(null);
+    }
     setCurrentYear(year);
     setCurrentMonth(0);
     setSelectedDay(null);
-  }, []);
+  }, [currentMonth, currentYear]);
 
   const findFirstAvailableDay = useCallback(() => {
     return Object.keys(availability)
@@ -223,10 +221,14 @@ export function CalendarProvider({
   }, [availability, isPastDay]);
 
   const goToToday = useCallback(() => {
+    if (currentYear !== minBookableDate.year || currentMonth !== minBookableDate.month - 1) {
+      setLoadedAvailability(null);
+      setFailedAvailabilityKey(null);
+    }
     setCurrentMonth(minBookableDate.month - 1);
     setCurrentYear(minBookableDate.year);
     setSelectedDay(null);
-  }, [minBookableDate.month, minBookableDate.year]);
+  }, [currentMonth, currentYear, minBookableDate.month, minBookableDate.year]);
 
   const goToNextAvailableDay = useCallback(() => {
     const nextDay = findFirstAvailableDay();

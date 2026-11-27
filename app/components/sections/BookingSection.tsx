@@ -57,6 +57,11 @@ export default function BookingSection({ selectedTourSlug, initialPackageId, tou
             >
               {!showDetails && (
                 <div className="rounded-2xl border border-stone-200 bg-white p-3 shadow-xl shadow-stone-900/5 dark:border-white/10 dark:bg-stone-900 sm:rounded-[1.75rem] sm:p-5">
+                  {selectedDay !== null && availabilityStatus === "ready" && (availability[selectedDay] ?? 0) < 1 && (
+                    <p role="status" className="mb-4 rounded-xl bg-amber-50 p-3 text-sm font-semibold text-amber-950 dark:bg-amber-950/40 dark:text-amber-100">
+                      {lang === "es" ? "La fecha elegida ya no tiene cupos. Seleccione otra fecha o consulte al equipo." : "The selected date no longer has spots. Choose another date or contact the team."}
+                    </p>
+                  )}
                   {tour && <UpcomingDepartures tour={tour} preferredPackage={chosenPackage} lang={lang} onChoosePackage={choosePackage} />}
                   <CalendarSection selectedPackage={tour && chosenPackage ? resolveInitialPackage(getTourPackageOptions(tour), chosenPackage) : null} />
                 </div>

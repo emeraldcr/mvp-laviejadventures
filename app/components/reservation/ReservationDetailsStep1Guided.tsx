@@ -7,6 +7,7 @@ import PackagePicker from "./PackagePicker";
 import { formatDepartureLabel } from "@/lib/booking/core/constants";
 import type { ReservationChoiceStep, TourTime } from "@/lib/booking/core/types";
 import type { TourPackageOption } from "@/lib/tours/types";
+import { BUSINESS_WHATSAPP_URL } from "@/lib/site/config";
 
 type ReservationTranslations = typeof import("@/lib/site/translations").translations["es"]["reservation"];
 export type ChoiceStep = ReservationChoiceStep;
@@ -171,6 +172,7 @@ export default function ReservationDetailsStep1Guided(props: Props) {
           {choiceStep === 3 && (
             <section>
               {hasFlexibleSchedule && <p className="mb-4 text-sm font-bold text-emerald-700 dark:text-emerald-300">{isEs ? "Horario flexible · lo coordinamos contigo" : "Flexible schedule · we’ll coordinate it with you"}</p>}
+              {tickets > slots && <p role="alert" className="mb-4 rounded-xl bg-amber-50 p-3 text-sm font-semibold text-amber-950 dark:bg-amber-950/40 dark:text-amber-100">{isEs ? `Solicitó ${tickets} personas y esta fecha muestra ${slots} cupos. Reduzca el grupo o cambie de fecha. ` : `You requested ${tickets} guests and this date shows ${slots} spots. Reduce the group or change the date. `}<a href={BUSINESS_WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="underline">{isEs ? "Consultar al equipo" : "Contact the team"}</a></p>}
               <div className="rounded-3xl border border-zinc-200 bg-zinc-50/70 p-4 dark:border-zinc-700 dark:bg-zinc-950/30 sm:p-6">
                 <div className="mb-3 flex items-center justify-between gap-3">
                   <p className="flex items-center gap-2 text-sm font-black text-zinc-900 dark:text-white"><Users className="h-4 w-4 text-emerald-600" />{tr.numPeople}</p>

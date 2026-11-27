@@ -11,12 +11,12 @@ import { renderToStaticMarkup } from 'react-dom/server';
 
 const require = createRequire(import.meta.url);
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-function load(file, imports) {
+function load(file, imports, globals = {}) {
   const module = { exports: {} };
   const code = ts.transpileModule(fs.readFileSync(path.join(root, file), 'utf8'), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true },
   }).outputText;
-  vm.runInNewContext(code, { module, exports: module.exports, require: name => name in imports ? imports[name] : require(name) });
+  vm.runInNewContext(code, { module, exports: module.exports, require: name => name in imports ? imports[name] : require(name), ...globals });
   return module.exports.default;
 }
 
@@ -38,6 +38,39 @@ test('calendar only labels dates sold out after a successful availability respon
   }
   availabilityStatus = 'ready';
   assert.match(renderToStaticMarkup(React.createElement(Day, { day: 20 })), /agotado/i);
+});
+
+test('calendar keeps the requested group size when the selected date has fewer spots', async () => {
+  const slots = []; let cursor = 0; const effects = [];
+  const same = (a, b) => a && b && a.length === b.length && a.every((item, i) => Object.is(item, b[i]));
+  const react = {
+    createContext: () => ({ Provider: 'provider' }),
+    useContext: () => null,
+    useState(initial) { const i = cursor++; slots[i] ??= { value: typeof initial === 'function' ? initial() : initial }; return [slots[i].value, next => { slots[i].value = typeof next === 'function' ? next(slots[i].value) : next; }]; },
+    useRef(initial) { const i = cursor++; return slots[i] ??= { current: initial }; },
+    useMemo(fn, deps) { const i = cursor++; if (!slots[i] || !same(slots[i].deps, deps)) slots[i] = { value: fn(), deps }; return slots[i].value; },
+    useCallback(fn, deps) { return react.useMemo(() => fn, deps); },
+    useEffect(fn, deps) { const i = cursor++; if (!slots[i] || !same(slots[i].deps, deps)) effects.push(() => { slots[i]?.cleanup?.(); slots[i] = { deps, cleanup: fn() }; }); },
+  };
+  const code = ts.transpileModule(fs.readFileSync(path.join(root, 'lib/booking/calendar/CalendarContext.tsx'), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX } }).outputText;
+  const module = { exports: {} };
+  const imports = {
+    react,
+    'react/jsx-runtime': { jsx: (type, props) => ({ type, props }) },
+    '@/lib/site/contexts/LanguageContext': { useLanguage: () => ({ lang: 'es' }) },
+    '@/lib/shared/dates/costa-rica-time': { getCostaRicaDateParts: () => ({ year: 2026, month: 12, day: 1 }), getMinBookableDateInCostaRica: () => ({ year: 2026, month: 12, day: 2 }), toDateKey: (y, m, d) => `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}` },
+  };
+  vm.runInNewContext(code, { module, exports: module.exports, require: name => imports[name], AbortController: globalThis.AbortController, setTimeout: globalThis.setTimeout, clearTimeout: globalThis.clearTimeout, fetch: async () => ({ ok: true, json: async () => ({ availability: { 20: 2 } }) }) });
+  const render = () => { cursor = 0; const result = module.exports.CalendarProvider({ selectedTourSlug: 'tour', initialTickets: 6, children: null }); effects.splice(0).forEach(fn => fn()); return result.props.value; };
+  render();
+  for (let i = 0; i < 8; i++) await Promise.resolve();
+  let state = render();
+  assert.equal(state.availabilityStatus, 'ready');
+  state.selectDay(20);
+  state = render();
+  assert.equal(state.selectedDay, 20);
+  assert.equal(state.tickets, 6);
+  assert.equal(state.getSlotsForDay(20), 2);
 });
 
 test('a single unavailable package cannot be selected', () => {
