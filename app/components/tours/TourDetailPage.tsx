@@ -176,6 +176,25 @@ export default function TourDetailPage({ tour, locale }: TourDetailPageProps) {
         </div>
       </section>
 
+      {tour.slug === "tour-ciudad-esmeralda" && (
+        <section className="mx-auto max-w-7xl px-4 pb-16 md:px-8" aria-labelledby="travel-planning">
+          <div className="lva-card rounded-3xl p-6 md:p-8">
+            <h2 id="travel-planning" className="lva-heading text-2xl font-black">{isEnglish ? "Plan your visit to San Carlos" : "Planee su visita a San Carlos"}</h2>
+            <div className="mt-5 grid gap-5 md:grid-cols-3">
+              <div><h3 className="lva-heading font-bold">La Fortuna</h3><p className="lva-body mt-2 text-sm leading-relaxed">{isEnglish ? "Ask our team for the meeting point and directions before setting out. Allow time for the journey as well as the 3–4 hour hike; road and weather conditions can change." : "Consulte al equipo el punto de encuentro y las indicaciones antes de salir. Reserve tiempo para el traslado además de las 3–4 horas de caminata; las condiciones de carretera y clima pueden cambiar."}</p></div>
+              <div><h3 className="lva-heading font-bold">San José</h3><p className="lva-body mt-2 text-sm leading-relaxed">{isEnglish ? "Planning a day trip? Ask about transport, departure and return times, group minimums and the total price. These details must be confirmed for your date." : "¿Planea una excursión de un día? Consulte transporte, salida y regreso, mínimo de personas y precio total. Estos detalles deben confirmarse para su fecha."}</p></div>
+              <div><h3 className="lva-heading font-bold">Jacó · SJO · Liberia · Monteverde</h3><p className="lva-body mt-2 text-sm leading-relaxed">{isEnglish ? "Add the hike to a later San Carlos stop, or ask your driver, hotel or agency to check whether it fits your route. Transfers are not confirmed by this page." : "Incluya la caminata en una próxima parada en San Carlos o consulte con su chofer, hotel o agencia si cabe en su ruta. Esta página no confirma traslados."}</p></div>
+            </div>
+            <p className="lva-body mt-5 text-sm leading-relaxed">{isEnglish ? "The hike follows trails and the river toward El Zafiro. Rappelling is a separate experience: ask the team which descents and conditions apply before booking." : "La caminata sigue senderos y el río hacia El Zafiro. El rápel es una experiencia aparte: consulte al equipo cuáles descensos y condiciones aplican antes de reservar."} <Link className="lva-accent font-bold underline" href={`${prefix}/tour/rapel-canon-del-rio`}>{isEnglish ? "Explore rappelling" : "Conocer el rápel"}</Link></p>
+            <p className="lva-body mt-3 text-sm leading-relaxed">{isEnglish ? "Heavy rain or a rising river means no canyon entry. The team can discuss a safer alternative or rescheduling." : "Con lluvia fuerte o río crecido no se ingresa al cañón. El equipo puede orientar sobre una alternativa segura o reprogramar."}</p>
+            <a href={`${BUSINESS_WHATSAPP_URL}?text=${encodeURIComponent(isEnglish ? "Hello, I am planning a Ciudad Esmeralda visit. My starting point, date and group size are: " : "Hola, quiero planear una visita a Ciudad Esmeralda. Mi punto de salida, fecha y cantidad de personas son: ")}`} target="_blank" rel="noopener noreferrer" className="lva-button-primary mt-5 inline-flex">{isEnglish ? "Ask about your itinerary" : "Consultar mi itinerario"}</a>
+          </div>
+        </section>
+      )}
+      {tour.slug === "rapel-canon-del-rio" && (
+        <section className="mx-auto max-w-7xl px-4 pb-12 md:px-8"><p className="lva-body text-sm">{isEnglish ? "Looking for the river and waterfall hike? " : "¿Busca la caminata por el río hasta la cascada? "}<Link href={`${prefix}/tour/tour-ciudad-esmeralda`} className="lva-accent font-bold underline">{isEnglish ? "Explore Ciudad Esmeralda" : "Conozca Ciudad Esmeralda"}</Link></p></section>
+      )}
+
       {content && content.itinerary.length > 0 && (
         <section className="mx-auto max-w-7xl px-4 pb-16 md:px-8">
           <div className="mb-6 flex items-center gap-4">

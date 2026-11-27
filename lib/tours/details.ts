@@ -26,8 +26,8 @@ export type TourDetail = {
 
 const DEFAULT_TOUR: TourDetail = {
   slug: "tour-ciudad-esmeralda",
-  titleEs: "Tour Ciudad Esmeralda",
-  titleEn: "Ciudad Esmeralda Canyon Tour",
+  titleEs: "Ciudad Esmeralda: caminata guiada al cañón y cascada",
+  titleEn: "Ciudad Esmeralda Guided Canyon Hike & Waterfall | San Carlos",
   descriptionEs: "Adentrate en el Canon del Rio La Vieja y descubre Ciudad Esmeralda entre senderos, pozas naturales y paisajes de aventura.",
   descriptionEn: "Explore La Vieja River Canyon and discover Ciudad Esmeralda through trails, natural pools, and adventure landscapes.",
   details: "Recorrido guiado por senderos, rio y canon hacia Cascada El Zafiro. Ideal para viajeros que quieren una experiencia natural con buena dosis de aventura.",

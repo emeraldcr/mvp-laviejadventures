@@ -100,7 +100,7 @@ const ENGLISH_ROUTE_CONTENT: Record<string, EnglishEditorial> = {
       "This activity requires moderate fitness and no medical contraindications.",
       "It is not suitable for pregnancy or recent back or knee injuries.",
       "Fear of heights is normal; guides stay with you on every descent and let you progress at your pace.",
-      "The route follows river flow and weather. Heavy rain or a rising river means we modify or reschedule for safety.",
+      "Heavy rain or a rising river means no canyon entry; ask about a safer alternative or rescheduling.",
     ],
   },
   "caminata-volcanes-dormidos": {

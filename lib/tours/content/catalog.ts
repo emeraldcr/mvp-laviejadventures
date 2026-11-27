@@ -374,7 +374,7 @@ export const TOUR_CONTENT: Record<string, TourContent> = {
       "Requiere condición física moderada y no tener contraindicaciones médicas.",
       "No apto para embarazadas ni personas con lesiones de espalda/rodilla recientes.",
       "El vértigo es normal: los guías te acompañan en cada descenso.",
-      "La ruta se ajusta al caudal del río y al clima por seguridad.",
+      "Con lluvia fuerte o río crecido no se ingresa al cañón; consulte por una alternativa segura o reprogramación.",
     ],
     faqs: [
       { q: "¿Necesito experiencia en rapel?", a: "No. La inducción y la práctica inicial están pensadas para principiantes." },
