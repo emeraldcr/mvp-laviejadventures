@@ -36,25 +36,37 @@ export function SuccessClient(props: SuccessClientProps) {
   useEffect(() => {
     if (props.error || !props.orderId) return;
 
-    trackAnalyticsEvent("booking_completed", {
-      metadata: {
-        orderId: props.orderId,
-        captureId: props.captureId,
-        status: props.status,
-        date: props.date,
-        tickets: props.tickets,
-        amount: props.amount,
-        currency: props.currency,
-        language: lang,
-      },
-    });
-    sessionStorage.removeItem(BOOKING_COMPLETION_STORAGE_KEY);
+    const completionKey = `lva-booking-completed:${props.orderId}`;
+    let completionAlreadyTracked = false;
+    try {
+      completionAlreadyTracked = sessionStorage.getItem(completionKey) === "1";
+      sessionStorage.removeItem(BOOKING_COMPLETION_STORAGE_KEY);
+      if (!completionAlreadyTracked) sessionStorage.setItem(completionKey, "1");
+    } catch { /* Storage is optional; completion must remain visible. */ }
+    if (!completionAlreadyTracked) {
+      void trackAnalyticsEvent("booking_completed", {
+        metadata: {
+          orderId: props.orderId,
+          captureId: props.captureId,
+          status: props.status,
+          date: props.date,
+          tickets: props.tickets,
+          amount: props.amount,
+          currency: props.currency,
+          language: lang,
+        },
+      }).catch(() => {});
+    }
 
     const transactionId = props.captureId || props.orderId || "";
     const conversionStorageKey = `google-ads-purchase-conversion:${transactionId}`;
 
-    if (typeof window !== "undefined" && !sessionStorage.getItem(conversionStorageKey)) {
-      sessionStorage.setItem(conversionStorageKey, "sent");
+    let conversionAlreadyTracked = false;
+    try {
+      conversionAlreadyTracked = sessionStorage.getItem(conversionStorageKey) === "sent";
+      if (!conversionAlreadyTracked) sessionStorage.setItem(conversionStorageKey, "sent");
+    } catch { /* The payment succeeded even when storage is unavailable. */ }
+    if (typeof window !== "undefined" && !conversionAlreadyTracked) {
 
       const gtag =
         window.gtag ??

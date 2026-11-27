@@ -144,9 +144,12 @@ test('payment ownership binds signed HttpOnly cookie to an order and rejects tam
 
 test('analytics page rankings count page views and report truncated results', async () => {
   const events = [
-    { event: 'booking_step', path: '/reservar', request: { deviceType: 'mobile' }, metadata: { step: 2 } },
+    { event: 'booking_step', path: '/reservar', sessionId: 'one', request: { deviceType: 'mobile' }, metadata: { step: 1, choiceStep: 1 } },
+    { event: 'booking_step', path: '/reservar', sessionId: 'one', metadata: { step: 1, choiceStep: 1 } },
+    { event: 'booking_step', path: '/reservar', sessionId: 'two', metadata: { step: 1, choiceStep: 3 } },
+    { event: 'payment_error', metadata: { stage: 'capture' } },
     { event: 'page_view', path: '/tours', request: { deviceType: 'desktop' } },
-    ...Array.from({ length: 9999 }, () => ({ event: 'click', path: '/reservar' })),
+    ...Array.from({ length: 9996 }, () => ({ event: 'click', path: '/reservar' })),
   ];
   const api = load('app/api/analytics/events/route.ts', {
     'next/server': next,
@@ -160,7 +163,25 @@ test('analytics page rankings count page views and report truncated results', as
   assert.equal(data.sampledEvents, 10000);
   assert.deepEqual(data.site.topPages, [{ label: '/tours', count: 1 }]);
   assert.deepEqual(data.site.devices, [{ label: 'desktop', count: 1 }]);
-  assert.equal(data.reservation.topSteps[0].label, '2');
+  assert.equal(data.reservation.topSteps[0].label, '1');
+  assert.deepEqual(data.reservation.setupIdentifiers, [{ label: '1', count: 1 }, { label: '2', count: 0 }, { label: '3', count: 1 }]);
+  assert.deepEqual(data.checkout.errorStages, [{ label: 'capture', count: 1 }]);
+});
+
+test('analytics does not store booking free text or nested add-on details', async () => {
+  let saved;
+  const api = load('app/api/analytics/events/route.ts', {
+    'next/server': next,
+    '@/lib/auth': { auth: async () => null },
+    '@/lib/security/admin': { isAuthorizedAdmin: async () => false },
+    '@/lib/data/mongodb': { getDb: async () => ({ collection: () => ({ insertOne: async doc => { saved = doc; } }) }) },
+    'next/headers': { headers: async () => new globalThis.Headers() },
+    '@/lib/data/collections': { COLLECTIONS: {} },
+  });
+  const response = await api.POST(new globalThis.Request('https://example.com/api/analytics/events', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ event: 'booking_step', metadata: { tickets: 2, specialRequests: 'private note', booking: { addonDetails: { transportNotes: 'private address' }, addonDetailsSummary: 'private address', restaurantNotes: 'private note' } } }) }));
+  assert.equal(response.status, 200);
+  assert.equal(saved.metadata.tickets, 2);
+  assert.equal(JSON.stringify(saved.metadata).includes('private'), false);
 });
 
 test('admin reservations paginate and omit unneeded payment data', async () => {

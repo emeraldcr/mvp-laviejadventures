@@ -49,8 +49,6 @@ export function buildBookingAnalyticsMetadata(orderDetails: OrderDetails, lang: 
     packagePrice: orderDetails.packagePrice,
     addons: orderDetails.addons,
     addonIds: orderDetails.addonIds,
-    addonDetails: orderDetails.addonDetails,
-    specialRequests: orderDetails.specialRequests,
     amount: orderDetails.total,
     currency: "USD",
     language: lang,

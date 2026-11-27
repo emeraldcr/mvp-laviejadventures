@@ -6,6 +6,10 @@ There were seven payment-error events in the last 30 days, all from one historic
 
 Previously, booking_step fired again as form state changed (1,646 events for 90 identifiers in 30 days). New events fire on entering a step or guided substep, use a tab-scoped identifier, and include choiceStep for step one. Existing data retains its old semantics. Pagehide remains an exit signal, not a definitive abandoned booking. Compare future cohorts by identifier and sequence, with sufficient traffic, before making conversion claims. The main page-view tracker recorded only five page views in the same period; investigate production deployment, blocking, and collection failures before using site-wide traffic or attribution as denominators.
 
+The analytics dashboard now reports distinct identifiers reaching each guided setup screen and groups payment errors by stage. These are descriptive counts, not an ordered attempt-level funnel: visitors can return, change their booking, or skip the time screen for flexible schedules. Reloads of the same voucher in one tab no longer emit repeated booking-completed events when session storage is available. Client events can still be lost or duplicated across tabs and must not replace server-side payment and reservation reconciliation. The dashboard no longer presents a ratio of unmatched checkout and completion events as a conversion metric.
+
+New analytics events omit free-text special requests and add-on details; the server also filters those fields. This does not remove any historical events that may already contain such text. Review existing analytics data and retention separately before deciding on cleanup.
+
 The form no longer displays an invalid-name error while someone is still typing before their first blur. Checkout errors provide an explicit WhatsApp support link; a support conversation does not itself create or confirm a reservation. Payment, availability, and operational confirmation remain separate.
 
 ## Internal access configuration

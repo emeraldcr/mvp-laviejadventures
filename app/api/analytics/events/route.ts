@@ -85,7 +85,7 @@ function sanitizeValue(value: unknown, depth = 0): unknown {
 
   if (typeof value === "object") {
     return Object.fromEntries(
-      Object.entries(value as Record<string, unknown>).filter(([key]) => !/email|phone|name|token|password|address|referrer/i.test(key)).slice(0, 100).map(([key, nestedValue]) => [
+      Object.entries(value as Record<string, unknown>).filter(([key]) => !/email|phone|name|token|password|address|referrer|specialrequests|notes|addondetails/i.test(key)).slice(0, 100).map(([key, nestedValue]) => [
         key,
         sanitizeValue(nestedValue, depth + 1),
       ])
@@ -260,6 +260,8 @@ export async function GET(request: Request) {
     const blockerCounts = new Map<string, number>();
     const paymentCounts = new Map<string, number>();
     const stepCounts = new Map<string, number>();
+    const setupSessions = new Map<string, Set<string>>();
+    const paymentErrorStages = new Map<string, number>();
     const sessions = new Set<string>();
     let pageViews = 0;
     let clicks = 0;
@@ -283,7 +285,16 @@ export async function GET(request: Request) {
 
       if (item.event === "page_view") pageViews += 1;
       if (item.event === "click") clicks += 1;
-      if (item.event === "booking_step") addCount(stepCounts, asRecord(item.metadata).step === undefined ? null : String(asRecord(item.metadata).step));
+      if (item.event === "booking_step") {
+        const metadata = asRecord(item.metadata);
+        addCount(stepCounts, metadata.step === undefined ? null : String(metadata.step));
+        if (metadata.step === 1 && [1, 2, 3].includes(Number(metadata.choiceStep)) && item.sessionId) {
+          const key = String(metadata.choiceStep);
+          const identifiers = setupSessions.get(key) ?? new Set<string>();
+          identifiers.add(item.sessionId);
+          setupSessions.set(key, identifiers);
+        }
+      }
       if (item.event === "booking_step_progressed") progressions += 1;
       if (item.event === "booking_step_backtracked") backtracks += 1;
       if (item.event === "booking_step_completed") stepCompletions += 1;
@@ -302,7 +313,10 @@ export async function GET(request: Request) {
       }
       if (item.event === "booking_checkout_started") checkoutStarted += 1;
       if (item.event === "payment_approved") paymentApproved += 1;
-      if (item.event === "payment_error") paymentErrors += 1;
+      if (item.event === "payment_error") {
+        paymentErrors += 1;
+        addCount(paymentErrorStages, asRecord(item.metadata).stage);
+      }
       if (item.event === "booking_completed") bookingsCompleted += 1;
       if (item.event === "whatsapp_checkout_click") addCount(paymentCounts, "whatsapp");
       if (item.event === "sinpe_checkout_selected") addCount(paymentCounts, "sinpe");
@@ -334,6 +348,7 @@ export async function GET(request: Request) {
         blocked,
         abandoned,
         topSteps: topEntries(stepCounts),
+        setupIdentifiers: [1, 2, 3].map((step) => ({ label: String(step), count: setupSessions.get(String(step))?.size ?? 0 })),
       },
       friction: {
         blocked,
@@ -348,6 +363,7 @@ export async function GET(request: Request) {
         orderCreated: eventCounts.get("payment_order_created") ?? 0,
         approved: paymentApproved,
         errors: paymentErrors,
+        errorStages: topEntries(paymentErrorStages),
         completed: bookingsCompleted,
         paymentMethods: topEntries(paymentCounts),
         orderOutcomes: { created: outcomes.created ?? 0, returned: outcomes.returned ?? 0, cancelled: outcomes.cancelled ?? 0, paymentFailed: outcomes.payment_failed ?? 0, capturedUnconfirmed: outcomes.captured_unconfirmed ?? 0, confirmed: outcomes.confirmed ?? 0 },
