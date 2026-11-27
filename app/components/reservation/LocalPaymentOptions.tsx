@@ -58,29 +58,10 @@ export default function LocalPaymentOptions({
     [lang, orderDetails, packageLabel, referenceCode, timeLabel],
   );
 
-  const handleWhatsAppClick = async () => {
-    const saved = await savePendingBooking("whatsapp");
-    if (!saved) return;
-
-    trackAnalyticsEvent("whatsapp_checkout_click", {
-      metadata: {
-        ...analyticsMetadata,
-        referenceCode: saved.referenceCode,
-        reservationId: saved.reservationId,
-      },
-    });
-
-    if (typeof window !== "undefined") {
-      window.open(
-        buildReservationWhatsAppHref(orderDetails, lang, {
-          packageLabel,
-          timeLabel,
-          referenceCode: saved.referenceCode,
-        }),
-        "_blank",
-        "noopener,noreferrer",
-      );
-    }
+  const trackWhatsAppClick = (surface: string) => {
+    void trackAnalyticsEvent("whatsapp_checkout_click", {
+      metadata: { ...analyticsMetadata, referenceCode, reservationId, surface },
+    }).catch(() => {});
   };
 
   const handleCopyReference = async () => {
@@ -104,8 +85,8 @@ export default function LocalPaymentOptions({
       <div className="space-y-4">
         <div className="lva-status-success rounded-xl px-4 py-3 text-sm leading-relaxed">
           {isEs
-            ? "Confirme su reserva por WhatsApp con Allan o Verónica. Guardamos su solicitud y le respondemos con disponibilidad y pago local si lo prefiere."
-            : "Confirm your booking on WhatsApp with our team. We save your request and reply with availability and local payment options if you prefer."}
+            ? "Guarde su solicitud y luego envíe el mensaje por WhatsApp. Allan o Verónica le confirmarán disponibilidad y opciones de pago."
+            : "Save your request and then send the message on WhatsApp. Our team will confirm availability and payment options."}
         </div>
 
         <div className="lva-card-muted rounded-xl p-4 text-sm">
@@ -133,9 +114,9 @@ export default function LocalPaymentOptions({
           </div>
         )}
 
-        <button
+        {!referenceCode ? <button
           type="button"
-          onClick={() => void handleWhatsAppClick()}
+          onClick={() => void savePendingBooking("whatsapp")}
           disabled={isSaving}
           className="lva-button-whatsapp w-full"
         >
@@ -145,9 +126,12 @@ export default function LocalPaymentOptions({
               ? "Guardando solicitud..."
               : "Saving request..."
             : isEs
-              ? "Confirmar por WhatsApp"
-              : "Confirm via WhatsApp"}
-        </button>
+              ? "Guardar solicitud"
+              : "Save request"}
+        </button> : <a href={whatsappHref} target="_blank" rel="noopener noreferrer" onClick={() => trackWhatsAppClick("whatsapp_request")} className="lva-button-whatsapp w-full">
+          <MessageCircle className="h-5 w-5" aria-hidden />{isEs ? "Abrir WhatsApp y enviar mensaje" : "Open WhatsApp and send message"}
+        </a>}
+        {saveError && !referenceCode && <p className="text-sm">{isEs ? "La solicitud no se guardó. Puede consultar directamente al equipo: " : "The request was not saved. You can contact the team directly: "}<a href={whatsappHref} target="_blank" rel="noopener noreferrer" onClick={() => trackWhatsAppClick("whatsapp_unsaved")} className="font-bold underline">WhatsApp</a></p>}
       </div>
     );
   }
@@ -156,8 +140,8 @@ export default function LocalPaymentOptions({
     <div className="space-y-4">
       <div className="lva-status-warning rounded-xl px-4 py-3 text-sm leading-relaxed">
         {isEs
-          ? "Pagá con SINPE Móvil o transferencia bancaria. Usá la referencia en el detalle del pago y envianos el comprobante por WhatsApp para confirmar."
-          : "Pay with SINPE Móvil or bank transfer. Use the reference in the payment detail and send us the receipt on WhatsApp to confirm."}
+          ? "Genere la referencia y consulte con el equipo la disponibilidad y el monto antes de pagar por SINPE o transferencia. Luego envíe el comprobante por WhatsApp."
+          : "Generate a reference and ask the team to confirm availability and the amount before paying by SINPE or bank transfer. Then send the receipt on WhatsApp."}
       </div>
 
       {!referenceCode && (
@@ -202,13 +186,13 @@ export default function LocalPaymentOptions({
 
       <div className="lva-card-accent rounded-xl p-4">
         <p className="lva-accent text-[11px] font-bold uppercase tracking-[0.16em]">
-          {isEs ? "Monto a transferir" : "Amount to transfer"}
+          {isEs ? "Total estimado" : "Estimated total"}
         </p>
         <p className="lva-heading mt-1 text-3xl font-black">${orderDetails.total.toFixed(2)} USD</p>
         <p className="lva-muted mt-1 text-xs">
           {isEs
-            ? "Si pagás en colones, usá el tipo de cambio del día y mencioná la referencia."
-            : "If paying in colones, use the day's exchange rate and include the reference."}
+            ? "Confirme el monto y, si paga en colones, el tipo de cambio con el equipo antes de transferir."
+            : "Confirm the amount and, if paying in colones, the exchange rate with the team before transferring."}
         </p>
       </div>
 

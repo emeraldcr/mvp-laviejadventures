@@ -150,6 +150,24 @@ test('resumed checkout requires review before enabling payment', () => {
   assert.doesNotMatch(html, /Local payment actions/);
 });
 
+test('WhatsApp checkout provides a direct link after saving and a fallback after failure', () => {
+  const LocalOptions = load('app/components/reservation/LocalPaymentOptions.tsx', {
+    'lucide-react': Object.fromEntries(['Building2', 'CheckCircle2', 'Copy', 'MessageCircle', 'Smartphone'].map(name => [name, () => null])),
+    '@/lib/analytics/client': { trackAnalyticsEvent: async () => {} },
+    '@/lib/booking/checkout/messages': { buildReservationWhatsAppHref: (_order, _lang, options) => `https://wa.me/50662332535?text=${encodeURIComponent(options.referenceCode || 'consulta')}` },
+  });
+  const props = { method: 'whatsapp', orderDetails: { total: 100 }, lang: 'es', packageLabel: 'Paquete', timeLabel: '08:00', analyticsMetadata: {}, reservationId: null, isSaving: false, savePendingBooking() {} };
+  const before = renderToStaticMarkup(React.createElement(LocalOptions, { ...props, referenceCode: null, saveError: null }));
+  assert.match(before, /Guardar solicitud/);
+  assert.doesNotMatch(before, /Abrir WhatsApp y enviar mensaje/);
+  const saved = renderToStaticMarkup(React.createElement(LocalOptions, { ...props, referenceCode: 'LVA-123', saveError: null }));
+  assert.match(saved, /href="https:\/\/wa\.me\/50662332535\?text=LVA-123"/);
+  assert.match(saved, /Abrir WhatsApp y enviar mensaje/);
+  const failed = renderToStaticMarkup(React.createElement(LocalOptions, { ...props, referenceCode: null, saveError: 'Error' }));
+  assert.match(failed, /La solicitud no se guardó/);
+  assert.match(failed, /href="https:\/\/wa\.me\/50662332535\?text=consulta"/);
+});
+
 test('booking does not substitute a default tour while the requested tour is missing', () => {
   const Booking = load('app/components/sections/BookingSection.tsx', {
     '@/lib/booking/packages/pricing': { getTourPackageOptions: () => [], resolveInitialPackage: () => null },
