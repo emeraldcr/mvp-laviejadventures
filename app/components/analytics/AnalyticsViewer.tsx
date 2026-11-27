@@ -41,7 +41,7 @@ export default function AnalyticsViewer() {
     setError("");
     try {
       const response = await fetch(`/api/analytics/events?days=${days}`, { cache: "no-store" });
-      if (!response.ok) throw new Error(response.status === 403 ? "Acceso restringido: ingresá con una cuenta autorizada para analítica" : "No se pudieron cargar los datos de analítica");
+      if (!response.ok) throw new Error("No se pudieron cargar los datos de analítica");
       setData(await response.json() as AnalyticsData);
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : "No se pudieron cargar los datos de analítica");

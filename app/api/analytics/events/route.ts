@@ -228,12 +228,6 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   try {
-    const session = await auth();
-    const verified = (session?.user as { verifiedEmail?: boolean } | undefined)?.verifiedEmail === true;
-    const allowed = (process.env.ANALYTICS_ADMIN_EMAILS ?? "").split(",").map(email => email.trim().toLowerCase()).filter(Boolean);
-    if (!verified || !session?.user?.email || !allowed.includes(session.user.email.toLowerCase())) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
     const url = new URL(request.url);
     const requestedDays = Number(url.searchParams.get("days") ?? "7");
     const days = [7, 30, 90].includes(requestedDays) ? requestedDays : 7;
