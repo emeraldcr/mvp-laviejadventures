@@ -191,6 +191,23 @@ test('draft/storage failures do not invalidate a verified quote; own capacity ho
   assert.equal(bodies[0].bookingAttemptId, order.bookingAttemptId);
 });
 
+test('checkout refreshes the quote and draft when special requests change', async () => {
+  const runtime = hooks(); const bodies = [];
+  const imported = load('app/components/reservation/hooks/useCheckoutQuote.ts', { react: runtime.react }, {
+    sessionStorage: { setItem() {} },
+    fetch: async (url, init) => {
+      bodies.push({ url, body: JSON.parse(init.body) });
+      return { ok: true, json: async () => url.endsWith('/draft') ? { success: false } : { success: true, totalWithTax: 100 } };
+    },
+  });
+  runtime.render(() => imported.useCheckoutQuote({ ...order, specialRequests: 'First' }, 'es'));
+  await tick();
+  runtime.render(() => imported.useCheckoutQuote({ ...order, specialRequests: 'Updated' }, 'es'));
+  await tick();
+  assert.deepEqual(bodies.filter(item => item.url.endsWith('/quote')).map(item => item.body.specialRequests), ['First', 'Updated']);
+  assert.equal(bodies.filter(item => item.url.endsWith('/draft')).at(-1).body.specialRequests, 'Updated');
+});
+
 function captureApi(responses, options = {}) {
   let quotes = 0, writes = 0, reservationWrites = 0; const requests = [];
   const context = { booking: { total: 100, date: order.date, tickets: 2 }, customer: {} };

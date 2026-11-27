@@ -52,7 +52,7 @@ const useReservationForm = (
         agreeTerms: false,
       }));
     } catch {
-      sessionStorage.removeItem(storageKey);
+      try { sessionStorage.removeItem(storageKey); } catch { /* Storage may be blocked entirely. */ }
     } finally {
       setIsHydrated(true);
     }

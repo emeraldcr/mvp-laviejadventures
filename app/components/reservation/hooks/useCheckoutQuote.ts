@@ -176,9 +176,11 @@ export function useCheckoutQuote(orderDetails: OrderDetails, lang: "es" | "en") 
     orderDetails.tickets,
     orderDetails.tourPackage,
     orderDetails.tourSlug,
+    orderDetails.tourName,
     orderDetails.tourTime,
     orderDetails.total,
     orderDetails.resumeToken,
+    orderDetails.specialRequests,
     requestVersion,
   ]);
 

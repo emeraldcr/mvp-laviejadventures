@@ -92,7 +92,9 @@ export function useReservationTraveler({
           if (previous.phoneNumber.trim() || !profile.phone?.trim()) return next;
 
           const normalizedPhone = profile.phone.trim();
-          const matchedCode = PHONE_COUNTRIES.find((country) => normalizedPhone.startsWith(country.code));
+          const matchedCode = [...PHONE_COUNTRIES]
+            .sort((a, b) => b.code.length - a.code.length)
+            .find((country) => normalizedPhone.startsWith(country.code));
           if (matchedCode) {
             return {
               ...next,
