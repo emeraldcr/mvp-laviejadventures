@@ -113,6 +113,7 @@ test('checkout requires explicit acceptance before a changed total can be paid',
     './hooks/useCheckoutQuote': { useCheckoutQuote: () => ({ total, synced: true, syncing: false, error: null, subtotal: 100, ivaRatePercent: 13, packagePrice: 50, addonsPrice: 0, addonsPricePerPerson: 0, addonsBreakdown: [], transportQuote: null }) },
     './hooks/usePayPalCheckout': { usePayPalCheckout: options => { enabled = options.enabled; return { paypalRef() {}, isPaypalLoading: false }; } },
     '@/lib/site/config': { BUSINESS_WHATSAPP_URL: 'https://wa.me/50662332535' },
+    '@/lib/analytics/client': { trackAnalyticsEvent: async () => {} },
   });
   const props = { lang: 'es', onBack() {}, orderDetails: { total: 100, tickets: 2, tourName: 'Tour', date: '2026-12-20' } };
   const changed = renderToStaticMarkup(React.createElement(Checkout, props));
@@ -124,6 +125,8 @@ test('checkout requires explicit acceptance before a changed total can be paid',
   const unchanged = renderToStaticMarkup(React.createElement(Checkout, props));
   assert.equal(enabled, true);
   assert.doesNotMatch(unchanged, /Acepto el nuevo total/);
+  assert.match(unchanged, /Consultar disponibilidad y pago por WhatsApp/);
+  assert.match(unchanged, /no guarda ni confirma la reserva/);
 });
 
 test('resumed checkout requires review before enabling payment', () => {

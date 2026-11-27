@@ -6,6 +6,7 @@ import { translations } from "@/lib/site/translations";
 import { useCheckoutQuote } from "./hooks/useCheckoutQuote";
 import { usePayPalCheckout } from "./hooks/usePayPalCheckout";
 import { BUSINESS_WHATSAPP_URL } from "@/lib/site/config";
+import { trackAnalyticsEvent } from "@/lib/analytics/client";
 
 export default function InlinePayPalCheckout({
   orderDetails,
@@ -49,8 +50,9 @@ export default function InlinePayPalCheckout({
   });
   const supportMessage = pendingOrderId
     ? (lang === "es" ? `Hola, necesito ayuda para verificar mi pago. Orden PayPal: ${pendingOrderId}.` : `Hello, I need help checking my payment. PayPal order: ${pendingOrderId}.`)
-    : (lang === "es" ? `Hola, necesito ayuda con mi reserva de ${orderDetails.tourName}, fecha ${orderDetails.dateIso ?? orderDetails.date}, para ${orderDetails.tickets} personas.` : `Hello, I need help with my booking for ${orderDetails.tourName}, ${orderDetails.dateIso ?? orderDetails.date}, for ${orderDetails.tickets} guests.`);
+    : (lang === "es" ? `Hola, quiero consultar disponibilidad y formas de pago para ${orderDetails.tourName}, fecha ${orderDetails.dateIso ?? orderDetails.date}, para ${orderDetails.tickets} personas.` : `Hello, I would like to ask about availability and payment options for ${orderDetails.tourName}, ${orderDetails.dateIso ?? orderDetails.date}, for ${orderDetails.tickets} guests.`);
   const supportHref = `${BUSINESS_WHATSAPP_URL}?text=${encodeURIComponent(supportMessage)}`;
+  const trackSupport = () => { void trackAnalyticsEvent("whatsapp_checkout_click", { metadata: { surface: "inline_checkout_help", hasPendingPayment: Boolean(pendingOrderId) } }).catch(() => {}); };
 
   if (quote.error || paypalLoadError) {
     return (
@@ -65,7 +67,7 @@ export default function InlinePayPalCheckout({
         <button type="button" onClick={onBack} className="ml-2 mt-3 rounded-lg border border-current px-4 py-2 text-xs font-black">
           {lang === "es" ? "Volver a revisar la reserva" : "Return to reservation review"}
         </button>
-        <p className="mt-3"><a className="font-bold underline" href={supportHref} target="_blank" rel="noopener noreferrer">{lang === "es" ? "Pedir ayuda por WhatsApp" : "Get help on WhatsApp"}</a></p>
+        <p className="mt-3"><a className="font-bold underline" href={supportHref} target="_blank" rel="noopener noreferrer" onClick={trackSupport}>{lang === "es" ? "Pedir ayuda por WhatsApp" : "Get help on WhatsApp"}</a></p>
       </section>
     );
   }
@@ -98,11 +100,14 @@ export default function InlinePayPalCheckout({
         <p>{isCapturing ? (lang === "es" ? "Verificando el pago…" : "Checking payment…") : paymentError}</p>
         {pendingOrderId && !isCapturing && <p className="mt-2 break-all text-xs">{lang === "es" ? "Orden PayPal" : "PayPal order"}: {pendingOrderId}</p>}
         {pendingOrderId && !isCapturing && <button type="button" onClick={retryCapture} className="mt-2 rounded-lg border px-4 py-2 font-bold">{lang === "es" ? "Verificar este pago" : "Check this payment"}</button>}
-        {paymentError && <p className="mt-2"><a className="font-bold underline" href={supportHref} target="_blank" rel="noopener noreferrer">{lang === "es" ? "Pedir ayuda por WhatsApp" : "Get help on WhatsApp"}</a></p>}
       </div>}
       <p className="mt-3 text-center text-xs text-zinc-500 dark:text-zinc-400">
         {lang === "es" ? "Pague con PayPal o tarjeta." : "Pay with PayPal or card."}
       </p>
+      {!isCapturing && <div className="mt-4 border-t border-emerald-200 pt-4 text-center text-sm dark:border-emerald-800">
+        <a className="font-bold text-emerald-800 underline dark:text-emerald-200" href={supportHref} target="_blank" rel="noopener noreferrer" onClick={trackSupport}>{pendingOrderId ? (lang === "es" ? "Consultar este pago por WhatsApp" : "Ask about this payment on WhatsApp") : (lang === "es" ? "Consultar disponibilidad y pago por WhatsApp" : "Ask about availability and payment on WhatsApp")}</a>
+        {!pendingOrderId && <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-300">{lang === "es" ? "El equipo revisará su consulta; este enlace no guarda ni confirma la reserva." : "The team will review your inquiry; this link does not save or confirm a booking."}</p>}
+      </div>}
     </section>
   );
 }
