@@ -13,9 +13,9 @@ type Props = {
 type Status = "past" | "soldout" | "available";
 
 const STATUS_CARD_CLASS: Record<Status, string> = {
-  past: "bg-zinc-100 dark:bg-zinc-800 border-zinc-300 dark:border-zinc-600",
+  past: "bg-stone-50 dark:bg-zinc-900 border-transparent",
   soldout: "bg-red-50 dark:bg-red-900/20 border-red-400 dark:border-red-600",
-  available: "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-400 dark:border-emerald-600",
+  available: "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-300 dark:border-emerald-700",
 };
 
 const STATUS_TEXT_CLASS: Record<Status, string> = {
@@ -47,19 +47,9 @@ function CalendarDayBase({ day }: Props) {
   const selected = selectedDay === day;
   const status: Status = past ? "past" : slots === 0 ? "soldout" : "available";
 
-  const labelText =
-    status === "past"
-      ? tr.statusPast
-      : status === "soldout"
-        ? tr.statusSoldOut
-        : tr.legendAvailable;
-
-  const compactLabel =
-    status === "past"
-      ? tr.statusPast
-      : status === "soldout"
-        ? tr.statusSoldOut
-        : tr.legendAvailable;
+  const labelText = status === "past"
+    ? (today ? (lang === "es" ? "No reservable" : "Not bookable") : "")
+    : status === "soldout" ? tr.statusSoldOut : (lang === "es" ? "Elegir" : "Select");
 
   const handleSelect = () => {
     if (!hasSlots) return;
@@ -76,17 +66,17 @@ function CalendarDayBase({ day }: Props) {
       aria-disabled={isDisabled}
       aria-label={
         past
-          ? tr.ariaDayPast.replace("{day}", String(day))
+          ? today ? (lang === "es" ? `Día ${day}, hoy, no reservable` : `Day ${day}, today, not bookable`) : tr.ariaDayPast.replace("{day}", String(day))
           : hasSlots
-            ? tr.ariaDayAvailable.replace("{day}", String(day))
+            ? (lang === "es" ? `Día ${day}, seleccionar fecha; disponibilidad sujeta a confirmación` : `Day ${day}, select date; availability subject to confirmation`)
             : tr.ariaDaySoldOut.replace("{day}", String(day))
       }
       aria-pressed={selected}
       className={cn(
-        "group relative flex h-[clamp(3.5rem,8svh,4.5rem)] min-w-0 w-full flex-col overflow-hidden rounded-lg border-2 p-1 text-left shadow-sm outline-none transition-[transform,box-shadow,border-color,background-color] duration-200 ease-out select-none motion-reduce:transition-none sm:h-[clamp(4.25rem,9svh,5rem)] sm:rounded-xl sm:p-2 md:p-2.5",
+        "group relative flex h-[clamp(3.5rem,8svh,4.5rem)] min-w-0 w-full flex-col overflow-hidden rounded-lg border p-1 text-left shadow-sm outline-none transition-[transform,box-shadow,border-color,background-color] duration-200 ease-out select-none motion-reduce:transition-none sm:h-[clamp(4.25rem,9svh,5rem)] sm:rounded-xl sm:p-2 md:p-2.5",
         hasSlots
           ? "cursor-pointer hover:z-10 hover:-translate-y-1 hover:scale-[1.025] hover:border-emerald-400 hover:bg-emerald-100 hover:shadow-[0_12px_28px_-12px_rgba(16,185,129,0.55)] active:translate-y-0 active:scale-[0.99] focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 dark:hover:border-emerald-500 dark:hover:bg-emerald-900/40 dark:hover:shadow-[0_12px_28px_-12px_rgba(16,185,129,0.28)] dark:focus-visible:ring-offset-zinc-950"
-          : "cursor-not-allowed opacity-60",
+          : "cursor-not-allowed opacity-75",
         STATUS_CARD_CLASS[status],
         today && !selected && "border-sky-500 bg-sky-50 shadow-[0_0_0_2px_rgba(56,189,248,0.18),0_8px_22px_-14px_rgba(14,165,233,0.7)] dark:border-sky-400 dark:bg-sky-950/40",
         selected && "z-[1] border-emerald-600 bg-emerald-100 ring-2 ring-emerald-500 shadow-[0_8px_24px_-10px_rgba(16,185,129,0.55)] dark:border-emerald-400 dark:bg-emerald-900/40 dark:shadow-[0_8px_24px_-10px_rgba(16,185,129,0.32)]"
@@ -145,7 +135,7 @@ function CalendarDayBase({ day }: Props) {
             STATUS_TEXT_CLASS[status]
           )}
         >
-          {compactLabel}
+          {labelText}
         </span>
       </div>
 

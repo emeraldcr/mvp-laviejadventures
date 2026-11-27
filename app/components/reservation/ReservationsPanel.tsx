@@ -27,7 +27,7 @@ export default function ReservationsPanel() {
     setLoading(true); setError("");
     try {
       const response = await fetch(`/api/admin/reservations?page=${page}`, { cache: "no-store", signal });
-      if (!response.ok) throw new Error(response.status === 403 ? "Acceso restringido. Inicie sesión con una cuenta administrativa verificada." : "No se pudieron cargar las reservas. Inténtelo de nuevo.");
+      if (!response.ok) throw new Error("No se pudieron cargar las reservas. Inténtelo de nuevo.");
       setData(await response.json() as Result);
     } catch (err) {
       if (signal?.aborted) return;

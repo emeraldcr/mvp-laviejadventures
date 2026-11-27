@@ -25,12 +25,14 @@ export default function BookingSection({ selectedTourSlug, initialPackageId }: P
         {selectedTourSlug ? (
           <>
             {!selectedDay && (
-              <div className="mx-auto mb-2 max-w-2xl text-center md:mb-3">
-                <p className="text-[10px] font-semibold tracking-wide text-stone-500 dark:text-stone-400 sm:text-xs">
+              <div className="mx-auto mb-4 max-w-2xl text-center md:mb-5">
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-emerald-700 dark:text-emerald-400">
                   {lang === "es"
-                    ? "Paso 1 de 3 · Elija una fecha · Los días disponibles están marcados"
-                    : "Step 1 of 3 · Choose a date · Available days are marked"}
+                    ? "Paso 1 de 3 · Su aventura comienza aquí"
+                    : "Step 1 of 3 · Your adventure starts here"}
                 </p>
+                <h1 className="mt-2 text-2xl font-black tracking-tight text-stone-900 dark:text-white sm:text-3xl">{lang === "es" ? "Elija la fecha de su visita" : "Choose the date of your visit"}</h1>
+                <p className="mt-2 text-sm text-stone-600 dark:text-stone-400">{lang === "es" ? "Seleccione una fecha para continuar. La disponibilidad se confirma con el equipo." : "Select a date to continue. Our team will confirm availability."}</p>
               </div>
             )}
 
@@ -42,7 +44,7 @@ export default function BookingSection({ selectedTourSlug, initialPackageId }: P
               }`}
             >
               {!selectedDay && (
-                <div className="rounded-2xl border border-stone-200 bg-white pb-2 shadow-sm dark:border-white/10 dark:bg-stone-900 sm:pb-3">
+                <div className="rounded-2xl border border-stone-200 bg-white p-3 shadow-xl shadow-stone-900/5 dark:border-white/10 dark:bg-stone-900 sm:rounded-[1.75rem] sm:p-5">
                   <CalendarSection />
                 </div>
               )}

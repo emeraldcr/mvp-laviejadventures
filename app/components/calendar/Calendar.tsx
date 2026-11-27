@@ -7,6 +7,7 @@ import { translations } from "@/lib/site/translations";
 import CalendarDay from "./CalendarDay";
 import { cn } from "@/lib/shared/utils";
 import { getDaysInMonth, startOfMonth, getDay } from "date-fns";
+import { getCostaRicaDateParts } from "@/lib/shared/dates/costa-rica-time";
 
 function CalendarBase() {
   const {
@@ -20,6 +21,8 @@ function CalendarBase() {
   } = useCalendarContext();
   const { lang } = useLanguage();
   const tr = translations[lang].calendar;
+  const thisYear = getCostaRicaDateParts().year;
+  const nextYear = thisYear + 1;
 
   const calendarDays = useMemo(() => {
     const firstOfMonth = new Date(currentYear, currentMonth, 1);
@@ -80,7 +83,7 @@ function CalendarBase() {
           </button>
         </div>
         <div className="flex flex-wrap justify-center gap-2 sm:justify-end">
-          {currentYear !== new Date().getFullYear() && (
+          {currentYear !== thisYear && (
             <button
               type="button"
               onClick={goToToday}
@@ -89,13 +92,13 @@ function CalendarBase() {
               {lang === "es" ? "Volver a hoy" : "Back to today"}
             </button>
           )}
-          {currentYear !== 2027 && (
+          {currentYear !== nextYear && (
             <button
               type="button"
-              onClick={() => goToYear(2027)}
+              onClick={() => goToYear(nextYear)}
               className="inline-flex min-h-8 items-center justify-center rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-[10px] font-extrabold tracking-wide text-emerald-800 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-500 hover:bg-emerald-500/20 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:text-emerald-200 sm:text-xs"
             >
-              {lang === "es" ? "Ver fechas 2027" : "See 2027 dates"}
+              {lang === "es" ? `Ver fechas ${nextYear}` : `See ${nextYear} dates`}
             </button>
           )}
         </div>
@@ -106,7 +109,7 @@ function CalendarBase() {
         {tr.weekdays.map((lbl) => (
           <div
             key={lbl}
-            className="rounded-md border border-zinc-200 bg-zinc-100/80 py-1 text-center text-[10px] font-extrabold uppercase tracking-wide text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800/80 dark:text-zinc-200 sm:rounded-lg sm:py-1.5 sm:text-xs"
+            className="py-2 text-center text-[10px] font-bold uppercase tracking-wide text-stone-500 dark:text-zinc-400 sm:text-xs"
           >
             {lbl}
           </div>
@@ -121,9 +124,9 @@ function CalendarBase() {
       </div>
 
       {/* Legend */}
-      <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-[9px] text-zinc-500 dark:text-zinc-400 sm:mt-2 sm:text-[10px]">
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-zinc-500 dark:text-zinc-400 sm:mt-2 sm:text-xs">
         <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 sm:gap-3">
-          <LegendDot className="bg-emerald-500" label={tr.legendAvailable} />
+          <LegendDot className="bg-emerald-500" label={lang === "es" ? "Fecha elegible" : "Selectable date"} />
           <LegendDot className="bg-red-500" label={tr.legendSoldOut} />
           <LegendDot className="bg-zinc-400" label={tr.legendPast} />
           <LegendDot className="bg-blue-500" label={tr.legendToday} />

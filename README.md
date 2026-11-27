@@ -151,4 +151,4 @@ Tell me which of these you'd like next and I will implement it.
 
 ### Panel de reservas
 
-El panel administrativo está disponible en `/reservations`. Configure `RESERVATIONS_ADMIN_EMAILS` con los correos administrativos separados por comas; si no está definido, se usa `ANALYTICS_ADMIN_EMAILS`. Cada administrador debe iniciar sesión con un correo verificado.
+El panel `/reservations` consulta las reservas sin inicio de sesión. Su API devuelve información personal de los clientes y es accesible públicamente.

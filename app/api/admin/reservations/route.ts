@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/data/mongodb";
 import { COLLECTIONS } from "@/lib/data/collections";
 
@@ -8,13 +7,6 @@ const PAGE_SIZE = 50;
 
 export async function GET(request: Request) {
   try {
-    const session = await auth();
-    const user = session?.user as { email?: string | null; verifiedEmail?: boolean } | undefined;
-    const allowed = (process.env.RESERVATIONS_ADMIN_EMAILS ?? process.env.ANALYTICS_ADMIN_EMAILS ?? "")
-      .split(",").map((email) => email.trim().toLowerCase()).filter(Boolean);
-    if (!user?.verifiedEmail || !user.email || !allowed.includes(user.email.toLowerCase())) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
     const requested = Number(new URL(request.url).searchParams.get("page") ?? "1");
     const page = Number.isSafeInteger(requested) && requested > 0 && requested <= 100000 ? requested : 1;
     const db = await getDb();
