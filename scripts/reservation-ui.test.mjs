@@ -103,3 +103,25 @@ test('checkout requires explicit acceptance before a changed total can be paid',
   assert.equal(enabled, true);
   assert.doesNotMatch(unchanged, /Acepto el nuevo total/);
 });
+
+test('booking does not substitute a default tour while the requested tour is missing', () => {
+  const Booking = load('app/components/sections/BookingSection.tsx', {
+    '@/lib/booking/packages/pricing': { getTourPackageOptions: () => [], resolveInitialPackage: () => null },
+    './UpcomingDepartures': { __esModule: true, default: () => React.createElement('p', null, 'Departures') },
+    'lucide-react': { CalendarDays: () => null },
+    '@/lib/site/contexts/LanguageContext': { useLanguage: () => ({ lang: 'es' }) },
+    '@/lib/booking/calendar/CalendarContext': { useCalendarContext: () => ({ selectedDay: 20, availability: { 20: 5 }, availabilityStatus: 'ready' }) },
+    '@/app/components/sections/CalendarSection': { __esModule: true, default: () => null },
+    '@/app/components/sections/ReservationSection': { __esModule: true, default: () => React.createElement('p', null, 'Reservation form') },
+    'next/link': { __esModule: true, default: ({ children }) => React.createElement('span', null, children) },
+    '@/lib/site/i18n': { localizeHref: value => value },
+    '@/lib/site/config': { BUSINESS_WHATSAPP_URL: 'https://wa.me/50662332535' },
+  });
+  const props = { selectedTourSlug: 'requested-tour', tour: null, tours: [], ivaRatePercent: 13, retryCatalog() {} };
+  const missing = renderToStaticMarkup(React.createElement(Booking, { ...props, catalogStatus: 'ready' }));
+  assert.match(missing, /No encontramos el tour solicitado/);
+  assert.doesNotMatch(missing, /Reservation form|Departures/);
+  const loading = renderToStaticMarkup(React.createElement(Booking, { ...props, catalogStatus: 'loading' }));
+  assert.match(loading, /Cargando su experiencia/);
+  assert.doesNotMatch(loading, /Reservation form|Departures/);
+});

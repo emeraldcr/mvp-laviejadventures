@@ -9,14 +9,21 @@ import { useLanguage } from "@/lib/site/contexts/LanguageContext";
 import { useCalendarContext } from "@/lib/booking/calendar/CalendarContext";
 import CalendarSection from "@/app/components/sections/CalendarSection";
 import ReservationSection from "@/app/components/sections/ReservationSection";
+import Link from "next/link";
+import { localizeHref } from "@/lib/site/i18n";
+import { BUSINESS_WHATSAPP_URL } from "@/lib/site/config";
 
 type Props = {
   selectedTourSlug: string | null;
   initialPackageId?: string;
   tour: TourSummary | null;
+  tours: TourSummary[];
+  ivaRatePercent: number;
+  catalogStatus: "loading" | "ready" | "error";
+  retryCatalog: () => void;
 };
 
-export default function BookingSection({ selectedTourSlug, initialPackageId, tour }: Props) {
+export default function BookingSection({ selectedTourSlug, initialPackageId, tour, tours, ivaRatePercent, catalogStatus, retryCatalog }: Props) {
   const [chosenPackage, setChosenPackage] = useState(initialPackageId);
   const choosePackage = (id: string) => {
     setChosenPackage(id);
@@ -34,7 +41,14 @@ export default function BookingSection({ selectedTourSlug, initialPackageId, tou
       className="relative min-h-[calc(100svh-4rem)] overflow-x-hidden bg-[#f4f1ea] dark:bg-[#0b0a09]"
     >
       <div className="container relative z-10 mx-auto px-2 pt-20 pb-3 sm:px-4 sm:pt-24 sm:pb-4 md:px-8 md:pt-28 md:pb-6">
-        {selectedTourSlug ? (
+        {catalogStatus === "loading" ? (
+          <p role="status" className="mx-auto max-w-2xl rounded-2xl bg-white p-6 text-center text-sm font-semibold dark:bg-stone-900">{lang === "es" ? "Cargando su experiencia…" : "Loading your experience…"}</p>
+        ) : catalogStatus === "error" || !tour ? (
+          <div role="alert" className="mx-auto max-w-2xl rounded-2xl border border-amber-200 bg-amber-50 p-6 text-center text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
+            <p className="font-semibold">{catalogStatus === "error" ? (lang === "es" ? "No pudimos cargar los tours. Intente de nuevo o consulte al equipo." : "We couldn't load the tours. Try again or contact the team.") : (lang === "es" ? "No encontramos el tour solicitado. Elija otra experiencia o consulte al equipo." : "We couldn't find the requested tour. Choose another experience or contact the team.")}</p>
+            <div className="mt-4 flex flex-wrap justify-center gap-3 font-bold">{catalogStatus === "error" && <button type="button" onClick={retryCatalog} className="underline">{lang === "es" ? "Reintentar" : "Try again"}</button>}<Link href={localizeHref("/tours", lang)} className="underline">{lang === "es" ? "Ver tours" : "See tours"}</Link><a href={BUSINESS_WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="underline">WhatsApp</a></div>
+          </div>
+        ) : selectedTourSlug ? (
           <>
             {!showDetails && (
               <div className="mx-auto mb-4 max-w-2xl text-center md:mb-5">
@@ -93,6 +107,8 @@ export default function BookingSection({ selectedTourSlug, initialPackageId, tou
                       <ReservationSection
                         preselectedTourSlug={selectedTourSlug}
                         preselectedPackageId={chosenPackage}
+                        tours={tours}
+                        ivaRatePercent={ivaRatePercent}
                       />
                     </Suspense>
                   </div>

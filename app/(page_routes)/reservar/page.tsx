@@ -31,7 +31,7 @@ const PACKAGE_QUERY_ALIASES: Record<string, string> = {
 
 export default function ReservarPage() {
   const { lang } = useLanguage();
-  const { tours } = useReservationData();
+  const { tours, ivaRatePercent, catalogStatus, retryCatalog } = useReservationData();
   const [paymentStep, setPaymentStep] = useState(false);
   const [urlParams, setUrlParams] = useState<UrlBookingParams>(DEFAULT_URL_PARAMS);
   const [selectedTourSlug, setSelectedTourSlug] = useState("");
@@ -145,7 +145,7 @@ export default function ReservarPage() {
           </div>
         </header> */}
 
-        <BookingSection selectedTourSlug={bookingTourSlug} tour={activeTour} initialPackageId={urlParams.package} />
+        <BookingSection selectedTourSlug={bookingTourSlug} tour={activeTour} initialPackageId={urlParams.package} tours={tours} ivaRatePercent={ivaRatePercent} catalogStatus={catalogStatus} retryCatalog={retryCatalog} />
       </main>
     </CalendarProvider>
   );

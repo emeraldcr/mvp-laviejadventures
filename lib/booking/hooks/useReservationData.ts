@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { CIUDAD_ESMERALDA_PACKAGES } from "@/lib/tours/packages";
 import type { TourSummary } from "@/lib/tours/types";
 
@@ -21,20 +21,27 @@ export const DEFAULT_BOOKABLE_TOUR: TourSummary = {
 export function useReservationData() {
   const [tours, setTours] = useState<TourSummary[]>([DEFAULT_BOOKABLE_TOUR]);
   const [ivaRatePercent, setIvaRatePercent] = useState<number>(13);
+  const [catalogStatus, setCatalogStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [requestVersion, setRequestVersion] = useState(0);
+  const retryCatalog = useCallback(() => { setCatalogStatus("loading"); setRequestVersion((value) => value + 1); }, []);
 
   useEffect(() => {
+    let active = true;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 20_000);
     fetch("/api/settings/iva")
       .then((r) => r.json())
       .then((data) => {
         const rate = Number(data?.ivaRate);
-        if (!Number.isNaN(rate) && rate >= 0) setIvaRatePercent(rate);
+        if (active && !Number.isNaN(rate) && rate >= 0) setIvaRatePercent(rate);
       })
       .catch(() => {});
 
-    fetch("/api/tours")
-      .then((r) => r.json())
+    fetch("/api/tours", { signal: controller.signal })
+      .then((r) => { if (!r.ok) throw new Error("Tour catalog unavailable"); return r.json(); })
       .then((data) => {
-        const remoteTours = Array.isArray(data?.tours) ? data.tours : [];
+        if (!Array.isArray(data?.tours)) throw new Error("Invalid tour catalog");
+        const remoteTours = data.tours;
         const mapped: TourSummary[] = remoteTours
           .map((t: {
             id?: string;
@@ -74,11 +81,15 @@ export function useReservationData() {
             tagEn: t.tagEn,
           }))
           .filter((t: TourSummary) => Boolean(t.slug));
-        const hasMain = mapped.some((t) => t.slug === DEFAULT_BOOKABLE_TOUR.slug);
-        setTours(hasMain ? mapped : [DEFAULT_BOOKABLE_TOUR, ...mapped]);
+        if (active) {
+          setTours(mapped);
+          setCatalogStatus("ready");
+        }
       })
-      .catch(() => { setTours([DEFAULT_BOOKABLE_TOUR]); });
-  }, []);
+      .catch(() => { if (active) setCatalogStatus("error"); })
+      .finally(() => clearTimeout(timeout));
+    return () => { active = false; clearTimeout(timeout); controller.abort(); };
+  }, [requestVersion]);
 
-  return { tours, ivaRatePercent };
+  return { tours, ivaRatePercent, catalogStatus, retryCatalog };
 }

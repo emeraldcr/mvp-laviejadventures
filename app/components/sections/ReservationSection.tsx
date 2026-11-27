@@ -4,16 +4,19 @@ import { useCalendarContext } from "@/lib/booking/calendar/CalendarContext";
 import ReservationDetails from "@/app/components/reservation/ReservationDetails";
 import { useLanguage } from "@/lib/site/contexts/LanguageContext";
 import { useSearchParams } from "next/navigation";
-import { useReservationData, DEFAULT_BOOKABLE_TOUR } from "@/lib/booking/hooks/useReservationData";
+import { DEFAULT_BOOKABLE_TOUR } from "@/lib/booking/hooks/useReservationData";
+import type { TourSummary } from "@/lib/tours/types";
 
 type Props = {
   className?: string;
   preselectedTourSlug?: string | null;
   preselectedPackageId?: string;
+  tours: TourSummary[];
+  ivaRatePercent: number;
 };
 
 
-export default function ReservationSection({ className, preselectedTourSlug, preselectedPackageId }: Props) {
+export default function ReservationSection({ className, preselectedTourSlug, preselectedPackageId, tours, ivaRatePercent }: Props) {
   const {
     selectedDay,
     currentMonth,
@@ -24,7 +27,6 @@ export default function ReservationSection({ className, preselectedTourSlug, pre
   } = useCalendarContext();
 
   const { lang } = useLanguage();
-  const { tours, ivaRatePercent } = useReservationData();
   const searchParams = useSearchParams();
 
   const requestedTourSlug = (preselectedTourSlug ?? searchParams.get("tour") ?? "").trim();
