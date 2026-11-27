@@ -56,10 +56,7 @@ export function useReservationInteractions({
 
   const onTicketsChange = useCallback((rawValue: string) => {
     const parsedValue = Number(rawValue);
-    const nextTickets = Math.min(
-      Math.max(Number.isFinite(parsedValue) ? Math.trunc(parsedValue) : 1, 1),
-      Math.max(slots, 1),
-    );
+    const nextTickets = Number.isSafeInteger(parsedValue) && parsedValue >= 1 ? parsedValue : 1;
     setTickets(nextTickets);
     setHasConfirmedTickets(true);
     trackAnalyticsEvent("booking_selection_changed", {

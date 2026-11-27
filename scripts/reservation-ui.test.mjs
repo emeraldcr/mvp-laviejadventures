@@ -11,13 +11,13 @@ import { renderToStaticMarkup } from 'react-dom/server';
 
 const require = createRequire(import.meta.url);
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-function load(file, imports, globals = {}) {
+function load(file, imports, globals = {}, exportName = 'default') {
   const module = { exports: {} };
   const code = ts.transpileModule(fs.readFileSync(path.join(root, file), 'utf8'), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true },
   }).outputText;
   vm.runInNewContext(code, { module, exports: module.exports, require: name => name in imports ? imports[name] : require(name), ...globals });
-  return module.exports.default;
+  return module.exports[exportName];
 }
 
 test('calendar only labels dates sold out after a successful availability response', () => {
@@ -71,6 +71,18 @@ test('calendar keeps the requested group size when the selected date has fewer s
   assert.equal(state.selectedDay, 20);
   assert.equal(state.tickets, 6);
   assert.equal(state.getSlotsForDay(20), 2);
+});
+
+test('entering a group larger than remaining capacity preserves the requested number', () => {
+  let tickets = 0;
+  const useInteractions = load('app/components/reservation/hooks/useReservationInteractions.ts', {
+    react: { useCallback: fn => fn },
+    '@/lib/analytics/client': { trackAnalyticsEvent() {} },
+    '../constants/reservationWizard': { RESERVATION_STEP_LABELS: { 1: 'schedule' } },
+  }, {}, 'useReservationInteractions');
+  const actions = useInteractions({ getBookingSnapshot: () => ({}), setTickets: value => { tickets = value; }, slots: 20, setHasConfirmedTickets() {} });
+  actions.onTicketsChange('25');
+  assert.equal(tickets, 25);
 });
 
 test('a single unavailable package cannot be selected', () => {

@@ -54,6 +54,10 @@ export default function ReservationDetailsStep1Guided(props: Props) {
     onTourTimeSelect, onTicketsChange, onStep1Enter, onContinue, tr, lang,
   } = props;
   const isEs = lang === "es";
+  const groupMessage = isEs
+    ? `Hola, quisiera consultar por una reserva para ${tickets} personas el ${reservationDateIso}. ¿Me pueden ayudar con la disponibilidad?`
+    : `Hello, I would like to ask about a booking for ${tickets} guests on ${reservationDateIso}. Can you help me check availability?`;
+  const groupSupportHref = `${BUSINESS_WHATSAPP_URL}?text=${encodeURIComponent(groupMessage)}`;
   const reduceMotion = useReducedMotion();
   const guestPresets = GUEST_PRESETS.filter((count) => count <= Math.max(1, slots));
   const titles = isEs
@@ -172,7 +176,7 @@ export default function ReservationDetailsStep1Guided(props: Props) {
           {choiceStep === 3 && (
             <section>
               {hasFlexibleSchedule && <p className="mb-4 text-sm font-bold text-emerald-700 dark:text-emerald-300">{isEs ? "Horario flexible · lo coordinamos contigo" : "Flexible schedule · we’ll coordinate it with you"}</p>}
-              {tickets > slots && <p role="alert" className="mb-4 rounded-xl bg-amber-50 p-3 text-sm font-semibold text-amber-950 dark:bg-amber-950/40 dark:text-amber-100">{isEs ? `Solicitó ${tickets} personas y esta fecha muestra ${slots} cupos. Reduzca el grupo o cambie de fecha. ` : `You requested ${tickets} guests and this date shows ${slots} spots. Reduce the group or change the date. `}<a href={BUSINESS_WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="underline">{isEs ? "Consultar al equipo" : "Contact the team"}</a></p>}
+              {tickets > slots && <p role="alert" className="mb-4 rounded-xl bg-amber-50 p-3 text-sm font-semibold text-amber-950 dark:bg-amber-950/40 dark:text-amber-100">{isEs ? `Solicitó ${tickets} personas y esta fecha muestra ${slots} cupos. Reduzca el grupo o cambie de fecha. ` : `You requested ${tickets} guests and this date shows ${slots} spots. Reduce the group or change the date. `}<a href={groupSupportHref} target="_blank" rel="noopener noreferrer" className="underline">{isEs ? "Consultar al equipo" : "Contact the team"}</a></p>}
               <div className="rounded-3xl border border-zinc-200 bg-zinc-50/70 p-4 dark:border-zinc-700 dark:bg-zinc-950/30 sm:p-6">
                 <div className="mb-3 flex items-center justify-between gap-3">
                   <p className="flex items-center gap-2 text-sm font-black text-zinc-900 dark:text-white"><Users className="h-4 w-4 text-emerald-600" />{tr.numPeople}</p>
@@ -187,10 +191,11 @@ export default function ReservationDetailsStep1Guided(props: Props) {
                   ))}
                   <div className="ml-auto flex items-center gap-2">
                     <button type="button" onClick={() => onTicketsChange(String(tickets - 1))} disabled={tickets <= 1} className="grid h-14 w-14 place-items-center rounded-2xl border border-zinc-300 disabled:opacity-40 dark:border-zinc-700" aria-label={isEs ? "Reducir personas" : "Decrease guests"}><Minus className="h-5 w-5" /></button>
-                    <input ref={ticketsInputRef} id="tickets" type="number" min={1} max={Math.max(1, slots)} value={tickets} onChange={(e) => onTicketsChange(e.target.value)} onKeyDown={onStep1Enter} className="h-14 w-20 rounded-2xl border border-zinc-300 bg-white text-center text-xl font-black dark:border-zinc-700 dark:bg-zinc-900" />
-                    <button type="button" onClick={() => onTicketsChange(String(tickets + 1))} disabled={tickets >= slots} className="grid h-14 w-14 place-items-center rounded-2xl border border-zinc-300 disabled:opacity-40 dark:border-zinc-700" aria-label={isEs ? "Aumentar personas" : "Increase guests"}><Plus className="h-5 w-5" /></button>
+                    <input ref={ticketsInputRef} id="tickets" type="number" min={1} value={tickets} onChange={(e) => onTicketsChange(e.target.value)} onKeyDown={onStep1Enter} aria-label={isEs ? "Cantidad de personas" : "Number of guests"} className="h-14 w-20 rounded-2xl border border-zinc-300 bg-white text-center text-xl font-black dark:border-zinc-700 dark:bg-zinc-900" />
+                    <button type="button" onClick={() => onTicketsChange(String(tickets + 1))} disabled={tickets >= Number.MAX_SAFE_INTEGER} className="grid h-14 w-14 place-items-center rounded-2xl border border-zinc-300 disabled:opacity-40 dark:border-zinc-700" aria-label={isEs ? "Aumentar personas" : "Increase guests"}><Plus className="h-5 w-5" /></button>
                   </div>
                 </div>
+                <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-300">{isEs ? "¿Grupo grande o necesita un plan especial? " : "Traveling with a large group or need a custom plan? "}<a href={groupSupportHref} target="_blank" rel="noopener noreferrer" className="font-bold text-emerald-700 underline dark:text-emerald-300">{isEs ? "Consulte al equipo por WhatsApp" : "Ask the team on WhatsApp"}</a></p>
               </div>
             </section>
           )}

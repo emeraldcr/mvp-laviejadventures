@@ -52,7 +52,7 @@ export default function ReservarPage() {
 
     setUrlParams({
       tour: tourFromUrl,
-      pax: Number.isFinite(paxRaw) && paxRaw >= 1 ? Math.min(20, Math.round(paxRaw)) : 2,
+      pax: Number.isSafeInteger(paxRaw) && paxRaw >= 1 ? paxRaw : 2,
       date: params.get("date")?.trim() ?? "",
       package: (() => {
         const value = params.get("package")?.trim() ?? "";
