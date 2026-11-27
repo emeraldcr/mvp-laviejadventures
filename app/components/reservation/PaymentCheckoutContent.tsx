@@ -10,8 +10,11 @@ import { useCheckoutQuote } from "@/app/components/reservation/hooks/useCheckout
 import { ADDON_DATA } from "@/lib/booking/addons/catalog";
 import { usePendingBooking } from "@/lib/booking/checkout/use-pending-booking";
 import { usePayPalCheckout } from "@/app/components/reservation/hooks/usePayPalCheckout";
-import { buildBookingAnalyticsMetadata } from "@/app/components/reservation/checkoutUtils";
+import { buildBookingAnalyticsMetadata, buildCheckoutKey } from "@/app/components/reservation/checkoutUtils";
 import SafetyBookingNotice from "@/app/components/reservation/SafetyBookingNotice";
+import Link from "next/link";
+import { localizeHref } from "@/lib/site/i18n";
+import { BOOKING_ASSURANCE_EN, BOOKING_ASSURANCE_ES } from "@/lib/tours/policy";
 
 const SummaryRow = ({
   icon,
@@ -46,6 +49,7 @@ type Props = {
 
 export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Props) {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("paypal");
+  const [acceptedReview, setAcceptedReview] = useState<string | null>(null);
   const { lang } = useLanguage();
   const tr = translations[lang].payment;
 
@@ -74,6 +78,8 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
     }),
     [checkoutQuote, orderDetails],
   );
+  const reviewKey = buildCheckoutKey(checkoutOrderDetails, lang);
+  const reviewAccepted = acceptedReview === reviewKey;
 
   const packageName = (tr.packages as Record<string, string>)[tourPackage] ?? tourPackage;
   const formattedTime = tr.timeLabels[tourTime] ?? tourTime;
@@ -89,7 +95,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
     paypalLoadError, retryPayPal, paymentError, isCapturing, pendingOrderId, retryCapture,
     isPaypalLoading: isPayPalSdkLoading,
   } = usePayPalCheckout({
-    enabled: paymentMethod === "paypal" && checkoutQuote.synced && !checkoutQuote.syncing && !checkoutQuote.error,
+    enabled: paymentMethod === "paypal" && checkoutQuote.synced && !checkoutQuote.syncing && !checkoutQuote.error && reviewAccepted,
     orderDetails: checkoutOrderDetails,
     lang,
     errorMessage: tr.error,
@@ -222,9 +228,9 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
             {checkoutQuote.error && (
               <p className="lva-alert-error mt-1 rounded-lg px-2 py-1 text-xs font-medium">{checkoutQuote.error}</p>
             )}
-            {!checkoutQuote.syncing && !checkoutQuote.error && Math.abs(initialTotal - total) >= 0.02 && (
+            {!checkoutQuote.syncing && !checkoutQuote.error && Math.round(initialTotal * 100) !== Math.round(total * 100) && (
               <p className="lva-status-warning mt-1 rounded-lg px-2 py-1 text-xs font-medium">
-                {lang === "es" ? "Total actualizado con extras." : "Total updated with add-ons."}
+                {lang === "es" ? `Total anterior: $${initialTotal.toFixed(2)}. El total fue actualizado.` : `Previous total: $${initialTotal.toFixed(2)}. The total has been updated.`}
               </p>
             )}
           </div>
@@ -245,6 +251,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
                   type="button"
                   role="tab"
                   aria-selected={isActive}
+                  disabled={Boolean(pendingOrderId) || isCapturing}
                   onClick={() => setPaymentMethod(tab.id)}
                   data-active={isActive}
                   className={["lva-control flex min-h-[4.5rem] w-full items-center justify-between gap-3 rounded-2xl px-4 py-3 text-left transition", isActive ? "" : "lva-muted"].join(" ")}
@@ -271,6 +278,7 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
                     type="button"
                     role="tab"
                     aria-selected={isActive}
+                    disabled={Boolean(pendingOrderId) || isCapturing}
                     onClick={() => setPaymentMethod(tab.id)}
                     data-active={isActive}
                     className={["lva-control flex min-h-[4.5rem] items-center justify-between gap-2 rounded-2xl px-3 py-2.5 text-left transition", isActive ? "" : "lva-muted"].join(" ")}
@@ -289,6 +297,12 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
         </div>
 
         <SafetyBookingNotice lang={lang} className="mb-4" />
+        <p className="lva-card-muted mb-4 rounded-xl px-4 py-3 text-sm">{lang === "es" ? BOOKING_ASSURANCE_ES : BOOKING_ASSURANCE_EN}</p>
+
+        {checkoutQuote.synced && !checkoutQuote.syncing && !checkoutQuote.error && <label className="mb-4 flex cursor-pointer items-start gap-3 rounded-xl border border-emerald-300 bg-emerald-50 p-4 text-sm text-emerald-950 dark:border-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-100">
+          <input type="checkbox" checked={reviewAccepted} disabled={Boolean(pendingOrderId) || isCapturing} onChange={(event) => setAcceptedReview(event.target.checked ? reviewKey : null)} className="mt-0.5 h-5 w-5 shrink-0" />
+          <span>{lang === "es" ? `Revisé los detalles y acepto el total de $${total.toFixed(2)} USD, los ` : `I reviewed the details and accept the $${total.toFixed(2)} USD total, the `}<Link href={localizeHref("/terminos-y-condiciones", lang)} target="_blank" rel="noopener noreferrer" className="font-bold underline">{lang === "es" ? "términos" : "terms"}</Link>{lang === "es" ? " y la " : " and "}<Link href={localizeHref("/politica-de-privacidad", lang)} target="_blank" rel="noopener noreferrer" className="font-bold underline">{lang === "es" ? "política de privacidad" : "privacy policy"}</Link>.</span>
+        </label>}
 
         {resumePath && (
           <div className="lva-status-success mb-4 flex flex-col gap-2 rounded-xl px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
@@ -314,6 +328,10 @@ export default function PaymentCheckoutContent({ orderDetails, onSuccess }: Prop
               {lang === "es" ? "Validar de nuevo" : "Validate again"}
             </button>
           </div>
+        ) : !checkoutQuote.synced || checkoutQuote.syncing ? (
+          <p role="status" className="lva-card-muted rounded-2xl p-4 text-sm">{tr.loadingPaymentInfo}</p>
+        ) : !reviewAccepted ? (
+          <p className="lva-card-muted rounded-2xl p-4 text-sm">{lang === "es" ? "Confirme los detalles para continuar." : "Confirm the details to continue."}</p>
         ) : paymentMethod === "paypal" ? (
           <div className="lva-card-muted relative min-h-[160px] w-full overflow-hidden rounded-2xl p-3">
             {isPaypalLoading && (

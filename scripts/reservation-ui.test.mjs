@@ -126,6 +126,30 @@ test('checkout requires explicit acceptance before a changed total can be paid',
   assert.doesNotMatch(unchanged, /Acepto el nuevo total/);
 });
 
+test('resumed checkout requires review before enabling payment', () => {
+  let enabled;
+  const Checkout = load('app/components/reservation/PaymentCheckoutContent.tsx', {
+    'lucide-react': Object.fromEntries(['Building2', 'CalendarDays', 'Clock3', 'CreditCard', 'Mail', 'MessageCircle', 'Phone', 'ShieldCheck', 'Ticket', 'UserRound'].map(name => [name, () => null])),
+    '@/lib/site/contexts/LanguageContext': { useLanguage: () => ({ lang: 'es' }) },
+    '@/lib/site/translations': { translations: { es: { payment: { packages: {}, timeLabels: {}, loadingPaymentInfo: 'Cargando' } } } },
+    '@/app/components/reservation/LocalPaymentOptions': { __esModule: true, default: () => React.createElement('p', null, 'Local payment actions') },
+    '@/app/components/reservation/hooks/useCheckoutQuote': { useCheckoutQuote: () => ({ total: 113, synced: true, syncing: false, error: null, subtotal: 100, ivaRatePercent: 13, packagePrice: 50, addonsPrice: 0, addonsPricePerPerson: 0, addonsBreakdown: [], transportQuote: null }) },
+    '@/lib/booking/addons/catalog': { ADDON_DATA: [] },
+    '@/lib/booking/checkout/use-pending-booking': { usePendingBooking: () => ({ savePendingBooking() {} }) },
+    '@/app/components/reservation/hooks/usePayPalCheckout': { usePayPalCheckout: options => { enabled = options.enabled; return { paypalRef() {}, isPaypalLoading: false }; } },
+    '@/app/components/reservation/checkoutUtils': { buildBookingAnalyticsMetadata: () => ({}), buildCheckoutKey: value => String(value.total) },
+    '@/app/components/reservation/SafetyBookingNotice': { __esModule: true, default: () => null },
+    'next/link': { __esModule: true, default: ({ children }) => React.createElement('span', null, children) },
+    '@/lib/site/i18n': { localizeHref: value => value },
+    '@/lib/tours/policy': { BOOKING_ASSURANCE_ES: 'Sujeto a confirmación', BOOKING_ASSURANCE_EN: 'Subject to confirmation' },
+  });
+  const html = renderToStaticMarkup(React.createElement(Checkout, { orderDetails: { bookingAttemptId: 'attempt', name: 'Test', email: 'a@example.com', phone: '+50688888888', tickets: 2, total: 100, date: '2026-12-20', tourTime: '08:00', tourPackage: 'Package', tourName: 'Tour' }, onSuccess() {} }));
+  assert.equal(enabled, false);
+  assert.match(html, /Revisé los detalles y acepto el total de \$113\.00/);
+  assert.match(html, /Total anterior: \$100\.00/);
+  assert.doesNotMatch(html, /Local payment actions/);
+});
+
 test('booking does not substitute a default tour while the requested tour is missing', () => {
   const Booking = load('app/components/sections/BookingSection.tsx', {
     '@/lib/booking/packages/pricing': { getTourPackageOptions: () => [], resolveInitialPackage: () => null },
