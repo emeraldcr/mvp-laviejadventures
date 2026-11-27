@@ -135,10 +135,17 @@ export default function ReservationDetailsStep1Guided(props: Props) {
           </div>
 
           {choiceStep === 1 && (
+            <>
+            {selectedPackageId && packages.some((pkg) => pkg.id === selectedPackageId && isPackageDisabled?.(pkg)) && (
+              <p role="status" className="mb-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950 dark:text-amber-100">
+                {isEs ? "El paquete elegido no opera en esta fecha. Cambie la fecha para ver sus próximas salidas o seleccione otra opción disponible." : "Your selected package does not operate on this date. Change the date to see its next departures or choose another available option."}
+              </p>
+            )}
             <PackagePicker packages={packages} selectedPackageId={selectedPackageId}
               hasConfirmedSelection={hasConfirmedPackage}
               onSelect={onPackageSelect} lang={lang} dateIso={reservationDateIso}
               isPackageDisabled={isPackageDisabled} />
+            </>
           )}
 
           {choiceStep === 2 && (

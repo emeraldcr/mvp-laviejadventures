@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef } from "react";
 import { useCalendarContext } from "@/lib/booking/calendar/CalendarContext";
+import type { TourPackageOption } from "@/lib/tours/types";
 import Calendar from "@/app/components/calendar/Calendar";
 import { cn } from "@/lib/shared/utils";
 import { useLanguage } from "@/lib/site/contexts/LanguageContext";
@@ -9,9 +10,10 @@ import SafetyBookingNotice from "@/app/components/reservation/SafetyBookingNotic
 
 type Props = {
   className?: string;
+  selectedPackage?: TourPackageOption | null;
 };
 
-export default function CalendarSection({ className }: Props) {
+export default function CalendarSection({ className, selectedPackage }: Props) {
   const { selectedDay } = useCalendarContext();
   const { lang } = useLanguage();
   const previousSelectedDay = useRef(selectedDay);
@@ -37,7 +39,7 @@ export default function CalendarSection({ className }: Props) {
         <div>
           <SafetyBookingNotice lang={lang} className="mb-4" />
           <div className="w-full">
-            <Calendar />
+            <Calendar selectedPackage={selectedPackage} />
           </div>
         </div>
       </div>

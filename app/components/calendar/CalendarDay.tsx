@@ -4,10 +4,13 @@ import React from "react";
 import { useCalendarContext } from "@/lib/booking/calendar/CalendarContext";
 import { useLanguage } from "@/lib/site/contexts/LanguageContext";
 import { translations } from "@/lib/site/translations";
+import { isPackageAvailableOnDate } from "@/lib/tours/packages";
+import type { TourPackageOption } from "@/lib/tours/types";
 import { cn } from "@/lib/shared/utils";
 
 type Props = {
   day: number | null;
+  selectedPackage?: TourPackageOption | null;
 };
 
 type Status = "past" | "soldout" | "available";
@@ -24,10 +27,12 @@ const STATUS_TEXT_CLASS: Record<Status, string> = {
   available: "text-emerald-700 dark:text-emerald-200",
 };
 
-function CalendarDayBase({ day }: Props) {
+function CalendarDayBase({ day, selectedPackage }: Props) {
   const { lang } = useLanguage();
   const tr = translations[lang].calendar;
   const {
+    currentYear,
+    currentMonth,
     selectedDay,
     selectDay,
     isPastDay,
@@ -43,13 +48,15 @@ function CalendarDayBase({ day }: Props) {
   const today = isToday(day);
   const slots = getSlotsForDay(day);
 
-  const hasSlots = slots > 0 && !past;
+  const dateIso = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  const packageUnavailable = Boolean(selectedPackage && !isPackageAvailableOnDate(selectedPackage, dateIso));
+  const hasSlots = slots > 0 && !past && !packageUnavailable;
   const selected = selectedDay === day;
-  const status: Status = past ? "past" : slots === 0 ? "soldout" : "available";
+  const status: Status = past ? "past" : slots === 0 || packageUnavailable ? "soldout" : "available";
 
   const labelText = status === "past"
     ? (today ? (lang === "es" ? "No reservable" : "Not bookable") : "")
-    : status === "soldout" ? tr.statusSoldOut : (lang === "es" ? "Elegir" : "Select");
+    : packageUnavailable ? (lang === "es" ? "Paquete no disponible" : "Package unavailable") : status === "soldout" ? tr.statusSoldOut : (lang === "es" ? "Elegir" : "Select");
 
   const handleSelect = () => {
     if (!hasSlots) return;
@@ -69,7 +76,7 @@ function CalendarDayBase({ day }: Props) {
           ? today ? (lang === "es" ? `Día ${day}, hoy, no reservable` : `Day ${day}, today, not bookable`) : tr.ariaDayPast.replace("{day}", String(day))
           : hasSlots
             ? (lang === "es" ? `Día ${day}, seleccionar fecha; disponibilidad sujeta a confirmación` : `Day ${day}, select date; availability subject to confirmation`)
-            : tr.ariaDaySoldOut.replace("{day}", String(day))
+            : packageUnavailable ? (lang === "es" ? `Día ${day}, paquete no disponible` : `Day ${day}, package unavailable`) : tr.ariaDaySoldOut.replace("{day}", String(day))
       }
       aria-pressed={selected}
       className={cn(

@@ -4,12 +4,13 @@ import React, { useMemo } from "react";
 import { useCalendarContext } from "@/lib/booking/calendar/CalendarContext";
 import { useLanguage } from "@/lib/site/contexts/LanguageContext";
 import { translations } from "@/lib/site/translations";
+import type { TourPackageOption } from "@/lib/tours/types";
 import CalendarDay from "./CalendarDay";
 import { cn } from "@/lib/shared/utils";
 import { getDaysInMonth, startOfMonth, getDay } from "date-fns";
 import { getCostaRicaDateParts } from "@/lib/shared/dates/costa-rica-time";
 
-function CalendarBase() {
+function CalendarBase({ selectedPackage }: { selectedPackage?: TourPackageOption | null }) {
   const {
     currentMonth,
     currentYear,
@@ -119,6 +120,7 @@ function CalendarBase() {
           <CalendarDay
             key={`${currentYear}-${currentMonth}-${day ?? "empty"}-${i}`}
             day={day}
+            selectedPackage={selectedPackage}
           />
         ))}
       </div>

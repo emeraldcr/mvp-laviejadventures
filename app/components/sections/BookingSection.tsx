@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useState } from "react";
+import { getTourPackageOptions, resolveInitialPackage } from "@/lib/booking/packages/pricing";
 import type { TourSummary } from "@/lib/tours/types";
 import UpcomingDepartures from "./UpcomingDepartures";
 import { CalendarDays } from "lucide-react";
@@ -55,8 +56,8 @@ export default function BookingSection({ selectedTourSlug, initialPackageId, tou
             >
               {!selectedDay && (
                 <div className="rounded-2xl border border-stone-200 bg-white p-3 shadow-xl shadow-stone-900/5 dark:border-white/10 dark:bg-stone-900 sm:rounded-[1.75rem] sm:p-5">
-                  {tour && <UpcomingDepartures tour={tour} preferredPackage={initialPackageId} lang={lang} onChoosePackage={choosePackage} />}
-                  <CalendarSection />
+                  {tour && <UpcomingDepartures tour={tour} preferredPackage={chosenPackage} lang={lang} onChoosePackage={choosePackage} />}
+                  <CalendarSection selectedPackage={tour && chosenPackage ? resolveInitialPackage(getTourPackageOptions(tour), chosenPackage) : null} />
                 </div>
               )}
 
@@ -65,7 +66,10 @@ export default function BookingSection({ selectedTourSlug, initialPackageId, tou
                   <div className="mb-1 flex justify-end sm:mb-2">
                     <button
                       type="button"
-                      onClick={() => selectDay(null)}
+                      onClick={() => {
+                        setChosenPackage(new URLSearchParams(window.location.search).get("package") || chosenPackage);
+                        selectDay(null);
+                      }}
                       className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-stone-300 bg-white px-3 text-xs font-black text-stone-700 transition hover:border-[#00C4B0] hover:text-[#087d72] dark:border-white/15 dark:bg-stone-900 dark:text-stone-200"
                     >
                       <CalendarDays className="h-4 w-4" aria-hidden />

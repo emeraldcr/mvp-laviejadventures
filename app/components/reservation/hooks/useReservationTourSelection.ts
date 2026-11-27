@@ -128,20 +128,6 @@ export function useReservationTourSelection({
   }, [selectedTourSlug, packageOptions, initialSelectedPackageId, isPackageDisabled]);
 
   useEffect(() => {
-    if (packageOptions.length === 0 || !selectedPackageId) return;
-    const current = packageOptions.find((pkg) => getPackageId(pkg) === selectedPackageId) ?? null;
-    if (current && !isPackageDisabled(current)) return;
-
-    const recommended = resolveRecommendedPackage(packageOptions, isPackageDisabled);
-    if (recommended) {
-      setSelectedPackageId(getPackageId(recommended));
-      return;
-    }
-    const firstOpen = packageOptions.find((pkg) => !isPackageDisabled(pkg));
-    if (firstOpen) setSelectedPackageId(getPackageId(firstOpen));
-  }, [isPackageDisabled, packageOptions, selectedPackageId]);
-
-  useEffect(() => {
     if (typeof window === "undefined" || !selectedTourSlug || !selectedPackageId) return;
 
     const url = new URL(window.location.href);
