@@ -129,7 +129,7 @@ export default function HomeHero({ tour }: { tour?: TourSummary }) {
             </a>
           </div>
           <p className="mt-2 max-w-sm text-[11px] font-semibold leading-relaxed text-white/80 sm:text-xs">
-            {isEs ? "Sin pago hasta confirmar disponibilidad." : "No payment until availability is confirmed."}
+            {isEs ? "El pago en línea se realiza al reservar; el equipo confirma la disponibilidad." : "Online payment is made when booking; the team confirms availability."}
           </p>
           {tour && <p className="mt-3 max-w-xl text-xs font-bold leading-relaxed text-white/75 sm:text-sm">
             {tourDuration(tour.duration ?? "", lang)} · {tourDifficulty(tour.difficulty ?? "", lang)} · {isEs ? "desde" : "from"} {getTourPriceDisplay(tour, isEs).compact}/{isEs ? "persona" : "person"} · {isEs ? "cupos sujetos a confirmación" : "spaces subject to confirmation"}

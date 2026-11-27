@@ -19,6 +19,8 @@ type CalendarContextValue = {
   currentMonth: number;
   monthLabel: string;
   availability: AvailabilityMap;
+  availabilityStatus: "loading" | "ready" | "error";
+  retryAvailability: () => void;
   selectedDay: number | null;
   selectedDate: Date | null;
   setSelectedDate: (date: Date | null) => void;
@@ -72,18 +74,29 @@ export function CalendarProvider({
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [tickets, setTicketsState] = useState<number>(Math.max(1, initialTickets));
   const [loadedAvailability, setLoadedAvailability] = useState<{ key: string; data: AvailabilityMap } | null>(null);
+  const [failedAvailabilityKey, setFailedAvailabilityKey] = useState<string | null>(null);
+  const [retryVersion, setRetryVersion] = useState(0);
   const availabilityKey = `${selectedTourSlug ?? ""}:${currentYear}:${currentMonth}`;
   const availability = loadedAvailability?.key === availabilityKey ? loadedAvailability.data : {};
+  const availabilityStatus = loadedAvailability?.key === availabilityKey ? "ready" : failedAvailabilityKey === availabilityKey ? "error" : "loading";
+  const retryAvailability = useCallback(() => {
+    setFailedAvailabilityKey(null);
+    setLoadedAvailability(null);
+    setRetryVersion((version) => version + 1);
+  }, []);
 
   useEffect(() => {
     if (!selectedTourSlug) return;
     const controller = new AbortController();
-    fetch(`/api/calendar/availability?year=${currentYear}&month=${currentMonth}&tourSlug=${encodeURIComponent(selectedTourSlug)}`, { signal: controller.signal })
+    fetch(`/api/calendar/availability?year=${currentYear}&month=${currentMonth}&tourSlug=${encodeURIComponent(selectedTourSlug)}`, { signal: AbortSignal.any([controller.signal, AbortSignal.timeout(20_000)]) })
       .then((response) => { if (!response.ok) throw new Error("Availability unavailable"); return response.json(); })
-      .then((data) => setLoadedAvailability({ key: availabilityKey, data: data.availability }))
-      .catch(() => {});
+      .then((data) => {
+        if (!data?.availability || typeof data.availability !== "object" || Array.isArray(data.availability) || Object.values(data.availability).some((value) => typeof value !== "number" || !Number.isFinite(value) || value < 0)) throw new Error("Invalid availability");
+        if (!controller.signal.aborted) setLoadedAvailability({ key: availabilityKey, data: data.availability });
+      })
+      .catch(() => { if (!controller.signal.aborted) setFailedAvailabilityKey(availabilityKey); });
     return () => controller.abort();
-  }, [availabilityKey, currentMonth, currentYear, selectedTourSlug]);
+  }, [availabilityKey, currentMonth, currentYear, selectedTourSlug, retryVersion]);
 
   const monthLabel = useMemo(
     () =>
@@ -241,6 +254,8 @@ export function CalendarProvider({
     currentMonth,
     monthLabel,
     availability,
+    availabilityStatus,
+    retryAvailability,
     selectedDay,
     selectedDate,
     setSelectedDate,

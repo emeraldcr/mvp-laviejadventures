@@ -25,7 +25,8 @@ export default function BookingSection({ selectedTourSlug, initialPackageId, tou
     window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
   };
   const { lang } = useLanguage();
-  const { selectedDay, selectDay } = useCalendarContext();
+  const { selectedDay, selectDay, availability, availabilityStatus, retryAvailability } = useCalendarContext();
+  const showDetails = selectedDay !== null && availabilityStatus === "ready" && (availability[selectedDay] ?? 0) > 0;
 
   return (
     <section
@@ -35,7 +36,7 @@ export default function BookingSection({ selectedTourSlug, initialPackageId, tou
       <div className="container relative z-10 mx-auto px-2 pt-20 pb-3 sm:px-4 sm:pt-24 sm:pb-4 md:px-8 md:pt-28 md:pb-6">
         {selectedTourSlug ? (
           <>
-            {!selectedDay && (
+            {!showDetails && (
               <div className="mx-auto mb-4 max-w-2xl text-center md:mb-5">
                 <p className="text-xs font-bold uppercase tracking-[0.16em] text-emerald-700 dark:text-emerald-400">
                   {lang === "es"
@@ -49,19 +50,25 @@ export default function BookingSection({ selectedTourSlug, initialPackageId, tou
 
             <div
               className={`mx-auto grid items-start gap-3 lg:gap-5 xl:gap-6 ${
-                selectedDay
+                showDetails
                   ? "max-w-6xl"
                   : "max-w-2xl"
               }`}
             >
-              {!selectedDay && (
+              {!showDetails && (
                 <div className="rounded-2xl border border-stone-200 bg-white p-3 shadow-xl shadow-stone-900/5 dark:border-white/10 dark:bg-stone-900 sm:rounded-[1.75rem] sm:p-5">
                   {tour && <UpcomingDepartures tour={tour} preferredPackage={chosenPackage} lang={lang} onChoosePackage={choosePackage} />}
                   <CalendarSection selectedPackage={tour && chosenPackage ? resolveInitialPackage(getTourPackageOptions(tour), chosenPackage) : null} />
                 </div>
               )}
 
-              {selectedDay && (
+              {selectedDay !== null && availabilityStatus !== "ready" && (
+                <div className="rounded-2xl border border-stone-200 bg-white p-5 text-sm dark:border-white/10 dark:bg-stone-900" role={availabilityStatus === "error" ? "alert" : "status"}>
+                  {availabilityStatus === "error" ? (lang === "es" ? "No pudimos consultar esta fecha. Intente de nuevo o elija otra." : "We could not check this date. Try again or choose another date.") : (lang === "es" ? "Consultando disponibilidad de la fecha elegida…" : "Checking availability for your selected date…")}
+                  {availabilityStatus === "error" && <button type="button" onClick={retryAvailability} className="ml-2 font-bold underline">{lang === "es" ? "Reintentar" : "Try again"}</button>}
+                </div>
+              )}
+              {showDetails && (
                 <div className="min-w-0">
                   <div className="mb-1 flex justify-end sm:mb-2">
                     <button

@@ -9,6 +9,7 @@ import CalendarDay from "./CalendarDay";
 import { cn } from "@/lib/shared/utils";
 import { getDaysInMonth, startOfMonth, getDay } from "date-fns";
 import { getCostaRicaDateParts } from "@/lib/shared/dates/costa-rica-time";
+import { BUSINESS_WHATSAPP_URL } from "@/lib/site/config";
 
 function CalendarBase({ selectedPackage }: { selectedPackage?: TourPackageOption | null }) {
   const {
@@ -19,6 +20,8 @@ function CalendarBase({ selectedPackage }: { selectedPackage?: TourPackageOption
     prevMonth,
     goToYear,
     goToToday,
+    availabilityStatus,
+    retryAvailability,
   } = useCalendarContext();
   const { lang } = useLanguage();
   const tr = translations[lang].calendar;
@@ -105,6 +108,11 @@ function CalendarBase({ selectedPackage }: { selectedPackage?: TourPackageOption
         </div>
       </div>
 
+      {availabilityStatus !== "ready" && <div className="mb-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-950 dark:bg-amber-950/40 dark:text-amber-100" role={availabilityStatus === "error" ? "alert" : "status"}>
+        {availabilityStatus === "loading" ? (lang === "es" ? "Consultando disponibilidad…" : "Checking availability…") : (lang === "es" ? "No pudimos consultar las fechas. Intente de nuevo." : "We could not check dates. Please try again.")}
+        {availabilityStatus === "error" && <button type="button" onClick={retryAvailability} className="ml-2 font-bold underline">{lang === "es" ? "Reintentar" : "Try again"}</button>}
+        {availabilityStatus === "error" && <a href={BUSINESS_WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="ml-3 font-bold underline">{lang === "es" ? "Consultar por WhatsApp" : "Ask on WhatsApp"}</a>}
+      </div>}
       {/* Weekday labels + grid */}
       <div className="grid min-w-0 grid-cols-7 gap-x-1 gap-y-1 sm:gap-x-1.5 sm:gap-y-1.5 lg:gap-2 [&>*]:min-w-0">
         {tr.weekdays.map((lbl) => (

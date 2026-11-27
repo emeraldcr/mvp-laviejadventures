@@ -13,18 +13,20 @@ type Props = {
   selectedPackage?: TourPackageOption | null;
 };
 
-type Status = "past" | "soldout" | "available";
+type Status = "past" | "soldout" | "available" | "unknown";
 
 const STATUS_CARD_CLASS: Record<Status, string> = {
   past: "bg-stone-50 dark:bg-zinc-900 border-transparent",
   soldout: "bg-red-50 dark:bg-red-900/20 border-red-400 dark:border-red-600",
   available: "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-300 dark:border-emerald-700",
+  unknown: "bg-stone-50 dark:bg-zinc-900 border-stone-200 dark:border-zinc-700",
 };
 
 const STATUS_TEXT_CLASS: Record<Status, string> = {
   past: "text-zinc-500 dark:text-zinc-400",
   soldout: "text-red-600 dark:text-red-300",
   available: "text-emerald-700 dark:text-emerald-200",
+  unknown: "text-zinc-500 dark:text-zinc-400",
 };
 
 function CalendarDayBase({ day, selectedPackage }: Props) {
@@ -38,6 +40,7 @@ function CalendarDayBase({ day, selectedPackage }: Props) {
     isPastDay,
     isToday,
     getSlotsForDay,
+    availabilityStatus,
   } = useCalendarContext();
 
   if (day === null) {
@@ -50,13 +53,13 @@ function CalendarDayBase({ day, selectedPackage }: Props) {
 
   const dateIso = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
   const packageUnavailable = Boolean(selectedPackage && !isPackageAvailableOnDate(selectedPackage, dateIso));
-  const hasSlots = slots > 0 && !past && !packageUnavailable;
+  const hasSlots = availabilityStatus === "ready" && slots > 0 && !past && !packageUnavailable;
   const selected = selectedDay === day;
-  const status: Status = past ? "past" : slots === 0 || packageUnavailable ? "soldout" : "available";
+  const status: Status = past ? "past" : availabilityStatus !== "ready" ? "unknown" : slots === 0 || packageUnavailable ? "soldout" : "available";
 
   const labelText = status === "past"
     ? (today ? (lang === "es" ? "No reservable" : "Not bookable") : "")
-    : packageUnavailable ? (lang === "es" ? "Paquete no disponible" : "Package unavailable") : status === "soldout" ? tr.statusSoldOut : (lang === "es" ? "Elegir" : "Select");
+    : status === "unknown" ? "—" : packageUnavailable ? (lang === "es" ? "Paquete no disponible" : "Package unavailable") : status === "soldout" ? tr.statusSoldOut : (lang === "es" ? "Elegir" : "Select");
 
   const handleSelect = () => {
     if (!hasSlots) return;
@@ -74,7 +77,7 @@ function CalendarDayBase({ day, selectedPackage }: Props) {
       aria-label={
         past
           ? today ? (lang === "es" ? `Día ${day}, hoy, no reservable` : `Day ${day}, today, not bookable`) : tr.ariaDayPast.replace("{day}", String(day))
-          : hasSlots
+          : status === "unknown" ? (lang === "es" ? `Día ${day}, disponibilidad sin consultar` : `Day ${day}, availability not checked`) : hasSlots
             ? (lang === "es" ? `Día ${day}, seleccionar fecha; disponibilidad sujeta a confirmación` : `Day ${day}, select date; availability subject to confirmation`)
             : packageUnavailable ? (lang === "es" ? `Día ${day}, paquete no disponible` : `Day ${day}, package unavailable`) : tr.ariaDaySoldOut.replace("{day}", String(day))
       }
@@ -116,7 +119,7 @@ function CalendarDayBase({ day, selectedPackage }: Props) {
               ✓
             </span>
           )}
-          {!hasSlots && !past && (
+          {status === "soldout" && (
             <span className="rounded-full bg-red-500/10 px-1.5 py-[1px] text-[9px] font-medium text-red-600 dark:text-red-300 sm:px-2 sm:py-[2px] sm:text-[10px]">
               x
             </span>
