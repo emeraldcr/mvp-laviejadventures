@@ -66,7 +66,7 @@ export default function ReservationDetailsSidebar({
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="text-[10px] font-black uppercase tracking-wide text-emerald-700 dark:text-emerald-300">{isEs ? "Paquete" : "Package"}</p>
-            <p className="mt-1 truncate font-black text-zinc-900 dark:text-zinc-50">{hasConfirmedPackage ? packageLabel : isEs ? "Por elegir" : "To choose"}</p>
+            <p className="mt-1 break-words font-black text-zinc-900 dark:text-zinc-50">{hasConfirmedPackage ? packageLabel : isEs ? "Por elegir" : "To choose"}</p>
           </div>
           <div className="shrink-0 text-right">
             <p className="text-lg font-black text-emerald-700 dark:text-emerald-300">{hasConfirmedPackage ? `$${pricePerPerson.toFixed(2)}` : "—"}</p>
@@ -104,7 +104,7 @@ export default function ReservationDetailsSidebar({
     </>
   );
   return (
-    <aside className="min-w-0 lg:sticky lg:top-4">
+    <aside className="min-w-0 lg:sticky lg:top-4 lg:max-h-[calc(100dvh-2rem)] lg:overflow-y-auto">
       <details className="group overflow-hidden rounded-2xl border border-emerald-200 bg-white shadow-sm dark:border-emerald-900/60 dark:bg-zinc-900 lg:hidden">
         <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-3 [&::-webkit-details-marker]:hidden">
           <div className="min-w-0">

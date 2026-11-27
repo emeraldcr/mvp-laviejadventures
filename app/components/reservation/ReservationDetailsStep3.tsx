@@ -77,7 +77,7 @@ export default function ReservationDetailsStep3({
               <p className="text-[11px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
                 {isEs ? "Su aventura" : "Your adventure"}
               </p>
-              <h3 className="truncate text-base font-black text-zinc-900 dark:text-zinc-50">{selectedTourName}</h3>
+              <h3 className="break-words text-base font-black text-zinc-900 dark:text-zinc-50">{selectedTourName}</h3>
               <p className="mt-0.5 text-xs font-semibold capitalize text-zinc-500">{formattedDate}</p>
             </div>
             {onEditStep && (
@@ -272,7 +272,7 @@ export default function ReservationDetailsStep3({
       <div className="flex flex-wrap justify-center gap-x-5 gap-y-1.5 border-t border-zinc-200 pb-1 pt-4 dark:border-zinc-800">
         <span className="flex items-center gap-1.5 text-xs font-medium text-zinc-500 dark:text-zinc-400">
           <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" aria-hidden />
-          {isEs ? "Cancelación gratuita hasta 48h antes" : "Free cancellation up to 48h before"}
+          {isEs ? "Consulte la política de cancelación arriba" : "See the cancellation policy above"}
         </span>
         <span className="flex items-center gap-1.5 text-xs font-medium text-zinc-500 dark:text-zinc-400">
           <Check className="h-3.5 w-3.5 text-emerald-500" aria-hidden />
@@ -287,7 +287,7 @@ function ReviewChip({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-950/40">
       <p className="text-[10px] font-bold uppercase tracking-wide text-zinc-500">{label}</p>
-      <p className="truncate text-sm font-black text-zinc-900 dark:text-zinc-50">{value}</p>
+      <p className="break-words text-sm font-black text-zinc-900 dark:text-zinc-50">{value}</p>
     </div>
   );
 }

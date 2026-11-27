@@ -51,34 +51,28 @@ export default function ReservationDetailsStepProgress({
           const canJump = step.id <= maxReachableStep && !isCurrent;
 
           return (
-            <div key={step.id} className={`flex gap-2 ${sidebar ? "items-start" : "flex-1 items-center"}`} aria-current={isCurrent ? "step" : undefined}>
+            <div key={step.id} className={`flex gap-2 ${sidebar ? "items-start" : "flex-1 items-center"}`}>
               <button
                 type="button"
                 disabled={!canJump}
                 onClick={() => onStepSelect?.(step.id)}
-                className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-xs font-bold transition-colors ${
+                aria-current={isCurrent ? "step" : undefined}
+                className={`inline-flex min-w-0 items-center gap-2 text-left ${canJump ? "cursor-pointer hover:underline" : "cursor-default"}`}
+              >
+                <span className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-xs font-bold transition-colors ${
                   isCurrent
                     ? "border-[#00C4B0] bg-[#00C4B0] text-[#18312f]"
                     : isDone
                     ? "border-teal-400 bg-teal-400/20 text-teal-700 dark:text-teal-300"
                     : "border-zinc-300 bg-zinc-100 text-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-500"
-                } ${canJump ? "cursor-pointer hover:scale-105" : "cursor-default"}`}
-              >
-                {step.id}
-              </button>
-              <button
-                type="button"
-                disabled={!canJump}
-                onClick={() => onStepSelect?.(step.id)}
-                className={`min-w-0 ${sidebar ? "whitespace-normal pt-1" : "truncate"} text-left text-xs font-semibold ${
+                }`} aria-hidden="true">{step.id}</span>
+                <span className={`min-w-0 ${sidebar ? "whitespace-normal" : "truncate"} text-xs font-semibold ${
                   isCurrent
                     ? "text-[#087d72] dark:text-[#66ddcf]"
                     : isDone
                       ? "text-teal-700 dark:text-teal-300"
                       : "text-zinc-500"
-                } ${canJump ? "cursor-pointer hover:underline" : "cursor-default"}`}
-              >
-                {step.label}
+                }`}>{step.label}</span>
               </button>
               {step.id < steps.length && !sidebar && (
                 <span className={`h-px flex-1 ${isDone ? "bg-teal-500/60" : "bg-zinc-300 dark:bg-zinc-800"}`} aria-hidden />

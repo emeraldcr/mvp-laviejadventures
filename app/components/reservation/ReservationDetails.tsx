@@ -463,7 +463,7 @@ function ReservationDetailsFlow({
     : lang === "es" ? "Revisar" : "Review";
 
   return (
-    <div className={`grid gap-4 pb-32 md:pb-4 lg:items-start lg:gap-6 ${currentStep === 3 && formState.agreeTerms ? "lg:grid-cols-1" : "lg:grid-cols-[minmax(220px,270px)_minmax(0,1fr)]"}`}>
+    <div className="grid gap-4 pb-32 md:pb-4 lg:items-start lg:gap-6 lg:grid-cols-[minmax(220px,270px)_minmax(0,1fr)]">
       <ReservationDetailsSidebar
         lang={lang}
         selectedTourName={selectedTourName}
@@ -498,7 +498,7 @@ function ReservationDetailsFlow({
         }
         onStepSelect={(step) => {
           if (step < currentStep) {
-            setCurrentStep(step);
+            goToStep(step, "progress");
             return;
           }
           if (currentStep === 1 && step === 3 && isStep1Valid && isStep2Valid) {
@@ -592,7 +592,7 @@ function ReservationDetailsFlow({
             localizedCancellationPolicy={localizedCancellationPolicy}
             onTermsChange={(accepted) => handleChange("agreeTerms", accepted)}
             onTermsEnter={handleTermsEnter}
-            onEditStep={(step) => setCurrentStep(step)}
+            onEditStep={(step) => goToStep(step, "review_edit")}
             tr={tr}
             lang={lang}
           />
