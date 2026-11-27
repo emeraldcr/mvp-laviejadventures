@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Bricolage_Grotesque, Manrope } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import AnalyticsTracker from "@/app/components/analytics/AnalyticsTracker";
 import "./globals.css";
 import { BUSINESS_ADDRESS, BUSINESS_NAME, BUSINESS_PHONE, SITE_URL, SOCIAL_URLS } from "@/lib/site/config";
 import { LanguageProvider } from "@/lib/site/contexts/LanguageContext";
@@ -56,5 +57,5 @@ export default function SiteRoot({ children, locale }: Readonly<{ children: Reac
       },
     ],
   };
-  return <html lang={locale} className={`${manrope.variable} ${bricolage.variable}`} suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: THEME_NO_FLASH_SCRIPT }} /><JsonLd data={schema} /></head><body className="antialiased"><a className="lva-skip-link" href="#main-content">{locale === "es" ? "Saltar al contenido" : "Skip to content"}</a><ThemeProvider><LanguageProvider initialLang={locale}><div id="main-content">{children}</div><MobileBookingBar /></LanguageProvider></ThemeProvider><Analytics /></body></html>;
+  return <html lang={locale} className={`${manrope.variable} ${bricolage.variable}`} suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: THEME_NO_FLASH_SCRIPT }} /><JsonLd data={schema} /></head><body className="antialiased"><a className="lva-skip-link" href="#main-content">{locale === "es" ? "Saltar al contenido" : "Skip to content"}</a><ThemeProvider><LanguageProvider initialLang={locale}><div id="main-content">{children}</div><MobileBookingBar /></LanguageProvider></ThemeProvider><AnalyticsTracker /><Analytics /></body></html>;
 }

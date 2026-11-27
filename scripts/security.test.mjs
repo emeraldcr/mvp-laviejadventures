@@ -152,6 +152,26 @@ test('analytics GET denies anonymous and ordinary users before querying the data
   assert.equal((await api.GET(new globalThis.Request('https://example.com/api/analytics/events'))).status, 403);
 });
 
+test('analytics page rankings count page views and report truncated results', async () => {
+  const events = [
+    { event: 'booking_step', path: '/reservar', request: { deviceType: 'mobile' }, metadata: { step: 2 } },
+    { event: 'page_view', path: '/tours', request: { deviceType: 'desktop' } },
+    ...Array.from({ length: 9999 }, () => ({ event: 'click', path: '/reservar' })),
+  ];
+  const api = load('app/api/analytics/events/route.ts', {
+    'next/server': next,
+    '@/lib/auth': { auth: async () => ({ user: { email: 'owner@example.com', verifiedEmail: true } }) },
+    '@/lib/data/mongodb': { getDb: async () => ({ collection: () => ({ find: () => ({ sort: () => ({ limit: () => ({ toArray: async () => events }) }) }) }) }) },
+    'next/headers': {}, '@/lib/data/collections': { COLLECTIONS: {} },
+  }, { process: { env: { ANALYTICS_ADMIN_EMAILS: 'owner@example.com' } } });
+  const data = await (await api.GET(new globalThis.Request('https://example.com/api/analytics/events'))).json();
+  assert.equal(data.truncated, true);
+  assert.equal(data.sampledEvents, 10000);
+  assert.deepEqual(data.site.topPages, [{ label: '/tours', count: 1 }]);
+  assert.deepEqual(data.site.devices, [{ label: 'desktop', count: 1 }]);
+  assert.equal(data.reservation.topSteps[0].label, '2');
+});
+
 test('unverified accounts can query reservations only by their own authenticated user ID', async () => {
   let query;
   const api = load('app/api/bookings/route.ts', {

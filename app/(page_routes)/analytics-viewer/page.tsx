@@ -1,10 +1,5 @@
-import AnalyticsViewer from "@/app/components/analytics/AnalyticsViewer";
-
-export const metadata = {
-  title: "Analytics Viewer | La Vieja Adventures",
-  description: "Internal analytics overview for site activity and reservations.",
-};
+import { redirect } from "next/navigation";
 
 export default function AnalyticsViewerPage() {
-  return <AnalyticsViewer />;
+  redirect("/analytics");
 }

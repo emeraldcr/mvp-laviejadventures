@@ -245,8 +245,11 @@ export async function GET(request: Request) {
         { projection: { event: 1, path: 1, sessionId: 1, metadata: 1, happenedAt: 1, request: 1 } },
       )
       .sort({ happenedAt: -1 })
-      .limit(10_000)
+      .limit(10_001)
       .toArray();
+
+    const truncated = events.length > 10_000;
+    if (truncated) events.pop();
 
     const eventCounts = new Map<string, number>();
     const pageCounts = new Map<string, number>();
@@ -272,12 +275,12 @@ export async function GET(request: Request) {
     for (const item of events) {
       addCount(eventCounts, item.event);
       if (item.sessionId) sessions.add(item.sessionId);
-      if (item.path) addCount(pageCounts, item.path);
-      if (item.request?.deviceType) addCount(deviceCounts, item.request.deviceType);
+      if (item.event === "page_view" && item.path) addCount(pageCounts, item.path);
+      if (item.event === "page_view" && item.request?.deviceType) addCount(deviceCounts, item.request.deviceType);
 
       if (item.event === "page_view") pageViews += 1;
       if (item.event === "click") clicks += 1;
-      if (item.event === "booking_step") addCount(stepCounts, asRecord(item.metadata).step === undefined ? null : `step_${asRecord(item.metadata).step}`);
+      if (item.event === "booking_step") addCount(stepCounts, asRecord(item.metadata).step === undefined ? null : String(asRecord(item.metadata).step));
       if (item.event === "booking_step_progressed") progressions += 1;
       if (item.event === "booking_step_backtracked") backtracks += 1;
       if (item.event === "booking_step_completed") stepCompletions += 1;
@@ -312,6 +315,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       range: { days, since: since.toISOString(), until: new Date().toISOString() },
       sampledEvents: events.length,
+      truncated,
       site: {
         sessions: sessions.size,
         pageViews,
