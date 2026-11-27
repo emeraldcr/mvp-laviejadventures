@@ -456,6 +456,11 @@ function ReservationDetailsFlow({
 
   const step1ContinueLabel = lang === "es" ? "Siguiente · mis datos" : "Next · my details";
 
+  const returnToStep = (step: BookingStepId, source: string) => {
+    if (currentStep === 3) handleChange("agreeTerms", false);
+    goToStep(step, source);
+  };
+
   const stickyLabel = currentStep === 1
     ? choiceStep < 3
       ? lang === "es" ? "Continuar" : "Continue"
@@ -498,7 +503,7 @@ function ReservationDetailsFlow({
         }
         onStepSelect={(step) => {
           if (step < currentStep) {
-            goToStep(step, "progress");
+            returnToStep(step, "progress");
             return;
           }
           if (currentStep === 1 && step === 3 && isStep1Valid && isStep2Valid) {
@@ -560,7 +565,7 @@ function ReservationDetailsFlow({
           onEmailEnter={handleEmailEnter}
           onPhoneEnter={handlePhoneEnter}
           onFieldBlur={onFieldBlur}
-          onBack={() => setCurrentStep(1)}
+          onBack={() => returnToStep(1, "back_button")}
           onContinue={() => goToStep(3, "continue_button")}
           canContinue={isStep2Valid}
           tr={tr}
@@ -592,7 +597,7 @@ function ReservationDetailsFlow({
             localizedCancellationPolicy={localizedCancellationPolicy}
             onTermsChange={(accepted) => handleChange("agreeTerms", accepted)}
             onTermsEnter={handleTermsEnter}
-            onEditStep={(step) => goToStep(step, "review_edit")}
+            onEditStep={(step) => returnToStep(step, "review_edit")}
             tr={tr}
             lang={lang}
           />
@@ -600,7 +605,7 @@ function ReservationDetailsFlow({
           <div className="mb-3 hidden gap-2 md:flex">
             <button
               type="button"
-              onClick={() => setCurrentStep(2)}
+              onClick={() => returnToStep(2, "back_button")}
               className="flex-1 rounded-full border border-zinc-300 px-6 py-3 text-sm font-bold text-zinc-700 transition hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-200"
             >
               {lang === "es" ? "Volver" : "Back"}
@@ -646,7 +651,7 @@ function ReservationDetailsFlow({
           currentStep === 1 && choiceStep > 1
             ? () => setChoiceStep(hasFlexibleSchedule && choiceStep === 3 ? 1 : (choiceStep - 1) as ReservationChoiceStep)
             : currentStep > 1
-              ? () => setCurrentStep((currentStep - 1) as BookingStepId)
+              ? () => returnToStep((currentStep - 1) as BookingStepId, "back_button")
               : undefined
         }
         onAction={goToNextStep}

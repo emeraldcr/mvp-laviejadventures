@@ -6,6 +6,7 @@ interface ReservationDetailsStepProgressProps {
   onStepSelect?: (step: BookingStepId) => void;
   maxReachableStep?: BookingStepId;
   sidebar?: boolean;
+  lang?: "es" | "en";
 }
 
 export default function ReservationDetailsStepProgress({
@@ -14,9 +15,10 @@ export default function ReservationDetailsStepProgress({
   onStepSelect,
   maxReachableStep = currentStep,
   sidebar = false,
+  lang = "en",
 }: ReservationDetailsStepProgressProps) {
   return (
-    <div className="mb-2 rounded-xl border border-zinc-200 bg-zinc-50/80 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950/35 sm:mb-4 sm:rounded-2xl sm:p-4" aria-label="Booking progress">
+    <nav className="mb-2 rounded-xl border border-zinc-200 bg-zinc-50/80 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950/35 sm:mb-4 sm:rounded-2xl sm:p-4" aria-label={lang === "es" ? "Progreso de la reserva" : "Booking progress"}>
       <div className="sm:hidden">
         <div className="mb-2 flex items-center justify-between gap-3">
           <p className="text-sm font-black text-zinc-900 dark:text-zinc-50">{currentStep} / {steps.length}</p>
@@ -35,16 +37,16 @@ export default function ReservationDetailsStepProgress({
                 onClick={() => onStepSelect?.(step.id)}
                 aria-label={step.label}
                 aria-current={currentStep === step.id ? "step" : undefined}
-                className={`h-1.5 rounded-full transition ${
-                  currentStep >= step.id ? "bg-[#00C4B0]" : "bg-zinc-200 dark:bg-zinc-700"
-                } ${canJump ? "cursor-pointer hover:opacity-80" : "cursor-default"}`}
-              />
+                className={`flex min-h-11 items-center ${canJump ? "cursor-pointer hover:opacity-80" : "cursor-default"}`}
+              >
+                <span aria-hidden="true" className={`h-1.5 w-full rounded-full ${currentStep >= step.id ? "bg-[#00C4B0]" : "bg-zinc-200 dark:bg-zinc-700"}`} />
+              </button>
             );
           })}
         </div>
       </div>
 
-      <div className={`${sidebar ? "hidden gap-2 lg:flex lg:flex-col lg:items-stretch" : "hidden items-center gap-2 sm:flex"}`}>
+      <div className={`${sidebar ? "hidden items-center gap-2 sm:flex lg:flex-col lg:items-stretch" : "hidden items-center gap-2 sm:flex"}`}>
         {steps.map((step) => {
           const isCurrent = currentStep === step.id;
           const isDone = currentStep > step.id;
@@ -81,6 +83,6 @@ export default function ReservationDetailsStepProgress({
           );
         })}
       </div>
-    </div>
+    </nav>
   );
 }

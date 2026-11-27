@@ -116,7 +116,7 @@ export default function ReservationDetailsSidebar({
         <div className="border-t border-emerald-100 p-3 dark:border-emerald-900/50">{summaryContent}</div>
       </details>
       <div className="hidden rounded-2xl border border-emerald-200 bg-white p-4 shadow-sm dark:border-emerald-900/60 dark:bg-zinc-900 lg:block">{summaryContent}</div>
-      <ReservationDetailsStepProgress steps={steps} currentStep={currentStep} sidebar maxReachableStep={maxReachableStep} onStepSelect={onStepSelect} />
+      <ReservationDetailsStepProgress steps={steps} currentStep={currentStep} sidebar lang={lang} maxReachableStep={maxReachableStep} onStepSelect={onStepSelect} />
       {currentStep === 1 && (
         <div className="hidden rounded-xl border border-emerald-200 bg-emerald-50/70 p-3 dark:border-emerald-800/40 dark:bg-emerald-950/20 lg:block">
           <p className="text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-300">{isEs ? `Paso ${hasFlexibleSchedule && choiceStep === 3 ? 2 : choiceStep} de ${hasFlexibleSchedule ? 2 : 3}` : `Step ${hasFlexibleSchedule && choiceStep === 3 ? 2 : choiceStep} of ${hasFlexibleSchedule ? 2 : 3}`}</p>
