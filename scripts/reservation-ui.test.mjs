@@ -192,3 +192,24 @@ test('booking does not substitute a default tour while the requested tour is mis
   assert.match(loading, /Cargando su experiencia/);
   assert.doesNotMatch(loading, /Reservation form|Departures/);
 });
+
+test('upcoming departures distinguishes a lookup failure from no matching dates', () => {
+  let result = { key: 'tour:2026-12-02:0', days: [], failed: true };
+  let stateIndex = 0;
+  const Upcoming = load('app/components/sections/UpcomingDepartures.tsx', {
+    react: { useState: () => [stateIndex++ % 2 === 0 ? result : 0, () => {}], useMemo: fn => fn(), useEffect() {} },
+    '@/lib/booking/calendar/CalendarContext': { useCalendarContext: () => ({ tickets: 4, setSelectedDate() {} }) },
+    '@/lib/booking/packages/pricing': { getTourPackageOptions: () => [], resolveInitialPackage: () => null },
+    '@/lib/shared/dates/costa-rica-time': { getMinBookableIsoDateInCostaRica: () => '2026-12-02' },
+    '@/lib/tours/packages': { isPackageAvailableOnDate: () => true },
+    '@/lib/site/config': { BUSINESS_WHATSAPP_URL: 'https://wa.me/50662332535' },
+  });
+  const props = { tour: { slug: 'tour', titleEs: 'Tour', titleEn: 'Tour' }, lang: 'es', onChoosePackage() {} };
+  const failed = renderToStaticMarkup(React.createElement(Upcoming, props));
+  assert.match(failed, /No pudimos consultar las próximas salidas/);
+  assert.match(failed, /Reintentar/);
+  result = { ...result, failed: false };
+  const empty = renderToStaticMarkup(React.createElement(Upcoming, props));
+  assert.match(empty, /No encontramos fechas para 4 personas/);
+  assert.match(empty, /Consultar por WhatsApp/);
+});
