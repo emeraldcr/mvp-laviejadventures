@@ -61,5 +61,5 @@ export default function SiteRoot({ children, locale }: Readonly<{ children: Reac
   return <html lang={locale} className={`${manrope.variable} ${bricolage.variable}`} suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: THEME_NO_FLASH_SCRIPT }} /><JsonLd data={schema} /></head><body className="antialiased"><a className="lva-skip-link" href="#main-content">{locale === "es" ? "Saltar al contenido" : "Skip to content"}</a><ThemeProvider><LanguageProvider initialLang={locale}><div id="main-content">{children}</div><MobileBookingBar /></LanguageProvider></ThemeProvider><AnalyticsTracker /><Analytics /><Script id="google-tag-loader" async src="https://www.googletagmanager.com/gtag/js?id=G-MLR47VENC7" /><Script id="google-tag-init">{`window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
 gtag('js', new Date());
-gtag('config', 'G-MLR47VENC7');`}</Script></body></html>;
+gtag('config', 'G-MLR47VENC7');`}</Script><Script id="google-tag-manager-loader" async src="https://www.googletagmanager.com/gtm.js?id=GTM-TBWCPTFK" /></body></html>;
 }
