@@ -11,7 +11,6 @@ import {
   ReactNode,
 } from "react";
 import { AvailabilityMap } from "@/lib/booking/types";
-import { DEFAULT_AVAILABILITY } from "@/lib/booking/core/business";
 import { useLanguage } from "@/lib/site/contexts/LanguageContext";
 import { getCostaRicaDateParts, getMinBookableDateInCostaRica, toDateKey } from "@/lib/shared/dates/costa-rica-time";
 
@@ -58,6 +57,7 @@ export function CalendarProvider({
   children,
   initialTickets = 1,
   initialDateIso = null,
+  selectedTourSlug,
 }: Props) {
   const { lang } = useLanguage();
 
@@ -71,16 +71,19 @@ export function CalendarProvider({
   });
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [tickets, setTicketsState] = useState<number>(Math.max(1, initialTickets));
-  const availability: AvailabilityMap = useMemo(() => {
-    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-    return Object.fromEntries(
-      Array.from({ length: daysInMonth }, (_, index) => {
-        const day = index + 1;
-        const weekday = new Date(currentYear, currentMonth, day).getDay();
-        return [day, weekday === 0 || weekday === 6 ? DEFAULT_AVAILABILITY.WEEKEND : DEFAULT_AVAILABILITY.WEEKDAY];
-      }),
-    ) as AvailabilityMap;
-  }, [currentMonth, currentYear]);
+  const [loadedAvailability, setLoadedAvailability] = useState<{ key: string; data: AvailabilityMap } | null>(null);
+  const availabilityKey = `${selectedTourSlug ?? ""}:${currentYear}:${currentMonth}`;
+  const availability = loadedAvailability?.key === availabilityKey ? loadedAvailability.data : {};
+
+  useEffect(() => {
+    if (!selectedTourSlug) return;
+    const controller = new AbortController();
+    fetch(`/api/calendar/availability?year=${currentYear}&month=${currentMonth}&tourSlug=${encodeURIComponent(selectedTourSlug)}`, { signal: controller.signal })
+      .then((response) => { if (!response.ok) throw new Error("Availability unavailable"); return response.json(); })
+      .then((data) => setLoadedAvailability({ key: availabilityKey, data: data.availability }))
+      .catch(() => {});
+    return () => controller.abort();
+  }, [availabilityKey, currentMonth, currentYear, selectedTourSlug]);
 
   const monthLabel = useMemo(
     () =>
@@ -167,7 +170,7 @@ export function CalendarProvider({
   }, []);
 
   useEffect(() => {
-    if (selectedDay == null) return;
+    if (selectedDay == null || loadedAvailability?.key !== availabilityKey) return;
 
     const remaining = availability[selectedDay] ?? 0;
     if (remaining < 1) {
@@ -177,7 +180,7 @@ export function CalendarProvider({
     }
 
     setTicketsState((current) => Math.min(current, remaining));
-  }, [availability, selectedDay]);
+  }, [availability, availabilityKey, loadedAvailability, selectedDay]);
 
   const changeMonth = useCallback(
     (delta: number) => {

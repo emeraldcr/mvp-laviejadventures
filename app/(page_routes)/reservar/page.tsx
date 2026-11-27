@@ -145,7 +145,7 @@ export default function ReservarPage() {
           </div>
         </header> */}
 
-        <BookingSection selectedTourSlug={bookingTourSlug} initialPackageId={urlParams.package} />
+        <BookingSection selectedTourSlug={bookingTourSlug} tour={activeTour} initialPackageId={urlParams.package} />
       </main>
     </CalendarProvider>
   );

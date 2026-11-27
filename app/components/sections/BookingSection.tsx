@@ -1,6 +1,8 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
+import type { TourSummary } from "@/lib/tours/types";
+import UpcomingDepartures from "./UpcomingDepartures";
 import { CalendarDays } from "lucide-react";
 import { useLanguage } from "@/lib/site/contexts/LanguageContext";
 import { useCalendarContext } from "@/lib/booking/calendar/CalendarContext";
@@ -10,9 +12,17 @@ import ReservationSection from "@/app/components/sections/ReservationSection";
 type Props = {
   selectedTourSlug: string | null;
   initialPackageId?: string;
+  tour: TourSummary | null;
 };
 
-export default function BookingSection({ selectedTourSlug, initialPackageId }: Props) {
+export default function BookingSection({ selectedTourSlug, initialPackageId, tour }: Props) {
+  const [chosenPackage, setChosenPackage] = useState(initialPackageId);
+  const choosePackage = (id: string) => {
+    setChosenPackage(id);
+    const url = new URL(window.location.href);
+    url.searchParams.set("package", id);
+    window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+  };
   const { lang } = useLanguage();
   const { selectedDay, selectDay } = useCalendarContext();
 
@@ -45,6 +55,7 @@ export default function BookingSection({ selectedTourSlug, initialPackageId }: P
             >
               {!selectedDay && (
                 <div className="rounded-2xl border border-stone-200 bg-white p-3 shadow-xl shadow-stone-900/5 dark:border-white/10 dark:bg-stone-900 sm:rounded-[1.75rem] sm:p-5">
+                  {tour && <UpcomingDepartures tour={tour} preferredPackage={initialPackageId} lang={lang} onChoosePackage={choosePackage} />}
                   <CalendarSection />
                 </div>
               )}
@@ -65,7 +76,7 @@ export default function BookingSection({ selectedTourSlug, initialPackageId }: P
                     <Suspense fallback={<ReservationFallback />}>
                       <ReservationSection
                         preselectedTourSlug={selectedTourSlug}
-                        preselectedPackageId={initialPackageId}
+                        preselectedPackageId={chosenPackage}
                       />
                     </Suspense>
                   </div>
